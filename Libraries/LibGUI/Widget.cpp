@@ -124,6 +124,40 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("preferred_height", preferred_height, set_preferred_height);
     REGISTER_SIZE_POLICY_PROPERTY("horizontal_size_policy", horizontal_size_policy, set_horizontal_size_policy);
     REGISTER_SIZE_POLICY_PROPERTY("vertical_size_policy", vertical_size_policy, set_vertical_size_policy);
+
+    register_property(
+        "focus_policy", [this]() -> JsonValue {
+        auto policy = focus_policy();
+        if (policy == GUI::FocusPolicy::ClickFocus)
+            return "ClickFocus";
+        if (policy == GUI::FocusPolicy::NoFocus)
+            return "NoFocus";
+        if (policy == GUI::FocusPolicy::TabFocus)
+            return "TabFocus";
+        if (policy == GUI::FocusPolicy::StrongFocus)
+            return "StrongFocus";
+        return JsonValue(); },
+        [this](auto& value) {
+            if (!value.is_string())
+                return false;
+            if (value.as_string() == "ClickFocus") {
+                set_focus_policy(GUI::FocusPolicy::ClickFocus);
+                return true;
+            }
+            if (value.as_string() == "NoFocus") {
+                set_focus_policy(GUI::FocusPolicy::NoFocus);
+                return true;
+            }
+            if (value.as_string() == "TabFocus") {
+                set_focus_policy(GUI::FocusPolicy::TabFocus);
+                return true;
+            }
+            if (value.as_string() == "StrongFocus") {
+                set_focus_policy(GUI::FocusPolicy::StrongFocus);
+                return true;
+            }
+            return false;
+        });
 }
 
 Widget::~Widget()
