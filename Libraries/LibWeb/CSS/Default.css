@@ -188,3 +188,8 @@ blockquote {
     margin-left: 25px;
     margin-right: 25px;
 }
+
+ul,
+ol {
+    padding-left: 40px;
+}
