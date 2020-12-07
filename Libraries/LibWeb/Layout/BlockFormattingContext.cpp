@@ -267,12 +267,12 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& 
     auto margin_right = CSS::Length::make_auto();
     const auto border_left = style.border_left().width;
     const auto border_right = style.border_right().width;
-    const auto padding_left = style.padding().left.resolved(zero_value, box, containing_block.width());
-    const auto padding_right = style.padding().right.resolved(zero_value, box, containing_block.width());
+    const auto padding_left = style.padding().left.resolved_or_zero(box, containing_block.width());
+    const auto padding_right = style.padding().right.resolved_or_zero(box, containing_block.width());
 
     auto try_compute_width = [&](const auto& a_width) {
-        margin_left = style.margin().left.resolved(zero_value, box, containing_block.width());
-        margin_right = style.margin().right.resolved(zero_value, box, containing_block.width());
+        margin_left = style.margin().left.resolved_or_zero(box, containing_block.width());
+        margin_right = style.margin().right.resolved_or_zero(box, containing_block.width());
 
         auto left = style.offset().left.resolved_or_auto(box, containing_block.width());
         auto right = style.offset().right.resolved_or_auto(box, containing_block.width());
@@ -508,16 +508,15 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
 
 void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
 {
-    auto zero_value = CSS::Length::make_px(0);
     auto& box_model = child_box.box_model();
     auto& style = child_box.style();
 
-    box_model.margin.top = style.margin().top.resolved(zero_value, containing_block, containing_block.width());
-    box_model.margin.bottom = style.margin().bottom.resolved(zero_value, containing_block, containing_block.width());
+    box_model.margin.top = style.margin().top.resolved_or_zero(containing_block, containing_block.width());
+    box_model.margin.bottom = style.margin().bottom.resolved_or_zero(containing_block, containing_block.width());
     box_model.border.top = CSS::Length::make_px(style.border_top().width);
     box_model.border.bottom = CSS::Length::make_px(style.border_bottom().width);
-    box_model.padding.top = style.padding().top.resolved(zero_value, containing_block, containing_block.width());
-    box_model.padding.bottom = style.padding().bottom.resolved(zero_value, containing_block, containing_block.width());
+    box_model.padding.top = style.padding().top.resolved_or_zero(containing_block, containing_block.width());
+    box_model.padding.bottom = style.padding().bottom.resolved_or_zero(containing_block, containing_block.width());
 
     float x = box_model.margin.left.to_px(child_box)
         + box_model.border.left.to_px(child_box)
