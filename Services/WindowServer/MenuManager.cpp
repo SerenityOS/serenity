@@ -181,8 +181,7 @@ void MenuManager::event(Core::Event& event)
 
             if (key_event.key() == Key_Return) {
                 auto hovered_item = m_current_menu->hovered_item();
-
-                if (!hovered_item->is_enabled())
+                if (!hovered_item || !hovered_item->is_enabled())
                     return;
                 if (hovered_item->is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
