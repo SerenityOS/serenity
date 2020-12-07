@@ -525,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 
     Vector<StringView> sub_strings = string_view.split_view(const_cast<StringView&>(separator_view), true);
 
-    for(auto sub_string: sub_strings) {
+    for (auto sub_string : sub_strings) {
         new_array->indexed_properties().append(Value(js_string(vm, sub_string)));
     }
 
