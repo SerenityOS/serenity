@@ -28,6 +28,7 @@
 
 namespace Web::CSS {
 class Selector;
+class StyleDeclaration;
 class StyleProperties;
 class StyleResolver;
 class StyleRule;
