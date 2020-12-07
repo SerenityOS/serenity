@@ -96,7 +96,7 @@ static float greatest_child_width(const Box& box)
         }
     } else {
         box.for_each_child_of_type<Box>([&](auto& child) {
-            max_width = max(max_width, child.width());
+            max_width = max(max_width, child.border_box_width());
         });
     }
     return max_width;
