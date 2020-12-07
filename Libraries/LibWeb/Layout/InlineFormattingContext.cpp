@@ -213,13 +213,13 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         if (inline_block.style().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
-            auto margin_left = inline_block.style().margin().left.resolved(CSS::Length::make_px(0), containing_block(), containing_block().width()).to_px(inline_block);
+            auto margin_left = inline_block.style().margin().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
             auto border_left_width = inline_block.style().border_left().width;
-            auto padding_left = inline_block.style().padding().left.resolved(CSS::Length::make_px(0), containing_block(), containing_block().width()).to_px(inline_block);
+            auto padding_left = inline_block.style().padding().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
-            auto margin_right = inline_block.style().margin().right.resolved(CSS::Length::make_px(0), containing_block(), containing_block().width()).to_px(inline_block);
+            auto margin_right = inline_block.style().margin().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
             auto border_right_width = inline_block.style().border_right().width;
-            auto padding_right = inline_block.style().padding().right.resolved(CSS::Length::make_px(0), containing_block(), containing_block().width()).to_px(inline_block);
+            auto padding_right = inline_block.style().padding().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
             auto available_width = containing_block().width()
                 - margin_left
@@ -232,7 +232,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_width(width);
         } else {
-            inline_block.set_width(inline_block.style().width().resolved(CSS::Length::make_px(0), containing_block(), containing_block().width()).to_px(inline_block));
+            inline_block.set_width(inline_block.style().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
         }
 
         layout_inside(inline_block, layout_mode);
@@ -240,7 +240,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         if (inline_block.style().height().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         } else {
-            inline_block.set_height(inline_block.style().height().resolved(CSS::Length::make_px(0), containing_block(), containing_block().height()).to_px(inline_block));
+            inline_block.set_height(inline_block.style().height().resolved_or_zero(inline_block, containing_block().height()).to_px(inline_block));
         }
         return;
     }
