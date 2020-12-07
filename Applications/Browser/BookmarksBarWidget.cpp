@@ -139,6 +139,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
         button.set_preferred_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
+        button.set_focus_policy(GUI::FocusPolicy::TabFocus);
 
         button.on_click = [title, url, this](auto modifiers) {
             if (on_bookmark_click)
