@@ -16,6 +16,7 @@ test("basic functionality", () => {
         "substring",
         "includes",
         "slice",
+        "split",
     ];
 
     genericStringPrototypeFunctions.forEach(name => {
