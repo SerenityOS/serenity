@@ -169,6 +169,20 @@ public:
 
     Vector<ValueAndAttributes> values_unordered() const;
 
+    template<typename Callback>
+    void for_each_value(Callback callback)
+    {
+        if (m_storage->is_simple_storage()) {
+            for (auto& value : static_cast<SimpleIndexedPropertyStorage&>(*m_storage).elements())
+                callback(value);
+        } else {
+            for (auto& element : static_cast<const GenericIndexedPropertyStorage&>(*m_storage).packed_elements())
+                callback(element.value);
+            for (auto& element : static_cast<const GenericIndexedPropertyStorage&>(*m_storage).sparse_elements())
+                callback(element.value.value);
+        }
+    }
+
 private:
     void switch_to_generic_storage();
 

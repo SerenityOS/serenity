@@ -818,8 +818,9 @@ void Object::visit_edges(Cell::Visitor& visitor)
     for (auto& value : m_storage)
         visitor.visit(value);
 
-    for (auto& value : m_indexed_properties.values_unordered())
-        visitor.visit(value.value);
+    m_indexed_properties.for_each_value([&visitor](auto& value) {
+        visitor.visit(value);
+    });
 }
 
 bool Object::has_property(const PropertyName& property_name) const
