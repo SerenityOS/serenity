@@ -127,7 +127,6 @@ Value ScriptFunction::execute_function_body()
     VM::InterpreterExecutionScope scope(*interpreter);
 
     auto& call_frame_args = vm.call_frame().arguments;
-    ArgumentVector arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
         auto parameter = m_parameters[i];
         Value argument_value;
@@ -145,11 +144,10 @@ Value ScriptFunction::execute_function_body()
         } else {
             argument_value = js_undefined();
         }
-        arguments.append({ parameter.name, argument_value });
         vm.current_scope()->put_to_scope(parameter.name, { argument_value, DeclarationKind::Var });
     }
 
-    return interpreter->execute_statement(global_object(), m_body, move(arguments), ScopeType::Function);
+    return interpreter->execute_statement(global_object(), m_body, {}, ScopeType::Function);
 }
 
 Value ScriptFunction::call()
