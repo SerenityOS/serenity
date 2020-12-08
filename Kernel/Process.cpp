@@ -750,6 +750,7 @@ void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
+    ASSERT(Process::current() == this);
     dbg() << "Terminating " << *this << " due to signal " << signal;
     m_termination_status = 0;
     m_termination_signal = signal;

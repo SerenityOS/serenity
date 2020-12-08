@@ -381,9 +381,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(vmobject().is_anonymous());
 
-    sti();
     LOCKER(vmobject().m_paging_lock);
-    cli();
 
     auto& page_slot = physical_page_slot(page_index_in_region);
 

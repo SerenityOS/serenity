@@ -61,9 +61,8 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
             timeout = Thread::BlockTimeout(true, &ts_abstimeout);
         }
 
-        // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
         WaitQueue& wait_queue = futex_queue((FlatPtr)params.userspace_address);
-        Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", timeout);
+        Thread::BlockResult result = wait_queue.wait_on(timeout, "Futex");
         if (result == Thread::BlockResult::InterruptedByTimeout) {
             return -ETIMEDOUT;
         }

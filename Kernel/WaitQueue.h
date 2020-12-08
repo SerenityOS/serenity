@@ -32,23 +32,22 @@
 
 namespace Kernel {
 
-class WaitQueue {
+class WaitQueue : public Thread::BlockCondition {
 public:
-    WaitQueue();
-    ~WaitQueue();
-
-    SpinLock<u32>& get_lock() { return m_lock; }
-    bool enqueue(Thread&);
-    bool dequeue(Thread&);
-    void wake_one(Atomic<bool>* lock = nullptr);
+    void wake_one();
     void wake_n(u32 wake_count);
     void wake_all();
-    void clear();
+
+    template<class... Args>
+    Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
+    {
+        return Thread::current()->block<Thread::QueueBlocker>(timeout, *this, forward<Args>(args)...);
+    }
+
+protected:
+    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
 
 private:
-    typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;
-    ThreadList m_threads;
-    SpinLock<u32> m_lock;
     bool m_wake_requested { false };
 };
 

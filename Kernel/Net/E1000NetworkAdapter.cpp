@@ -419,7 +419,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
             sti();
             break;
         }
-        Thread::current()->wait_on(m_wait_queue, "E1000NetworkAdapter");
+        m_wait_queue.wait_on(nullptr, "E1000NetworkAdapter");
     }
 #ifdef E1000_DEBUG
     klog() << "E1000: Sent packet, status is now " << String::format("%b", descriptor.status) << "!";

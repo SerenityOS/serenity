@@ -45,6 +45,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG
@@ -1282,54 +1283,120 @@ const DescriptorTablePointer& Processor::get_gdtr()
     return m_gdtr;
 }
 
-bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip, bool from_other_processor)
+Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
-    bool ret = true;
-    ScopedCritical critical;
+    FlatPtr frame_ptr = 0, eip = 0;
+    Vector<FlatPtr, 32> stack_trace;
+
+    auto walk_stack = [&](FlatPtr stack_ptr)
+    {
+        stack_trace.append(eip);
+        size_t count = 1;
+        while (stack_ptr) {
+            FlatPtr retaddr;
+
+            count++;
+            if (max_frames != 0 && count > max_frames)
+                break;
+
+            if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
+                if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]) || !retaddr)
+                    break;
+                stack_trace.append(retaddr);
+                if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
+                    break;
+            } else {
+                void* fault_at;
+                if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
+                    break;
+                stack_trace.append(retaddr);
+                if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
+                    break;
+            }
+        }
+    };
+    auto capture_current_thread = [&]()
+    {
+        frame_ptr = (FlatPtr)__builtin_frame_address(0);
+        eip = (FlatPtr)__builtin_return_address(0);
+
+        walk_stack(frame_ptr);
+    };
+
+    // Since the thread may be running on another processor, there
+    // is a chance a context switch may happen while we're trying
+    // to get it. It also won't be entirely accurate and merely
+    // reflect the status at the last context switch.
+    ScopedSpinLock lock(g_scheduler_lock);
     auto& proc = Processor::current();
     if (&thread == proc.current_thread()) {
         ASSERT(thread.state() == Thread::Running);
-        asm volatile("movl %%ebp, %%eax"
-                     : "=g"(frame_ptr));
-    } else {
-        // If this triggered from another processor, we should never
-        // hit this code path because the other processor is still holding
-        // the scheduler lock, which should prevent us from switching
-        // contexts
-        ASSERT(!from_other_processor);
+        // Leave the scheduler lock. If we trigger page faults we may
+        // need to be preempted. Since this is our own thread it won't
+        // cause any problems as the stack won't change below this frame.
+        lock.unlock();
+        capture_current_thread();
+    } else if (thread.is_active()) {
+        ASSERT(thread.cpu() != proc.id());
+        // If this is the case, the thread is currently running
+        // on another processor. We can't trust the kernel stack as
+        // it may be changing at any time. We need to probably send
+        // an IPI to that processor, have it walk the stack and wait
+        // until it returns the data back to us
+        smp_unicast(thread.cpu(),
+            [&]() {
+                dbg() << "CPU[" << Processor::current().id() << "] getting stack for cpu #" << proc.id();
+                ProcessPagingScope paging_scope(thread.process());
+                auto& target_proc = Processor::current();
+                ASSERT(&target_proc != &proc);
+                ASSERT(&thread == target_proc.current_thread());
+                // NOTE: Because the other processor is still holding the
+                // scheduler lock while waiting for this callback to finish,
+                // the current thread on the target processor cannot change
 
-        // Since the thread may be running on another processor, there
-        // is a chance a context switch may happen while we're trying
-        // to get it. It also won't be entirely accurate and merely
-        // reflect the status at the last context switch.
-        ScopedSpinLock lock(g_scheduler_lock);
-        if (thread.state() == Thread::Running) {
-            ASSERT(thread.cpu() != proc.id());
-            // If this is the case, the thread is currently running
-            // on another processor. We can't trust the kernel stack as
-            // it may be changing at any time. We need to probably send
-            // an IPI to that processor, have it walk the stack and wait
-            // until it returns the data back to us
-            smp_unicast(thread.cpu(),
-                [&]() {
-                    dbg() << "CPU[" << Processor::current().id() << "] getting stack for cpu #" << proc.id();
-                    // NOTE: Because we are holding the scheduler lock while
-                    // waiting for this callback to finish, the current thread
-                    // on the target processor cannot change
-                    ret = get_context_frame_ptr(thread, frame_ptr, eip, true);
-                }, false);
-        } else {
+                // TODO: What to do about page faults here? We might deadlock
+                //       because the other processor is still holding the
+                //       scheduler lock...
+                capture_current_thread();
+            }, false);
+    } else {
+        switch (thread.state()) {
+        case Thread::Running:
+            ASSERT_NOT_REACHED(); // should have been handled above
+        case Thread::Runnable:
+        case Thread::Stopped:
+        case Thread::Blocked:
+        case Thread::Dying:
+        case Thread::Dead: {
             // We need to retrieve ebp from what was last pushed to the kernel
             // stack. Before switching out of that thread, it switch_context
             // pushed the callee-saved registers, and the last of them happens
             // to be ebp.
+            ProcessPagingScope paging_scope(thread.process());
             auto& tss = thread.tss();
             u32* stack_top = reinterpret_cast<u32*>(tss.esp);
-            frame_ptr = stack_top[0];
+            if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
+                if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
+                    frame_ptr = 0;
+            } else {
+                void* fault_at;
+                if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
+                    frame_ptr = 0;
+            }
             eip = tss.eip;
+            // TODO: We need to leave the scheduler lock here, but we also
+            //       need to prevent the target thread from being run while
+            //       we walk the stack
+            lock.unlock();
+            walk_stack(frame_ptr);
+            break;
+        }
+        default:
+            dbg() << "Cannot capture stack trace for thread " << thread << " in state " << thread.state_string();
+            break;
         }
     }
-    return true;
+    return stack_trace;
 }
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
@@ -1435,7 +1502,7 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
 
     ASSERT(to_thread == Thread::current());
 
-    Scheduler::enter_current(*from_thread);
+    Scheduler::enter_current(*from_thread, true);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this

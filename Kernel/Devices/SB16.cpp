@@ -227,7 +227,7 @@ void SB16::handle_irq(const RegisterState&)
 
 void SB16::wait_for_irq()
 {
-    Thread::current()->wait_on(m_irq_queue, "SB16");
+    m_irq_queue.wait_on(nullptr, "SB16");
     disable_irq();
 }
 
