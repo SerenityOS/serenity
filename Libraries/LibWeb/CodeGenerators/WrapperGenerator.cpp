@@ -476,9 +476,8 @@ public:
     }
 
     generator.append(R"~~~(
-    virtual bool is_@wrapper_class:snakecase@() const final { return true; }
-
 private:
+    virtual bool is_@wrapper_class:snakecase@() const final { return true; }
 )~~~");
 
     for (auto& function : interface.functions) {
