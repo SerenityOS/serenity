@@ -167,8 +167,6 @@ public:
 
     Vector<u32> indices() const;
 
-    Vector<ValueAndAttributes> values_unordered() const;
-
     template<typename Callback>
     void for_each_value(Callback callback)
     {
