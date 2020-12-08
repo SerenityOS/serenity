@@ -563,6 +563,7 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
     if (!target_node.is_directory())
         return;
 
+    bool had_accepted_drop = false;
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
@@ -573,8 +574,12 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
             auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
             GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
+        } else {
+            had_accepted_drop = true;
         }
     }
-};
+    if (had_accepted_drop)
+        on_accepted_drop();
+}
 
 }
