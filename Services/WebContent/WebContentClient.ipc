@@ -1,6 +1,7 @@
 endpoint WebContentClient = 90
 {
-    DidFinishLoad(URL url) =|
+    DidStartLoading(URL url) =|
+    DidFinishLoading(URL url) =|
     DidPaint(Gfx::IntRect content_rect, i32 shbuf_id) =|
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
@@ -11,7 +12,6 @@ endpoint WebContentClient = 90
     DidUnhoverLink() =|
     DidClickLink(URL url, String target, unsigned modifiers) =|
     DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
-    DidStartLoading(URL url) =|
     DidRequestContextMenu(Gfx::IntPoint content_position) =|
     DidRequestLinkContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers) =|
     DidRequestAlert(String message) => ()

@@ -60,6 +60,7 @@ public:
     void notify_server_did_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
     void notify_server_did_middle_click_link(Badge<WebContentClient>, const URL&, const String& target, unsigned modifiers);
     void notify_server_did_start_loading(Badge<WebContentClient>, const URL&);
+    void notify_server_did_finish_loading(Badge<WebContentClient>, const URL&);
     void notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&);
     void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers);
     void notify_server_did_request_alert(Badge<WebContentClient>, const String& message);

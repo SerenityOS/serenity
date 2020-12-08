@@ -52,11 +52,9 @@ void WebContentClient::handle(const Messages::WebContentClient::DidPaint& messag
     m_view.notify_server_did_paint({}, message.shbuf_id());
 }
 
-void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient::DidFinishLoad& message)
+void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient::DidFinishLoading& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidFinishLoad! url=" << message.url();
-#endif
+    m_view.notify_server_did_finish_loading({}, message.url());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateContentRect& message)

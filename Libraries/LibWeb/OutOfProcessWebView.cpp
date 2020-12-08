@@ -209,6 +209,13 @@ void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient
         on_load_start(url);
 }
 
+
+void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClient>, const URL& url)
+{
+    if (on_load_finish)
+        on_load_finish(url);
+}
+
 void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position)
 {
     if (on_context_menu_request)

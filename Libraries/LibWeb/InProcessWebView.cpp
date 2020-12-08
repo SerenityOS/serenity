@@ -150,6 +150,12 @@ void InProcessWebView::page_did_start_loading(const URL& url)
         on_load_start(url);
 }
 
+void InProcessWebView::page_did_finish_loading(const URL& url)
+{
+    if (on_load_finish)
+        on_load_finish(url);
+}
+
 void InProcessWebView::page_did_change_selection()
 {
     update();

@@ -159,6 +159,11 @@ void PageHost::page_did_start_loading(const URL& url)
     m_client.post_message(Messages::WebContentClient::DidStartLoading(url));
 }
 
+void PageHost::page_did_finish_loading(const URL& url)
+{
+    m_client.post_message(Messages::WebContentClient::DidFinishLoading(url));
+}
+
 void PageHost::page_did_request_context_menu(const Gfx::IntPoint& content_position)
 {
     m_client.post_message(Messages::WebContentClient::DidRequestContextMenu(content_position));

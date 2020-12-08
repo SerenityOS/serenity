@@ -47,7 +47,7 @@ private:
     WebContentClient(OutOfProcessWebView&);
 
     virtual void handle(const Messages::WebContentClient::DidPaint&) override;
-    virtual void handle(const Messages::WebContentClient::DidFinishLoad&) override;
+    virtual void handle(const Messages::WebContentClient::DidFinishLoading&) override;
     virtual void handle(const Messages::WebContentClient::DidInvalidateContentRect&) override;
     virtual void handle(const Messages::WebContentClient::DidChangeSelection&) override;
     virtual void handle(const Messages::WebContentClient::DidLayout&) override;

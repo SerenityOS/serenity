@@ -274,6 +274,9 @@ void FrameLoader::resource_did_load()
         ASSERT(is<HTML::HTMLIFrameElement>(*host_element));
         downcast<HTML::HTMLIFrameElement>(*host_element).content_frame_did_load({});
     }
+
+    if (auto* page = frame().page())
+        page->client().page_did_finish_loading(url);
 }
 
 void FrameLoader::resource_did_fail()

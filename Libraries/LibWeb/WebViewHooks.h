@@ -42,6 +42,7 @@ public:
     Function<void(const URL&)> on_link_hover;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
+    Function<void(const URL&)> on_load_finish;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<void(const URL&)> on_url_drop;
     Function<void(DOM::Document*)> on_set_document;
