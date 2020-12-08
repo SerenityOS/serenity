@@ -209,7 +209,6 @@ void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient
         on_load_start(url);
 }
 
-
 void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClient>, const URL& url)
 {
     if (on_load_finish)
