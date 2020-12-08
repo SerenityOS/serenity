@@ -29,6 +29,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/SIMD.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 
@@ -131,12 +132,31 @@ public:
         if (!source.alpha())
             return *this;
 
+#ifdef __SSE__
+        using AK::SIMD::i32x4;
+
+        const i32x4 color = {
+            red(),
+            green(),
+            blue()
+        };
+        const i32x4 source_color = {
+            source.red(),
+            source.green(),
+            source.blue()
+        };
+
+        const int d = 255 * (alpha() + source.alpha()) - alpha() * source.alpha();
+        const i32x4 out = (color * alpha() * (255 - source.alpha()) + 255 * source.alpha() * source_color) / d;
+        return Color(out[0], out[1], out[2], d / 255);
+#else
         int d = 255 * (alpha() + source.alpha()) - alpha() * source.alpha();
         u8 r = (red() * alpha() * (255 - source.alpha()) + 255 * source.alpha() * source.red()) / d;
         u8 g = (green() * alpha() * (255 - source.alpha()) + 255 * source.alpha() * source.green()) / d;
         u8 b = (blue() * alpha() * (255 - source.alpha()) + 255 * source.alpha() * source.blue()) / d;
         u8 a = d / 255;
         return Color(r, g, b, a);
+#endif
     }
 
     Color to_grayscale() const
