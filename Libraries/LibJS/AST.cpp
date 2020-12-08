@@ -1901,8 +1901,12 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.vm().clear_exception();
-            ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
-            interpreter.execute_statement(global_object, m_handler->body(), move(arguments));
+
+            HashMap<FlyString, Variable> parameters;
+            parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
+            auto* catch_scope = interpreter.heap().allocate<LexicalEnvironment>(global_object, move(parameters), interpreter.vm().call_frame().scope);
+            TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, catch_scope);
+            interpreter.execute_statement(global_object, m_handler->body());
         }
     }
 
