@@ -218,7 +218,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::Inode, true);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    tree_view.set_preferred_size(150, 0);
+    tree_view.set_preferred_size(175, 0);
     bool is_reacting_to_tree_view_selection_change = false;
 
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
@@ -257,9 +257,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         // Reselect the existing folder in the tree.
         auto new_index = directories_model->index(current_path, GUI::FileSystemModel::Column::Name);
-        tree_view.selection().set(new_index);
-        tree_view.scroll_into_view(new_index, false, true);
-        tree_view.update();
+        if (new_index.is_valid()) {
+            tree_view.expand_all_parents_of(new_index);
+            tree_view.set_cursor(new_index, GUI::AbstractView::SelectionUpdate::Set, true);
+        }
 
         directory_view.refresh();
     };
@@ -442,6 +443,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
             FileUtils::delete_paths(tree_view_selected_file_paths(), true, window);
+            refresh_tree_view();
         },
         &tree_view);
 
@@ -452,13 +454,24 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             tree_view_delete_action->activate();
         else
             directory_view.delete_action().activate();
+        refresh_tree_view();
+    });
+
+    auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+        directory_view.mkdir_action().activate();
+        refresh_tree_view();
+    });
+
+    auto touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+        directory_view.touch_action().activate();
+        refresh_tree_view();
     });
 
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("File Manager");
-    app_menu.add_action(directory_view.mkdir_action());
-    app_menu.add_action(directory_view.touch_action());
+    app_menu.add_action(mkdir_action);
+    app_menu.add_action(touch_action);
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
     app_menu.add_action(focus_dependent_delete_action);
@@ -472,6 +485,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto action_show_dotfiles = GUI::Action::create_checkable("Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view.set_should_show_dotfiles(action.is_checked());
+        refresh_tree_view();
     });
 
     auto& view_menu = menubar->add_menu("View");
@@ -505,8 +519,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(go_home_action);
 
     main_toolbar.add_separator();
-    main_toolbar.add_action(directory_view.mkdir_action());
-    main_toolbar.add_action(directory_view.touch_action());
+    main_toolbar.add_action(mkdir_action);
+    main_toolbar.add_action(touch_action);
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
     main_toolbar.add_action(focus_dependent_delete_action);
@@ -546,6 +560,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         open_parent_directory_action->set_enabled(new_path != "/");
     };
 
+    directory_view.on_accepted_drop = [&]() {
+        refresh_tree_view();
+    };
+
     directory_view.on_status_message = [&](const StringView& message) {
         statusbar.set_text(message);
     };
@@ -572,8 +590,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
-    directory_view_context_menu->add_action(directory_view.mkdir_action());
-    directory_view_context_menu->add_action(directory_view.touch_action());
+    directory_view_context_menu->add_action(mkdir_action);
+    directory_view_context_menu->add_action(touch_action);
     directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(directory_view.open_terminal_action());
     directory_view_context_menu->add_separator();
@@ -587,8 +605,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
-    tree_view_directory_context_menu->add_action(directory_view.mkdir_action());
-    tree_view_directory_context_menu->add_action(directory_view.touch_action());
+    tree_view_directory_context_menu->add_action(mkdir_action);
+    tree_view_directory_context_menu->add_action(touch_action);
 
     RefPtr<GUI::Menu> file_context_menu;
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;
