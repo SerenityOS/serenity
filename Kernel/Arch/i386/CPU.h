@@ -1018,7 +1018,7 @@ public:
     void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, u32 flags);
     u32 init_context(Thread& thread, bool leave_crit);
-    static bool get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip, bool = false);
+    static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     void set_thread_specific(u8* data, size_t len);
 };

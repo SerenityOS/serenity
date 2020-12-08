@@ -74,7 +74,7 @@ auto AsyncDeviceRequest::wait(timeval* timeout) -> RequestWaitResult
     auto request_result = get_request_result();
     if (is_completed_result(request_result))
         return { request_result, Thread::BlockResult::NotBlocked };
-    auto wait_result = Thread::current()->wait_on(m_queue, name(), Thread::BlockTimeout(false, timeout));
+    auto wait_result = m_queue.wait_on(Thread::BlockTimeout(false, timeout), name());
     return { get_request_result(), wait_result };
 }
 

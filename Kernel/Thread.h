@@ -151,8 +151,7 @@ public:
         Dying,
         Dead,
         Stopped,
-        Blocked,
-        Queued,
+        Blocked
     };
 
     class BlockResult {
@@ -263,6 +262,7 @@ public:
             File,
             Plan9FS,
             Join,
+            Queue,
             Routing,
             Sleep,
             Wait
@@ -418,21 +418,48 @@ public:
         }
 
         template<typename UnblockOne>
-        void unblock_all(UnblockOne unblock_one)
+        bool unblock_some(UnblockOne unblock_one)
         {
             ScopedSpinLock lock(m_lock);
-            do_unblock_all(unblock_one);
+            return do_unblock_some(unblock_one);
         }
 
         template<typename UnblockOne>
-        void do_unblock_all(UnblockOne unblock_one)
+        bool do_unblock_some(UnblockOne unblock_one)
         {
             ASSERT(m_lock.is_locked());
+            bool stop_iterating = false;
+            for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
+                auto& info = m_blockers[i];
+                if (unblock_one(*info.blocker, info.data, stop_iterating)) {
+                    m_blockers.remove(i);
+                    continue;
+                }
+
+                i++;
+            }
+            return !stop_iterating;
+        }
+
+        template<typename UnblockOne>
+        bool unblock_all(UnblockOne unblock_one)
+        {
+            ScopedSpinLock lock(m_lock);
+            return do_unblock_all(unblock_one);
+        }
+
+        template<typename UnblockOne>
+        bool do_unblock_all(UnblockOne unblock_one)
+        {
+            ASSERT(m_lock.is_locked());
+            bool unblocked_any = false;
             for (auto& info : m_blockers) {
                 bool did_unblock = unblock_one(*info.blocker, info.data);
+                unblocked_any |= did_unblock;
                 ASSERT(did_unblock);
             }
             m_blockers.clear();
+            return unblocked_any;
         }
 
         virtual bool should_add_blocker(Blocker&, void*) { return true; }
@@ -464,6 +491,28 @@ public:
         bool m_join_error { false };
         bool m_did_unblock { false };
         bool m_should_block { true };
+    };
+
+    class QueueBlocker : public Blocker {
+    public:
+        explicit QueueBlocker(WaitQueue&, const char* block_reason = nullptr);
+        virtual ~QueueBlocker();
+
+        virtual Type blocker_type() const override { return Type::Queue; }
+        virtual const char* state_string() const override { return m_block_reason ? m_block_reason : "Queue"; }
+        virtual void not_blocking(bool) override { }
+
+        virtual bool should_block() override
+        {
+            return m_should_block;
+        }
+
+        bool unblock();
+
+    protected:
+        const char* const m_block_reason;
+        bool m_should_block { true };
+        bool m_did_unblock { false };
     };
 
     class FileBlocker : public Blocker {
@@ -587,7 +636,6 @@ public:
         size_t collect_unblocked_flags();
 
         FDVector& m_fds;
-        size_t m_registered_count { 0 };
         bool m_did_unblock { false };
     };
 
@@ -660,7 +708,8 @@ public:
         bool m_finalized { false };
     };
 
-    KResult try_join(JoinBlocker& blocker)
+    template<typename AddBlockerHandler>
+    KResult try_join(AddBlockerHandler add_blocker)
     {
         if (Thread::current() == this)
             return KResult(-EDEADLK);
@@ -669,8 +718,7 @@ public:
         if (!m_is_joinable || state() == Dead)
             return KResult(-EINVAL);
 
-        bool added = m_join_condition.add_blocker(blocker, nullptr);
-        ASSERT(added);
+        add_blocker();
 
         // From this point on the thread is no longer joinable by anyone
         // else. It also means that if the join is timed, it becomes
@@ -686,10 +734,10 @@ public:
 
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const { return m_state == Blocked; }
-    bool has_blocker() const
+    bool is_in_block() const
     {
-        ASSERT(m_lock.own_lock());
-        return m_blocker != nullptr;
+        ScopedSpinLock lock(m_block_lock);
+        return m_in_block;
     }
     const Blocker& blocker() const;
 
@@ -711,49 +759,85 @@ public:
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
     size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
 
+    ALWAYS_INLINE void yield_if_stopped()
+    {
+        // If some thread stopped us, we need to yield to someone else
+        // We check this when entering/exiting a system call. A thread
+        // may continue to execute in user land until the next timer
+        // tick or entering the next system call, or if it's in kernel
+        // mode then we will intercept prior to returning back to user
+        // mode.
+        ScopedSpinLock lock(m_lock);
+        while (state() == Thread::Stopped) {
+            lock.unlock();
+            // We shouldn't be holding the big lock here
+            yield_while_not_holding_big_lock();
+            lock.lock();
+        }
+    }
+
     template<typename T, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
-        ScopedSpinLock lock(m_lock);
-        // We need to hold m_lock so that nobody can unblock a blocker as soon
+        ScopedSpinLock block_lock(m_block_lock);
+        // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
+        ASSERT(!m_in_block);
+        m_in_block = true;
         T t(forward<Args>(args)...);
 
         bool did_timeout = false;
         RefPtr<Timer> timer;
         {
-            // We should never be blocking a blocked (or otherwise non-active) thread.
-            ASSERT(state() == Thread::Running);
-            ASSERT(m_blocker == nullptr);
+            switch (state()) {
+            case Thread::Stopped:
+                // It's possible that we were requested to be stopped!
+                break;
+            case Thread::Running:
+                ASSERT(m_blocker == nullptr);
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
 
             m_blocker = &t;
             if (!t.should_block()) {
                 // Don't block if the wake condition is already met
                 t.not_blocking(false);
                 m_blocker = nullptr;
+                m_in_block = false;
                 return BlockResult::NotBlocked;
             }
 
             auto& block_timeout = t.override_timeout(timeout);
             if (!block_timeout.is_infinite()) {
-                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
+                // Process::kill_all_threads may be called at any time, which will mark all
+                // threads to die. In that case
+                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [this]() {
+                    ASSERT(!g_scheduler_lock.own_lock());
+                    ASSERT(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
-                    ScopedSpinLock scheduler_lock(g_scheduler_lock);
-                    ScopedSpinLock lock(m_lock);
-                    if (m_blocker) {
+                    {
+                        ScopedSpinLock block_lock(m_block_lock);
+                        if (!m_blocker)
+                            return;
                         m_blocker_timeout = nullptr;
-                        if (!is_stopped()) {
-                            // Only unblock if we're not stopped. In either
-                            // case the blocker should be marked as timed out
-                            unblock();
-                        }
+                    }
+
+                    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+                    ScopedSpinLock block_lock(m_block_lock);
+                    if (!this->is_stopped()) {
+                        // Only unblock if we're not stopped. In either
+                        // case the blocker should be marked as timed out
+                        unblock();
                     }
                 });
                 if (!m_blocker_timeout) {
                     // Timeout is already in the past
                     t.not_blocking(true);
                     m_blocker = nullptr;
+                    m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
                 }
             } else {
@@ -765,29 +849,29 @@ public:
             set_state(Thread::Blocked);
         }
 
-        lock.unlock();
+        block_lock.unlock();
         scheduler_lock.unlock();
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         yield_without_holding_big_lock();
 
         scheduler_lock.lock();
-        lock.lock();
 
-        bool is_stopped = false;
+        bool is_stopped = state() == Thread::Stopped;
+
         {
-            if (t.was_interrupted_by_signal())
+            if (t.was_interrupted_by_signal()) {
+                ScopedSpinLock lock(m_lock);
                 dispatch_one_pending_signal();
+            }
 
-            auto current_state = state();
             // We should no longer be blocked once we woke up, but we may be stopped
-            if (current_state == Stopped)
-                is_stopped = true;
-            else
-                ASSERT(current_state == Thread::Running);
+            ASSERT(state() == (is_stopped ? Thread::Stopped : Thread::Running));
 
+            ScopedSpinLock block_lock2(m_block_lock);
             // Remove ourselves...
             m_blocker = nullptr;
+            m_in_block = false;
             if (timer && !m_blocker_timeout)
                 did_timeout = true;
         }
@@ -796,26 +880,22 @@ public:
         // to clean up now while we're still holding m_lock
         auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
 
+        scheduler_lock.unlock();
         if (timer && !did_timeout) {
             // Cancel the timer while not holding any locks. This allows
             // the timer function to complete before we remove it
             // (e.g. if it's on another processor)
-            lock.unlock();
-            scheduler_lock.unlock();
             TimerQueue::the().cancel_timer(timer.release_nonnull());
-        } else {
-            scheduler_lock.unlock();
-        }
-
-        if (is_stopped) {
+            if (is_stopped) {
+                // If we're stopped we need to yield
+                yield_without_holding_big_lock();
+            }
+        } else if (is_stopped) {
             // If we're stopped we need to yield
             yield_without_holding_big_lock();
         }
         return result;
     }
-
-    BlockResult wait_on(WaitQueue& queue, const char* reason, const BlockTimeout& = nullptr, Atomic<bool>* lock = nullptr, RefPtr<Thread> beneficiary = {});
-    void wake_from_queue();
 
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
@@ -864,6 +944,7 @@ public:
     DispatchSignalResult dispatch_one_pending_signal();
     DispatchSignalResult try_dispatch_one_pending_signal(u8 signal);
     DispatchSignalResult dispatch_signal(u8 signal);
+    void check_dispatch_pending_signal();
     bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
@@ -929,14 +1010,13 @@ public:
         m_ipv4_socket_write_bytes += bytes;
     }
 
-    const char* wait_reason() const
-    {
-        return m_wait_reason;
-    }
-
     void set_active(bool active)
     {
         m_is_active.store(active, AK::memory_order_release);
+    }
+    bool is_active() const
+    {
+        return m_is_active.load(AK::MemoryOrder::memory_order_acquire);
     }
 
     bool is_finalizable() const
@@ -946,7 +1026,7 @@ public:
         // as the thread may not be in Running state but switching out.
         // m_is_active is set to false once the context switch is
         // complete and the thread is not executing on any processor.
-        if (m_is_active.load(AK::memory_order_consume))
+        if (m_is_active.load(AK::memory_order_acquire))
             return false;
         // We can't finalize until the thread is either detached or
         // a join has started. We can't make m_is_joinable atomic
@@ -1020,7 +1100,6 @@ public:
 
 private:
     IntrusiveListNode m_runnable_list_node;
-    IntrusiveListNode m_wait_queue_node;
 
 private:
     friend struct SchedulerData;
@@ -1088,6 +1167,7 @@ private:
     void reset_fpu_state();
 
     mutable RecursiveSpinLock m_lock;
+    mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS32 m_tss;
@@ -1106,8 +1186,6 @@ private:
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
     RefPtr<Timer> m_blocker_timeout;
-    const char* m_wait_reason { nullptr };
-    WaitQueue* m_queue { nullptr };
 
 #ifdef LOCK_DEBUG
     struct HoldingLockInfo {
@@ -1152,11 +1230,13 @@ private:
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
+    bool m_in_block { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     OwnPtr<ThreadTracer> m_tracer;
 
     void yield_without_holding_big_lock();
+    void yield_while_not_holding_big_lock();
     void update_state_for_thread(Thread::State previous_state);
 };
 

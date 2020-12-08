@@ -71,7 +71,7 @@ NonnullRefPtr<FileDescription> FIFO::open_direction_blocking(FIFO::Direction dir
 
         if (m_writers == 0) {
             locker.unlock();
-            Thread::current()->wait_on(m_write_open_queue, "FIFO");
+            m_write_open_queue.wait_on(nullptr, "FIFO");
             locker.lock();
         }
     }
@@ -81,7 +81,7 @@ NonnullRefPtr<FileDescription> FIFO::open_direction_blocking(FIFO::Direction dir
 
         if (m_readers == 0) {
             locker.unlock();
-            Thread::current()->wait_on(m_read_open_queue, "FIFO");
+            m_read_open_queue.wait_on(nullptr, "FIFO");
             locker.lock();
         }
     }

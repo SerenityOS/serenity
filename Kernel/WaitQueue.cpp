@@ -31,126 +31,88 @@
 
 namespace Kernel {
 
-WaitQueue::WaitQueue()
+bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
 {
-}
-
-WaitQueue::~WaitQueue()
-{
-}
-
-bool WaitQueue::enqueue(Thread& thread)
-{
-    ScopedSpinLock queue_lock(m_lock);
+    ASSERT(data != nullptr); // Thread that is requesting to be blocked
+    ASSERT(m_lock.is_locked());
+    ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
     if (m_wake_requested) {
-        // wake_* was called when no threads were in the queue
-        // we shouldn't wait at all
         m_wake_requested = false;
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": enqueue: wake_all pending";
+        dbg() << "WaitQueue @ " << this << ": do not block thread " << *static_cast<Thread*>(data) << ", wake was pending";
 #endif
         return false;
     }
-    m_threads.append(thread);
+#ifdef WAITQUEUE_DEBUG
+    dbg() << "WaitQueue @ " << this << ": should block thread " << *static_cast<Thread*>(data);
+#endif
     return true;
 }
 
-bool WaitQueue::dequeue(Thread& thread)
+void WaitQueue::wake_one()
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.contains(thread)) {
-        m_threads.remove(thread);
-        return true;
-    }
-    return false;
-}
-
-void WaitQueue::wake_one(Atomic<bool>* lock)
-{
-    ScopedSpinLock queue_lock(m_lock);
-    if (lock)
-        *lock = false;
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
+    ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: nobody to wake, mark as pending";
+    dbg() << "WaitQueue @ " << this << ": wake_one";
 #endif
-        return;
-    }
+    bool did_unblock_one = do_unblock_some([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+        ASSERT(data);
+        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
 #ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one:";
+        dbg() << "WaitQueue @ " << this << ": wake_one unblocking " << *static_cast<Thread*>(data);
 #endif
-    auto* thread = m_threads.take_first();
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: wake thread " << *thread;
-#endif
-    thread->wake_from_queue();
-    m_wake_requested = false;
-    Scheduler::yield();
+        if (blocker.unblock()) {
+            stop_iterating = true;
+            return true;
+        }
+        return false;
+    });
+    m_wake_requested = !did_unblock_one;
 }
 
 void WaitQueue::wake_n(u32 wake_count)
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
+    if (wake_count == 0)
+        return; // should we assert instaed?
+    ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: nobody to wake, mark as pending";
+    dbg() << "WaitQueue @ " << this << ": wake_n(" << wake_count << ")";
 #endif
-        return;
-    }
-
+    bool did_unblock_some = do_unblock_some([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+        ASSERT(data);
+        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
 #ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: " << wake_count;
+        dbg() << "WaitQueue @ " << this << ": wake_n unblocking " << *static_cast<Thread*>(data);
 #endif
-    for (u32 i = 0; i < wake_count; ++i) {
-        Thread* thread = m_threads.take_first();
-        if (!thread)
-            break;
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: wake thread " << *thread;
-#endif
-        thread->wake_from_queue();
-    }
-    m_wake_requested = false;
-    Scheduler::yield();
+        ASSERT(wake_count > 0);
+        if (blocker.unblock()) {
+            if (--wake_count == 0)
+                stop_iterating = true;
+            return true;
+        }
+        return false;
+    });
+    m_wake_requested = !did_unblock_some;
 }
 
 void WaitQueue::wake_all()
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
+    ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: nobody to wake, mark as pending";
+    dbg() << "WaitQueue @ " << this << ": wake_all";
 #endif
-        return;
-    }
+    bool did_unblock_any = do_unblock_all([&](Thread::Blocker& b, void* data) {
+        ASSERT(data);
+        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        auto& blocker = static_cast<Thread::QueueBlocker&>(b);
 #ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: ";
+        dbg() << "WaitQueue @ " << this << ": wake_all unblocking " << *static_cast<Thread*>(data);
 #endif
-    while (!m_threads.is_empty()) {
-        Thread* thread = m_threads.take_first();
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: wake thread " << *thread;
-#endif
-        thread->wake_from_queue();
-    }
-    m_wake_requested = false;
-    Scheduler::yield();
-}
-
-void WaitQueue::clear()
-{
-    ScopedSpinLock queue_lock(m_lock);
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": clear";
-#endif
-    m_threads.clear();
-    m_wake_requested = false;
+        return blocker.unblock();
+    });
+    m_wake_requested = !did_unblock_any;
 }
 
 }

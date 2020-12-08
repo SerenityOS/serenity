@@ -78,7 +78,8 @@ void Lock::lock(Mode mode)
                     m_lock.store(false, AK::memory_order_release);
                     return;
                 }
-            } while (current_thread->wait_on(m_queue, m_name, nullptr, &m_lock, m_holder) == Thread::BlockResult::NotBlocked);
+                m_lock.store(false, AK::memory_order_release);
+            } while (m_queue.wait_on(nullptr, m_name) == Thread::BlockResult::NotBlocked);
         } else {
             // I don't know *who* is using "m_lock", so just yield.
             Scheduler::yield_from_critical();
@@ -114,7 +115,8 @@ void Lock::unlock()
                 return;
             }
             m_mode = Mode::Unlocked;
-            m_queue.wake_one(&m_lock);
+            m_lock.store(false, AK::memory_order_release);
+            m_queue.wake_one();
             return;
         }
         // I don't know *who* is using "m_lock", so just yield.
@@ -142,7 +144,8 @@ bool Lock::force_unlock_if_locked()
             m_holder = nullptr;
             m_mode = Mode::Unlocked;
             m_times_locked = 0;
-            m_queue.wake_one(&m_lock);
+            m_lock.store(false, AK::memory_order_release);
+            m_queue.wake_one();
             break;
         }
         // I don't know *who* is using "m_lock", so just yield.
@@ -154,8 +157,7 @@ bool Lock::force_unlock_if_locked()
 void Lock::clear_waiters()
 {
     ASSERT(m_mode != Mode::Shared);
-    ScopedCritical critical;
-    m_queue.clear();
+    m_queue.wake_all();
 }
 
 }
