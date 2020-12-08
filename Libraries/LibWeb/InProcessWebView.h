@@ -88,6 +88,7 @@ private:
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;
+    virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) override;
