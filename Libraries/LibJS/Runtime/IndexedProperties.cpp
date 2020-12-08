@@ -387,24 +387,6 @@ Vector<u32> IndexedProperties::indices() const
     return indices;
 }
 
-Vector<ValueAndAttributes> IndexedProperties::values_unordered() const
-{
-    if (m_storage->is_simple_storage()) {
-        const auto& elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
-        Vector<ValueAndAttributes> with_attributes;
-        for (auto& value : elements)
-            with_attributes.append({ value, default_attributes });
-        return with_attributes;
-    }
-
-    auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
-    auto values = storage.packed_elements();
-    values.ensure_capacity(values.size() + storage.sparse_elements().size());
-    for (auto& entry : storage.sparse_elements())
-        values.unchecked_append(entry.value);
-    return values;
-}
-
 void IndexedProperties::switch_to_generic_storage()
 {
     auto& storage = static_cast<SimpleIndexedPropertyStorage&>(*m_storage);

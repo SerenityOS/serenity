@@ -51,7 +51,7 @@
 
 namespace JS {
 
-static void update_function_name(Value& value, const FlyString& name, HashTable<const JS::Cell*>& visited)
+static void update_function_name(Value value, const FlyString& name, HashTable<const JS::Cell*>& visited)
 {
     if (!value.is_object())
         return;
@@ -65,12 +65,13 @@ static void update_function_name(Value& value, const FlyString& name, HashTable<
             static_cast<ScriptFunction&>(function).set_name(name);
     } else if (object.is_array()) {
         auto& array = static_cast<Array&>(object);
-        for (auto& entry : array.indexed_properties().values_unordered())
-            update_function_name(entry.value, name, visited);
+        array.indexed_properties().for_each_value([&](auto& array_element_value) {
+            update_function_name(array_element_value, name, visited);
+        });
     }
 }
 
-static void update_function_name(Value& value, const FlyString& name)
+static void update_function_name(Value value, const FlyString& name)
 {
     HashTable<const JS::Cell*> visited;
     update_function_name(value, name, visited);
