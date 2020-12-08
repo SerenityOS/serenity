@@ -162,19 +162,18 @@ int detached_test()
             return nullptr;
         },
         nullptr);
-    if (rc < 0) {
-        perror("pthread_create");
+    if (rc != 0) {
+        printf("pthread_create: %s\n", strerror(rc));
         return 4;
     }
 
     void* ret_val;
-    errno = 0;
     rc = pthread_join(thread_id, &ret_val);
-    if (rc < 0 && errno != EINVAL) {
-        perror("pthread_join");
+    if (rc != 0 && rc != EINVAL) {
+        printf("pthread_join: %s\n", strerror(rc));
         return 5;
     }
-    if (errno != EINVAL) {
+    if (rc != EINVAL) {
         printf("Expected EINVAL! Thread was joinable?\n");
         return 6;
     }
