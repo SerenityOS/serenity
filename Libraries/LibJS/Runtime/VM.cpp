@@ -105,9 +105,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(string);
 
     roots.set(m_scope_object_shape);
-
-    if (m_exception)
-        roots.set(m_exception);
+    roots.set(m_exception);
 
     if (m_last_value.is_cell())
         roots.set(m_last_value.as_cell());
@@ -115,8 +113,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     for (auto& call_frame : m_call_stack) {
         if (call_frame->this_value.is_cell())
             roots.set(call_frame->this_value.as_cell());
-        if (call_frame->arguments_object)
-            roots.set(call_frame->arguments_object);
+        roots.set(call_frame->arguments_object);
         for (auto& argument : call_frame->arguments) {
             if (argument.is_cell())
                 roots.set(argument.as_cell());
