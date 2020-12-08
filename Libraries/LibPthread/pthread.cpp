@@ -48,6 +48,9 @@ constexpr size_t required_stack_alignment = 4 * MiB;
 constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
 constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
 
+#define __RETURN_PTHREAD_ERROR(rc) \
+    return ((rc) < 0 ? -(rc) : 0)
+
 extern "C" {
 
 static void* pthread_create_helper(void* (*routine)(void*), void* argument)
@@ -57,7 +60,7 @@ static void* pthread_create_helper(void* (*routine)(void*), void* argument)
     return nullptr;
 }
 
-static int create_thread(void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
+static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
 {
     void** stack = (void**)((uintptr_t)thread_params->m_stack_location + thread_params->m_stack_size);
 
@@ -80,7 +83,10 @@ static int create_thread(void* (*entry)(void*), void* argument, PthreadAttrImpl*
     // Push a fake return address
     push_on_stack(nullptr);
 
-    return syscall(SC_create_thread, pthread_create_helper, thread_params);
+    int rc = syscall(SC_create_thread, pthread_create_helper, thread_params);
+    if (rc >= 0)
+        *thread = rc;
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 [[noreturn]] static void exit_thread(void* code)
@@ -124,11 +130,7 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
         used_attributes->m_stack_location);
 #endif
 
-    int rc = create_thread(start_routine, argument_to_start_routine, used_attributes);
-    if (rc < 0)
-        return rc;
-    *thread = rc;
-    return 0;
+    return create_thread(thread, start_routine, argument_to_start_routine, used_attributes);
 }
 
 void pthread_exit(void* value_ptr)
@@ -138,12 +140,14 @@ void pthread_exit(void* value_ptr)
 
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
-    return syscall(SC_join_thread, thread, exit_value_ptr);
+    int rc = syscall(SC_join_thread, thread, exit_value_ptr);
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 int pthread_detach(pthread_t thread)
 {
-    return syscall(SC_detach_thread, thread);
+    int rc = syscall(SC_detach_thread, thread);
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
@@ -599,12 +603,14 @@ int pthread_setname_np(pthread_t thread, const char* name)
 {
     if (!name)
         return EFAULT;
-    return syscall(SC_set_thread_name, thread, name, strlen(name));
+    int rc = syscall(SC_set_thread_name, thread, name, strlen(name));
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 {
-    return syscall(SC_get_thread_name, thread, buffer, buffer_size);
+    int rc = syscall(SC_get_thread_name, thread, buffer, buffer_size);
+    __RETURN_PTHREAD_ERROR(rc);
 }
 
 } // extern "C"
