@@ -787,7 +787,17 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
         int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
         if (rc < 0) {
-            if (errno == ENOENT) {
+            int saved_errno = errno;
+            struct stat st;
+            if (stat(argv[0], &st)) {
+                fprintf(stderr, "stat(%s): %s\n", argv[0], strerror(errno));
+                _exit(126);
+            }
+            if (!(st.st_mode & S_IXUSR)) {
+                fprintf(stderr, "%s: Not executable\n", argv[0]);
+                _exit(126);
+            }
+            if (saved_errno == ENOENT) {
                 int shebang_fd = open(argv[0], O_RDONLY);
                 auto close_argv = ScopeGuard([shebang_fd]() { if (shebang_fd >= 0)  close(shebang_fd); });
                 char shebang[256] {};
@@ -796,13 +806,14 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
                     StringView shebang_path_view(&shebang[2], num_read - 2);
                     Optional<size_t> newline_pos = shebang_path_view.find_first_of("\n\r");
                     shebang[newline_pos.has_value() ? (newline_pos.value() + 2) : num_read] = '\0';
-                    fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(ENOENT));
+                    argv[0] = shebang;
+                    int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
+                    if (rc < 0)
+                        fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(errno));
                 } else
                     fprintf(stderr, "%s: Command not found.\n", argv[0]);
             } else {
-                int saved_errno = errno;
-                struct stat st;
-                if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
+                if (S_ISDIR(st.st_mode)) {
                     fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
                     _exit(126);
                 }
