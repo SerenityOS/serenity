@@ -164,6 +164,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_script_function_prototype_object_shape);
+    visitor.visit(m_proxy_constructor);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);
