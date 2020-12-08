@@ -147,7 +147,7 @@ Value ScriptFunction::execute_function_body()
         vm.current_scope()->put_to_scope(parameter.name, { argument_value, DeclarationKind::Var });
     }
 
-    return interpreter->execute_statement(global_object(), m_body, {}, ScopeType::Function);
+    return interpreter->execute_statement(global_object(), m_body, ScopeType::Function);
 }
 
 Value ScriptFunction::call()

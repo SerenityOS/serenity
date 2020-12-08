@@ -90,7 +90,7 @@ const GlobalObject& Interpreter::global_object() const
     return static_cast<const GlobalObject&>(*m_global_object.cell());
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
+void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type, GlobalObject& global_object)
 {
     for (auto& declaration : scope_node.functions()) {
         auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_strict_mode());
@@ -115,10 +115,6 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
                 scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
             }
         }
-    }
-
-    for (auto& argument : arguments) {
-        scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
     }
 
     bool pushed_lexical_environment = false;
@@ -152,13 +148,13 @@ void Interpreter::push_scope(ScopeFrame frame)
     m_scope_stack.append(move(frame));
 }
 
-Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ScopeType scope_type)
 {
     if (!statement.is_scope_node())
         return statement.execute(*this, global_object);
 
     auto& block = static_cast<const ScopeNode&>(statement);
-    enter_scope(block, move(arguments), scope_type, global_object);
+    enter_scope(block, scope_type, global_object);
 
     if (block.children().is_empty())
         vm().set_last_value({}, js_undefined());

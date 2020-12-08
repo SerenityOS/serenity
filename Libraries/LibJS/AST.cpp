@@ -93,7 +93,7 @@ Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) 
 
 Value Program::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.execute_statement(global_object, *this, {}, ScopeType::Block);
+    return interpreter.execute_statement(global_object, *this, ScopeType::Block);
 }
 
 Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
@@ -340,7 +340,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         NonnullRefPtrVector<VariableDeclaration> decls;
         decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
         wrapper->add_variables(decls);
-        interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+        interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
     }
 
     auto wrapper_cleanup = ScopeGuard([&] {
@@ -416,7 +416,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
         ASSERT(!variable_declaration->declarations().is_empty());
         if (variable_declaration->declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>();
-            interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+            interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
         }
         variable_declaration->execute(interpreter, global_object);
         variable_name = variable_declaration->declarations().first().id().string();
@@ -1897,7 +1897,7 @@ void ThrowStatement::dump(int indent) const
 
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.execute_statement(global_object, m_block, {}, ScopeType::Try);
+    interpreter.execute_statement(global_object, m_block, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.vm().clear_exception();

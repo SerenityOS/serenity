@@ -74,10 +74,10 @@ public:
     ScopeObject* current_scope() { return vm().current_scope(); }
     LexicalEnvironment* current_environment();
 
-    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
+    void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
-    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
+    Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
 
 private:
     explicit Interpreter(VM&);
