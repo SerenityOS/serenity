@@ -143,6 +143,8 @@ void syscall_handler(TrapFrame* trap)
         current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
     }
 
+    current_thread->yield_if_stopped();
+
     // Make sure SMAP protection is enabled on syscall entry.
     clac();
 
@@ -185,12 +187,16 @@ void syscall_handler(TrapFrame* trap)
     u32 arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
 
+    process.big_lock().unlock();
+
     if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
         current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
     }
 
-    process.big_lock().unlock();
+    current_thread->yield_if_stopped();
+
+    current_thread->check_dispatch_pending_signal();
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();

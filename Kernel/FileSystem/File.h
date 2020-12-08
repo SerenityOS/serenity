@@ -142,17 +142,24 @@ protected:
     {
         if (Processor::current().in_irq()) {
             // If called from an IRQ handler we need to delay evaluation
-            // and unblocking of waiting threads
-            Processor::deferred_call_queue([this]() {
-                ASSERT(!Processor::current().in_irq());
-                evaluate_block_conditions();
+            // and unblocking of waiting threads. Note that this File
+            // instance may be deleted until the deferred call is executed!
+            Processor::deferred_call_queue([self = make_weak_ptr()]() {
+                if (auto file = self.strong_ref())
+                    file->do_evaluate_block_conditions();
             });
         } else {
-            block_condition().unblock();
+            do_evaluate_block_conditions();
         }
     }
 
 private:
+    ALWAYS_INLINE void do_evaluate_block_conditions()
+    {
+        ASSERT(!Processor::current().in_irq());
+        block_condition().unblock();
+    }
+
     FileBlockCondition m_block_condition;
 };
 

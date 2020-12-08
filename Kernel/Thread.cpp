@@ -130,7 +130,7 @@ Thread::~Thread()
 void Thread::unblock_from_blocker(Blocker& blocker)
 {
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
-    ScopedSpinLock lock(m_lock);
+    ScopedSpinLock block_lock(m_block_lock);
     if (m_blocker != &blocker)
         return;
     if (!is_stopped())
@@ -140,7 +140,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 void Thread::unblock(u8 signal)
 {
     ASSERT(g_scheduler_lock.own_lock());
-    ASSERT(m_lock.own_lock());
+    ASSERT(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
         return;
     ASSERT(m_blocker);
@@ -167,36 +167,26 @@ void Thread::set_should_die()
 
     // Remember that we should die instead of returning to
     // the userspace.
-    {
-        ScopedSpinLock lock(g_scheduler_lock);
-        m_should_die = true;
+    ScopedSpinLock lock(g_scheduler_lock);
+    m_should_die = true;
 
-        // NOTE: Even the current thread can technically be in "Stopped"
-        // state! This is the case when another thread sent a SIGSTOP to
-        // it while it was running and it calls e.g. exit() before
-        // the scheduler gets involved again.
-        if (is_stopped()) {
-            // If we were stopped, we need to briefly resume so that
-            // the kernel stacks can clean up. We won't ever return back
-            // to user mode, though
-            resume_from_stopped();
-        } else if (state() == Queued) {
-            // m_queue can only be accessed safely if g_scheduler_lock is held!
-            if (m_queue) {
-                m_queue->dequeue(*this);
-                m_queue = nullptr;
-                // Wake the thread
-                wake_from_queue();
-            }
-        }
+    // NOTE: Even the current thread can technically be in "Stopped"
+    // state! This is the case when another thread sent a SIGSTOP to
+    // it while it was running and it calls e.g. exit() before
+    // the scheduler gets involved again.
+    if (is_stopped()) {
+        // If we were stopped, we need to briefly resume so that
+        // the kernel stacks can clean up. We won't ever return back
+        // to user mode, though
+        resume_from_stopped();
     }
-
     if (is_blocked()) {
-        ScopedSpinLock lock(m_lock);
-        ASSERT(m_blocker != nullptr);
-        // We're blocked in the kernel.
-        m_blocker->set_interrupted_by_death();
-        unblock();
+        ScopedSpinLock block_lock(m_block_lock);
+        if (m_blocker) {
+            // We're blocked in the kernel.
+            m_blocker->set_interrupted_by_death();
+            unblock();
+        }
     }
 }
 
@@ -222,7 +212,7 @@ void Thread::die_if_needed()
     // actual context switch
     u32 prev_flags;
     Processor::current().clear_critical(prev_flags, false);
-    dbg() << "die_if_needed returned form clear_critical!!! in irq: " << Processor::current().in_irq();
+    dbg() << "die_if_needed returned from clear_critical!!! in irq: " << Processor::current().in_irq();
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     ASSERT_NOT_REACHED();
@@ -235,6 +225,16 @@ void Thread::exit(void* exit_value)
     set_should_die();
     unlock_process_if_locked();
     die_if_needed();
+}
+
+void Thread::yield_while_not_holding_big_lock()
+{
+    ASSERT(!g_scheduler_lock.own_lock());
+    u32 prev_flags;
+    u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+    Scheduler::yield();
+    // NOTE: We may be on a different CPU now!
+    Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
 void Thread::yield_without_holding_big_lock()
@@ -298,10 +298,8 @@ const char* Thread::state_string() const
         return "Dead";
     case Thread::Stopped:
         return "Stopped";
-    case Thread::Queued:
-        return "Queued";
     case Thread::Blocked: {
-        ScopedSpinLock lock(m_lock);
+        ScopedSpinLock block_lock(m_block_lock);
         ASSERT(m_blocker != nullptr);
         return m_blocker->state_string();
     }
@@ -382,6 +380,29 @@ bool Thread::tick()
     return --m_ticks_left;
 }
 
+void Thread::check_dispatch_pending_signal()
+{
+    auto result = DispatchSignalResult::Continue;
+    {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        if (pending_signals_for_state()) {
+            ScopedSpinLock lock(m_lock);
+            result = dispatch_one_pending_signal();
+        }
+    }
+
+    switch (result) {
+    case DispatchSignalResult::Yield:
+        yield_while_not_holding_big_lock();
+        break;
+    case DispatchSignalResult::Terminate:
+        process().die();
+        break;
+    default:
+        break;
+    }
+}
+
 bool Thread::has_pending_signal(u8 signal) const
 {
     ScopedSpinLock lock(g_scheduler_lock);
@@ -424,11 +445,19 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     m_pending_signals |= 1 << (signal - 1);
     m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
 
-    ScopedSpinLock lock(m_lock);
     if (m_state == Stopped) {
-        if (pending_signals_for_state())
+        ScopedSpinLock lock(m_lock);
+        if (pending_signals_for_state()) {
+#ifdef SIGNAL_DEBUG
+            dbg() << "Signal: Resuming stopped " << *this << " to deliver signal " << signal;
+#endif
             resume_from_stopped();
+        }
     } else {
+        ScopedSpinLock block_lock(m_block_lock);
+#ifdef SIGNAL_DEBUG
+        dbg() << "Signal: Unblocking " << *this << " to deliver signal " << signal;
+#endif
         unblock(signal);
     }
 }
@@ -607,7 +636,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     ASSERT(this == Thread::current());
 
 #ifdef SIGNAL_DEBUG
-    klog() << "signal: dispatch signal " << signal << " to " << *this;
+    klog() << "signal: dispatch signal " << signal << " to " << *this << " state: " << state_string();
 #endif
 
     if (m_state == Invalid || !is_initialized()) {
@@ -618,12 +647,18 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    if (is_stopped() && signal != SIGCONT && signal != SIGKILL && signal != SIGTRAP) {
-#ifdef SIGNAL_DEBUG
-        klog() << "signal: " << *this << " is stopped, will handle signal " << signal << " when resumed";
-#endif
-        return DispatchSignalResult::Deferred;
-    }
+    //    if (is_stopped() && signal != SIGCONT && signal != SIGKILL && signal != SIGTRAP) {
+    //#ifdef SIGNAL_DEBUG
+    //        klog() << "signal: " << *this << " is stopped, will handle signal " << signal << " when resumed";
+    //#endif
+    //        return DispatchSignalResult::Deferred;
+    //    }
+    //    if (is_blocked()) {
+    //#ifdef SIGNAL_DEBUG
+    //        klog() << "signal: " << *this << " is blocked, will handle signal " << signal << " when unblocking";
+    //#endif
+    //        return DispatchSignalResult::Deferred;
+    //    }
 
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
@@ -635,21 +670,18 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     auto* thread_tracer = tracer();
     if (signal == SIGSTOP || (thread_tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
-        if (!is_stopped()) {
 #ifdef SIGNAL_DEBUG
-            dbg() << "signal: signal " << signal << " stopping thread " << *this;
+        dbg() << "signal: signal " << signal << " stopping thread " << *this;
 #endif
-            m_stop_signal = signal;
-            set_state(State::Stopped);
-        }
+        m_stop_signal = signal;
+        set_state(State::Stopped);
         return DispatchSignalResult::Yield;
     }
 
-    if (signal == SIGCONT && is_stopped()) {
+    if (signal == SIGCONT) {
 #ifdef SIGNAL_DEBUG
-        dbg() << "signal: SIGCONT resuming " << *this << " from stopped";
+        dbg() << "signal: SIGCONT resuming " << *this;
 #endif
-        resume_from_stopped();
     } else {
         if (thread_tracer != nullptr) {
             // when a thread is traced, it should be stopped whenever it receives a signal
@@ -873,13 +905,14 @@ void Thread::set_state(State new_state)
 
     if (new_state == Blocked) {
         // we should always have a Blocker while blocked
+        ScopedSpinLock block_lock(m_block_lock);
         ASSERT(m_blocker != nullptr);
     }
 
     auto previous_state = m_state;
+    ScopedSpinLock thread_lock(m_lock);
     if (previous_state == Invalid) {
         // If we were *just* created, we may have already pending signals
-        ScopedSpinLock thread_lock(m_lock);
         if (has_unmasked_pending_signals()) {
             dbg() << "Dispatch pending signals to new thread " << *this;
             dispatch_one_pending_signal();
@@ -890,6 +923,7 @@ void Thread::set_state(State new_state)
 #ifdef THREAD_DEBUG
     dbg() << "Set Thread " << *this << " state to " << state_string();
 #endif
+    thread_lock.unlock();
 
     if (m_process->pid() != 0) {
         update_state_for_thread(previous_state);
@@ -906,7 +940,7 @@ void Thread::set_state(State new_state)
         m_stop_state = previous_state != Running ? m_state : Runnable;
         process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Stopped, m_stop_signal);
     } else if (m_state == Dying) {
-        ASSERT(previous_state != Queued);
+        ASSERT(previous_state != Blocked);
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
             // finalizer right away as it can be cleaned up now
@@ -979,34 +1013,13 @@ String Thread::backtrace_impl()
         // If we're handling IRQs we can't really safely symbolicate
         elf_bundle = process.elf_bundle();
     }
+    auto stack_trace = Processor::capture_stack_trace(*this);
     ProcessPagingScope paging_scope(process);
-
-    // To prevent a context switch involving this thread, which may happen
-    // on another processor, we need to acquire the scheduler lock while
-    // walking the stack
-    {
-        ScopedSpinLock lock(g_scheduler_lock);
-        FlatPtr stack_ptr, eip;
-        if (Processor::get_context_frame_ptr(*this, stack_ptr, eip)) {
-            recognized_symbols.append({ eip, symbolicate_kernel_address(eip) });
-            while (stack_ptr) {
-                FlatPtr retaddr;
-
-                if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                    if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]))
-                        break;
-                    recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-                    if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
-                        break;
-                } else {
-                    void* fault_at;
-                    if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at))
-                        break;
-                    recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-                    if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
-                        break;
-                }
-            }
+    for (auto& frame : stack_trace) {
+        if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
+            recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });
+        } else {
+            recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });
         }
     }
 
@@ -1062,120 +1075,6 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
 const LogStream& operator<<(const LogStream& stream, const Thread& value)
 {
     return stream << value.process().name() << "(" << value.pid().value() << ":" << value.tid().value() << ")";
-}
-
-Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const BlockTimeout& timeout, Atomic<bool>* lock, RefPtr<Thread> beneficiary)
-{
-    auto* current_thread = Thread::current();
-    RefPtr<Timer> timer;
-    bool block_finished = false;
-    bool did_timeout = false;
-    bool did_unlock;
-
-    {
-        ScopedCritical critical;
-        // We need to be in a critical section *and* then also acquire the
-        // scheduler lock. The only way acquiring the scheduler lock could
-        // block us is if another core were to be holding it, in which case
-        // we need to wait until the scheduler lock is released again
-        {
-            ScopedSpinLock sched_lock(g_scheduler_lock);
-            if (!timeout.is_infinite()) {
-                timer = TimerQueue::the().add_timer_without_id(timeout.clock_id(), timeout.absolute_time(), [&]() {
-                    // NOTE: this may execute on the same or any other processor!
-                    ScopedSpinLock lock(g_scheduler_lock);
-                    if (!block_finished) {
-                        did_timeout = true;
-                        wake_from_queue();
-                    }
-                });
-                if (!timer) {
-                    if (lock)
-                        *lock = false;
-                    // We timed out already, don't block
-                    return BlockResult::InterruptedByTimeout;
-                }
-            }
-
-            // m_queue can only be accessed safely if g_scheduler_lock is held!
-            m_queue = &queue;
-            if (!queue.enqueue(*current_thread)) {
-                // The WaitQueue was already requested to wake someone when
-                // nobody was waiting. So return right away as we shouldn't
-                // be waiting
-                // NOTE: Do not set lock to false in this case!
-                return BlockResult::NotBlocked;
-            }
-
-            if (lock)
-                *lock = false;
-            did_unlock = unlock_process_if_locked();
-            set_state(State::Queued);
-            m_wait_reason = reason;
-
-            // Yield and wait for the queue to wake us up again.
-            if (beneficiary)
-                Scheduler::donate_to(beneficiary, reason);
-            else
-                Scheduler::yield();
-        }
-
-        // We've unblocked, relock the process if needed and carry on.
-        relock_process(did_unlock);
-
-        // This looks counter productive, but we may not actually leave
-        // the critical section we just restored. It depends on whether
-        // we were in one while being called.
-        if (current_thread->should_die()) {
-            // We're being unblocked so that we can clean up. We shouldn't
-            // be in Dying state until we're about to return back to user mode
-            ASSERT(current_thread->state() == Thread::Running);
-#ifdef THREAD_DEBUG
-            dbg() << "Dying thread " << *current_thread << " was unblocked";
-#endif
-        }
-    }
-
-    BlockResult result(BlockResult::WokeNormally);
-    {
-        // To be able to look at m_wait_queue_node we once again need the
-        // scheduler lock, which is held when we insert into the queue
-        ScopedSpinLock sched_lock(g_scheduler_lock);
-        block_finished = true;
-
-        if (m_queue) {
-            ASSERT(m_queue == &queue);
-            // If our thread was still in the queue, we timed out
-            m_queue = nullptr;
-            if (queue.dequeue(*current_thread))
-                result = BlockResult::InterruptedByTimeout;
-        } else {
-            // Our thread was already removed from the queue. The only
-            // way this can happen if someone else is trying to kill us.
-            // In this case, the queue should not contain us anymore.
-            result = BlockResult::InterruptedByDeath;
-        }
-    }
-
-    if (timer && !did_timeout) {
-        // Cancel the timer while not holding any locks. This allows
-        // the timer function to complete before we remove it
-        // (e.g. if it's on another processor)
-        TimerQueue::the().cancel_timer(timer.release_nonnull());
-    }
-
-    return result;
-}
-
-void Thread::wake_from_queue()
-{
-    ScopedSpinLock lock(g_scheduler_lock);
-    ASSERT(state() == State::Queued);
-    m_wait_reason = nullptr;
-    if (this != Thread::current())
-        set_state(State::Runnable);
-    else
-        set_state(State::Running);
 }
 
 RefPtr<Thread> Thread::from_tid(ThreadID tid)

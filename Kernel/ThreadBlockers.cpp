@@ -81,11 +81,14 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*
         // We need to hold our lock to avoid a race where try_join succeeds
         // but the joinee is joining immediately
         ScopedSpinLock lock(m_lock);
-        try_join_result = joinee.try_join(*this);
+        try_join_result = joinee.try_join([&]() {
+            if (!set_block_condition(joinee.m_join_condition))
+                m_should_block = false;
+        });
         m_join_error = try_join_result.is_error();
+        if (m_join_error)
+            m_should_block = false;
     }
-    if (!set_block_condition(joinee.m_join_condition))
-        m_should_block = false;
 }
 
 void Thread::JoinBlocker::not_blocking(bool timeout_in_past)
@@ -119,13 +122,36 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
     return true;
 }
 
+Thread::QueueBlocker::QueueBlocker(WaitQueue& wait_queue, const char* block_reason)
+    : m_block_reason(block_reason)
+{
+    if (!set_block_condition(wait_queue, Thread::current()))
+        m_should_block = false;
+}
+
+Thread::QueueBlocker::~QueueBlocker()
+{
+}
+
+bool Thread::QueueBlocker::unblock()
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        if (m_did_unblock)
+            return false;
+        m_did_unblock = true;
+    }
+
+    unblock_from_blocker();
+    return true;
+}
+
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags)
     : m_blocked_description(description)
     , m_flags(flags)
     , m_unblocked_flags(unblocked_flags)
 {
     m_unblocked_flags = BlockFlags::None;
-
     if (!set_block_condition(description.block_condition()))
         m_should_block = false;
 }
@@ -281,19 +307,13 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
             continue;
         if (!fd_entry.description->block_condition().add_blocker(*this, &fd_entry))
             m_should_block = false;
-        m_registered_count++;
     }
 }
 
 Thread::SelectBlocker::~SelectBlocker()
 {
-    if (m_registered_count > 0) {
-        for (auto& fd_entry : m_fds) {
-            fd_entry.description->block_condition().remove_blocker(*this, &fd_entry);
-            if (--m_registered_count == 0)
-                break;
-        }
-    }
+    for (auto& fd_entry : m_fds)
+        fd_entry.description->block_condition().remove_blocker(*this, &fd_entry);
 }
 
 void Thread::SelectBlocker::not_blocking(bool timeout_in_past)

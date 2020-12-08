@@ -140,9 +140,7 @@ bool Scheduler::pick_next()
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbg() << "Scheduler[" << Processor::current().id() << "]: Non-runnables:";
     Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
-        if (thread.state() == Thread::Queued)
-            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
-        else if (thread.state() == Thread::Dying)
+        if (thread.state() == Thread::Dying)
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
         else
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
@@ -324,14 +322,6 @@ bool Scheduler::context_switch(Thread* thread)
     thread->did_schedule();
 
     auto from_thread = Thread::current();
-
-    // Check if we have any signals we should deliver (even if we don't
-    // end up switching to another thread)
-    if (from_thread && from_thread->state() == Thread::Running && from_thread->pending_signals_for_state()) {
-        ScopedSpinLock lock(from_thread->get_lock());
-        from_thread->dispatch_one_pending_signal();
-    }
-
     if (from_thread == thread)
         return false;
 
@@ -364,21 +354,31 @@ bool Scheduler::context_switch(Thread* thread)
 
     // NOTE: from_thread at this point reflects the thread we were
     // switched from, and thread reflects Thread::current()
-    enter_current(*from_thread);
+    enter_current(*from_thread, false);
     ASSERT(thread == Thread::current());
 
     return true;
 }
 
-void Scheduler::enter_current(Thread& prev_thread)
+void Scheduler::enter_current(Thread& prev_thread, bool is_first)
 {
-    ASSERT(g_scheduler_lock.is_locked());
+    ASSERT(g_scheduler_lock.own_lock());
     prev_thread.set_active(false);
     if (prev_thread.state() == Thread::Dying) {
         // If the thread we switched from is marked as dying, then notify
         // the finalizer. Note that as soon as we leave the scheduler lock
         // the finalizer may free from_thread!
         notify_finalizer();
+    } else if (!is_first) {
+        // Check if we have any signals we should deliver (even if we don't
+        // end up switching to another thread).
+        auto current_thread = Thread::current();
+        if (!current_thread->is_in_block()) {
+            ScopedSpinLock lock(current_thread->get_lock());
+            if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
+                current_thread->dispatch_one_pending_signal();
+            }
+        }
     }
 }
 
