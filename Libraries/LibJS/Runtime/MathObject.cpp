@@ -62,6 +62,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.clz32, clz32, 1, attr);
     define_native_function(vm.names.acosh, acosh, 1, attr);
     define_native_function(vm.names.asinh, asinh, 1, attr);
+    define_native_function(vm.names.atan, atan, 1, attr);
     define_native_function(vm.names.atanh, atanh, 1, attr);
     define_native_function(vm.names.log1p, log1p, 1, attr);
     define_native_function(vm.names.cbrt, cbrt, 1, attr);
@@ -288,6 +289,20 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
     if (vm.exception())
         return {};
     return Value(::asinh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
+        return number;
+    if (number.is_positive_infinity())
+        return Value(M_PI_2);
+    if (number.is_negative_infinity())
+        return Value(-M_PI_2);
+    return Value(::atan(number.as_double()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
