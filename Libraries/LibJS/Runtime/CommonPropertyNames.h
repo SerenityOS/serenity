@@ -66,6 +66,7 @@ namespace JS {
     P(asIntN)                                \
     P(asUintN)                               \
     P(asinh)                                 \
+    P(atan)                                  \
     P(atanh)                                 \
     P(bind)                                  \
     P(byteLength)                            \
