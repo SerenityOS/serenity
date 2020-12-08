@@ -297,13 +297,17 @@ void DisplaySettingsWidget::load_current_settings()
         m_wallpaper_combo->set_selected_index(0);
     }
 
+    size_t index;
+
     /// Mode //////////////////////////////////////////////////////////////////////////////////////
-    auto mode = ws_config->read_entry("Background", "Mode");
-    if (!mode.is_empty()) {
-        this->m_monitor_widget->set_wallpaper_mode(mode);
-        auto index = m_modes.find_first_index(mode).value();
-        m_mode_combo->set_selected_index(index);
+    auto mode = ws_config->read_entry("Background", "Mode", "simple");
+    if (!m_modes.contains_slow(mode)) {
+        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'simple'", mode);
+        mode = "simple";
     }
+    this->m_monitor_widget->set_wallpaper_mode(mode);
+    index = m_modes.find_first_index(mode).value();
+    m_mode_combo->set_selected_index(index);
 
     /// Resolution ////////////////////////////////////////////////////////////////////////////////
     Gfx::IntSize find_size;
@@ -312,7 +316,7 @@ void DisplaySettingsWidget::load_current_settings()
     find_size.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
     find_size.set_height(ws_config->read_num_entry("Screen", "Height", 768));
 
-    size_t index = m_resolutions.find_first_index(find_size).value_or(0);
+    index = m_resolutions.find_first_index(find_size).value_or(0);
     Gfx::IntSize m_current_resolution = m_resolutions.at(index);
     m_monitor_widget->set_desktop_resolution(m_current_resolution);
     m_resolution_combo->set_selected_index(index);
