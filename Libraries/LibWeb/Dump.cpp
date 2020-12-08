@@ -82,9 +82,16 @@ void dump_tree(const DOM::Node& node)
 
 void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_specified_style)
 {
+    StringBuilder builder;
+    dump_tree(builder, layout_node, show_box_model, show_specified_style, true);
+    dbgprintf("%s", builder.to_string().characters());
+}
+
+void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool show_box_model, bool show_specified_style, bool interactive)
+{
     static size_t indent = 0;
     for (size_t i = 0; i < indent; ++i)
-        dbgprintf("  ");
+        builder.append("  ");
 
     FlyString tag_name;
     if (layout_node.is_anonymous())
@@ -114,28 +121,68 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
         identifier = builder.to_string();
     }
 
+    const char* nonbox_color_on = "";
+    const char* box_color_on = "";
+    const char* positioned_color_on = "";
+    const char* floating_color_on = "";
+    const char* inline_block_color_on = "";
+    const char* line_box_color_on = "";
+    const char* fragment_color_on = "";
+    const char* color_off = "";
+
+    if (interactive) {
+        nonbox_color_on = "\033[33m";
+        box_color_on = "\033[34m";
+        positioned_color_on = "\033[31;1m";
+        floating_color_on = "\033[32;1m";
+        inline_block_color_on = "\033[36;1m";
+        line_box_color_on = "\033[34;1m";
+        fragment_color_on = "\033[35;1m";
+        color_off = "\033[0m";
+    }
+
     if (!layout_node.is_box()) {
-        dbgprintf("\033[33m%s\033[0m {\033[33m%s\033[0m%s} @%p\n", layout_node.class_name(), tag_name.characters(), identifier.characters(), &layout_node);
+        builder.appendff("{}{}{} <{}{}{}>",
+            nonbox_color_on,
+            layout_node.class_name(),
+            color_off,
+            tag_name,
+            nonbox_color_on,
+            identifier,
+            color_off);
+        if (interactive)
+            builder.appendff(" @{:p}", &layout_node);
+        builder.append("\n");
     } else {
         auto& box = downcast<Layout::Box>(layout_node);
-        dbgprintf("\033[34m%s\033[0m {\033[34m%s\033[0m%s} @%p at (%d,%d) size %dx%d",
+        builder.appendff("{}{}{} <{}{}{}{}> ",
+            box_color_on,
             box.class_name(),
-            tag_name.characters(),
-            identifier.characters(),
-            &layout_node,
+            color_off,
+            box_color_on,
+            tag_name,
+            color_off,
+            identifier.characters());
+
+        if (interactive)
+            builder.appendff("@{:p} ", &layout_node);
+
+        builder.appendff("at ({},{}) size {}x{}",
             (int)box.absolute_x(),
             (int)box.absolute_y(),
             (int)box.width(),
             (int)box.height());
 
         if (box.is_positioned())
-            dbgprintf(" \033[31;1mpositioned\033[0m");
+            builder.appendff(" {}positioned{}", positioned_color_on, color_off);
         if (box.is_floating())
-            dbgprintf(" \033[32;1mfloating\033[0m");
+            builder.appendff(" {}floating{}", floating_color_on, color_off);
+        if (box.is_inline_block())
+            builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
 
         if (show_box_model) {
             // Dump the horizontal box properties
-            dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
                 box.box_model().margin.left.to_px(box),
                 box.box_model().border.left.to_px(box),
                 box.box_model().padding.left.to_px(box),
@@ -145,7 +192,7 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
                 box.box_model().margin.right.to_px(box));
 
             // And the vertical box properties
-            dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
                 box.box_model().margin.top.to_px(box),
                 box.box_model().border.top.to_px(box),
                 box.box_model().padding.top.to_px(box),
@@ -155,7 +202,7 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
                 box.box_model().margin.bottom.to_px(box));
         }
 
-        dbgprintf("\n");
+        builder.append("\n");
     }
 
     if (layout_node.is_block() && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
@@ -163,25 +210,33 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
         for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
-                dbgprintf("  ");
-            dbgprintf("  \033[34;1mline %d\033[0m width: %d\n", line_box_index, (int)line_box.width());
+                builder.append("  ");
+            builder.appendff("  {}line {}{} width: {}\n",
+                line_box_color_on,
+                line_box_index,
+                color_off,
+                (int)line_box.width());
             for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
                 for (size_t i = 0; i < indent; ++i)
-                    dbgprintf("  ");
-                dbgprintf("    \033[35;1mfrag %d\033[0m from %s @%p, start: %d, length: %d, rect: %s\n",
+                    builder.append("  ");
+                builder.appendff("    {}frag {}{} from {} ",
+                    fragment_color_on,
                     fragment_index,
-                    fragment.layout_node().class_name(),
-                    &fragment.layout_node(),
+                    color_off,
+                    fragment.layout_node().class_name());
+                if (interactive)
+                    builder.appendff("@{:p}, ", &fragment.layout_node());
+                builder.appendff("start: {}, length: {}, rect: {}\n",
                     fragment.start(),
                     fragment.length(),
-                    enclosing_int_rect(fragment.absolute_rect()).to_string().characters());
+                    enclosing_int_rect(fragment.absolute_rect()).to_string());
                 if (fragment.layout_node().is_text()) {
                     for (size_t i = 0; i < indent; ++i)
-                        dbgprintf("  ");
+                        builder.append("  ");
                     auto& layout_text = static_cast<const Layout::TextNode&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
-                    dbgprintf("      \"%s\"\n", fragment_text.characters());
+                    builder.appendff("      \"{}\"\n", fragment_text);
                 }
             }
         }
@@ -200,14 +255,14 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
 
         for (auto& property : properties) {
             for (size_t i = 0; i < indent; ++i)
-                dbgprintf("    ");
-            dbgprintf("  (%s: %s)\n", property.name.characters(), property.value.characters());
+                builder.append("    ");
+            builder.appendf("  (%s: %s)\n", property.name.characters(), property.value.characters());
         }
     }
 
     ++indent;
-    layout_node.for_each_child([](auto& child) {
-        dump_tree(child);
+    layout_node.for_each_child([&](auto& child) {
+        dump_tree(builder, child, show_box_model, show_specified_style, interactive);
     });
     --indent;
 }
