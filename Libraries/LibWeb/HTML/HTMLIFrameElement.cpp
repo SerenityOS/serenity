@@ -79,8 +79,8 @@ void HTMLIFrameElement::load_src(const String& value)
         dbg() << "iframe failed to load URL: Invalid URL: " << value;
         return;
     }
-    if (url.protocol() == "file" && content_origin().protocol() != "file") {
-        dbg() << "iframe failed to load URL: Security violation: " << document().url() << " may not load " << value;
+    if (url.protocol() == "file" && document().origin().protocol() != "file") {
+        dbg() << "iframe failed to load URL: Security violation: " << document().url() << " may not load " << url;
         return;
     }
 
