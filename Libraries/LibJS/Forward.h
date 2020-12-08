@@ -166,8 +166,6 @@ JS_ENUMERATE_ERROR_SUBCLASSES
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
-struct Argument;
-
 template<class T>
 class Handle;
 

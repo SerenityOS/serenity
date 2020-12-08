@@ -64,13 +64,6 @@ struct CallFrame {
     bool is_strict_mode { false };
 };
 
-struct Argument {
-    FlyString name;
-    Value value;
-};
-
-typedef Vector<Argument, 8> ArgumentVector;
-
 class VM : public RefCounted<VM> {
 public:
     static NonnullRefPtr<VM> create();
