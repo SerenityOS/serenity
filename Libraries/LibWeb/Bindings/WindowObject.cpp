@@ -90,8 +90,6 @@ void WindowObject::initialize()
     add_constructor("XMLHttpRequest", m_xhr_constructor, m_xhr_prototype);
 
     m_range_prototype = heap().allocate<RangePrototype>(*this, *this);
-    m_range_constructor = heap().allocate<RangeConstructor>(*this, *this);
-    m_range_constructor->define_property("prototype", m_range_prototype);
     add_constructor("Range", m_range_constructor, m_range_prototype);
 }
 
@@ -104,6 +102,8 @@ void WindowObject::visit_edges(Visitor& visitor)
     GlobalObject::visit_edges(visitor);
     visitor.visit(m_xhr_constructor);
     visitor.visit(m_xhr_prototype);
+    visitor.visit(m_range_constructor);
+    visitor.visit(m_range_prototype);
 }
 
 Origin WindowObject::origin() const

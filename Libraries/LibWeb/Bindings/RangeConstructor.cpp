@@ -26,6 +26,7 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibWeb/Bindings/RangeConstructor.h>
+#include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Range.h>
@@ -39,14 +40,17 @@ RangeConstructor::RangeConstructor(JS::GlobalObject& global_object)
 
 void RangeConstructor::initialize(JS::GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-
-    define_property("length", JS::Value(0), JS::Attribute::Configurable);
+    auto& window = static_cast<WindowObject&>(global_object);
+    define_property(vm.names.prototype, window.range_prototype(), 0);
+    define_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 
 JS::Value RangeConstructor::call()
 {
-    return construct(*this);
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Range");
+    return {};
 }
 
 JS::Value RangeConstructor::construct(Function&)
