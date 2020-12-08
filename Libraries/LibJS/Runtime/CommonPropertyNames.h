@@ -60,11 +60,13 @@ namespace JS {
     P(Symbol)                                \
     P(UTC)                                   \
     P(abs)                                   \
+    P(acos)                                  \
     P(acosh)                                 \
     P(apply)                                 \
     P(arguments)                             \
     P(asIntN)                                \
     P(asUintN)                               \
+    P(asin)                                  \
     P(asinh)                                 \
     P(atan)                                  \
     P(atanh)                                 \

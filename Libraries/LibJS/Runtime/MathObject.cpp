@@ -60,7 +60,9 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.expm1, expm1, 1, attr);
     define_native_function(vm.names.sign, sign, 1, attr);
     define_native_function(vm.names.clz32, clz32, 1, attr);
+    define_native_function(vm.names.acos, acos, 1, attr);
     define_native_function(vm.names.acosh, acosh, 1, attr);
+    define_native_function(vm.names.asin, asin, 1, attr);
     define_native_function(vm.names.asinh, asinh, 1, attr);
     define_native_function(vm.names.atan, atan, 1, attr);
     define_native_function(vm.names.atanh, atanh, 1, attr);
@@ -273,6 +275,18 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
     return Value(__builtin_clz((unsigned)number.as_double()));
 }
 
+JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan() || number.as_double() > 1 || number.as_double() < -1)
+        return js_nan();
+    if (number.as_double() == 1)
+        return Value(0);
+    return Value(::acos(number.as_double()));
+}
+
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -281,6 +295,16 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
     if (number.as_double() < 1)
         return JS::js_nan();
     return Value(::acosh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
+        return number;
+    return Value(::asin(number.as_double()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
