@@ -62,6 +62,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_additional->set_text(">");
     m_additional->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_additional->set_preferred_size(14, 20);
+    m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_additional->on_click = [this](auto) {
         if (m_additional_menu) {
             m_additional_menu->popup(m_additional->relative_position().translated(relative_position().translated(m_additional->window()->position())));
