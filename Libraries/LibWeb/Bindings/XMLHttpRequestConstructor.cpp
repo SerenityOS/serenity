@@ -57,7 +57,8 @@ XMLHttpRequestConstructor::~XMLHttpRequestConstructor()
 
 JS::Value XMLHttpRequestConstructor::call()
 {
-    return construct(*this);
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "XMLHttpRequest");
+    return {};
 }
 
 JS::Value XMLHttpRequestConstructor::construct(Function&)
