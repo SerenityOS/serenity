@@ -48,18 +48,11 @@ int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 /**
  * "Does this process have a thread that is currently being traced by the provided process?"
  */
-bool Process::has_tracee_thread(ProcessID tracer_pid) const
+bool Process::has_tracee_thread(ProcessID tracer_pid)
 {
-    bool has_tracee = false;
-
-    for_each_thread([&](Thread& t) {
-        if (t.tracer() && t.tracer()->tracer_pid() == tracer_pid) {
-            has_tracee = true;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return has_tracee;
+    if (auto tracer = this->tracer())
+        return tracer->tracer_pid() == tracer_pid;
+    return false;
 }
 
 KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
