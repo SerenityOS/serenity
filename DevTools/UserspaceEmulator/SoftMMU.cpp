@@ -48,8 +48,9 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
         m_shbuf_regions.set(static_cast<SharedBufferRegion*>(region.ptr())->shbuf_id(), region.ptr());
 
     size_t first_page_in_region = region->base() / PAGE_SIZE;
-    for (size_t i = 0; i < ceil_div(region->size(), PAGE_SIZE); ++i) {
-        m_page_to_region_map[first_page_in_region + i] = region.ptr();
+    size_t last_page_in_region = (region->base() + region->size() - 1) / PAGE_SIZE;
+    for (size_t page = first_page_in_region; page <= last_page_in_region; ++page) {
+        m_page_to_region_map[page] = region.ptr();
     }
 
     m_regions.append(move(region));
