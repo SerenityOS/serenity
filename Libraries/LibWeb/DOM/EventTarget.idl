@@ -1,6 +1,6 @@
 interface EventTarget {
 
-    void addEventListener(DOMString type, EventListener? callback);
-    void removeEventListener(DOMString type, EventListener? callback);
+    undefined addEventListener(DOMString type, EventListener? callback);
+    undefined removeEventListener(DOMString type, EventListener? callback);
 
 };

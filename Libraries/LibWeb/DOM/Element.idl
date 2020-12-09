@@ -3,7 +3,7 @@ interface Element : Node {
     readonly attribute DOMString tagName;
 
     DOMString? getAttribute(DOMString qualifiedName);
-    void setAttribute(DOMString qualifiedName, DOMString value);
+    undefined setAttribute(DOMString qualifiedName, DOMString value);
 
     readonly attribute Element? firstElementChild;
     readonly attribute Element? lastElementChild;

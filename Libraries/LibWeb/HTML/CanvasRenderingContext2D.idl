@@ -1,28 +1,28 @@
 interface CanvasRenderingContext2D {
 
-    void fillRect(double x, double y, double w, double h);
-    void strokeRect(double x, double y, double w, double h);
+    undefined fillRect(double x, double y, double w, double h);
+    undefined strokeRect(double x, double y, double w, double h);
 
-    void scale(double x, double y);
-    void translate(double x, double y);
-    void rotate(double radians);
+    undefined scale(double x, double y);
+    undefined translate(double x, double y);
+    undefined rotate(double radians);
 
-    void beginPath();
-    void closePath();
-    void fill(DOMString fillRule);
-    void stroke();
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void quadraticCurveTo(double cpx, double cpy, double x, double y);
+    undefined beginPath();
+    undefined closePath();
+    undefined fill(DOMString fillRule);
+    undefined stroke();
+    undefined moveTo(double x, double y);
+    undefined lineTo(double x, double y);
+    undefined quadraticCurveTo(double cpx, double cpy, double x, double y);
 
-    void drawImage(HTMLImageElement image, double dx, double dy);
+    undefined drawImage(HTMLImageElement image, double dx, double dy);
 
     attribute DOMString fillStyle;
     attribute DOMString strokeStyle;
     attribute double lineWidth;
 
     ImageData createImageData(double sw, double sh);
-    void putImageData(ImageData imagedata, double dx, double dy);
+    undefined putImageData(ImageData imagedata, double dx, double dy);
 
     readonly attribute HTMLCanvasElement canvas;
 
