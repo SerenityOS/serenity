@@ -1034,7 +1034,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
 
         {
             auto frame = shell->push_frame(String::formatted("for ({})", this));
-            shell->set_local_variable(m_variable_name, value);
+            shell->set_local_variable(m_variable_name, value, true);
 
             block_value = m_block->run(shell);
         }
@@ -1587,7 +1587,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
 
     auto frame = shell->push_frame(String::formatted("match ({})", this));
     if (!m_expr_name.is_empty())
-        shell->set_local_variable(m_expr_name, value);
+        shell->set_local_variable(m_expr_name, value, true);
 
     for (auto& entry : m_entries) {
         for (auto& option : entry.options) {
@@ -1598,7 +1598,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
                         size_t i = 0;
                         for (auto& name : entry.match_names.value()) {
                             if (spans.size() > i)
-                                shell->set_local_variable(name, create<AST::StringValue>(spans[i]));
+                                shell->set_local_variable(name, create<AST::StringValue>(spans[i]), true);
                             ++i;
                         }
                     }
