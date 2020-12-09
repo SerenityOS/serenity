@@ -30,6 +30,8 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 
+//#define WAITBLOCK_DEBUG
+
 namespace Kernel {
 
 bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_condition, void* data)
@@ -390,22 +392,40 @@ void Thread::SelectBlocker::was_unblocked(bool did_timeout)
     }
 }
 
+Thread::WaitBlockCondition::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)
+    : process(move(process))
+    , flags(flags)
+    , signal(signal)
+{
+}
+
+Thread::WaitBlockCondition::ProcessBlockInfo::~ProcessBlockInfo()
+{
+}
+
 void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
 {
     ScopedSpinLock lock(m_lock);
     // We if we have any processes pending
-    for (size_t i = 0; i < m_threads.size(); i++) {
-        auto& info = m_threads[i];
+    for (size_t i = 0; i < m_processes.size(); i++) {
+        auto& info = m_processes[i];
         // We need to call unblock as if we were called from add_blocker
         // so that we don't trigger a context switch by yielding!
         if (info.was_waited && blocker.is_wait())
             continue; // This state was already waited on, do not unblock
-        if (blocker.unblock(info.thread, info.flags, info.signal, true)) {
+        if (blocker.unblock(info.process, info.flags, info.signal, true)) {
             if (blocker.is_wait()) {
-                if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated)
-                    m_threads.remove(i);
-                else
+                if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
+                    m_processes.remove(i);
+#ifdef WAITBLOCK_DEBUG
+                    dbg() << "WaitBlockCondition[" << m_process << "] terminated, remove " << *info.process;
+#endif
+                } else {
+#ifdef WAITBLOCK_DEBUG
+                    dbg() << "WaitBlockCondition[" << m_process << "] terminated, mark as waited " << *info.process;
+#endif
                     info.was_waited = true;
+                }
             }
             break;
         }
@@ -417,17 +437,20 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
     ScopedSpinLock lock(m_lock);
     if (m_finalized)
         return;
-    for (size_t i = 0; i < m_threads.size();) {
-        auto& info = m_threads[i];
-        if (&info.thread->process() == &process) {
+    for (size_t i = 0; i < m_processes.size();) {
+        auto& info = m_processes[i];
+        if (info.process == &process) {
             do_unblock([&](Blocker& b, void*) {
                 ASSERT(b.blocker_type() == Blocker::Type::Wait);
                 auto& blocker = static_cast<WaitBlocker&>(b);
-                bool did_unblock = blocker.unblock(info.thread, WaitBlocker::UnblockFlags::Disowned, 0, false);
+                bool did_unblock = blocker.unblock(info.process, WaitBlocker::UnblockFlags::Disowned, 0, false);
                 ASSERT(did_unblock); // disowning must unblock everyone
                 return true;
             });
-            m_threads.remove(i);
+#ifdef WAITBLOCK_DEBUG
+            dbg() << "WaitBlockCondition[" << m_process << "] disowned " << *info.process;
+#endif
+            m_processes.remove(i);
             continue;
         }
 
@@ -435,7 +458,7 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
     }
 }
 
-bool Thread::WaitBlockCondition::unblock(Thread& thread, WaitBlocker::UnblockFlags flags, u8 signal)
+bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockFlags flags, u8 signal)
 {
     ASSERT(flags != WaitBlocker::UnblockFlags::Disowned);
 
@@ -448,8 +471,8 @@ bool Thread::WaitBlockCondition::unblock(Thread& thread, WaitBlocker::UnblockFla
         return false;
     if (flags != WaitBlocker::UnblockFlags::Terminated) {
         // First check if this state was already waited on
-        for (auto& info : m_threads) {
-            if (info.thread == &thread) {
+        for (auto& info : m_processes) {
+            if (info.process == &process) {
                 was_waited_already = info.was_waited;
                 break;
             }
@@ -461,7 +484,7 @@ bool Thread::WaitBlockCondition::unblock(Thread& thread, WaitBlocker::UnblockFla
         auto& blocker = static_cast<WaitBlocker&>(b);
         if (was_waited_already && blocker.is_wait())
             return false; // This state was already waited on, do not unblock
-        if (blocker.unblock(thread, flags, signal, false)) {
+        if (blocker.unblock(process, flags, signal, false)) {
             did_wait |= blocker.is_wait(); // anyone requesting a wait
             did_unblock_any = true;
             return true;
@@ -473,18 +496,25 @@ bool Thread::WaitBlockCondition::unblock(Thread& thread, WaitBlocker::UnblockFla
     // UnblockFlags::Terminated then add it to your list
     if (!did_unblock_any || !did_wait || flags != WaitBlocker::UnblockFlags::Terminated) {
         bool updated_existing = false;
-        for (auto& info : m_threads) {
-            if (info.thread == &thread) {
+        for (auto& info : m_processes) {
+            if (info.process == &process) {
                 ASSERT(info.flags != WaitBlocker::UnblockFlags::Terminated);
                 info.flags = flags;
                 info.signal = signal;
                 info.was_waited = did_wait;
+#ifdef WAITBLOCK_DEBUG
+                dbg() << "WaitBlockCondition[" << m_process << "] update " << process << " flags: " << (int)flags << " mark as waited: " << info.was_waited;
+#endif
                 updated_existing = true;
                 break;
             }
         }
-        if (!updated_existing)
-            m_threads.append(ThreadBlockInfo(thread, flags, signal));
+        if (!updated_existing) {
+#ifdef WAITBLOCK_DEBUG
+            dbg() << "WaitBlockCondition[" << m_process << "] add " << process << " flags: " << (int)flags;
+#endif
+            m_processes.append(ProcessBlockInfo(process, flags, signal));
+        }
     }
     return did_unblock_any;
 }
@@ -497,12 +527,12 @@ bool Thread::WaitBlockCondition::should_add_blocker(Blocker& b, void*)
     ASSERT(b.blocker_type() == Blocker::Type::Wait);
     auto& blocker = static_cast<WaitBlocker&>(b);
     // See if we can match any process immediately
-    for (size_t i = 0; i < m_threads.size(); i++) {
-        auto& info = m_threads[i];
-        if (blocker.unblock(info.thread, info.flags, info.signal, true)) {
+    for (size_t i = 0; i < m_processes.size(); i++) {
+        auto& info = m_processes[i];
+        if (blocker.unblock(info.process, info.flags, info.signal, true)) {
             // Only remove the entry if UnblockFlags::Terminated
             if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated && blocker.is_wait())
-                m_threads.remove(i);
+                m_processes.remove(i);
             return false;
         }
     }
@@ -516,7 +546,7 @@ void Thread::WaitBlockCondition::finalize()
     m_finalized = true;
 
     // Clear the list of threads here so we can drop the references to them
-    m_threads.clear();
+    m_processes.clear();
 
     // No more waiters, drop the last reference immediately. This may
     // cause us to be destructed ourselves!
@@ -614,15 +644,14 @@ void Thread::WaitBlocker::do_set_result(const siginfo_t& result)
     }
 }
 
-bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal, bool from_add_blocker)
+bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker)
 {
     ASSERT(flags != UnblockFlags::Terminated || signal == 0); // signal argument should be ignored for Terminated
 
-    auto& process = thread.process();
     switch (m_id_type) {
     case P_PID:
         ASSERT(m_waitee);
-        if (process.pid() != m_waitee_id && thread.tid() != m_waitee_id) // TODO: pid/tid
+        if (process.pid() != m_waitee_id)
             return false;
         break;
     case P_PGID:
@@ -648,13 +677,13 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
     case UnblockFlags::Stopped:
         if (!(m_wait_options & WSTOPPED))
             return false;
-        if (!(m_wait_options & WUNTRACED) && !thread.is_traced())
+        if (!(m_wait_options & WUNTRACED) && !process.is_traced())
             return false;
         break;
     case UnblockFlags::Continued:
         if (!(m_wait_options & WCONTINUED))
             return false;
-        if (!(m_wait_options & WUNTRACED) && !thread.is_traced())
+        if (!(m_wait_options & WUNTRACED) && !process.is_traced())
             return false;
         break;
     case UnblockFlags::Disowned:
@@ -681,7 +710,7 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
             ScopedSpinLock lock(g_scheduler_lock);
             // We need to gather the information before we release the sheduler lock!
             siginfo.si_signo = SIGCHLD;
-            siginfo.si_pid = thread.tid().value();
+            siginfo.si_pid = process.pid().value();
             siginfo.si_uid = process.uid();
             siginfo.si_status = signal;
 
