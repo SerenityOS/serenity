@@ -27,6 +27,7 @@
 #include <AK/TestSuite.h>
 
 #include <AK/Array.h>
+#include <AK/LogStream.h>
 #include <AK/MemoryStream.h>
 
 static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
@@ -214,6 +215,23 @@ TEST_CASE(unsigned_integer_underflow_regression)
 
     DuplexMemoryStream stream;
     stream << buffer;
+}
+
+TEST_CASE(offset_calculation_error_regression)
+{
+    Array<u8, DuplexMemoryStream::chunk_size> input, output;
+    input.span().fill(0xff);
+
+    DuplexMemoryStream stream;
+    stream << 0x00000000 << input << 0x00000000;
+
+    stream.discard_or_error(sizeof(int));
+    stream.read(output);
+
+    EXPECT(compare(input, output));
+
+    AK::dump_bytes(input);
+    AK::dump_bytes(output);
 }
 
 TEST_MAIN(MemoryStream)
