@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibCore/Timer.h>
 #include <LibGUI/Window.h>
 
 namespace NotificationServer {
@@ -41,6 +42,7 @@ private:
     NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap&);
 
     Gfx::IntRect m_original_rect;
+    RefPtr<Core::Timer> m_close_timer;
 };
 
 }

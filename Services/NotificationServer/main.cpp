@@ -59,6 +59,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/etc", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {

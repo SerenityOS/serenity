@@ -26,6 +26,7 @@
 
 #include "NotificationWindow.h"
 #include <AK/Vector.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
@@ -90,7 +91,8 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     widget.layout()->set_margins({ 8, 8, 8, 8 });
     widget.layout()->set_spacing(6);
 
-    if (icon.is_valid()) {
+    auto config = Core::ConfigFile::get_for_system("NotificationServer");
+    if (icon.is_valid() && config->read_bool_entry("Window", "ShowIcons", true)) {
         auto& image = widget.add<GUI::ImageWidget>();
         image.set_bitmap(icon.bitmap());
     }
@@ -104,16 +106,22 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     auto& text_label = left_container.add<GUI::Label>(text);
     text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto& right_container = widget.add<GUI::Widget>();
-    right_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    right_container.set_preferred_size(36, 0);
-    right_container.set_layout<GUI::HorizontalBoxLayout>();
-
     on_close_request = [this] {
         s_windows.remove_first_matching([this](auto& entry) { return entry == this; });
         update_notification_window_locations();
         return CloseRequestDecision::Close;
     };
+
+    int timeout_value = config->read_num_entry("Window", "Timeout", 10000);
+    if (timeout_value > 0) {
+        m_close_timer = add<Core::Timer>();
+        m_close_timer->set_interval(timeout_value);
+        m_close_timer->on_timeout = [this] {
+            s_windows.remove_first_matching([this](auto& entry) { return entry == this; });
+            update_notification_window_locations();
+        };
+        m_close_timer->start();
+    }
 }
 
 NotificationWindow::~NotificationWindow()
