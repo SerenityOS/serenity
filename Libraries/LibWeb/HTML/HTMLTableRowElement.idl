@@ -7,4 +7,4 @@ interface HTMLTableRowElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
 
-}
+};

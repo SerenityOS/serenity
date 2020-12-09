@@ -2,4 +2,4 @@ interface HTMLSlotElement : HTMLElement {
 
     [Reflect] attribute DOMString name;
 
-}
+};

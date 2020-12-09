@@ -4,4 +4,4 @@ interface DOMImplementation {
 
     boolean hasFeature();
 
-}
+};

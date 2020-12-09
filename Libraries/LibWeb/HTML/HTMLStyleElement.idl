@@ -4,4 +4,4 @@ interface HTMLStyleElement : HTMLElement {
 
     [Reflect] attribute DOMString type;
 
-}
+};

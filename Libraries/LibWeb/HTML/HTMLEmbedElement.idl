@@ -8,4 +8,4 @@ interface HTMLEmbedElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [Reflect] attribute DOMString name;
 
-}
+};

@@ -6,4 +6,4 @@ interface HTMLParamElement : HTMLElement {
     [Reflect] attribute DOMString type;
     [Reflect=valuetype] attribute DOMString valueType;
 
-}
+};

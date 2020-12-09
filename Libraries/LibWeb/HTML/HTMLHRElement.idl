@@ -6,4 +6,4 @@ interface HTMLHRElement : HTMLElement {
     [Reflect] attribute DOMString size;
     [Reflect] attribute DOMString width;
 
-}
+};

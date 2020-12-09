@@ -4,4 +4,4 @@ interface HTMLFontElement : HTMLElement {
     [Reflect] attribute DOMString face;
     [Reflect] attribute DOMString size;
 
-}
+};

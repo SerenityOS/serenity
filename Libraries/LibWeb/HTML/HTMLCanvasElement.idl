@@ -4,4 +4,4 @@ interface HTMLCanvasElement : HTMLElement {
     readonly attribute unsigned long width;
     readonly attribute unsigned long height;
 
-}
+};

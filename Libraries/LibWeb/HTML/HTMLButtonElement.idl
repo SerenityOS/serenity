@@ -5,4 +5,4 @@ interface HTMLButtonElement : HTMLElement {
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString value;
 
-}
+};

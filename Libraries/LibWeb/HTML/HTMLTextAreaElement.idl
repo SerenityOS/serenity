@@ -9,4 +9,4 @@ interface HTMLTextAreaElement : HTMLElement {
     [Reflect=readonly] attribute boolean readOnly;
     [Reflect] attribute boolean required;
 
-}
+};

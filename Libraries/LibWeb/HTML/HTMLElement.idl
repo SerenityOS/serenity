@@ -8,4 +8,4 @@ interface HTMLElement : Element {
     attribute DOMString contentEditable;
 
     [LegacyNullToEmptyString] attribute DOMString innerText;
-}
+};

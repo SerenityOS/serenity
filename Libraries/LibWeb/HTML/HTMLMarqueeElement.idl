@@ -6,4 +6,4 @@ interface HTMLMarqueeElement : HTMLElement {
     [Reflect] attribute DOMString height;
     [Reflect] attribute DOMString width;
 
-}
+};

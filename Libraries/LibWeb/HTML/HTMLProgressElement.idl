@@ -2,4 +2,4 @@ interface HTMLProgressElement : HTMLElement {
 
 
 
-}
+};

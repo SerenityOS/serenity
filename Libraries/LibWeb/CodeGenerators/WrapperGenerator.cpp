@@ -288,8 +288,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
         consume_whitespace();
 
-        if (lexer.consume_specific('}'))
+        if (lexer.consume_specific('}')) {
+            consume_whitespace();
+            assert_specific(';');
             break;
+        }
 
         if (lexer.consume_specific('[')) {
             extended_attributes = parse_extended_attributes();

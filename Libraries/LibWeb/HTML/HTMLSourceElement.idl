@@ -6,4 +6,4 @@ interface HTMLSourceElement : HTMLElement {
     [Reflect] attribute DOMString sizes;
     [Reflect] attribute DOMString media;
 
-}
+};

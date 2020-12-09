@@ -6,4 +6,4 @@ interface HTMLFrameElement : HTMLElement {
     [Reflect=frameborder] attribute DOMString frameBorder;
     [Reflect=longdesc] attribute DOMString longDesc;
 
-}
+};

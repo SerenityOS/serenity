@@ -2,4 +2,4 @@ interface HTMLDetailsElement : HTMLElement {
 
     [Reflect] attribute boolean open;
 
-}
+};

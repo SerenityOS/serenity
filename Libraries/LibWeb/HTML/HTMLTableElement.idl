@@ -11,4 +11,4 @@ interface HTMLTableElement : HTMLElement {
     [LegacyNullToEmptyString, Reflect=cellpadding] attribute DOMString cellPadding;
     [LegacyNullToEmptyString, Reflect=cellspacing] attribute DOMString cellSpacing;
 
-}
+};

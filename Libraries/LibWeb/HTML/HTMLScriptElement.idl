@@ -10,4 +10,4 @@ interface HTMLScriptElement : HTMLElement {
     [Reflect] attribute DOMString event;
     [Reflect=for] attribute DOMString htmlFor;
 
-}
+};

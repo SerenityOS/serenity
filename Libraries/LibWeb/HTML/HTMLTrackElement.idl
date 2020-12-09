@@ -5,4 +5,4 @@ interface HTMLTrackElement : HTMLElement {
     [Reflect] attribute DOMString label;
     [Reflect] attribute boolean default;
 
-}
+};

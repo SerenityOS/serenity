@@ -14,4 +14,4 @@ interface HTMLLinkElement : HTMLElement {
     [Reflect] attribute DOMString rev;
     [Reflect] attribute DOMString target;
 
-}
+};

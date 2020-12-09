@@ -8,4 +8,4 @@ interface DocumentFragment : Node {
     Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 
-}
+};

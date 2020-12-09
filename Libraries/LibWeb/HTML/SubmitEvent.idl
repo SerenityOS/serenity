@@ -2,4 +2,4 @@ interface SubmitEvent : Event {
 
     readonly attribute HTMLElement? submitter;
 
-}
+};

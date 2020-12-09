@@ -2,4 +2,4 @@ interface HTMLAreaElement : HTMLElement {
 
     [Reflect=nohref] attribute boolean noHref;
 
-}
+};

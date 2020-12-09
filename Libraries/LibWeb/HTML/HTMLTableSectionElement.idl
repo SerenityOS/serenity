@@ -5,4 +5,4 @@ interface HTMLTableSectionElement : HTMLElement {
     [Reflect=charoff] attribute DOMString chOff;
     [Reflect=valign] attribute DOMString vAlign;
 
-}
+};
