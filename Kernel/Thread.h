@@ -644,7 +644,8 @@ public:
         enum class UnblockFlags {
             Terminated,
             Stopped,
-            Continued
+            Continued,
+            Disowned
         };
 
         WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result);
@@ -658,6 +659,7 @@ public:
         bool is_wait() const { return !(m_wait_options & WNOWAIT); }
 
     private:
+        void do_was_disowned();
         void do_set_result(const siginfo_t&);
 
         const int m_wait_options;
@@ -681,6 +683,7 @@ public:
         {
         }
 
+        void disowned_by_waiter(Process&);
         bool unblock(Thread&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
         void finalize();

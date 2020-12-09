@@ -642,6 +642,11 @@ void Process::finalize(Thread& last_thread)
     m_wait_block_condition.finalize();
 }
 
+void Process::disowned_by_waiter(Process& process)
+{
+    m_wait_block_condition.disowned_by_waiter(process);
+}
+
 void Process::unblock_waiters(Thread& thread, Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
     if (auto parent = Process::from_pid(ppid()))

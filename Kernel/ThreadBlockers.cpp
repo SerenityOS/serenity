@@ -412,8 +412,33 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
     }
 }
 
+void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
+{
+    ScopedSpinLock lock(m_lock);
+    if (m_finalized)
+        return;
+    for (size_t i = 0; i < m_threads.size();) {
+        auto& info = m_threads[i];
+        if (&info.thread->process() == &process) {
+            do_unblock([&](Blocker& b, void*) {
+                ASSERT(b.blocker_type() == Blocker::Type::Wait);
+                auto& blocker = static_cast<WaitBlocker&>(b);
+                bool did_unblock = blocker.unblock(info.thread, WaitBlocker::UnblockFlags::Disowned, 0, false);
+                ASSERT(did_unblock); // disowning must unblock everyone
+                return true;
+            });
+            m_threads.remove(i);
+            continue;
+        }
+
+        i++;
+    }
+}
+
 bool Thread::WaitBlockCondition::unblock(Thread& thread, WaitBlocker::UnblockFlags flags, u8 signal)
 {
+    ASSERT(flags != WaitBlocker::UnblockFlags::Disowned);
+
     bool did_unblock_any = false;
     bool did_wait = false;
     bool was_waited_already = false;
@@ -565,6 +590,13 @@ void Thread::WaitBlocker::was_unblocked(bool)
         current_thread->try_dispatch_one_pending_signal(SIGCHLD);
 }
 
+void Thread::WaitBlocker::do_was_disowned()
+{
+    ASSERT(!m_did_unblock);
+    m_did_unblock = true;
+    m_result = KResult(-ECHILD);
+}
+
 void Thread::WaitBlocker::do_set_result(const siginfo_t& result)
 {
     ASSERT(!m_did_unblock);
@@ -599,6 +631,10 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
             return false;
         break;
     case P_ALL:
+        if (flags == UnblockFlags::Disowned) {
+            // Generic waiter won't be unblocked by disown
+            return false;
+        }
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -621,6 +657,12 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
         if (!(m_wait_options & WUNTRACED) && !thread.is_traced())
             return false;
         break;
+    case UnblockFlags::Disowned:
+        ScopedSpinLock lock(m_lock);
+        // Disowning must unblock anyone waiting for this process explicitly
+        if (!m_did_unblock)
+            do_was_disowned();
+        return true;
     }
 
     if (flags == UnblockFlags::Terminated) {
@@ -645,6 +687,7 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
 
             switch (flags) {
             case UnblockFlags::Terminated:
+            case UnblockFlags::Disowned:
                 ASSERT_NOT_REACHED();
             case UnblockFlags::Stopped:
                 siginfo.si_code = CLD_STOPPED;
@@ -665,6 +708,7 @@ bool Thread::WaitBlocker::unblock(Thread& thread, UnblockFlags flags, u8 signal,
 
     if (!from_add_blocker) {
         // Only call unblock if we weren't called from within set_block_condition!
+        ASSERT(flags != UnblockFlags::Disowned);
         unblock_from_blocker();
     }
     // Because this may be called from add_blocker, in which case we should
