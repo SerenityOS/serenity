@@ -5,6 +5,6 @@ interface HTMLFormElement : HTMLElement {
     [Reflect=accept-charset] attribute DOMString acceptCharset;
     [Reflect=novalidate] attribute boolean noValidate;
 
-    void submit();
+    undefined submit();
 
 };
