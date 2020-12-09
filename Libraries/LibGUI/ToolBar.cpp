@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
@@ -65,7 +67,7 @@ private:
         if (action.group() && action.group()->is_exclusive())
             set_exclusive(true);
         set_action(action);
-        set_tooltip(action.text());
+        set_tooltip(tooltip(action));
         set_focus_policy(FocusPolicy::TabFocus);
         if (action.icon())
             set_icon(action.icon());
@@ -73,6 +75,17 @@ private:
             set_text(action.text());
         set_button_style(Gfx::ButtonStyle::CoolBar);
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    }
+    String tooltip(const Action& action) const
+    {
+        StringBuilder builder;
+        builder.append(action.text());
+        if (action.shortcut().is_valid()) {
+            builder.append(" (");
+            builder.append(action.shortcut().to_string());
+            builder.append(")");
+        }
+        return builder.to_string();
     }
 };
 
