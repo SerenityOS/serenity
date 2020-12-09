@@ -741,7 +741,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         auto scoped_generator = generator.fork();
         scoped_generator.set("return_type", return_type.name);
 
-        if (return_type.name == "void") {
+        if (return_type.name == "undefined") {
             scoped_generator.append(R"~~~(
     return JS::js_undefined();
 )~~~");
@@ -918,7 +918,7 @@ JS_DEFINE_NATIVE_FUNCTION(@wrapper_class@::@function.name:snakecase@)
 
         function_generator.set(".arguments", arguments_builder.string_view());
 
-        if (function.return_type.name != "void") {
+        if (function.return_type.name != "undefined") {
             function_generator.append(R"~~~(
     auto retval = impl->@function.name:snakecase@(@.arguments@);
 )~~~");
