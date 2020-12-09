@@ -479,7 +479,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
-        set_local_variable(arg, adopt(*new AST::StringValue(command.argv[index])));
+        set_local_variable(arg, adopt(*new AST::StringValue(command.argv[index])), true);
     }
 
     auto argv = command.argv;
