@@ -133,6 +133,15 @@ class WeakPtr;
 template<typename T, size_t inline_capacity = 0>
 class Vector;
 
+template<typename... Parameters>
+void dbgln(const char* fmtstr, const Parameters&...);
+
+template<typename... Parameters>
+void warnln(const char* fmtstr, const Parameters&...);
+
+template<typename... Parameters>
+void outln(const char* fmtstr, const Parameters&...);
+
 }
 
 using AK::Array;
