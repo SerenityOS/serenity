@@ -26,9 +26,9 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Shape.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 
@@ -41,8 +41,11 @@ XMLHttpRequestConstructor::XMLHttpRequestConstructor(JS::GlobalObject& global_ob
 
 void XMLHttpRequestConstructor::initialize(JS::GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("length", JS::Value(1), JS::Attribute::Configurable);
+    auto& window = static_cast<WindowObject&>(global_object);
+    define_property(vm.names.prototype, window.xhr_prototype(), 0);
+    define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 
     define_property("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
     define_property("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);

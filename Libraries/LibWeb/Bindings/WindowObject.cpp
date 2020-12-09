@@ -85,8 +85,6 @@ void WindowObject::initialize()
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>(*this, *this);
-    m_xhr_constructor = heap().allocate<XMLHttpRequestConstructor>(*this, *this);
-    m_xhr_constructor->define_property("prototype", m_xhr_prototype, 0);
     add_constructor("XMLHttpRequest", m_xhr_constructor, m_xhr_prototype);
 }
 
