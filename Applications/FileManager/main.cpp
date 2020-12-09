@@ -698,6 +698,38 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
+    tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+        if (!event.mime_data().has_urls())
+            return;
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty()) {
+            dbgln("No files to drop");
+            return;
+        }
+
+        auto& target_node = directories_model->node(index);
+        if (!target_node.is_directory())
+            return;
+
+        bool had_accepted_drop = false;
+        for (auto& url_to_copy : urls) {
+            if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
+                continue;
+            auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath(url_to_copy.path()).basename());
+            if (url_to_copy.path() == new_path)
+                continue;
+
+            if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
+                auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
+                GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
+            } else {
+                had_accepted_drop = true;
+            }
+        }
+        if (had_accepted_drop)
+            refresh_tree_view();
+    };
+
     directory_view.open(initial_location);
     directory_view.set_focus(true);
 
