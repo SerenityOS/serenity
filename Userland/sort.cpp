@@ -47,8 +47,9 @@ int main(int argc, char** argv)
     for (;;) {
         char* buffer = nullptr;
         ssize_t buflen = 0;
+        size_t n;
         errno = 0;
-        buflen = getline(&buffer, nullptr, stdin);
+        buflen = getline(&buffer, &n, stdin);
         if (buflen == -1 && errno != 0) {
             perror("getline");
             exit(1);
