@@ -2,4 +2,4 @@ interface HTMLMenuElement : HTMLElement {
 
     [Reflect] attribute boolean compact;
 
-}
+};

@@ -4,4 +4,4 @@ interface HTMLSelectElement : HTMLElement {
     [Reflect] attribute boolean multiple;
     [Reflect] attribute boolean required;
 
-}
+};

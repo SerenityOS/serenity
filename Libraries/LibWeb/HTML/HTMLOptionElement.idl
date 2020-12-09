@@ -3,4 +3,4 @@ interface HTMLOptionElement : HTMLElement {
     [Reflect] attribute boolean disabled;
     [Reflect=selected] attribute boolean defaultSelected;
 
-}
+};

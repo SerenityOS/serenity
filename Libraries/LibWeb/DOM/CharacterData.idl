@@ -6,4 +6,4 @@ interface CharacterData : Node {
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 
-}
+};

@@ -24,4 +24,4 @@ interface HTMLInputElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [Reflect=usemap] attribute DOMString useMap;
 
-}
+};
