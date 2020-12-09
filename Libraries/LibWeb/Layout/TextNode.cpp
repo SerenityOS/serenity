@@ -134,7 +134,9 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     float cursor_top = fragment_rect.top();
     float cursor_height = fragment_rect.height();
     Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
-    context.painter().draw_rect(cursor_rect, context.palette().text_cursor());
+
+    auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
+    context.painter().draw_rect(cursor_rect, color);
 }
 
 template<typename Callback>
