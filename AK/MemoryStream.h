@@ -289,7 +289,7 @@ public:
             if ((m_write_offset + nwritten) % chunk_size == 0)
                 m_chunks.append(ByteBuffer::create_uninitialized(chunk_size));
 
-            nwritten += bytes.copy_trimmed_to(m_chunks.last().bytes().slice(m_write_offset % chunk_size));
+            nwritten += bytes.slice(nwritten).copy_trimmed_to(m_chunks.last().bytes().slice(m_write_offset % chunk_size));
         }
 
         m_write_offset += nwritten;
