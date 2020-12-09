@@ -34,3 +34,8 @@ fn() {
 fn2() { }
 
 test "$(fn foobar)" = "foobar" || echo 'Frames are somehow messed up in nested functions' && exit 1
+
+fn(xfoo) { }
+xfoo=1
+fn 2
+test $xfoo -eq 1 || echo 'Functions overwrite parent scopes' && exit 1
