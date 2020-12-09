@@ -663,7 +663,11 @@ int getchar()
 
 ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream)
 {
-    char *ptr, *eptr;
+    if (!lineptr || !n) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (*lineptr == nullptr || *n == 0) {
         *n = BUFSIZ;
         if ((*lineptr = static_cast<char*>(malloc(*n))) == nullptr) {
@@ -671,6 +675,8 @@ ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream)
         }
     }
 
+    char* ptr;
+    char* eptr;
     for (ptr = *lineptr, eptr = *lineptr + *n;;) {
         int c = fgetc(stream);
         if (c == -1) {
