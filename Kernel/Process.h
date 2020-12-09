@@ -488,6 +488,7 @@ public:
     KResultOr<u32> peek_user_data(Userspace<const u32*> address);
     KResult poke_user_data(Userspace<u32*> address, u32 data);
 
+    void disowned_by_waiter(Process& process);
     void unblock_waiters(Thread&, Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
 

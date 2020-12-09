@@ -37,6 +37,7 @@ int Process::sys$disown(ProcessID pid)
     if (process->ppid() != this->pid())
         return -ECHILD;
     process->m_ppid = 0;
+    process->disowned_by_waiter(*this);
     return 0;
 }
 }
