@@ -181,7 +181,9 @@ bool copy_directory(String src_path, String dst_path)
     }
 
     String src_rp = Core::File::real_path_for(src_path);
+    src_rp = String::format("%s/", src_rp.characters());
     String dst_rp = Core::File::real_path_for(dst_path);
+    dst_rp = String::format("%s/", dst_rp.characters());
 
     if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp)) {
         fprintf(stderr, "cp: Cannot copy %s into itself (%s)\n",
