@@ -3,4 +3,4 @@ interface MouseEvent : Event {
     readonly attribute double offsetX;
     readonly attribute double offsetY;
 
-}
+};

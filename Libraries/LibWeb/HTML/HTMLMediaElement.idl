@@ -7,4 +7,4 @@ interface HTMLMediaElement : HTMLElement {
 
     [Reflect] attribute boolean controls;
 
-}
+};

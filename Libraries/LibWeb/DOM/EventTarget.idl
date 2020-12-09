@@ -3,4 +3,4 @@ interface EventTarget {
     void addEventListener(DOMString type, EventListener? callback);
     void removeEventListener(DOMString type, EventListener? callback);
 
-}
+};

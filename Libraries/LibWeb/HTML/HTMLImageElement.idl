@@ -11,4 +11,4 @@ interface HTMLImageElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [LegacyNullToEmptyString, Reflect] attribute DOMString border;
 
-}
+};

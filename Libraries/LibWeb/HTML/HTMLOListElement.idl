@@ -5,4 +5,4 @@ interface HTMLOListElement : HTMLElement {
 
     [Reflect] attribute boolean compact;
 
-}
+};

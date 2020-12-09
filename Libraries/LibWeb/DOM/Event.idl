@@ -20,4 +20,4 @@ interface Event {
 
     readonly attribute boolean isTrusted;
 
-}
+};

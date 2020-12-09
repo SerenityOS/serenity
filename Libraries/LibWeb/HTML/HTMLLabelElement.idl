@@ -2,4 +2,4 @@ interface HTMLLabelElement : HTMLElement {
 
     [Reflect=for] attribute DOMString htmlFor;
 
-}
+};

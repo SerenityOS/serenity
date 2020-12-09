@@ -3,4 +3,4 @@ interface ShadowRoot : DocumentFragment {
     readonly attribute DOMString mode;
     readonly attribute Element host;
 
-}
+};

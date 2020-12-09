@@ -34,4 +34,4 @@ interface Document : Node {
 
     attribute DOMString title;
 
-}
+};

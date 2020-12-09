@@ -2,4 +2,4 @@ interface HTMLLIElement : HTMLElement {
 
     [Reflect] attribute DOMString type;
 
-}
+};

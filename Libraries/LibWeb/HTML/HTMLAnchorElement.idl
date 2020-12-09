@@ -13,4 +13,4 @@ interface HTMLAnchorElement : HTMLElement {
     [Reflect] attribute DOMString rev;
     [Reflect] attribute DOMString shape;
 
-}
+};

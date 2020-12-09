@@ -2,4 +2,4 @@ interface HTMLMapElement : HTMLElement {
 
     [Reflect] attribute DOMString name;
 
-}
+};

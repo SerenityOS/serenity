@@ -16,4 +16,4 @@ interface HTMLObjectElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect] attribute DOMString border;
 
-}
+};
