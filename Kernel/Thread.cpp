@@ -129,23 +129,37 @@ Thread::~Thread()
 
 void Thread::unblock_from_blocker(Blocker& blocker)
 {
-    ScopedSpinLock scheduler_lock(g_scheduler_lock);
-    ScopedSpinLock block_lock(m_block_lock);
-    if (m_blocker != &blocker)
-        return;
-    if (!is_stopped())
-        unblock();
+    auto do_unblock = [&]() {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        ScopedSpinLock block_lock(m_block_lock);
+        if (m_blocker != &blocker)
+            return;
+        if (!should_be_stopped() && !is_stopped())
+            unblock();
+    };
+    if (Processor::current().in_irq()) {
+        Processor::current().deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+            if (auto this_thread = self.strong_ref())
+                do_unblock();
+        });
+    } else {
+        do_unblock();
+    }
 }
 
 void Thread::unblock(u8 signal)
 {
+    ASSERT(!Processor::current().in_irq());
     ASSERT(g_scheduler_lock.own_lock());
     ASSERT(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
         return;
     ASSERT(m_blocker);
-    if (signal != 0)
+    if (signal != 0) {
+        if (!m_blocker->can_be_interrupted() && !m_should_die)
+            return;
         m_blocker->set_interrupted_by_signal(signal);
+    }
     m_blocker = nullptr;
     if (Thread::current() == this) {
         set_state(Thread::Running);
@@ -178,6 +192,7 @@ void Thread::set_should_die()
         // If we were stopped, we need to briefly resume so that
         // the kernel stacks can clean up. We won't ever return back
         // to user mode, though
+        ASSERT(!process().is_stopped());
         resume_from_stopped();
     }
     if (is_blocked()) {
@@ -251,6 +266,11 @@ void Thread::yield_without_holding_big_lock()
 bool Thread::unlock_process_if_locked()
 {
     return process().big_lock().force_unlock_if_locked();
+}
+
+void Thread::lock_process()
+{
+    process().big_lock().lock();
 }
 
 void Thread::relock_process(bool did_unlock)
@@ -343,9 +363,7 @@ void Thread::finalize()
 
     ASSERT(thread_cnt_before != 0);
     if (thread_cnt_before == 1)
-        process().finalize(*this);
-    else
-        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Terminated);
+        process().finalize();
 }
 
 void Thread::finalize_dying_threads()
@@ -624,7 +642,18 @@ void Thread::resume_from_stopped()
     ASSERT(is_stopped());
     ASSERT(m_stop_state != State::Invalid);
     ASSERT(g_scheduler_lock.own_lock());
-    set_state(m_stop_state != Blocked ? m_stop_state : Runnable);
+    if (m_stop_state == Blocked) {
+        ScopedSpinLock block_lock(m_block_lock);
+        if (m_blocker) {
+            // Hasn't been unblocked yet
+            set_state(Blocked, 0);
+        } else {
+            // Was unblocked while stopped
+            set_state(Runnable);
+        }
+    } else {
+        set_state(m_stop_state, 0);
+    }
 }
 
 DispatchSignalResult Thread::dispatch_signal(u8 signal)
@@ -668,13 +697,13 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_pending_signals &= ~(1 << (signal - 1));
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
-    auto* thread_tracer = tracer();
-    if (signal == SIGSTOP || (thread_tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
+    auto& process = this->process();
+    auto tracer = process.tracer();
+    if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
 #ifdef SIGNAL_DEBUG
         dbg() << "signal: signal " << signal << " stopping thread " << *this;
 #endif
-        m_stop_signal = signal;
-        set_state(State::Stopped);
+        set_state(State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }
 
@@ -683,19 +712,18 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         dbg() << "signal: SIGCONT resuming " << *this;
 #endif
     } else {
-        if (thread_tracer != nullptr) {
+        if (tracer) {
             // when a thread is traced, it should be stopped whenever it receives a signal
             // the tracer is notified of this by using waitpid()
             // only "pending signals" from the tracer are sent to the tracee
-            if (!thread_tracer->has_pending_signal(signal)) {
-                m_stop_signal = signal;
+            if (!tracer->has_pending_signal(signal)) {
 #ifdef SIGNAL_DEBUG
                 dbg() << "signal: " << signal << " stopping " << *this << " for tracer";
 #endif
-                set_state(Stopped);
+                set_state(Stopped, signal);
                 return DispatchSignalResult::Yield;
             }
-            thread_tracer->unset_signal(signal);
+            tracer->unset_signal(signal);
         }
     }
 
@@ -703,11 +731,10 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     if (handler_vaddr.is_null()) {
         switch (default_signal_action(signal)) {
         case DefaultSignalAction::Stop:
-            m_stop_signal = signal;
-            set_state(Stopped);
+            set_state(Stopped, signal);
             return DispatchSignalResult::Yield;
         case DefaultSignalAction::DumpCore:
-            process().for_each_thread([](auto& thread) {
+            process.for_each_thread([](auto& thread) {
                 thread.set_dump_backtrace_on_finalization();
                 return IterationDecision::Continue;
             });
@@ -897,33 +924,29 @@ RefPtr<Thread> Thread::clone(Process& process)
     return clone;
 }
 
-void Thread::set_state(State new_state)
+void Thread::set_state(State new_state, u8 stop_signal)
 {
+    State previous_state;
     ASSERT(g_scheduler_lock.own_lock());
     if (new_state == m_state)
         return;
 
-    if (new_state == Blocked) {
-        // we should always have a Blocker while blocked
-        ScopedSpinLock block_lock(m_block_lock);
-        ASSERT(m_blocker != nullptr);
-    }
-
-    auto previous_state = m_state;
-    ScopedSpinLock thread_lock(m_lock);
-    if (previous_state == Invalid) {
-        // If we were *just* created, we may have already pending signals
-        if (has_unmasked_pending_signals()) {
-            dbg() << "Dispatch pending signals to new thread " << *this;
-            dispatch_one_pending_signal();
+    {
+        ScopedSpinLock thread_lock(m_lock);
+        previous_state = m_state;
+        if (previous_state == Invalid) {
+            // If we were *just* created, we may have already pending signals
+            if (has_unmasked_pending_signals()) {
+                dbg() << "Dispatch pending signals to new thread " << *this;
+                dispatch_one_pending_signal();
+            }
         }
-    }
 
-    m_state = new_state;
+        m_state = new_state;
 #ifdef THREAD_DEBUG
-    dbg() << "Set Thread " << *this << " state to " << state_string();
+        dbg() << "Set Thread " << *this << " state to " << state_string();
 #endif
-    thread_lock.unlock();
+    }
 
     if (m_process->pid() != 0) {
         update_state_for_thread(previous_state);
@@ -932,13 +955,37 @@ void Thread::set_state(State new_state)
 
     if (previous_state == Stopped) {
         m_stop_state = State::Invalid;
-        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Continued);
+        auto& process = this->process();
+        if (process.set_stopped(false) == true) {
+            process.for_each_thread([&](auto& thread) {
+                if (&thread == this || !thread.is_stopped())
+                    return IterationDecision::Continue;
+#ifdef THREAD_DEBUG
+                dbg() << "Resuming peer thread " << thread;
+#endif
+                thread.resume_from_stopped();
+                return IterationDecision::Continue;
+            });
+            process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
+        }
     }
 
     if (m_state == Stopped) {
         // We don't want to restore to Running state, only Runnable!
-        m_stop_state = previous_state != Running ? m_state : Runnable;
-        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Stopped, m_stop_signal);
+        m_stop_state = previous_state != Running ? previous_state : Runnable;
+        auto& process = this->process();
+        if (process.set_stopped(true) == false) {
+            process.for_each_thread([&](auto& thread) {
+                if (&thread == this || thread.is_stopped())
+                    return IterationDecision::Continue;
+#ifdef THREAD_DEBUG
+                dbg() << "Stopping peer thread " << thread;
+#endif
+                thread.set_state(Stopped, stop_signal);
+                return IterationDecision::Continue;
+            });
+            process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
+        }
     } else if (m_state == Dying) {
         ASSERT(previous_state != Blocked);
         if (this != Thread::current() && is_finalizable()) {
@@ -1014,6 +1061,7 @@ String Thread::backtrace_impl()
         elf_bundle = process.elf_bundle();
     }
     auto stack_trace = Processor::capture_stack_trace(*this);
+    ASSERT(!g_scheduler_lock.own_lock());
     ProcessPagingScope paging_scope(process);
     for (auto& frame : stack_trace) {
         if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
@@ -1096,28 +1144,9 @@ void Thread::reset_fpu_state()
     memcpy(m_fpu_state, &Processor::current().clean_fpu_state(), sizeof(FPUState));
 }
 
-void Thread::start_tracing_from(ProcessID tracer)
+bool Thread::should_be_stopped() const
 {
-    m_tracer = ThreadTracer::create(tracer);
-}
-
-void Thread::stop_tracing()
-{
-    m_tracer = nullptr;
-}
-
-void Thread::tracer_trap(const RegisterState& regs)
-{
-    ASSERT(m_tracer.ptr());
-    m_tracer->set_regs(regs);
-    send_urgent_signal_to_self(SIGTRAP);
-}
-
-const Thread::Blocker& Thread::blocker() const
-{
-    ASSERT(m_lock.own_lock());
-    ASSERT(m_blocker);
-    return *m_blocker;
+    return process().is_stopped();
 }
 
 }

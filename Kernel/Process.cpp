@@ -577,7 +577,7 @@ KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgume
     return get_syscall_path_argument(path.characters, path.length);
 }
 
-void Process::finalize(Thread& last_thread)
+void Process::finalize()
 {
     ASSERT(Thread::current() == g_finalizer);
 #ifdef PROCESS_DEBUG
@@ -627,7 +627,7 @@ void Process::finalize(Thread& last_thread)
         }
     }
 
-    unblock_waiters(last_thread, Thread::WaitBlocker::UnblockFlags::Terminated);
+    unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
 
     {
         ScopedSpinLock lock(m_lock);
@@ -647,10 +647,10 @@ void Process::disowned_by_waiter(Process& process)
     m_wait_block_condition.disowned_by_waiter(process);
 }
 
-void Process::unblock_waiters(Thread& thread, Thread::WaitBlocker::UnblockFlags flags, u8 signal)
+void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
     if (auto parent = Process::from_pid(ppid()))
-        parent->m_wait_block_condition.unblock(thread, flags, signal);
+        parent->m_wait_block_condition.unblock(*this, flags, signal);
 }
 
 void Process::die()
@@ -875,6 +875,23 @@ OwnPtr<Process::ELFBundle> Process::elf_bundle() const
         return nullptr;
     bundle->elf_loader = ELF::Loader::create(bundle->region->vaddr().as_ptr(), bundle->region->size());
     return bundle;
+}
+
+void Process::start_tracing_from(ProcessID tracer)
+{
+    m_tracer = ThreadTracer::create(tracer);
+}
+
+void Process::stop_tracing()
+{
+    m_tracer = nullptr;
+}
+
+void Process::tracer_trap(Thread& thread, const RegisterState& regs)
+{
+    ASSERT(m_tracer.ptr());
+    m_tracer->set_regs(regs);
+    thread.send_urgent_signal_to_self(SIGTRAP);
 }
 
 }

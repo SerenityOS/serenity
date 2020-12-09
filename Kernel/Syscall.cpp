@@ -94,10 +94,10 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
 
-        if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+        if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
             regs.eax = 0;
             tracer->set_trace_syscalls(false);
-            current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
+            process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
         }
 
         cli();
@@ -137,10 +137,11 @@ void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
+    auto& process = current_thread->process();
 
-    if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+    if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
-        current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
+        process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
     }
 
     current_thread->yield_if_stopped();
@@ -160,7 +161,6 @@ void syscall_handler(TrapFrame* trap)
     asm volatile(""
                  : "=m"(*ptr));
 
-    auto& process = current_thread->process();
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
@@ -189,9 +189,9 @@ void syscall_handler(TrapFrame* trap)
 
     process.big_lock().unlock();
 
-    if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+    if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
-        current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
+        process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
     }
 
     current_thread->yield_if_stopped();

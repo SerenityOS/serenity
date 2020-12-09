@@ -484,7 +484,8 @@ void debug_handler(TrapFrame* trap)
     clac();
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
-    if (&current_thread->process() == nullptr || (regs.cs & 3) == 0) {
+    auto& process = current_thread->process();
+    if ((regs.cs & 3) == 0) {
         klog() << "Debug Exception in Ring0";
         Processor::halt();
         return;
@@ -494,8 +495,8 @@ void debug_handler(TrapFrame* trap)
     if (!is_reason_singlestep)
         return;
 
-    if (current_thread->tracer()) {
-        current_thread->tracer()->set_regs(regs);
+    if (auto tracer = process.tracer()) {
+        tracer->set_regs(regs);
     }
     current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
@@ -506,13 +507,14 @@ void breakpoint_handler(TrapFrame* trap)
     clac();
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
-    if (&current_thread->process() == nullptr || (regs.cs & 3) == 0) {
+    auto& process = current_thread->process();
+    if ((regs.cs & 3) == 0) {
         klog() << "Breakpoint Trap in Ring0";
         Processor::halt();
         return;
     }
-    if (current_thread->tracer()) {
-        current_thread->tracer()->set_regs(regs);
+    if (auto tracer = process.tracer()) {
+        tracer->set_regs(regs);
     }
     current_thread->send_urgent_signal_to_self(SIGTRAP);
 }

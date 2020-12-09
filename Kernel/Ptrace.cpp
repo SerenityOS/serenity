@@ -37,7 +37,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
 {
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
-        if (Thread::current()->tracer())
+        if (Process::current()->tracer())
             return KResult(-EBUSY);
 
         caller.set_wait_for_tracer_at_next_execve(true);
@@ -59,11 +59,12 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         || (peer->process().uid() != peer->process().euid())) // Disallow tracing setuid processes
         return KResult(-EACCES);
 
+    auto& peer_process = peer->process();
     if (params.request == PT_ATTACH) {
-        if (peer->tracer()) {
+        if (peer_process.tracer()) {
             return KResult(-EBUSY);
         }
-        peer->start_tracing_from(caller.pid());
+        peer_process.start_tracing_from(caller.pid());
         ScopedSpinLock lock(peer->get_lock());
         if (peer->state() != Thread::State::Stopped) {
             peer->send_signal(SIGSTOP, &caller);
@@ -71,7 +72,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         return KSuccess;
     }
 
-    auto* tracer = peer->tracer();
+    auto* tracer = peer_process.tracer();
 
     if (!tracer)
         return KResult(-EPERM);
@@ -88,7 +89,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         break;
 
     case PT_DETACH:
-        peer->stop_tracing();
+        peer_process.stop_tracing();
         peer->send_signal(SIGCONT, &caller);
         break;
 

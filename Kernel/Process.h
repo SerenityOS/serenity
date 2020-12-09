@@ -42,6 +42,7 @@
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
@@ -166,6 +167,9 @@ public:
 
     bool is_dead() const { return m_dead; }
 
+    bool is_stopped() const { return m_is_stopped.load(AK::MemoryOrder::memory_order_relaxed); }
+    bool set_stopped(bool stopped) { return m_is_stopped.exchange(stopped, AK::MemoryOrder::memory_order_relaxed); }
+
     bool is_kernel_process() const { return m_is_kernel_process; }
     bool is_user_process() const { return !m_is_kernel_process; }
 
@@ -209,9 +213,15 @@ public:
     void for_each_thread(Callback) const;
 
     void die();
-    void finalize(Thread&);
+    void finalize();
 
     ALWAYS_INLINE SpinLock<u32>& get_lock() const { return m_lock; }
+
+    ThreadTracer* tracer() { return m_tracer.ptr(); }
+    bool is_traced() const { return !!m_tracer; }
+    void start_tracing_from(ProcessID tracer);
+    void stop_tracing();
+    void tracer_trap(Thread&, const RegisterState&);
 
     int sys$yield();
     int sys$sync();
@@ -489,7 +499,7 @@ public:
     KResult poke_user_data(Userspace<u32*> address, u32 data);
 
     void disowned_by_waiter(Process& process);
-    void unblock_waiters(Thread&, Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
+    void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
 
 private:
@@ -530,7 +540,7 @@ private:
     }
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
-    bool has_tracee_thread(ProcessID tracer_pid) const;
+    bool has_tracee_thread(ProcessID tracer_pid);
 
     RefPtr<PageDirectory> m_page_directory;
 
@@ -553,6 +563,8 @@ private:
     ThreadID m_exec_tid { 0 };
     FlatPtr m_load_offset { 0U };
     FlatPtr m_entry_eip { 0U };
+
+    OwnPtr<ThreadTracer> m_tracer;
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 
@@ -582,6 +594,7 @@ private:
     const bool m_is_kernel_process;
     bool m_dead { false };
     bool m_profiling { false };
+    Atomic<bool> m_is_stopped { false };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;

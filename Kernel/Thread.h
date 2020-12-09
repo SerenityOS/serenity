@@ -272,6 +272,7 @@ public:
         virtual bool should_block() { return true; }
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
+        virtual bool can_be_interrupted() const { return true; }
         virtual void not_blocking(bool) = 0;
         virtual void was_unblocked(bool did_timeout)
         {
@@ -480,6 +481,7 @@ public:
         explicit JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value);
         virtual Type blocker_type() const override { return Type::Join; }
         virtual const char* state_string() const override { return "Joining"; }
+        virtual bool can_be_interrupted() const override { return false; }
         virtual bool should_block() override { return !m_join_error && m_should_block; }
         virtual void not_blocking(bool) override;
 
@@ -655,7 +657,7 @@ public:
         virtual void not_blocking(bool) override;
         virtual void was_unblocked(bool) override;
 
-        bool unblock(Thread& thread, UnblockFlags flags, u8 signal, bool from_add_blocker);
+        bool unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker);
         bool is_wait() const { return !(m_wait_options & WNOWAIT); }
 
     private:
@@ -684,7 +686,7 @@ public:
         }
 
         void disowned_by_waiter(Process&);
-        bool unblock(Thread&, WaitBlocker::UnblockFlags, u8);
+        bool unblock(Process&, WaitBlocker::UnblockFlags, u8);
         void try_unblock(WaitBlocker&);
         void finalize();
 
@@ -692,22 +694,18 @@ public:
         virtual bool should_add_blocker(Blocker&, void*) override;
 
     private:
-        struct ThreadBlockInfo {
-            NonnullRefPtr<Thread> thread;
+        struct ProcessBlockInfo {
+            NonnullRefPtr<Process> process;
             WaitBlocker::UnblockFlags flags;
             u8 signal;
             bool was_waited { false };
 
-            explicit ThreadBlockInfo(NonnullRefPtr<Thread>&& thread, WaitBlocker::UnblockFlags flags, u8 signal)
-                : thread(move(thread))
-                , flags(flags)
-                , signal(signal)
-            {
-            }
+            explicit ProcessBlockInfo(NonnullRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
+            ~ProcessBlockInfo();
         };
 
         Process& m_process;
-        Vector<ThreadBlockInfo, 2> m_threads;
+        Vector<ProcessBlockInfo, 2> m_processes;
         bool m_finalized { false };
     };
 
@@ -735,6 +733,7 @@ public:
 
     void resume_from_stopped();
 
+    bool should_be_stopped() const;
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const { return m_state == Blocked; }
     bool is_in_block() const
@@ -742,7 +741,6 @@ public:
         ScopedSpinLock lock(m_block_lock);
         return m_in_block;
     }
-    const Blocker& blocker() const;
 
     u32 cpu() const { return m_cpu.load(AK::MemoryOrder::memory_order_consume); }
     void set_cpu(u32 cpu) { m_cpu.store(cpu, AK::MemoryOrder::memory_order_release); }
@@ -782,15 +780,17 @@ public:
     template<typename T, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
+        ASSERT(!Processor::current().in_irq());
+        ScopedCritical critical;
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
-        ASSERT(!m_in_block);
-        m_in_block = true;
+        m_in_block++;
         T t(forward<Args>(args)...);
 
-        bool did_timeout = false;
+        Atomic<bool> timeout_unblocked(false);
+        Atomic<bool> did_unblock(false);
         RefPtr<Timer> timer;
         {
             switch (state()) {
@@ -809,7 +809,7 @@ public:
                 // Don't block if the wake condition is already met
                 t.not_blocking(false);
                 m_blocker = nullptr;
-                m_in_block = false;
+                m_in_block--;
                 return BlockResult::NotBlocked;
             }
 
@@ -817,34 +817,23 @@ public:
             if (!block_timeout.is_infinite()) {
                 // Process::kill_all_threads may be called at any time, which will mark all
                 // threads to die. In that case
-                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [this]() {
+                timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
+                    ASSERT(!Processor::current().in_irq());
                     ASSERT(!g_scheduler_lock.own_lock());
                     ASSERT(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
-                    {
-                        ScopedSpinLock block_lock(m_block_lock);
-                        if (!m_blocker)
-                            return;
-                        m_blocker_timeout = nullptr;
-                    }
-
                     ScopedSpinLock scheduler_lock(g_scheduler_lock);
                     ScopedSpinLock block_lock(m_block_lock);
-                    if (!this->is_stopped()) {
-                        // Only unblock if we're not stopped. In either
-                        // case the blocker should be marked as timed out
+                    if (m_blocker && timeout_unblocked.exchange(true, AK::MemoryOrder::memory_order_relaxed) == false)
                         unblock();
-                    }
                 });
-                if (!m_blocker_timeout) {
+                if (!timer) {
                     // Timeout is already in the past
                     t.not_blocking(true);
                     m_blocker = nullptr;
-                    m_in_block = false;
+                    m_in_block--;
                     return BlockResult::InterruptedByTimeout;
                 }
-            } else {
-                m_blocker_timeout = nullptr;
             }
 
             t.begin_blocking({});
@@ -853,30 +842,46 @@ public:
         }
 
         block_lock.unlock();
-        scheduler_lock.unlock();
 
-        // Yield to the scheduler, and wait for us to resume unblocked.
-        yield_without_holding_big_lock();
+        bool did_timeout = false;
+        bool last_recursive_unblock;
+        for (;;) {
+            scheduler_lock.unlock();
 
-        scheduler_lock.lock();
+            // Yield to the scheduler, and wait for us to resume unblocked.
+            m_need_relock_process |= unlock_process_if_locked();
+            ASSERT(!g_scheduler_lock.own_lock());
+            ASSERT(Processor::current().in_critical());
+            yield_while_not_holding_big_lock();
 
-        bool is_stopped = state() == Thread::Stopped;
-
-        {
-            if (t.was_interrupted_by_signal()) {
-                ScopedSpinLock lock(m_lock);
-                dispatch_one_pending_signal();
-            }
-
-            // We should no longer be blocked once we woke up, but we may be stopped
-            ASSERT(state() == (is_stopped ? Thread::Stopped : Thread::Running));
-
+            scheduler_lock.lock();
             ScopedSpinLock block_lock2(m_block_lock);
-            // Remove ourselves...
-            m_blocker = nullptr;
-            m_in_block = false;
-            if (timer && !m_blocker_timeout)
-                did_timeout = true;
+            if (should_be_stopped() || state() == Stopped) {
+                dbg() << "Thread should be stopped, current state: " << state_string();
+                set_state(Thread::Blocked);
+                continue;
+            }
+            if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
+                block_lock2.unlock();
+                dbg() << "Thread should not be unblocking, current state: " << state_string();
+                set_state(Thread::Blocked);
+                continue;
+            }
+            // Prevent the timeout from unblocking this thread if it happens to
+            // be in the process of firing already
+            did_timeout |= timeout_unblocked.exchange(true, AK::MemoryOrder::memory_order_relaxed);
+            if (m_blocker) {
+                // Remove ourselves...
+                ASSERT(m_blocker == &t);
+                m_blocker = nullptr;
+            }
+            last_recursive_unblock = (--m_in_block == 0);
+            break;
+        }
+
+        if (t.was_interrupted_by_signal()) {
+            ScopedSpinLock lock(m_lock);
+            dispatch_one_pending_signal();
         }
 
         // Notify the blocker that we are no longer blocking. It may need
@@ -889,13 +894,12 @@ public:
             // the timer function to complete before we remove it
             // (e.g. if it's on another processor)
             TimerQueue::the().cancel_timer(timer.release_nonnull());
-            if (is_stopped) {
-                // If we're stopped we need to yield
-                yield_without_holding_big_lock();
-            }
-        } else if (is_stopped) {
-            // If we're stopped we need to yield
-            yield_without_holding_big_lock();
+        }
+        if (m_need_relock_process && last_recursive_unblock) {
+            m_need_relock_process = false;
+            // NOTE: this may trigger another call to Thread::block(), so
+            // we need to do this after we're all done and restored m_in_block!
+            lock_process();
         }
         return result;
     }
@@ -929,7 +933,7 @@ public:
     u32 kernel_stack_base() const { return m_kernel_stack_base; }
     u32 kernel_stack_top() const { return m_kernel_stack_top; }
 
-    void set_state(State);
+    void set_state(State, u8 = 0);
 
     bool is_initialized() const { return m_initialized; }
     void set_initialized(bool initialized) { m_initialized = initialized; }
@@ -1055,12 +1059,6 @@ public:
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 4 * MiB;
 
-    ThreadTracer* tracer() { return m_tracer.ptr(); }
-    void start_tracing_from(ProcessID tracer);
-    void stop_tracing();
-    void tracer_trap(const RegisterState&);
-    bool is_traced() const { return !!m_tracer; }
-
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #ifdef LOCK_DEBUG
@@ -1165,6 +1163,7 @@ private:
     };
 
     bool unlock_process_if_locked();
+    void lock_process();
     void relock_process(bool did_unlock);
     String backtrace_impl();
     void reset_fpu_state();
@@ -1188,7 +1187,6 @@ private:
     size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
-    RefPtr<Timer> m_blocker_timeout;
 
 #ifdef LOCK_DEBUG
     struct HoldingLockInfo {
@@ -1227,16 +1225,14 @@ private:
     u32 m_extra_priority { 0 };
     u32 m_priority_boost { 0 };
 
-    u8 m_stop_signal { 0 };
     State m_stop_state { Invalid };
+    u32 m_in_block { false };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
-    bool m_in_block { false };
+    bool m_need_relock_process { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
-
-    OwnPtr<ThreadTracer> m_tracer;
 
     void yield_without_holding_big_lock();
     void yield_while_not_holding_big_lock();
