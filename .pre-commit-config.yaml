@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: meta-lint-ci
+        name: Running Meta/lint-ci.sh to ensure changes will pass linting on CI
+        entry: bash Meta/lint-ci.sh
+        language: system
+        pass_filenames: false
