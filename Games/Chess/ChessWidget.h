@@ -46,9 +46,13 @@ public:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     Chess::Board& board() { return m_board; };
     const Chess::Board& board() const { return m_board; };
+
+    Chess::Board& board_playback() { return m_board_playback; };
+    const Chess::Board& board_playback() const { return m_board_playback; };
 
     Chess::Colour side() const { return m_side; };
     void set_side(Chess::Colour side) { m_side = side; };
@@ -79,6 +83,15 @@ public:
     void set_board_theme(const BoardTheme& theme) { m_board_theme = theme; }
     void set_board_theme(const StringView& name);
 
+    enum class PlaybackDirection {
+        First,
+        Backward,
+        Forward,
+        Last
+    };
+
+    void playback_move(PlaybackDirection);
+
     void set_engine(RefPtr<Engine> engine) { m_engine = engine; }
 
     void maybe_input_engine_move();
@@ -88,6 +101,9 @@ public:
 
 private:
     Chess::Board m_board;
+    Chess::Board m_board_playback;
+    bool m_playback { false };
+    size_t m_playback_move_number { 0 };
     BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     Color m_move_highlight_color { Color::from_rgba(0x66ccee00) };
     Chess::Colour m_side { Chess::Colour::White };
