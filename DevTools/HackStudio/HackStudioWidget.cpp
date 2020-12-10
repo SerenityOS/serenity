@@ -109,6 +109,10 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
 
     m_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     m_right_hand_stack = m_right_hand_splitter->add<GUI::StackWidget>();
+
+    // Put a placeholder widget front & center since we don't have a file open yet.
+    m_right_hand_stack->add<GUI::Widget>();
+
     create_form_editor(*m_right_hand_stack);
 
     m_diff_viewer = m_right_hand_stack->add<DiffViewer>();
@@ -174,14 +178,13 @@ void HackStudioWidget::on_action_tab_change()
     reinterpret_cast<GitWidget*>(git_widget)->refresh();
 }
 
-void HackStudioWidget::open_project(String filename)
+void HackStudioWidget::open_project(const String& root_path)
 {
-    LexicalPath lexical_path(filename);
-    if (chdir(lexical_path.dirname().characters()) < 0) {
+    if (chdir(root_path.characters()) < 0) {
         perror("chdir");
         exit(1);
     }
-    m_project = Project::load_from_file(filename);
+    m_project = Project::open_with_root_path(root_path);
     ASSERT(m_project);
     if (m_project_tree_view) {
         m_project_tree_view->set_model(m_project->model());
@@ -240,7 +243,12 @@ void HackStudioWidget::open_file(const String& filename)
     }
 
     m_currently_open_file = filename;
-    window()->set_title(String::formatted("{} - HackStudio", m_currently_open_file));
+
+    String relative_file_path = m_currently_open_file;
+    if (m_currently_open_file.starts_with(m_project->root_path()))
+        relative_file_path = m_currently_open_file.substring(m_project->root_path().length() + 1);
+
+    window()->set_title(String::formatted("{} - {} - HackStudio", relative_file_path, m_project->name()));
     m_project_tree_view->update();
 
     current_editor_wrapper().filename_label().set_text(filename);
@@ -277,14 +285,12 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
 {
     m_open_selected_action = create_open_selected_action();
     m_new_action = create_new_action();
-    m_add_existing_file_action = create_add_existing_file_action();
     m_delete_action = create_delete_action();
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     // TODO: Rename, cut, copy, duplicate with new name, show containing folder ...
     project_tree_view_context_menu->add_separator();
     project_tree_view_context_menu->add_action(*m_new_action);
-    project_tree_view_context_menu->add_action(*m_add_existing_file_action);
     project_tree_view_context_menu->add_action(*m_delete_action);
     return project_tree_view_context_menu;
 }
@@ -298,11 +304,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_action()
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
             GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filename), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-        if (!m_project->add_file(filename)) {
-            GUI::MessageBox::show(window(), String::formatted("Failed to add '{}' to project", filename), "Error", GUI::MessageBox::Type::Error);
-            // FIXME: Should we unlink the file here maybe?
             return;
         }
         m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
@@ -322,25 +323,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
     return open_selected_action;
 }
 
-NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_existing_file_action()
-{
-    return GUI::Action::create("Add existing file to project...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [this](auto&) {
-        auto result = GUI::FilePicker::get_open_filepath(window(), "Add existing file to project");
-        if (!result.has_value())
-            return;
-        auto& filename = result.value();
-        if (!m_project->add_file(filename)) {
-            GUI::MessageBox::show(window(), String::formatted("Failed to add '{}' to project", filename), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-        m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
-        open_file(filename);
-    });
-}
-
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 {
-
     auto delete_action = GUI::CommonActions::make_delete_action([this](const GUI::Action&) {
         auto files = selected_file_names();
         if (files.is_empty())
@@ -348,9 +332,9 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
         String message;
         if (files.size() == 1) {
-            message = String::formatted("Really remove {} from the project?", LexicalPath(files[0]).basename());
+            message = String::formatted("Really remove {} from disk?", LexicalPath(files[0]).basename());
         } else {
-            message = String::formatted("Really remove {} files from the project?", files.size());
+            message = String::formatted("Really remove {} files from disk?", files.size());
         }
 
         auto result = GUI::MessageBox::show(window(),
@@ -362,11 +346,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             return;
 
         for (auto& file : files) {
-            if (m_project->remove_file(file)) {
-                m_open_files_vector.remove_first_matching([&](auto& filename) {
-                    return filename == file;
-                });
-                m_open_files_view->model()->update();
+            if (1) {
+                // FIXME: Remove `file` from disk
             } else {
                 GUI::MessageBox::show(window(),
                     String::formatted("Removing file {} from the project failed.", file),
@@ -455,7 +436,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_action()
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
-        open_file(m_project->default_file());
         update_actions();
     });
 }
@@ -522,10 +502,6 @@ void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 {
     return GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [this](auto&) {
-        if (m_project->type() != ProjectType::Cpp) {
-            GUI::MessageBox::show(window(), "Cannot debug current project type", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
         if (!GUI::FilePicker::file_exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), String::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error", GUI::MessageBox::Type::Error);
             return;
@@ -534,6 +510,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
             GUI::MessageBox::show(window(), "Debugger is already running", "Error", GUI::MessageBox::Type::Error);
             return;
         }
+
         Debugger::the().set_executable_path(get_project_executable_path());
         m_debugger_thread = adopt(*new LibThread::Thread(Debugger::start_static));
         m_debugger_thread->start();
@@ -616,14 +593,15 @@ NonnullRefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& 
 
 String HackStudioWidget::get_project_executable_path() const
 {
-    // e.g /my/project.hsp => /my/project
+    // FIXME: Dumb heuristic ahead!
+    // e.g /my/project => /my/project/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?
-    return m_project->path().substring(0, m_project->path().index_of(".").value());
+    return String::formatted("{}/{}", m_project->root_path(), LexicalPath(m_project->root_path()).basename());
 }
 
 void HackStudioWidget::build(TerminalWrapper& wrapper)
 {
-    if (m_project->type() == ProjectType::JavaScript && m_currently_open_file.ends_with(".js"))
+    if (m_currently_open_file.ends_with(".js"))
         wrapper.run_command(String::formatted("js -A {}", m_currently_open_file));
     else
         wrapper.run_command("make");
@@ -631,7 +609,7 @@ void HackStudioWidget::build(TerminalWrapper& wrapper)
 
 void HackStudioWidget::run(TerminalWrapper& wrapper)
 {
-    if (m_project->type() == ProjectType::JavaScript && m_currently_open_file.ends_with(".js"))
+    if (m_currently_open_file.ends_with(".js"))
         wrapper.run_command(String::formatted("js {}", m_currently_open_file));
     else
         wrapper.run_command("make run");
@@ -656,7 +634,11 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
 {
     m_project_tree_view = parent.add<GUI::TreeView>();
     m_project_tree_view->set_model(m_project->model());
-    m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
+
+    for (int column_index = 0; column_index < m_project->model().column_count(); ++column_index)
+        m_project_tree_view->set_column_hidden(column_index, true);
+
+    m_project_tree_view->set_column_hidden(GUI::FileSystemModel::Column::Name, false);
 
     m_project_tree_view->on_context_menu_request = [this](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
@@ -777,7 +759,6 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 {
     auto& toolbar = parent.add<GUI::ToolBar>();
     toolbar.add_action(*m_new_action);
-    toolbar.add_action(*m_add_existing_file_action);
     toolbar.add_action(*m_save_action);
     toolbar.add_action(*m_delete_action);
     toolbar.add_separator();
@@ -837,7 +818,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_directory()));
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_path()));
     m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
@@ -850,7 +831,7 @@ void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);
     app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 }
@@ -859,7 +840,6 @@ void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
 {
     auto& project_menu = menubar.add_menu("Project");
     project_menu.add_action(*m_new_action);
-    project_menu.add_action(*m_add_existing_file_action);
 }
 
 void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
