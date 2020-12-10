@@ -292,6 +292,11 @@ void ChessWidget::maybe_input_engine_move()
     });
 }
 
+String ChessWidget::get_fen() const
+{
+    return m_board.to_fen();
+}
+
 bool ChessWidget::export_pgn(const StringView& export_path) const
 {
     auto file_or_error = Core::File::open(export_path, Core::File::WriteOnly);

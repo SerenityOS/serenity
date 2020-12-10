@@ -30,6 +30,7 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -120,6 +121,10 @@ int main(int argc, char** argv)
         }
 
         dbgln("Exported PGN file to {}", export_path.value());
+    }));
+    app_menu.add_action(GUI::Action::create("Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
+        GUI::Clipboard::the().set_data(widget.get_fen().bytes());
+        GUI::MessageBox::show(window, "Board state copied to clipboard as FEN.", "Copy FEN", GUI::MessageBox::Type::Information);
     }));
     app_menu.add_separator();
 

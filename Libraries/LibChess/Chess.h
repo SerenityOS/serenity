@@ -139,6 +139,8 @@ public:
     bool apply_move(const Move&, Colour colour = Colour::None);
     const Optional<Move>& last_move() const { return m_last_move; }
 
+    String to_fen() const;
+
     enum class Result {
         CheckMate,
         StaleMate,
@@ -180,6 +182,7 @@ private:
     Colour m_resigned { Colour::None };
     Optional<Move> m_last_move;
     int m_moves_since_capture { 0 };
+    int m_moves_since_pawn_advance { 0 };
 
     bool m_white_can_castle_kingside { true };
     bool m_white_can_castle_queenside { true };
