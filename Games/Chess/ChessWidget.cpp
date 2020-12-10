@@ -59,6 +59,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     size_t tile_height = height() / 8;
     unsigned coord_rank_file = (side() == Chess::Colour::White) ? 0 : 7;
 
+    Chess::Board& active_board = (m_playback ? board_playback() : board());
+
     Chess::Square::for_each([&](Chess::Square sq) {
         Gfx::IntRect tile_rect;
         if (side() == Chess::Colour::White) {
@@ -69,7 +71,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         painter.fill_rect(tile_rect, (sq.is_light()) ? board_theme().light_square_color : board_theme().dark_square_color);
 
-        if (board().last_move().has_value() && (board().last_move().value().to == sq || board().last_move().value().from == sq)) {
+        if (active_board.last_move().has_value() && (active_board.last_move().value().to == sq || active_board.last_move().value().from == sq)) {
             painter.fill_rect(tile_rect, m_move_highlight_color);
         }
 
@@ -87,7 +89,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         }
 
         if (!(m_dragging_piece && sq == m_moving_square)) {
-            auto bmp = m_pieces.get(board().get_piece(sq));
+            auto bmp = m_pieces.get(active_board.get_piece(sq));
             if (bmp.has_value()) {
                 painter.draw_scaled_bitmap(tile_rect, *bmp.value(), bmp.value()->rect());
             }
@@ -97,7 +99,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     });
 
     if (m_dragging_piece) {
-        auto bmp = m_pieces.get(board().get_piece(m_moving_square));
+        auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
         if (bmp.has_value()) {
             auto center = m_drag_point - Gfx::IntPoint(tile_width / 2, tile_height / 2);
             painter.draw_scaled_bitmap({ center, { tile_width, tile_height } }, *bmp.value(), bmp.value()->rect());
@@ -110,7 +112,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     GUI::Widget::mousedown_event(event);
     auto square = mouse_to_square(event);
     auto piece = board().get_piece(square);
-    if (drag_enabled() && piece.colour == board().turn()) {
+    if (drag_enabled() && piece.colour == board().turn() && !m_playback) {
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
@@ -136,8 +138,11 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     }
 
     if (board().apply_move(move)) {
-        if (board().game_result() != Chess::Board::Result::NotFinished) {
+        m_playback_move_number = board().moves().size();
+        m_playback = false;
+        m_board_playback = m_board;
 
+        if (board().game_result() != Chess::Board::Result::NotFinished) {
             bool over = true;
             String msg;
             switch (board().game_result()) {
@@ -206,6 +211,33 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
     update();
 }
 
+void ChessWidget::keydown_event(GUI::KeyEvent& event)
+{
+    switch (event.key()) {
+    case KeyCode::Key_Left:
+        playback_move(PlaybackDirection::Backward);
+        break;
+    case KeyCode::Key_Right:
+        playback_move(PlaybackDirection::Forward);
+        break;
+    case KeyCode::Key_Up:
+        playback_move(PlaybackDirection::Last);
+        break;
+    case KeyCode::Key_Down:
+        playback_move(PlaybackDirection::First);
+        break;
+    case KeyCode::Key_Home:
+        playback_move(PlaybackDirection::First);
+        break;
+    case KeyCode::Key_End:
+        playback_move(PlaybackDirection::Last);
+        break;
+    default:
+        return;
+    }
+    update();
+}
+
 static String set_path = String("/res/icons/chess/sets/");
 
 static RefPtr<Gfx::Bitmap> get_piece(const StringView& set, const StringView& image)
@@ -254,6 +286,9 @@ RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) co
 
 void ChessWidget::reset()
 {
+    m_playback = false;
+    m_playback_move_number = 0;
+    m_board_playback = Chess::Board();
     m_board = Chess::Board();
     m_side = (arc4random() % 2) ? Chess::Colour::White : Chess::Colour::Black;
     m_drag_enabled = true;
@@ -288,13 +323,55 @@ void ChessWidget::maybe_input_engine_move()
     m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](Chess::Move move) {
         set_drag_enabled(drag_was_enabled);
         ASSERT(board().apply_move(move));
+        m_playback_move_number = m_board.moves().size();
+        m_playback = false;
         update();
     });
 }
 
+void ChessWidget::playback_move(PlaybackDirection direction)
+{
+    if (m_board.moves().is_empty())
+        return;
+
+    m_playback = true;
+
+    switch (direction) {
+    case PlaybackDirection::Backward:
+        if (m_playback_move_number == 0)
+            return;
+        m_board_playback = Chess::Board();
+        for (size_t i = 0; i < m_playback_move_number - 1; i++)
+            m_board_playback.apply_move(m_board.moves().at(i));
+        m_playback_move_number--;
+        break;
+    case PlaybackDirection::Forward:
+        if (m_playback_move_number + 1 > m_board.moves().size()) {
+            m_playback = false;
+            return;
+        }
+        m_board_playback.apply_move(m_board.moves().at(m_playback_move_number++));
+        if (m_playback_move_number == m_board.moves().size())
+            m_playback = false;
+        break;
+    case PlaybackDirection::First:
+        m_board_playback = Chess::Board();
+        m_playback_move_number = 0;
+        break;
+    case PlaybackDirection::Last:
+        while (m_playback) {
+            playback_move(PlaybackDirection::Forward);
+        }
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+    update();
+}
+
 String ChessWidget::get_fen() const
 {
-    return m_board.to_fen();
+    return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
 bool ChessWidget::export_pgn(const StringView& export_path) const
