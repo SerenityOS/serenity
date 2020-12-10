@@ -456,6 +456,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             directory_view.delete_action().activate();
         refresh_tree_view();
     });
+    focus_dependent_delete_action->set_enabled(false);
 
     auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         directory_view.mkdir_action().activate();
@@ -579,9 +580,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     directory_view.on_selection_change = [&](GUI::AbstractView& view) {
-        // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
         auto& selection = view.selection();
         copy_action->set_enabled(!selection.is_empty());
+        focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
+            || !directory_view.current_view().selection().is_empty());
     };
 
     directory_context_menu->add_action(copy_action);
@@ -681,6 +683,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     tree_view.on_selection_change = [&] {
+        focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
+            || !directory_view.current_view().selection().is_empty());
+
         if (tree_view.selection().is_empty())
             return;
         auto path = directories_model->full_path(tree_view.selection().first());
@@ -690,6 +695,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         directory_view.open(path);
         copy_action->set_enabled(!tree_view.selection().is_empty());
         directory_view.delete_action().set_enabled(!tree_view.selection().is_empty());
+    };
+
+    tree_view.on_focus_change = [&]([[ maybe_unused ]] const bool has_focus, [[ maybe_unused ]] const GUI::FocusSource source) {
+        focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && has_focus)
+                                                   || !directory_view.current_view().selection().is_empty());
     };
 
     tree_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {

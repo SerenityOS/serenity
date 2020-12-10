@@ -165,6 +165,8 @@ public:
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
+    Function<void(const bool, const FocusSource)> on_focus_change;
+
     // Returns true if this widget or one of its descendants is focused.
     bool has_focus_within() const;
 
