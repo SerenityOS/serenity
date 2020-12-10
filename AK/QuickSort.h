@@ -51,8 +51,8 @@ void dual_pivot_quick_sort(Collection& col, int start, int end, LessThan less_th
     int k = start + 1;
     int g = end - 1;
 
-    auto left_pivot = col[start];
-    auto right_pivot = col[end];
+    auto&& left_pivot = col[start];
+    auto&& right_pivot = col[end];
 
     while (k <= g) {
         if (less_than(col[k], left_pivot)) {
