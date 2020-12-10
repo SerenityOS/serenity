@@ -201,6 +201,31 @@ public:
         ReadLine,
     };
 
+    enum class ShellError {
+        None,
+        InternalControlFlowBreak,
+        InternalControlFlowContinue,
+        EvaluatedSyntaxError,
+        NonExhaustiveMatchRules,
+        InvalidGlobError,
+    };
+
+    void raise_error(ShellError kind, String description)
+    {
+        m_error = kind;
+        m_error_description = move(description);
+    }
+    bool has_error(ShellError err) const { return m_error == err; }
+    const String& error_description() const { return m_error_description; }
+    ShellError take_error()
+    {
+        auto err = m_error;
+        m_error = ShellError::None;
+        m_error_description = {};
+        return err;
+    }
+    void possibly_print_error() const;
+
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
     bool name { default_ };
 
@@ -262,6 +287,9 @@ private:
     bool m_is_interactive { true };
     bool m_is_subshell { false };
     bool m_should_reinstall_signal_handlers { true };
+
+    ShellError m_error { ShellError::None };
+    String m_error_description;
 
     bool m_should_format_live { false };
 

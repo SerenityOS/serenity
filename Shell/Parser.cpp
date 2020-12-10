@@ -362,6 +362,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
         }
     }
 
+    TemporaryChange controls { m_continuation_controls_allowed, false };
     auto body = parse_toplevel();
 
     {
@@ -499,8 +500,14 @@ RefPtr<AST::Node> Parser::parse_control_structure()
 {
     auto rule_start = push_start();
     consume_while(is_whitespace);
+    if (auto control = parse_continuation_control())
+        return control;
+
     if (auto for_loop = parse_for_loop())
         return for_loop;
+
+    if (auto loop = parse_loop_loop())
+        return loop;
 
     if (auto if_expr = parse_if_expr())
         return if_expr;
@@ -510,6 +517,40 @@ RefPtr<AST::Node> Parser::parse_control_structure()
 
     if (auto match = parse_match_expr())
         return match;
+
+    return nullptr;
+}
+
+RefPtr<AST::Node> Parser::parse_continuation_control()
+{
+    if (!m_continuation_controls_allowed)
+        return nullptr;
+
+    auto rule_start = push_start();
+
+    if (expect("break")) {
+        {
+            auto break_end = push_start();
+            if (consume_while(is_any_of(" \t\n;")).is_empty()) {
+                restore_to(*rule_start);
+                return nullptr;
+            }
+            restore_to(*break_end);
+        }
+        return create<AST::ContinuationControl>(AST::ContinuationControl::Break);
+    }
+
+    if (expect("continue")) {
+        {
+            auto continue_end = push_start();
+            if (consume_while(is_any_of(" \t\n;")).is_empty()) {
+                restore_to(*rule_start);
+                return nullptr;
+            }
+            restore_to(*continue_end);
+        }
+        return create<AST::ContinuationControl>(AST::ContinuationControl::Continue);
+    }
 
     return nullptr;
 }
@@ -544,10 +585,8 @@ RefPtr<AST::Node> Parser::parse_for_loop()
     {
         auto iter_error_start = push_start();
         iterated_expression = parse_expression();
-        if (!iterated_expression) {
-            auto syntax_error = create<AST::SyntaxError>("Expected an expression in 'for' loop", true);
-            return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr, move(in_start_position)); // ForLoop Var Iterated Block
-        }
+        if (!iterated_expression)
+            iterated_expression = create<AST::SyntaxError>("Expected an expression in 'for' loop", true);
     }
 
     consume_while(is_any_of(" \t\n"));
@@ -555,10 +594,11 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto obrace_error_start = push_start();
         if (!expect('{')) {
             auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body", true);
-            return create<AST::ForLoop>(move(variable_name), iterated_expression.release_nonnull(), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
+            return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
         }
     }
 
+    TemporaryChange controls { m_continuation_controls_allowed, true };
     auto body = parse_toplevel();
 
     {
@@ -573,7 +613,44 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         }
     }
 
-    return create<AST::ForLoop>(move(variable_name), iterated_expression.release_nonnull(), move(body), move(in_start_position)); // ForLoop Var Iterated Block
+    return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(body), move(in_start_position)); // ForLoop Var Iterated Block
+}
+
+RefPtr<AST::Node> Parser::parse_loop_loop()
+{
+    auto rule_start = push_start();
+    if (!expect("loop"))
+        return nullptr;
+
+    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+        restore_to(*rule_start);
+        return nullptr;
+    }
+
+    {
+        auto obrace_error_start = push_start();
+        if (!expect('{')) {
+            auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'loop' loop body", true);
+            return create<AST::ForLoop>(String::empty(), nullptr, move(syntax_error), Optional<AST::Position> {}); // ForLoop null null Block
+        }
+    }
+
+    TemporaryChange controls { m_continuation_controls_allowed, true };
+    auto body = parse_toplevel();
+
+    {
+        auto cbrace_error_start = push_start();
+        if (!expect('}')) {
+            auto error_start = push_start();
+            auto syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'loop' loop body", true);
+            if (body)
+                body->set_is_syntax_error(*syntax_error);
+            else
+                body = syntax_error;
+        }
+    }
+
+    return create<AST::ForLoop>(String::empty(), nullptr, move(body), Optional<AST::Position> {}); // ForLoop null null Block
 }
 
 RefPtr<AST::Node> Parser::parse_if_expr()

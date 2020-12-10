@@ -554,6 +554,8 @@ int Shell::run_command(const StringView& cmd)
     // should not be used for execution!
     ASSERT(!m_default_constructed);
 
+    take_error();
+
     if (cmd.is_empty())
         return 0;
 
@@ -891,6 +893,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
 void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAction& next_in_chain, int head_exit_code)
 {
+    if (m_error != ShellError::None) {
+        possibly_print_error();
+        return;
+    }
     auto evaluate = [&] {
         if (next_in_chain.node->would_execute()) {
             next_in_chain.node->run(*this);
@@ -929,6 +935,11 @@ void Shell::run_tail(RefPtr<Job> job)
 
 NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 {
+    if (m_error != ShellError::None) {
+        possibly_print_error();
+        return {};
+    }
+
     NonnullRefPtrVector<Job> spawned_jobs;
 
     for (auto& command : commands) {
@@ -1720,6 +1731,24 @@ void Shell::save_to(JsonObject& object)
         job_objects.append(move(job_object));
     }
     object.set("jobs", move(job_objects));
+}
+
+void Shell::possibly_print_error() const
+{
+    switch (m_error) {
+    case ShellError::EvaluatedSyntaxError:
+        warnln("Shell Syntax Error: {}", m_error_description);
+        return;
+    case ShellError::InvalidGlobError:
+    case ShellError::NonExhaustiveMatchRules:
+        warnln("Shell: {}", m_error_description);
+        return;
+    case ShellError::InternalControlFlowBreak:
+    case ShellError::InternalControlFlowContinue:
+        return;
+    case ShellError::None:
+        return;
+    }
 }
 
 void FileDescriptionCollector::collect()

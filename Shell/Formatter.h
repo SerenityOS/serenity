@@ -64,6 +64,7 @@ private:
     virtual void visit(const AST::CloseFdRedirection*) override;
     virtual void visit(const AST::CommandLiteral*) override;
     virtual void visit(const AST::Comment*) override;
+    virtual void visit(const AST::ContinuationControl*) override;
     virtual void visit(const AST::DynamicEvaluate*) override;
     virtual void visit(const AST::DoubleQuotedString*) override;
     virtual void visit(const AST::Fd2FdRedirection*) override;

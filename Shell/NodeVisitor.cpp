@@ -84,6 +84,10 @@ void NodeVisitor::visit(const AST::Comment*)
 {
 }
 
+void NodeVisitor::visit(const AST::ContinuationControl*)
+{
+}
+
 void NodeVisitor::visit(const AST::DynamicEvaluate* node)
 {
     node->inner()->visit(*this);
@@ -107,7 +111,8 @@ void NodeVisitor::visit(const AST::FunctionDeclaration* node)
 
 void NodeVisitor::visit(const AST::ForLoop* node)
 {
-    node->iterated_expression()->visit(*this);
+    if (node->iterated_expression())
+        node->iterated_expression()->visit(*this);
     if (node->block())
         node->block()->visit(*this);
 }
