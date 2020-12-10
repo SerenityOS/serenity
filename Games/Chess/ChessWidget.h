@@ -100,13 +100,40 @@ public:
     void set_coordinates(bool coordinates) { m_coordinates = coordinates; }
     bool coordinates() const { return m_coordinates; }
 
+    struct BoardMarking {
+        Chess::Square from { 50, 50 };
+        Chess::Square to { 50, 50 };
+        bool alternate_color { false };
+        bool secondary_color { false };
+        enum class Type {
+            Square,
+            Arrow,
+            None
+        };
+        Type type() const
+        {
+            if (from.in_bounds() && to.in_bounds() && from != to)
+                return Type::Arrow;
+            else if ((from.in_bounds() && !to.in_bounds()) || (from.in_bounds() && to.in_bounds() && from == to))
+                return Type::Square;
+
+            return Type::None;
+        }
+        bool operator==(const BoardMarking& other) const { return from == other.from && to == other.to; }
+    };
+
 private:
     Chess::Board m_board;
     Chess::Board m_board_playback;
     bool m_playback { false };
     size_t m_playback_move_number { 0 };
+    BoardMarking m_current_marking;
+    Vector<BoardMarking> m_board_markings;
     BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     Color m_move_highlight_color { Color::from_rgba(0x66ccee00) };
+    Color m_marking_primary_color { Color::from_rgba(0x66ff0000) };
+    Color m_marking_alternate_color { Color::from_rgba(0x66ffaa00) };
+    Color m_marking_secondary_color { Color::from_rgba(0x6655dd55) };
     Chess::Colour m_side { Chess::Colour::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
     String m_piece_set;

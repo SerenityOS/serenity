@@ -32,6 +32,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Path.h>
 #include <unistd.h>
 
 ChessWidget::ChessWidget(const StringView& set)
@@ -88,6 +89,13 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
                 painter.draw_text(shrunken_rect, coord.substring_view(1, 1), Gfx::Font::default_bold_font(), Gfx::TextAlignment::TopLeft, text_color);
         }
 
+        for (auto& m : m_board_markings) {
+            if (m.type() == BoardMarking::Type::Square && m.from == sq) {
+                Gfx::Color color = m.secondary_color ? m_marking_secondary_color : (m.alternate_color ? m_marking_alternate_color : m_marking_primary_color);
+                painter.fill_rect(tile_rect, color);
+            }
+        }
+
         if (!(m_dragging_piece && sq == m_moving_square)) {
             auto bmp = m_pieces.get(active_board.get_piece(sq));
             if (bmp.has_value()) {
@@ -97,6 +105,53 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         return IterationDecision::Continue;
     });
+
+    auto draw_arrow = [&painter](Gfx::FloatPoint A, Gfx::FloatPoint B, float w1, float w2, float h, Gfx::Color color) {
+        float dx = B.x() - A.x();
+        float dy = A.y() - B.y();
+        float phi = atan2f(dy, dx);
+        float hdx = h * cos(phi);
+        float hdy = h * sin(phi);
+
+        Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos(M_PI_2 - phi), A.y() - (w1 / 2) * sin(M_PI_2 - phi));
+        Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos(M_PI_2 - phi), A.y() + (w1 / 2) * sin(M_PI_2 - phi));
+        Gfx::FloatPoint A2(A1.x() + (dx - hdx), A1.y() - (dy - hdy));
+        Gfx::FloatPoint B2(B3.x() + (dx - hdx), B3.y() - (dy - hdy));
+        Gfx::FloatPoint A3(A2.x() - w2 * cos(M_PI_2 - phi), A2.y() - w2 * sin(M_PI_2 - phi));
+        Gfx::FloatPoint B1(B2.x() + w2 * cos(M_PI_2 - phi), B2.y() + w2 * sin(M_PI_2 - phi));
+
+        auto path = Gfx::Path();
+        path.move_to(A);
+        path.line_to(A1);
+        path.line_to(A2);
+        path.line_to(A3);
+        path.line_to(B);
+        path.line_to(B1);
+        path.line_to(B2);
+        path.line_to(B3);
+        path.line_to(A);
+        path.close();
+
+        painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+    };
+
+    for (auto& m : m_board_markings) {
+        if (m.type() == BoardMarking::Type::Arrow) {
+            Gfx::FloatPoint arrow_start;
+            Gfx::FloatPoint arrow_end;
+
+            if (side() == Chess::Colour::White) {
+                arrow_start = { m.from.file * tile_width + tile_width / 2.0f, (7 - m.from.rank) * tile_height + tile_height / 2.0f };
+                arrow_end = { m.to.file * tile_width + tile_width / 2.0f, (7 - m.to.rank) * tile_height + tile_height / 2.0f };
+            } else {
+                arrow_start = { (7 - m.from.file) * tile_width + tile_width / 2.0f, m.from.rank * tile_height + tile_height / 2.0f };
+                arrow_end = { (7 - m.to.file) * tile_width + tile_width / 2.0f, m.to.rank * tile_height + tile_height / 2.0f };
+            }
+
+            Gfx::Color color = m.secondary_color ? m_marking_secondary_color : (m.alternate_color ? m_marking_primary_color : m_marking_alternate_color);
+            draw_arrow(arrow_start, arrow_end, tile_width / 8.0f, tile_width / 10.0f, tile_height / 2.5f, color);
+        }
+    }
 
     if (m_dragging_piece) {
         auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
@@ -110,19 +165,43 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mousedown_event(event);
+
+    if (event.button() == GUI::MouseButton::Right) {
+        m_current_marking.from = mouse_to_square(event);
+        return;
+    }
+    m_board_markings.clear();
+
     auto square = mouse_to_square(event);
     auto piece = board().get_piece(square);
     if (drag_enabled() && piece.colour == board().turn() && !m_playback) {
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
-        update();
     }
+
+    update();
 }
 
 void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mouseup_event(event);
+
+    if (event.button() == GUI::MouseButton::Right) {
+        m_current_marking.secondary_color = event.shift();
+        m_current_marking.alternate_color = event.ctrl();
+        m_current_marking.to = mouse_to_square(event);
+        auto match_index = m_board_markings.find_first_index(m_current_marking);
+        if (match_index.has_value()) {
+            m_board_markings.remove(match_index.value());
+            update();
+            return;
+        }
+        m_board_markings.append(m_current_marking);
+        update();
+        return;
+    }
+
     if (!m_dragging_piece)
         return;
 
@@ -286,6 +365,7 @@ RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) co
 
 void ChessWidget::reset()
 {
+    m_board_markings.clear();
     m_playback = false;
     m_playback_move_number = 0;
     m_board_playback = Chess::Board();
@@ -325,6 +405,7 @@ void ChessWidget::maybe_input_engine_move()
         ASSERT(board().apply_move(move));
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
+        m_board_markings.clear();
         update();
     });
 }
@@ -335,6 +416,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
         return;
 
     m_playback = true;
+    m_board_markings.clear();
 
     switch (direction) {
     case PlaybackDirection::Backward:
@@ -469,6 +551,7 @@ bool ChessWidget::import_pgn(const StringView& import_path)
         }
     }
 
+    m_board_markings.clear();
     m_board_playback = m_board;
     m_playback_move_number = m_board_playback.moves().size();
     m_playback = true;
