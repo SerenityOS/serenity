@@ -101,6 +101,8 @@ struct Square {
     String to_algebraic() const;
 };
 
+class Board;
+
 struct Move {
     Square from;
     Square to;
@@ -111,7 +113,7 @@ struct Move {
     bool is_capture = false;
     bool is_ambiguous = false;
     Square ambiguous { 50, 50 };
-    Move(const StringView& algebraic);
+    Move(const StringView& long_algebraic);
     Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
         : from(from)
         , to(to)
@@ -120,6 +122,7 @@ struct Move {
     }
     bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
+    static Move from_algebraic(const StringView& algebraic, const Colour turn, const Board& board);
     String to_long_algebraic() const;
     String to_algebraic() const;
 };

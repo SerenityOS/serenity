@@ -374,6 +374,110 @@ String ChessWidget::get_fen() const
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
+bool ChessWidget::import_pgn(const StringView& import_path)
+{
+    auto file_or_error = Core::File::open(import_path, Core::File::OpenMode::ReadOnly);
+    if (file_or_error.is_error()) {
+        warnln("Couldn't open '{}': {}", import_path, file_or_error.error());
+        return false;
+    }
+    auto& file = *file_or_error.value();
+
+    m_board = Chess::Board();
+
+    ByteBuffer bytes = file.read_all();
+    StringView content = bytes;
+    auto lines = content.lines();
+    StringView line;
+    size_t i = 0;
+
+    // Tag Pair Section
+    // FIXME: Parse these tags when they become relevant
+    do {
+        line = lines.at(i++);
+    } while (!line.is_empty() || i >= lines.size());
+
+    // Movetext Section
+    bool skip = false;
+    bool recursive_annotation = false;
+    bool future_expansion = false;
+    Chess::Colour turn = Chess::Colour::White;
+    String movetext;
+
+    for (size_t j = i; j < lines.size(); j++)
+        movetext = String::formatted("{}{}", movetext, lines.at(i).to_string());
+
+    for (auto token : movetext.split(' ')) {
+        token = token.trim_whitespace();
+
+        // FIXME: Parse all of these tokens when we start caring about them
+        if (token.ends_with("}")) {
+            skip = false;
+            continue;
+        }
+        if (skip)
+            continue;
+        if (token.starts_with("{")) {
+            if (token.ends_with("}"))
+                continue;
+            skip = true;
+            continue;
+        }
+        if (token.ends_with(")")) {
+            recursive_annotation = false;
+            continue;
+        }
+        if (recursive_annotation)
+            continue;
+        if (token.starts_with("(")) {
+            if (token.ends_with(")"))
+                continue;
+            recursive_annotation = true;
+            continue;
+        }
+        if (token.ends_with(">")) {
+            future_expansion = false;
+            continue;
+        }
+        if (future_expansion)
+            continue;
+        if (token.starts_with("<")) {
+            if (token.ends_with(">"))
+                continue;
+            future_expansion = true;
+            continue;
+        }
+        if (token.starts_with("$"))
+            continue;
+        if (token.contains("*"))
+            break;
+        // FIXME: When we become able to set more of the game state, fix these end results
+        if (token.contains("1-0")) {
+            m_board.set_resigned(Chess::Colour::Black);
+            break;
+        }
+        if (token.contains("0-1")) {
+            m_board.set_resigned(Chess::Colour::White);
+            break;
+        }
+        if (token.contains("1/2-1/2")) {
+            break;
+        }
+        if (!token.ends_with(".")) {
+            m_board.apply_move(Chess::Move::from_algebraic(token, turn, m_board));
+            turn = Chess::opposing_colour(turn);
+        }
+    }
+
+    m_board_playback = m_board;
+    m_playback_move_number = m_board_playback.moves().size();
+    m_playback = true;
+    update();
+
+    file.close();
+    return true;
+}
+
 bool ChessWidget::export_pgn(const StringView& export_path) const
 {
     auto file_or_error = Core::File::open(export_path, Core::File::WriteOnly);
