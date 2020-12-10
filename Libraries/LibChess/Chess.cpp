@@ -205,6 +205,73 @@ Board::Board()
     set_piece(Square("h8"), { Colour::Black, Type::Rook });
 }
 
+String Board::to_fen() const
+{
+    StringBuilder builder;
+
+    // 1. Piece placement
+    int empty = 0;
+    for (unsigned rank = 0; rank < 8; rank++) {
+        for (unsigned file = 0; file < 8; file++) {
+            const Piece p(get_piece({ 7 - rank, file }));
+            if (p.type == Type::None) {
+                empty++;
+                continue;
+            }
+            if (empty > 0) {
+                builder.append(String::number(empty));
+                empty = 0;
+            }
+            String piece = char_for_piece(p.type);
+            if (piece == "")
+                piece = "P";
+
+            builder.append(p.colour == Colour::Black ? piece.to_lowercase() : piece);
+        }
+        if (empty > 0) {
+            builder.append(String::number(empty));
+            empty = 0;
+        }
+        if (rank < 7)
+            builder.append("/");
+    }
+
+    // 2. Active color
+    ASSERT(m_turn != Colour::None);
+    builder.append(m_turn == Colour::White ? " w " : " b ");
+
+    // 3. Castling availability
+    builder.append(m_white_can_castle_kingside ? "K" : "");
+    builder.append(m_white_can_castle_queenside ? "Q" : "");
+    builder.append(m_black_can_castle_kingside ? "k" : "");
+    builder.append(m_black_can_castle_queenside ? "q" : "");
+    builder.append(" ");
+
+    // 4. En passant target square
+    if (!m_last_move.has_value())
+        builder.append("-");
+    else if (m_last_move.value().piece.type == Type::Pawn) {
+        if (m_last_move.value().from.rank == 1 && m_last_move.value().to.rank == 3)
+            builder.append(Square(m_last_move.value().to.rank - 1, m_last_move.value().to.file).to_algebraic());
+        else if (m_last_move.value().from.rank == 6 && m_last_move.value().to.rank == 4)
+            builder.append(Square(m_last_move.value().to.rank + 1, m_last_move.value().to.file).to_algebraic());
+        else
+            builder.append("-");
+    } else {
+        builder.append("-");
+    }
+    builder.append(" ");
+
+    // 5. Halfmove clock
+    builder.append(String::number(min(m_moves_since_capture, m_moves_since_pawn_advance)));
+    builder.append(" ");
+
+    // 6. Fullmove number
+    builder.append(String::number(1 + m_moves.size() / 2));
+
+    return builder.to_string();
+}
+
 Piece Board::get_piece(const Square& square) const
 {
     ASSERT(square.rank < 8);
@@ -474,6 +541,7 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
 
     m_last_move = move;
     m_moves_since_capture++;
+    m_moves_since_pawn_advance++;
 
     if (move.from == Square("a1") || move.to == Square("a1") || move.from == Square("e1"))
         m_white_can_castle_queenside = false;
@@ -513,6 +581,9 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
             return true;
         }
     }
+
+    if (move.piece.type == Type::Pawn)
+        m_moves_since_pawn_advance = 0;
 
     if (get_piece(move.to).colour != Colour::None) {
         const_cast<Move&>(move).is_capture = true;
