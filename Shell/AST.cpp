@@ -792,6 +792,28 @@ Comment::~Comment()
 {
 }
 
+void ContinuationControl::dump(int level) const
+{
+    Node::dump(level);
+    print_indented(m_kind == Continue ? "(Continue)" : "(Break)", level + 1);
+}
+
+RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
+{
+    if (m_kind == Break)
+        shell->raise_error(Shell::ShellError::InternalControlFlowBreak, {});
+    else if (m_kind == Continue)
+        shell->raise_error(Shell::ShellError::InternalControlFlowContinue, {});
+    else
+        ASSERT_NOT_REACHED();
+    return create<ListValue>({});
+}
+
+void ContinuationControl::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
+{
+    editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+}
+
 void DoubleQuotedString::dump(int level) const
 {
     Node::dump(level);
@@ -1011,7 +1033,10 @@ void ForLoop::dump(int level) const
 {
     Node::dump(level);
     print_indented(String::format("%s in\n", m_variable_name.characters()), level + 1);
-    m_iterated_expression->dump(level + 2);
+    if (m_iterated_expression)
+        m_iterated_expression->dump(level + 2);
+    else
+        print_indented("(ever)", level + 2);
     print_indented("Running", level + 1);
     if (m_block)
         m_block->dump(level + 2);
@@ -1025,18 +1050,15 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         return create<ListValue>({});
 
     size_t consecutive_interruptions = 0;
-
-    m_iterated_expression->for_each_entry(shell, [&](auto value) {
-        if (consecutive_interruptions == 2)
+    auto run = [&](auto& block_value) {
+        if (shell->has_error(Shell::ShellError::InternalControlFlowBreak)) {
+            shell->take_error();
             return IterationDecision::Break;
+        }
 
-        RefPtr<Value> block_value;
-
-        {
-            auto frame = shell->push_frame(String::formatted("for ({})", this));
-            shell->set_local_variable(m_variable_name, value, true);
-
-            block_value = m_block->run(shell);
+        if (shell->has_error(Shell::ShellError::InternalControlFlowContinue)) {
+            shell->take_error();
+            return IterationDecision::Continue;
         }
 
         if (block_value->is_job()) {
@@ -1055,19 +1077,48 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             }
         }
         return IterationDecision::Continue;
-    });
+    };
+
+    if (m_iterated_expression) {
+        m_iterated_expression->for_each_entry(shell, [&](auto value) {
+            if (consecutive_interruptions == 2)
+                return IterationDecision::Break;
+
+            RefPtr<Value> block_value;
+
+            {
+                auto frame = shell->push_frame(String::formatted("for ({})", this));
+                shell->set_local_variable(m_variable_name, value, true);
+
+                block_value = m_block->run(shell);
+            }
+            return run(block_value);
+        });
+    } else {
+        for (;;) {
+            if (consecutive_interruptions == 2)
+                break;
+
+            RefPtr<Value> block_value = m_block->run(shell);
+            if (run(block_value) == IterationDecision::Break)
+                break;
+        }
+    }
 
     return create<ListValue>({});
 }
 
 void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
-    editor.stylize({ m_position.start_offset, m_position.start_offset + 3 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
-    if (m_in_kw_position.has_value())
-        editor.stylize({ m_in_kw_position.value().start_offset, m_in_kw_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    auto is_loop = m_iterated_expression.is_null();
+    editor.stylize({ m_position.start_offset, m_position.start_offset + (is_loop ? 4 : 3) }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    if (!is_loop) {
+        if (m_in_kw_position.has_value())
+            editor.stylize({ m_in_kw_position.value().start_offset, m_in_kw_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
 
-    metadata.is_first_in_list = false;
-    m_iterated_expression->highlight_in_editor(editor, shell, metadata);
+        metadata.is_first_in_list = false;
+        m_iterated_expression->highlight_in_editor(editor, shell, metadata);
+    }
 
     metadata.is_first_in_list = true;
     if (m_block)
@@ -1079,8 +1130,10 @@ HitTestResult ForLoop::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    if (auto result = m_iterated_expression->hit_test_position(offset); result.matching_node)
-        return result;
+    if (m_iterated_expression) {
+        if (auto result = m_iterated_expression->hit_test_position(offset); result.matching_node)
+            return result;
+    }
 
     if (!m_block)
         return {};
@@ -1088,14 +1141,14 @@ HitTestResult ForLoop::hit_test_position(size_t offset)
     return m_block->hit_test_position(offset);
 }
 
-ForLoop::ForLoop(Position position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position)
+ForLoop::ForLoop(Position position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position)
     : Node(move(position))
     , m_variable_name(move(variable_name))
     , m_iterated_expression(move(iterated_expr))
     , m_block(move(block))
     , m_in_kw_position(move(in_kw_position))
 {
-    if (m_iterated_expression->is_syntax_error())
+    if (m_iterated_expression && m_iterated_expression->is_syntax_error())
         set_is_syntax_error(m_iterated_expression->syntax_error_node());
     else if (m_block && m_block->is_syntax_error())
         set_is_syntax_error(m_block->syntax_error_node());
@@ -1221,8 +1274,10 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                         notifier->set_event_mask(Core::Notifier::Read);
                 } };
 
-                if (check_and_call() == Break)
+                if (check_and_call() == Break) {
+                    loop.quit(Break);
                     return;
+                }
 
                 auto read_size = read(pipefd[0], buffer, remaining_size);
                 if (read_size < 0) {
@@ -1243,12 +1298,20 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 stream.write({ buffer, (size_t)read_size });
             }
 
-            loop.quit(Break);
+            loop.quit(NothingLeft);
         };
 
-        shell->run_commands(commands);
+        auto jobs = shell->run_commands(commands);
+        ScopeGuard kill_jobs_if_around { [&] {
+            for (auto& job : jobs) {
+                if (job.is_running_in_background() && !job.exited() && !job.signaled()) {
+                    job.set_should_announce_signal(false); // We're explicitly killing it here.
+                    shell->kill_job(&job, SIGTERM);
+                }
+            }
+        } };
 
-        loop.exec();
+        auto exit_reason = loop.exec();
 
         notifier->on_ready_to_read = nullptr;
 
@@ -1256,7 +1319,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             dbgln("close() failed: {}", strerror(errno));
         }
 
-        if (!stream.eof()) {
+        if (exit_reason != Break && !stream.eof()) {
             auto action = Continue;
             do {
                 action = check_and_call();
@@ -1610,8 +1673,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         }
     }
 
-    // FIXME: Somehow raise an error in the shell.
-    dbgln("Non-exhaustive match rules!");
+    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!");
     return create<AST::ListValue>({});
 }
 
@@ -1927,7 +1989,7 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                 }
             } else {
             yield_start_end:;
-                warnln("Shell: Cannot interpolate between '{}' and '{}'!", start_str, end_str);
+                shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, String::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str));
                 // We can't really interpolate between the two, so just yield both.
                 values.append(create<StringValue>(move(start_str)));
                 values.append(create<StringValue>(move(end_str)));
@@ -2471,10 +2533,9 @@ void SyntaxError::dump(int level) const
     print_indented(String::formatted("{}", m_is_continuable), level + 2);
 }
 
-RefPtr<Value> SyntaxError::run(RefPtr<Shell>)
+RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
 {
-    dbgln("SYNTAX ERROR executed from");
-    dump(1);
+    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text);
     return create<StringValue>("");
 }
 
@@ -2786,7 +2847,10 @@ Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
     if (!shell)
         return { m_glob };
 
-    return shell->expand_globs(m_glob, shell->cwd);
+    auto results = shell->expand_globs(m_glob, shell->cwd);
+    if (results.is_empty())
+        shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!");
+    return results;
 }
 
 SimpleVariableValue::~SimpleVariableValue()

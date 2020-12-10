@@ -221,6 +221,28 @@ $ for * { mv $it 1-$it }
 $ for i in $(seq 1 100) { echo $i >> foo }
 ```
 
+##### Infinite Loops
+Infinite loops (as denoted by the keyword `loop`) can be used to repeat a block until the block runs `break`, or the loop terminates by external sources (interrupts, program exit, and terminating signals).
+
+The behaviour regarding SIGINT and other signals is the same as for loops (mentioned above).
+
+###### Examples
+```sh
+# Keep deleting a file
+loop {
+    rm -f foo
+}
+```
+
+###### Examples
+```sh
+# Iterate over every non-hidden file in the current directory, and prepend '1-' to its name.
+$ for * { mv $it 1-$it }
+
+# Iterate over a sequence and write each element to a file
+$ for i in $(seq 1 100) { echo $i >> foo }
+```
+
 ##### Subshells
 Subshells evaluate a given block in a new instance (fork) of the current shell process. to create a subshell, any valid shell code can be enclosed in braces.
 
@@ -299,7 +321,7 @@ sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? function_decl (terminator sequence)?
           | variable_decls? terminator sequence
 
-function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' toplevel '}'
+function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' [!c] toplevel '}'
 
 or_logical_sequence :: and_logical_sequence '|' '|' and_logical_sequence
                      | and_logical_sequence
@@ -318,12 +340,19 @@ pipe_sequence :: command '|' pipe_sequence
                | control_structure '|' pipe_sequence
                | control_structure
 
-control_structure :: for_expr
-                   | if_expr
-                   | subshell
-                   | match_expr
+control_structure[c] :: for_expr
+                      | loop_expr
+                      | if_expr
+                      | subshell
+                      | match_expr
+                      | ?c: continuation_control
 
-for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
+continuation_control :: 'break'
+                      | 'continue'
+
+for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
+
+loop_expr :: 'loop' ws* '{' [c] toplevel '}'
 
 if_expr :: 'if' ws+ or_logical_sequence ws+ '{' toplevel '}' else_clause?
 

@@ -47,6 +47,7 @@ class CastToList;
 class CloseFdRedirection;
 class CommandLiteral;
 class Comment;
+class ContinuationControl;
 class DynamicEvaluate;
 class DoubleQuotedString;
 class Fd2FdRedirection;

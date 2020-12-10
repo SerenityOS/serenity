@@ -190,6 +190,13 @@ private:
         auto& span = span_for_node(node);
         span.color = m_palette.syntax_comment();
     }
+    virtual void visit(const AST::ContinuationControl* node) override
+    {
+        NodeVisitor::visit(node);
+
+        auto& span = span_for_node(node);
+        span.color = m_palette.syntax_control_keyword();
+    }
     virtual void visit(const AST::DynamicEvaluate* node) override
     {
         NodeVisitor::visit(node);
