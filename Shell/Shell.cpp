@@ -871,6 +871,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     job->on_exit = [this](auto job) {
         if (!job->exited())
             return;
+
+        restore_ios();
         if (job->is_running_in_background() && job->should_announce_exit())
             warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd().characters());
         else if (job->signaled() && job->should_announce_signal())
