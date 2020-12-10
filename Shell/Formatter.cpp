@@ -261,6 +261,19 @@ void Formatter::visit(const AST::Comment* node)
     visited(node);
 }
 
+void Formatter::visit(const AST::ContinuationControl* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+    if (node->continuation_kind() == AST::ContinuationControl::Break)
+        current_builder().append("break");
+    else if (node->continuation_kind() == AST::ContinuationControl::Continue)
+        current_builder().append("continue");
+    else
+        ASSERT_NOT_REACHED();
+    visited(node);
+}
+
 void Formatter::visit(const AST::DynamicEvaluate* node)
 {
     will_visit(node);
@@ -327,15 +340,18 @@ void Formatter::visit(const AST::ForLoop* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append("for ");
+    auto is_loop = node->iterated_expression().is_null();
+    current_builder().append(is_loop ? "loop" : "for ");
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    if (node->variable_name() != "it") {
-        current_builder().append(node->variable_name());
-        current_builder().append(" in ");
-    }
+    if (!is_loop) {
+        if (node->variable_name() != "it") {
+            current_builder().append(node->variable_name());
+            current_builder().append(" in ");
+        }
 
-    node->iterated_expression()->visit(*this);
+        node->iterated_expression()->visit(*this);
+    }
 
     current_builder().append(' ');
     in_new_block([&] {
