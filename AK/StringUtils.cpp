@@ -96,7 +96,8 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
     return string_ptr == string_end && mask_ptr == mask_end;
 }
 
-Optional<int> convert_to_int(const StringView& str)
+template<typename T>
+Optional<T> convert_to_int(const StringView& str)
 {
     auto str_trimmed = str.trim_whitespace();
     if (str_trimmed.is_empty())
@@ -113,7 +114,7 @@ Optional<int> convert_to_int(const StringView& str)
         negative = (characters[0] == '-');
     }
 
-    int value = 0;
+    T value = 0;
     for (; i < str_trimmed.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
@@ -123,13 +124,19 @@ Optional<int> convert_to_int(const StringView& str)
     return negative ? -value : value;
 }
 
-Optional<unsigned> convert_to_uint(const StringView& str)
+template Optional<i8> convert_to_int(const StringView& str);
+template Optional<i16> convert_to_int(const StringView& str);
+template Optional<i32> convert_to_int(const StringView& str);
+template Optional<i64> convert_to_int(const StringView& str);
+
+template<typename T>
+Optional<T> convert_to_uint(const StringView& str)
 {
     auto str_trimmed = str.trim_whitespace();
     if (str_trimmed.is_empty())
         return {};
 
-    unsigned value = 0;
+    T value = 0;
     const auto characters = str_trimmed.characters_without_null_termination();
 
     for (size_t i = 0; i < str_trimmed.length(); i++) {
@@ -142,13 +149,19 @@ Optional<unsigned> convert_to_uint(const StringView& str)
     return value;
 }
 
-Optional<unsigned> convert_to_uint_from_hex(const StringView& str)
+template Optional<u8> convert_to_uint(const StringView& str);
+template Optional<u16> convert_to_uint(const StringView& str);
+template Optional<u32> convert_to_uint(const StringView& str);
+template Optional<u64> convert_to_uint(const StringView& str);
+
+template<typename T>
+Optional<T> convert_to_uint_from_hex(const StringView& str)
 {
     auto str_trimmed = str.trim_whitespace();
     if (str_trimmed.is_empty())
         return {};
 
-    unsigned value = 0;
+    T value = 0;
     const auto count = str_trimmed.length();
 
     for (size_t i = 0; i < count; i++) {
@@ -169,6 +182,11 @@ Optional<unsigned> convert_to_uint_from_hex(const StringView& str)
     }
     return value;
 }
+
+template Optional<u8> convert_to_uint_from_hex(const StringView& str);
+template Optional<u16> convert_to_uint_from_hex(const StringView& str);
+template Optional<u32> convert_to_uint_from_hex(const StringView& str);
+template Optional<u64> convert_to_uint_from_hex(const StringView& str);
 
 static inline char to_lowercase(char c)
 {

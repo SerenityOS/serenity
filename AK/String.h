@@ -114,8 +114,10 @@ public:
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
-    Optional<int> to_int() const;
-    Optional<unsigned> to_uint() const;
+    template<typename T = int>
+    Optional<T> to_int() const;
+    template<typename T = unsigned>
+    Optional<T> to_uint() const;
 
     String to_lowercase() const;
     String to_uppercase() const;

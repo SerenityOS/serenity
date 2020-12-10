@@ -217,15 +217,27 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
 }
 
-Optional<int> String::to_int() const
+template<typename T>
+Optional<T> String::to_int() const
 {
-    return StringUtils::convert_to_int(view());
+    return StringUtils::convert_to_int<T>(view());
 }
 
-Optional<unsigned> String::to_uint() const
+template Optional<i8> String::to_int() const;
+template Optional<i16> String::to_int() const;
+template Optional<i32> String::to_int() const;
+template Optional<i64> String::to_int() const;
+
+template<typename T>
+Optional<T> String::to_uint() const
 {
-    return StringUtils::convert_to_uint(view());
+    return StringUtils::convert_to_uint<T>(view());
 }
+
+template Optional<u8> String::to_uint() const;
+template Optional<u16> String::to_uint() const;
+template Optional<u32> String::to_uint() const;
+template Optional<u64> String::to_uint() const;
 
 template<typename T>
 String String::number(T value) { return formatted("{}", value); }

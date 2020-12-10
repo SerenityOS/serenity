@@ -111,8 +111,10 @@ public:
     // following newline.".
     Vector<StringView> lines(bool consider_cr = true) const;
 
-    Optional<int> to_int() const;
-    Optional<unsigned> to_uint() const;
+    template<typename T = int>
+    Optional<T> to_int() const;
+    template<typename T = unsigned>
+    Optional<T> to_uint() const;
 
     // Create a new substring view of this string view, starting either at the beginning of
     // the given substring view, or after its end, and continuing until the end of this string

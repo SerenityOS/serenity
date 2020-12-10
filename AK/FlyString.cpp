@@ -85,10 +85,27 @@ FlyString::FlyString(const char* string)
 {
 }
 
-Optional<int> FlyString::to_int() const
+template<typename T>
+Optional<T> FlyString::to_int() const
 {
-    return StringUtils::convert_to_int(view());
+    return StringUtils::convert_to_int<T>(view());
 }
+
+template Optional<i8> FlyString::to_int() const;
+template Optional<i16> FlyString::to_int() const;
+template Optional<i32> FlyString::to_int() const;
+template Optional<i64> FlyString::to_int() const;
+
+template<typename T>
+Optional<T> FlyString::to_uint() const
+{
+    return StringUtils::convert_to_uint<T>(view());
+}
+
+template Optional<u8> FlyString::to_uint() const;
+template Optional<u16> FlyString::to_uint() const;
+template Optional<u32> FlyString::to_uint() const;
+template Optional<u64> FlyString::to_uint() const;
 
 bool FlyString::equals_ignoring_case(const StringView& other) const
 {

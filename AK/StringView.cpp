@@ -222,15 +222,27 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
     return { remaining_characters, remaining_length };
 }
 
-Optional<int> StringView::to_int() const
+template<typename T>
+Optional<T> StringView::to_int() const
 {
-    return StringUtils::convert_to_int(*this);
+    return StringUtils::convert_to_int<T>(*this);
 }
 
-Optional<unsigned> StringView::to_uint() const
+template Optional<i8> StringView::to_int() const;
+template Optional<i16> StringView::to_int() const;
+template Optional<i32> StringView::to_int() const;
+template Optional<i64> StringView::to_int() const;
+
+template<typename T>
+Optional<T> StringView::to_uint() const
 {
-    return StringUtils::convert_to_uint(*this);
+    return StringUtils::convert_to_uint<T>(*this);
 }
+
+template Optional<u8> StringView::to_uint() const;
+template Optional<u16> StringView::to_uint() const;
+template Optional<u32> StringView::to_uint() const;
+template Optional<u64> StringView::to_uint() const;
 
 unsigned StringView::hash() const
 {
