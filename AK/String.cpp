@@ -129,6 +129,13 @@ String String::isolated_copy() const
     return String(move(*impl));
 }
 
+String String::substring(size_t start) const
+{
+    ASSERT(m_impl);
+    ASSERT(start <= length());
+    return { characters() + start, length() - start };
+}
+
 String String::substring(size_t start, size_t length) const
 {
     if (!length)
