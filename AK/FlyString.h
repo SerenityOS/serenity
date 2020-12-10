@@ -82,7 +82,10 @@ public:
 
     FlyString to_lowercase() const;
 
-    Optional<int> to_int() const;
+    template<typename T = int>
+    Optional<T> to_int() const;
+    template<typename T = unsigned>
+    Optional<T> to_uint() const;
 
     bool equals_ignoring_case(const StringView&) const;
     bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
