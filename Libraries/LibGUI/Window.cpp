@@ -558,14 +558,21 @@ void Window::set_focused_widget(Widget* widget, FocusSource source)
 {
     if (m_focused_widget == widget)
         return;
-    if (m_focused_widget) {
-        Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusOut, source));
-        m_focused_widget->update();
-    }
+
+    WeakPtr<Widget> previously_focused_widget = m_focused_widget;
     m_focused_widget = widget;
+
+    if (previously_focused_widget) {
+        Core::EventLoop::current().post_event(*previously_focused_widget, make<FocusEvent>(Event::FocusOut, source));
+        previously_focused_widget->update();
+        if (previously_focused_widget && previously_focused_widget->on_focus_change)
+            previously_focused_widget->on_focus_change(previously_focused_widget->is_focused(), source);
+    }
     if (m_focused_widget) {
         Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusIn, source));
         m_focused_widget->update();
+        if (m_focused_widget && m_focused_widget->on_focus_change)
+            m_focused_widget->on_focus_change(m_focused_widget->is_focused(), source);
     }
 }
 
