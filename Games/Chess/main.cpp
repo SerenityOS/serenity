@@ -73,7 +73,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(Core::StandardPaths::home_directory().characters(), "wcb") < 0) {
+    if (unveil(Core::StandardPaths::home_directory().characters(), "wcbr") < 0) {
         perror("unveil");
         return 1;
     }
@@ -107,7 +107,17 @@ int main(int argc, char** argv)
     app_menu.add_separator();
 
     app_menu.add_action(GUI::Action::create("Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
-        GUI::MessageBox::show(window, "Feature not yet available.", "TODO", GUI::MessageBox::Type::Information);
+        Optional<String> import_path = GUI::FilePicker::get_open_filepath(window);
+
+        if (!import_path.has_value())
+            return;
+
+        if (!widget.import_pgn(import_path.value())) {
+            GUI::MessageBox::show(window, "Unable to import game.\n", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        dbgln("Imported PGN file from {}", import_path.value());
     }));
     app_menu.add_action(GUI::Action::create("Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
         Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "pgn");

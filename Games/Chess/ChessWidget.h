@@ -67,6 +67,7 @@ public:
     RefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
 
     String get_fen() const;
+    bool import_pgn(const StringView& import_path);
     bool export_pgn(const StringView& export_path) const;
 
     void resign();
