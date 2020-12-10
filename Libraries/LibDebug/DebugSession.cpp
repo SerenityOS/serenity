@@ -64,6 +64,11 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
 {
     int pid = fork();
 
+    if (pid < 0) {
+        perror("fork");
+        exit(1);
+    }
+
     if (!pid) {
         if (ptrace(PT_TRACE_ME, 0, 0, 0) < 0) {
             perror("PT_TRACE_ME");
@@ -90,16 +95,6 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
 
     if (ptrace(PT_ATTACH, pid, 0, 0) < 0) {
         perror("PT_ATTACH");
-        return nullptr;
-    }
-
-    if (waitpid(pid, nullptr, WSTOPPED) != pid) {
-        perror("waitpid");
-        return nullptr;
-    }
-
-    if (ptrace(PT_CONTINUE, pid, 0, 0) < 0) {
-        perror("continue");
         return nullptr;
     }
 
