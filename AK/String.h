@@ -134,6 +134,7 @@ public:
 
     Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     Vector<String> split(char separator, bool keep_empty = false) const;
+    String substring(size_t start) const;
     String substring(size_t start, size_t length) const;
 
     Vector<StringView> split_view(char separator, bool keep_empty = false) const;
