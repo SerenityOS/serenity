@@ -100,15 +100,15 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::Action::create("Resign", { Mod_None, Key_F3 }, [&](auto&) {
         widget.resign();
     }));
-    app_menu.add_action(GUI::Action::create("Flip Board", { Mod_None, Key_F4 }, [&](auto&) {
+    app_menu.add_action(GUI::Action::create("Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
         widget.flip_board();
     }));
     app_menu.add_separator();
 
-    app_menu.add_action(GUI::Action::create("Import PGN...", { Mod_None, Key_F6 }, [&](auto&) {
+    app_menu.add_action(GUI::Action::create("Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
         GUI::MessageBox::show(window, "Feature not yet available.", "TODO", GUI::MessageBox::Type::Information);
     }));
-    app_menu.add_action(GUI::Action::create("Export PGN...", { Mod_None, Key_F7 }, [&](auto&) {
+    app_menu.add_action(GUI::Action::create("Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
         Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "pgn");
 
         if (!export_path.has_value())
