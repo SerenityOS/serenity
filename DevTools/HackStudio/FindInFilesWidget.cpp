@@ -96,7 +96,14 @@ public:
     }
 
     virtual void update() override { }
-    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override
+    {
+        if (row < 0 || row >= (int)m_matches.size())
+            return {};
+        if (column < 0 || column >= Column::__Count)
+            return {};
+        return create_index(row, column, &m_matches.at(row));
+    }
 
 private:
     Vector<Match> m_matches;
