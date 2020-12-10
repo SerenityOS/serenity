@@ -43,6 +43,7 @@ public:
     virtual void visit(const AST::CloseFdRedirection*);
     virtual void visit(const AST::CommandLiteral*);
     virtual void visit(const AST::Comment*);
+    virtual void visit(const AST::ContinuationControl*);
     virtual void visit(const AST::DynamicEvaluate*);
     virtual void visit(const AST::DoubleQuotedString*);
     virtual void visit(const AST::Fd2FdRedirection*);

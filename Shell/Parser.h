@@ -61,7 +61,9 @@ private:
     RefPtr<AST::Node> parse_pipe_sequence();
     RefPtr<AST::Node> parse_command();
     RefPtr<AST::Node> parse_control_structure();
+    RefPtr<AST::Node> parse_continuation_control();
     RefPtr<AST::Node> parse_for_loop();
+    RefPtr<AST::Node> parse_loop_loop();
     RefPtr<AST::Node> parse_if_expr();
     RefPtr<AST::Node> parse_subshell();
     RefPtr<AST::Node> parse_match_expr();
@@ -139,6 +141,7 @@ private:
     Vector<AST::Position::Line> m_rule_start_lines;
 
     bool m_is_in_brace_expansion_spec { false };
+    bool m_continuation_controls_allowed { false };
 };
 
 #if 0
@@ -151,7 +154,7 @@ sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? function_decl (terminator sequence)?
           | variable_decls? terminator sequence
 
-function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' toplevel '}'
+function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' [!c] toplevel '}'
 
 or_logical_sequence :: and_logical_sequence '|' '|' and_logical_sequence
                      | and_logical_sequence
@@ -170,12 +173,19 @@ pipe_sequence :: command '|' pipe_sequence
                | control_structure '|' pipe_sequence
                | control_structure
 
-control_structure :: for_expr
-                   | if_expr
-                   | subshell
-                   | match_expr
+control_structure[c] :: for_expr
+                      | loop_expr
+                      | if_expr
+                      | subshell
+                      | match_expr
+                      | ?c: continuation_control
 
-for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
+continuation_control :: 'break'
+                      | 'continue'
+
+for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
+
+loop_expr :: 'loop' ws* '{' [c] toplevel '}'
 
 if_expr :: 'if' ws+ or_logical_sequence ws+ '{' toplevel '}' else_clause?
 

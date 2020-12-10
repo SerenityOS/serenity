@@ -447,6 +447,7 @@ public:
         CloseFdRedirection,
         CommandLiteral,
         Comment,
+        ContinuationControl,
         DynamicEvaluate,
         DoubleQuotedString,
         Fd2FdRedirection,
@@ -700,6 +701,32 @@ private:
     String m_text;
 };
 
+class ContinuationControl final : public Node {
+public:
+    enum ContinuationKind {
+        Break,
+        Continue,
+    };
+    ContinuationControl(Position position, ContinuationKind kind)
+        : Node(move(position))
+        , m_kind(kind)
+    {
+    }
+    virtual ~ContinuationControl() { }
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    ContinuationKind continuation_kind() const { return m_kind; }
+
+private:
+    NODE(ContinuationControl);
+
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+
+    ContinuationKind m_kind { ContinuationKind::Break };
+};
+
 class DynamicEvaluate final : public Node {
 public:
     DynamicEvaluate(Position, NonnullRefPtr<Node>);
@@ -795,12 +822,12 @@ private:
 
 class ForLoop final : public Node {
 public:
-    ForLoop(Position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position = {});
+    ForLoop(Position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position = {});
     virtual ~ForLoop();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const String& variable_name() const { return m_variable_name; }
-    const NonnullRefPtr<Node>& iterated_expression() const { return m_iterated_expression; }
+    const RefPtr<Node>& iterated_expression() const { return m_iterated_expression; }
     const RefPtr<Node>& block() const { return m_block; }
     const Optional<Position> in_keyword_position() const { return m_in_kw_position; }
 
@@ -813,7 +840,7 @@ private:
     virtual bool would_execute() const override { return true; }
 
     String m_variable_name;
-    NonnullRefPtr<AST::Node> m_iterated_expression;
+    RefPtr<AST::Node> m_iterated_expression;
     RefPtr<AST::Node> m_block;
     Optional<Position> m_in_kw_position;
 };
