@@ -54,8 +54,6 @@ static RefPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
 static void update_path_environment_variable();
-static String path_to_project(const String& path_argument_absolute_path);
-static void open_default_project_file(const String& project_path);
 
 int main(int argc, char** argv)
 {
@@ -73,7 +71,6 @@ int main(int argc, char** argv)
 
     s_window = GUI::Window::construct();
     s_window->resize(840, 600);
-    s_window->set_title("HackStudio");
     s_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
 
     update_path_environment_variable();
@@ -88,16 +85,20 @@ int main(int argc, char** argv)
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
 
-    auto menubar = GUI::MenuBar::construct();
-    auto project_path = path_to_project(argument_absolute_path);
+    auto project_path = argument_absolute_path;
+    if (argument_absolute_path.is_null())
+        project_path = Core::File::real_path_for(".");
+
     s_hack_studio_widget = s_window->set_main_widget<HackStudioWidget>(project_path);
 
+    s_window->set_title(String::formatted("{} - HackStudio", s_hack_studio_widget->project().name()));
+
+    auto menubar = GUI::MenuBar::construct();
     s_hack_studio_widget->initialize_menubar(menubar);
     app->set_menubar(menubar);
 
     s_window->show();
 
-    open_default_project_file(argument_absolute_path);
     s_hack_studio_widget->update_actions();
 
     return app->exec();
@@ -129,22 +130,6 @@ static void update_path_environment_variable()
         path.append(":");
     path.append("/bin:/usr/bin:/usr/local/bin");
     setenv("PATH", path.to_string().characters(), true);
-}
-
-static String path_to_project(const String& path_argument_absolute_path)
-{
-    if (path_argument_absolute_path.ends_with(".hsp"))
-        return path_argument_absolute_path;
-    else
-        return "/home/anon/Source/little/little.hsp";
-}
-
-static void open_default_project_file(const String& project_path)
-{
-    if (!project_path.is_empty() && !project_path.ends_with(".hsp"))
-        open_file(project_path);
-    else
-        open_file(s_hack_studio_widget->project().default_file());
 }
 
 namespace HackStudio {

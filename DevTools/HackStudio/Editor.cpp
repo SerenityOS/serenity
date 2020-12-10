@@ -465,7 +465,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     switch (code_document.language()) {
     case Language::Cpp:
         set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
-        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_directory());
+        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
         break;
     case Language::JavaScript:
         set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
@@ -475,16 +475,15 @@ void Editor::set_document(GUI::TextDocument& doc)
         break;
     case Language::Shell:
         set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
-        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_directory());
+        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
         break;
     default:
         set_syntax_highlighter(nullptr);
     }
 
     if (m_language_client) {
-        auto full_file_path = String::formatted("{}/{}", project().root_directory(), code_document.file_path());
-        dbg() << "Opening " << full_file_path;
-        int fd = open(full_file_path.characters(), O_RDONLY | O_NOCTTY);
+        dbgln("Opening {}", code_document.file_path());
+        int fd = open(code_document.file_path().string().characters(), O_RDONLY | O_NOCTTY);
         if (fd < 0) {
             perror("open");
             return;

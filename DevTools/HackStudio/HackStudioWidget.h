@@ -37,6 +37,7 @@
 #include "Git/GitWidget.h"
 #include "Locator.h"
 #include "Project.h"
+#include "ProjectFile.h"
 #include "TerminalWrapper.h"
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Splitter.h>
@@ -67,7 +68,7 @@ private:
     static String get_full_path_of_serenity_source(const String& file);
 
     HackStudioWidget(const String& path_to_project);
-    void open_project(String filename);
+    void open_project(const String& root_path);
 
     enum class EditMode {
         Text,
@@ -80,7 +81,6 @@ private:
     NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
     NonnullRefPtr<GUI::Action> create_new_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
-    NonnullRefPtr<GUI::Action> create_add_existing_file_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_action();
     NonnullRefPtr<GUI::Action> create_switch_to_previous_editor_action();
@@ -153,7 +153,6 @@ private:
 
     RefPtr<GUI::Action> m_new_action;
     RefPtr<GUI::Action> m_open_selected_action;
-    RefPtr<GUI::Action> m_add_existing_file_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
     RefPtr<GUI::Action> m_switch_to_previous_editor;
