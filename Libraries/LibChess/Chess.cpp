@@ -106,10 +106,10 @@ String Square::to_algebraic() const
     return builder.build();
 }
 
-Move::Move(const StringView& algebraic)
-    : from(algebraic.substring_view(0, 2))
-    , to(algebraic.substring_view(2, 2))
-    , promote_to(piece_for_char_promotion((algebraic.length() >= 5) ? algebraic.substring_view(4, 1) : ""))
+Move::Move(const StringView& long_algebraic)
+    : from(long_algebraic.substring_view(0, 2))
+    , to(long_algebraic.substring_view(2, 2))
+    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""))
 {
 }
 
@@ -120,6 +120,81 @@ String Move::to_long_algebraic() const
     builder.append(to.to_algebraic());
     builder.append(char_for_piece(promote_to).to_lowercase());
     return builder.build();
+}
+
+Move Move::from_algebraic(const StringView& algebraic, const Colour turn, const Board& board)
+{
+    String move_string = algebraic;
+    Move move({ 50, 50 }, { 50, 50 });
+
+    if (move_string.contains("-")) {
+        move.from = Square(turn == Colour::White ? 0 : 7, 4);
+        move.to = Square(turn == Colour::White ? 0 : 7, move_string == "O-O" ? 6 : 2);
+        move.promote_to = Type::None;
+        move.piece = { turn, Type::King };
+
+        return move;
+    }
+
+    if (algebraic.contains("#")) {
+        move.is_mate = true;
+        move_string = move_string.substring(0, move_string.length() - 1);
+    } else if (algebraic.contains("+")) {
+        move.is_check = true;
+        move_string = move_string.substring(0, move_string.length() - 1);
+    }
+
+    if (algebraic.contains("=")) {
+        move.promote_to = piece_for_char_promotion(move_string.split('=').at(1).substring(0, 1));
+        move_string = move_string.split('=').at(0);
+    }
+
+    move.to = Square(move_string.substring(move_string.length() - 2, 2));
+    move_string = move_string.substring(0, move_string.length() - 2);
+
+    if (move_string.contains("x")) {
+        move.is_capture = true;
+        move_string = move_string.substring(0, move_string.length() - 1);
+    }
+
+    if (move_string.is_empty() || move_string.characters()[0] >= 'a') {
+        move.piece = Piece(turn, Type::Pawn);
+    } else {
+        move.piece = Piece(turn, piece_for_char_promotion(move_string.substring(0, 1)));
+        move_string = move_string.substring(1, move_string.length() - 1);
+    }
+
+    Square::for_each([&](const Square& square) {
+        if (!move_string.is_empty()) {
+            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to), turn)) {
+                if (move_string.length() >= 2) {
+                    if (square == Square(move_string.substring(0, 2))) {
+                        move.from = square;
+                        return IterationDecision::Break;
+                    }
+                } else if (move_string.characters()[0] <= 57) {
+                    if (square.rank == (unsigned)(move_string.characters()[0] - '0')) {
+                        move.from = square;
+                        return IterationDecision::Break;
+                    }
+                } else {
+                    if (square.file == (unsigned)(move_string.characters()[0] - 'a')) {
+                        move.from = square;
+                        return IterationDecision::Break;
+                    }
+                }
+            }
+            return IterationDecision::Continue;
+        } else {
+            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to), turn)) {
+                move.from = square;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        }
+    });
+
+    return move;
 }
 
 String Move::to_algebraic() const
