@@ -123,6 +123,7 @@ We also have a project mailing list: [serenityos-dev](https://lists.sr.ht/~aweso
 * **Tom** - [tomuta](https://github.com/tomuta)
 * **Paul Scharnofske** - [asynts](https://github.com/asynts)
 * **Itamar Shenhar** - [itamar8910](https://github.com/itamar8910)
+* **Luke Wilde** - [Lubrsi](https://github.com/Lubrsi)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
