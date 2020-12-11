@@ -416,6 +416,7 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         case 's':
             fatal_error("Unsupported operator \033[1m%s", argv[optind]);
         default:
+            --optind;
             break;
         }
     }
