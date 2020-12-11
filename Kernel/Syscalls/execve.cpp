@@ -224,7 +224,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // Copy of the master TLS region that we will clone for new threads
     // FIXME: Handle this in userspace
-    m_master_tls_region = master_tls_region->make_weak_ptr();
+    m_master_tls_region = master_tls_region ? master_tls_region->make_weak_ptr() : nullptr;
 
     auto main_program_metadata = main_program_description->metadata();
 
