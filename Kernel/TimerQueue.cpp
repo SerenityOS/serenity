@@ -272,19 +272,24 @@ void TimerQueue::fire()
 
         while (timer && timer->now() > timer->m_expires) {
             queue.list.remove(timer);
+            timer->set_queued(false);
+
             m_timers_executing.append(timer);
 
             update_next_timer_due(queue);
 
             lock.unlock();
-            timer->m_callback();
+
+            // Defer executing the timer outside of the irq handler
+            Processor::current().deferred_call_queue([this, timer]() {
+                timer->m_callback();
+                ScopedSpinLock lock(g_timerqueue_lock);
+                m_timers_executing.remove(timer);
+                // Drop the reference we added when queueing the timer
+                timer->unref();
+            });
+
             lock.lock();
-
-            m_timers_executing.remove(timer);
-            timer->set_queued(false);
-            // Drop the reference we added when queueing the timer
-            timer->unref();
-
             timer = queue.list.head();
         }
     };
