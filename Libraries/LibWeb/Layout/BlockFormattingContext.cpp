@@ -117,7 +117,7 @@ void BlockFormattingContext::compute_width(Box& box)
             total_px += value.to_px(box);
         }
 
-        if (!box.is_replaced() && !box.is_inline()) {
+        if (!box.is_inline()) {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
             if (width.is_auto() && total_px > width_of_containing_block) {
@@ -154,7 +154,7 @@ void BlockFormattingContext::compute_width(Box& box)
                     margin_right = half_of_the_underflow;
                 }
             }
-        } else if (!box.is_replaced() && box.is_inline_block()) {
+        } else if (box.is_inline_block()) {
 
             // 10.3.9 'Inline-block', non-replaced elements in normal flow
 
