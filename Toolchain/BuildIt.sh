@@ -224,6 +224,7 @@ pushd "$DIR/Build/"
                                             --with-newlib \
                                             --enable-shared \
                                             --enable-languages=c,c++ \
+                                            --enable-default-pie \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
