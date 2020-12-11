@@ -58,6 +58,9 @@ protected:
         float preferred_minimum_width { 0 };
     };
 
+    static float tentative_width_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
+    static float tentative_height_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
+
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
     FormattingContext* m_parent { nullptr };

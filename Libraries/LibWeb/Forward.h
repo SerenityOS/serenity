@@ -27,6 +27,7 @@
 #pragma once
 
 namespace Web::CSS {
+class Length;
 class Selector;
 class StyleDeclaration;
 class StyleProperties;
