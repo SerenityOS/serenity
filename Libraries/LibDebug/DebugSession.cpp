@@ -30,18 +30,18 @@
 
 namespace Debug {
 
-DebugSession::DebugSession(int pid)
+DebugSession::DebugSession(pid_t pid)
     : m_debuggee_pid(pid)
-    , m_executable(initialize_executable_mapped_file(pid))
-    , m_elf(ELF::Loader::create(reinterpret_cast<const u8*>(m_executable->data()), m_executable->size()))
+    , m_executable(map_executable_for_process(pid))
+    , m_elf(ELF::Loader::create(reinterpret_cast<const u8*>(m_executable.data()), m_executable.size()))
     , m_debug_info(m_elf)
 {
 }
 
-NonnullOwnPtr<const MappedFile> DebugSession::initialize_executable_mapped_file(int pid)
+MappedFile DebugSession::map_executable_for_process(pid_t pid)
 {
-    auto executable = adopt_own(*new MappedFile(String::format("/proc/%d/exe", pid)));
-    ASSERT(executable->is_valid());
+    MappedFile executable(String::formatted("/proc/{}/exe", pid));
+    ASSERT(executable.is_valid());
     return executable;
 }
 
@@ -62,7 +62,7 @@ DebugSession::~DebugSession()
 
 OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
 {
-    int pid = fork();
+    auto pid = fork();
 
     if (pid < 0) {
         perror("fork");
@@ -108,7 +108,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
         return nullptr;
     }
 
-    return make<DebugSession>(pid);
+    return adopt_own(*new DebugSession(pid));
 }
 
 bool DebugSession::poke(u32* address, u32 data)
