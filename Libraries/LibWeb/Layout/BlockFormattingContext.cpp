@@ -83,8 +83,7 @@ void BlockFormattingContext::compute_width(Box& box)
         // FIXME: This should not be done *by* ReplacedBox
         auto& replaced = downcast<ReplacedBox>(box);
         replaced.prepare_for_replaced_layout();
-        auto width = replaced.calculate_width();
-        replaced.set_width(width);
+        compute_width_for_block_level_replaced_element_in_normal_flow(replaced);
         return;
     }
 
@@ -257,6 +256,16 @@ void BlockFormattingContext::compute_width_for_floating_box(Box& box)
     box.set_width(final_width);
 }
 
+void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox& box)
+{
+    box.set_width(compute_width_for_replaced_element(box));
+}
+
+void BlockFormattingContext::compute_height_for_block_level_replaced_element_in_normal_flow(ReplacedBox& box)
+{
+    box.set_height(compute_height_for_replaced_element(box));
+}
+
 void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& box)
 {
     auto& containing_block = context_box();
@@ -400,9 +409,7 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& 
 void BlockFormattingContext::compute_height(Box& box)
 {
     if (box.is_replaced()) {
-        // FIXME: This should not be done *by* ReplacedBox
-        auto height = downcast<ReplacedBox>(box).calculate_height();
-        box.set_height(height);
+        compute_height_for_block_level_replaced_element_in_normal_flow(downcast<ReplacedBox>(box));
         return;
     }
 

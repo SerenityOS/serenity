@@ -203,9 +203,9 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
     if (box.is_replaced()) {
-        auto& replaced = const_cast<ReplacedBox&>(downcast<ReplacedBox>(box));
-        replaced.set_width(replaced.calculate_width());
-        replaced.set_height(replaced.calculate_height());
+        auto& replaced = downcast<ReplacedBox>(box);
+        replaced.set_width(compute_width_for_replaced_element(replaced));
+        replaced.set_height(compute_height_for_replaced_element(replaced));
         return;
     }
 
