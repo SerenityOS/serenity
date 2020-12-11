@@ -97,7 +97,7 @@ public:
     bool cancel_timer(Timer&);
     bool cancel_timer(NonnullRefPtr<Timer>&& timer)
     {
-        return cancel_timer(timer.leak_ref());
+        return cancel_timer(*move(timer));
     }
     void fire();
 

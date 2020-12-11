@@ -213,8 +213,6 @@ bool TimerQueue::cancel_timer(TimerId id)
     ASSERT(found_timer);
     ASSERT(timer_queue);
     remove_timer_locked(*timer_queue, *found_timer);
-    lock.unlock();
-    found_timer->unref();
     return true;
 }
 
@@ -241,6 +239,7 @@ bool TimerQueue::cancel_timer(Timer& timer)
         return false;
     }
 
+    ASSERT(timer.ref_count() > 1);
     remove_timer_locked(timer_queue, timer);
     return true;
 }
@@ -256,6 +255,10 @@ void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
 
     if (was_next_timer)
         update_next_timer_due(queue);
+    // Whenever we remove a timer that was still queued (but hasn't been
+    // fired) we added a reference to it. So, when removing it from the
+    // queue we need to drop that reference.
+    timer.unref();
 }
 
 void TimerQueue::fire()
@@ -279,6 +282,7 @@ void TimerQueue::fire()
 
             m_timers_executing.remove(timer);
             timer->set_queued(false);
+            // Drop the reference we added when queueing the timer
             timer->unref();
 
             timer = queue.list.head();
