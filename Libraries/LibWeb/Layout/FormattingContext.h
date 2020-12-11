@@ -44,6 +44,9 @@ public:
 
     static bool creates_block_formatting_context(const Box&);
 
+    static float compute_width_for_replaced_element(const ReplacedBox&);
+    static float compute_height_for_replaced_element(const ReplacedBox&);
+
 protected:
     FormattingContext(Box&, FormattingContext* parent = nullptr);
     virtual ~FormattingContext();

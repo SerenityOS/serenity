@@ -54,6 +54,9 @@ private:
     void compute_width_for_absolutely_positioned_block(Box&);
     void compute_width_for_floating_box(Box&);
 
+    void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox&);
+    void compute_height_for_block_level_replaced_element_in_normal_flow(ReplacedBox&);
+
     void layout_initial_containing_block(LayoutMode);
 
     void layout_block_level_children(Box&, LayoutMode);

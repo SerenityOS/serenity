@@ -57,9 +57,6 @@ public:
     void set_intrinsic_height(float height) { m_intrinsic_height = height; }
     void set_intrinsic_ratio(float ratio) { m_intrinsic_ratio = ratio; }
 
-    float calculate_width() const;
-    float calculate_height() const;
-
     virtual void prepare_for_replaced_layout() { }
 
     virtual bool can_have_children() const override { return false; }

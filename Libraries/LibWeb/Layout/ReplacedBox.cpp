@@ -42,91 +42,13 @@ ReplacedBox::~ReplacedBox()
 {
 }
 
-float ReplacedBox::calculate_width() const
-{
-    // 10.3.2 [Inline,] replaced elements
-
-    auto zero_value = CSS::Length::make_px(0);
-    auto& containing_block = *this->containing_block();
-
-    auto margin_left = style().margin().left.resolved_or_zero(*this, containing_block.width());
-    auto margin_right = style().margin().right.resolved_or_zero(*this, containing_block.width());
-
-    // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
-    if (margin_left.is_auto())
-        margin_left = zero_value;
-    if (margin_right.is_auto())
-        margin_right = zero_value;
-
-    auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
-    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
-
-    // FIXME: Actually compute 'width'
-    auto computed_width = specified_width;
-
-    float used_width = specified_width.to_px(*this);
-
-    // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width,
-    // then that intrinsic width is the used value of 'width'.
-    if (specified_height.is_auto() && specified_width.is_auto() && has_intrinsic_width()) {
-        used_width = intrinsic_width();
-    }
-
-    // If 'height' and 'width' both have computed values of 'auto' and the element has no intrinsic width,
-    // but does have an intrinsic height and intrinsic ratio;
-    // or if 'width' has a computed value of 'auto',
-    // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
-    //
-    //     (used height) * (intrinsic ratio)
-    else if ((specified_height.is_auto() && specified_width.is_auto() && !has_intrinsic_width() && has_intrinsic_height() && has_intrinsic_ratio()) || (computed_width.is_auto() && has_intrinsic_ratio())) {
-        used_width = calculate_height() * intrinsic_ratio();
-    }
-
-    else if (computed_width.is_auto() && has_intrinsic_width()) {
-        used_width = intrinsic_width();
-    }
-
-    else if (computed_width.is_auto()) {
-        used_width = 300;
-    }
-
-    return used_width;
-}
-
-float ReplacedBox::calculate_height() const
-{
-    // 10.6.2 Inline replaced elements, block-level replaced elements in normal flow,
-    // 'inline-block' replaced elements in normal flow and floating replaced elements
-    auto& containing_block = *this->containing_block();
-
-    auto specified_width = style().width().resolved_or_auto(*this, containing_block.width());
-    auto specified_height = style().height().resolved_or_auto(*this, containing_block.height());
-
-    float used_height = specified_height.to_px(*this);
-
-    // If 'height' and 'width' both have computed values of 'auto' and the element also has
-    // an intrinsic height, then that intrinsic height is the used value of 'height'.
-    if (specified_width.is_auto() && specified_height.is_auto() && has_intrinsic_height())
-        used_height = intrinsic_height();
-    else if (specified_height.is_auto() && has_intrinsic_ratio())
-        used_height = calculate_width() / intrinsic_ratio();
-    else if (specified_height.is_auto() && has_intrinsic_height())
-        used_height = intrinsic_height();
-    else if (specified_height.is_auto())
-        used_height = 150;
-
-    return used_height;
-}
-
 void ReplacedBox::split_into_lines(InlineFormattingContext& context, LayoutMode)
 {
     auto& containing_block = context.containing_block();
 
-    // FIXME: This feels out of place. It would be nice if someone at a higher level
-    //        made sure we had usable geometry by the time we start splitting.
     prepare_for_replaced_layout();
-    auto width = calculate_width();
-    auto height = calculate_height();
+    auto width = context.compute_width_for_replaced_element(*this);
+    auto height = context.compute_height_for_replaced_element(*this);
 
     auto* line_box = &containing_block.ensure_last_line_box();
     if (line_box->width() > 0 && line_box->width() + width > context.available_width_at_line(containing_block.line_boxes().size() - 1))
