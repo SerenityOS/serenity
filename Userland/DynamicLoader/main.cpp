@@ -156,7 +156,9 @@ static Vector<String> get_dependencies(const String& name)
     auto lib = g_loaders.get(name).value();
     Vector<String> dependencies;
 
-    lib->for_each_needed_library([&dependencies](auto needed_name) {
+    lib->for_each_needed_library([&dependencies, &name](auto needed_name) {
+        if (name == needed_name)
+            return IterationDecision::Continue;
         dependencies.append(needed_name);
         return IterationDecision::Continue;
     });
@@ -255,7 +257,6 @@ static FlatPtr loader_main(auxv_t* auxvp)
     }
     ASSERT(main_program_fd >= 0);
     ASSERT(!main_program_name.is_null());
-    dbgln("loading: {}", main_program_name);
 
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
