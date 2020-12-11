@@ -128,7 +128,7 @@ index 000000000..2692b8e57
 +#define ENDFILE_SPEC "%{shared|pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
-+#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}}"
++#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:-lgcc_s -dynamic-linker /usr/lib/Loader.so}}"
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS

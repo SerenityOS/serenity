@@ -233,8 +233,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g1 -fno-exceptions -fno-rtti -Wno-a
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DSANITIZE_PTRS")
-set(CMAKE_CXX_FLAGS_STATIC ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostartfiles -lgcc_s -pie -fpic")
+set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostartfiles -pie -fpic")
  
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
