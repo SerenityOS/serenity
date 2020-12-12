@@ -59,7 +59,7 @@ private:
 ComboBox::ComboBox()
 {
     m_editor = add<ComboBoxEditor>();
-    m_editor->set_has_open_button(true);
+    m_editor->set_frame_thickness(0);
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
             on_return_pressed();
@@ -139,11 +139,13 @@ ComboBox::~ComboBox()
 
 void ComboBox::resize_event(ResizeEvent& event)
 {
-    int frame_thickness = m_editor->frame_thickness();
-    int button_height = event.size().height() - frame_thickness * 2;
+    Widget::resize_event(event);
+    int button_height = event.size().height() - frame_thickness() * 2;
     int button_width = 15;
-    m_open_button->set_relative_rect(width() - button_width - frame_thickness, frame_thickness, button_width, button_height);
-    m_editor->set_relative_rect(0, 0, width(), height());
+    m_open_button->set_relative_rect(width() - button_width - frame_thickness(), frame_thickness(), button_width, button_height);
+    auto editor_rect = frame_inner_rect();
+    editor_rect.set_width(editor_rect.width() - button_width);
+    m_editor->set_relative_rect(editor_rect);
 }
 
 void ComboBox::set_model(NonnullRefPtr<Model> model)

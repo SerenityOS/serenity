@@ -68,8 +68,6 @@ public:
 
     bool has_visible_list() const { return m_has_visible_list; }
     void set_has_visible_list(bool);
-    bool has_open_button() const { return m_has_open_button; }
-    void set_has_open_button(bool);
 
     virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
@@ -212,7 +210,6 @@ private:
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
-    int button_padding() const { return m_has_open_button ? 17 : 2; }
 
     class ReflowDeferrer {
     public:
@@ -282,7 +279,6 @@ private:
     bool m_automatic_indentation_enabled { false };
     bool m_line_wrapping_enabled { false };
     bool m_has_visible_list { false };
-    bool m_has_open_button { false };
     bool m_visualize_trailing_whitespace { true };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
