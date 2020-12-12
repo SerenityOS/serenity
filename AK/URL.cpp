@@ -236,6 +236,12 @@ bool URL::parse(const StringView& string)
         m_fragment = String::copy(buffer);
     if (state == State::InDataPayload)
         m_data_payload = urldecode(String::copy(buffer));
+    if (state == State::InPort) {
+        auto port_opt = String::copy(buffer).to_uint();
+        if (port_opt.has_value())
+            m_port = port_opt.value();
+    }
+
     if (m_query.is_null())
         m_query = "";
     if (m_fragment.is_null())
