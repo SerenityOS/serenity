@@ -1449,6 +1449,28 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
 
 //#define FILL_PATH_DEBUG
 
+[[maybe_unused]] static void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
+{
+    auto diffs = fto - ffrom;
+    // Truncate all first (round down).
+    from = ffrom.to_type<int>();
+    to = fto.to_type<int>();
+    // There are 16 possible configurations, by deciding to round each
+    // coord up or down (and there are four coords, from.x from.y to.x to.y)
+    // we will simply choose one which most closely matches the correct slope
+    // with the following heuristic:
+    // - if the x diff is positive or zero (that is, a right-to-left slant), round 'from.x' up and 'to.x' down.
+    // - if the x diff is negative         (that is, a left-to-right slant), round 'from.x' down and 'to.x' up.
+    // Note that we do not need to touch the 'y' attribute, as that is our scanline.
+    if (diffs.x() >= 0) {
+        from.set_x(from.x() + 1);
+    } else {
+        to.set_x(to.x() + 1);
+    }
+    if (previous_to.has_value() && from.x() != previous_to.value().x()) // The points have to line up, since we're using these lines to fill a shape.
+        from.set_x(previous_to.value().x());
+}
+
 void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 {
     const auto& segments = path.split_lines();
@@ -1460,9 +1482,9 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
     active_list.ensure_capacity(segments.size());
 
     // first, grab the segments for the very first scanline
-    auto first_y = segments.first().maximum_y;
-    auto last_y = segments.last().minimum_y;
-    auto scanline = first_y;
+    int first_y = path.bounding_box().bottom_right().y() + 1;
+    int last_y = path.bounding_box().top_left().y() - 1;
+    float scanline = first_y;
 
     size_t last_active_segment { 0 };
 
@@ -1501,6 +1523,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
     };
 
     while (scanline >= last_y) {
+        Optional<IntPoint> previous_to;
         if (active_list.size()) {
             // sort the active list by 'x' from right to left
             quick_sort(active_list, [](const auto& line0, const auto& line1) {
@@ -1518,21 +1541,10 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                     auto& previous = active_list[i - 1];
                     auto& current = active_list[i];
 
-                    int int_distance = fabs(current.x - previous.x);
-                    IntPoint from(previous.x, scanline);
-                    IntPoint to(current.x, scanline);
-
-                    if (int_distance < 1) {
-                        // the two lines intersect on an int grid
-                        // so they should both be treated as a single line segment
-                        goto skip_drawing;
-                    }
-
-                    if (int_distance == 1 && is_inside_shape(winding_number)) {
-                        // The two lines form a singluar edge for the shape
-                        // while they do not intersect, they connect together
-                        goto skip_drawing;
-                    }
+                    IntPoint from, to;
+                    IntPoint truncated_from { previous.x, scanline };
+                    IntPoint truncated_to { current.x, scanline };
+                    approximately_place_on_int_grid({ previous.x, scanline }, { current.x, scanline }, from, to, previous_to);
 
                     if (is_inside_shape(winding_number)) {
                         // The points between this segment and the previous are
@@ -1542,8 +1554,6 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #endif
                         draw_line(from, to, color, 1);
                     }
-
-                skip_drawing:;
 
                     auto is_passing_through_maxima = scanline == previous.maximum_y
                         || scanline == previous.minimum_y
@@ -1557,7 +1567,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                     }
 
                     if (!is_passing_through_vertex || previous.inverse_slope * current.inverse_slope < 0)
-                        increment_winding(winding_number, from, to);
+                        increment_winding(winding_number, truncated_from, truncated_to);
 
                     // update the x coord
                     active_list[i - 1].x -= active_list[i - 1].inverse_slope;
@@ -1595,7 +1605,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #ifdef FILL_PATH_DEBUG
     size_t i { 0 };
     for (auto& segment : segments) {
-        draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(++i / segments.size() * 360.0, 1.0, 1.0), 1);
+        draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
     }
 #endif
 }
