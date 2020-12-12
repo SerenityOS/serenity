@@ -27,27 +27,26 @@
 #pragma once
 
 #include <LibGfx/Size.h>
-#include <LibWeb/CSS/LengthBox.h>
 
 namespace Web::Layout {
 
 struct PixelBox {
-    float top;
-    float right;
-    float bottom;
-    float left;
+    float top { 0 };
+    float right { 0 };
+    float bottom { 0 };
+    float left { 0 };
 };
 
 struct BoxModelMetrics {
 public:
-    CSS::LengthBox margin;
-    CSS::LengthBox padding;
-    CSS::LengthBox border;
-    CSS::LengthBox offset;
+    PixelBox margin;
+    PixelBox padding;
+    PixelBox border;
+    PixelBox offset;
 
-    PixelBox margin_box(const Node&) const;
-    PixelBox padding_box(const Node&) const;
-    PixelBox border_box(const Node&) const;
+    PixelBox margin_box() const;
+    PixelBox padding_box() const;
+    PixelBox border_box() const;
 };
 
 }

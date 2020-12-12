@@ -206,12 +206,12 @@ void BlockFormattingContext::compute_width(Box& box)
     }
 
     box.set_width(used_width.to_px(box));
-    box.box_model().margin.left = margin_left;
-    box.box_model().margin.right = margin_right;
-    box.box_model().border.left = CSS::Length::make_px(style.border_left().width);
-    box.box_model().border.right = CSS::Length::make_px(style.border_right().width);
-    box.box_model().padding.left = padding_left;
-    box.box_model().padding.right = padding_right;
+    box.box_model().margin.left = margin_left.to_px(box);
+    box.box_model().margin.right = margin_right.to_px(box);
+    box.box_model().border.left = style.border_left().width;
+    box.box_model().border.right = style.border_right().width;
+    box.box_model().padding.left = padding_left.to_px(box);
+    box.box_model().padding.right = padding_right.to_px(box);
 }
 
 void BlockFormattingContext::compute_width_for_floating_box(Box& box)
@@ -396,12 +396,12 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& 
 
     box.set_width(used_width.to_px(box));
 
-    box.box_model().margin.left = margin_left;
-    box.box_model().margin.right = margin_right;
-    box.box_model().border.left = CSS::Length::make_px(border_left);
-    box.box_model().border.right = CSS::Length::make_px(border_right);
-    box.box_model().padding.left = padding_left;
-    box.box_model().padding.right = padding_right;
+    box.box_model().margin.left = margin_left.to_px(box);
+    box.box_model().margin.right = margin_right.to_px(box);
+    box.box_model().border.left = border_left;
+    box.box_model().border.right = border_right;
+    box.box_model().padding.left = padding_left.to_px(box);
+    box.box_model().padding.right = padding_right.to_px(box);
 }
 
 void BlockFormattingContext::compute_height(Box& box)
@@ -424,12 +424,12 @@ void BlockFormattingContext::compute_height(Box& box)
 
     auto specified_max_height = style.max_height().resolved_or_auto(box, containing_block.height());
 
-    box.box_model().margin.top = style.margin().top.resolved_or_zero(box, containing_block.width());
-    box.box_model().margin.bottom = style.margin().bottom.resolved_or_zero(box, containing_block.width());
-    box.box_model().border.top = CSS::Length::make_px(style.border_top().width);
-    box.box_model().border.bottom = CSS::Length::make_px(style.border_bottom().width);
-    box.box_model().padding.top = style.padding().top.resolved_or_zero(box, containing_block.width());
-    box.box_model().padding.bottom = style.padding().bottom.resolved_or_zero(box, containing_block.width());
+    box.box_model().margin.top = style.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().margin.bottom = style.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().border.top = style.border_top().width;
+    box.box_model().border.bottom = style.border_bottom().width;
+    box.box_model().padding.top = style.padding().top.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().padding.bottom = style.padding().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(box);
@@ -477,7 +477,7 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
         if (is<ListItemBox>(child_box))
             downcast<ListItemBox>(child_box).layout_marker();
 
-        content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box(child_box).bottom);
+        content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box().bottom);
         content_width = max(content_width, downcast<Box>(child_box).width());
         return IterationDecision::Continue;
     });
@@ -496,19 +496,19 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
     ASSERT(!containing_block.is_absolutely_positioned());
     auto& replaced_element_box_model = child_box.box_model();
 
-    replaced_element_box_model.margin.top = child_box.style().margin().top.resolved_or_zero(containing_block, containing_block.width());
-    replaced_element_box_model.margin.bottom = child_box.style().margin().bottom.resolved_or_zero(containing_block, containing_block.width());
-    replaced_element_box_model.border.top = CSS::Length::make_px(child_box.style().border_top().width);
-    replaced_element_box_model.border.bottom = CSS::Length::make_px(child_box.style().border_bottom().width);
-    replaced_element_box_model.padding.top = child_box.style().padding().top.resolved_or_zero(containing_block, containing_block.width());
-    replaced_element_box_model.padding.bottom = child_box.style().padding().bottom.resolved_or_zero(containing_block, containing_block.width());
+    replaced_element_box_model.margin.top = child_box.style().margin().top.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    replaced_element_box_model.margin.bottom = child_box.style().margin().bottom.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    replaced_element_box_model.border.top = child_box.style().border_top().width;
+    replaced_element_box_model.border.bottom = child_box.style().border_bottom().width;
+    replaced_element_box_model.padding.top = child_box.style().padding().top.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    replaced_element_box_model.padding.bottom = child_box.style().padding().bottom.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
 
-    float x = replaced_element_box_model.margin.left.to_px(child_box)
-        + replaced_element_box_model.border.left.to_px(child_box)
-        + replaced_element_box_model.padding.left.to_px(child_box)
-        + replaced_element_box_model.offset.left.to_px(child_box);
+    float x = replaced_element_box_model.margin.left
+        + replaced_element_box_model.border.left
+        + replaced_element_box_model.padding.left
+        + replaced_element_box_model.offset.left;
 
-    float y = replaced_element_box_model.margin_box(child_box).top + containing_block.box_model().offset.top.to_px(child_box);
+    float y = replaced_element_box_model.margin_box().top + containing_block.box_model().offset.top;
 
     child_box.set_offset(x, y);
 }
@@ -518,24 +518,24 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     auto& box_model = child_box.box_model();
     auto& style = child_box.style();
 
-    box_model.margin.top = style.margin().top.resolved_or_zero(containing_block, containing_block.width());
-    box_model.margin.bottom = style.margin().bottom.resolved_or_zero(containing_block, containing_block.width());
-    box_model.border.top = CSS::Length::make_px(style.border_top().width);
-    box_model.border.bottom = CSS::Length::make_px(style.border_bottom().width);
-    box_model.padding.top = style.padding().top.resolved_or_zero(containing_block, containing_block.width());
-    box_model.padding.bottom = style.padding().bottom.resolved_or_zero(containing_block, containing_block.width());
+    box_model.margin.top = style.margin().top.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    box_model.margin.bottom = style.margin().bottom.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    box_model.border.top = style.border_top().width;
+    box_model.border.bottom = style.border_bottom().width;
+    box_model.padding.top = style.padding().top.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
+    box_model.padding.bottom = style.padding().bottom.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
 
-    float x = box_model.margin.left.to_px(child_box)
-        + box_model.border.left.to_px(child_box)
-        + box_model.padding.left.to_px(child_box)
-        + box_model.offset.left.to_px(child_box);
+    float x = box_model.margin.left
+        + box_model.border.left
+        + box_model.padding.left
+        + box_model.offset.left;
 
     if (containing_block.style().text_align() == CSS::TextAlign::VendorSpecificCenter) {
         x = (containing_block.width() / 2) - child_box.width() / 2;
     }
 
-    float y = box_model.margin_box(child_box).top
-        + box_model.offset.top.to_px(child_box);
+    float y = box_model.margin_box().top
+        + box_model.offset.top;
 
     // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
     float collapsed_bottom_margin_of_preceding_siblings = 0;
@@ -543,7 +543,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     auto* relevant_sibling = child_box.previous_sibling_of_type<Layout::BlockBox>();
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
-            collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom.to_px(*relevant_sibling));
+            collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom);
             if (relevant_sibling->height() > 0)
                 break;
         }
@@ -553,10 +553,10 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     if (relevant_sibling) {
         y += relevant_sibling->effective_offset().y()
             + relevant_sibling->height()
-            + relevant_sibling->box_model().border_box(*relevant_sibling).bottom;
+            + relevant_sibling->box_model().border_box().bottom;
 
         // Collapse top margin with bottom margin of preceding siblings if needed
-        float my_margin_top = box_model.margin.top.to_px(child_box);
+        float my_margin_top = box_model.margin.top;
 
         if (my_margin_top < 0 || collapsed_bottom_margin_of_preceding_siblings < 0) {
             // Negative margins present.
@@ -574,7 +574,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         if (!m_left_floating_boxes.is_empty()) {
             float clearance_y = 0;
             for (auto* floating_box : m_left_floating_boxes) {
-                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box(*floating_box).bottom);
+                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box().bottom);
             }
             y = max(y, clearance_y);
             m_left_floating_boxes.clear();
@@ -585,7 +585,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         if (!m_right_floating_boxes.is_empty()) {
             float clearance_y = 0;
             for (auto* floating_box : m_right_floating_boxes) {
-                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box(*floating_box).bottom);
+                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box().bottom);
             }
             y = max(y, clearance_y);
             m_right_floating_boxes.clear();
@@ -701,7 +701,6 @@ void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
 {
     auto& containing_block = context_box();
     auto& box_model = box.box_model();
-    auto zero_value = CSS::Length::make_px(0);
 
     auto specified_width = box.style().width().resolved_or_auto(box, containing_block.width());
 
@@ -709,55 +708,55 @@ void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
     layout_inside(box, LayoutMode::Default);
     compute_height(box);
 
-    box_model.margin.left = box.style().margin().left.resolved_or_auto(box, containing_block.width());
-    box_model.margin.top = box.style().margin().top.resolved_or_auto(box, containing_block.height());
-    box_model.margin.right = box.style().margin().right.resolved_or_auto(box, containing_block.width());
-    box_model.margin.bottom = box.style().margin().bottom.resolved_or_auto(box, containing_block.height());
+    box_model.margin.left = box.style().margin().left.resolved_or_auto(box, containing_block.width()).to_px(box);
+    box_model.margin.top = box.style().margin().top.resolved_or_auto(box, containing_block.height()).to_px(box);
+    box_model.margin.right = box.style().margin().right.resolved_or_auto(box, containing_block.width()).to_px(box);
+    box_model.margin.bottom = box.style().margin().bottom.resolved_or_auto(box, containing_block.height()).to_px(box);
 
-    box_model.border.left = CSS::Length::make_px(box.style().border_left().width);
-    box_model.border.right = CSS::Length::make_px(box.style().border_right().width);
-    box_model.border.top = CSS::Length::make_px(box.style().border_top().width);
-    box_model.border.bottom = CSS::Length::make_px(box.style().border_bottom().width);
+    box_model.border.left = box.style().border_left().width;
+    box_model.border.right = box.style().border_right().width;
+    box_model.border.top = box.style().border_top().width;
+    box_model.border.bottom = box.style().border_bottom().width;
 
-    box_model.offset.left = box.style().offset().left.resolved_or_auto(box, containing_block.width());
-    box_model.offset.top = box.style().offset().top.resolved_or_auto(box, containing_block.height());
-    box_model.offset.right = box.style().offset().right.resolved_or_auto(box, containing_block.width());
-    box_model.offset.bottom = box.style().offset().bottom.resolved_or_auto(box, containing_block.height());
+    box_model.offset.left = box.style().offset().left.resolved_or_auto(box, containing_block.width()).to_px(box);
+    box_model.offset.top = box.style().offset().top.resolved_or_auto(box, containing_block.height()).to_px(box);
+    box_model.offset.right = box.style().offset().right.resolved_or_auto(box, containing_block.width()).to_px(box);
+    box_model.offset.bottom = box.style().offset().bottom.resolved_or_auto(box, containing_block.height()).to_px(box);
 
-    if (box_model.offset.left.is_auto() && specified_width.is_auto() && box_model.offset.right.is_auto()) {
-        if (box_model.margin.left.is_auto())
-            box_model.margin.left = zero_value;
-        if (box_model.margin.right.is_auto())
-            box_model.margin.right = zero_value;
+    if (box.style().offset().left.is_auto() && specified_width.is_auto() && box.style().offset().right.is_auto()) {
+        if (box.style().margin().left.is_auto())
+            box_model.margin.left = 0;
+        if (box.style().margin().right.is_auto())
+            box_model.margin.right = 0;
     }
 
     Gfx::FloatPoint used_offset;
 
-    if (!box_model.offset.left.is_auto()) {
-        float x_offset = box_model.offset.left.to_px(box)
-            + box_model.border_box(box).left;
-        used_offset.set_x(x_offset + box_model.margin.left.to_px(box));
-    } else if (!box_model.offset.right.is_auto()) {
+    if (!box.style().offset().left.is_auto()) {
+        float x_offset = box_model.offset.left
+            + box_model.border_box().left;
+        used_offset.set_x(x_offset + box_model.margin.left);
+    } else if (!box.style().offset().right.is_auto()) {
         float x_offset = 0
-            - box_model.offset.right.to_px(box)
-            - box_model.border_box(box).right;
-        used_offset.set_x(containing_block.width() + x_offset - box.width() - box_model.margin.right.to_px(box));
+            - box.style().offset().right.to_px(box)
+            - box_model.border_box().right;
+        used_offset.set_x(containing_block.width() + x_offset - box.width() - box_model.margin.right);
     } else {
-        float x_offset = box_model.margin_box(box).left;
+        float x_offset = box_model.margin_box().left;
         used_offset.set_x(x_offset);
     }
 
-    if (!box_model.offset.top.is_auto()) {
-        float y_offset = box_model.offset.top.to_px(box)
-            + box_model.border_box(box).top;
-        used_offset.set_y(y_offset + box_model.margin.top.to_px(box));
-    } else if (!box_model.offset.bottom.is_auto()) {
+    if (!box.style().offset().top.is_auto()) {
+        float y_offset = box_model.offset.top
+            + box_model.border_box().top;
+        used_offset.set_y(y_offset + box_model.margin.top);
+    } else if (!box.style().offset().bottom.is_auto()) {
         float y_offset = 0
-            - box_model.offset.bottom.to_px(box)
-            - box_model.border_box(box).bottom;
-        used_offset.set_y(containing_block.height() + y_offset - box.height() - box_model.margin.bottom.to_px(box));
+            - box.style().offset().bottom.to_px(box)
+            - box_model.border_box().bottom;
+        used_offset.set_y(containing_block.height() + y_offset - box.height() - box_model.margin.bottom);
     } else {
-        float y_offset = box_model.margin_box(box).top;
+        float y_offset = box_model.margin_box().top;
         used_offset.set_y(y_offset);
     }
 

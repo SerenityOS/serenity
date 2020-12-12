@@ -54,7 +54,7 @@ public:
 
     float border_box_width() const
     {
-        auto border_box = box_model().border_box(*this);
+        auto border_box = box_model().border_box();
         return width() + border_box.left + border_box.right;
     }
 
@@ -66,7 +66,7 @@ public:
     Gfx::FloatRect margin_box_as_relative_rect() const
     {
         auto rect = content_box_as_relative_rect();
-        auto margin_box = box_model().margin_box(*this);
+        auto margin_box = box_model().margin_box();
         rect.set_x(rect.x() - margin_box.left);
         rect.set_width(rect.width() + margin_box.left + margin_box.right);
         rect.set_y(rect.y() - margin_box.top);
