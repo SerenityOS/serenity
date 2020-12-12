@@ -786,7 +786,7 @@ public:
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
-        m_in_block++;
+        m_in_block = true;
         T t(forward<Args>(args)...);
 
         Atomic<bool> timeout_unblocked(false);
@@ -809,7 +809,7 @@ public:
                 // Don't block if the wake condition is already met
                 t.not_blocking(false);
                 m_blocker = nullptr;
-                m_in_block--;
+                m_in_block = false;
                 return BlockResult::NotBlocked;
             }
 
@@ -831,7 +831,7 @@ public:
                     // Timeout is already in the past
                     t.not_blocking(true);
                     m_blocker = nullptr;
-                    m_in_block--;
+                    m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
                 }
             }
@@ -844,12 +844,13 @@ public:
         block_lock.unlock();
 
         bool did_timeout = false;
-        bool last_recursive_unblock;
+        bool did_unlock = false;
         for (;;) {
             scheduler_lock.unlock();
 
             // Yield to the scheduler, and wait for us to resume unblocked.
-            m_need_relock_process |= unlock_process_if_locked();
+            did_unlock |= unlock_process_if_locked();
+
             ASSERT(!g_scheduler_lock.own_lock());
             ASSERT(Processor::current().in_critical());
             yield_while_not_holding_big_lock();
@@ -875,7 +876,7 @@ public:
                 ASSERT(m_blocker == &t);
                 m_blocker = nullptr;
             }
-            last_recursive_unblock = (--m_in_block == 0);
+            m_in_block = false;
             break;
         }
 
@@ -895,8 +896,7 @@ public:
             // (e.g. if it's on another processor)
             TimerQueue::the().cancel_timer(timer.release_nonnull());
         }
-        if (m_need_relock_process && last_recursive_unblock) {
-            m_need_relock_process = false;
+        if (did_unlock) {
             // NOTE: this may trigger another call to Thread::block(), so
             // we need to do this after we're all done and restored m_in_block!
             lock_process();
@@ -1226,12 +1226,11 @@ private:
     u32 m_priority_boost { 0 };
 
     State m_stop_state { Invalid };
-    u32 m_in_block { false };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
-    bool m_need_relock_process { false };
+    bool m_in_block { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     void yield_without_holding_big_lock();
