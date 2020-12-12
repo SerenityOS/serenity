@@ -65,8 +65,6 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
     if (layout_mode == LayoutMode::Default)
         compute_width(box);
 
-    layout_floating_children(box);
-
     if (box.children_are_inline()) {
         layout_inline_children(box, layout_mode);
     } else {
@@ -458,8 +456,10 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
             return IterationDecision::Continue;
         }
 
-        if (child_box.is_floating())
+        if (child_box.is_floating()) {
+            layout_floating_child(child_box, box);
             return IterationDecision::Continue;
+        }
 
         compute_width(child_box);
         layout_inside(child_box, layout_mode);
@@ -604,8 +604,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     icb.set_width(viewport_rect.width());
 
-    layout_floating_children(context_box());
-
     layout_block_level_children(context_box(), layout_mode);
 
     ASSERT(!icb.children_are_inline());
@@ -622,15 +620,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
     icb.for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& widget) {
         widget.update_widget();
-        return IterationDecision::Continue;
-    });
-}
-
-void BlockFormattingContext::layout_floating_children(Box& box)
-{
-    box.for_each_child_of_type<Box>([&](auto& child_box) {
-        if (child_box.is_floating())
-            layout_floating_child(child_box, box);
         return IterationDecision::Continue;
     });
 }
