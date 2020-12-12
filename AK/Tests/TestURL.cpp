@@ -207,4 +207,10 @@ TEST_CASE(trailing_slash_with_complete_url)
     EXPECT_EQ(URL("http://a/b").complete_url("c").to_string(), "http://a/c");
 }
 
+TEST_CASE(trailing_port)
+{
+    URL url("http://example.com:8086");
+    EXPECT_EQ(url.port(), 8086);
+}
+
 TEST_MAIN(URL)
