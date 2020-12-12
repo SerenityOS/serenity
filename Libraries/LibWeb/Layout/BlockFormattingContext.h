@@ -61,7 +61,6 @@ private:
 
     void layout_block_level_children(Box&, LayoutMode);
     void layout_inline_children(Box&, LayoutMode);
-    void layout_floating_children(Box&);
 
     void place_block_level_replaced_element_in_normal_flow(Box& child, Box& container);
     void place_block_level_non_replaced_element_in_normal_flow(Box& child, Box& container);
