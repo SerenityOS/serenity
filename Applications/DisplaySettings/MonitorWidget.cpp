@@ -106,6 +106,8 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
     painter.blit({ 0, 0 }, *m_monitor_bitmap, m_monitor_bitmap->rect());
     painter.draw_scaled_bitmap(m_monitor_rect, *screen_bitmap, screen_bitmap->rect());
 
-    if (!m_desktop_resolution.is_null())
-        painter.draw_text(m_monitor_rect, m_desktop_resolution.to_string(), Gfx::TextAlignment::Center);
+    if (!m_desktop_resolution.is_null()) {
+        painter.draw_text(m_monitor_rect.translated(1, 1), m_desktop_resolution.to_string(), Gfx::TextAlignment::Center, Color::Black);
+        painter.draw_text(m_monitor_rect, m_desktop_resolution.to_string(), Gfx::TextAlignment::Center, Color::White);
+    }
 }
