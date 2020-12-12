@@ -386,7 +386,7 @@ void TextEditor::paint_event(PaintEvent& event)
         Gfx::IntRect display_rect {
             widget_inner_rect().x() + 1,
             widget_inner_rect().y() + 1,
-            widget_inner_rect().width() - button_padding(),
+            widget_inner_rect().width() - 2,
             widget_inner_rect().height() - 2
         };
         painter.add_clip_rect(display_rect);
@@ -1435,13 +1435,6 @@ void TextEditor::set_mode(const Mode mode)
         set_override_cursor(Gfx::StandardCursor::IBeam);
     else
         set_override_cursor(Gfx::StandardCursor::None);
-}
-
-void TextEditor::set_has_open_button(bool has_button)
-{
-    if (m_has_open_button == has_button)
-        return;
-    m_has_open_button = has_button;
 }
 
 void TextEditor::set_has_visible_list(bool visible)

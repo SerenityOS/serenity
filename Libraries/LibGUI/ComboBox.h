@@ -26,15 +26,16 @@
 
 #pragma once
 
-#include <LibGUI/Widget.h>
+#include <LibGUI/Frame.h>
 
 namespace GUI {
 
 class ComboBoxEditor;
 class ControlBoxButton;
 
-class ComboBox : public Widget {
-    C_OBJECT(ComboBox)
+class ComboBox : public Frame {
+    C_OBJECT(ComboBox);
+
 public:
     virtual ~ComboBox() override;
 
