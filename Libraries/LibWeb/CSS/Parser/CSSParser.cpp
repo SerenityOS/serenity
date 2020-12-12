@@ -442,17 +442,22 @@ public:
         return 0;
     }
 
-    char consume_specific(char ch)
+    bool consume_specific(char ch)
     {
         if (peek() != ch) {
-            dbg() << "peek() != '" << ch << "'";
+            dbgln("CSSParser: Peeked '{:c}' wanted specific '{:c}'", peek(), ch);
+        }
+        if (!peek()) {
+            PARSE_ERROR();
+            return false;
         }
         if (peek() != ch) {
             PARSE_ERROR();
+            ++index;
+            return false;
         }
-        PARSE_ASSERT(index < css.length());
         ++index;
-        return ch;
+        return true;
     }
 
     char consume_one()
@@ -600,10 +605,13 @@ public:
             simple_selector.attribute_match_type = attribute_match_type;
             simple_selector.attribute_name = attribute_name;
             simple_selector.attribute_value = attribute_value;
-            if (expected_end_of_attribute_selector != ']')
-                consume_specific(expected_end_of_attribute_selector);
+            if (expected_end_of_attribute_selector != ']') {
+                if (!consume_specific(expected_end_of_attribute_selector))
+                    return {};
+            }
             consume_whitespace_or_comments();
-            consume_specific(']');
+            if (!consume_specific(']'))
+                return {};
         }
 
         if (peek() == ':') {
@@ -618,10 +626,14 @@ public:
                 buffer.append(consume_one());
                 buffer.append(consume_one());
                 buffer.append(consume_one());
-                buffer.append(consume_specific('('));
+                if (!consume_specific('('))
+                    return {};
+                buffer.append('(');
                 while (peek() != ')')
                     buffer.append(consume_one());
-                buffer.append(consume_specific(')'));
+                if (!consume_specific(')'))
+                    return {};
+                buffer.append(')');
             } else {
                 while (is_valid_selector_char(peek()))
                     buffer.append(consume_one());
@@ -854,15 +866,18 @@ public:
         auto property_name = String::copy(buffer);
         buffer.clear();
         consume_whitespace_or_comments();
-        consume_specific(':');
+        if (!consume_specific(':'))
+            return {};
         consume_whitespace_or_comments();
 
         auto [property_value, important] = consume_css_value();
 
         consume_whitespace_or_comments();
 
-        if (peek() && peek() != '}')
-            consume_specific(';');
+        if (peek() && peek() != '}') {
+            if (!consume_specific(';'))
+                return {};
+        }
 
         auto property_id = CSS::property_id_from_string(property_name);
         if (property_id == CSS::PropertyID::Invalid) {
@@ -881,7 +896,7 @@ public:
             if (property.has_value())
                 current_rule.properties.append(property.value());
             consume_whitespace_or_comments();
-            if (peek() == '}')
+            if (!peek() || peek() == '}')
                 break;
         }
     }
@@ -889,7 +904,7 @@ public:
     void parse_rule()
     {
         consume_whitespace_or_comments();
-        if (index >= css.length())
+        if (!peek())
             return;
 
         // FIXME: We ignore @-rules for now.
@@ -912,9 +927,15 @@ public:
         }
 
         parse_selector_list();
-        consume_specific('{');
+        if (!consume_specific('{')) {
+            PARSE_ERROR();
+            return;
+        }
         parse_declaration();
-        consume_specific('}');
+        if (!consume_specific('}')) {
+            PARSE_ERROR();
+            return;
+        }
         rules.append(CSS::StyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
         consume_whitespace_or_comments();
     }
@@ -926,7 +947,7 @@ public:
             index += 3;
         }
 
-        while (index < css.length()) {
+        while (peek()) {
             parse_rule();
         }
 
