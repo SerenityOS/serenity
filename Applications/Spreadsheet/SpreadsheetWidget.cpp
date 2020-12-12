@@ -48,7 +48,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     auto& top_bar = container.add<GUI::Frame>();
     top_bar.set_layout<GUI::HorizontalBoxLayout>().set_spacing(1);
-    top_bar.set_preferred_size(0, 50);
+    top_bar.set_preferred_size(0, 26);
     top_bar.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     auto& current_cell_label = top_bar.add<GUI::Label>("");
     current_cell_label.set_preferred_size(50, 0);
