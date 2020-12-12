@@ -93,7 +93,7 @@ static inline bool in_userinfo_set(u32 c)
 String urlencode(const StringView& input)
 {
     StringBuilder builder;
-    for (char ch : input) {
+    for (unsigned char ch : input) {
         if (in_userinfo_set((u8)ch)) {
             builder.append('%');
             builder.appendff("{:02X}", ch);
