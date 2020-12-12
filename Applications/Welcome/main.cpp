@@ -55,28 +55,17 @@ struct ContentPage {
 
 static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
 {
-    const auto error = Optional<Vector<ContentPage>>();
     auto file = Core::File::construct(path);
-
     if (!file->open(Core::IODevice::ReadOnly))
-        return error;
+        return {};
 
     Vector<ContentPage> pages;
     StringBuilder current_output_line;
     bool started = false;
     ContentPage current;
-    while (true) {
+    while (file->can_read_line()) {
         auto buffer = file->read_line(4096);
-        if (buffer.is_null()) {
-            if (file->error()) {
-                file->close();
-                return error;
-            }
-
-            break;
-        }
-
-        auto line = String((char*)buffer.data());
+        auto line = String((const char*)buffer.data(), buffer.size());
         if (line.length() > 1)
             line = line.substring(0, line.length() - 1); // remove newline
         switch (line[0]) {
@@ -122,7 +111,6 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
         pages.append(current);
     }
 
-    file->close();
     return pages;
 }
 
