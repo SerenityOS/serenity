@@ -1,5 +1,6 @@
 add_subdirectory(LibAudio)
 add_subdirectory(LibBencode)
+add_subdirectory(LibBitTorrent)
 add_subdirectory(LibC)
 add_subdirectory(LibChess)
 add_subdirectory(LibCompress)
