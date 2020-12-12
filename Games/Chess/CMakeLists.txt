@@ -6,4 +6,4 @@ set(SOURCES
 )
 
 serenity_bin(Chess)
-target_link_libraries(Chess LibChess LibGUI)
+target_link_libraries(Chess LibChess LibGUI LibCore)
