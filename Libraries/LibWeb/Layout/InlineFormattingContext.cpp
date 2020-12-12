@@ -62,7 +62,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
 
     for (ssize_t i = bfc.left_floating_boxes().size() - 1; i >= 0; --i) {
         auto& floating_box = *bfc.left_floating_boxes().at(i);
-        Gfx::FloatRect rect { floating_box.effective_offset(), floating_box.size() };
+        auto rect = floating_box.margin_box_as_relative_rect();
         if (rect.contains_vertically(y)) {
             info.left = rect.right() + 1;
             break;
@@ -73,7 +73,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
 
     for (ssize_t i = bfc.right_floating_boxes().size() - 1; i >= 0; --i) {
         auto& floating_box = *bfc.right_floating_boxes().at(i);
-        Gfx::FloatRect rect { floating_box.effective_offset(), floating_box.size() };
+        auto rect = floating_box.margin_box_as_relative_rect();
         if (rect.contains_vertically(y)) {
             info.right = rect.left() - 1;
             break;
