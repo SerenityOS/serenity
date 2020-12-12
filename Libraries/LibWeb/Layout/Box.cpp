@@ -44,10 +44,10 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         context.painter().translate(context.scroll_offset());
 
     Gfx::FloatRect padded_rect;
-    padded_rect.set_x(absolute_x() - box_model().padding.left.to_px(*this));
-    padded_rect.set_width(width() + box_model().padding.left.to_px(*this) + box_model().padding.right.to_px(*this));
-    padded_rect.set_y(absolute_y() - box_model().padding.top.to_px(*this));
-    padded_rect.set_height(height() + box_model().padding.top.to_px(*this) + box_model().padding.bottom.to_px(*this));
+    padded_rect.set_x(absolute_x() - box_model().padding.left);
+    padded_rect.set_width(width() + box_model().padding.left + box_model().padding.right);
+    padded_rect.set_y(absolute_y() - box_model().padding.top);
+    padded_rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
 
     if (phase == PaintPhase::Background && !is_body()) {
         // FIXME: We should paint the body here too, but that currently happens at the view layer.
@@ -67,10 +67,10 @@ void Box::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Border) {
         Gfx::FloatRect bordered_rect;
-        bordered_rect.set_x(padded_rect.x() - box_model().border.left.to_px(*this));
-        bordered_rect.set_width(padded_rect.width() + box_model().border.left.to_px(*this) + box_model().border.right.to_px(*this));
-        bordered_rect.set_y(padded_rect.y() - box_model().border.top.to_px(*this));
-        bordered_rect.set_height(padded_rect.height() + box_model().border.top.to_px(*this) + box_model().border.bottom.to_px(*this));
+        bordered_rect.set_x(padded_rect.x() - box_model().border.left);
+        bordered_rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
+        bordered_rect.set_y(padded_rect.y() - box_model().border.top);
+        bordered_rect.set_height(padded_rect.height() + box_model().border.top + box_model().border.bottom);
 
         Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, style());
         Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, style());
@@ -83,7 +83,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = absolute_rect();
 
-        auto margin_box = box_model().margin_box(*this);
+        auto margin_box = box_model().margin_box();
         Gfx::FloatRect margin_rect;
         margin_rect.set_x(absolute_x() - margin_box.left);
         margin_rect.set_width(width() + margin_box.left + margin_box.right);

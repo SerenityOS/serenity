@@ -183,23 +183,23 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         if (show_box_model) {
             // Dump the horizontal box properties
             builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
-                box.box_model().margin.left.to_px(box),
-                box.box_model().border.left.to_px(box),
-                box.box_model().padding.left.to_px(box),
+                box.box_model().margin.left,
+                box.box_model().border.left,
+                box.box_model().padding.left,
                 box.width(),
-                box.box_model().padding.right.to_px(box),
-                box.box_model().border.right.to_px(box),
-                box.box_model().margin.right.to_px(box));
+                box.box_model().padding.right,
+                box.box_model().border.right,
+                box.box_model().margin.right);
 
             // And the vertical box properties
             builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
-                box.box_model().margin.top.to_px(box),
-                box.box_model().border.top.to_px(box),
-                box.box_model().padding.top.to_px(box),
+                box.box_model().margin.top,
+                box.box_model().border.top,
+                box.box_model().padding.top,
                 box.height(),
-                box.box_model().padding.bottom.to_px(box),
-                box.box_model().border.bottom.to_px(box),
-                box.box_model().margin.bottom.to_px(box));
+                box.box_model().padding.bottom,
+                box.box_model().border.bottom,
+                box.box_model().margin.bottom);
         }
 
         builder.append("\n");

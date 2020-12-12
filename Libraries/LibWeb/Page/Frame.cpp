@@ -167,7 +167,7 @@ void Frame::scroll_to_anchor(const String& fragment)
     Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
     if (is<Layout::Box>(layout_node)) {
         auto& layout_box = downcast<Layout::Box>(layout_node);
-        auto padding_box = layout_box.box_model().padding_box(layout_box);
+        auto padding_box = layout_box.box_model().padding_box();
         float_rect.move_by(-padding_box.left, -padding_box.top);
     }
 

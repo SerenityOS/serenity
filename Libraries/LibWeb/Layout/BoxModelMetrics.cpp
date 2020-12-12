@@ -28,33 +28,33 @@
 
 namespace Web::Layout {
 
-PixelBox BoxModelMetrics::margin_box(const Node& layout_node) const
+PixelBox BoxModelMetrics::margin_box() const
 {
     return {
-        margin.top.to_px(layout_node) + border.top.to_px(layout_node) + padding.top.to_px(layout_node),
-        margin.right.to_px(layout_node) + border.right.to_px(layout_node) + padding.right.to_px(layout_node),
-        margin.bottom.to_px(layout_node) + border.bottom.to_px(layout_node) + padding.bottom.to_px(layout_node),
-        margin.left.to_px(layout_node) + border.left.to_px(layout_node) + padding.left.to_px(layout_node),
+        margin.top + border.top + padding.top,
+        margin.right + border.right + padding.right,
+        margin.bottom + border.bottom + padding.bottom,
+        margin.left + border.left + padding.left,
     };
 }
 
-PixelBox BoxModelMetrics::padding_box(const Node& layout_node) const
+PixelBox BoxModelMetrics::padding_box() const
 {
     return {
-        padding.top.to_px(layout_node),
-        padding.right.to_px(layout_node),
-        padding.bottom.to_px(layout_node),
-        padding.left.to_px(layout_node),
+        padding.top,
+        padding.right,
+        padding.bottom,
+        padding.left,
     };
 }
 
-PixelBox BoxModelMetrics::border_box(const Node& layout_node) const
+PixelBox BoxModelMetrics::border_box() const
 {
     return {
-        border.top.to_px(layout_node) + padding.top.to_px(layout_node),
-        border.right.to_px(layout_node) + padding.right.to_px(layout_node),
-        border.bottom.to_px(layout_node) + padding.bottom.to_px(layout_node),
-        border.left.to_px(layout_node) + padding.left.to_px(layout_node),
+        border.top + padding.top,
+        border.right + padding.right,
+        border.bottom + padding.bottom,
+        border.left + padding.left,
     };
 }
 
