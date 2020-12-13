@@ -214,7 +214,8 @@ bool FrameLoader::load(const URL& url, Type type)
 
 void FrameLoader::load_html(const StringView& html, const URL& url)
 {
-    HTML::HTMLDocumentParser parser(html, "utf-8");
+    auto document = DOM::Document::create(url);
+    HTML::HTMLDocumentParser parser(document, html, "utf-8");
     parser.run(url);
     frame().set_document(&parser.document());
 }
