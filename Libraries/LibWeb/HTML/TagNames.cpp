@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/DOM/TagNames.h>
+#include <LibWeb/HTML/TagNames.h>
 
 namespace Web::HTML::TagNames {
 

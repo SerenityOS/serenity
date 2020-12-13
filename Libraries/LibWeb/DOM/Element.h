@@ -31,8 +31,8 @@
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
-#include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/QualifiedName.h>
 
