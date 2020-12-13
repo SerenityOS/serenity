@@ -159,6 +159,9 @@ void Frame::scroll_to_anchor(const String& fragment)
         }
     }
 
+    // FIXME: This is overly aggressive and should be something more like a "update_layout_if_needed()"
+    document()->force_layout();
+
     if (!element || !element->layout_node())
         return;
 

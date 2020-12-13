@@ -58,7 +58,7 @@ private:
     virtual void resource_did_fail() override;
 
     void load_error_page(const URL& failed_url, const String& error_message);
-    RefPtr<DOM::Document> create_document_from_mime_type(const ByteBuffer&, const URL&, const String& mime_type, const String& encoding);
+    bool parse_document(DOM::Document&, const ByteBuffer& data);
 
     Frame& m_frame;
 };
