@@ -158,7 +158,7 @@ void DisplaySettingsWidget::create_frame()
             return;
 
         m_wallpaper_combo->set_only_allow_values_from_model(false);
-        this->m_wallpaper_combo->set_text(open_path.value());
+        m_wallpaper_combo->set_text(open_path.value());
         m_wallpaper_combo->set_only_allow_values_from_model(true);
     };
 
@@ -182,8 +182,8 @@ void DisplaySettingsWidget::create_frame()
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
-        this->m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
-        this->m_monitor_widget->update();
+        m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
+        m_monitor_widget->update();
     };
 
     /// Resolution Row ////////////////////////////////////////////////////////////////////////////
@@ -205,8 +205,8 @@ void DisplaySettingsWidget::create_frame()
     m_resolution_combo->set_only_allow_values_from_model(true);
     m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
-        this->m_monitor_widget->set_desktop_resolution(m_resolutions.at(index.row()));
-        this->m_monitor_widget->update();
+        m_monitor_widget->set_desktop_resolution(m_resolutions.at(index.row()));
+        m_monitor_widget->update();
     };
 
     /// Background Color Row //////////////////////////////////////////////////////////////////////
@@ -228,8 +228,8 @@ void DisplaySettingsWidget::create_frame()
     m_color_input->set_preferred_size(90, 0);
     m_color_input->set_color_picker_title("Select color for desktop");
     m_color_input->on_change = [this] {
-        this->m_monitor_widget->set_background_color(m_color_input->color());
-        this->m_monitor_widget->update();
+        m_monitor_widget->set_background_color(m_color_input->color());
+        m_monitor_widget->update();
     };
 
     /// Add the apply and cancel buttons //////////////////////////////////////////////////////////
@@ -305,7 +305,7 @@ void DisplaySettingsWidget::load_current_settings()
         warnln("Invalid background mode '{}' in WindowServer config, falling back to 'simple'", mode);
         mode = "simple";
     }
-    this->m_monitor_widget->set_wallpaper_mode(mode);
+    m_monitor_widget->set_wallpaper_mode(mode);
     index = m_modes.find_first_index(mode).value();
     m_mode_combo->set_selected_index(index);
 
@@ -323,7 +323,7 @@ void DisplaySettingsWidget::load_current_settings()
 
     /// Color /////////////////////////////////////////////////////////////////////////////////////
     /// If presend read from config file. If not paint with palet color.
-    Color palette_desktop_color = this->palette().desktop_background();
+    Color palette_desktop_color = palette().desktop_background();
 
     auto background_color = ws_config->read_entry("Background", "Color", "");
     if (!background_color.is_empty()) {
