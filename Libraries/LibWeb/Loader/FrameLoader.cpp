@@ -52,74 +52,73 @@ FrameLoader::~FrameLoader()
 {
 }
 
-static RefPtr<DOM::Document> create_markdown_document(const ByteBuffer& data, const URL& url)
+static bool build_markdown_document(DOM::Document& document, const ByteBuffer& data)
 {
     auto markdown_document = Markdown::Document::parse(data);
     if (!markdown_document)
-        return nullptr;
+        return false;
 
-    return HTML::parse_html_document(markdown_document->render_to_html(), url, "utf-8");
+    HTML::HTMLDocumentParser parser(document, markdown_document->render_to_html(), "utf-8");
+    parser.run(document.url());
+    return true;
 }
 
-static RefPtr<DOM::Document> create_text_document(const ByteBuffer& data, const URL& url)
+static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
 {
-    auto document = DOM::Document::create(url);
+    auto html_element = document.create_element("html");
+    document.append_child(html_element);
 
-    auto html_element = document->create_element("html");
-    document->append_child(html_element);
-
-    auto head_element = document->create_element("head");
+    auto head_element = document.create_element("head");
     html_element->append_child(head_element);
-    auto title_element = document->create_element("title");
+    auto title_element = document.create_element("title");
     head_element->append_child(title_element);
 
-    auto title_text = document->create_text_node(url.basename());
+    auto title_text = document.create_text_node(document.url().basename());
     title_element->append_child(title_text);
 
-    auto body_element = document->create_element("body");
+    auto body_element = document.create_element("body");
     html_element->append_child(body_element);
 
-    auto pre_element = document->create_element("pre");
+    auto pre_element = document.create_element("pre");
     body_element->append_child(pre_element);
 
-    pre_element->append_child(document->create_text_node(String::copy(data)));
-    return document;
+    pre_element->append_child(document.create_text_node(String::copy(data)));
+    return true;
 }
 
-static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const URL& url)
+static bool build_image_document(DOM::Document& document, const ByteBuffer& data)
 {
-    auto document = DOM::Document::create(url);
-
     auto image_decoder = Gfx::ImageDecoder::create(data.data(), data.size());
     auto bitmap = image_decoder->bitmap();
-    ASSERT(bitmap);
+    if (!bitmap)
+        return false;
 
-    auto html_element = document->create_element("html");
-    document->append_child(html_element);
+    auto html_element = document.create_element("html");
+    document.append_child(html_element);
 
-    auto head_element = document->create_element("head");
+    auto head_element = document.create_element("head");
     html_element->append_child(head_element);
-    auto title_element = document->create_element("title");
+    auto title_element = document.create_element("title");
     head_element->append_child(title_element);
 
-    auto basename = LexicalPath(url.path()).basename();
-    auto title_text = adopt(*new DOM::Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
+    auto basename = LexicalPath(document.url().path()).basename();
+    auto title_text = adopt(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
-    auto body_element = document->create_element("body");
+    auto body_element = document.create_element("body");
     html_element->append_child(body_element);
 
-    auto image_element = document->create_element("img");
-    image_element->set_attribute(HTML::AttributeNames::src, url.to_string());
+    auto image_element = document.create_element("img");
+    image_element->set_attribute(HTML::AttributeNames::src, document.url().to_string());
     body_element->append_child(image_element);
 
-    return document;
+    return true;
 }
 
-static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, const URL& url)
+static bool build_gemini_document(DOM::Document& document, const ByteBuffer& data)
 {
     StringView gemini_data { data };
-    auto gemini_document = Gemini::Document::parse(gemini_data, url);
+    auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
     String html_data = gemini_document->render_to_html();
 
 #ifdef GEMINI_DEBUG
@@ -127,29 +126,29 @@ static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, cons
     dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 #endif
 
-    return HTML::parse_html_document(move(html_data), url, "utf-8");
+    HTML::HTMLDocumentParser parser(document, html_data, "utf-8");
+    parser.run(document.url());
+    return true;
 }
 
-RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
+bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data)
 {
-    RefPtr<DOM::Document> document;
-
+    auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        document = HTML::parse_html_document(data, url, encoding);
-    } else if (mime_type.starts_with("image/")) {
-        document = create_image_document(data, url);
-    } else if (mime_type == "text/plain") {
-        document = create_text_document(data, url);
-    } else if (mime_type == "text/markdown") {
-        document = create_markdown_document(data, url);
-    } else if (mime_type == "text/gemini") {
-        document = create_gemini_document(data, url);
+        HTML::HTMLDocumentParser parser(document, data, document.encoding());
+        parser.run(document.url());
+        return true;
     }
+    if (mime_type.starts_with("image/"))
+        return build_image_document(document, data);
+    if (mime_type == "text/plain")
+        return build_text_document(document, data);
+    if (mime_type == "text/markdown")
+        return build_markdown_document(document, data);
+    if (mime_type == "text/gemini")
+        return build_gemini_document(document, data);
 
-    if (document)
-        document->set_content_type(mime_type);
-
-    return document;
+    return false;
 }
 
 bool FrameLoader::load(const LoadRequest& request, Type type)
@@ -257,15 +256,18 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    dbg() << "I believe this content has MIME type '" << resource()->mime_type() << "', encoding '" << resource()->encoding() << "'";
-    auto document = create_document_from_mime_type(resource()->encoded_data(), url, resource()->mime_type(), resource()->encoding());
+    dbgln("I believe this content has MIME type '{}', , encoding '{}'", resource()->mime_type(), resource()->encoding());
 
-    if (!document) {
+    auto document = DOM::Document::create();
+    document->set_url(url);
+    document->set_content_type(resource()->mime_type());
+
+    frame().set_document(document);
+
+    if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");
         return;
     }
-
-    frame().set_document(document);
 
     if (!url.fragment().is_empty())
         frame().scroll_to_anchor(url.fragment());
