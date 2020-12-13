@@ -49,6 +49,24 @@ struct Traits<int> : public GenericTraits<int> {
 };
 
 template<>
+struct Traits<char> : public GenericTraits<char> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(char c) { return int_hash(c); }
+};
+
+template<>
+struct Traits<i16> : public GenericTraits<i16> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(i16 i) { return int_hash(i); }
+};
+
+template<>
+struct Traits<i64> : public GenericTraits<i64> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(i64 i) { return u64_hash(i); }
+};
+
+template<>
 struct Traits<unsigned> : public GenericTraits<unsigned> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(unsigned u) { return int_hash(u); }
@@ -70,12 +88,6 @@ template<>
 struct Traits<u64> : public GenericTraits<u64> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(u64 u) { return u64_hash(u); }
-};
-
-template<>
-struct Traits<char> : public GenericTraits<char> {
-    static constexpr bool is_trivial() { return true; }
-    static unsigned hash(char c) { return int_hash(c); }
 };
 
 template<typename T>
