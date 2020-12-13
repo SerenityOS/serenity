@@ -35,10 +35,10 @@ MonitorWidget::MonitorWidget()
 
 bool MonitorWidget::set_wallpaper(String path)
 {
-    m_desktop_wallpaper_path = path;
     auto bitmap_ptr = Gfx::Bitmap::load_from_file(path);
-    if (!bitmap_ptr)
+    if (!bitmap_ptr && !path.is_empty())
         return false;
+    m_desktop_wallpaper_path = path;
     m_desktop_wallpaper_bitmap = bitmap_ptr;
     return true;
 }
