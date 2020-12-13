@@ -260,6 +260,7 @@ void FrameLoader::resource_did_load()
 
     auto document = DOM::Document::create();
     document->set_url(url);
+    document->set_encoding(resource()->encoding());
     document->set_content_type(resource()->mime_type());
 
     frame().set_document(document);

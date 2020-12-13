@@ -113,7 +113,7 @@ static Vector<FlyString> s_quirks_public_ids = {
 RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
 {
     auto document = DOM::Document::create(url);
-    HTMLDocumentParser parser(document, data, TextCodec::get_standardized_encoding(encoding));
+    HTMLDocumentParser parser(document, data, encoding);
     parser.run(url);
     return document;
 }
@@ -122,7 +122,7 @@ HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
-    m_document->set_encoding(encoding);
+    m_document->set_encoding(TextCodec::get_standardized_encoding(encoding));
 }
 
 HTMLDocumentParser::~HTMLDocumentParser()
