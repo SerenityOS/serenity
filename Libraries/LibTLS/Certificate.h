@@ -66,8 +66,7 @@ struct Certificate {
     String entity;
     String subject;
     String unit;
-    u8** SAN;
-    u16 SAN_length;
+    Vector<String> SAN;
     u8* ocsp;
     Crypto::UnsignedBigInteger serial_number;
     ByteBuffer sign_key;
