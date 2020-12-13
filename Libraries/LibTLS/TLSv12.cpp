@@ -41,7 +41,7 @@
 
 namespace {
 struct OIDChain {
-    void* root { nullptr };
+    OIDChain* root { nullptr };
     u8* oid { nullptr };
 };
 }
@@ -71,6 +71,25 @@ static bool _asn1_is_oid(const u8* oid, const u8* compare, size_t length = 3)
         ++i;
     }
     return true;
+}
+
+static bool _asn1_is_oid_in_chain(OIDChain* reference_chain, const u8* lookup, size_t lookup_length = 3)
+{
+    auto is_oid = [](const u8* oid, size_t oid_length, const u8* compare, size_t compare_length) {
+        if (oid_length < compare_length)
+            compare_length = oid_length;
+        for (size_t i = 0; i < compare_length; i++) {
+            if (oid[i] != compare[i])
+                return false;
+        }
+        return true;
+    };
+    for (; reference_chain; reference_chain = reference_chain->root) {
+        if (reference_chain->oid)
+            if (is_oid(reference_chain->oid, 16, lookup, lookup_length))
+                return true;
+    }
+    return false;
 }
 
 static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, size_t length)
@@ -266,6 +285,12 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
                 if (_asn1_is_field_present(fields, Constants::version_id)) {
                     if (length == 1)
                         cert.version = buffer[position];
+                }
+                if (chain && length > 2) {
+                    if (_asn1_is_oid_in_chain(chain, Constants::san_oid)) {
+                        StringView alt_name { &buffer[position], length };
+                        cert.SAN.append(alt_name);
+                    }
                 }
                 // print_buffer(ByteBuffer::wrap(const_cast<u8*>(buffer) + position, length));
                 break;
@@ -788,9 +813,12 @@ Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringV
 
     for (size_t i = 0; i < m_context.certificates.size(); ++i) {
         auto& cert = m_context.certificates[i];
-        // FIXME: Also check against SAN (oid 2.5.29.17).
         if (wildcard_matches(host, cert.subject))
             return i;
+        for (auto& san : cert.SAN) {
+            if (wildcard_matches(host, san))
+                return i;
+        }
     }
 
     return {};
