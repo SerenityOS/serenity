@@ -267,7 +267,6 @@ void Element::set_inner_html(StringView markup)
     }
 
     set_needs_style_update(true);
-    document().schedule_style_update();
     document().invalidate_layout();
 }
 

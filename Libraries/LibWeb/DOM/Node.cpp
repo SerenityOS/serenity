@@ -102,7 +102,6 @@ void Node::set_text_content(const String& content)
     }
 
     set_needs_style_update(true);
-    document().schedule_style_update();
     document().invalidate_layout();
 }
 
@@ -248,6 +247,15 @@ EventTarget* Node::get_parent(const Event&)
 {
     // FIXME: returns the node’s assigned slot, if node is assigned, and node’s parent otherwise.
     return parent();
+}
+
+void Node::set_needs_style_update(bool value)
+{
+    if (m_needs_style_update == value)
+        return;
+    m_needs_style_update = value;
+    if (m_needs_style_update)
+        document().schedule_style_update();
 }
 
 }
