@@ -131,7 +131,7 @@ bool IRCClient::connect()
 void IRCClient::receive_from_server()
 {
     while (m_socket->can_read_line()) {
-        auto line = m_socket->read_line(PAGE_SIZE);
+        auto line = m_socket->read_line();
         if (line.is_null()) {
             if (!m_socket->is_connected()) {
                 outln("IRCClient: Connection closed!");
@@ -139,11 +139,11 @@ void IRCClient::receive_from_server()
             }
             ASSERT_NOT_REACHED();
         }
-        process_line(move(line));
+        process_line(line);
     }
 }
 
-void IRCClient::process_line(ByteBuffer&& line)
+void IRCClient::process_line(const String& line)
 {
     Message msg;
     Vector<char, 32> prefix;
@@ -159,7 +159,7 @@ void IRCClient::process_line(ByteBuffer&& line)
     } state
         = Start;
 
-    for (size_t i = 0; i < line.size(); ++i) {
+    for (size_t i = 0; i < line.length(); ++i) {
         char ch = line[i];
         if (ch == '\r')
             continue;

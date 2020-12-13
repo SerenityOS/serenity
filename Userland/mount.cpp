@@ -95,13 +95,7 @@ static bool mount_all()
 
     bool all_ok = true;
     while (fstab->can_read_line()) {
-        ByteBuffer buffer = fstab->read_line(1024);
-        StringView line_view { buffer.data(), buffer.size() };
-
-        // Trim the trailing newline, if any.
-        if (line_view.length() > 0 && line_view[line_view.length() - 1] == '\n')
-            line_view = line_view.substring_view(0, line_view.length() - 1);
-        String line = line_view;
+        auto line = fstab->read_line();
 
         // Skip comments and blank lines.
         if (line.is_empty() || line.starts_with("#"))

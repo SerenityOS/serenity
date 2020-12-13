@@ -174,7 +174,7 @@ ByteBuffer IODevice::read_all()
     return ByteBuffer::copy(data.data(), data.size());
 }
 
-ByteBuffer IODevice::read_line(size_t max_size)
+String IODevice::read_line(size_t max_size)
 {
     if (m_fd < 0)
         return {};
@@ -187,9 +187,9 @@ ByteBuffer IODevice::read_line(size_t max_size)
             dbgprintf("IODevice::read_line: At EOF but there's more than max_size(%zu) buffered\n", max_size);
             return {};
         }
-        auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
+        auto line = String((const char*)m_buffered_data.data(), m_buffered_data.size(), Chomp);
         m_buffered_data.clear();
-        return buffer;
+        return line;
     }
     auto line = ByteBuffer::create_uninitialized(max_size + 1);
     size_t line_index = 0;
@@ -201,7 +201,7 @@ ByteBuffer IODevice::read_line(size_t max_size)
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
             line.trim(line_index);
-            return line;
+            return String::copy(line, Chomp);
         }
     }
     return {};

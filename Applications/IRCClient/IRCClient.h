@@ -170,7 +170,7 @@ private:
     void send_kick(const String& channel_name, const String& nick, const String&);
     void send_list();
     void send_whois(const String&);
-    void process_line(ByteBuffer&&);
+    void process_line(const String&);
     void handle_join(const Message&);
     void handle_part(const Message&);
     void handle_quit(const Message&);

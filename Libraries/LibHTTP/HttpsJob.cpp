@@ -126,7 +126,7 @@ bool HttpsJob::can_read_line() const
     return m_socket->can_read_line();
 }
 
-ByteBuffer HttpsJob::read_line(size_t size)
+String HttpsJob::read_line(size_t size)
 {
     return m_socket->read_line(size);
 }

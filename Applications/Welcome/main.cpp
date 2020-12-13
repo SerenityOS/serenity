@@ -64,10 +64,13 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
     bool started = false;
     ContentPage current;
     while (file->can_read_line()) {
-        auto buffer = file->read_line(4096);
-        auto line = String((const char*)buffer.data(), buffer.size());
-        if (line.length() > 1)
-            line = line.substring(0, line.length() - 1); // remove newline
+        auto line = file->read_line();
+        if (line.is_empty()) {
+            if (!current_output_line.to_string().is_empty())
+                current.content.append(current_output_line.to_string());
+            current_output_line.clear();
+            continue;
+        }
         switch (line[0]) {
         case '*':
             dbgln("menu_item line:\t{}", line);
@@ -86,13 +89,6 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
         case '>':
             dbgln("title line:\t{}", line);
             current.title = line.substring(2, line.length() - 2);
-            break;
-        case '\n':
-            dbgln("newline");
-
-            if (!current_output_line.to_string().is_empty())
-                current.content.append(current_output_line.to_string());
-            current_output_line.clear();
             break;
         case '#':
             dbgln("comment line:\t{}", line);

@@ -146,7 +146,7 @@ int main(int argc, char** argv)
                         match.view.to_string());
                     last_printed_char_pos = match.global_offset + match.view.length();
                 }
-                out("{}", StringView(&str[last_printed_char_pos], str.length() - last_printed_char_pos));
+                outln("{}", StringView(&str[last_printed_char_pos], str.length() - last_printed_char_pos));
             }
 
             return true;
@@ -163,11 +163,10 @@ int main(int argc, char** argv)
         }
 
         while (file->can_read_line()) {
-            auto line = file->read_line(1024);
-            auto is_binary = memchr(line.data(), 0, line.size()) != nullptr;
+            auto line = file->read_line();
+            auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 
-            StringView str { reinterpret_cast<const char*>(line.data()), line.size() };
-            if (matches(str, filename, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+            if (matches(line, filename, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
                 return true;
         }
         return true;
@@ -189,14 +188,13 @@ int main(int argc, char** argv)
     if (!files.size() && !recursive) {
         auto stdin_file = Core::File::stdin();
         for (;;) {
-            auto line = stdin_file->read_line(4096);
-            StringView str { line.data(), line.size() };
-            bool is_binary = str.bytes().contains_slow(0);
+            auto line = stdin_file->read_line();
+            bool is_binary = line.bytes().contains_slow(0);
 
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return 1;
 
-            if (matches(str, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+            if (matches(line, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
                 return 0;
         }
     } else {
