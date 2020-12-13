@@ -71,9 +71,9 @@ void Job::on_socket_connected()
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
 
-            auto parts = String::copy(line, Chomp).split_limit(' ', 2);
+            auto parts = line.split_limit(' ', 2);
             if (parts.size() != 2) {
-                fprintf(stderr, "Job: Expected 2-part status line, got '%s'\n", line.data());
+                warnln("Job: Expected 2-part status line, got '{}'", line);
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 

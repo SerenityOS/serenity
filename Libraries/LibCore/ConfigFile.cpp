@@ -83,8 +83,8 @@ void ConfigFile::reparse()
     HashMap<String, String>* current_group = nullptr;
 
     while (file->can_read_line()) {
-        auto line = file->read_line(BUFSIZ);
-        auto* cp = (const char*)line.data();
+        auto line = file->read_line();
+        auto* cp = line.characters();
 
         while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
             ++cp;

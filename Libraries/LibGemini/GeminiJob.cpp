@@ -124,7 +124,7 @@ bool GeminiJob::can_read_line() const
     return m_socket->can_read_line();
 }
 
-ByteBuffer GeminiJob::read_line(size_t size)
+String GeminiJob::read_line(size_t size)
 {
     return m_socket->read_line(size);
 }

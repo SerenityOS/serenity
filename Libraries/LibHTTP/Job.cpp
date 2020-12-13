@@ -103,9 +103,9 @@ void Job::on_socket_connected()
                 fprintf(stderr, "Job: Expected HTTP status\n");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
-            auto parts = String::copy(line, Chomp).split(' ');
+            auto parts = line.split_view(' ');
             if (parts.size() < 3) {
-                fprintf(stderr, "Job: Expected 3-part HTTP status, got '%s'\n", line.data());
+                warnln("Job: Expected 3-part HTTP status, got '{}'", line);
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto code = parts[1].to_uint();
@@ -131,8 +131,7 @@ void Job::on_socket_connected()
                 fprintf(stderr, "Job: Expected HTTP header\n");
                 return did_fail(Core::NetworkJob::Error::ProtocolFailed);
             }
-            auto chomped_line = String::copy(line, Chomp);
-            if (chomped_line.is_empty()) {
+            if (line.is_empty()) {
                 if (m_state == State::Trailers) {
                     return finish_up();
                 } else {
@@ -140,7 +139,7 @@ void Job::on_socket_connected()
                 }
                 return;
             }
-            auto parts = chomped_line.split(':');
+            auto parts = line.split_view(':');
             if (parts.is_empty()) {
                 if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
@@ -152,17 +151,17 @@ void Job::on_socket_connected()
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
-            if (chomped_line.length() < name.length() + 2) {
+            if (line.length() < name.length() + 2) {
                 if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
                     // use this fact as an excuse to ignore anything after the last chunk
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                fprintf(stderr, "Job: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
+                warnln("Job: Malformed HTTP header: '{}' ({})", line, line.length());
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
-            auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
+            auto value = line.substring(name.length() + 2, line.length() - name.length() - 2);
             m_headers.set(name, value);
 #ifdef JOB_DEBUG
             dbg() << "Job: [" << name << "] = '" << value << "'";
@@ -180,7 +179,7 @@ void Job::on_socket_connected()
                 if (remaining == -1) {
                     // read size
                     auto size_data = read_line(PAGE_SIZE);
-                    auto size_lines = StringView { size_data.data(), size_data.size() }.lines();
+                    auto size_lines = size_data.view().lines();
 #ifdef JOB_DEBUG
                     dbg() << "Job: Received a chunk with size _" << size_data << "_";
 #endif

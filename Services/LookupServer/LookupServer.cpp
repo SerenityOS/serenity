@@ -72,8 +72,7 @@ void LookupServer::load_etc_hosts()
         auto line = file->read_line(1024);
         if (line.is_empty())
             break;
-        auto str_line = String((const char*)line.data(), line.size() - 1, Chomp);
-        auto fields = str_line.split('\t');
+        auto fields = line.split('\t');
 
         auto sections = fields[0].split('.');
         IPv4Address addr {

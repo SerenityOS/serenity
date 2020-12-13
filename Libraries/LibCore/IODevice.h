@@ -59,8 +59,8 @@ public:
     int read(u8* buffer, int length);
 
     ByteBuffer read(size_t max_size);
-    ByteBuffer read_line(size_t max_size);
     ByteBuffer read_all();
+    String read_line(size_t max_size = 16384);
 
     bool write(const u8*, int size);
     bool write(const StringView&);

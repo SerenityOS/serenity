@@ -318,7 +318,7 @@ public:
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
     bool can_read() const { return m_context.application_buffer.size() > 0; }
-    ByteBuffer read_line(size_t max_size);
+    String read_line(size_t max_size);
 
     Function<void(TLSv12&)> on_tls_ready_to_read;
     Function<void(TLSv12&)> on_tls_ready_to_write;

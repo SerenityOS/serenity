@@ -51,7 +51,7 @@ protected:
     virtual void register_on_ready_to_read(Function<void()>) = 0;
     virtual void register_on_ready_to_write(Function<void()>) = 0;
     virtual bool can_read_line() const = 0;
-    virtual ByteBuffer read_line(size_t) = 0;
+    virtual String read_line(size_t) = 0;
     virtual bool can_read() const = 0;
     virtual ByteBuffer receive(size_t) = 0;
     virtual bool eof() const = 0;
