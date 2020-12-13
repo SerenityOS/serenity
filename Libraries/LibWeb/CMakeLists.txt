@@ -47,7 +47,6 @@ set(SOURCES
     DOM/ParentNode.cpp
     DOM/Position.cpp
     DOM/ShadowRoot.cpp
-    DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Text.idl
     DOM/Timer.cpp
@@ -138,6 +137,7 @@ set(SOURCES
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
+    HTML/TagNames.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
     Layout/BlockBox.cpp
