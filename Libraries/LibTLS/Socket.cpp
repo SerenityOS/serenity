@@ -70,7 +70,7 @@ String TLSv12::read_line(size_t max_size)
     auto buffer = ByteBuffer::copy(start, offset);
     m_context.application_buffer = m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1);
 
-    return String::copy(buffer);
+    return String::copy(buffer, Chomp);
 }
 
 bool TLSv12::write(const ByteBuffer& buffer)
