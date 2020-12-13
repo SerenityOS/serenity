@@ -269,4 +269,13 @@ KResult Socket::stat(::stat& st) const
     return KSuccess;
 }
 
+void Socket::set_connected(bool connected)
+{
+    LOCKER(lock());
+    if (m_connected == connected)
+        return;
+    m_connected = connected;
+    evaluate_block_conditions();
+}
+
 }
