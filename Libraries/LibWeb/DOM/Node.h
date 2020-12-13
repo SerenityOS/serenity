@@ -138,7 +138,7 @@ public:
     virtual bool is_child_allowed(const Node&) const { return true; }
 
     bool needs_style_update() const { return m_needs_style_update; }
-    void set_needs_style_update(bool value) { m_needs_style_update = value; }
+    void set_needs_style_update(bool);
 
     void invalidate_style();
 
