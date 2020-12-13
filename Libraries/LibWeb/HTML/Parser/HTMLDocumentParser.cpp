@@ -112,21 +112,15 @@ static Vector<FlyString> s_quirks_public_ids = {
 
 RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
 {
-    HTMLDocumentParser parser(data, TextCodec::get_standardized_encoding(encoding));
+    auto document = DOM::Document::create(url);
+    HTMLDocumentParser parser(document, data, TextCodec::get_standardized_encoding(encoding));
     parser.run(url);
-    return parser.document();
+    return document;
 }
 
-HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
+HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
-{
-    m_document = DOM::Document::create();
-    m_document->set_encoding(encoding);
-}
-
-HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document)
-    : m_tokenizer(input, encoding)
-    , m_document(existing_document)
+    , m_document(document)
 {
     m_document->set_encoding(encoding);
 }
@@ -2975,7 +2969,8 @@ DOM::Document& HTMLDocumentParser::document()
 
 NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Element& context_element, const StringView& markup)
 {
-    HTMLDocumentParser parser(markup, "utf-8");
+    auto temp_document = DOM::Document::create();
+    HTMLDocumentParser parser(*temp_document, markup, "utf-8");
     parser.m_context_element = context_element;
     parser.m_parsing_fragment = true;
     parser.document().set_quirks_mode(context_element.document().mode());
@@ -3022,5 +3017,4 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
     }
     return children;
 }
-
 }

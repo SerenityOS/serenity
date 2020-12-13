@@ -63,8 +63,7 @@ RefPtr<DOM::Document> parse_html_document(const StringView&, const URL&, const S
 
 class HTMLDocumentParser {
 public:
-    HTMLDocumentParser(const StringView& input, const String& encoding);
-    HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document);
+    HTMLDocumentParser(DOM::Document&, const StringView& input, const String& encoding);
     ~HTMLDocumentParser();
 
     void run(const URL&);
@@ -180,7 +179,7 @@ private:
     bool m_stop_parsing { false };
     size_t m_script_nesting_level { 0 };
 
-    RefPtr<DOM::Document> m_document;
+    NonnullRefPtr<DOM::Document> m_document;
     RefPtr<HTMLHeadElement> m_head_element;
     RefPtr<HTMLFormElement> m_form_element;
     RefPtr<DOM::Element> m_context_element;
