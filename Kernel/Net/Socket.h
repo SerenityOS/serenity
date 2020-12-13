@@ -91,7 +91,7 @@ public:
     virtual Role role(const FileDescription&) const { return m_role; }
 
     bool is_connected() const { return m_connected; }
-    void set_connected(bool connected) { m_connected = connected; }
+    void set_connected(bool);
 
     bool can_accept() const { return !m_pending.is_empty(); }
     RefPtr<Socket> accept();
