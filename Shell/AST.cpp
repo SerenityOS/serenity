@@ -2055,27 +2055,11 @@ void Sequence::dump(int level) const
 
 RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
 {
-    // If we are to return a job, block on the left one then return the right one.
-    if (would_execute()) {
-        RefPtr<AST::Node> execute_node = create<AST::Execute>(m_left->position(), m_left);
-        auto left_value = execute_node->run(shell);
-        // Some nodes are inherently empty, such as Comments and For loops without bodies,
-        // it is not an error for the value not to be a job.
-        if (left_value && left_value->is_job())
-            shell->block_on_job(static_cast<JobValue*>(left_value.ptr())->job());
-
-        if (m_right->would_execute())
-            return m_right->run(shell);
-
-        execute_node = create<AST::Execute>(m_right->position(), m_right);
-        return execute_node->run(shell);
-    }
-
     auto left = m_left->to_lazy_evaluated_commands(shell);
     // This could happen if a comment is next to a command.
     if (left.size() == 1) {
         auto& command = left.first();
-        if (command.argv.is_empty() && command.redirections.is_empty())
+        if (command.argv.is_empty() && command.redirections.is_empty() && command.next_chain.is_empty())
             return m_right->run(shell);
     }
 
@@ -2139,7 +2123,7 @@ RefPtr<Value> Subshell::run(RefPtr<Shell> shell)
     if (!m_block)
         return create<ListValue>({});
 
-    return m_block->run(shell);
+    return create<AST::CommandSequenceValue>(m_block->to_lazy_evaluated_commands(shell));
 }
 
 void Subshell::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
