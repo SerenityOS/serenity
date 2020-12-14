@@ -40,6 +40,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/BreadcrumbBar.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FileIconProvider.h>
@@ -301,12 +302,23 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& location_toolbar = toolbar_container.add<GUI::ToolBar>();
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
 
+    location_toolbar.set_visible(false);
+
     auto& location_label = location_toolbar.add<GUI::Label>("Location: ");
     location_label.size_to_fit();
 
     auto& location_textbox = location_toolbar.add<GUI::TextBox>();
     location_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     location_textbox.set_preferred_size(0, 22);
+
+    auto& breadcrumb_toolbar = toolbar_container.add<GUI::ToolBar>(Gfx::Orientation::Horizontal, 16);
+    breadcrumb_toolbar.layout()->set_margins({});
+    auto& breadcrumb_bar = breadcrumb_toolbar.add<GUI::BreadcrumbBar>();
+
+    location_textbox.on_focusout = [&] {
+        location_toolbar.set_visible(false);
+        breadcrumb_toolbar.set_visible(true);
+    };
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& tree_view = splitter.add<GUI::TreeView>();
@@ -325,6 +337,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     bool is_reacting_to_tree_view_selection_change = false;
 
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
+
+    location_textbox.on_escape_pressed = [&] {
+        directory_view.set_focus(true);
+    };
 
     // Open the root directory. FIXME: This is awkward.
     tree_view.toggle_index(directories_model->index(0, 0, {}));
@@ -570,6 +586,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     go_menu.add_action(go_home_action);
     go_menu.add_action(GUI::Action::create(
         "Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
+            location_toolbar.set_visible(true);
+            breadcrumb_toolbar.set_visible(false);
             location_textbox.select_all();
             location_textbox.set_focus(true);
         }));
@@ -607,6 +625,54 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         window->set_title(String::formatted("{} - File Manager", new_path));
         location_textbox.set_text(new_path);
+
+        {
+            LexicalPath lexical_path(new_path);
+
+            auto segment_index_of_new_path_in_breadcrumb_bar = [&]() -> Optional<size_t> {
+                for (size_t i = 0; i < breadcrumb_bar.segment_count(); ++i) {
+                    if (breadcrumb_bar.segment_data(i) == new_path)
+                        return i;
+                }
+                return {};
+            }();
+
+            if (segment_index_of_new_path_in_breadcrumb_bar.has_value()) {
+                breadcrumb_bar.set_selected_segment(segment_index_of_new_path_in_breadcrumb_bar.value());
+            } else {
+                breadcrumb_bar.clear_segments();
+
+                breadcrumb_bar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/");
+                StringBuilder builder;
+
+                for (auto& part : lexical_path.parts()) {
+                    // NOTE: We rebuild the path as we go, so we have something to pass to GUI::FileIconProvider.
+                    builder.append('/');
+                    builder.append(part);
+
+                    breadcrumb_bar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view());
+                }
+
+                breadcrumb_bar.set_selected_segment(breadcrumb_bar.segment_count() - 1);
+
+                breadcrumb_bar.on_segment_click = [&directory_view, lexical_path](size_t segment_index) {
+                    if (segment_index == 0) {
+                        directory_view.open("/");
+                        return;
+                    }
+                    size_t part_index = segment_index - 1;
+                    ASSERT(part_index < lexical_path.parts().size());
+
+                    StringBuilder builder;
+                    for (size_t i = 0; i <= part_index; ++i) {
+                        builder.append('/');
+                        builder.append(lexical_path.parts()[i]);
+                    }
+
+                    directory_view.open(builder.string_view());
+                };
+            }
+        }
 
         if (!is_reacting_to_tree_view_selection_change) {
             auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
