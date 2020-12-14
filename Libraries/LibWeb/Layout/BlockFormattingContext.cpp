@@ -71,8 +71,16 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
         layout_block_level_children(box, layout_mode);
     }
 
-    if (layout_mode == LayoutMode::Default)
+    if (layout_mode == LayoutMode::Default) {
         compute_height(box);
+
+        box.for_each_child_of_type<Box>([&](auto& child_box) {
+            if (child_box.is_absolutely_positioned()) {
+                layout_absolutely_positioned_child(child_box);
+            }
+            return IterationDecision::Continue;
+        });
+    }
 }
 
 void BlockFormattingContext::compute_width(Box& box)
@@ -451,10 +459,8 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
     float content_width = 0;
 
     box.for_each_child_of_type<Box>([&](auto& child_box) {
-        if (child_box.is_absolutely_positioned()) {
-            layout_absolutely_positioned_child(child_box);
+        if (child_box.is_absolutely_positioned())
             return IterationDecision::Continue;
-        }
 
         if (child_box.is_floating()) {
             layout_floating_child(child_box, box);
