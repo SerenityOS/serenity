@@ -598,10 +598,13 @@ Token Lexer::next()
             auto two_chars_view = m_source.substring_view(m_position - 1, 2);
             auto it = s_two_char_tokens.find(two_chars_view.hash(), [&](auto& entry) { return entry.key == two_chars_view; });
             if (it != s_two_char_tokens.end()) {
-                found_two_char_token = true;
-                consume();
-                consume();
-                token_type = it->value;
+                // OptionalChainingPunctuator :: ?. [lookahead ∉ DecimalDigit]
+                if (!(it->value == TokenType::QuestionMarkPeriod && m_position + 1 < m_source.length() && isdigit(m_source[m_position + 1]))) {
+                    found_two_char_token = true;
+                    consume();
+                    consume();
+                    token_type = it->value;
+                }
             }
         }
 
