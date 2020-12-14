@@ -14,3 +14,7 @@ test("object values", () => {
     expect(o.f ? true : false).toBeTrue();
     expect(1 ? o.f : null).toBeTrue();
 });
+
+test("issue #4409, '?.' followed by decimal digit", () => {
+    expect("return false?.1:.2").toEvalTo(0.2);
+});
