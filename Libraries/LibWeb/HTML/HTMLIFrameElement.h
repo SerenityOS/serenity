@@ -50,8 +50,7 @@ public:
     void content_frame_did_load(Badge<FrameLoader>);
 
 private:
-    virtual void document_did_attach_to_frame(Frame&) override;
-    virtual void document_will_detach_from_frame(Frame&) override;
+    virtual void parse_attribute(const FlyString& name, const String& value) override;
 
     void load_src(const String&);
 
