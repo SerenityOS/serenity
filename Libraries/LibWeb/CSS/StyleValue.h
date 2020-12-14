@@ -202,6 +202,16 @@ public:
 
     virtual bool is_auto() const { return false; }
 
+    bool operator==(const StyleValue& other) const { return equals(other); }
+    bool operator!=(const StyleValue& other) const { return !(*this == other); }
+
+    virtual bool equals(const StyleValue& other) const
+    {
+        if (type() != other.type())
+            return false;
+        return to_string() == other.to_string();
+    }
+
 protected:
     explicit StyleValue(Type);
 
@@ -316,6 +326,13 @@ public:
 
     virtual String to_string() const override;
     virtual Color to_color(const DOM::Document&) const override;
+
+    virtual bool equals(const StyleValue& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_id == static_cast<const IdentifierStyleValue&>(other).m_id;
+    }
 
 private:
     explicit IdentifierStyleValue(CSS::ValueID id)
