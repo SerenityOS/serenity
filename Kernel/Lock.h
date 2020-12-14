@@ -28,44 +28,60 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Thread.h>
+#include <Kernel/LockMode.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 
 class Lock {
+    AK_MAKE_NONCOPYABLE(Lock);
+    AK_MAKE_NONMOVABLE(Lock);
+
 public:
+    using Mode = LockMode;
+
     Lock(const char* name = nullptr)
         : m_name(name)
     {
     }
     ~Lock() { }
 
-    enum class Mode {
-        Unlocked,
-        Shared,
-        Exclusive
-    };
-
     void lock(Mode = Mode::Exclusive);
 #ifdef LOCK_DEBUG
     void lock(const char* file, int line, Mode mode = Mode::Exclusive);
+    void restore_lock(const char* file, int line, Mode, u32);
 #endif
     void unlock();
-    bool force_unlock_if_locked();
-    bool is_locked() const { return m_holder; }
+    [[nodiscard]] Mode force_unlock_if_locked(u32&);
+    void restore_lock(Mode, u32);
+    bool is_locked() const { return m_mode.load(AK::MemoryOrder::memory_order_relaxed) != Mode::Unlocked; }
     void clear_waiters();
 
     const char* name() const { return m_name; }
+
+    static const char* mode_to_string(Mode mode)
+    {
+        switch (mode) {
+        case Mode::Unlocked:
+            return "unlocked";
+        case Mode::Exclusive:
+            return "exclusive";
+        case Mode::Shared:
+            return "shared";
+        default:
+            return "invalid";
+        }
+    }
 
 private:
     Atomic<bool> m_lock { false };
     const char* m_name { nullptr };
     WaitQueue m_queue;
-    Mode m_mode { Mode::Unlocked };
+    Atomic<Mode> m_mode { Mode::Unlocked };
 
     // When locked exclusively, only the thread already holding the lock can
     // lock it again. When locked in shared mode, any thread can do that.
@@ -77,6 +93,7 @@ private:
     // When locked exclusively, this is always the one thread that holds the
     // lock.
     RefPtr<Thread> m_holder;
+    HashMap<Thread*, u32> m_shared_holders;
 };
 
 class Locker {
@@ -103,8 +120,10 @@ private:
 
 #ifdef LOCK_DEBUG
 #    define LOCKER(...) Locker locker(__FILE__, __LINE__, __VA_ARGS__)
+#    define RESTORE_LOCK(lock, ...) (lock).restore_lock(__FILE__, __LINE__, __VA_ARGS__)
 #else
 #    define LOCKER(...) Locker locker(__VA_ARGS__)
+#    define RESTORE_LOCK(lock, ...) (lock).restore_lock(__VA_ARGS__)
 #endif
 
 template<typename T>
