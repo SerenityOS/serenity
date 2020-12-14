@@ -254,8 +254,17 @@ void Node::set_needs_style_update(bool value)
     if (m_needs_style_update == value)
         return;
     m_needs_style_update = value;
-    if (m_needs_style_update)
+
+    if (m_needs_style_update) {
+        for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent())
+            ancestor->m_child_needs_style_update = true;
         document().schedule_style_update();
+    }
+}
+
+void Node::inserted_into(Node&)
+{
+    set_needs_style_update(true);
 }
 
 }

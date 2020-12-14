@@ -400,13 +400,25 @@ void Document::update_layout()
     }
 }
 
-void Document::update_style()
+static void update_style_recursively(DOM::Node& node)
 {
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.needs_style_update())
-            element.recompute_style();
+    node.for_each_child([&](auto& child) {
+        if (child.needs_style_update()) {
+            if (is<Element>(child))
+                downcast<Element>(child).recompute_style();
+            child.set_needs_style_update(false);
+        }
+        if (child.child_needs_style_update()) {
+            update_style_recursively(child);
+            child.set_child_needs_style_update(false);
+        }
         return IterationDecision::Continue;
     });
+}
+
+void Document::update_style()
+{
+    update_style_recursively(*this);
     update_layout();
 }
 

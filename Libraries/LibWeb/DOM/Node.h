@@ -126,7 +126,7 @@ public:
     Element* parent_element();
     const Element* parent_element() const;
 
-    virtual void inserted_into(Node&) { }
+    virtual void inserted_into(Node&);
     virtual void removed_from(Node&) { }
     virtual void children_changed() { }
 
@@ -139,6 +139,9 @@ public:
 
     bool needs_style_update() const { return m_needs_style_update; }
     void set_needs_style_update(bool);
+
+    bool child_needs_style_update() const { return m_child_needs_style_update; }
+    void set_child_needs_style_update(bool b) { m_child_needs_style_update = b; }
 
     void invalidate_style();
 
@@ -157,7 +160,8 @@ protected:
     Document* m_document { nullptr };
     mutable WeakPtr<Layout::Node> m_layout_node;
     NodeType m_type { NodeType::INVALID };
-    bool m_needs_style_update { true };
+    bool m_needs_style_update { false };
+    bool m_child_needs_style_update { false };
 };
 
 }
