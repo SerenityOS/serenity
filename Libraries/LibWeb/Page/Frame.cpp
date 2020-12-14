@@ -103,7 +103,7 @@ void Frame::set_size(const Gfx::IntSize& size)
         return;
     m_size = size;
     if (m_document)
-        m_document->layout();
+        m_document->update_layout();
 }
 
 void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
