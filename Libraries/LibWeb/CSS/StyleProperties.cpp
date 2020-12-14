@@ -225,20 +225,25 @@ Optional<int> StyleProperties::z_index() const
     return static_cast<int>(value.value()->to_length().raw_value());
 }
 
-CSS::Position StyleProperties::position() const
+Optional<CSS::Position> StyleProperties::position() const
 {
-    if (property(CSS::PropertyID::Position).has_value()) {
-        String position_string = string_or_fallback(CSS::PropertyID::Position, "static");
-        if (position_string == "relative")
-            return CSS::Position::Relative;
-        if (position_string == "absolute")
-            return CSS::Position::Absolute;
-        if (position_string == "sticky")
-            return CSS::Position::Sticky;
-        if (position_string == "fixed")
-            return CSS::Position::Fixed;
+    auto value = property(CSS::PropertyID::Position);
+    if (!value.has_value() || !value.value()->is_identifier())
+        return {};
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::Static:
+        return CSS::Position::Static;
+    case CSS::ValueID::Relative:
+        return CSS::Position::Relative;
+    case CSS::ValueID::Absolute:
+        return CSS::Position::Absolute;
+    case CSS::ValueID::Fixed:
+        return CSS::Position::Fixed;
+    case CSS::ValueID::Sticky:
+        return CSS::Position::Sticky;
+    default:
+        return {};
     }
-    return CSS::Position::Static;
 }
 
 bool StyleProperties::operator==(const StyleProperties& other) const

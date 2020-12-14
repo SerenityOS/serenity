@@ -219,7 +219,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& style = static_cast<MutableLayoutStyle&>(m_style);
 
-    style.set_position(specified_style.position());
+    auto position = specified_style.position();
+    if (position.has_value())
+        style.set_position(position.value());
 
     auto text_align = specified_style.text_align();
     if (text_align.has_value())
