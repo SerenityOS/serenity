@@ -8,6 +8,7 @@ set(SOURCES
     Application.cpp
     BoxLayout.cpp
     Button.cpp
+    BreadcrumbBar.cpp
     Calendar.cpp
     CheckBox.cpp
     Clipboard.cpp
