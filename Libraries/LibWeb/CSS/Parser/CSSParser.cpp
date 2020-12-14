@@ -396,6 +396,56 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::Fixed;
     if (string.equals_ignoring_case("sticky"))
         return CSS::ValueID::Sticky;
+    if (string.equals_ignoring_case("none"))
+        return CSS::ValueID::None;
+    if (string.equals_ignoring_case("both"))
+        return CSS::ValueID::Both;
+    if (string.equals_ignoring_case("hidden"))
+        return CSS::ValueID::Hidden;
+    if (string.equals_ignoring_case("dotted"))
+        return CSS::ValueID::Dotted;
+    if (string.equals_ignoring_case("dashed"))
+        return CSS::ValueID::Dashed;
+    if (string.equals_ignoring_case("solid"))
+        return CSS::ValueID::Solid;
+    if (string.equals_ignoring_case("double"))
+        return CSS::ValueID::Double;
+    if (string.equals_ignoring_case("groove"))
+        return CSS::ValueID::Groove;
+    if (string.equals_ignoring_case("ridge"))
+        return CSS::ValueID::Ridge;
+    if (string.equals_ignoring_case("inset"))
+        return CSS::ValueID::Inset;
+    if (string.equals_ignoring_case("outset"))
+        return CSS::ValueID::Outset;
+    if (string.equals_ignoring_case("nowrap"))
+        return CSS::ValueID::Nowrap;
+    if (string.equals_ignoring_case("pre"))
+        return CSS::ValueID::Pre;
+    if (string.equals_ignoring_case("pre-line"))
+        return CSS::ValueID::PreLine;
+    if (string.equals_ignoring_case("pre-wrap"))
+        return CSS::ValueID::PreWrap;
+    if (string.equals_ignoring_case("block"))
+        return CSS::ValueID::Block;
+    if (string.equals_ignoring_case("inline"))
+        return CSS::ValueID::Inline;
+    if (string.equals_ignoring_case("inline-block"))
+        return CSS::ValueID::InlineBlock;
+    if (string.equals_ignoring_case("list-item"))
+        return CSS::ValueID::ListItem;
+    if (string.equals_ignoring_case("table"))
+        return CSS::ValueID::Table;
+    if (string.equals_ignoring_case("table-row"))
+        return CSS::ValueID::TableRow;
+    if (string.equals_ignoring_case("table-cell"))
+        return CSS::ValueID::TableCell;
+    if (string.equals_ignoring_case("table-row-group"))
+        return CSS::ValueID::TableRowGroup;
+    if (string.equals_ignoring_case("table-header-group"))
+        return CSS::ValueID::TableHeaderGroup;
+    if (string.equals_ignoring_case("table-footer-group"))
+        return CSS::ValueID::TableFooterGroup;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
         return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
     return {};
