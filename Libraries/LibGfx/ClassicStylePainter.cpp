@@ -113,7 +113,11 @@ static void paint_button_new(Painter& painter, const IntRect& rect, const Palett
 
     if (pressed || checked) {
         // Base
-        painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
+        Gfx::IntRect base_rect { 1, 1, rect.width() - 2, rect.height() - 2 };
+        if (checked && !pressed)
+            painter.fill_rect_with_dither_pattern(base_rect, palette.button().lightened(1.3f), palette.button());
+        else
+            painter.fill_rect(base_rect, button_color);
 
         // Top shadow
         painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, shadow_color2);
