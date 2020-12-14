@@ -1,6 +1,6 @@
 #!/bin/bash ../.port_include.sh
 port=ncurses
-version=6.1
+version=6.2
 useconfigure=true
 configopts="--with-termlib --enable-pc-files --with-pkg-config=/usr/local/lib/pkgconfig --with-pkg-config-libdir=/usr/local/lib/pkgconfig --without-ada --enable-sigwinch"
 files="ftp://ftp.gnu.org/gnu/ncurses/ncurses-${version}.tar.gz ncurses-${version}.tar.gz
