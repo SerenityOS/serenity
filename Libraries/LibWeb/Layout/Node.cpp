@@ -220,7 +220,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     auto& style = static_cast<MutableLayoutStyle&>(m_style);
 
     style.set_position(specified_style.position());
-    style.set_text_align(specified_style.text_align());
+
+    auto text_align = specified_style.text_align();
+    if (text_align.has_value())
+        style.set_text_align(text_align.value());
 
     auto white_space = specified_style.white_space();
     if (white_space.has_value())

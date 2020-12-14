@@ -37,6 +37,7 @@ public:
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
+    static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
 };
 
 struct BorderData {
@@ -74,7 +75,7 @@ protected:
     CSS::Float m_float { InitialValues::float_() };
     CSS::Clear m_clear { InitialValues::clear() };
     Optional<int> m_z_index;
-    CSS::TextAlign m_text_align;
+    CSS::TextAlign m_text_align { InitialValues::text_align() };
     CSS::Position m_position;
     CSS::WhiteSpace m_white_space { InitialValues::white_space() };
     CSS::Length m_width;
