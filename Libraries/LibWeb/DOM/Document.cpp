@@ -287,7 +287,7 @@ void Document::attach_to_frame(Badge<Frame>, Frame& frame)
         node.document_did_attach_to_frame(frame);
         return IterationDecision::Continue;
     });
-    layout();
+    update_layout();
 }
 
 void Document::detach_from_frame(Badge<Frame>, Frame& frame)
@@ -376,10 +376,10 @@ void Document::invalidate_layout()
 void Document::force_layout()
 {
     invalidate_layout();
-    layout();
+    update_layout();
 }
 
-void Document::layout()
+void Document::update_layout()
 {
     if (!frame())
         return;
@@ -408,14 +408,6 @@ void Document::update_style()
         return IterationDecision::Continue;
     });
     update_layout();
-}
-
-void Document::update_layout()
-{
-    if (!frame())
-        return;
-
-    layout();
 }
 
 RefPtr<Layout::Node> Document::create_layout_node(const CSS::StyleProperties*)

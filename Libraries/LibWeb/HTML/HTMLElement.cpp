@@ -113,7 +113,7 @@ String HTMLElement::inner_text()
     StringBuilder builder;
 
     // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
-    document().layout();
+    document().update_layout();
     if (!layout_node())
         return text_content();
 
