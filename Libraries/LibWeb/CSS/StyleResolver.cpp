@@ -103,6 +103,22 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
     return matching_rules;
 }
 
+void StyleResolver::sort_matching_rules(Vector<MatchingRule>& matching_rules) const
+{
+    quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
+        auto& a_selector = a.rule->selectors()[a.selector_index];
+        auto& b_selector = b.rule->selectors()[b.selector_index];
+        auto a_specificity = a_selector.specificity();
+        auto b_specificity = b_selector.specificity();
+        if (a_selector.specificity() == b_selector.specificity()) {
+            if (a.style_sheet_index == b.style_sheet_index)
+                return a.rule_index < b.rule_index;
+            return a.style_sheet_index < b.style_sheet_index;
+        }
+        return a_specificity < b_specificity;
+    });
+}
+
 bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
 {
     static HashTable<CSS::PropertyID> inherited_properties;
@@ -547,19 +563,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& 
     element.apply_presentational_hints(*style);
 
     auto matching_rules = collect_matching_rules(element);
-
-    quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
-        auto& a_selector = a.rule->selectors()[a.selector_index];
-        auto& b_selector = b.rule->selectors()[b.selector_index];
-        auto a_specificity = a_selector.specificity();
-        auto b_specificity = b_selector.specificity();
-        if (a_selector.specificity() == b_selector.specificity()) {
-            if (a.style_sheet_index == b.style_sheet_index)
-                return a.rule_index < b.rule_index;
-            return a.style_sheet_index < b.style_sheet_index;
-        }
-        return a_specificity < b_specificity;
-    });
+    sort_matching_rules(matching_rules);
 
     for (auto& match : matching_rules) {
         for (auto& property : match.rule->declaration().properties()) {
