@@ -108,6 +108,9 @@ void Button::click(unsigned modifiers)
 {
     if (!is_enabled())
         return;
+
+    NonnullRefPtr protector = *this;
+
     if (is_checkable()) {
         if (is_checked() && !is_uncheckable())
             return;
