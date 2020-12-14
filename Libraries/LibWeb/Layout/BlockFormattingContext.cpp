@@ -744,7 +744,7 @@ void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
         used_offset.set_x(x_offset + box_model.margin.left);
     } else if (!box.style().offset().right.is_auto()) {
         float x_offset = 0
-            - box.style().offset().right.to_px(box)
+            - box_model.offset.right
             - box_model.border_box().right;
         used_offset.set_x(containing_block.width() + x_offset - box.width() - box_model.margin.right);
     } else {
@@ -758,7 +758,7 @@ void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
         used_offset.set_y(y_offset + box_model.margin.top);
     } else if (!box.style().offset().bottom.is_auto()) {
         float y_offset = 0
-            - box.style().offset().bottom.to_px(box)
+            - box_model.offset.bottom
             - box_model.border_box().bottom;
         used_offset.set_y(containing_block.height() + y_offset - box.height() - box_model.margin.bottom);
     } else {
