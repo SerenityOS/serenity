@@ -350,10 +350,16 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::Bold;
     if (string.equals_ignoring_case("bolder"))
         return CSS::ValueID::Bolder;
+    if (string.equals_ignoring_case("center"))
+        return CSS::ValueID::Center;
+    if (string.equals_ignoring_case("justify"))
+        return CSS::ValueID::Justify;
     if (string.equals_ignoring_case("large"))
         return CSS::ValueID::Large;
     if (string.equals_ignoring_case("larger"))
         return CSS::ValueID::Larger;
+    if (string.equals_ignoring_case("left"))
+        return CSS::ValueID::Left;
     if (string.equals_ignoring_case("lighter"))
         return CSS::ValueID::Lighter;
     if (string.equals_ignoring_case("medium"))
@@ -362,6 +368,8 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::Normal;
     if (string.equals_ignoring_case("small"))
         return CSS::ValueID::Small;
+    if (string.equals_ignoring_case("right"))
+        return CSS::ValueID::Right;
     if (string.equals_ignoring_case("smaller"))
         return CSS::ValueID::Smaller;
     if (string.equals_ignoring_case("x-large"))
@@ -374,6 +382,8 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::XxSmall;
     if (string.equals_ignoring_case("xxx-large"))
         return CSS::ValueID::XxxLarge;
+    if (string.equals_ignoring_case("-libweb-center"))
+        return CSS::ValueID::VendorSpecificCenter;
     if (string.equals_ignoring_case("-libweb-link"))
         return CSS::ValueID::VendorSpecificLink;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
