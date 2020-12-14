@@ -82,26 +82,36 @@ int main(int argc, char** argv)
 void print(const JsonValue& value, int indent, bool use_color)
 {
     if (value.is_object()) {
+        size_t printed_members = 0;
+        auto object = value.as_object();
         outln("{{");
-        value.as_object().for_each_member([&](auto& member_name, auto& member_value) {
+        object.for_each_member([&](auto& member_name, auto& member_value) {
+            ++printed_members;
             print_indent(indent + 1);
             if (use_color)
                 out("\"\033[33;1m{}\033[0m\": ", member_name);
             else
                 out("\"{}\": ", member_name);
             print(member_value, indent + 1, use_color);
-            outln(",");
+            if (printed_members < static_cast<size_t>(object.size()))
+                out(",");
+            outln();
         });
         print_indent(indent);
         out("}}");
         return;
     }
     if (value.is_array()) {
+        size_t printed_entries = 0;
+        auto array = value.as_array();
         outln("[");
-        value.as_array().for_each([&](auto& entry_value) {
+        array.for_each([&](auto& entry_value) {
+            ++printed_entries;
             print_indent(indent + 1);
             print(entry_value, indent + 1, use_color);
-            outln(",");
+            if (printed_entries < static_cast<size_t>(array.size()))
+                out(",");
+            outln();
         });
         print_indent(indent);
         out("]");
