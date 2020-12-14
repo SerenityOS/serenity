@@ -1050,7 +1050,6 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool is_list() const override { return true; }
-    virtual bool would_execute() const override { return m_left->would_execute() || m_right->would_execute(); }
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -1071,7 +1070,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
-    virtual bool would_execute() const override { return true; }
+    virtual bool would_execute() const override { return false; }
 
     RefPtr<AST::Node> m_block;
 };

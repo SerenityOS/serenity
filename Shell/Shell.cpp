@@ -693,7 +693,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
 
-    auto can_be_run_in_current_process = command.should_wait && !command.pipeline;
+    auto can_be_run_in_current_process = command.should_wait && !command.pipeline && !command.argv.is_empty();
     if (can_be_run_in_current_process && has_function(command.argv.first())) {
         SavedFileDescriptors fds { rewirings };
 
