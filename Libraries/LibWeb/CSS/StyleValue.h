@@ -103,6 +103,20 @@ enum class ValueID {
     Right,
     Justify,
     VendorSpecificCenter,
+    Bold,
+    Bolder,
+    Large,
+    Larger,
+    Lighter,
+    Medium,
+    Normal,
+    Small,
+    Smaller,
+    XLarge,
+    XSmall,
+    XxLarge,
+    XxSmall,
+    XxxLarge,
 };
 
 enum class Position {
