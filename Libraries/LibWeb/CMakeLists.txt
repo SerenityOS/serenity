@@ -23,6 +23,7 @@ set(SOURCES
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleDeclaration.cpp
+    CSS/StyleInvalidator.cpp
     CSS/StyleProperties.cpp
     CSS/StyleResolver.cpp
     CSS/StyleRule.cpp
