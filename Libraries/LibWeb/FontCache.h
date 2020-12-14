@@ -33,18 +33,19 @@
 
 struct FontSelector {
     FlyString family;
-    FlyString weight;
+    int size { 0 };
+    int weight { 0 };
 
     bool operator==(const FontSelector& other) const
     {
-        return family == other.family && weight == other.weight;
+        return family == other.family && size == other.size && weight == other.weight;
     }
 };
 
 namespace AK {
 template<>
 struct Traits<FontSelector> : public GenericTraits<FontSelector> {
-    static unsigned hash(const FontSelector& key) { return pair_int_hash(key.family.hash(), key.weight.hash()); }
+    static unsigned hash(const FontSelector& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.size); }
 };
 }
 

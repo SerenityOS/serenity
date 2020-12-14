@@ -71,118 +71,117 @@ bool ParsingContext::in_quirks_mode() const
 
 }
 
-static CSS::ValueID value_id_for_palette_string(const StringView& string)
+static Optional<CSS::ValueID> value_id_for_palette_string(const StringView& string)
 {
-    if (string == "desktop-background")
+    if (string.equals_ignoring_case("desktop-background"))
         return CSS::ValueID::VendorSpecificPaletteDesktopBackground;
-    else if (string == "active-window-border1")
+    if (string.equals_ignoring_case("active-window-border1"))
         return CSS::ValueID::VendorSpecificPaletteActiveWindowBorder1;
-    else if (string == "active-window-border2")
+    if (string.equals_ignoring_case("active-window-border2"))
         return CSS::ValueID::VendorSpecificPaletteActiveWindowBorder2;
-    else if (string == "active-window-title")
+    if (string.equals_ignoring_case("active-window-title"))
         return CSS::ValueID::VendorSpecificPaletteActiveWindowTitle;
-    else if (string == "inactive-window-border1")
+    if (string.equals_ignoring_case("inactive-window-border1"))
         return CSS::ValueID::VendorSpecificPaletteInactiveWindowBorder1;
-    else if (string == "inactive-window-border2")
+    if (string.equals_ignoring_case("inactive-window-border2"))
         return CSS::ValueID::VendorSpecificPaletteInactiveWindowBorder2;
-    else if (string == "inactive-window-title")
+    if (string.equals_ignoring_case("inactive-window-title"))
         return CSS::ValueID::VendorSpecificPaletteInactiveWindowTitle;
-    else if (string == "moving-window-border1")
+    if (string.equals_ignoring_case("moving-window-border1"))
         return CSS::ValueID::VendorSpecificPaletteMovingWindowBorder1;
-    else if (string == "moving-window-border2")
+    if (string.equals_ignoring_case("moving-window-border2"))
         return CSS::ValueID::VendorSpecificPaletteMovingWindowBorder2;
-    else if (string == "moving-window-title")
+    if (string.equals_ignoring_case("moving-window-title"))
         return CSS::ValueID::VendorSpecificPaletteMovingWindowTitle;
-    else if (string == "highlight-window-border1")
+    if (string.equals_ignoring_case("highlight-window-border1"))
         return CSS::ValueID::VendorSpecificPaletteHighlightWindowBorder1;
-    else if (string == "highlight-window-border2")
+    if (string.equals_ignoring_case("highlight-window-border2"))
         return CSS::ValueID::VendorSpecificPaletteHighlightWindowBorder2;
-    else if (string == "highlight-window-title")
+    if (string.equals_ignoring_case("highlight-window-title"))
         return CSS::ValueID::VendorSpecificPaletteHighlightWindowTitle;
-    else if (string == "menu-stripe")
+    if (string.equals_ignoring_case("menu-stripe"))
         return CSS::ValueID::VendorSpecificPaletteMenuStripe;
-    else if (string == "menu-base")
+    if (string.equals_ignoring_case("menu-base"))
         return CSS::ValueID::VendorSpecificPaletteMenuBase;
-    else if (string == "menu-base-text")
+    if (string.equals_ignoring_case("menu-base-text"))
         return CSS::ValueID::VendorSpecificPaletteMenuBaseText;
-    else if (string == "menu-selection")
+    if (string.equals_ignoring_case("menu-selection"))
         return CSS::ValueID::VendorSpecificPaletteMenuSelection;
-    else if (string == "menu-selection-text")
+    if (string.equals_ignoring_case("menu-selection-text"))
         return CSS::ValueID::VendorSpecificPaletteMenuSelectionText;
-    else if (string == "window")
+    if (string.equals_ignoring_case("window"))
         return CSS::ValueID::VendorSpecificPaletteWindow;
-    else if (string == "window-text")
+    if (string.equals_ignoring_case("window-text"))
         return CSS::ValueID::VendorSpecificPaletteWindowText;
-    else if (string == "button")
+    if (string.equals_ignoring_case("button"))
         return CSS::ValueID::VendorSpecificPaletteButton;
-    else if (string == "button-text")
+    if (string.equals_ignoring_case("button-text"))
         return CSS::ValueID::VendorSpecificPaletteButtonText;
-    else if (string == "base")
+    if (string.equals_ignoring_case("base"))
         return CSS::ValueID::VendorSpecificPaletteBase;
-    else if (string == "base-text")
+    if (string.equals_ignoring_case("base-text"))
         return CSS::ValueID::VendorSpecificPaletteBaseText;
-    else if (string == "threed-highlight")
+    if (string.equals_ignoring_case("threed-highlight"))
         return CSS::ValueID::VendorSpecificPaletteThreedHighlight;
-    else if (string == "threed-shadow1")
+    if (string.equals_ignoring_case("threed-shadow1"))
         return CSS::ValueID::VendorSpecificPaletteThreedShadow1;
-    else if (string == "threed-shadow2")
+    if (string.equals_ignoring_case("threed-shadow2"))
         return CSS::ValueID::VendorSpecificPaletteThreedShadow2;
-    else if (string == "hover-highlight")
+    if (string.equals_ignoring_case("hover-highlight"))
         return CSS::ValueID::VendorSpecificPaletteHoverHighlight;
-    else if (string == "selection")
+    if (string.equals_ignoring_case("selection"))
         return CSS::ValueID::VendorSpecificPaletteSelection;
-    else if (string == "selection-text")
+    if (string.equals_ignoring_case("selection-text"))
         return CSS::ValueID::VendorSpecificPaletteSelectionText;
-    else if (string == "inactive-selection")
+    if (string.equals_ignoring_case("inactive-selection"))
         return CSS::ValueID::VendorSpecificPaletteInactiveSelection;
-    else if (string == "inactive-selection-text")
+    if (string.equals_ignoring_case("inactive-selection-text"))
         return CSS::ValueID::VendorSpecificPaletteInactiveSelectionText;
-    else if (string == "rubber-band-fill")
+    if (string.equals_ignoring_case("rubber-band-fill"))
         return CSS::ValueID::VendorSpecificPaletteRubberBandFill;
-    else if (string == "rubber-band-border")
+    if (string.equals_ignoring_case("rubber-band-border"))
         return CSS::ValueID::VendorSpecificPaletteRubberBandBorder;
-    else if (string == "link")
+    if (string.equals_ignoring_case("link"))
         return CSS::ValueID::VendorSpecificPaletteLink;
-    else if (string == "active-link")
+    if (string.equals_ignoring_case("active-link"))
         return CSS::ValueID::VendorSpecificPaletteActiveLink;
-    else if (string == "visited-link")
+    if (string.equals_ignoring_case("visited-link"))
         return CSS::ValueID::VendorSpecificPaletteVisitedLink;
-    else if (string == "ruler")
+    if (string.equals_ignoring_case("ruler"))
         return CSS::ValueID::VendorSpecificPaletteRuler;
-    else if (string == "ruler-border")
+    if (string.equals_ignoring_case("ruler-border"))
         return CSS::ValueID::VendorSpecificPaletteRulerBorder;
-    else if (string == "ruler-active-text")
+    if (string.equals_ignoring_case("ruler-active-text"))
         return CSS::ValueID::VendorSpecificPaletteRulerActiveText;
-    else if (string == "ruler-inactive-text")
+    if (string.equals_ignoring_case("ruler-inactive-text"))
         return CSS::ValueID::VendorSpecificPaletteRulerInactiveText;
-    else if (string == "text-cursor")
+    if (string.equals_ignoring_case("text-cursor"))
         return CSS::ValueID::VendorSpecificPaletteTextCursor;
-    else if (string == "focus-outline")
+    if (string.equals_ignoring_case("focus-outline"))
         return CSS::ValueID::VendorSpecificPaletteFocusOutline;
-    else if (string == "syntax-comment")
+    if (string.equals_ignoring_case("syntax-comment"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxComment;
-    else if (string == "syntax-number")
+    if (string.equals_ignoring_case("syntax-number"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxNumber;
-    else if (string == "syntax-string")
+    if (string.equals_ignoring_case("syntax-string"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxString;
-    else if (string == "syntax-type")
+    if (string.equals_ignoring_case("syntax-type"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxType;
-    else if (string == "syntax-punctuation")
+    if (string.equals_ignoring_case("syntax-punctuation"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxPunctuation;
-    else if (string == "syntax-operator")
+    if (string.equals_ignoring_case("syntax-operator"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxOperator;
-    else if (string == "syntax-keyword")
+    if (string.equals_ignoring_case("syntax-keyword"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxKeyword;
-    else if (string == "syntax-control-keyword")
+    if (string.equals_ignoring_case("syntax-control-keyword"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxControlKeyword;
-    else if (string == "syntax-identifier")
+    if (string.equals_ignoring_case("syntax-identifier"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxIdentifier;
-    else if (string == "syntax-preprocessor-statement")
+    if (string.equals_ignoring_case("syntax-preprocessor-statement"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxPreprocessorStatement;
-    else if (string == "syntax-preprocessor-value")
+    if (string.equals_ignoring_case("syntax-preprocessor-value"))
         return CSS::ValueID::VendorSpecificPaletteSyntaxPreprocessorValue;
-    else
-        return CSS::ValueID::Invalid;
+    return {};
 }
 
 static Optional<Color> parse_css_color(const CSS::ParsingContext&, const StringView& view)
@@ -340,7 +339,46 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
 
 static bool takes_integer_value(CSS::PropertyID property_id)
 {
-    return property_id == CSS::PropertyID::ZIndex;
+    return property_id == CSS::PropertyID::ZIndex || property_id == CSS::PropertyID::FontWeight;
+}
+
+static Optional<CSS::ValueID> value_id_from_string(const String& string)
+{
+    // FIXME: Handle all identifiers
+    // FIXME: Generate this code
+    if (string.equals_ignoring_case("bold"))
+        return CSS::ValueID::Bold;
+    if (string.equals_ignoring_case("bolder"))
+        return CSS::ValueID::Bolder;
+    if (string.equals_ignoring_case("large"))
+        return CSS::ValueID::Large;
+    if (string.equals_ignoring_case("larger"))
+        return CSS::ValueID::Larger;
+    if (string.equals_ignoring_case("lighter"))
+        return CSS::ValueID::Lighter;
+    if (string.equals_ignoring_case("medium"))
+        return CSS::ValueID::Medium;
+    if (string.equals_ignoring_case("normal"))
+        return CSS::ValueID::Normal;
+    if (string.equals_ignoring_case("small"))
+        return CSS::ValueID::Small;
+    if (string.equals_ignoring_case("smaller"))
+        return CSS::ValueID::Smaller;
+    if (string.equals_ignoring_case("x-large"))
+        return CSS::ValueID::XLarge;
+    if (string.equals_ignoring_case("x-small"))
+        return CSS::ValueID::XSmall;
+    if (string.equals_ignoring_case("xx-large"))
+        return CSS::ValueID::XxLarge;
+    if (string.equals_ignoring_case("xx-small"))
+        return CSS::ValueID::XxSmall;
+    if (string.equals_ignoring_case("xxx-large"))
+        return CSS::ValueID::XxxLarge;
+    if (string.equals_ignoring_case("-libweb-link"))
+        return CSS::ValueID::VendorSpecificLink;
+    if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
+        return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
+    return {};
 }
 
 RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string, CSS::PropertyID property_id)
@@ -366,16 +404,13 @@ RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, cons
     if (string.equals_ignoring_case("auto"))
         return CSS::LengthStyleValue::create(CSS::Length::make_auto());
 
+    auto value_id = value_id_from_string(string);
+    if (value_id.has_value())
+        return CSS::IdentifierStyleValue::create(value_id.value());
+
     auto color = parse_css_color(context, string);
     if (color.has_value())
         return CSS::ColorStyleValue::create(color.value());
-
-    if (string == "-libweb-link")
-        return CSS::IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
-    else if (string.starts_with("-libweb-palette-")) {
-        auto value_id = value_id_for_palette_string(string.substring_view(16, string.length() - 16));
-        return CSS::IdentifierStyleValue::create(value_id);
-    }
 
     return CSS::StringStyleValue::create(string);
 }

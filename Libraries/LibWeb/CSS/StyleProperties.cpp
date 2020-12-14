@@ -25,6 +25,7 @@
  */
 
 #include <LibCore/DirIterator.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
 #include <ctype.h>
@@ -104,73 +105,108 @@ Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document
 
 void StyleProperties::load_font() const
 {
-    auto font_family = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
-    auto font_weight = string_or_fallback(CSS::PropertyID::FontWeight, "normal");
+    auto family_value = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
+    auto font_size = property(CSS::PropertyID::FontSize).value_or(IdentifierStyleValue::create(CSS::ValueID::Medium));
+    auto font_weight = property(CSS::PropertyID::FontWeight).value_or(IdentifierStyleValue::create(CSS::ValueID::Normal));
 
-    if (auto cached_font = FontCache::the().get({ font_family, font_weight })) {
-        m_font = cached_font;
-        return;
-    }
+    auto family_parts = family_value.split(',');
+    auto family = family_parts[0];
 
-    String weight;
-    if (font_weight == "lighter")
-        weight = "Thin";
-    else if (font_weight == "normal")
-        weight = "Regular";
-    else if (font_weight == "bold")
-        weight = "Bold";
-    else {
-        dbg() << "Unknown font-weight: " << font_weight;
-        weight = "";
-    }
+    if (family.is_one_of("monospace", "ui-monospace"))
+        family = "Csilla";
+    else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded"))
+        family = "Katica";
 
-    auto look_for_file = [](const StringView& expected_name) -> String {
-        // TODO: handle font sizes properly?
-        Core::DirIterator it { "/res/fonts/", Core::DirIterator::Flags::SkipDots };
-        while (it.has_next()) {
-            String name = it.next_path();
-
-            if (!name.ends_with(".font"))
-                continue;
-            if (!name.starts_with(expected_name))
-                continue;
-
-            // Check that a numeric size immediately
-            // follows the font name. This prevents,
-            // for example, matching KaticaBold when
-            // the regular Katica is requested.
-            if (!isdigit(name[expected_name.length()]))
-                continue;
-
-            return name;
+    int weight = 400;
+    if (font_weight->is_identifier()) {
+        switch (static_cast<const IdentifierStyleValue&>(*font_weight).id()) {
+        case CSS::ValueID::Normal:
+            weight = 400;
+            break;
+        case CSS::ValueID::Bold:
+            weight = 700;
+            break;
+        case CSS::ValueID::Lighter:
+            // FIXME: This should be relative to the parent.
+            weight = 400;
+            break;
+        case CSS::ValueID::Bolder:
+            // FIXME: This should be relative to the parent.
+            weight = 700;
+            break;
+        default:
+            break;
         }
-        return {};
-    };
+    } else if (font_weight->is_length()) {
+        // FIXME: This isn't really a length, it's a numeric value..
+        int font_weight_integer = font_weight->to_length().raw_value();
+        if (font_weight_integer <= 400)
+            weight = 400;
+        if (font_weight_integer <= 700)
+            weight = 700;
+        weight = 900;
+    }
 
-    // FIXME: Do this properly, with quote handling etc.
-    for (auto& font_name : font_family.split(',')) {
-        font_name = font_name.trim_whitespace();
-        if (font_name == "monospace")
-            font_name = "Csilla";
+    int size = 10;
+    if (font_size->is_identifier()) {
+        switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
+        case CSS::ValueID::XxSmall:
+        case CSS::ValueID::XSmall:
+        case CSS::ValueID::Small:
+        case CSS::ValueID::Medium:
+            // FIXME: Should be based on "user's default font size"
+            size = 10;
+            break;
+        case CSS::ValueID::Large:
+        case CSS::ValueID::XLarge:
+        case CSS::ValueID::XxLarge:
+        case CSS::ValueID::XxxLarge:
+            // FIXME: Should be based on "user's default font size"
+            size = 12;
+            break;
+        case CSS::ValueID::Smaller:
+            // FIXME: This should be relative to the parent.
+            size = 10;
+            break;
+        case CSS::ValueID::Larger:
+            // FIXME: This should be relative to the parent.
+            size = 12;
+            break;
 
-        auto file_name = look_for_file(String::format("%s%s", font_name.characters(), weight.characters()));
-        if (file_name.is_null() && weight == "")
-            file_name = look_for_file(String::format("%sRegular", font_name.characters()));
-        if (file_name.is_null())
-            continue;
+        default:
+            break;
+        }
+    } else if (font_size->is_length()) {
+        // FIXME: This isn't really a length, it's a numeric value..
+        int font_size_integer = font_size->to_length().raw_value();
+        if (font_size_integer <= 10)
+            size = 10;
+        else if (font_size_integer <= 12)
+            size = 12;
+        else
+            size = 14;
+    }
 
-        m_font = Gfx::Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
-        FontCache::the().set({ font_name, font_weight }, *m_font);
+    FontSelector font_selector { family, size, weight };
+
+    auto found_font = FontCache::the().get(font_selector);
+    if (found_font) {
+        m_font = found_font;
         return;
     }
 
-    if (font_weight == "bold")
-        m_font = Gfx::Font::default_bold_font();
-    else
-        m_font = Gfx::Font::default_font();
-    // FIXME: This is a hack to stop chewing CPU on sites that use a font we don't have and have a lot of text
-    //        or changes text often. Examples are the Serenity 2nd birthday page and the JS specification.
-    FontCache::the().set({ font_family, font_weight }, *m_font);
+    Gfx::FontDatabase::the().for_each_font([&](auto& font) {
+        if (font.family() == family && font.weight() == weight && font.presentation_size() == size)
+            found_font = font;
+    });
+
+    if (!found_font) {
+        dbgln("Font not found: '{}' {} {}", family, size, weight);
+        found_font = Gfx::Font::default_font();
+    }
+
+    m_font = found_font;
+    FontCache::the().set(font_selector, *m_font);
 }
 
 float StyleProperties::line_height(const Layout::Node& layout_node) const
@@ -218,7 +254,7 @@ bool StyleProperties::operator==(const StyleProperties& other) const
         auto& other_value = *jt->value;
         if (my_value.type() != other_value.type())
             return false;
-        if (my_value.to_string() != other_value.to_string())
+        if (my_value != other_value)
             return false;
     }
 
