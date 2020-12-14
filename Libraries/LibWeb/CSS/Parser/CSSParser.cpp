@@ -386,6 +386,16 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::VendorSpecificCenter;
     if (string.equals_ignoring_case("-libweb-link"))
         return CSS::ValueID::VendorSpecificLink;
+    if (string.equals_ignoring_case("static"))
+        return CSS::ValueID::Static;
+    if (string.equals_ignoring_case("relative"))
+        return CSS::ValueID::Relative;
+    if (string.equals_ignoring_case("absolute"))
+        return CSS::ValueID::Absolute;
+    if (string.equals_ignoring_case("fixed"))
+        return CSS::ValueID::Fixed;
+    if (string.equals_ignoring_case("sticky"))
+        return CSS::ValueID::Sticky;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
         return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
     return {};

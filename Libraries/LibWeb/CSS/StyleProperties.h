@@ -79,7 +79,7 @@ public:
     bool operator==(const StyleProperties&) const;
     bool operator!=(const StyleProperties& other) const { return !(*this == other); }
 
-    CSS::Position position() const;
+    Optional<CSS::Position> position() const;
     Optional<int> z_index() const;
 
 private:

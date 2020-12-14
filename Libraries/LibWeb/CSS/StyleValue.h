@@ -117,6 +117,11 @@ enum class ValueID {
     XxLarge,
     XxSmall,
     XxxLarge,
+    Static,
+    Relative,
+    Absolute,
+    Fixed,
+    Sticky,
 };
 
 enum class Position {
