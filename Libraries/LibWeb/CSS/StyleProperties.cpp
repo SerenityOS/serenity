@@ -291,110 +291,122 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
 Optional<CSS::WhiteSpace> StyleProperties::white_space() const
 {
     auto value = property(CSS::PropertyID::WhiteSpace);
-    if (!value.has_value() || !value.value()->is_string())
+    if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    auto string = value.value()->to_string();
-    if (string == "normal")
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::Normal:
         return CSS::WhiteSpace::Normal;
-    if (string == "nowrap")
+    case CSS::ValueID::Nowrap:
         return CSS::WhiteSpace::Nowrap;
-    if (string == "pre")
+    case CSS::ValueID::Pre:
         return CSS::WhiteSpace::Pre;
-    if (string == "pre-line")
+    case CSS::ValueID::PreLine:
         return CSS::WhiteSpace::PreLine;
-    if (string == "pre-wrap")
+    case CSS::ValueID::PreWrap:
         return CSS::WhiteSpace::PreWrap;
-    return {};
+    default:
+        return {};
+    }
 }
 
 Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id) const
 {
     auto value = property(property_id);
-    if (!value.has_value() || !value.value()->is_string())
+    if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    auto string = value.value()->to_string();
-    if (string == "none")
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::None:
         return CSS::LineStyle::None;
-    if (string == "hidden")
+    case CSS::ValueID::Hidden:
         return CSS::LineStyle::Hidden;
-    if (string == "dotted")
+    case CSS::ValueID::Dotted:
         return CSS::LineStyle::Dotted;
-    if (string == "dashed")
+    case CSS::ValueID::Dashed:
         return CSS::LineStyle::Dashed;
-    if (string == "solid")
+    case CSS::ValueID::Solid:
         return CSS::LineStyle::Solid;
-    if (string == "double")
+    case CSS::ValueID::Double:
         return CSS::LineStyle::Double;
-    if (string == "groove")
+    case CSS::ValueID::Groove:
         return CSS::LineStyle::Groove;
-    if (string == "ridge")
+    case CSS::ValueID::Ridge:
         return CSS::LineStyle::Ridge;
-    if (string == "inset")
+    case CSS::ValueID::Inset:
         return CSS::LineStyle::Inset;
-    if (string == "outset")
+    case CSS::ValueID::Outset:
         return CSS::LineStyle::Outset;
-    return {};
+    default:
+        return {};
+    }
 }
 
 Optional<CSS::Float> StyleProperties::float_() const
 {
     auto value = property(CSS::PropertyID::Float);
-    if (!value.has_value() || !value.value()->is_string())
+    if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    auto string = value.value()->to_string();
-    if (string == "none")
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::None:
         return CSS::Float::None;
-    if (string == "left")
+    case CSS::ValueID::Left:
         return CSS::Float::Left;
-    if (string == "right")
+    case CSS::ValueID::Right:
         return CSS::Float::Right;
-    return {};
+    default:
+        return {};
+    }
 }
 
 Optional<CSS::Clear> StyleProperties::clear() const
 {
     auto value = property(CSS::PropertyID::Clear);
-    if (!value.has_value() || !value.value()->is_string())
+    if (!value.has_value() || !value.value()->is_identifier())
         return {};
-    auto string = value.value()->to_string();
-    if (string == "none")
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::None:
         return CSS::Clear::None;
-    if (string == "left")
+    case CSS::ValueID::Left:
         return CSS::Clear::Left;
-    if (string == "right")
+    case CSS::ValueID::Right:
         return CSS::Clear::Right;
-    if (string == "both")
+    case CSS::ValueID::Both:
         return CSS::Clear::Both;
-    return {};
+    default:
+        return {};
+    }
 }
 
 CSS::Display StyleProperties::display() const
 {
-    auto display = string_or_fallback(CSS::PropertyID::Display, "inline");
-    if (display == "none")
-        return CSS::Display::None;
-    if (display == "block")
-        return CSS::Display::Block;
-    if (display == "inline")
+    auto value = property(CSS::PropertyID::Display);
+    if (!value.has_value() || !value.value()->is_identifier())
         return CSS::Display::Inline;
-    if (display == "inline-block")
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::None:
+        return CSS::Display::None;
+    case CSS::ValueID::Block:
+        return CSS::Display::Block;
+    case CSS::ValueID::Inline:
+        return CSS::Display::Inline;
+    case CSS::ValueID::InlineBlock:
         return CSS::Display::InlineBlock;
-    if (display == "list-item")
+    case CSS::ValueID::ListItem:
         return CSS::Display::ListItem;
-    if (display == "table")
+    case CSS::ValueID::Table:
         return CSS::Display::Table;
-    if (display == "table-row")
+    case CSS::ValueID::TableRow:
         return CSS::Display::TableRow;
-    if (display == "table-cell")
+    case CSS::ValueID::TableCell:
         return CSS::Display::TableCell;
-    if (display == "table-row-group")
+    case CSS::ValueID::TableRowGroup:
         return CSS::Display::TableRowGroup;
-    if (display == "table-header-group")
+    case CSS::ValueID::TableHeaderGroup:
         return CSS::Display::TableHeaderGroup;
-    if (display == "table-footer-group")
+    case CSS::ValueID::TableFooterGroup:
         return CSS::Display::TableFooterGroup;
-    dbg() << "Unknown display type: _" << display << "_";
-    return CSS::Display::Block;
+    default:
+        return CSS::Display::Block;
+    }
 }
 
 }

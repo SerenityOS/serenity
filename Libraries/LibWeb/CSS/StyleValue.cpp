@@ -163,7 +163,7 @@ String IdentifierStyleValue::to_string() const
     case CSS::ValueID::VendorSpecificPaletteSyntaxPreprocessorValue:
         return "-libweb-palette-syntax-preprocessor-value";
     default:
-        ASSERT_NOT_REACHED();
+        return String::formatted("-fixme-css-value-id-{}", (int)id());
     }
 }
 
