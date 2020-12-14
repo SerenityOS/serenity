@@ -212,7 +212,8 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
-    unlock_process_if_locked();
+    u32 unlock_count;
+    (void)unlock_process_if_locked(unlock_count);
 
     ScopedCritical critical;
     set_should_die();
@@ -238,7 +239,8 @@ void Thread::exit(void* exit_value)
     ASSERT(Thread::current() == this);
     m_join_condition.thread_did_exit(exit_value);
     set_should_die();
-    unlock_process_if_locked();
+    u32 unlock_count;
+    (void)unlock_process_if_locked(unlock_count);
     die_if_needed();
 }
 
@@ -255,25 +257,33 @@ void Thread::yield_while_not_holding_big_lock()
 void Thread::yield_without_holding_big_lock()
 {
     ASSERT(!g_scheduler_lock.own_lock());
-    bool did_unlock = unlock_process_if_locked();
+    u32 lock_count_to_restore = 0;
+    auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
     // NOTE: Even though we call Scheduler::yield here, unless we happen
     // to be outside of a critical section, the yield will be postponed
     // until leaving it in relock_process.
     Scheduler::yield();
-    relock_process(did_unlock);
+    relock_process(previous_locked, lock_count_to_restore);
 }
 
-bool Thread::unlock_process_if_locked()
+void Thread::donate_without_holding_big_lock(RefPtr<Thread>& thread, const char* reason)
 {
-    return process().big_lock().force_unlock_if_locked();
+    ASSERT(!g_scheduler_lock.own_lock());
+    u32 lock_count_to_restore = 0;
+    auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
+    // NOTE: Even though we call Scheduler::yield here, unless we happen
+    // to be outside of a critical section, the yield will be postponed
+    // until leaving it in relock_process.
+    Scheduler::donate_to(thread, reason);
+    relock_process(previous_locked, lock_count_to_restore);
 }
 
-void Thread::lock_process()
+LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 {
-    process().big_lock().lock();
+    return process().big_lock().force_unlock_if_locked(lock_count_to_restore);
 }
 
-void Thread::relock_process(bool did_unlock)
+void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 {
     // Clearing the critical section may trigger the context switch
     // flagged by calling Scheduler::donate_to or Scheduler::yield
@@ -282,13 +292,15 @@ void Thread::relock_process(bool did_unlock)
     u32 prev_flags;
     u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
 
-    if (did_unlock) {
-        // We've unblocked, relock the process if needed and carry on.
-        process().big_lock().lock();
-    }
+    // CONTEXT SWITCH HAPPENS HERE!
 
     // NOTE: We may be on a different CPU now!
     Processor::current().restore_critical(prev_crit, prev_flags);
+
+    if (previous_locked != LockMode::Unlocked) {
+        // We've unblocked, relock the process if needed and carry on.
+        RESTORE_LOCK(process().big_lock(), previous_locked, lock_count_to_restore);
+    }
 }
 
 auto Thread::sleep(clockid_t clock_id, const timespec& duration, timespec* remaining_time) -> BlockResult

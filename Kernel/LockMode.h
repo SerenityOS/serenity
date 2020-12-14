@@ -26,29 +26,12 @@
 
 #pragma once
 
-#include <AK/Atomic.h>
-#include <Kernel/SpinLock.h>
-#include <Kernel/Thread.h>
-
 namespace Kernel {
 
-class WaitQueue : public Thread::BlockCondition {
-public:
-    void wake_one();
-    void wake_n(u32 wake_count);
-    void wake_all();
-
-    template<class... Args>
-    Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
-    {
-        return Thread::current()->block<Thread::QueueBlocker>(timeout, *this, forward<Args>(args)...);
-    }
-
-protected:
-    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
-
-private:
-    bool m_wake_requested { false };
+enum class LockMode {
+    Unlocked,
+    Shared,
+    Exclusive
 };
 
 }
