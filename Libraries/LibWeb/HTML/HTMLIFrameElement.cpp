@@ -46,6 +46,8 @@ namespace Web::HTML {
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, const QualifiedName& qualified_name)
     : HTMLElement(document, qualified_name)
 {
+    ASSERT(document.frame());
+    m_content_frame = Frame::create_subframe(*this, document.frame()->main_frame());
 }
 
 HTMLIFrameElement::~HTMLIFrameElement()
@@ -58,18 +60,11 @@ RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(const CSS::StylePrope
     return adopt(*new Layout::FrameBox(document(), *this, move(style)));
 }
 
-void HTMLIFrameElement::document_did_attach_to_frame(Frame& frame)
+void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& value)
 {
-    ASSERT(!m_content_frame);
-    m_content_frame = Frame::create_subframe(*this, frame.main_frame());
-    auto src = attribute(HTML::AttributeNames::src);
-    if (src.is_null())
-        return;
-    load_src(src);
-}
-
-void HTMLIFrameElement::document_will_detach_from_frame(Frame&)
-{
+    HTMLElement::parse_attribute(name, value);
+    if (name == HTML::AttributeNames::src)
+        load_src(value);
 }
 
 void HTMLIFrameElement::load_src(const String& value)

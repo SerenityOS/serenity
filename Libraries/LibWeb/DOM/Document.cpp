@@ -283,20 +283,11 @@ void Document::set_title(const String& title)
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 {
     m_frame = frame;
-    for_each_in_subtree([&](auto& node) {
-        node.document_did_attach_to_frame(frame);
-        return IterationDecision::Continue;
-    });
     update_layout();
 }
 
 void Document::detach_from_frame(Badge<Frame>, Frame& frame)
 {
-    for_each_in_subtree([&](auto& node) {
-        node.document_will_detach_from_frame(frame);
-        return IterationDecision::Continue;
-    });
-
     tear_down_layout_tree();
     m_frame = nullptr;
 }
