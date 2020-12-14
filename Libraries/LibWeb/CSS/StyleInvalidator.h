@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,21 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
-#include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/Forward.h>
+#include <AK/HashMap.h>
+#include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 
 namespace Web::CSS {
 
-struct MatchingRule {
-    RefPtr<StyleRule> rule;
-    size_t style_sheet_index { 0 };
-    size_t rule_index { 0 };
-    size_t selector_index { 0 };
-};
-
-class StyleResolver {
+class StyleInvalidator {
 public:
-    explicit StyleResolver(DOM::Document&);
-    ~StyleResolver();
-
-    DOM::Document& document() { return m_document; }
-    const DOM::Document& document() const { return m_document; }
-
-    NonnullRefPtr<StyleProperties> resolve_style(const DOM::Element&, const StyleProperties* parent_style) const;
-
-    Vector<MatchingRule> collect_matching_rules(const DOM::Element&) const;
-    void sort_matching_rules(Vector<MatchingRule>&) const;
-
-    static bool is_inherited_property(CSS::PropertyID);
+    explicit StyleInvalidator(DOM::Document&);
+    ~StyleInvalidator();
 
 private:
-    template<typename Callback>
-    void for_each_stylesheet(Callback) const;
-
     DOM::Document& m_document;
+    HashMap<DOM::Element*, Vector<MatchingRule>> m_elements_and_matching_rules_before;
 };
 
 }

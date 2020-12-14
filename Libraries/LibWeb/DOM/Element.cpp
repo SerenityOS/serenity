@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -83,6 +84,8 @@ String Element::attribute(const FlyString& name) const
 
 void Element::set_attribute(const FlyString& name, const String& value)
 {
+    CSS::StyleInvalidator style_invalidator(document());
+
     if (auto* attribute = find_attribute(name))
         attribute->set_value(value);
     else
@@ -93,11 +96,15 @@ void Element::set_attribute(const FlyString& name, const String& value)
 
 void Element::remove_attribute(const FlyString& name)
 {
+    CSS::StyleInvalidator style_invalidator(document());
+
     m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
 void Element::set_attributes(Vector<Attribute>&& attributes)
 {
+    CSS::StyleInvalidator style_invalidator(document());
+
     m_attributes = move(attributes);
 
     for (auto& attribute : m_attributes)
@@ -161,11 +168,8 @@ void Element::parse_attribute(const FlyString& name, const String& value)
         for (auto& new_class : new_classes) {
             m_classes.unchecked_append(new_class);
         }
-        set_needs_style_update(true);
     } else if (name == HTML::AttributeNames::style) {
         m_inline_style = parse_css_declaration(CSS::ParsingContext(document()), value);
-        set_needs_style_update(true);
-    } else if (name == HTML::AttributeNames::id) {
         set_needs_style_update(true);
     }
 }
