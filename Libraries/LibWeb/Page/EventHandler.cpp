@@ -348,23 +348,24 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
 
     if (layout_root()->selection().is_valid()) {
         auto range = layout_root()->selection().to_dom_range()->normalized();
+        if (range->start_container()->is_editable()) {
+            m_frame.document()->layout_node()->set_selection({});
 
-        m_frame.document()->layout_node()->set_selection({});
+            // FIXME: This doesn't work for some reason?
+            m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
 
-        // FIXME: This doesn't work for some reason?
-        m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
+            if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
 
-        if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
-            if (range->start_container()->is_editable()) {
                 m_edit_event_handler->handle_delete(range);
                 return true;
-            }
-        } else {
-            m_edit_event_handler->handle_delete(range);
+            } else {
 
-            m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-            m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
-            return true;
+                m_edit_event_handler->handle_delete(range);
+
+                m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
+                m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
+                return true;
+            }
         }
     }
 
