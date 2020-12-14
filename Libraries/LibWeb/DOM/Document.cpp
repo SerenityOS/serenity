@@ -288,6 +288,7 @@ void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 
 void Document::detach_from_frame(Badge<Frame>, Frame& frame)
 {
+    ASSERT(&frame == m_frame);
     tear_down_layout_tree();
     m_frame = nullptr;
 }
