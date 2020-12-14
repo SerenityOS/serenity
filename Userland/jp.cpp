@@ -38,7 +38,7 @@ static void print(const JsonValue& value, int indent = 0);
 static void print_indent(int indent)
 {
     for (int i = 0; i < indent; ++i)
-        printf("  ");
+        out("  ");
 }
 
 int main(int argc, char** argv)
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Couldn't open %s for reading: %s\n", path, file->error_string());
+        warnln("Couldn't open {} for reading: {}", path, file->error_string());
         return 1;
     }
 
@@ -69,12 +69,12 @@ int main(int argc, char** argv)
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
     if (!json.has_value()) {
-        fprintf(stderr, "Couldn't parse %s as JSON\n", path);
+        warnln("Couldn't parse {} as JSON", path);
         return 1;
     }
 
     print(json.value());
-    printf("\n");
+    outln();
 
     return 0;
 }
@@ -82,40 +82,40 @@ int main(int argc, char** argv)
 void print(const JsonValue& value, int indent)
 {
     if (value.is_object()) {
-        printf("{\n");
+        outln("{{");
         value.as_object().for_each_member([&](auto& member_name, auto& member_value) {
             print_indent(indent + 1);
-            printf("\"\033[33;1m%s\033[0m\": ", member_name.characters());
+            out("\"\033[33;1m{}\033[0m\": ", member_name);
             print(member_value, indent + 1);
-            printf(",\n");
+            outln(",");
         });
         print_indent(indent);
-        printf("}");
+        out("}}");
         return;
     }
     if (value.is_array()) {
-        printf("[\n");
+        outln("[");
         value.as_array().for_each([&](auto& entry_value) {
             print_indent(indent + 1);
             print(entry_value, indent + 1);
-            printf(",\n");
+            outln(",");
         });
         print_indent(indent);
-        printf("]");
+        out("]");
         return;
     }
     if (value.is_string())
-        printf("\033[31;1m");
+        out("\033[31;1m");
     else if (value.is_number())
-        printf("\033[35;1m");
+        out("\033[35;1m");
     else if (value.is_bool())
-        printf("\033[32;1m");
+        out("\033[32;1m");
     else if (value.is_null())
-        printf("\033[34;1m");
+        out("\033[34;1m");
     if (value.is_string())
-        putchar('"');
-    printf("%s", value.to_string().characters());
+        out("\"");
+    out("{}", value.to_string());
     if (value.is_string())
-        putchar('"');
-    printf("\033[0m");
+        out("\"");
+    out("\033[0m");
 }
