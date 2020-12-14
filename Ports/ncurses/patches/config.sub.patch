@@ -1,11 +1,12 @@
---- ./config.sub	2017-11-25 20:49:31.000000000 +0000
-+++ ./config.sub.serenity	2019-11-11 14:08:38.274752900 +0000
-@@ -1393,7 +1393,7 @@
- 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
- 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
- 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
--	      | -sym* | -kopensolaris* | -plan9* \
-+	      | -sym* | -kopensolaris* | -plan9* | -serenity* \
- 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
- 	      | -aos* | -aros* | -cloudabi* | -sortix* \
- 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+diff -u ncurses-6.2/config.sub ncurses-6.2-patched/config.sub
+--- ncurses-6.2/config.sub	2019-09-12 01:56:40.000000000 +0200
++++ ncurses-6.2-patched/config.sub	2020-12-14 23:30:48.813959617 +0100
+@@ -1343,7 +1343,7 @@
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
+ 	     | amigaos* | amigados* | msdos* | newsos* | unicos* | aof* \
+-	     | aos* | aros* | cloudabi* | sortix* | twizzler* \
++	     | aos* | aros* | cloudabi* | sortix* | twizzler* | serenity*  \
+ 	     | nindy* | vxsim* | vxworks* | ebmon* | hms* | mvs* \
+ 	     | clix* | riscos* | uniplus* | iris* | isc* | rtu* | xenix* \
+ 	     | knetbsd* | mirbsd* | netbsd* \
