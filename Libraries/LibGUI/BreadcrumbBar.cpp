@@ -70,6 +70,7 @@ void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, 
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.set_text(text);
     button.set_icon(icon);
+    button.set_focus_policy(FocusPolicy::TabFocus);
     button.set_checkable(true);
     button.set_exclusive(true);
     button.on_click = [this, index = m_segments.size()](auto) {
