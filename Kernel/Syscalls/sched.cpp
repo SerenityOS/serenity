@@ -41,14 +41,11 @@ int Process::sys$donate(pid_t tid)
     if (tid < 0)
         return -EINVAL;
 
-    // We don't strictly need to grab the scheduler lock here, but it
-    // will close a race where we can find the thread but it disappears
-    // before we call Scheduler::donate_to.
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedCritical critical;
     auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
-    Scheduler::donate_to(thread, "sys$donate");
+    Thread::current()->donate_without_holding_big_lock(thread, "sys$donate");
     return 0;
 }
 

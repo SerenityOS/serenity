@@ -27,6 +27,10 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Thread.h>
+
+//#define LOCK_TRACE_DEBUG
+//#define LOCK_RESTORE_DEBUG
 
 namespace Kernel {
 
@@ -46,37 +50,77 @@ void Lock::lock(Mode mode)
     ASSERT(!Processor::current().in_irq());
     ASSERT(mode != Mode::Unlocked);
     auto current_thread = Thread::current();
-    ScopedCritical critical;
+    ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             do {
                 // FIXME: Do not add new readers if writers are queued.
-                bool can_lock;
-                switch (m_mode) {
-                case Lock::Mode::Unlocked:
-                    can_lock = true;
-                    break;
-                case Lock::Mode::Shared:
-                    can_lock = (mode == Lock::Mode::Shared);
-                    break;
-                case Lock::Mode::Exclusive:
-                    can_lock = (m_holder == current_thread);
-                    break;
-                }
-                if (can_lock) {
-                    // We got the lock!
-                    if (m_mode == Lock::Mode::Unlocked) {
-                        m_mode = mode;
-                        ASSERT(m_times_locked == 0);
-                        if (mode == Mode::Exclusive)
-                            m_holder = current_thread;
-                    }
-#ifdef LOCK_DEBUG
-                    current_thread->holding_lock(*this, true, file, line);
+                auto current_mode = m_mode.load(AK::MemoryOrder::memory_order_relaxed);
+                switch (current_mode) {
+                case Mode::Unlocked: {
+#ifdef LOCK_TRACE_DEBUG
+                    dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently unlocked";
 #endif
+                    m_mode.store(mode, AK::MemoryOrder::memory_order_relaxed);
+                    ASSERT(!m_holder);
+                    ASSERT(m_shared_holders.is_empty());
+                    if (mode == Mode::Exclusive) {
+                        m_holder = current_thread;
+                    } else {
+                        ASSERT(mode == Mode::Shared);
+                        m_shared_holders.set(current_thread, 1);
+                    }
+                    ASSERT(m_times_locked == 0);
                     m_times_locked++;
+#ifdef LOCK_DEBUG
+                    current_thread->holding_lock(*this, 1, file, line);
+#endif
                     m_lock.store(false, AK::memory_order_release);
                     return;
+                }
+                case Mode::Exclusive: {
+                    ASSERT(m_holder);
+                    if (m_holder != current_thread)
+                        break;
+                    ASSERT(m_shared_holders.is_empty());
+#ifdef LOCK_TRACE_DEBUG
+                    if (mode == Mode::Exclusive)
+                        dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently exclusive, holding: " << m_times_locked;
+                    else
+                        dbg() << "Lock::lock @ " << this << ": acquire exclusive (requested " << mode_to_string(mode) << "), currently exclusive, holding " << m_times_locked;
+#endif
+                    ASSERT(mode == Mode::Exclusive || mode == Mode::Shared);
+                    ASSERT(m_times_locked > 0);
+                    m_times_locked++;
+#ifdef LOCK_DEBUG
+                    current_thread->holding_lock(*this, 1, file, line);
+#endif
+                    m_lock.store(false, AK::memory_order_release);
+                    return;
+                }
+                case Mode::Shared: {
+                    ASSERT(!m_holder);
+                    if (mode != Mode::Shared)
+                        break;
+#ifdef LOCK_TRACE_DEBUG
+                    dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently shared, locks held: " << m_times_locked;
+#endif
+                    ASSERT(m_times_locked > 0);
+                    m_times_locked++;
+                    ASSERT(!m_shared_holders.is_empty());
+                    auto it = m_shared_holders.find(current_thread);
+                    if (it != m_shared_holders.end())
+                        it->value++;
+                    else
+                        m_shared_holders.set(current_thread, 1);
+#ifdef LOCK_DEBUG
+                    current_thread->holding_lock(*this, 1, file, line);
+#endif
+                    m_lock.store(false, AK::memory_order_release);
+                    return;
+                }
+                default:
+                    ASSERT_NOT_REACHED();
                 }
                 m_lock.store(false, AK::memory_order_release);
             } while (m_queue.wait_on(nullptr, m_name) == Thread::BlockResult::NotBlocked);
@@ -93,28 +137,53 @@ void Lock::unlock()
     // and also from within critical sections!
     ASSERT(!Processor::current().in_irq());
     auto current_thread = Thread::current();
-    ScopedCritical critical;
+    ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
-            ASSERT(m_times_locked);
-            --m_times_locked;
+            auto current_mode = m_mode.load(AK::MemoryOrder::memory_order_relaxed);
+#ifdef LOCK_TRACE_DEBUG
+            if (current_mode == Mode::Shared)
+                dbg() << "Lock::unlock @ " << this << ": release " << mode_to_string(current_mode) << ", locks held: " << m_times_locked;
+            else
+                dbg() << "Lock::unlock @ " << this << ": release " << mode_to_string(current_mode) << ", holding: " << m_times_locked;
+#endif
+            ASSERT(current_mode != Mode::Unlocked);
 
-            ASSERT(m_mode != Mode::Unlocked);
+            ASSERT(m_times_locked > 0);
+            m_times_locked--;
 
-            if (m_mode == Mode::Exclusive) {
+            switch (current_mode) {
+            case Mode::Exclusive:
                 ASSERT(m_holder == current_thread);
+                ASSERT(m_shared_holders.is_empty());
                 if (m_times_locked == 0)
                     m_holder = nullptr;
+                break;
+            case Mode::Shared: {
+                ASSERT(!m_holder);
+                auto it = m_shared_holders.find(current_thread);
+                ASSERT(it != m_shared_holders.end());
+                if (it->value > 1) {
+                    it->value--;
+                } else {
+                    ASSERT(it->value > 0);
+                    m_shared_holders.remove(it);
+                }
+                break;
             }
+            default:
+                ASSERT_NOT_REACHED();
+            }
+
+            if (m_times_locked == 0) {
+                ASSERT(current_mode == Mode::Exclusive ? !m_holder : m_shared_holders.is_empty());
+                m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+            }
+
 #ifdef LOCK_DEBUG
-            current_thread->holding_lock(*this, false);
+            current_thread->holding_lock(*this, -1);
 #endif
 
-            if (m_times_locked > 0) {
-                m_lock.store(false, AK::memory_order_release);
-                return;
-            }
-            m_mode = Mode::Unlocked;
             m_lock.store(false, AK::memory_order_release);
             m_queue.wake_one();
             return;
@@ -124,39 +193,153 @@ void Lock::unlock()
     }
 }
 
-bool Lock::force_unlock_if_locked()
+auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
     ASSERT(!Processor::current().in_irq());
-    ScopedCritical critical;
+    auto current_thread = Thread::current();
+    ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
-            if (m_holder != Thread::current()) {
-                m_lock.store(false, AK::MemoryOrder::memory_order_release);
-                return false;
-            }
-            ASSERT(m_mode != Mode::Shared);
-            ASSERT(m_times_locked == 1);
-#ifdef LOCK_DEBUG
-            m_holder->holding_lock(*this, false);
+            Mode previous_mode;
+            auto current_mode = m_mode.load(AK::MemoryOrder::memory_order_relaxed);
+            switch (current_mode) {
+            case Mode::Exclusive: {
+                if (m_holder != current_thread) {
+                    m_lock.store(false, AK::MemoryOrder::memory_order_release);
+                    lock_count_to_restore = 0;
+                    return Mode::Unlocked;
+                }
+#ifdef LOCK_RESTORE_DEBUG
+                dbg() << "Lock::force_unlock_if_locked @ " << this << ": unlocking exclusive with lock count: " << m_times_locked;
 #endif
-            m_holder = nullptr;
-            m_mode = Mode::Unlocked;
-            m_times_locked = 0;
-            m_lock.store(false, AK::memory_order_release);
+                m_holder = nullptr;
+                ASSERT(m_times_locked > 0);
+                lock_count_to_restore = m_times_locked;
+                m_times_locked = 0;
+                m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+                m_lock.store(false, AK::memory_order_release);
+#ifdef LOCK_DEBUG
+                m_holder->holding_lock(*this, -(int)lock_count_to_restore);
+#endif
+                previous_mode = Mode::Exclusive;
+                break;
+            }
+            case Mode::Shared: {
+                ASSERT(!m_holder);
+                auto it = m_shared_holders.find(current_thread);
+                if (it == m_shared_holders.end()) {
+                    m_lock.store(false, AK::MemoryOrder::memory_order_release);
+                    lock_count_to_restore = 0;
+                    return Mode::Unlocked;
+                }
+#ifdef LOCK_RESTORE_DEBUG
+                dbg() << "Lock::force_unlock_if_locked @ " << this << ": unlocking exclusive with lock count: " << it->value << ", total locks: " << m_times_locked;
+#endif
+                ASSERT(it->value > 0);
+                lock_count_to_restore = it->value;
+                ASSERT(lock_count_to_restore > 0);
+#ifdef LOCK_DEBUG
+                m_holder->holding_lock(*this, -(int)lock_count_to_restore);
+#endif
+                m_shared_holders.remove(it);
+                ASSERT(m_times_locked >= lock_count_to_restore);
+                m_times_locked -= lock_count_to_restore;
+                if (m_times_locked == 0)
+                    m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+                m_lock.store(false, AK::memory_order_release);
+                previous_mode = Mode::Shared;
+                break;
+            }
+            case Mode::Unlocked: {
+                m_lock.store(false, AK::memory_order_relaxed);
+                lock_count_to_restore = 0;
+                previous_mode = Mode::Unlocked;
+                break;
+            }
+            default:
+                ASSERT_NOT_REACHED();
+            }
             m_queue.wake_one();
-            break;
+            return previous_mode;
         }
         // I don't know *who* is using "m_lock", so just yield.
         Scheduler::yield_from_critical();
     }
-    return true;
+}
+
+#ifdef LOCK_DEBUG
+void Lock::restore_lock(Mode mode, u32 lock_count)
+{
+    return restore_lock("unknown", 0, mode, lock_count);
+}
+
+void Lock::restore_lock(const char* file, int line, Mode mode, u32 lock_count)
+#else
+void Lock::restore_lock(Mode mode, u32 lock_count)
+#endif
+{
+    ASSERT(mode != Mode::Unlocked);
+    ASSERT(lock_count > 0);
+    ASSERT(!Processor::current().in_irq());
+    auto current_thread = Thread::current();
+    ScopedCritical critical; // in case we're not in a critical section already
+    for (;;) {
+        if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
+            switch (mode) {
+            case Mode::Exclusive: {
+                auto expected_mode = Mode::Unlocked;
+                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Exclusive, AK::MemoryOrder::memory_order_relaxed))
+                    break;
+#ifdef LOCK_RESTORE_DEBUG
+                dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was unlocked";
+#endif
+                ASSERT(m_times_locked == 0);
+                m_times_locked = lock_count;
+                ASSERT(!m_holder);
+                ASSERT(m_shared_holders.is_empty());
+                m_holder = current_thread;
+                m_lock.store(false, AK::memory_order_release);
+#ifdef LOCK_DEBUG
+                m_holder->holding_lock(*this, (int)lock_count, file, line);
+#endif
+                return;
+            }
+            case Mode::Shared: {
+                auto expected_mode = Mode::Unlocked;
+                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Shared, AK::MemoryOrder::memory_order_relaxed) && expected_mode != Mode::Shared)
+                    break;
+#ifdef LOCK_RESTORE_DEBUG
+                dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was " << mode_to_string(expected_mode);
+#endif
+                ASSERT(expected_mode == Mode::Shared || m_times_locked == 0);
+                m_times_locked += lock_count;
+                ASSERT(!m_holder);
+                ASSERT((expected_mode == Mode::Unlocked) == m_shared_holders.is_empty());
+                auto set_result = m_shared_holders.set(current_thread, lock_count);
+                // There may be other shared lock holders already, but we should not have an entry yet
+                ASSERT(set_result == AK::HashSetResult::InsertedNewEntry);
+                m_lock.store(false, AK::memory_order_release);
+#ifdef LOCK_DEBUG
+                m_holder->holding_lock(*this, (int)lock_count, file, line);
+#endif
+                return;
+            }
+            default:
+                ASSERT_NOT_REACHED();
+            }
+
+            m_lock.store(false, AK::memory_order_relaxed);
+        }
+        // I don't know *who* is using "m_lock", so just yield.
+        Scheduler::yield_from_critical();
+    }
 }
 
 void Lock::clear_waiters()
 {
-    ASSERT(m_mode != Mode::Shared);
+    ASSERT(m_mode.load(AK::MemoryOrder::memory_order_relaxed) != Mode::Shared);
     m_queue.wake_all();
 }
 

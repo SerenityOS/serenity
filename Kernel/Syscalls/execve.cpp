@@ -348,7 +348,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         ScopedSpinLock lock(g_scheduler_lock);
         new_main_thread->set_state(Thread::State::Runnable);
     }
-    big_lock().force_unlock_if_locked();
+    u32 lock_count_to_restore;
+    (void)big_lock().force_unlock_if_locked(lock_count_to_restore);
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
     return 0;

@@ -38,6 +38,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
+#include <Kernel/LockMode.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
@@ -781,6 +782,7 @@ public:
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
         ASSERT(!Processor::current().in_irq());
+        ASSERT(this == Thread::current());
         ScopedCritical critical;
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
         ScopedSpinLock block_lock(m_block_lock);
@@ -844,12 +846,14 @@ public:
         block_lock.unlock();
 
         bool did_timeout = false;
-        bool did_unlock = false;
+        auto previous_locked = LockMode::Unlocked;
+        u32 lock_count_to_restore = 0;
         for (;;) {
             scheduler_lock.unlock();
 
             // Yield to the scheduler, and wait for us to resume unblocked.
-            did_unlock |= unlock_process_if_locked();
+            if (previous_locked == LockMode::Unlocked)
+                previous_locked = unlock_process_if_locked(lock_count_to_restore);
 
             ASSERT(!g_scheduler_lock.own_lock());
             ASSERT(Processor::current().in_critical());
@@ -896,16 +900,23 @@ public:
             // (e.g. if it's on another processor)
             TimerQueue::the().cancel_timer(timer.release_nonnull());
         }
-        if (did_unlock) {
+        if (previous_locked != LockMode::Unlocked) {
             // NOTE: this may trigger another call to Thread::block(), so
             // we need to do this after we're all done and restored m_in_block!
-            lock_process();
+            relock_process(previous_locked, lock_count_to_restore);
         }
         return result;
     }
 
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
+
+    template<class... Args>
+    Thread::BlockResult wait_on(WaitQueue& wait_queue, const Thread::BlockTimeout& timeout, Args&&... args)
+    {
+        ASSERT(this == Thread::current());
+        return block<Thread::QueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
+    }
 
     BlockResult sleep(clockid_t, const timespec&, timespec* = nullptr);
     BlockResult sleep(const timespec& duration, timespec* remaining_time = nullptr)
@@ -1062,29 +1073,32 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #ifdef LOCK_DEBUG
-    void holding_lock(Lock& lock, bool holding, const char* file = nullptr, int line = 0)
+    void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
     {
-        m_holding_locks.fetch_add(holding ? 1 : -1, AK::MemoryOrder::memory_order_relaxed);
+        ASSERT(refs_delta != 0);
+        m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
         ScopedSpinLock list_lock(m_holding_locks_lock);
-        if (holding) {
+        if (refs_delta > 0) {
             bool have_existing = false;
             for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
                 auto& info = m_holding_locks_list[i];
                 if (info.lock == &lock) {
                     have_existing = true;
-                    info.count++;
+                    info.count += refs_delta;
                     break;
                 }
             }
             if (!have_existing)
                 m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
         } else {
+            ASSERT(refs_delta < 0);
             bool found = false;
             for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
                 auto& info = m_holding_locks_list[i];
                 if (info.lock == &lock) {
-                    ASSERT(info.count > 0);
-                    if (--info.count == 0)
+                    ASSERT(info.count >= (unsigned)-refs_delta);
+                    info.count -= (unsigned)-refs_delta;
+                    if (info.count == 0)
                         m_holding_locks_list.remove(i);
                     found = true;
                     break;
@@ -1162,9 +1176,8 @@ private:
         bool m_thread_did_exit { false };
     };
 
-    bool unlock_process_if_locked();
-    void lock_process();
-    void relock_process(bool did_unlock);
+    LockMode unlock_process_if_locked(u32&);
+    void relock_process(LockMode, u32);
     String backtrace_impl();
     void reset_fpu_state();
 
@@ -1234,6 +1247,7 @@ private:
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     void yield_without_holding_big_lock();
+    void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);
     void yield_while_not_holding_big_lock();
     void update_state_for_thread(Thread::State previous_state);
 };
