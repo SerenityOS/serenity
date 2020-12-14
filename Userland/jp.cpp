@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static void print(const JsonValue& value, int indent = 0);
+static void print(const JsonValue& value, int indent = 0, bool use_color = true);
 static void print_indent(int indent)
 {
     for (int i = 0; i < indent; ++i)
@@ -73,20 +73,23 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    print(json.value());
+    print(json.value(), 0, isatty(STDOUT_FILENO));
     outln();
 
     return 0;
 }
 
-void print(const JsonValue& value, int indent)
+void print(const JsonValue& value, int indent, bool use_color)
 {
     if (value.is_object()) {
         outln("{{");
         value.as_object().for_each_member([&](auto& member_name, auto& member_value) {
             print_indent(indent + 1);
-            out("\"\033[33;1m{}\033[0m\": ", member_name);
-            print(member_value, indent + 1);
+            if (use_color)
+                out("\"\033[33;1m{}\033[0m\": ", member_name);
+            else
+                out("\"{}\": ", member_name);
+            print(member_value, indent + 1, use_color);
             outln(",");
         });
         print_indent(indent);
@@ -97,25 +100,28 @@ void print(const JsonValue& value, int indent)
         outln("[");
         value.as_array().for_each([&](auto& entry_value) {
             print_indent(indent + 1);
-            print(entry_value, indent + 1);
+            print(entry_value, indent + 1, use_color);
             outln(",");
         });
         print_indent(indent);
         out("]");
         return;
     }
-    if (value.is_string())
-        out("\033[31;1m");
-    else if (value.is_number())
-        out("\033[35;1m");
-    else if (value.is_bool())
-        out("\033[32;1m");
-    else if (value.is_null())
-        out("\033[34;1m");
+    if (use_color) {
+        if (value.is_string())
+            out("\033[31;1m");
+        else if (value.is_number())
+            out("\033[35;1m");
+        else if (value.is_bool())
+            out("\033[32;1m");
+        else if (value.is_null())
+            out("\033[34;1m");
+    }
     if (value.is_string())
         out("\"");
     out("{}", value.to_string());
     if (value.is_string())
         out("\"");
-    out("\033[0m");
+    if (use_color)
+        out("\033[0m");
 }
