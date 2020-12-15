@@ -454,6 +454,16 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::LineThrough;
     if (string.equals_ignoring_case("blink"))
         return CSS::ValueID::Blink;
+    if (string.equals_ignoring_case("capitalize"))
+        return CSS::ValueID::Capitalize;
+    if (string.equals_ignoring_case("uppercase"))
+        return CSS::ValueID::Uppercase;
+    if (string.equals_ignoring_case("lowercase"))
+        return CSS::ValueID::Lowercase;
+    if (string.equals_ignoring_case("full-width"))
+        return CSS::ValueID::FullWidth;
+    if (string.equals_ignoring_case("full-size-kana"))
+        return CSS::ValueID::FullSizeKana;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
         return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
     return {};

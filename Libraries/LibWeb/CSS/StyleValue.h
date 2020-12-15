@@ -151,6 +151,11 @@ enum class ValueID {
     Overline,
     LineThrough,
     Blink,
+    Capitalize,
+    Uppercase,
+    Lowercase,
+    FullWidth,
+    FullSizeKana,
 };
 
 enum class Position {
@@ -175,6 +180,15 @@ enum class TextDecorationLine {
     Overline,
     LineThrough,
     Blink,
+};
+
+enum class TextTransform {
+    None,
+    Capitalize,
+    Uppercase,
+    Lowercase,
+    FullWidth,
+    FullSizeKana,
 };
 
 enum class Display {

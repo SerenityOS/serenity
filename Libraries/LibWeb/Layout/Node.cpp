@@ -243,6 +243,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_decoration_line.has_value())
         style.set_text_decoration_line(text_decoration_line.value());
 
+    auto text_transform = specified_style.text_transform();
+    if (text_transform.has_value())
+        style.set_text_transform(text_transform.value());
+
     style.set_z_index(specified_style.z_index());
     style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     style.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
