@@ -64,9 +64,7 @@ void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fr
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
-        if (background_color.has_value() && background_color.value()->is_color())
-            painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
+        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), style().background_color());
     }
 }
 

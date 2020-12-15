@@ -41,6 +41,8 @@ public:
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
+    static Color color() { return Color::Black; }
+    static Color background_color() { return Color::Transparent; }
 };
 
 struct BorderData {
@@ -76,6 +78,9 @@ public:
     const BorderData& border_right() const { return m_border_right; }
     const BorderData& border_bottom() const { return m_border_bottom; }
 
+    Color color() const { return m_color; }
+    Color background_color() const { return m_background_color; }
+
 protected:
     CSS::Float m_float { InitialValues::float_() };
     CSS::Clear m_clear { InitialValues::clear() };
@@ -98,6 +103,8 @@ protected:
     BorderData m_border_top;
     BorderData m_border_right;
     BorderData m_border_bottom;
+    Color m_color { InitialValues::color() };
+    Color m_background_color { InitialValues::background_color() };
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -105,6 +112,8 @@ class ImmutableLayoutStyle final : public LayoutStyle {
 
 class MutableLayoutStyle final : public LayoutStyle {
 public:
+    void set_color(const Color& color) { m_color = color; }
+    void set_background_color(const Color& color) { m_background_color = color; }
     void set_float(CSS::Float value) { m_float = value; }
     void set_clear(CSS::Clear value) { m_clear = value; }
     void set_z_index(Optional<int> value) { m_z_index = value; }
