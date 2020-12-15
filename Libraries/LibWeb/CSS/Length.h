@@ -154,6 +154,16 @@ public:
         return String::format("[%g %s]", m_value, unit_name());
     }
 
+    bool operator==(const Length& other) const
+    {
+        return m_type == other.m_type && m_value == other.m_value;
+    }
+
+    bool operator!=(const Length& other) const
+    {
+        return !(*this == other);
+    }
+
 private:
     float relative_length_to_px(const Layout::Node&) const;
 

@@ -338,6 +338,13 @@ public:
 
     virtual bool is_auto() const override { return m_length.is_auto(); }
 
+    virtual bool equals(const StyleValue& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_length == static_cast<const LengthStyleValue&>(other).m_length;
+    }
+
 private:
     explicit LengthStyleValue(const Length& length)
         : StyleValue(Type::Length)
@@ -387,6 +394,13 @@ public:
     Color color() const { return m_color; }
     String to_string() const override { return m_color.to_string(); }
     Color to_color(const DOM::Document&) const override { return m_color; }
+
+    virtual bool equals(const StyleValue& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_color == static_cast<const ColorStyleValue&>(other).m_color;
+    }
 
 private:
     explicit ColorStyleValue(Color color)
