@@ -281,8 +281,8 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
         return CSS::TextAlign::Right;
     case CSS::ValueID::Justify:
         return CSS::TextAlign::Justify;
-    case CSS::ValueID::VendorSpecificCenter:
-        return CSS::TextAlign::VendorSpecificCenter;
+    case CSS::ValueID::LibwebCenter:
+        return CSS::TextAlign::LibwebCenter;
     default:
         return {};
     }

@@ -127,7 +127,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 
         switch (text_align) {
         case CSS::TextAlign::Center:
-        case CSS::TextAlign::VendorSpecificCenter:
+        case CSS::TextAlign::LibwebCenter:
             x_offset += excess_horizontal_space / 2;
             break;
         case CSS::TextAlign::Right:

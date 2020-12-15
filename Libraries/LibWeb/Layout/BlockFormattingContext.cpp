@@ -536,7 +536,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         + box_model.padding.left
         + box_model.offset.left;
 
-    if (containing_block.style().text_align() == CSS::TextAlign::VendorSpecificCenter) {
+    if (containing_block.style().text_align() == CSS::TextAlign::LibwebCenter) {
         x = (containing_block.width() / 2) - child_box.width() / 2;
     }
 

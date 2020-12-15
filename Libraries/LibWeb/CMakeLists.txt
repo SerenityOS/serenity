@@ -30,6 +30,8 @@ set(SOURCES
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp
+    CSS/ValueID.cpp
+    CSS/ValueID.h
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -354,6 +356,24 @@ add_custom_command(
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
     MAIN_DEPENDENCY CSS/Properties.json
+)
+
+add_custom_command(
+    OUTPUT CSS/ValueID.h
+    COMMAND ${write_if_different} CSS/ValueID.h CodeGenerators/Generate_CSS_ValueID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+    VERBATIM
+    DEPENDS Generate_CSS_ValueID_h
+    MAIN_DEPENDENCY CSS/Identifiers.json
+)
+add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
+
+add_custom_command(
+    OUTPUT CSS/ValueID.cpp
+    COMMAND /bin/mkdir -p CSS
+    COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+    VERBATIM
+    DEPENDS Generate_CSS_ValueID_cpp
+    MAIN_DEPENDENCY CSS/Identifiers.json
 )
 
 add_custom_command(
