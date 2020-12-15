@@ -77,13 +77,13 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fal
     return value.value()->to_length();
 }
 
-LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id) const
+LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const
 {
     LengthBox box;
-    box.left = length_or_fallback(left_id, CSS::Length::make_auto());
-    box.top = length_or_fallback(top_id, CSS::Length::make_auto());
-    box.right = length_or_fallback(right_id, CSS::Length::make_auto());
-    box.bottom = length_or_fallback(bottom_id, CSS::Length::make_auto());
+    box.left = length_or_fallback(left_id, default_value);
+    box.top = length_or_fallback(top_id, default_value);
+    box.right = length_or_fallback(right_id, default_value);
+    box.bottom = length_or_fallback(bottom_id, default_value);
     return box;
 }
 
