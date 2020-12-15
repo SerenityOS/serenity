@@ -453,4 +453,26 @@ Optional<CSS::TextTransform> StyleProperties::text_transform() const
     }
 }
 
+Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
+{
+    auto value = property(CSS::PropertyID::ListStyleType);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::None:
+        return CSS::ListStyleType::None;
+    case CSS::ValueID::Disc:
+        return CSS::ListStyleType::Disc;
+    case CSS::ValueID::Circle:
+        return CSS::ListStyleType::Circle;
+    case CSS::ValueID::Square:
+        return CSS::ListStyleType::Square;
+    case CSS::ValueID::Decimal:
+        return CSS::ListStyleType::Decimal;
+    default:
+        return {};
+    }
+}
+
 }
