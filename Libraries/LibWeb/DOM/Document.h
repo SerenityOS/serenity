@@ -61,6 +61,9 @@ public:
     static NonnullRefPtr<Document> create(const URL& url = "about:blank") { return adopt(*new Document(url)); }
     virtual ~Document() override;
 
+    bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
+    void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
+
     void set_url(const URL& url) { m_url = url; }
     URL url() const { return m_url; }
 
@@ -283,6 +286,8 @@ private:
     bool m_ready_for_post_load_tasks { false };
 
     NonnullRefPtr<DOMImplementation> m_implementation;
+
+    bool m_should_invalidate_styles_on_attribute_changes { true };
 };
 
 }
