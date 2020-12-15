@@ -177,9 +177,6 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
                     line_box.fragments()[j].set_offset(offset);
                 }
             }
-
-            if (is<Box>(fragment.layout_node()))
-                dimension_box_on_line(downcast<Box>(fragment.layout_node()), layout_mode);
         }
 
         if (!line_box.fragments().is_empty()) {
@@ -236,7 +233,6 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         } else {
             inline_block.set_width(inline_block.style().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
         }
-
         layout_inside(inline_block, layout_mode);
 
         if (inline_block.style().height().is_undefined_or_auto()) {
