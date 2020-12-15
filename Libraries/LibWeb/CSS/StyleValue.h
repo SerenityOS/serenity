@@ -147,6 +147,10 @@ enum class ValueID {
     TableHeaderGroup,
     TableRowGroup,
     TableFooterGroup,
+    Underline,
+    Overline,
+    LineThrough,
+    Blink,
 };
 
 enum class Position {
@@ -163,6 +167,14 @@ enum class TextAlign {
     Right,
     Justify,
     VendorSpecificCenter,
+};
+
+enum class TextDecorationLine {
+    None,
+    Underline,
+    Overline,
+    LineThrough,
+    Blink,
 };
 
 enum class Display {
@@ -243,6 +255,8 @@ public:
     virtual String to_string() const = 0;
     virtual Length to_length() const { return Length::make_auto(); }
     virtual Color to_color(const DOM::Document&) const { return {}; }
+
+    CSS::ValueID to_identifier() const;
 
     virtual bool is_auto() const { return false; }
 
@@ -409,5 +423,12 @@ private:
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
+
+inline CSS::ValueID StyleValue::to_identifier() const
+{
+    if (is_identifier())
+        return static_cast<const IdentifierStyleValue&>(*this).id();
+    return CSS::ValueID::Invalid;
+}
 
 }

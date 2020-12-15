@@ -80,13 +80,11 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     if (phase == PaintPhase::Foreground) {
         painter.set_font(specified_style().font());
         auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
-        auto text_decoration = specified_style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
-        bool is_underline = text_decoration == "underline";
-        if (is_underline)
+        if (style().text_decoration_line() == CSS::TextDecorationLine::Underline)
             painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.

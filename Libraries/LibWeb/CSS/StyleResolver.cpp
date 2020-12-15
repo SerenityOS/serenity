@@ -229,6 +229,20 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 {
     CSS::ParsingContext context(document);
 
+    if (property_id == CSS::PropertyID::TextDecoration) {
+        switch (value.to_identifier()) {
+        case CSS::ValueID::None:
+        case CSS::ValueID::Underline:
+        case CSS::ValueID::Overline:
+        case CSS::ValueID::LineThrough:
+        case CSS::ValueID::Blink:
+            set_property_expanding_shorthands(style, CSS::PropertyID::TextDecorationLine, value, document);
+        default:
+            break;
+        }
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Border) {
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);

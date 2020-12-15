@@ -446,6 +446,14 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::TableHeaderGroup;
     if (string.equals_ignoring_case("table-footer-group"))
         return CSS::ValueID::TableFooterGroup;
+    if (string.equals_ignoring_case("underline"))
+        return CSS::ValueID::Underline;
+    if (string.equals_ignoring_case("overline"))
+        return CSS::ValueID::Overline;
+    if (string.equals_ignoring_case("line-through"))
+        return CSS::ValueID::LineThrough;
+    if (string.equals_ignoring_case("blink"))
+        return CSS::ValueID::Blink;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
         return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
     return {};

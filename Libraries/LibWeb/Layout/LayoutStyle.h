@@ -39,6 +39,7 @@ public:
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
     static CSS::Position position() { return CSS::Position::Static; }
+    static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
 };
 
 struct BorderData {
@@ -54,6 +55,7 @@ public:
     CSS::Clear clear() const { return m_clear; }
     Optional<int> z_index() const { return m_z_index; }
     CSS::TextAlign text_align() const { return m_text_align; }
+    CSS::TextDecorationLine text_decoration_line() const { return m_text_decoration_line; }
     CSS::Position position() const { return m_position; }
     CSS::WhiteSpace white_space() const { return m_white_space; }
     const CSS::Length& width() const { return m_width; }
@@ -77,6 +79,7 @@ protected:
     CSS::Clear m_clear { InitialValues::clear() };
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align { InitialValues::text_align() };
+    CSS::TextDecorationLine m_text_decoration_line { InitialValues::text_decoration_line() };
     CSS::Position m_position { InitialValues::position() };
     CSS::WhiteSpace m_white_space { InitialValues::white_space() };
     CSS::Length m_width;
@@ -103,6 +106,7 @@ public:
     void set_clear(CSS::Clear value) { m_clear = value; }
     void set_z_index(Optional<int> value) { m_z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_text_align = text_align; }
+    void set_text_decoration_line(CSS::TextDecorationLine value) { m_text_decoration_line = value; }
     void set_position(CSS::Position position) { m_position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_white_space = value; }
     void set_width(const CSS::Length& width) { m_width = width; }

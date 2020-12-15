@@ -305,6 +305,28 @@
   },
   "text-decoration": {
     "inherited": false,
+    "initial": "none",
+    "longhands": [
+      "text-decoration-color",
+      "text-decoration-line",
+      "text-decoration-style",
+      "text-decoration-thickness"
+    ]
+  },
+  "text-decoration-color": {
+    "inherited": false,
+    "initial": "none"
+  },
+  "text-decoration-line": {
+    "inherited": false,
+    "initial": "none"
+  },
+  "text-decoration-style": {
+    "inherited": false,
+    "initial": "none"
+  },
+  "text-decoration-thickness": {
+    "inherited": false,
     "initial": "none"
   },
   "text-indent": {
