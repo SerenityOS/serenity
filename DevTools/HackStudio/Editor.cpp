@@ -483,12 +483,12 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     if (m_language_client) {
         dbgln("Opening {}", code_document.file_path());
-        int fd = open(code_document.file_path().string().characters(), O_RDONLY | O_NOCTTY);
+        int fd = open(code_document.file_path().characters(), O_RDONLY | O_NOCTTY);
         if (fd < 0) {
             perror("open");
             return;
         }
-        m_language_client->open_file(code_document.file_path().string(), fd);
+        m_language_client->open_file(code_document.file_path(), fd);
         close(fd);
     }
 }
@@ -519,7 +519,7 @@ void Editor::update_autocomplete(const AutoCompleteRequestData& data)
     };
 
     m_language_client->request_autocomplete(
-        code_document().file_path().string(),
+        code_document().file_path(),
         data.position.line(),
         data.position.column());
 }
@@ -544,7 +544,7 @@ void Editor::on_edit_action(const GUI::Command& command)
     if (command.is_insert_text()) {
         const GUI::InsertTextCommand& insert_command = static_cast<const GUI::InsertTextCommand&>(command);
         m_language_client->insert_text(
-            code_document().file_path().string(),
+            code_document().file_path(),
             insert_command.text(),
             insert_command.range().start().line(),
             insert_command.range().start().column());
@@ -554,7 +554,7 @@ void Editor::on_edit_action(const GUI::Command& command)
     if (command.is_remove_text()) {
         const GUI::RemoveTextCommand& remove_command = static_cast<const GUI::RemoveTextCommand&>(command);
         m_language_client->remove_text(
-            code_document().file_path().string(),
+            code_document().file_path(),
             remove_command.range().start().line(),
             remove_command.range().start().column(),
             remove_command.range().end().line(),
@@ -583,7 +583,7 @@ void Editor::flush_file_content_to_langauge_server()
         return;
 
     m_language_client->set_file_content(
-        code_document().file_path().string(),
+        code_document().file_path(),
         document().text());
 }
 }

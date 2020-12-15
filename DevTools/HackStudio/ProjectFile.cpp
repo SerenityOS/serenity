@@ -38,7 +38,7 @@ ProjectFile::ProjectFile(const String& name)
 GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {
-        m_document = CodeDocument::create(LexicalPath(m_name));
+        m_document = CodeDocument::create(m_name);
         auto file_or_error = Core::File::open(m_name, Core::File::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
