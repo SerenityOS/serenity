@@ -101,16 +101,6 @@ void Element::remove_attribute(const FlyString& name)
     m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
-void Element::set_attributes(Vector<Attribute>&& attributes)
-{
-    CSS::StyleInvalidator style_invalidator(document());
-
-    m_attributes = move(attributes);
-
-    for (auto& attribute : m_attributes)
-        parse_attribute(attribute.name(), attribute.value());
-}
-
 bool Element::has_class(const FlyString& class_name) const
 {
     for (auto& class_ : m_classes) {

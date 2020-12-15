@@ -65,8 +65,6 @@ public:
     void set_attribute(const FlyString& name, const String& value);
     void remove_attribute(const FlyString& name);
 
-    void set_attributes(Vector<Attribute>&&);
-
     template<typename Callback>
     void for_each_attribute(Callback callback) const
     {
