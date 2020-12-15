@@ -35,7 +35,28 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath shared_buffer accept unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto window = GUI::Window::construct();
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);
     auto app_icon = GUI::Icon::default_icon("app-breakout");
