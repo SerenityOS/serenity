@@ -113,6 +113,8 @@ void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode lay
     auto& containing_block = context.containing_block();
     auto* line_box = &containing_block.ensure_last_line_box();
 
+    context.dimension_box_on_line(*this, layout_mode);
+
     float available_width = context.available_width_at_line(containing_block.line_boxes().size() - 1);
 
     if (layout_mode != LayoutMode::OnlyRequiredLineBreaks && line_box->width() > 0 && line_box->width() + border_box_width() > available_width) {
