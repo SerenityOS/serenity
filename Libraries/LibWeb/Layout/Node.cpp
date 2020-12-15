@@ -247,6 +247,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_transform.has_value())
         style.set_text_transform(text_transform.value());
 
+    style.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, document(), Color::Transparent));
+    style.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
+
     style.set_z_index(specified_style.z_index());
     style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     style.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));

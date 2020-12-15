@@ -327,11 +327,10 @@ Color Document::background_color(const Palette& palette) const
     if (!body_layout_node)
         return default_color;
 
-    auto background_color = body_layout_node->specified_style().property(CSS::PropertyID::BackgroundColor);
-    if (!background_color.has_value() || !background_color.value()->is_color())
+    auto color = body_layout_node->style().background_color();
+    if (!color.alpha())
         return default_color;
-
-    return background_color.value()->to_color(*this);
+    return color;
 }
 
 RefPtr<Gfx::Bitmap> Document::background_image() const

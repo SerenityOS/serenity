@@ -50,11 +50,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     padded_rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
 
     if (phase == PaintPhase::Background && !is_body()) {
-        // FIXME: We should paint the body here too, but that currently happens at the view layer.
-        auto bgcolor = specified_style().property(CSS::PropertyID::BackgroundColor);
-        if (bgcolor.has_value() && bgcolor.value()->is_color()) {
-            context.painter().fill_rect(enclosing_int_rect(padded_rect), bgcolor.value()->to_color(document()));
-        }
+        context.painter().fill_rect(enclosing_int_rect(padded_rect), style().background_color());
 
         auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {

@@ -72,20 +72,17 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
-        if (background_color.has_value() && background_color.value()->is_color())
-            painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
+        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), style().background_color());
     }
 
     if (phase == PaintPhase::Foreground) {
         painter.set_font(specified_style().font());
-        auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
 
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
         if (style().text_decoration_line() == CSS::TextDecorationLine::Underline)
-            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
+            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), style().color());
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
@@ -95,7 +92,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (text_transform == CSS::TextTransform::Lowercase)
             text = m_text_for_rendering.to_lowercase();
 
-        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, color);
+        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, style().color());
 
         auto selection_rect = fragment.selection_rect(specified_style().font());
         if (!selection_rect.is_empty()) {
@@ -133,8 +130,7 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     float cursor_height = fragment_rect.height();
     Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
 
-    auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
-    context.painter().draw_rect(cursor_rect, color);
+    context.painter().draw_rect(cursor_rect, style().color());
 }
 
 template<typename Callback>
