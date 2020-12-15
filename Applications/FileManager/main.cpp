@@ -655,21 +655,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
                 breadcrumb_bar.set_selected_segment(breadcrumb_bar.segment_count() - 1);
 
-                breadcrumb_bar.on_segment_click = [&directory_view, lexical_path](size_t segment_index) {
-                    if (segment_index == 0) {
-                        directory_view.open("/");
-                        return;
-                    }
-                    size_t part_index = segment_index - 1;
-                    ASSERT(part_index < lexical_path.parts().size());
-
-                    StringBuilder builder;
-                    for (size_t i = 0; i <= part_index; ++i) {
-                        builder.append('/');
-                        builder.append(lexical_path.parts()[i]);
-                    }
-
-                    directory_view.open(builder.string_view());
+                breadcrumb_bar.on_segment_click = [&](size_t segment_index) {
+                    directory_view.open(breadcrumb_bar.segment_data(segment_index));
                 };
             }
         }
