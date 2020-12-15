@@ -220,6 +220,7 @@ void Element::recompute_style()
     if (diff == StyleDifference::None)
         return;
     layout_node()->set_specified_style(*style);
+    layout_node()->apply_style(*style);
     if (diff == StyleDifference::NeedsRelayout) {
         document().force_layout();
         return;
