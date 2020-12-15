@@ -1,0 +1,83 @@
+diff -ru make-4.3-clean/build-aux/config.sub make-4.3/build-aux/config.sub
+--- make-4.3-clean/build-aux/config.sub	2019-09-15 20:23:28.000000000 +0200
++++ make-4.3/build-aux/config.sub	2020-12-15 00:51:50.738132015 +0100
+@@ -1343,7 +1343,7 @@
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
+ 	     | amigaos* | amigados* | msdos* | newsos* | unicos* | aof* \
+-	     | aos* | aros* | cloudabi* | sortix* | twizzler* \
++	     | aos* | aros* | cloudabi* | sortix* | twizzler* | serenity* \
+ 	     | nindy* | vxsim* | vxworks* | ebmon* | hms* | mvs* \
+ 	     | clix* | riscos* | uniplus* | iris* | isc* | rtu* | xenix* \
+ 	     | knetbsd* | mirbsd* | netbsd* \
+diff -ru make-4.3-clean/lib/getdtablesize.c make-4.3/lib/getdtablesize.c
+--- make-4.3-clean/lib/getdtablesize.c	2020-01-19 21:34:01.000000000 +0100
++++ make-4.3/lib/getdtablesize.c	2020-12-15 00:53:49.661168383 +0100
+@@ -20,6 +20,10 @@
+ /* Specification.  */
+ #include <unistd.h>
+ 
++#ifdef __serenity__
++# include <sys/select.h>
++#endif
++
+ #if defined _WIN32 && ! defined __CYGWIN__
+ 
+ # include <stdio.h>
+@@ -109,6 +113,9 @@
+ int
+ getdtablesize (void)
+ {
++#ifdef __serenity__
++  return FD_SETSIZE;
++#else
+   struct rlimit lim;
+ 
+   if (getrlimit (RLIMIT_NOFILE, &lim) == 0
+@@ -119,6 +126,7 @@
+     return lim.rlim_cur;
+ 
+   return INT_MAX;
++#endif
+ }
+ 
+ #endif
+diff -ru make-4.3-clean/lib/getprogname.c make-4.3/lib/getprogname.c
+--- make-4.3-clean/lib/getprogname.c	2020-01-19 21:34:01.000000000 +0100
++++ make-4.3/lib/getprogname.c	2020-12-15 00:51:50.738132015 +0100
+@@ -51,6 +51,10 @@
+ # include <sys/procfs.h>
+ #endif
+ 
++#ifdef __serenity__
++# include <unistd.h>
++#endif
++
+ #include "dirname.h"
+ 
+ #ifndef HAVE_GETPROGNAME             /* not Mac OS X, FreeBSD, NetBSD, OpenBSD >= 5.4, Cygwin */
+@@ -245,6 +249,12 @@
+         }
+     }
+   return NULL;
++# elif defined __serenity__
++  char* buffer = malloc(1024);
++  if (get_process_name(buffer, 1024) < 0)
++      return NULL;
++  return buffer;
++
+ # else
+ #  error "getprogname module not ported to this OS"
+ # endif
+diff -ru make-4.3-clean/src/arscan.c make-4.3/src/arscan.c
+--- make-4.3-clean/src/arscan.c	2020-01-03 08:11:27.000000000 +0100
++++ make-4.3/src/arscan.c	2020-12-15 00:51:50.738132015 +0100
+@@ -331,7 +331,7 @@
+ #endif
+ 
+ #ifndef WINDOWS32
+-# if !defined (__ANDROID__) && !defined (__BEOS__)
++# if !defined (__ANDROID__) && !defined (__BEOS__) && !defined(__serenity__)
+ #  include <ar.h>
+ # else
+    /* These platforms don't have <ar.h> but have archives in the same format
