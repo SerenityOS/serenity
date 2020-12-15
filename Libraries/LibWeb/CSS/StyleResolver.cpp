@@ -382,7 +382,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
-        if (value.to_string() == "none") {
+        if (value.is_identifier() && static_cast<const IdentifierStyleValue&>(value).id() == CSS::ValueID::None) {
             style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(Color::Transparent));
             return;
         }
