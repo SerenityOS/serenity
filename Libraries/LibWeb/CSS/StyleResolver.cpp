@@ -146,7 +146,7 @@ bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
 
         // FIXME: This property is not supposed to be inherited, but we currently
         //        rely on inheritance to propagate decorations into line boxes.
-        inherited_properties.set(CSS::PropertyID::TextDecoration);
+        inherited_properties.set(CSS::PropertyID::TextDecorationLine);
     }
     return inherited_properties.contains(property_id);
 }
