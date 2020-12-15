@@ -102,7 +102,6 @@ void CoreDump::write_elf_header()
     elf_file_header.e_ident[EI_PAD + 4] = 0;
     elf_file_header.e_ident[EI_PAD + 5] = 0;
     elf_file_header.e_ident[EI_PAD + 6] = 0;
-    elf_file_header.e_ident[EI_NIDENT] = 16;
     elf_file_header.e_type = ET_CORE;
     elf_file_header.e_machine = EM_386;
     elf_file_header.e_version = 1;
