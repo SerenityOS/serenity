@@ -409,4 +409,25 @@ CSS::Display StyleProperties::display() const
     }
 }
 
+Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
+{
+    auto value = property(CSS::PropertyID::TextDecorationLine);
+    if (!value.has_value() || !value.value()->is_identifier())
+        return {};
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::None:
+        return CSS::TextDecorationLine::None;
+    case CSS::ValueID::Underline:
+        return CSS::TextDecorationLine::Underline;
+    case CSS::ValueID::Overline:
+        return CSS::TextDecorationLine::Overline;
+    case CSS::ValueID::LineThrough:
+        return CSS::TextDecorationLine::LineThrough;
+    case CSS::ValueID::Blink:
+        return CSS::TextDecorationLine::Blink;
+    default:
+        return {};
+    }
+}
+
 }
