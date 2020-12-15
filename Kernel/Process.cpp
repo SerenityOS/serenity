@@ -588,7 +588,7 @@ void Process::finalize()
 #endif
 
     if (is_profiling()) {
-        auto coredump = CoreDump::create(*this, LexicalPath { String::format("/tmp/profiler_coredumps/%d", pid().value()) });
+        auto coredump = CoreDump::create(*this, String::formatted("/tmp/profiler_coredumps/{}", pid().value()));
         if (coredump) {
             coredump->write();
         } else {
@@ -598,8 +598,8 @@ void Process::finalize()
     if (m_should_dump_core) {
         dbgln("Generating coredump for pid: {}", m_pid.value());
 
-        auto coredump_path = String::format("/tmp/coredump/%s_%d_%u", name().characters(), m_pid.value(), RTC::now());
-        auto coredump = CoreDump::create(*this, LexicalPath { coredump_path });
+        auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
+        auto coredump = CoreDump::create(*this, coredump_path);
         if (coredump) {
             coredump->write();
         } else {

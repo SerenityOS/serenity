@@ -39,16 +39,14 @@ class Process;
 
 class CoreDump {
 public:
-    static OwnPtr<CoreDump> create(Process&, const LexicalPath& output_path);
+    static OwnPtr<CoreDump> create(Process&, const String& output_path);
 
     ~CoreDump();
     void write();
 
-    // Has to be public for OwnPtr::make
-    CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
-
 private:
-    static RefPtr<FileDescription> create_target_file(const Process&, const LexicalPath& output_path);
+    CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
+    static RefPtr<FileDescription> create_target_file(const Process&, const String& output_path);
 
     void write_elf_header();
     void write_program_headers(size_t notes_size);
