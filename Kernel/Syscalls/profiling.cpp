@@ -60,7 +60,7 @@ int Process::sys$profiling_disable(pid_t pid)
     // We explicitly unlock here because we can't hold the lock when writing the coredump VFS
     lock.unlock();
 
-    auto coredump = CoreDump::create(*process, String::formatted("/tmp/profiler_coredumps/%d", pid));
+    auto coredump = CoreDump::create(*process, String::formatted("/tmp/profiler_coredumps/{}", pid));
     coredump->write();
     return 0;
 }

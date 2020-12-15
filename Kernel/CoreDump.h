@@ -59,7 +59,7 @@ private:
 
     Process& m_process;
     NonnullRefPtr<FileDescription> m_fd;
-    size_t m_num_program_headers;
+    const size_t m_num_program_headers;
 };
 
 }
