@@ -138,6 +138,7 @@ if (BUILD_LAGOM)
                 COMMAND shell_lagom "${TEST_PATH}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
+            set_tests_properties("Shell-${TEST_NAME}" PROPERTIES TIMEOUT 10)
         endforeach()
     endif()
 endif()
