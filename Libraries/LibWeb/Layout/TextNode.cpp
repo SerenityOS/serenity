@@ -89,10 +89,10 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
-        auto text_transform = specified_style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
-        if (text_transform == "uppercase")
+        auto text_transform = style().text_transform();
+        if (text_transform == CSS::TextTransform::Uppercase)
             text = m_text_for_rendering.to_uppercase();
-        if (text_transform == "lowercase")
+        if (text_transform == CSS::TextTransform::Lowercase)
             text = m_text_for_rendering.to_lowercase();
 
         painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, color);

@@ -430,4 +430,27 @@ Optional<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
     }
 }
 
+Optional<CSS::TextTransform> StyleProperties::text_transform() const
+{
+    auto value = property(CSS::PropertyID::TextTransform);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::None:
+        return CSS::TextTransform::None;
+    case CSS::ValueID::Lowercase:
+        return CSS::TextTransform::Lowercase;
+    case CSS::ValueID::Uppercase:
+        return CSS::TextTransform::Uppercase;
+    case CSS::ValueID::Capitalize:
+        return CSS::TextTransform::Capitalize;
+    case CSS::ValueID::FullWidth:
+        return CSS::TextTransform::FullWidth;
+    case CSS::ValueID::FullSizeKana:
+        return CSS::TextTransform::FullSizeKana;
+    default:
+        return {};
+    }
+}
+
 }
