@@ -156,6 +156,10 @@ enum class ValueID {
     Lowercase,
     FullWidth,
     FullSizeKana,
+    Disc,
+    Circle,
+    Square,
+    Decimal,
 };
 
 enum class Position {
@@ -237,6 +241,14 @@ enum class LineStyle {
     Ridge,
     Inset,
     Outset,
+};
+
+enum class ListStyleType {
+    None,
+    Disc,
+    Circle,
+    Square,
+    Decimal,
 };
 
 class StyleValue : public RefCounted<StyleValue> {

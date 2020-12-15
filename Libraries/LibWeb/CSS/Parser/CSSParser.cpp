@@ -464,6 +464,14 @@ static Optional<CSS::ValueID> value_id_from_string(const String& string)
         return CSS::ValueID::FullWidth;
     if (string.equals_ignoring_case("full-size-kana"))
         return CSS::ValueID::FullSizeKana;
+    if (string.equals_ignoring_case("disc"))
+        return CSS::ValueID::Disc;
+    if (string.equals_ignoring_case("circle"))
+        return CSS::ValueID::Circle;
+    if (string.equals_ignoring_case("square"))
+        return CSS::ValueID::Square;
+    if (string.equals_ignoring_case("decimal"))
+        return CSS::ValueID::Decimal;
     if (string.starts_with("-libweb-palette-", CaseSensitivity::CaseInsensitive))
         return value_id_for_palette_string(string.substring_view(16, string.length() - 16));
     return {};

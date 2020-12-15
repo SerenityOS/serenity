@@ -45,7 +45,7 @@ void ListItemBox::layout_marker()
         m_marker = nullptr;
     }
 
-    if (specified_style().string_or_fallback(CSS::PropertyID::ListStyleType, "disc") == "none")
+    if (style().list_style_type() == CSS::ListStyleType::None)
         return;
 
     if (!m_marker) {

@@ -43,6 +43,7 @@ public:
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
+    static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
 };
 
 struct BorderData {
@@ -81,6 +82,8 @@ public:
     Color color() const { return m_color; }
     Color background_color() const { return m_background_color; }
 
+    CSS::ListStyleType list_style_type() const { return m_list_style_type; }
+
 protected:
     CSS::Float m_float { InitialValues::float_() };
     CSS::Clear m_clear { InitialValues::clear() };
@@ -105,6 +108,7 @@ protected:
     BorderData m_border_bottom;
     Color m_color { InitialValues::color() };
     Color m_background_color { InitialValues::background_color() };
+    CSS::ListStyleType m_list_style_type { InitialValues::list_style_type() };
 };
 
 class ImmutableLayoutStyle final : public LayoutStyle {
@@ -131,6 +135,7 @@ public:
     void set_offset(const CSS::LengthBox& offset) { m_offset = offset; }
     void set_margin(const CSS::LengthBox& margin) { m_margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_padding = padding; }
+    void set_list_style_type(CSS::ListStyleType value) { m_list_style_type = value; }
     BorderData& border_left() { return m_border_left; }
     BorderData& border_top() { return m_border_top; }
     BorderData& border_right() { return m_border_right; }

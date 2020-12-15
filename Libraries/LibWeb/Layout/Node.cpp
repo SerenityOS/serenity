@@ -247,6 +247,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_transform.has_value())
         style.set_text_transform(text_transform.value());
 
+    if (auto list_style_type = specified_style.list_style_type(); list_style_type.has_value())
+        style.set_list_style_type(list_style_type.value());
+
     style.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, document(), Color::Transparent));
     style.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
 

@@ -68,6 +68,7 @@ public:
     Optional<CSS::LineStyle> line_style(CSS::PropertyID) const;
     Optional<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextTransform> text_transform() const;
+    Optional<CSS::ListStyleType> list_style_type() const;
 
     const Gfx::Font& font() const
     {
