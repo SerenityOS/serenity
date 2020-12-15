@@ -40,12 +40,12 @@
 
 namespace Kernel {
 
-OwnPtr<CoreDump> CoreDump::create(Process& process, const LexicalPath& output_path)
+OwnPtr<CoreDump> CoreDump::create(Process& process, const String& output_path)
 {
     auto fd = create_target_file(process, output_path);
     if (!fd)
         return nullptr;
-    return make<CoreDump>(process, fd.release_nonnull());
+    return adopt_own(*new CoreDump(process, fd.release_nonnull()));
 }
 
 CoreDump::CoreDump(Process& process, NonnullRefPtr<FileDescription>&& fd)
@@ -59,9 +59,10 @@ CoreDump::~CoreDump()
 {
 }
 
-RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const LexicalPath& output_path)
+RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
-    auto output_directory = output_path.dirname();
+    LexicalPath lexical_path(output_path);
+    auto output_directory = lexical_path.dirname();
     if (VFS::the().open_directory(output_directory, VFS::the().root_custody()).is_error()) {
         auto res = VFS::the().mkdir(output_directory, 0777, VFS::the().root_custody());
         if (res.is_error())
@@ -71,7 +72,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
     if (tmp_dir.is_error())
         return nullptr;
     auto fd_or_error = VFS::the().open(
-        output_path.basename(),
+        lexical_path.basename(),
         O_CREAT | O_WRONLY | O_EXCL,
         0, // We will enable reading from userspace when we finish generating the coredump file
         *tmp_dir.value(),
