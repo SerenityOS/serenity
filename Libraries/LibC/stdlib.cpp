@@ -289,6 +289,16 @@ int unsetenv(const char* name)
     return 0;
 }
 
+int clearenv()
+{
+    size_t environ_size = 0;
+    for (; environ[environ_size]; ++environ_size) {
+        environ[environ_size] = NULL;
+    }
+    *environ = NULL;
+    return 0;
+}
+
 int setenv(const char* name, const char* value, int overwrite)
 {
     if (!overwrite && getenv(name))
