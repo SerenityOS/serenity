@@ -45,6 +45,25 @@ Socket::Socket(Type type, Object* parent)
     : IODevice(parent)
     , m_type(type)
 {
+    register_property(
+        "source_address", [this] { return m_source_address.to_string(); },
+        [](auto&) { return false; });
+
+    register_property(
+        "destination_address", [this] { return m_destination_address.to_string(); },
+        [](auto&) { return false; });
+
+    register_property(
+        "source_port", [this] { return m_source_port; },
+        [](auto&) { return false; });
+
+    register_property(
+        "destination_port", [this] { return m_destination_port; },
+        [](auto&) { return false; });
+
+    register_property(
+        "connected", [this] { return m_connected; },
+        [](auto&) { return false; });
 }
 
 Socket::~Socket()
