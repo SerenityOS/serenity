@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     for (int idx = 1; idx < argc; ++idx) {
         if (idx == 1) {
             if (StringView { argv[idx] } == "-i" || StringView { argv[idx] } == "--ignore-environment") {
-                *environ = NULL;
+                clearenv();
                 continue;
             }
         }

@@ -47,6 +47,7 @@ __attribute__((alloc_size(2))) void* realloc(void* ptr, size_t);
 char* getenv(const char* name);
 int putenv(char*);
 int unsetenv(const char*);
+int clearenv(void);
 int setenv(const char* name, const char* value, int overwrite);
 int atoi(const char*);
 long atol(const char*);
