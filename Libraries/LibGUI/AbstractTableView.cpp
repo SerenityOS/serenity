@@ -41,6 +41,7 @@ namespace GUI {
 
 AbstractTableView::AbstractTableView()
 {
+    set_selection_behavior(SelectionBehavior::SelectRows);
     m_corner_button = add<Button>();
     m_corner_button->move_to_back();
     m_corner_button->set_background_role(Gfx::ColorRole::ThreedShadow1);

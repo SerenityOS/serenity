@@ -51,9 +51,6 @@ public:
     GridStyle grid_style() const { return m_grid_style; }
     void set_grid_style(GridStyle);
 
-    CursorStyle cursor_style() const { return m_cursor_style; }
-    void set_cursor_style(CursorStyle);
-
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
 protected:
@@ -64,7 +61,6 @@ protected:
 
 private:
     GridStyle m_grid_style { GridStyle::None };
-    CursorStyle m_cursor_style { CursorStyle::Row };
 };
 
 }

@@ -148,7 +148,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
     m_table_view = add<InfinitelyScrollableTableView>();
     m_table_view->set_grid_style(GUI::TableView::GridStyle::Both);
-    m_table_view->set_cursor_style(GUI::TableView::CursorStyle::Item);
+    m_table_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectItems);
     m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed | GUI::AbstractView::AnyKeyPressed | GUI::AbstractView::DoubleClicked);
     m_table_view->set_tab_key_navigation_enabled(true);
     m_table_view->row_header().set_visible(true);

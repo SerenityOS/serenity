@@ -149,13 +149,13 @@ void TableView::paint_event(PaintEvent& event)
             if (m_grid_style == GridStyle::Vertical || m_grid_style == GridStyle::Both)
                 painter.draw_line(cell_rect_for_fill.top_right(), cell_rect_for_fill.bottom_right(), palette().ruler());
 
-            if (m_cursor_style == CursorStyle::Item && cell_index == cursor_index())
+            if (selection_behavior() == SelectionBehavior::SelectItems && cell_index == cursor_index())
                 painter.draw_rect(cell_rect_for_fill, palette().text_cursor());
 
             x += column_width + horizontal_padding() * 2;
         }
 
-        if (is_focused() && cursor_style() == CursorStyle::Row && row_index == cursor_index().row()) {
+        if (is_focused() && selection_behavior() == SelectionBehavior::SelectRows && row_index == cursor_index().row()) {
             painter.draw_rect(row_rect, widget_background_color);
             painter.draw_focus_rect(row_rect, palette().focus_outline());
         }
@@ -241,14 +241,6 @@ void TableView::set_grid_style(GridStyle style)
     if (m_grid_style == style)
         return;
     m_grid_style = style;
-    update();
-}
-
-void TableView::set_cursor_style(CursorStyle style)
-{
-    if (m_cursor_style == style)
-        return;
-    m_cursor_style = style;
     update();
 }
 
