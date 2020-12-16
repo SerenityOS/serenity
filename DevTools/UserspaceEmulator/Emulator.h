@@ -105,7 +105,9 @@ private:
     u32 virt$unveil(u32);
     u32 virt$pledge(u32);
     uid_t virt$getuid();
+    uid_t virt$geteuid();
     gid_t virt$getgid();
+    gid_t virt$getegid();
     int virt$setuid(uid_t);
     int virt$setgid(gid_t);
     u32 virt$read(int, FlatPtr, ssize_t);
@@ -163,6 +165,7 @@ private:
     int virt$watch_file(FlatPtr, size_t);
     int virt$readlink(FlatPtr);
     u32 virt$allocate_tls(size_t);
+    int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$beep();
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
