@@ -620,7 +620,9 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     icb.for_each_child_of_type<Box>([&](auto& child) {
         lowest_bottom = max(lowest_bottom, child.absolute_rect().bottom());
     });
-    icb.set_height(lowest_bottom);
+
+    // FIXME: This is a hack and should be managed by an overflow mechanism.
+    icb.set_height(max(static_cast<float>(viewport_rect.height()), lowest_bottom));
 
     // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
     //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
