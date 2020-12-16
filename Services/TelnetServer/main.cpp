@@ -31,11 +31,11 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/TCPSocket.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -105,25 +105,21 @@ static void run_command(int ptm_fd, String command)
 
 int main(int argc, char** argv)
 {
+    int port = 23;
+    const char* command = "";
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(port, "Port to listen on", nullptr, 'p', "port");
+    args_parser.add_option(command, "Program to run on connection", nullptr, 'c', "command");
+    args_parser.parse(argc, argv);
+
+    if ((u16)port != port) {
+        warnln("Invalid port number: {}", port);
+        exit(1);
+    }
+
     Core::EventLoop event_loop;
     auto server = Core::TCPServer::construct();
-
-    int opt;
-    u16 port = 23;
-    const char* command = "";
-    while ((opt = getopt(argc, argv, "p:c:")) != -1) {
-        switch (opt) {
-        case 'p':
-            port = atoi(optarg);
-            break;
-        case 'c':
-            command = optarg;
-            break;
-        default:
-            fprintf(stderr, "Usage: %s [-p port] [-c command]", argv[0]);
-            exit(1);
-        }
-    }
 
     if (!server->listen({}, port)) {
         warnln("Listening on 0.0.0.0:{} failed", port);
