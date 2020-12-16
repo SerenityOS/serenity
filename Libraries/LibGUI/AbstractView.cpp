@@ -693,7 +693,12 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
         },
             text_rect, item_text, font, alignment, elision);
     } else {
-        painter.draw_text(text_rect, item_text, font, alignment, text_color, elision);
+        if (m_draw_item_text_with_shadow) {
+            painter.draw_text(text_rect.translated(1, 1), item_text, font, alignment, Color::Black, elision);
+            painter.draw_text(text_rect, item_text, font, alignment, Color::White, elision);
+        } else {
+            painter.draw_text(text_rect, item_text, font, alignment, text_color, elision);
+        }
     }
 }
 
