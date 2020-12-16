@@ -606,7 +606,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
                 fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
-            return IterationDecision::Continue;
+            return IterationDecision::Break;
         }
         auto& rewiring = rewiring_result.value();
 
