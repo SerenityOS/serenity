@@ -459,8 +459,8 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
         item_data.text_rect.set_width(unwrapped_text_width);
         item_data.text_rect.inflate(6, 4);
         item_data.text_rect.center_horizontally_within(item_rect);
-        item_data.text_rect.intersect(item_rect);
     }
+    item_data.text_rect.intersect(item_rect);
     item_data.text_offset_y = item_data.text_rect.y() - item_rect.y();
 }
 
@@ -494,8 +494,7 @@ void IconView::paint_event(PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    auto translation = painter.translation().translated(-relative_position().x(), -relative_position().y());
-    for_each_item_intersecting_rect(painter.clip_rect().translated(-translation.x(), -translation.y()), [&](auto& item_data) -> IterationDecision {
+    for_each_item_intersecting_rect(to_content_rect(event.rect()), [&](auto& item_data) -> IterationDecision {
         Color background_color;
         if (item_data.selected) {
             background_color = is_focused() ? palette().selection() : palette().inactive_selection();
@@ -523,11 +522,10 @@ void IconView::paint_event(PaintEvent& event)
 
         auto font = font_for_index(item_data.index);
 
-        Gfx::IntRect text_rect = item_data.text_rect;
-        auto icon_translation = translation.y() + vertical_scrollbar().value() - 12;
-        text_rect.set_height(text_rect.height() > icon_translation ? icon_translation : text_rect.height());
+        const auto& text_rect = item_data.text_rect;
 
         painter.fill_rect(text_rect, background_color);
+
         if (is_focused() && item_data.index == cursor_index()) {
             painter.draw_rect(text_rect, widget_background_color);
             painter.draw_focus_rect(text_rect, palette().focus_outline());
@@ -537,10 +535,10 @@ void IconView::paint_event(PaintEvent& event)
             // Item text would not fit in the item text rect, let's break it up into lines..
 
             const auto& lines = item_data.wrapped_text_lines;
-            size_t number_of_text_lines = min((size_t)icon_translation / font->glyph_height(), lines.size());
+            size_t number_of_text_lines = min((size_t)text_rect.height() / font->glyph_height(), lines.size());
             for (size_t line_index = 0; line_index < number_of_text_lines; ++line_index) {
                 Gfx::IntRect line_rect;
-                line_rect.set_width(item_data.text_rect.width());
+                line_rect.set_width(text_rect.width());
                 line_rect.set_height(font->glyph_height());
                 line_rect.center_horizontally_within(item_data.text_rect);
                 line_rect.set_y(2 + item_data.text_rect.y() + line_index * font->glyph_height());
