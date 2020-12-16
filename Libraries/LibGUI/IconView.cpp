@@ -499,7 +499,8 @@ void IconView::paint_event(PaintEvent& event)
         if (item_data.selected) {
             background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
-            background_color = widget_background_color;
+            if (fill_with_background_color())
+                background_color = widget_background_color;
         }
 
         auto icon = item_data.index.data(ModelRole::Icon);
