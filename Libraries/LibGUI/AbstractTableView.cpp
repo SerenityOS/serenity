@@ -240,7 +240,16 @@ void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_
 
 void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
 {
-    ScrollableWidget::scroll_into_view(content_rect(index), scroll_horizontally, scroll_vertically);
+    Gfx::IntRect rect;
+    switch (selection_behavior()) {
+    case SelectionBehavior::SelectItems:
+        rect = content_rect(index);
+        break;
+    case SelectionBehavior::SelectRows:
+        rect = row_rect(index.row());
+        break;
+    }
+    ScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
 }
 
 void AbstractTableView::context_menu_event(ContextMenuEvent& event)
