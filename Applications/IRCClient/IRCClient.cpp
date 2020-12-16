@@ -122,10 +122,8 @@ bool IRCClient::connect()
         ASSERT_NOT_REACHED();
 
     m_socket->on_connected = [this] { on_socket_connected(); };
-    bool success = m_socket->connect(m_hostname, m_port);
-    if (!success)
-        return false;
-    return true;
+
+    return m_socket->connect(m_hostname, m_port);
 }
 
 void IRCClient::receive_from_server()
