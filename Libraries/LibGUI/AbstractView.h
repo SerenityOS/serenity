@@ -127,6 +127,8 @@ public:
     bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
     void set_tab_key_navigation_enabled(bool enabled) { m_tab_key_navigation_enabled = enabled; }
 
+    void set_draw_item_text_with_shadow(bool b) { m_draw_item_text_with_shadow = b; }
+
 protected:
     AbstractView();
     virtual ~AbstractView() override;
@@ -191,6 +193,7 @@ private:
     bool m_multi_select { true };
     bool m_tab_key_navigation_enabled { false };
     bool m_is_dragging { false };
+    bool m_draw_item_text_with_shadow { false };
 };
 
 }
