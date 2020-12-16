@@ -170,8 +170,7 @@ PropertiesDialog::~PropertiesDialog() { }
 
 void PropertiesDialog::update()
 {
-    auto bitmap = GUI::FileIconProvider::icon_for_path(m_name, m_mode).bitmap_for_size(32);
-    m_icon->set_bitmap(bitmap);
+    m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
     set_title(String::formatted("{} - Properties", m_name));
 }
 
