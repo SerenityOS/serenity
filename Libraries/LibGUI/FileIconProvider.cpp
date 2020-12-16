@@ -24,11 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <sys/stat.h>
 
@@ -45,6 +48,8 @@ static Icon s_symlink_icon;
 static Icon s_socket_icon;
 static Icon s_executable_icon;
 static Icon s_filetype_image_icon;
+static RefPtr<Gfx::Bitmap> s_symlink_emblem;
+static RefPtr<Gfx::Bitmap> s_symlink_emblem_small;
 
 static HashMap<String, Icon> s_filetype_icons;
 static HashMap<String, Vector<String>> s_filetype_patterns;
@@ -56,6 +61,9 @@ static void initialize_if_needed()
         return;
 
     auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini");
+
+    s_symlink_emblem = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem.png");
+    s_symlink_emblem_small = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem-small.png");
 
     s_hard_disk_icon = Icon::default_icon("hard-disk");
     s_directory_icon = Icon::default_icon("filetype-folder");
@@ -127,8 +135,36 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
             return s_inaccessible_directory_icon;
         return s_directory_icon;
     }
-    if (S_ISLNK(mode))
-        return s_symlink_icon;
+    if (S_ISLNK(mode)) {
+        auto raw_symlink_target = Core::File::read_link(path);
+        if (raw_symlink_target.is_null())
+            return s_symlink_icon;
+
+        String target_path;
+        if (raw_symlink_target.starts_with('/')) {
+            target_path = raw_symlink_target;
+        } else {
+            target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath(path).dirname(), raw_symlink_target));
+        }
+        auto target_icon = icon_for_path(target_path);
+
+        Icon generated_icon;
+        for (auto size : target_icon.sizes()) {
+            auto& emblem = size < 32 ? *s_symlink_emblem_small : *s_symlink_emblem;
+            auto original_bitmap = target_icon.bitmap_for_size(size);
+            ASSERT(original_bitmap);
+            auto generated_bitmap = original_bitmap->clone();
+            if (!generated_bitmap) {
+                dbgln("Failed to clone {}x{} icon for symlink variant", size, size);
+                return s_symlink_icon;
+            }
+            GUI::Painter painter(*generated_bitmap);
+            painter.blit({ size - emblem.width(), size - emblem.height() }, emblem, emblem.rect());
+
+            generated_icon.set_bitmap_for_size(size, move(generated_bitmap));
+        }
+        return generated_icon;
+    }
     if (S_ISSOCK(mode))
         return s_socket_icon;
     if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
