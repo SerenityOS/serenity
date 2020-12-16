@@ -27,6 +27,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
@@ -123,6 +124,32 @@ Icon FileIconProvider::icon_for_path(const String& path)
     return icon_for_path(path, stat.st_mode);
 }
 
+static Icon icon_for_executable(const String& path)
+{
+    // FIXME: This is a huge hack and it would be much nicer if executables had icons embedded in them somehow.
+    static HashMap<String, Icon> app_icon_cache;
+
+    if (app_icon_cache.is_empty()) {
+        Core::DirIterator dt("/res/apps");
+        while (dt.has_next()) {
+            auto app_file = Core::ConfigFile::open(dt.next_full_path());
+            Icon app_icon;
+            auto icon16_path = app_file->read_entry("Icons", "16x16");
+            auto icon32_path = app_file->read_entry("Icons", "32x32");
+            if (auto icon16 = Gfx::Bitmap::load_from_file(icon16_path))
+                app_icon.set_bitmap_for_size(16, move(icon16));
+            if (auto icon32 = Gfx::Bitmap::load_from_file(icon32_path))
+                app_icon.set_bitmap_for_size(32, move(icon32));
+            app_icon_cache.set(app_file->read_entry("App", "Executable"), move(app_icon));
+        }
+    }
+
+    if (auto it = app_icon_cache.find(path); it != app_icon_cache.end())
+        return it->value;
+
+    return s_executable_icon;
+}
+
 Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
 {
     initialize_if_needed();
@@ -167,8 +194,9 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     }
     if (S_ISSOCK(mode))
         return s_socket_icon;
+
     if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-        return s_executable_icon;
+        return icon_for_executable(path);
 
     if (Gfx::Bitmap::is_path_a_supported_image_format(path.view()))
         return s_filetype_image_icon;
