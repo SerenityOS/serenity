@@ -163,6 +163,7 @@ private:
     int virt$watch_file(FlatPtr, size_t);
     int virt$readlink(FlatPtr);
     u32 virt$allocate_tls(size_t);
+    int virt$beep();
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);
