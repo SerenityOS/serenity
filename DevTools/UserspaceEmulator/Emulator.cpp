@@ -408,8 +408,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$unveil(arg1);
     case SC_getuid:
         return virt$getuid();
+    case SC_geteuid:
+        return virt$geteuid();
     case SC_getgid:
         return virt$getgid();
+    case SC_getegid:
+        return virt$getegid();
     case SC_setuid:
         return virt$setuid(arg1);
     case SC_setgid:
@@ -505,6 +509,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$clock_nanosleep(arg1);
     case SC_readlink:
         return virt$readlink(arg1);
+    case SC_ptsname:
+        return virt$ptsname(arg1, arg2, arg3);
     case SC_allocate_tls:
         return virt$allocate_tls(arg1);
     case SC_beep:
@@ -1061,9 +1067,19 @@ uid_t Emulator::virt$getuid()
     return getuid();
 }
 
+uid_t Emulator::virt$geteuid()
+{
+    return geteuid();
+}
+
 gid_t Emulator::virt$getgid()
 {
     return getgid();
+}
+
+gid_t Emulator::virt$getegid()
+{
+    return getegid();
 }
 
 int Emulator::virt$setuid(uid_t uid)
@@ -1688,6 +1704,12 @@ u32 Emulator::virt$allocate_tls(size_t size)
     mmu().add_region(move(tcb_region));
     mmu().set_tls_region(move(tls_region));
     return tls_base;
+}
+
+int Emulator::virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size)
+{
+    auto pts = mmu().copy_buffer_from_vm(buffer, buffer_size);
+    return syscall(SC_ptsname, fd, pts.data(), pts.size());
 }
 
 int Emulator::virt$beep()
