@@ -507,6 +507,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$readlink(arg1);
     case SC_allocate_tls:
         return virt$allocate_tls(arg1);
+    case SC_beep:
+        return virt$beep();
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1686,6 +1688,11 @@ u32 Emulator::virt$allocate_tls(size_t size)
     mmu().add_region(move(tcb_region));
     mmu().set_tls_region(move(tls_region));
     return tls_base;
+}
+
+int Emulator::virt$beep()
+{
+    return syscall(SC_beep);
 }
 
 bool Emulator::find_malloc_symbols(const MmapRegion& libc_text)
