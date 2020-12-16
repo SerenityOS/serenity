@@ -579,7 +579,7 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
             had_accepted_drop = true;
         }
     }
-    if (had_accepted_drop)
+    if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();
 }
 
