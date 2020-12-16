@@ -60,6 +60,11 @@ public:
         ClearIfNotSelected
     };
 
+    enum class SelectionBehavior {
+        SelectItems,
+        SelectRows,
+    };
+
     virtual void move_cursor(CursorMovement, SelectionUpdate) { }
 
     void set_model(RefPtr<Model>);
@@ -87,6 +92,9 @@ public:
 
     unsigned edit_triggers() const { return m_edit_triggers; }
     void set_edit_triggers(unsigned);
+
+    SelectionBehavior selection_behavior() const { return m_selection_behavior; }
+    void set_selection_behavior(SelectionBehavior behavior) { m_selection_behavior = behavior; }
 
     bool is_multi_select() const { return m_multi_select; }
     void set_multi_select(bool);
@@ -188,6 +196,7 @@ private:
     String m_searching;
     RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
+    SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
     bool m_activates_on_selection { false };
     bool m_multi_select { true };
