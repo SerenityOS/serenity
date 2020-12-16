@@ -133,18 +133,22 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         return (void*)-EINVAL;
 
     Region* region = nullptr;
-
-    auto range = allocate_range(VirtualAddress(addr), size, alignment);
-    if (!range.is_valid())
-        return (void*)-ENOMEM;
+    Optional<Range> range;
+    if (map_purgeable || map_anonymous) {
+        range = allocate_range(VirtualAddress(addr), size, alignment);
+        if (!range.value().is_valid())
+            return (void*)-ENOMEM;
+    }
 
     if (map_purgeable) {
+
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(range, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
+        region = allocate_region_with_vmobject(range.value(), vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(range, !name.is_null() ? name : "mmap", prot, false);
+
+        region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, false);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, false);
     } else {
