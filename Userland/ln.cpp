@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <stdio.h>
@@ -44,8 +45,14 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
     args_parser.add_positional_argument(target, "Link target", "target");
-    args_parser.add_positional_argument(path, "Link path", "path");
+    args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    String path_buffer;
+    if (!path) {
+        path_buffer = LexicalPath(target).basename();
+        path = path_buffer.characters();
+    }
 
     if (symbolic) {
         int rc = symlink(target, path);
