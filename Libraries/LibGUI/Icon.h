@@ -41,6 +41,14 @@ public:
     const Gfx::Bitmap* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap>&&);
 
+    Vector<int> sizes() const
+    {
+        Vector<int> sizes;
+        for (auto& it : m_bitmaps)
+            sizes.append(it.key);
+        return sizes;
+    }
+
 private:
     IconImpl() { }
     HashMap<int, RefPtr<Gfx::Bitmap>> m_bitmaps;
@@ -68,6 +76,8 @@ public:
     void set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
 
     const IconImpl& impl() const { return *m_impl; }
+
+    Vector<int> sizes() const { return m_impl->sizes(); }
 
 private:
     NonnullRefPtr<IconImpl> m_impl;
