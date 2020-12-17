@@ -55,7 +55,7 @@ public:
         case Read:
             return "BlockDeviceRequest (read)";
         case Write:
-            return "BlockDeviceRequest (read)";
+            return "BlockDeviceRequest (write)";
         default:
             ASSERT_NOT_REACHED();
         }
