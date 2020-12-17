@@ -210,7 +210,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
             }
             it = prev;
         };
-        if (line_boxes.last().ends_in_whitespace())
+        if (line_boxes.last().is_empty_or_ends_in_whitespace())
             skip_over_whitespace();
         for (; it != utf8_view.end(); ++it) {
             if (!isspace(*it)) {
@@ -246,13 +246,13 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
         auto& chunk = chunks[i];
 
         // Collapse entire fragment into non-existence if previous fragment on line ended in whitespace.
-        if (do_collapse && line_boxes.last().ends_in_whitespace() && chunk.is_all_whitespace)
+        if (do_collapse && line_boxes.last().is_empty_or_ends_in_whitespace() && chunk.is_all_whitespace)
             continue;
 
         float chunk_width;
         bool need_collapse = false;
         if (do_wrap_lines) {
-            need_collapse = do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().ends_in_whitespace();
+            need_collapse = do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace();
 
             if (need_collapse)
                 chunk_width = space_width;
@@ -262,6 +262,9 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
             if (line_boxes.last().width() > 0 && chunk_width > available_width) {
                 containing_block.add_line_box();
                 available_width = context.available_width_at_line(line_boxes.size() - 1);
+
+                if (do_collapse && chunk.is_all_whitespace)
+                    continue;
             }
             if (need_collapse & line_boxes.last().fragments().is_empty())
                 continue;

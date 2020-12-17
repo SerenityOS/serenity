@@ -45,7 +45,7 @@ public:
 
     void trim_trailing_whitespace();
 
-    bool ends_in_whitespace() const;
+    bool is_empty_or_ends_in_whitespace() const;
 
 private:
     friend class BlockBox;
