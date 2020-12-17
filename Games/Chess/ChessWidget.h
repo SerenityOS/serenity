@@ -70,7 +70,7 @@ public:
     bool import_pgn(const StringView& import_path);
     bool export_pgn(const StringView& export_path) const;
 
-    void resign();
+    int resign();
     void flip_board();
     void reset();
 
@@ -95,7 +95,8 @@ public:
 
     void set_engine(RefPtr<Engine> engine) { m_engine = engine; }
 
-    void maybe_input_engine_move();
+    void input_engine_move();
+    bool want_engine_move();
 
     void set_coordinates(bool coordinates) { m_coordinates = coordinates; }
     bool coordinates() const { return m_coordinates; }
