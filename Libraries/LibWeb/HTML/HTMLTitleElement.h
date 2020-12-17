@@ -36,6 +36,9 @@ public:
 
     HTMLTitleElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTitleElement() override;
+
+private:
+    virtual void children_changed() override;
 };
 
 }

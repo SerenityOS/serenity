@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -35,6 +37,13 @@ HTMLTitleElement::HTMLTitleElement(DOM::Document& document, const QualifiedName&
 
 HTMLTitleElement::~HTMLTitleElement()
 {
+}
+
+void HTMLTitleElement::children_changed()
+{
+    HTMLElement::children_changed();
+    if (auto* page = document().page())
+        page->client().page_did_change_title(document().title());
 }
 
 }
