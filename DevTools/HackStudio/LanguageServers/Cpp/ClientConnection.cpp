@@ -69,7 +69,7 @@ public:
     virtual void document_did_set_text() override {};
     virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
 
-    virtual bool is_automatic_indentation_enabled() const override { return true; }
+    virtual bool is_automatic_indentation_enabled() const override { return false; }
     virtual int soft_tab_width() const override { return 4; }
 };
 
