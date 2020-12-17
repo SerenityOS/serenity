@@ -24,15 +24,106 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowManager.h>
 
 namespace WindowServer {
 
-Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::IntPoint& hotspot)
-    : m_bitmap(move(bitmap))
-    , m_hotspot(hotspot)
+CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, const Gfx::IntPoint& default_hotspot)
 {
+    LexicalPath path(cursor_path);
+    if (!path.is_valid()) {
+        dbg() << "Cannot parse invalid cursor path, use default cursor params";
+        return { default_hotspot };
+    }
+    auto file_title = path.title();
+    auto last_dot_in_title = StringView(file_title).find_last_of('.');
+    if (!last_dot_in_title.has_value() || last_dot_in_title.value() == 0) {
+        // No encoded params in filename. Not an error, we'll just use defaults
+        return { default_hotspot };
+    }
+    auto params_str = file_title.substring_view(last_dot_in_title.value() + 1);
+
+    CursorParams params(default_hotspot);
+    for (size_t i = 0; i + 1 < params_str.length();) {
+        auto property = params_str[i++];
+
+        auto value = [&]() -> Optional<size_t> {
+            size_t k = i;
+            while (k < params_str.length()) {
+                auto ch = params_str[k];
+                if (ch < '0' || ch > '9')
+                    break;
+                k++;
+            }
+            if (k == i)
+                return {};
+            auto parsed_number = params_str.substring_view(i, k - i).to_uint();
+            if (!parsed_number.has_value())
+                return {};
+            i = k;
+            return parsed_number.value();
+        }();
+        if (!value.has_value()) {
+            dbg() << "Failed to parse value for property '" << property << "' from parsed cursor path: " << cursor_path;
+            return { default_hotspot };
+        }
+        switch (property) {
+        case 'x':
+            params.m_hotspot.set_x(value.value());
+            params.m_have_hotspot = true;
+            break;
+        case 'y':
+            params.m_hotspot.set_y(value.value());
+            params.m_have_hotspot = true;
+            break;
+        case 'f':
+            if (value.value() > 1)
+                params.m_frames = value.value();
+            break;
+        case 't':
+            if (value.value() >= 100 && value.value() <= 1000)
+                params.m_frame_ms = value.value();
+            else
+                dbg() << "Cursor frame rate outside of valid range (100-1000ms)";
+            break;
+        default:
+            dbg() << "Ignore unknown property '" << property << "' with value " << value.value() << " parsed from cursor path: " << cursor_path;
+            return { default_hotspot };
+        }
+    }
+    return params;
+}
+
+CursorParams CursorParams::constrained(const Gfx::Bitmap& bitmap) const
+{
+    CursorParams params(*this);
+    auto rect = bitmap.rect();
+    if (params.m_frames > 1) {
+        if (rect.width() % params.m_frames == 0) {
+            rect.set_width(rect.width() / (int)params.m_frames);
+        } else {
+            dbg() << "Cannot divide cursor dimensions " << rect << " into " << params.m_frames << " frames";
+            params.m_frames = 1;
+        }
+    }
+    if (params.m_have_hotspot)
+        params.m_hotspot = params.m_hotspot.constrained(rect);
+    else
+        params.m_hotspot = rect.center();
+    return params;
+}
+
+Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const CursorParams& cursor_params)
+    : m_bitmap(move(bitmap))
+    , m_params(cursor_params.constrained(*m_bitmap))
+    , m_rect(m_bitmap->rect())
+{
+    if (m_params.frames() > 1) {
+        ASSERT(m_rect.width() % m_params.frames() == 0);
+        m_rect.set_width(m_rect.width() / m_params.frames());
+    }
 }
 
 Cursor::~Cursor()
@@ -41,12 +132,14 @@ Cursor::~Cursor()
 
 NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap)
 {
-    return adopt(*new Cursor(move(bitmap), bitmap->rect().center()));
+    auto hotspot = bitmap->rect().center();
+    return adopt(*new Cursor(move(bitmap), CursorParams(hotspot)));
 }
 
-NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const Gfx::IntPoint& hotspot)
+NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const StringView& filename)
 {
-    return adopt(*new Cursor(move(bitmap), hotspot));
+    auto default_hotspot = bitmap->rect().center();
+    return adopt(*new Cursor(move(bitmap), CursorParams::parse_from_file_name(filename, default_hotspot)));
 }
 
 RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)

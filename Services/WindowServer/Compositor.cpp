@@ -118,6 +118,12 @@ void Compositor::compose()
         m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "simple"));
     auto& ws = Screen::the();
 
+    {
+        auto& current_cursor = wm.active_cursor();
+        if (m_current_cursor != &current_cursor)
+            change_cursor(&current_cursor);
+    }
+
     if (!m_invalidated_any) {
         // nothing dirtied since the last compose pass.
         return;
@@ -705,17 +711,21 @@ bool Compositor::set_resolution(int desired_width, int desired_height)
 Gfx::IntRect Compositor::current_cursor_rect() const
 {
     auto& wm = WindowManager::the();
-    return { Screen::the().cursor_location().translated(-wm.active_cursor().hotspot()), wm.active_cursor().size() };
+    auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
+    return { Screen::the().cursor_location().translated(-current_cursor.params().hotspot()), current_cursor.size() };
 }
 
-void Compositor::invalidate_cursor()
+void Compositor::invalidate_cursor(bool compose_immediately)
 {
     if (m_invalidated_cursor)
         return;
     m_invalidated_cursor = true;
     m_invalidated_any = true;
 
-    start_compose_async_timer();
+    if (compose_immediately)
+        compose();
+    else
+        start_compose_async_timer();
 }
 
 bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_rect)
@@ -742,6 +752,29 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_rect)
     return true;
 }
 
+void Compositor::change_cursor(const Cursor* cursor)
+{
+    if (m_current_cursor == cursor)
+        return;
+    m_current_cursor = cursor;
+    m_current_cursor_frame = 0;
+    if (m_cursor_timer) {
+        m_cursor_timer->stop();
+        m_cursor_timer = nullptr;
+    }
+    if (cursor && cursor->params().frames() > 1 && cursor->params().frame_ms() != 0) {
+        m_cursor_timer = add<Core::Timer>(
+            cursor->params().frame_ms(), [this, cursor] {
+                if (m_current_cursor != cursor)
+                    return;
+                auto frames = cursor->params().frames();
+                if (++m_current_cursor_frame >= frames)
+                    m_current_cursor_frame = 0;
+                invalidate_cursor(true);
+            });
+    }
+}
+
 void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
 {
     auto& wm = WindowManager::the();
@@ -751,9 +784,10 @@ void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
-    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, wm.active_cursor().rect().translated(cursor_rect.location()).intersected(Screen::the().rect()));
+    auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
+    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(Screen::the().rect()));
     auto& back_painter = *m_back_painter;
-    back_painter.blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
+    back_painter.blit(cursor_rect.location(), current_cursor.bitmap(), current_cursor.source_rect(m_current_cursor_frame));
 
     m_last_cursor_rect = cursor_rect;
 }

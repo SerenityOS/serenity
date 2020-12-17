@@ -65,7 +65,7 @@ public:
     bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
     String wallpaper_path() const { return m_wallpaper_path; }
 
-    void invalidate_cursor();
+    void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
 
     void increment_display_link_count(Badge<ClientConnection>);
@@ -84,6 +84,7 @@ private:
     void start_compose_async_timer();
     void recompute_occlusions();
     bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
+    void change_cursor(const Cursor*);
     void draw_cursor(const Gfx::IntRect&);
     void restore_cursor_back();
     bool draw_geometry_label(Gfx::IntRect&);
@@ -117,6 +118,10 @@ private:
     String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
+
+    const Cursor* m_current_cursor { nullptr };
+    unsigned m_current_cursor_frame { 0 };
+    RefPtr<Core::Timer> m_cursor_timer;
 
     RefPtr<Core::Timer> m_display_link_notify_timer;
     size_t m_display_link_count { 0 };

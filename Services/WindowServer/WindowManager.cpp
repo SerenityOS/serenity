@@ -83,23 +83,14 @@ WindowManager::~WindowManager()
 {
 }
 
-NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name, const Gfx::IntPoint& hotspot)
-{
-    auto path = m_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
-    auto gb = Gfx::Bitmap::load_from_file(path);
-    if (gb)
-        return Cursor::create(*gb, hotspot);
-    return Cursor::create(*Gfx::Bitmap::load_from_file("/res/cursors/arrow.png"));
-}
-
 NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 {
-    auto path = m_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
+    static const auto s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
+    auto path = m_config->read_entry("Cursor", name, s_default_cursor_path);
     auto gb = Gfx::Bitmap::load_from_file(path);
-
     if (gb)
-        return Cursor::create(*gb);
-    return Cursor::create(*Gfx::Bitmap::load_from_file("/res/cursors/arrow.png"));
+        return Cursor::create(*gb, path);
+    return Cursor::create(*Gfx::Bitmap::load_from_file(s_default_cursor_path), s_default_cursor_path);
 }
 
 void WindowManager::reload_config(bool set_screen)
@@ -113,9 +104,9 @@ void WindowManager::reload_config(bool set_screen)
     }
 
     m_hidden_cursor = get_cursor("Hidden");
-    m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
-    m_hand_cursor = get_cursor("Hand", { 8, 4 });
-    m_help_cursor = get_cursor("Help", { 1, 1 });
+    m_arrow_cursor = get_cursor("Arrow");
+    m_hand_cursor = get_cursor("Hand");
+    m_help_cursor = get_cursor("Help");
     m_resize_horizontally_cursor = get_cursor("ResizeH");
     m_resize_vertically_cursor = get_cursor("ResizeV");
     m_resize_diagonally_tlbr_cursor = get_cursor("ResizeDTLBR");
