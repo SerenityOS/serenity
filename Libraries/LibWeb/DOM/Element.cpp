@@ -271,19 +271,48 @@ void Element::set_inner_html(StringView markup)
 
 String Element::inner_html() const
 {
+    auto escape_string = [](const StringView& string, bool attribute_mode) -> String {
+        // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
+        StringBuilder builder;
+        for (auto& ch : string) {
+            if (ch == '&')
+                builder.append("&amp;");
+            // FIXME: also replace U+00A0 NO-BREAK SPACE with &nbsp;
+            else if (ch == '"' && attribute_mode)
+                builder.append("&quot;");
+            else if (ch == '<' && !attribute_mode)
+                builder.append("&lt;");
+            else if (ch == '>' && !attribute_mode)
+                builder.append("&gt;");
+            else
+                builder.append(ch);
+        }
+        return builder.to_string();
+    };
+
     StringBuilder builder;
 
     Function<void(const Node&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_element()) {
+                auto& element = downcast<Element>(*child);
                 builder.append('<');
-                builder.append(downcast<Element>(*child).local_name());
+                builder.append(element.local_name());
+                element.for_each_attribute([&](auto& name, auto& value) {
+                    builder.append(' ');
+                    builder.append(name);
+                    builder.append('=');
+                    builder.append('"');
+                    builder.append(escape_string(value, true));
+                    builder.append('"');
+                });
                 builder.append('>');
 
                 recurse(*child);
 
+                // FIXME: This should be skipped for void elements
                 builder.append("</");
-                builder.append(downcast<Element>(*child).local_name());
+                builder.append(element.local_name());
                 builder.append('>');
             }
             if (child->is_text()) {
