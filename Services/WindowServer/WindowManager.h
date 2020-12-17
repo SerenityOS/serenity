@@ -215,7 +215,6 @@ public:
 
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
-    NonnullRefPtr<Cursor> get_cursor(const String& name, const Gfx::IntPoint& hotspot);
 
     void process_mouse_event(MouseEvent&, Window*& hovered_window);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
