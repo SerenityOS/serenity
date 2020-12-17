@@ -274,7 +274,7 @@ void BlockFormattingContext::compute_height_for_block_level_replaced_element_in_
 
 void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& box)
 {
-    auto& containing_block = context_box();
+    auto& containing_block = *box.containing_block();
     auto& style = box.style();
     auto zero_value = CSS::Length::make_px(0);
 
