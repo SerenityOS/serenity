@@ -139,6 +139,10 @@ int main(int argc, char** argv)
     app_menu.add_separator();
 
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+        if (widget.board().game_result() == Chess::Board::Result::NotFinished) {
+            if (widget.resign() < 0)
+                return;
+        }
         widget.reset();
     }));
     app_menu.add_separator();
@@ -206,7 +210,7 @@ int main(int argc, char** argv)
                 widget.set_engine(nullptr);
             } else {
                 widget.set_engine(Engine::construct(action.text()));
-                widget.maybe_input_engine_move();
+                widget.input_engine_move();
             }
         });
         engines_action_group.add_action(*action);

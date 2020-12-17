@@ -273,7 +273,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
             }
         } else {
-            maybe_input_engine_move();
+            input_engine_move();
         }
     }
 
@@ -372,7 +372,7 @@ void ChessWidget::reset()
     m_board = Chess::Board();
     m_side = (arc4random() % 2) ? Chess::Colour::White : Chess::Colour::Black;
     m_drag_enabled = true;
-    maybe_input_engine_move();
+    input_engine_move();
     update();
 }
 
@@ -391,9 +391,18 @@ void ChessWidget::set_board_theme(const StringView& name)
     }
 }
 
-void ChessWidget::maybe_input_engine_move()
+bool ChessWidget::want_engine_move()
 {
-    if (!m_engine || board().turn() == side())
+    if (!m_engine)
+        return false;
+    if (board().turn() == side())
+        return false;
+    return true;
+}
+
+void ChessWidget::input_engine_move()
+{
+    if (!want_engine_move())
         return;
 
     bool drag_was_enabled = drag_enabled();
@@ -401,6 +410,8 @@ void ChessWidget::maybe_input_engine_move()
         set_drag_enabled(false);
 
     m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](Chess::Move move) {
+        if (!want_engine_move())
+            return;
         set_drag_enabled(drag_was_enabled);
         ASSERT(board().apply_move(move));
         m_playback_move_number = m_board.moves().size();
@@ -614,16 +625,25 @@ bool ChessWidget::export_pgn(const StringView& export_path) const
 
 void ChessWidget::flip_board()
 {
+    if (want_engine_move()) {
+        GUI::MessageBox::show(window(), "You can only flip the board on your turn.", "Flip Board", GUI::MessageBox::Type::Information);
+        return;
+    }
     m_side = Chess::opposing_colour(m_side);
+    input_engine_move();
     update();
 }
 
-void ChessWidget::resign()
+int ChessWidget::resign()
 {
-    if (m_engine && m_board.turn() != m_side) {
+    if (want_engine_move()) {
         GUI::MessageBox::show(window(), "You can only resign on your turn.", "Resign", GUI::MessageBox::Type::Information);
-        return;
+        return -1;
     }
+
+    auto result = GUI::MessageBox::show(window(), "Are you sure you wish to resign?", "Resign", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+    if (result != GUI::MessageBox::ExecYes)
+        return -1;
 
     board().set_resigned(m_board.turn());
 
@@ -631,4 +651,6 @@ void ChessWidget::resign()
     update();
     const String msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+
+    return 0;
 }
