@@ -104,7 +104,11 @@ void Parser::init_fadt()
     klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
     klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
-    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 1) || (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::PS2_8042);
+
+    // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
+    // Later on, we need to make sure that we enumerate the ACPI namespace (AML encoded), instead of just using this value.
+    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 3) || (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::PS2_8042);
+
     m_x86_specific_flags.legacy_devices = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::Legacy_Devices);
     m_x86_specific_flags.msi_not_supported = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::MSI_Not_Supported);
     m_x86_specific_flags.vga_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::VGA_Not_Present);
