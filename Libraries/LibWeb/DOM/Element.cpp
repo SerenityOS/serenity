@@ -316,8 +316,10 @@ String Element::inner_html() const
                 builder.append('>');
             }
             if (child->is_text()) {
-                builder.append(downcast<Text>(*child).data());
+                auto& text = downcast<Text>(*child);
+                builder.append(escape_string(text.data(), false));
             }
+            // FIXME: Also handle Comment, ProcessingInstruction, DocumentType
         }
     };
     recurse(*this);
