@@ -112,6 +112,17 @@ bool TextDocumentLine::ends_in_whitespace() const
     return isspace(code_points()[length() - 1]);
 }
 
+size_t TextDocumentLine::leading_spaces() const
+{
+    size_t count = 0;
+    for (; count < m_text.size(); ++count) {
+        if (m_text[count] != ' ') {
+            break;
+        }
+    }
+    return count;
+}
+
 String TextDocumentLine::to_utf8() const
 {
     StringBuilder builder;
@@ -661,6 +672,52 @@ InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text,
 {
 }
 
+void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
+{
+    const size_t tab_width = client.soft_tab_width();
+    const auto& dest_line = m_document.line(m_range.start().line());
+    const bool should_auto_indent = client.is_automatic_indentation_enabled();
+
+    StringBuilder builder;
+    size_t column = dest_line.length();
+    size_t line_indentation = dest_line.leading_spaces();
+    bool at_start_of_line = line_indentation == column;
+
+    for (auto input_char : m_text) {
+        if (input_char == '\n') {
+            builder.append('\n');
+            column = 0;
+            if (should_auto_indent) {
+                for (; column < line_indentation; ++column) {
+                    builder.append(' ');
+                }
+            }
+            at_start_of_line = true;
+        } else if (input_char == '\t') {
+            size_t next_soft_tab_stop = ((column + tab_width) / tab_width) * tab_width;
+            size_t spaces_to_insert = next_soft_tab_stop - column;
+            for (size_t i = 0; i < spaces_to_insert; ++i) {
+                builder.append(' ');
+            }
+            column = next_soft_tab_stop;
+            if (at_start_of_line) {
+                line_indentation = column;
+            }
+        } else {
+            if (input_char == ' ') {
+                if (at_start_of_line) {
+                    ++line_indentation;
+                }
+            } else {
+                at_start_of_line = false;
+            }
+            builder.append(input_char);
+            ++column;
+        }
+    }
+    m_text = builder.build();
+}
+
 void InsertTextCommand::redo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
@@ -709,60 +766,20 @@ TextPosition TextDocument::insert_at(const TextPosition& position, const StringV
     return cursor;
 }
 
-TextPosition TextDocument::insert_at(const TextPosition& position, u32 code_point, const Client* client)
+TextPosition TextDocument::insert_at(const TextPosition& position, u32 code_point, const Client*)
 {
-    bool automatic_indentation_enabled = client ? client->is_automatic_indentation_enabled() : false;
-    size_t m_soft_tab_width = client ? client->soft_tab_width() : 4;
-
-    bool at_head = position.column() == 0;
-    bool at_tail = position.column() == line(position.line()).length();
     if (code_point == '\n') {
-        if (at_tail || at_head) {
-            String new_line_contents;
-            if (automatic_indentation_enabled && at_tail) {
-                size_t leading_spaces = 0;
-                auto& old_line = lines()[position.line()];
-                for (size_t i = 0; i < old_line.length(); ++i) {
-                    if (old_line.code_points()[i] == ' ')
-                        ++leading_spaces;
-                    else
-                        break;
-                }
-                if (leading_spaces)
-                    new_line_contents = String::repeated(' ', leading_spaces);
-            }
-
-            size_t row = position.line();
-            Vector<u32> line_content;
-            for (size_t i = position.column(); i < line(row).length(); i++)
-                line_content.append(line(row).code_points()[i]);
-            insert_line(position.line() + (at_tail ? 1 : 0), make<TextDocumentLine>(*this, new_line_contents));
-            notify_did_change();
-            return { position.line() + 1, line(position.line() + 1).length() };
-        }
         auto new_line = make<TextDocumentLine>(*this);
         new_line->append(*this, line(position.line()).code_points() + position.column(), line(position.line()).length() - position.column());
-
-        Vector<u32> line_content;
-        for (size_t i = 0; i < new_line->length(); i++)
-            line_content.append(new_line->code_points()[i]);
         line(position.line()).truncate(*this, position.column());
         insert_line(position.line() + 1, move(new_line));
         notify_did_change();
         return { position.line() + 1, 0 };
-    }
-    if (code_point == '\t') {
-        size_t next_soft_tab_stop = ((position.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
-        size_t spaces_to_insert = next_soft_tab_stop - position.column();
-        for (size_t i = 0; i < spaces_to_insert; ++i) {
-            line(position.line()).insert(*this, position.column(), ' ');
-        }
+    } else {
+        line(position.line()).insert(*this, position.column(), code_point);
         notify_did_change();
-        return { position.line(), next_soft_tab_stop };
+        return { position.line(), position.column() + 1 };
     }
-    line(position.line()).insert(*this, position.column(), code_point);
-    notify_did_change();
-    return { position.line(), position.column() + 1 };
 }
 
 void TextDocument::remove(const TextRange& unnormalized_range)
