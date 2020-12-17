@@ -194,6 +194,7 @@ public:
     Optional<size_t> last_non_whitespace_column() const;
     bool ends_in_whitespace() const;
     bool is_empty() const { return length() == 0; }
+    size_t leading_spaces() const;
 
 private:
     // NOTE: This vector is null terminated.
@@ -204,6 +205,7 @@ class TextDocumentUndoCommand : public Command {
 public:
     TextDocumentUndoCommand(TextDocument&);
     virtual ~TextDocumentUndoCommand();
+    virtual void perform_formatting(const TextDocument::Client&) { }
 
     void execute_from(const TextDocument::Client& client)
     {
@@ -220,6 +222,7 @@ protected:
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
     InsertTextCommand(TextDocument&, const String&, const TextPosition&);
+    virtual void perform_formatting(const TextDocument::Client&) override;
     virtual void undo() override;
     virtual void redo() override;
     virtual bool is_insert_text() const override { return true; }

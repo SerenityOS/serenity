@@ -260,6 +260,7 @@ private:
     inline void execute(Args&&... args)
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
+        command->perform_formatting(*this);
         on_edit_action(*command);
         command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
