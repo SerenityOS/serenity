@@ -356,9 +356,9 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& 
         else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
         Rule3:
             auto result = calculate_shrink_to_fit_widths(box);
-            right = solve_for_right();
             auto available_width = solve_for_width();
             width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width), CSS::Length::Type::Px);
+            right = solve_for_right();
         }
 
         // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
