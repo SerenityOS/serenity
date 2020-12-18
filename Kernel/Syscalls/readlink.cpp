@@ -55,7 +55,7 @@ int Process::sys$readlink(Userspace<const Syscall::SC_readlink_params*> user_par
     if (contents.is_error())
         return contents.error();
 
-    auto& link_target = contents.value();
+    auto& link_target = *contents.value();
     auto size_to_copy = min(link_target.size(), params.buffer.size);
     if (!copy_to_user(params.buffer.data, link_target.data(), size_to_copy))
         return -EFAULT;

@@ -928,7 +928,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     if (buffer_or.is_error())
         return buffer_or.error();
 
-    auto buffer = buffer_or.value();
+    auto& buffer = *buffer_or.value();
     auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.data());
 
     while (entry < buffer.end_pointer()) {

@@ -68,7 +68,7 @@ public:
         return const_cast<PerformanceEventBuffer&>(*this).at(index);
     }
 
-    KBuffer to_json(ProcessID, const String& executable_path) const;
+    OwnPtr<KBuffer> to_json(ProcessID, const String& executable_path) const;
 
 private:
     PerformanceEvent& at(size_t index);

@@ -185,7 +185,7 @@ public:
     u16 tag() const { return m_tag; }
 
     Message(Plan9FS&, Type);
-    Message(KBuffer&&);
+    Message(NonnullOwnPtr<KBuffer>&&);
     ~Message();
     Message& operator=(Message&&);
 
@@ -205,7 +205,7 @@ private:
     union {
         KBufferBuilder m_builder;
         struct {
-            KBuffer buffer;
+            NonnullOwnPtr<KBuffer> buffer;
             Decoder decoder;
         } m_built;
     };
@@ -356,8 +356,8 @@ Plan9FS::Message::Message(Plan9FS& fs, Type type)
     *this << size_placeholder << (u8)type << m_tag;
 }
 
-Plan9FS::Message::Message(KBuffer&& buffer)
-    : m_built { buffer, Decoder({ buffer.data(), buffer.size() }) }
+Plan9FS::Message::Message(NonnullOwnPtr<KBuffer>&& buffer)
+    : m_built { move(buffer), Decoder({ buffer->data(), buffer->size() }) }
     , m_have_been_built(true)
 {
     u32 size;
@@ -369,7 +369,7 @@ Plan9FS::Message::Message(KBuffer&& buffer)
 Plan9FS::Message::~Message()
 {
     if (m_have_been_built) {
-        m_built.buffer.~KBuffer();
+        m_built.buffer.~NonnullOwnPtr<KBuffer>();
         m_built.decoder.~Decoder();
     } else {
         m_builder.~KBufferBuilder();
@@ -382,7 +382,7 @@ Plan9FS::Message& Plan9FS::Message::operator=(Message&& message)
     m_type = message.m_type;
 
     if (m_have_been_built) {
-        m_built.buffer.~KBuffer();
+        m_built.buffer.~NonnullOwnPtr<KBuffer>();
         m_built.decoder.~Decoder();
     } else {
         m_builder.~KBufferBuilder();
@@ -390,7 +390,7 @@ Plan9FS::Message& Plan9FS::Message::operator=(Message&& message)
 
     m_have_been_built = message.m_have_been_built;
     if (m_have_been_built) {
-        new (&m_built.buffer) KBuffer(move(message.m_built.buffer));
+        new (&m_built.buffer) NonnullOwnPtr<KBuffer>(move(message.m_built.buffer));
         new (&m_built.decoder) Decoder(move(message.m_built.decoder));
     } else {
         new (&m_builder) KBufferBuilder(move(message.m_builder));
@@ -405,14 +405,17 @@ const KBuffer& Plan9FS::Message::build()
 
     auto tmp_buffer = m_builder.build();
 
+    // FIXME: We should not assume success here.
+    ASSERT(tmp_buffer);
+
     m_have_been_built = true;
     m_builder.~KBufferBuilder();
 
-    new (&m_built.buffer) KBuffer(move(tmp_buffer));
-    new (&m_built.decoder) Decoder({ m_built.buffer.data(), m_built.buffer.size() });
-    u32* size = reinterpret_cast<u32*>(m_built.buffer.data());
-    *size = m_built.buffer.size();
-    return m_built.buffer;
+    new (&m_built.buffer) NonnullOwnPtr<KBuffer>(tmp_buffer.release_nonnull());
+    new (&m_built.decoder) Decoder({ m_built.buffer->data(), m_built.buffer->size() });
+    u32* size = reinterpret_cast<u32*>(m_built.buffer->data());
+    *size = m_built.buffer->size();
+    return *m_built.buffer;
 }
 
 Plan9FS::ReceiveCompletion::ReceiveCompletion(u16 tag)
@@ -578,10 +581,12 @@ KResult Plan9FS::read_and_dispatch_one_message()
     if (result.is_error())
         return result;
 
-    auto buffer = KBuffer::create_with_size(header.size, Region::Access::Read | Region::Access::Write);
+    auto buffer = KBuffer::try_create_with_size(header.size, Region::Access::Read | Region::Access::Write);
+    if (!buffer)
+        return KResult(-ENOMEM);
     // Copy the already read header into the buffer.
-    memcpy(buffer.data(), &header, sizeof(header));
-    result = do_read(buffer.data() + sizeof(header), header.size - sizeof(header));
+    memcpy(buffer->data(), &header, sizeof(header));
+    result = do_read(buffer->data() + sizeof(header), header.size - sizeof(header));
     if (result.is_error())
         return result;
 
@@ -592,7 +597,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
         auto completion = optional_completion.value();
         ScopedSpinLock lock(completion->lock);
         completion->result = KSuccess;
-        completion->message = new Message { move(buffer) };
+        completion->message = new Message { buffer.release_nonnull() };
         completion->completed = true;
 
         m_completions.remove(header.tag);

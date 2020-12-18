@@ -71,7 +71,7 @@ void Inode::sync()
     }
 }
 
-KResultOr<KBuffer> Inode::read_entire(FileDescription* descriptor) const
+KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptor) const
 {
     KBufferBuilder builder;
 
@@ -96,7 +96,10 @@ KResultOr<KBuffer> Inode::read_entire(FileDescription* descriptor) const
         return KResult(nread);
     }
 
-    return builder.build();
+    auto entire_file = builder.build();
+    if (!entire_file)
+        return KResult(-ENOMEM);
+    return entire_file.release_nonnull();
 }
 
 KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
@@ -109,7 +112,7 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
         return contents_or.error();
 
     auto& contents = contents_or.value();
-    auto path = StringView(contents.data(), contents.size());
+    auto path = StringView(contents->data(), contents->size());
     return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
 

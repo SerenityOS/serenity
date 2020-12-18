@@ -84,8 +84,8 @@ class MemoryManager {
     friend class PhysicalRegion;
     friend class Region;
     friend class VMObject;
-    friend Optional<KBuffer> procfs$mm(InodeIdentifier);
-    friend Optional<KBuffer> procfs$memstat(InodeIdentifier);
+    friend OwnPtr<KBuffer> procfs$mm(InodeIdentifier);
+    friend OwnPtr<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:
     static MemoryManager& the();

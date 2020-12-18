@@ -93,7 +93,7 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
     return events[index];
 }
 
-KBuffer PerformanceEventBuffer::to_json(ProcessID pid, const String& executable_path) const
+OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& executable_path) const
 {
     KBufferBuilder builder;
 
