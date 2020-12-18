@@ -377,7 +377,8 @@ void Window::handle_resize_event(ResizeEvent& event)
         m_pending_paint_event_rects.append({ {}, new_size });
     }
     m_rect_when_windowless = { {}, new_size };
-    m_main_widget->set_relative_rect({ {}, new_size });
+    if (m_main_widget)
+        m_main_widget->set_relative_rect({ {}, new_size });
 }
 
 void Window::handle_input_entered_or_left_event(Core::Event& event)
