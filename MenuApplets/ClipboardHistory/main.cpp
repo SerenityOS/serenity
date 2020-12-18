@@ -57,9 +57,12 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("clipboard");
+
     auto main_window = GUI::Window::construct();
     main_window->set_title("Clipboard history");
     main_window->set_rect(670, 65, 325, 500);
+    main_window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& table_view = main_window->set_main_widget<GUI::TableView>();
     auto model = ClipboardHistoryModel::create();
