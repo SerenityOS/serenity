@@ -40,7 +40,7 @@ IOAccess::IOAccess()
 {
     klog() << "PCI: Using I/O instructions for PCI configuration space access";
     enumerate_hardware([&](const Address& address, ID id) {
-        m_physical_ids.append({ address, id });
+        m_physical_ids.append({ address, id, get_capabilities(address) });
     });
 }
 
