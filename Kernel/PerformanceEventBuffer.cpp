@@ -33,7 +33,7 @@
 namespace Kernel {
 
 PerformanceEventBuffer::PerformanceEventBuffer()
-    : m_buffer(KBuffer::create_with_size(4 * MiB))
+    : m_buffer(KBuffer::try_create_with_size(4 * MiB))
 {
 }
 
@@ -89,7 +89,7 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
 PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 {
     ASSERT(index < capacity());
-    auto* events = reinterpret_cast<PerformanceEvent*>(m_buffer.data());
+    auto* events = reinterpret_cast<PerformanceEvent*>(m_buffer->data());
     return events[index];
 }
 
