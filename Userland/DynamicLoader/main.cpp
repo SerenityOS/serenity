@@ -107,6 +107,7 @@ static void perform_self_relocations(auxv_t* auxvp)
     dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
         if (reloc.type() != R_386_RELATIVE)
             return IterationDecision::Continue;
+
         *(u32*)reloc.address().as_ptr() += base_address;
         return IterationDecision::Continue;
     });
@@ -171,10 +172,10 @@ static Vector<String> get_dependencies(const String& name)
 
 static void map_dependencies(const String& name)
 {
-    VERBOSE("mapping dependencies for: %s", name.characters());
+    VERBOSE("mapping dependencies for: %s\n", name.characters());
 
     for (const auto& needed_name : get_dependencies(name)) {
-        VERBOSE("needed library: %s", needed_name.characters());
+        VERBOSE("needed library: %s\n", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
         if (!g_loaders.contains(library_name)) {
@@ -193,7 +194,7 @@ static void allocate_tls()
     }
     if (total_tls_size) {
         [[maybe_unused]] void* tls_address = allocate_tls(total_tls_size);
-        VERBOSE("from userspace, tls_address: %p", tls_address);
+        VERBOSE("from userspace, tls_address: %p\n", tls_address);
     }
     g_total_tls_size = total_tls_size;
 }
@@ -224,17 +225,17 @@ static void initialize_libc()
 
 static void load_elf(const String& name)
 {
-    VERBOSE("load_elf: %s", name.characters());
+    VERBOSE("load_elf: %s\n", name.characters());
     auto loader = g_loaders.get(name).value();
+    VERBOSE("a1\n");
     for (const auto& needed_name : get_dependencies(name)) {
-        VERBOSE("needed library: %s", needed_name.characters());
+        VERBOSE("needed library: %s\n", needed_name.characters());
         String library_name = get_library_name(needed_name);
         if (!g_loaded_objects.contains(library_name)) {
             load_elf(library_name);
         }
     }
 
-    VERBOSE("loading: %s", name.characters());
     auto dynamic_object = loader->load_from_image(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
     ASSERT(!dynamic_object.is_null());
     g_loaded_objects.set(name, dynamic_object.release_nonnull());
@@ -270,7 +271,7 @@ static FlatPtr loader_main(auxv_t* auxvp)
 
     VERBOSE("loaded all dependencies");
     for ([[maybe_unused]] auto& lib : g_loaders) {
-        VERBOSE("%s - tls size: %u, tls offset: %u", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
+        VERBOSE("%s - tls size: %u, tls offset: %u\n", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
     }
 
     allocate_tls();
@@ -278,8 +279,12 @@ static FlatPtr loader_main(auxv_t* auxvp)
     load_elf(main_program_name);
 
     auto main_program_lib = g_loaders.get(main_program_name).value();
-    FlatPtr entry_point = reinterpret_cast<FlatPtr>(main_program_lib->image().entry().as_ptr() + (FlatPtr)main_program_lib->text_segment_load_address().as_ptr());
-    VERBOSE("entry point: %p", entry_point);
+
+    FlatPtr entry_point = reinterpret_cast<FlatPtr>(main_program_lib->image().entry().as_ptr());
+    if (main_program_lib->is_dynamic())
+        entry_point += reinterpret_cast<FlatPtr>(main_program_lib->text_segment_load_address().as_ptr());
+
+    VERBOSE("entry point: %p\n", entry_point);
 
     // This will unmap the temporary memory maps we had for loading the libraries
     clear_temporary_objects_mappings();
@@ -310,9 +315,9 @@ void _start(int argc, char** argv, char** envp)
     }
 
     MainFunction main_function = (MainFunction)(entry);
-    VERBOSE("jumping to main program entry point: %p", main_function);
+    VERBOSE("jumping to main program entry point: %p\n", main_function);
     int rc = main_function(argc, argv, envp);
-    VERBOSE("rc: %d", rc);
+    VERBOSE("rc: %d\n", rc);
     if (g_libc_exit != nullptr) {
         g_libc_exit(rc);
     } else {

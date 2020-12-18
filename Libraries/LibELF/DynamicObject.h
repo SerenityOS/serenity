@@ -105,7 +105,12 @@ public:
         {
             return m_is_undefined;
         }
-        VirtualAddress address() const { return m_dynamic.base_address().offset(value()); }
+        VirtualAddress address() const
+        {
+            if (m_dynamic.elf_is_dynamic())
+                return m_dynamic.base_address().offset(value());
+            return VirtualAddress { value() };
+        }
         const DynamicObject& object() const { return m_dynamic; }
 
     private:
@@ -135,7 +140,10 @@ public:
         {
             return !entry_size() ? 0 : size() / entry_size();
         }
-        VirtualAddress address() const { return m_dynamic.base_address().offset(m_section_offset); }
+        VirtualAddress address() const
+        {
+            return m_dynamic.base_address().offset(m_section_offset);
+        }
 
     protected:
         friend class RelocationSection;
@@ -176,7 +184,12 @@ public:
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
         const Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
-        VirtualAddress address() const { return m_dynamic.base_address().offset(offset()); }
+        VirtualAddress address() const
+        {
+            if (m_dynamic.elf_is_dynamic())
+                return m_dynamic.base_address().offset(offset());
+            return VirtualAddress { offset() };
+        }
 
     private:
         const DynamicObject& m_dynamic;
@@ -274,6 +287,8 @@ public:
     using SymbolLookupFunction = DynamicObject::SymbolLookupResult (*)(const char*);
     SymbolLookupFunction m_global_symbol_lookup_func { nullptr };
 
+    bool elf_is_dynamic() const { return m_is_elf_dynamic; }
+
 private:
     explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
@@ -288,6 +303,7 @@ private:
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;
+    VirtualAddress m_elf_base_address;
 
     unsigned m_symbol_count { 0 };
 
@@ -318,6 +334,7 @@ private:
     size_t m_size_of_relocation_entry { 0 };
     size_t m_size_of_relocation_table { 0 };
     FlatPtr m_relocation_table_offset { 0 };
+    bool m_is_elf_dynamic { false };
 
     // DT_FLAGS
     Elf32_Word m_dt_flags { 0 };
@@ -356,7 +373,6 @@ inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
     auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_dynamic_address.as_ptr());
     for (unsigned i = 0;; ++i) {
-        // dbgprintf("%d\n", i);
         auto&& dyn = DynamicEntry(dyns[i]);
         if (dyn.tag() == DT_NULL)
             break;

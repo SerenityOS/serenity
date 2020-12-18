@@ -144,9 +144,10 @@ void* DynamicLoader::symbol_for_name(const char* name)
 RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t total_tls_size)
 {
 
-    m_valid = m_elf_image.is_valid() && m_elf_image.is_dynamic();
+    m_valid = m_elf_image.is_valid();
 
     if (!m_valid) {
+        dbgprintf("DynamicLoader::load_from_image failed: image is invalid\n");
         return nullptr;
     }
 
@@ -163,8 +164,10 @@ RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t tota
     m_dynamic_object->m_global_symbol_lookup_func = m_global_symbol_lookup_func;
 
     auto rc = load_stage_2(flags, total_tls_size);
-    if (!rc)
+    if (!rc) {
+        dbgprintf("DynamicLoader::load_from_image failed at load_stage_2\n");
         return nullptr;
+    }
     return m_dynamic_object;
 }
 
@@ -235,7 +238,9 @@ void DynamicLoader::load_program_headers()
 
     // Process regions in order: .text, .data, .tls
     auto* region = text_region_ptr;
-    void* text_segment_begin = mmap_with_name(nullptr,
+    void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : region->desired_load_address().as_ptr();
+    void* text_segment_begin = mmap_with_name(
+        requested_load_address,
         region->required_load_size(),
         region->mmap_prot(),
         MAP_PRIVATE,
@@ -245,13 +250,18 @@ void DynamicLoader::load_program_headers()
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
+    ASSERT(requested_load_address == nullptr || requested_load_address == text_segment_begin);
     m_text_segment_size = region->required_load_size();
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
-    m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
+    if (m_elf_image.is_dynamic())
+        m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
+    else
+        m_dynamic_section_address = dynamic_region_desired_vaddr;
 
     region = data_region_ptr;
-    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size,
+    void* data_segment_begin = mmap_with_name(
+        (u8*)text_segment_begin + m_text_segment_size,
         region->required_load_size(),
         region->mmap_prot(),
         MAP_ANONYMOUS | MAP_PRIVATE,
@@ -261,10 +271,14 @@ void DynamicLoader::load_program_headers()
     if (MAP_FAILED == data_segment_begin) {
         ASSERT_NOT_REACHED();
     }
-    VirtualAddress data_segment_actual_addr = region->desired_load_address().offset((FlatPtr)text_segment_begin);
+    VirtualAddress data_segment_actual_addr;
+    if (m_elf_image.is_dynamic()) {
+        data_segment_actual_addr = region->desired_load_address().offset((FlatPtr)text_segment_begin);
+    } else {
+        data_segment_actual_addr = region->desired_load_address();
+    }
     memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
-
-    // FIXME: Initialize the values in the TLS section. Currently, it will always be zeroed.
+    // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
 void DynamicLoader::do_relocations(size_t total_tls_size)
@@ -272,7 +286,12 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
     auto main_relocation_section = m_dynamic_object->relocation_section();
     main_relocation_section.for_each_relocation([&](ELF::DynamicObject::Relocation relocation) {
         VERBOSE("Relocation symbol: %s, type: %d\n", relocation.symbol().name(), relocation.type());
-        u32* patch_ptr = (u32*)(m_dynamic_object->base_address().as_ptr() + relocation.offset());
+        FlatPtr* patch_ptr = nullptr;
+        if (is_dynamic())
+            patch_ptr = (FlatPtr*)(m_dynamic_object->base_address().as_ptr() + relocation.offset());
+        else
+            patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
+
         // VERBOSE("dynamic object name: %s\n", dynamic_object.object_name());
         VERBOSE("dynamic object base address: %p\n", m_dynamic_object->base_address());
         VERBOSE("relocation offset: 0x%x\n", relocation.offset());
@@ -393,13 +412,12 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
             VERBOSE("patching plt reloaction: 0x%x\n", relocation.offset_in_section());
             [[maybe_unused]] auto rc = m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
-            // LAZY-ily bind the PLT slots by just adding the base address to the offsets stored there
-            // This avoids doing symbol lookup, which might be expensive
             ASSERT(relocation.type() == R_386_JMP_SLOT);
 
             u8* relocation_address = relocation.address().as_ptr();
 
-            *(u32*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
+            if (m_elf_image.is_dynamic())
+                *(u32*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
         }
         return IterationDecision::Continue;
     });
