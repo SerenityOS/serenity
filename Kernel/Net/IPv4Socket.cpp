@@ -363,7 +363,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         return bytes_written;
     }
 
-    return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
+    return protocol_receive(ReadonlyBytes { packet.data.value().data(), packet.data.value().size() }, buffer, buffer_length, flags);
 }
 
 KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, timeval& packet_timestamp)
@@ -408,7 +408,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             return false;
         }
         auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(m_scratch_buffer.value().data());
-        auto nreceived_or_error = protocol_receive(packet, scratch_buffer, m_scratch_buffer.value().size(), 0);
+        auto nreceived_or_error = protocol_receive(ReadonlyBytes { packet.data(), packet.size() }, scratch_buffer, m_scratch_buffer.value().size(), 0);
         if (nreceived_or_error.is_error())
             return false;
         ssize_t nwritten = m_receive_buffer.write(scratch_buffer, nreceived_or_error.value());
