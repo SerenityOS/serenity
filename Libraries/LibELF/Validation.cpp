@@ -195,11 +195,6 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
         auto& program_header = program_header_begin[header_index];
         switch (program_header.p_type) {
         case PT_INTERP:
-            if (ET_DYN != elf_header.e_type) {
-                if (verbose)
-                    dbgprintf("Found PT_INTERP header (%zu) in non-DYN ELF object! What? We can't handle this!\n", header_index);
-                return false;
-            }
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
             if (program_header.p_offset + program_header.p_filesz > buffer_size) {
                 if (verbose)
