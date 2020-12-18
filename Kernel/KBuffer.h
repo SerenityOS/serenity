@@ -48,11 +48,19 @@ namespace Kernel {
 
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
-    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name)
+    static RefPtr<KBufferImpl> try_create_with_size(size_t size, u8 access, const char* name)
     {
         auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), name, access, false, false);
-        ASSERT(region);
+        if (!region)
+            return nullptr;
         return adopt(*new KBufferImpl(region.release_nonnull(), size));
+    }
+
+    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name)
+    {
+        auto impl = try_create_with_size(size, access, name);
+        ASSERT(impl);
+        return impl.release_nonnull();
     }
 
     static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access, const char* name)
@@ -90,6 +98,14 @@ private:
 
 class KBuffer {
 public:
+    static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    {
+        auto impl = KBufferImpl::try_create_with_size(size, access, name);
+        if (!impl)
+            return nullptr;
+        return adopt_own(*new KBuffer(impl.release_nonnull()));
+    }
+
     static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
     {
         return KBuffer(KBufferImpl::create_with_size(size, access, name));
