@@ -1036,13 +1036,6 @@ void Editor::refresh_display()
         }
         m_was_resized = false;
     }
-    // Do not call hook on pure cursor movement.
-    if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
-        // Probably just moving around.
-        reposition_cursor();
-        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
-        return;
-    }
     // We might be at the last line, and have more than one line;
     // Refreshing the display will cause the terminal to scroll,
     // so note that fact and bring origin up.
@@ -1052,6 +1045,13 @@ void Editor::refresh_display()
             m_origin_row = 0;
         else
             m_origin_row = m_num_lines - current_num_lines + 1;
+    }
+    // Do not call hook on pure cursor movement.
+    if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
+        // Probably just moving around.
+        reposition_cursor();
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        return;
     }
 
     if (on_display_refresh)
