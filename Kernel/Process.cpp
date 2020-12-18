@@ -470,7 +470,7 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
         dump_backtrace();
     }
     m_termination_signal = signal;
-    set_dump_core(true);
+    set_dump_core(!out_of_memory);
     dump_regions();
     ASSERT(is_user_process());
     die();
