@@ -79,6 +79,7 @@ public:
     void set_global_symbol_lookup_function(DynamicObject::SymbolLookupFunction func) { m_global_symbol_lookup_func = func; }
 
     VirtualAddress text_segment_load_address() const { return m_text_segment_load_address; }
+    bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
 private:
     class ProgramHeaderRegion {
