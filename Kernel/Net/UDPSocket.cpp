@@ -96,16 +96,19 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
         return KResult(-EHOSTUNREACH);
-    auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
-    auto& udp_packet = *(UDPPacket*)(buffer.data());
+    const size_t buffer_size = sizeof(UDPPacket) + data_length;
+
+    alignas(UDPPacket) u8 buffer[buffer_size];
+    new (buffer) UDPPacket;
+
+    auto& udp_packet = *reinterpret_cast<UDPPacket*>(buffer);
     udp_packet.set_source_port(local_port());
     udp_packet.set_destination_port(peer_port());
-    udp_packet.set_length(sizeof(UDPPacket) + data_length);
+    udp_packet.set_length(buffer_size);
     if (!data.read(udp_packet.payload(), data_length))
         return KResult(-EFAULT);
-    klog() << "sending as udp packet from " << routing_decision.adapter->ipv4_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << "!";
-    auto udp_packet_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&udp_packet);
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, udp_packet_buffer, buffer.size(), ttl());
+
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, UserOrKernelBuffer::for_kernel_buffer(buffer), buffer_size, ttl());
     return data_length;
 }
 
