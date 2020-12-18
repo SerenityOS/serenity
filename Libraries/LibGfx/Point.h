@@ -137,7 +137,7 @@ public:
         return *this;
     }
 
-    Point<T> operator*(int factor) const { return { m_x * factor, m_y * factor }; }
+    Point<T> operator*(T factor) const { return { m_x * factor, m_y * factor }; }
 
     Point<T>& operator*=(T factor)
     {
@@ -146,9 +146,9 @@ public:
         return *this;
     }
 
-    Point<T> operator/(int factor) const { return { m_x / factor, m_y / factor }; }
+    Point<T> operator/(T factor) const { return { m_x / factor, m_y / factor }; }
 
-    Point<T>& operator/=(int factor)
+    Point<T>& operator/=(T factor)
     {
         m_x /= factor;
         m_y /= factor;
