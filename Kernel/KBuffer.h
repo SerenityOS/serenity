@@ -56,6 +56,16 @@ public:
         return adopt(*new KBufferImpl(region.release_nonnull(), size));
     }
 
+    static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, u8 access, const char* name)
+    {
+        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(bytes.size()), name, access, false, false);
+        if (!region)
+            return nullptr;
+        if (!region->commit())
+            return nullptr;
+        return adopt(*new KBufferImpl(region.release_nonnull(), bytes.size()));
+    }
+
     static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name)
     {
         auto impl = try_create_with_size(size, access, name);
@@ -101,6 +111,14 @@ public:
     static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name);
+        if (!impl)
+            return nullptr;
+        return adopt_own(*new KBuffer(impl.release_nonnull()));
+    }
+
+    static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    {
+        auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name);
         if (!impl)
             return nullptr;
         return adopt_own(*new KBuffer(impl.release_nonnull()));
