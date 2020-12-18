@@ -557,21 +557,9 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
     add_child(*m_notifier);
 
-    m_notifier->on_ready_to_read = [&] {
-        if (m_was_interrupted) {
-            handle_interrupt_event();
-        }
-
-        handle_read_event();
-
-        if (m_always_refresh)
-            m_refresh_needed = true;
-
-        refresh_display();
-
-        if (m_finish)
-            really_quit_event_loop();
-    };
+    m_notifier->on_ready_to_read = [&] { try_update_once(); };
+    if (!m_incomplete_data.is_empty())
+        deferred_invoke([&](auto&) { try_update_once(); });
 
     if (loop.exec() == Retry)
         return get_line(prompt);
@@ -595,6 +583,23 @@ void Editor::save_to(JsonObject& object)
     display_area.set("top_left_column", m_origin_column);
     display_area.set("line_count", num_lines());
     object.set("used_display_area", move(display_area));
+}
+
+void Editor::try_update_once()
+{
+    if (m_was_interrupted) {
+        handle_interrupt_event();
+    }
+
+    handle_read_event();
+
+    if (m_always_refresh)
+        m_refresh_needed = true;
+
+    refresh_display();
+
+    if (m_finish)
+        really_quit_event_loop();
 }
 
 void Editor::handle_interrupt_event()
@@ -924,6 +929,9 @@ void Editor::handle_read_event()
         for (size_t i = 0; i < consumed_code_points; ++i)
             m_incomplete_data.take_first();
     }
+
+    if (!m_incomplete_data.is_empty() && !m_finish)
+        deferred_invoke([&](auto&) { try_update_once(); });
 }
 
 void Editor::cleanup_suggestions()
