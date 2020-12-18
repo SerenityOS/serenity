@@ -475,8 +475,6 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
             place_block_level_replaced_element_in_normal_flow(child_box, box);
         else if (child_box.is_block())
             place_block_level_non_replaced_element_in_normal_flow(child_box, box);
-        else
-            dbgln("FIXME: BlockFormattingContext::layout_block_level_children() doesn't know how to place a {}", child_box.class_name());
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
