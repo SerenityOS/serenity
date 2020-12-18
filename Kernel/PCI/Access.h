@@ -60,6 +60,8 @@ public:
     virtual u16 read16_field(Address address, u32 field) = 0;
     virtual u32 read32_field(Address address, u32 field) = 0;
 
+    PhysicalID get_physical_id(Address address) const;
+
 protected:
     virtual void enumerate_hardware(Function<void(Address, ID)>) = 0;
 

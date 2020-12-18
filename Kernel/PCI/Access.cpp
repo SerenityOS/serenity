@@ -58,6 +58,19 @@ Access::Access()
     s_access = this;
 }
 
+PhysicalID Access::get_physical_id(Address address) const
+{
+    for (auto physical_id : m_physical_ids) {
+        if (physical_id.address().seg() == address.seg()
+            && physical_id.address().bus() == address.bus()
+            && physical_id.address().slot() == address.slot()
+            && physical_id.address().function() == address.function()) {
+            return physical_id;
+        }
+    }
+    ASSERT_NOT_REACHED();
+}
+
 u8 Access::early_read8_field(Address address, u32 field)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
@@ -135,6 +148,11 @@ Optional<u8> get_capabilities_pointer(Address address)
         return PCI::read8(address, PCI_CAPABILITIES_POINTER);
     }
     return {};
+}
+
+PhysicalID get_physical_id(Address address)
+{
+    return Access::the().get_physical_id(address);
 }
 
 Vector<Capability> get_capabilities(Address address)
