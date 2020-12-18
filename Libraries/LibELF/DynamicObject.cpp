@@ -50,6 +50,14 @@ DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic
     : m_base_address(base_address)
     , m_dynamic_address(dynamic_section_addresss)
 {
+    Elf32_Ehdr* header = (Elf32_Ehdr*)base_address.as_ptr();
+    Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
+    m_elf_base_address = VirtualAddress(pheader->p_vaddr - pheader->p_offset);
+    if (header->e_type == ET_DYN)
+        m_is_elf_dynamic = true;
+    else
+        m_is_elf_dynamic = false;
+
     parse();
 }
 
@@ -82,31 +90,31 @@ void DynamicObject::parse()
     for_each_dynamic_entry([&](const DynamicEntry& entry) {
         switch (entry.tag()) {
         case DT_INIT:
-            m_init_offset = entry.ptr();
+            m_init_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_FINI:
-            m_fini_offset = entry.ptr();
+            m_fini_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_INIT_ARRAY:
-            m_init_array_offset = entry.ptr();
+            m_init_array_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_INIT_ARRAYSZ:
             m_init_array_size = entry.val();
             break;
         case DT_FINI_ARRAY:
-            m_fini_array_offset = entry.ptr();
+            m_fini_array_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_FINI_ARRAYSZ:
             m_fini_array_size = entry.val();
             break;
         case DT_HASH:
-            m_hash_table_offset = entry.ptr();
+            m_hash_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_SYMTAB:
-            m_symbol_table_offset = entry.ptr();
+            m_symbol_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_STRTAB:
-            m_string_table_offset = entry.ptr();
+            m_string_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_STRSZ:
             m_size_of_string_table = entry.val();
@@ -115,7 +123,7 @@ void DynamicObject::parse()
             m_size_of_symbol_table_entry = entry.val();
             break;
         case DT_PLTGOT:
-            m_procedure_linkage_table_offset = entry.ptr();
+            m_procedure_linkage_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_PLTRELSZ:
             m_size_of_plt_relocation_entry_list = entry.val();
@@ -125,11 +133,11 @@ void DynamicObject::parse()
             ASSERT(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
             break;
         case DT_JMPREL:
-            m_plt_relocation_offset_location = entry.ptr();
+            m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_RELA:
         case DT_REL:
-            m_relocation_table_offset = entry.ptr();
+            m_relocation_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_RELASZ:
         case DT_RELSZ:
@@ -171,12 +179,13 @@ void DynamicObject::parse()
 
     if (!m_size_of_relocation_entry) {
         // TODO: FIXME, this shouldn't be hardcoded
-        // The reason we need this here is the for some reason, when there only PLT relocations, the compiler
+        // The reason we need this here is that for some reason, when there only PLT relocations, the compiler
         // doesn't insert a 'PLTRELSZ' entry to the dynamic section
         m_size_of_relocation_entry = sizeof(Elf32_Rel);
     }
 
     auto hash_section_address = hash_section().address().as_ptr();
+    // TODO: consider base address - it might not be zero
     auto num_hash_chains = ((u32*)hash_section_address)[1];
     m_symbol_count = num_hash_chains;
 }
@@ -287,9 +296,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
         if (strcmp(name, symbol.name()) == 0) {
-#ifdef DYNAMIC_LOAD_DEBUG
-            dbgprintf("Returning dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
-#endif
+            VERBOSE("Returning dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
