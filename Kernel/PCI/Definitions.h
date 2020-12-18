@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace Kernel {
@@ -221,6 +222,7 @@ class Access;
 class MMIOAccess;
 class IOAccess;
 class MMIOSegment;
+class DeviceController;
 class Device;
 
 }
