@@ -192,8 +192,10 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 
 int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
-    auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
-    auto& tcp_packet = *(TCPPacket*)(buffer.data());
+    const size_t buffer_size = sizeof(TCPPacket) + payload_size;
+    alignas(TCPPacket) u8 buffer[buffer_size];
+    new (buffer) TCPPacket;
+    auto& tcp_packet = *(TCPPacket*)(buffer);
     ASSERT(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
@@ -218,7 +220,7 @@ int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, siz
 
     if (tcp_packet.has_syn() || payload_size > 0) {
         LOCKER(m_not_acked_lock);
-        m_not_acked.append({ m_sequence_number, move(buffer) });
+        m_not_acked.append({ m_sequence_number, ByteBuffer::copy(buffer, buffer_size) });
         send_outgoing_packets();
         return 0;
     }
@@ -226,15 +228,15 @@ int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, siz
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     ASSERT(!routing_decision.is_zero());
 
-    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
+    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer);
     int err = routing_decision.adapter->send_ipv4(
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        packet_buffer, buffer.size(), ttl());
+        packet_buffer, buffer_size, ttl());
     if (err < 0)
         return err;
 
     m_packets_out++;
-    m_bytes_out += buffer.size();
+    m_bytes_out += buffer_size;
     return 0;
 }
 
