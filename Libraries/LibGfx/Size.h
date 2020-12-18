@@ -98,6 +98,15 @@ public:
         return *this;
     }
 
+    Size<T> operator*(T factor) const { return { m_width * factor, m_height * factor }; }
+
+    Size<T>& operator*=(T factor)
+    {
+        m_width *= factor;
+        m_height *= factor;
+        return *this;
+    }
+
     T primary_size_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? height() : width();
