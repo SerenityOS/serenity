@@ -30,6 +30,7 @@
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 namespace Kernel {
 
@@ -180,20 +181,33 @@ struct ChangeableAddress : public Address {
     }
 };
 
+struct Capability {
+    u8 m_id;
+    u8 m_next_pointer;
+};
+
 class PhysicalID {
 public:
-    PhysicalID(Address address, ID id)
+    PhysicalID(Address address, ID id, Vector<Capability> capabilities)
         : m_address(address)
         , m_id(id)
+        , m_capabilities(capabilities)
     {
+#ifdef PCI_DEBUG
+        for (auto capability : capabilities) {
+            dbg() << address << " has capbility " << capability.m_id;
+        }
+#endif
     }
 
+    Vector<Capability> capabilities() const { return m_capabilities; }
     const ID& id() const { return m_id; }
     const Address& address() const { return m_address; }
 
 private:
     Address m_address;
     ID m_id;
+    Vector<Capability> m_capabilities;
 };
 
 ID get_id(PCI::Address);
@@ -215,8 +229,11 @@ u8 get_class(Address);
 u16 get_subsystem_id(Address);
 u16 get_subsystem_vendor_id(Address);
 size_t get_BAR_space_size(Address, u8);
+Optional<u8> get_capabilities_pointer(Address);
+Vector<Capability> get_capabilities(Address);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
+PhysicalID get_physical_id(Address address);
 
 class Access;
 class MMIOAccess;
