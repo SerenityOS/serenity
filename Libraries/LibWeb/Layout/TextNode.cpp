@@ -61,8 +61,13 @@ const String& TextNode::text_for_style(const CSS::StyleProperties& style) const
 {
     static String one_space = " ";
     if (is_all_whitespace(dom_node().data())) {
-        if (style.white_space().value_or(CSS::WhiteSpace::Normal) == CSS::WhiteSpace::Normal)
+        switch (style.white_space().value_or(CSS::WhiteSpace::Normal)) {
+        case CSS::WhiteSpace::Pre:
+        case CSS::WhiteSpace::PreWrap:
+            break;
+        default:
             return one_space;
+        }
     }
     return dom_node().data();
 }
