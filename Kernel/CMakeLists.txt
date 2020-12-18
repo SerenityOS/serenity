@@ -83,6 +83,7 @@ set(KERNEL_SOURCES
     Net/UDPSocket.cpp
     PCI/Access.cpp
     PCI/Device.cpp
+    PCI/DeviceController.cpp
     PCI/IOAccess.cpp
     PCI/Initializer.cpp
     PCI/MMIOAccess.cpp
