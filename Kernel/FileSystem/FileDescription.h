@@ -73,7 +73,7 @@ public:
 
     ssize_t get_dir_entries(UserOrKernelBuffer& buffer, ssize_t);
 
-    KResultOr<KBuffer> read_entire_file();
+    KResultOr<NonnullOwnPtr<KBuffer>> read_entire_file();
 
     String absolute_path() const;
 
@@ -122,7 +122,7 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
-    Optional<KBuffer>& generator_cache() { return m_generator_cache; }
+    OwnPtr<KBuffer>& generator_cache() { return m_generator_cache; }
 
     void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
@@ -150,7 +150,7 @@ private:
 
     off_t m_current_offset { 0 };
 
-    Optional<KBuffer> m_generator_cache;
+    OwnPtr<KBuffer> m_generator_cache;
 
     u32 m_file_flags { 0 };
 

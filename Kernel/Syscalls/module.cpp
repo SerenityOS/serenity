@@ -53,7 +53,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     if (payload_or_error.is_error())
         return payload_or_error.error();
 
-    auto payload = payload_or_error.value();
+    auto& payload = *payload_or_error.value();
     auto storage = KBuffer::create_with_size(payload.size());
     memcpy(storage.data(), payload.data(), payload.size());
 

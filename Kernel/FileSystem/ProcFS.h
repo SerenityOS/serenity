@@ -59,7 +59,7 @@ private:
 
     struct ProcFSDirectoryEntry {
         ProcFSDirectoryEntry() { }
-        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, Optional<KBuffer> (*read_callback)(InodeIdentifier) = nullptr, ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
+        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, OwnPtr<KBuffer> (*read_callback)(InodeIdentifier) = nullptr, ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)
             , supervisor_only(a_supervisor_only)
@@ -72,7 +72,7 @@ private:
         const char* name { nullptr };
         unsigned proc_file_type { 0 };
         bool supervisor_only { false };
-        Optional<KBuffer> (*read_callback)(InodeIdentifier);
+        OwnPtr<KBuffer> (*read_callback)(InodeIdentifier);
         ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t);
         RefPtr<ProcFSInode> inode;
         InodeIdentifier identifier(unsigned fsid) const;

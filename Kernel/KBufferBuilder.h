@@ -37,6 +37,7 @@ public:
     using OutputType = KBuffer;
 
     explicit KBufferBuilder();
+    KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() { }
 
     void append(const StringView&);
@@ -55,13 +56,18 @@ public:
         append(String::formatted(fmtstr, parameters...));
     }
 
-    KBuffer build();
+    OwnPtr<KBuffer> build();
 
 private:
     bool can_append(size_t) const;
-    u8* insertion_ptr() { return m_buffer.data() + m_size; }
+    u8* insertion_ptr()
+    {
+        if (!m_buffer)
+            return nullptr;
+        return m_buffer->data() + m_size;
+    }
 
-    KBuffer m_buffer;
+    OwnPtr<KBuffer> m_buffer;
     size_t m_size { 0 };
 };
 
