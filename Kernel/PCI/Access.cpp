@@ -129,6 +129,30 @@ void enumerate(Function<void(Address, ID)> callback)
     Access::the().enumerate(callback);
 }
 
+Optional<u8> get_capabilities_pointer(Address address)
+{
+    if (PCI::read16(address, PCI_STATUS) & (1 << 4)) {
+        return PCI::read8(address, PCI_CAPABILITIES_POINTER);
+    }
+    return {};
+}
+
+Vector<Capability> get_capabilities(Address address)
+{
+    auto capabilities_pointer = PCI::get_capabilities_pointer(address);
+    if (!capabilities_pointer.has_value())
+        return {};
+    Vector<Capability> capabilities;
+    auto capability_pointer = capabilities_pointer.value();
+    while (capability_pointer != 0) {
+        u16 capability_header = PCI::read16(address, capability_pointer);
+        u8 capability_id = capability_header & 0xff;
+        capability_pointer = capability_header >> 8;
+        capabilities.append({ capability_id, capability_pointer });
+    }
+    return capabilities;
+}
+
 void raw_access(Address address, u32 field, size_t access_size, u32 value)
 {
     ASSERT(access_size != 0);

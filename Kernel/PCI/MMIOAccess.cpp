@@ -122,7 +122,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     InterruptDisabler disabler;
 
     enumerate_hardware([&](const Address& address, ID id) {
-        m_physical_ids.append({ address, id });
+        m_physical_ids.append({ address, id, get_capabilities(address) });
         m_mapped_device_regions.append(make<DeviceConfigurationSpaceMapping>(address, m_segments.get(address.seg()).value()));
 #ifdef PCI_DEBUG
         dbg() << "PCI: Mapping device @ pci (" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")"
