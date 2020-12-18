@@ -141,8 +141,12 @@ bool Ext2FS::initialize()
 
     unsigned blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = KBuffer::create_with_size(block_size() * blocks_to_read, Region::Access::Read | Region::Access::Write, "Ext2FS: Block group descriptors");
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table.value().data());
+    m_cached_group_descriptor_table = KBuffer::try_create_with_size(block_size() * blocks_to_read, Region::Access::Read | Region::Access::Write, "Ext2FS: Block group descriptors");
+    if (!m_cached_group_descriptor_table) {
+        dbgln("Ext2FS: Failed to allocate memory for group descriptor table");
+        return false;
+    }
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     read_blocks(first_block_of_bgdt, blocks_to_read, buffer);
 
 #ifdef EXT2_DEBUG
