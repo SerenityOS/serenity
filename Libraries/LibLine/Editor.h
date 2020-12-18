@@ -262,6 +262,7 @@ private:
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
 
+    void try_update_once();
     void handle_interrupt_event();
     void handle_read_event();
 
