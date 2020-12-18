@@ -62,12 +62,14 @@ bool UDPServer::bind(const IPv4Address& address, u16 port)
     if (m_bound)
         return false;
 
-    int rc;
     auto saddr = SocketAddress(address, port);
     auto in = saddr.to_sockaddr_in();
 
-    rc = ::bind(m_fd, (const sockaddr*)&in, sizeof(in));
-    ASSERT(rc == 0);
+    if (::bind(m_fd, (const sockaddr*)&in, sizeof(in)) != 0) {
+        perror("UDPServer::bind");
+        return false;
+    }
+
     m_bound = true;
 
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
