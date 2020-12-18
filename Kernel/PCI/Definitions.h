@@ -32,29 +32,29 @@
 
 namespace Kernel {
 
-#define PCI_VENDOR_ID 0x00            // word
-#define PCI_DEVICE_ID 0x02            // word
-#define PCI_COMMAND 0x04              // word
-#define PCI_STATUS 0x06               // word
-#define PCI_REVISION_ID 0x08          // byte
-#define PCI_PROG_IF 0x09              // byte
-#define PCI_SUBCLASS 0x0a             // byte
-#define PCI_CLASS 0x0b                // byte
-#define PCI_CACHE_LINE_SIZE 0x0c      // byte
-#define PCI_LATENCY_TIMER 0x0d        // byte
-#define PCI_HEADER_TYPE 0x0e          // byte
-#define PCI_BIST 0x0f                 // byte
-#define PCI_BAR0 0x10                 // u32
-#define PCI_BAR1 0x14                 // u32
-#define PCI_BAR2 0x18                 // u32
-#define PCI_BAR3 0x1C                 // u32
-#define PCI_BAR4 0x20                 // u32
-#define PCI_BAR5 0x24                 // u32
-#define PCI_SUBSYSTEM_ID 0x2C         // u16
-#define PCI_SUBSYSTEM_VENDOR_ID 0x2E  // u16
+#define PCI_VENDOR_ID 0x00 // word
+#define PCI_DEVICE_ID 0x02 // word
+#define PCI_COMMAND 0x04 // word
+#define PCI_STATUS 0x06 // word
+#define PCI_REVISION_ID 0x08 // byte
+#define PCI_PROG_IF 0x09 // byte
+#define PCI_SUBCLASS 0x0a // byte
+#define PCI_CLASS 0x0b // byte
+#define PCI_CACHE_LINE_SIZE 0x0c // byte
+#define PCI_LATENCY_TIMER 0x0d // byte
+#define PCI_HEADER_TYPE 0x0e // byte
+#define PCI_BIST 0x0f // byte
+#define PCI_BAR0 0x10 // u32
+#define PCI_BAR1 0x14 // u32
+#define PCI_BAR2 0x18 // u32
+#define PCI_BAR3 0x1C // u32
+#define PCI_BAR4 0x20 // u32
+#define PCI_BAR5 0x24 // u32
+#define PCI_SUBSYSTEM_ID 0x2C // u16
+#define PCI_SUBSYSTEM_VENDOR_ID 0x2E // u16
 #define PCI_CAPABILITIES_POINTER 0x34 // u8
-#define PCI_INTERRUPT_LINE 0x3C       // byte
-#define PCI_SECONDARY_BUS 0x19        // byte
+#define PCI_INTERRUPT_LINE 0x3C // byte
+#define PCI_SECONDARY_BUS 0x19 // byte
 #define PCI_HEADER_TYPE_DEVICE 0
 #define PCI_HEADER_TYPE_BRIDGE 1
 #define PCI_TYPE_BRIDGE 0x0604
