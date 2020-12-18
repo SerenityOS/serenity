@@ -102,7 +102,7 @@ private:
     InodeMetadata m_metadata;
     InodeIdentifier m_parent;
 
-    Optional<KBuffer> m_content;
+    OwnPtr<KBuffer> m_content;
     struct Child {
         String name;
         NonnullRefPtr<TmpFSInode> inode;

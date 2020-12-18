@@ -153,7 +153,7 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& b
     ASSERT(size >= 0);
     ASSERT(offset >= 0);
 
-    if (!m_content.has_value())
+    if (!m_content)
         return 0;
 
     if (offset >= m_metadata.size)
@@ -162,7 +162,7 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& b
     if (static_cast<off_t>(size) > m_metadata.size - offset)
         size = m_metadata.size - offset;
 
-    if (!buffer.write(m_content.value().data() + offset, size))
+    if (!buffer.write(m_content->data() + offset, size))
         return -EFAULT;
     return size;
 }
@@ -183,8 +183,8 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
         new_size = offset + size;
 
     if (new_size > old_size) {
-        if (m_content.has_value() && m_content.value().capacity() >= (size_t)new_size) {
-            m_content.value().set_size(new_size);
+        if (m_content && m_content->capacity() >= (size_t)new_size) {
+            m_content->set_size(new_size);
         } else {
             // Grow the content buffer 2x the new sizeto accommodate repeating write() calls.
             // Note that we're not actually committing physical memory to the buffer
@@ -193,10 +193,12 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
             // FIXME: Fix this so that no memcpy() is necessary, and we can just grow the
             //        KBuffer and it will add physical pages as needed while keeping the
             //        existing ones.
-            auto tmp = KBuffer::create_with_size(new_size * 2);
-            tmp.set_size(new_size);
-            if (m_content.has_value())
-                memcpy(tmp.data(), m_content.value().data(), old_size);
+            auto tmp = KBuffer::try_create_with_size(new_size * 2);
+            if (!tmp)
+                return -ENOMEM;
+            tmp->set_size(new_size);
+            if (m_content)
+                memcpy(tmp->data(), m_content->data(), old_size);
             m_content = move(tmp);
         }
         m_metadata.size = new_size;
@@ -205,7 +207,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
         inode_size_changed(old_size, new_size);
     }
 
-    if (!buffer.read(m_content.value().data() + offset, size)) // TODO: partial reads?
+    if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
         return -EFAULT;
     inode_contents_changed(offset, size, buffer);
 
@@ -334,17 +336,21 @@ KResult TmpFSInode::truncate(u64 size)
 
     if (size == 0)
         m_content.clear();
-    else if (!m_content.has_value()) {
-        m_content = KBuffer::create_with_size(size);
-    } else if (static_cast<size_t>(size) < m_content.value().capacity()) {
+    else if (!m_content) {
+        m_content = KBuffer::try_create_with_size(size);
+        if (!m_content)
+            return KResult(-ENOMEM);
+    } else if (static_cast<size_t>(size) < m_content->capacity()) {
         size_t prev_size = m_metadata.size;
-        m_content.value().set_size(size);
+        m_content->set_size(size);
         if (prev_size < static_cast<size_t>(size))
-            memset(m_content.value().data() + prev_size, 0, size - prev_size);
+            memset(m_content->data() + prev_size, 0, size - prev_size);
     } else {
         size_t prev_size = m_metadata.size;
-        KBuffer tmp = KBuffer::create_with_size(size);
-        memcpy(tmp.data(), m_content.value().data(), prev_size);
+        auto tmp = KBuffer::try_create_with_size(size);
+        if (!tmp)
+            return KResult(-ENOMEM);
+        memcpy(tmp->data(), m_content->data(), prev_size);
         m_content = move(tmp);
     }
 
@@ -354,8 +360,8 @@ KResult TmpFSInode::truncate(u64 size)
 
     if (old_size != (size_t)size) {
         inode_size_changed(old_size, size);
-        if (m_content.has_value()) {
-            auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_content.value().data());
+        if (m_content) {
+            auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_content->data());
             inode_contents_changed(0, size, buffer);
         }
     }
