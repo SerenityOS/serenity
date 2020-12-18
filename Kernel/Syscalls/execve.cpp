@@ -469,9 +469,6 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
     }
 
     if (!interpreter_path.is_empty()) {
-        // Programs with an interpreter better be relocatable executables or we don't know what to do...
-        if (elf_header->e_type != ET_DYN)
-            return KResult(-ENOEXEC);
 
 #ifdef EXEC_DEBUG
         dbg() << "exec(" << path << "): Using program interpreter " << interpreter_path;
