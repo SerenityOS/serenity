@@ -812,7 +812,10 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
 
 void TerminalWidget::beep()
 {
-    if (m_should_beep) {
+    if (m_bell_mode == BellMode::Disabled) {
+        return;
+    }
+    if (m_bell_mode == BellMode::AudibleBeep) {
         sysbeep();
         return;
     }
