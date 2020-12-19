@@ -55,6 +55,7 @@ public:
 private:
     IDEController(PCI::Address address, bool force_pio);
 
+    RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     void initialize(bool force_pio);
     void detect_disks();
 

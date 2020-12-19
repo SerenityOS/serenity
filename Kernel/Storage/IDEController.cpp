@@ -95,7 +95,7 @@ void IDEController::initialize(bool force_pio)
     m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary, force_pio));
 }
 
-RefPtr<StorageDevice> IDEController::device(u32 index) const
+RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
 {
     switch (index) {
     case 0:
@@ -107,7 +107,21 @@ RefPtr<StorageDevice> IDEController::device(u32 index) const
     case 3:
         return m_channels[1].slave_device();
     }
-    return nullptr;
+    ASSERT_NOT_REACHED();
+}
+
+RefPtr<StorageDevice> IDEController::device(u32 index) const
+{
+    NonnullRefPtrVector<StorageDevice> connected_devices;
+    for (size_t index = 0; index < 4; index++) {
+        auto checked_device = device_by_channel_and_position(index);
+        if (checked_device.is_null())
+            continue;
+        connected_devices.append(checked_device.release_nonnull());
+    }
+    if (index >= connected_devices.size())
+        return nullptr;
+    return connected_devices[index];
 }
 
 }
