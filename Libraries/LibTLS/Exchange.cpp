@@ -50,8 +50,8 @@ bool TLSv12::expand_key()
         key_buffer,
         m_context.master_key,
         (const u8*)"key expansion", 13,
-        ByteBuffer::wrap(m_context.remote_random, 32),
-        ByteBuffer::wrap(m_context.local_random, 32));
+        ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) },
+        ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) });
 
     size_t offset = 0;
     if (is_aead) {
@@ -93,14 +93,14 @@ bool TLSv12::expand_key()
         memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
         memcpy(m_context.crypto.remote_aead_iv, server_iv, iv_size);
 
-        m_aes_local.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ByteBuffer::wrap(client_key, key_size), key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-        m_aes_remote.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ByteBuffer::wrap(server_key, key_size), key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_local.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_remote.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
     } else {
         memcpy(m_context.crypto.local_iv, client_iv, iv_size);
         memcpy(m_context.crypto.remote_iv, server_iv, iv_size);
 
-        m_aes_local.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(client_key, key_size), key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-        m_aes_remote.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(server_key, key_size), key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_local.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_remote.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
     }
 
     m_context.crypto.created = 1;
@@ -167,8 +167,8 @@ bool TLSv12::compute_master_secret(size_t length)
         m_context.master_key,
         m_context.premaster_key,
         (const u8*)"master secret", 13,
-        ByteBuffer::wrap(m_context.local_random, 32),
-        ByteBuffer::wrap(m_context.remote_random, 32));
+        ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) },
+        ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
     m_context.premaster_key.clear();
 #ifdef TLS_DEBUG

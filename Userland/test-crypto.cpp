@@ -204,7 +204,7 @@ static void aes_cbc(const char* message, size_t len)
 
     if (encrypting) {
         Crypto::Cipher::AESCipher::CBCMode cipher(
-            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            StringView(secret_key).bytes(),
             key_bits,
             Crypto::Cipher::Intent::Encryption);
 
@@ -218,7 +218,7 @@ static void aes_cbc(const char* message, size_t len)
             print_buffer(enc_span, Crypto::Cipher::AESCipher::block_size());
     } else {
         Crypto::Cipher::AESCipher::CBCMode cipher(
-            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            StringView(secret_key).bytes(),
             key_bits,
             Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
@@ -2038,8 +2038,8 @@ static void tls_test_client_hello()
             FAIL(write(0) failed);
             loop.quit(0);
         }
-        auto* the_server = (const u8*)(server ?: DEFAULT_SERVER);
-        if (!tls.write(ByteBuffer::wrap(const_cast<u8*>(the_server), strlen((const char*)the_server)))) {
+        auto* the_server = server ?: DEFAULT_SERVER;
+        if (!tls.write(StringView(the_server).bytes())) {
             FAIL(write(1) failed);
             loop.quit(0);
         }
