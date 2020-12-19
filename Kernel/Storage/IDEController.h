@@ -45,9 +45,10 @@ public:
     virtual ~IDEController() override;
 
     virtual Type type() const override { return Type::IDE; }
-    virtual RefPtr<StorageDevice> device(u32 index) override;
+    virtual RefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
+    virtual size_t devices_count() const override;
     virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 

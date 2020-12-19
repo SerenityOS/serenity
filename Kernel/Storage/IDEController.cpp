@@ -47,6 +47,16 @@ bool IDEController::shutdown()
     TODO();
 }
 
+size_t IDEController::devices_count() const
+{
+    size_t count = 0;
+    for (u32 index = 0; index < 4; index++) {
+        if (!device(index).is_null())
+            count++;
+    }
+    return count;
+}
+
 void IDEController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
 {
     ASSERT_NOT_REACHED();
@@ -85,7 +95,7 @@ void IDEController::initialize(bool force_pio)
     m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary, force_pio));
 }
 
-RefPtr<StorageDevice> IDEController::device(u32 index)
+RefPtr<StorageDevice> IDEController::device(u32 index) const
 {
     switch (index) {
     case 0:

@@ -108,8 +108,8 @@ public:
     IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
     virtual ~IDEChannel() override;
 
-    RefPtr<StorageDevice> master_device();
-    RefPtr<StorageDevice> slave_device();
+    RefPtr<StorageDevice> master_device() const;
+    RefPtr<StorageDevice> slave_device() const;
 
     virtual const char* purpose() const override { return "PATA Channel"; }
 
