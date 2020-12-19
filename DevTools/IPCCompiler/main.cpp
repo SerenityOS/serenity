@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
@@ -437,7 +436,7 @@ public:
     static String static_name() { return "@endpoint.name@"; }
     virtual String name() const override { return "@endpoint.name@"; }
 
-    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, int sockfd)
+    static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, int sockfd)
     {
         InputMemoryStream stream { buffer };
         i32 message_endpoint_magic = 0;
