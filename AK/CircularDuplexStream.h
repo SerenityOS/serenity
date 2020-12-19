@@ -54,7 +54,8 @@ public:
             return false;
         }
 
-        write(bytes);
+        const auto nwritten = write(bytes);
+        ASSERT(nwritten == bytes.size());
         return true;
     }
 
