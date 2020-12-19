@@ -31,8 +31,6 @@ set(KERNEL_SOURCES
     Devices/MBRPartitionTable.cpp
     Devices/MBVGADevice.cpp
     Devices/NullDevice.cpp
-    Devices/PATAChannel.cpp
-    Devices/PATADiskDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/PS2MouseDevice.cpp
     Devices/RandomDevice.cpp
@@ -41,6 +39,10 @@ set(KERNEL_SOURCES
     Devices/UHCIController.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
+    Storage/StorageDevice.cpp
+    Storage/IDEController.cpp
+    Storage/IDEChannel.cpp
+    Storage/PATADiskDevice.cpp
     DoubleBuffer.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp

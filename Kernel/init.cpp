@@ -40,8 +40,6 @@
 #include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
-#include <Kernel/Devices/PATAChannel.h>
-#include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
@@ -67,6 +65,8 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/PATADiskDevice.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
@@ -276,8 +276,15 @@ void init_stage2(void*)
         Processor::halt();
     }
 
-    auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary, force_pio);
-    NonnullRefPtr<BlockDevice> root_dev = *pata0->master_device();
+    RefPtr<BlockDevice> checked_root_dev;
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
+        if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
+            auto pata0 = IDEController::initialize(address, force_pio);
+            checked_root_dev = *pata0->device(0);
+        }
+    });
+    ASSERT(!checked_root_dev.is_null());
+    NonnullRefPtr<BlockDevice> root_dev = checked_root_dev.release_nonnull();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
