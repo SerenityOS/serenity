@@ -65,8 +65,7 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Storage/IDEController.h>
-#include <Kernel/Storage/PATADiskDevice.h>
+#include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
@@ -271,20 +270,8 @@ void init_stage2(void*)
 
     auto root = kernel_command_line().lookup("root").value_or("/dev/hda");
 
-    if (!root.starts_with("/dev/hda")) {
-        klog() << "init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)";
-        Processor::halt();
-    }
-
-    RefPtr<BlockDevice> checked_root_dev;
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-        if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
-            auto pata0 = IDEController::initialize(address, force_pio);
-            checked_root_dev = *pata0->device(0);
-        }
-    });
-    ASSERT(!checked_root_dev.is_null());
-    NonnullRefPtr<BlockDevice> root_dev = checked_root_dev.release_nonnull();
+    StorageManagement::initialize(root, force_pio);
+    NonnullRefPtr<BlockDevice> root_dev = StorageManagement::the().boot_device();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
