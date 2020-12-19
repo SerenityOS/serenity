@@ -113,7 +113,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
     return keypair;
 }
 
-void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
+void RSA::encrypt(ReadonlyBytes in, ByteBuffer& out)
 {
 #ifdef CRYPTO_DEBUG
     dbg() << "in size: " << in.size();
@@ -133,7 +133,7 @@ void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
     }
 }
 
-void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
+void RSA::decrypt(ReadonlyBytes in, ByteBuffer& out)
 {
     // FIXME: Actually use the private key properly
 
@@ -149,7 +149,7 @@ void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
     out = out.slice(out.size() - aligned_size, aligned_size);
 }
 
-void RSA::sign(const ByteBuffer& in, ByteBuffer& out)
+void RSA::sign(ReadonlyBytes in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
@@ -157,7 +157,7 @@ void RSA::sign(const ByteBuffer& in, ByteBuffer& out)
     out = out.slice(out.size() - size, size);
 }
 
-void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
+void RSA::verify(ReadonlyBytes in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
@@ -198,7 +198,7 @@ void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
 }
 
 template<typename HashFunction>
-void RSA_EMSA_PSS<HashFunction>::sign(const ByteBuffer& in, ByteBuffer& out)
+void RSA_EMSA_PSS<HashFunction>::sign(ReadonlyBytes in, ByteBuffer& out)
 {
     // -- encode via EMSA_PSS
     auto mod_bits = m_rsa.private_key().modulus().trimmed_length() * sizeof(u32) * 8;
@@ -212,7 +212,7 @@ void RSA_EMSA_PSS<HashFunction>::sign(const ByteBuffer& in, ByteBuffer& out)
 }
 
 template<typename HashFunction>
-VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(const ByteBuffer& in)
+VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
 {
     auto mod_bytes = m_rsa.public_key().modulus().trimmed_length() * sizeof(u32);
     if (in.size() != mod_bytes)
@@ -228,7 +228,7 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(const ByteBuffer& in)
     return m_emsa_pss.verify(in, EM, mod_bytes * 8 - 1);
 }
 
-void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
+void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, ByteBuffer& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
 #ifdef CRYPTO_DEBUG
@@ -271,7 +271,7 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
 
     RSA::encrypt(out, out);
 }
-void RSA_PKCS1_EME::decrypt(const ByteBuffer& in, ByteBuffer& out)
+void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, ByteBuffer& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
     if (in.size() != mod_len) {
@@ -317,11 +317,11 @@ void RSA_PKCS1_EME::decrypt(const ByteBuffer& in, ByteBuffer& out)
     out = out.slice(offset, out.size() - offset);
 }
 
-void RSA_PKCS1_EME::sign(const ByteBuffer&, ByteBuffer&)
+void RSA_PKCS1_EME::sign(ReadonlyBytes, ByteBuffer&)
 {
     dbg() << "FIXME: RSA_PKCS_EME::sign";
 }
-void RSA_PKCS1_EME::verify(const ByteBuffer&, ByteBuffer&)
+void RSA_PKCS1_EME::verify(ReadonlyBytes, ByteBuffer&)
 {
     dbg() << "FIXME: RSA_PKCS_EME::verify";
 }

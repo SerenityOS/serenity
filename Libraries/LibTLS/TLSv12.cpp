@@ -428,7 +428,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
 }
 }
 
-Optional<Certificate> TLSv12::parse_asn1(const ByteBuffer& buffer, bool) const
+Optional<Certificate> TLSv12::parse_asn1(ReadonlyBytes buffer, bool) const
 {
     // FIXME: Our ASN.1 parser is not quite up to the task of
     //        parsing this X.509 certificate, so for the
@@ -447,7 +447,7 @@ Optional<Certificate> TLSv12::parse_asn1(const ByteBuffer& buffer, bool) const
     return cert;
 }
 
-ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
+ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 {
     ssize_t res = 0;
 
@@ -522,7 +522,7 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
             }
             remaining -= certificate_size_specific;
 
-            auto certificate = parse_asn1(buffer.slice_view(res_cert, certificate_size_specific), false);
+            auto certificate = parse_asn1(buffer.slice(res_cert, certificate_size_specific), false);
             if (certificate.has_value()) {
                 if (certificate.value().is_valid()) {
                     m_context.certificates.append(certificate.value());
@@ -546,7 +546,7 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
     return res;
 }
 
-void TLSv12::consume(const ByteBuffer& record)
+void TLSv12::consume(ReadonlyBytes record)
 {
     if (m_context.critical_error) {
         dbg() << "There has been a critical error (" << (i8)m_context.critical_error << "), refusing to continue";
@@ -846,7 +846,7 @@ TLSv12::TLSv12(Core::Object* parent, Version version)
     }
 }
 
-bool TLSv12::add_client_key(const ByteBuffer& certificate_pem_buffer, const ByteBuffer& rsa_key) // FIXME: This should not be bound to RSA
+bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes rsa_key) // FIXME: This should not be bound to RSA
 {
     if (certificate_pem_buffer.is_empty() || rsa_key.is_empty()) {
         return true;

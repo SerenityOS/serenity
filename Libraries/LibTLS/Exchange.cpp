@@ -108,7 +108,7 @@ bool TLSv12::expand_key()
     return true;
 }
 
-void TLSv12::pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret, const u8* label, size_t label_length, const ByteBuffer& seed, const ByteBuffer& seed_b)
+void TLSv12::pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     if (!secret.size()) {
         dbg() << "null secret";
@@ -225,7 +225,7 @@ ByteBuffer TLSv12::build_certificate()
         for (auto& certificate : certificates) {
             if (!certificate->der.is_empty()) {
                 builder.append_u24(certificate->der.size());
-                builder.append(certificate->der);
+                builder.append(certificate->der.bytes());
             }
         }
     }
@@ -265,13 +265,13 @@ ByteBuffer TLSv12::build_client_key_exchange()
     return packet;
 }
 
-ssize_t TLSv12::handle_server_key_exchange(const ByteBuffer&)
+ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
 {
     dbg() << "FIXME: parse_server_key_exchange";
     return 0;
 }
 
-ssize_t TLSv12::handle_verify(const ByteBuffer&)
+ssize_t TLSv12::handle_verify(ReadonlyBytes)
 {
     dbg() << "FIXME: parse_verify";
     return 0;

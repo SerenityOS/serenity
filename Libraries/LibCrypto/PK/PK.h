@@ -49,11 +49,11 @@ public:
     {
     }
 
-    virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) = 0;
+    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) = 0;
 
-    virtual void sign(const ByteBuffer& in, ByteBuffer& out) = 0;
-    virtual void verify(const ByteBuffer& in, ByteBuffer& out) = 0;
+    virtual void sign(ReadonlyBytes in, ByteBuffer& out) = 0;
+    virtual void verify(ReadonlyBytes in, ByteBuffer& out) = 0;
 
     virtual String class_name() const = 0;
 

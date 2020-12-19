@@ -46,7 +46,7 @@ public:
 
     static constexpr auto SaltLength = SaltSize;
 
-    virtual void encode(const ByteBuffer& in, ByteBuffer& out, size_t em_bits) override
+    virtual void encode(ReadonlyBytes in, ByteBuffer& out, size_t em_bits) override
     {
         // FIXME: we're supposed to check if in.size() > HashFunction::input_limitation
         //        however, all of our current hash functions can hash unlimited blocks
@@ -87,8 +87,7 @@ public:
         u8 DB_mask[mask_length];
         auto DB_mask_buffer = ByteBuffer::wrap(DB_mask, mask_length);
         // FIXME: we should probably allow reading from u8*
-        auto hash_buffer = ByteBuffer::wrap(hash.data, HashFunction::DigestSize);
-        MGF1(hash_buffer, mask_length, DB_mask_buffer);
+        MGF1(ReadonlyBytes { hash.data, HashFunction::DigestSize }, mask_length, DB_mask_buffer);
 
         for (size_t i = 0; i < DB.size(); ++i)
             DB_data[i] ^= DB_mask[i];
@@ -101,7 +100,7 @@ public:
         out[DB.size() + hash_fn.DigestSize] = 0xbc;
     }
 
-    virtual VerificationConsistency verify(const ByteBuffer& msg, const ByteBuffer& emsg, size_t em_bits) override
+    virtual VerificationConsistency verify(ReadonlyBytes msg, ReadonlyBytes emsg, size_t em_bits) override
     {
         auto& hash_fn = this->hasher();
         hash_fn.update(msg);
@@ -114,8 +113,8 @@ public:
             return VerificationConsistency::Inconsistent;
 
         auto mask_length = emsg.size() - HashFunction::DigestSize - 1;
-        auto masked_DB = emsg.slice_view(0, mask_length);
-        auto H = emsg.slice_view(mask_length, HashFunction::DigestSize);
+        auto masked_DB = emsg.slice(0, mask_length);
+        auto H = emsg.slice(mask_length, HashFunction::DigestSize);
 
         auto length_to_check = 8 * emsg.size() - em_bits;
         auto octet = masked_DB[0];
@@ -160,7 +159,7 @@ public:
         return VerificationConsistency::Consistent;
     }
 
-    void MGF1(const ByteBuffer& seed, size_t length, ByteBuffer& out)
+    void MGF1(ReadonlyBytes seed, size_t length, ByteBuffer& out)
     {
         auto& hash_fn = this->hasher();
         ByteBuffer T = ByteBuffer::create_zeroed(0);

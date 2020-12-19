@@ -39,8 +39,8 @@ class Mode {
 public:
     virtual ~Mode() { }
 
-    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr) = 0;
-    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) = 0;
+    virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* ivec_out = nullptr) = 0;
+    virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) = 0;
 
     virtual size_t IV_length() const = 0;
 

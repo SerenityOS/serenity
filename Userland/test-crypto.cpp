@@ -198,7 +198,7 @@ static void tls(const char* message, size_t len)
 
 static void aes_cbc(const char* message, size_t len)
 {
-    auto buffer = ByteBuffer::wrap(const_cast<char*>(message), len);
+    ReadonlyBytes buffer { message, len };
     // FIXME: Take iv as an optional parameter
     auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
 

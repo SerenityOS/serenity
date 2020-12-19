@@ -70,7 +70,7 @@ public:
     {
         append((const u8*)&value, sizeof(value));
     }
-    inline void append(const ByteBuffer& data)
+    inline void append(ReadonlyBytes data)
     {
         append(data.data(), data.size());
     }

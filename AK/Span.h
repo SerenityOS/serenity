@@ -118,6 +118,9 @@ public:
     ALWAYS_INLINE constexpr const T* data() const { return this->m_values; }
     ALWAYS_INLINE constexpr T* data() { return this->m_values; }
 
+    ALWAYS_INLINE constexpr const T* offset_pointer(size_t offset) const { return this->m_values + offset; }
+    ALWAYS_INLINE constexpr T* offset_pointer(size_t offset) { return this->m_values + offset; }
+
     using ConstIterator = SimpleIterator<const Span, const T>;
     using Iterator = SimpleIterator<Span, T>;
 
@@ -128,7 +131,7 @@ public:
     constexpr Iterator end() { return Iterator::end(*this); }
 
     ALWAYS_INLINE constexpr size_t size() const { return this->m_size; }
-
+    ALWAYS_INLINE constexpr bool is_null() const { return this->m_values == nullptr; }
     ALWAYS_INLINE constexpr bool is_empty() const { return this->m_size == 0; }
 
     ALWAYS_INLINE constexpr Span slice(size_t start, size_t length) const

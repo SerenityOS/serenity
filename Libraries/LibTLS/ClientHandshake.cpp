@@ -34,7 +34,7 @@
 
 namespace TLS {
 
-ssize_t TLSv12::handle_server_hello_done(const ByteBuffer& buffer)
+ssize_t TLSv12::handle_server_hello_done(ReadonlyBytes buffer)
 {
     if (buffer.size() < 3)
         return (i8)Error::NeedMoreData;
@@ -47,7 +47,7 @@ ssize_t TLSv12::handle_server_hello_done(const ByteBuffer& buffer)
     return size + 3;
 }
 
-ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_packets)
+ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packets)
 {
     write_packets = WritePacketStage::Initial;
     if (m_context.connection_status != ConnectionStatus::Disconnected && m_context.connection_status != ConnectionStatus::Renegotiating) {
@@ -192,7 +192,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
                 }
             } else if (extension_type == HandshakeExtension::SignatureAlgorithms) {
                 dbg() << "supported signatures: ";
-                print_buffer(buffer.slice_view(res, extension_length));
+                print_buffer(buffer.slice(res, extension_length));
                 // FIXME: what are we supposed to do here?
             }
             res += extension_length;
@@ -202,7 +202,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
     return res;
 }
 
-ssize_t TLSv12::handle_finished(const ByteBuffer& buffer, WritePacketStage& write_packets)
+ssize_t TLSv12::handle_finished(ReadonlyBytes buffer, WritePacketStage& write_packets)
 {
     if (m_context.connection_status < ConnectionStatus::KeyExchange || m_context.connection_status == ConnectionStatus::Established) {
         dbg() << "unexpected finished message";
@@ -305,10 +305,10 @@ void TLSv12::build_random(PacketBuilder& builder)
 
     builder.append_u24(outbuf.size() + 2);
     builder.append((u16)outbuf.size());
-    builder.append(outbuf);
+    builder.append(outbuf.bytes());
 }
 
-ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
+ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 {
     if (m_context.connection_status == ConnectionStatus::Established) {
 #ifdef TLS_DEBUG
@@ -374,7 +374,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                 dbg() << "unsupported: server mode";
                 ASSERT_NOT_REACHED();
             } else {
-                payload_res = handle_hello(buffer.slice_view(1, payload_size), write_packets);
+                payload_res = handle_hello(buffer.slice(1, payload_size), write_packets);
             }
             break;
         case HelloVerifyRequest:
@@ -396,7 +396,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                     dbg() << "unsupported: server mode";
                     ASSERT_NOT_REACHED();
                 }
-                payload_res = handle_certificate(buffer.slice_view(1, payload_size));
+                payload_res = handle_certificate(buffer.slice(1, payload_size));
                 if (m_context.certificates.size()) {
                     auto it = m_context.certificates.find([&](auto& cert) { return cert.is_valid(); });
 
@@ -430,7 +430,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                 dbg() << "unsupported: server mode";
                 ASSERT_NOT_REACHED();
             } else {
-                payload_res = handle_server_key_exchange(buffer.slice_view(1, payload_size));
+                payload_res = handle_server_key_exchange(buffer.slice(1, payload_size));
             }
             break;
         case CertificateRequest:
@@ -466,7 +466,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
                 dbg() << "unsupported: server mode";
                 ASSERT_NOT_REACHED();
             } else {
-                payload_res = handle_server_hello_done(buffer.slice_view(1, payload_size));
+                payload_res = handle_server_hello_done(buffer.slice(1, payload_size));
                 if (payload_res > 0)
                     write_packets = WritePacketStage::ClientHandshake;
             }
@@ -482,7 +482,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
             dbg() << "certificate verify";
 #endif
             if (m_context.connection_status == ConnectionStatus::KeyExchange) {
-                payload_res = handle_verify(buffer.slice_view(1, payload_size));
+                payload_res = handle_verify(buffer.slice(1, payload_size));
             } else {
                 payload_res = (i8)Error::UnexpectedMessage;
             }
@@ -517,7 +517,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
 #ifdef TLS_DEBUG
             dbg() << "finished";
 #endif
-            payload_res = handle_finished(buffer.slice_view(1, payload_size), write_packets);
+            payload_res = handle_finished(buffer.slice(1, payload_size), write_packets);
             if (payload_res > 0) {
                 memset(m_context.handshake_messages, 0, sizeof(m_context.handshake_messages));
             }
@@ -528,7 +528,7 @@ ssize_t TLSv12::handle_payload(const ByteBuffer& vbuffer)
         }
 
         if (type != HelloRequest) {
-            update_hash(buffer.slice_view(0, payload_size + 1));
+            update_hash(buffer.slice(0, payload_size + 1));
         }
 
         // if something went wrong, send an alert about it

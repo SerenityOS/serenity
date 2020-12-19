@@ -194,7 +194,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
     ++m_context.local_sequence_number;
 }
 
-void TLSv12::update_hash(const ByteBuffer& message)
+void TLSv12::update_hash(ReadonlyBytes message)
 {
     m_context.handshake_hash.update(message);
 }
@@ -226,7 +226,7 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     return mac;
 }
 
-ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
+ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 {
     auto res { 5ll };
     size_t header_size = res;
@@ -265,7 +265,9 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
 #ifdef TLS_DEBUG
     dbg() << "message type: " << (u8)type << ", length: " << length;
 #endif
-    ByteBuffer plain = buffer.slice_view(buffer_position, buffer.size() - buffer_position);
+    auto plain = buffer.slice(buffer_position, buffer.size() - buffer_position);
+
+    ByteBuffer decrypted;
 
     if (m_context.cipher_spec_set && type != MessageType::ChangeCipher) {
 #ifdef TLS_DEBUG
@@ -284,8 +286,8 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             }
 
             auto packet_length = length - iv_length() - 16;
-            auto payload = plain.bytes();
-            auto decrypted = ByteBuffer::create_uninitialized(packet_length);
+            auto payload = plain;
+            decrypted = ByteBuffer::create_uninitialized(packet_length);
 
             // AEAD AAD (13)
             // Seq. no (8)
@@ -299,8 +301,8 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
             u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);
 
-            aad_stream.write({ &seq_no, sizeof(seq_no) });              // Sequence number
-            aad_stream.write(buffer.bytes().slice(0, header_size - 2)); // content-type + version
+            aad_stream.write({ &seq_no, sizeof(seq_no) });      // Sequence number
+            aad_stream.write(buffer.slice(0, header_size - 2)); // content-type + version
             aad_stream.write({ &len, sizeof(u16) });
             ASSERT(aad_stream.is_end());
 
@@ -342,10 +344,10 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             auto iv_size = iv_length();
 
             auto decrypted = m_aes_remote.cbc->create_aligned_buffer(length - iv_size);
-            auto iv = buffer.slice_view(header_size, iv_size);
+            auto iv = buffer.slice(header_size, iv_size);
 
             Bytes decrypted_span = decrypted;
-            m_aes_remote.cbc->decrypt(buffer.bytes().slice(header_size + iv_size, length - iv_size), decrypted_span, iv);
+            m_aes_remote.cbc->decrypt(buffer.slice(header_size + iv_size, length - iv_size), decrypted_span, iv);
 
             length = decrypted_span.size();
 

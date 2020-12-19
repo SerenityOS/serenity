@@ -75,8 +75,8 @@ private:
 
 struct AESCipherKey : public CipherKey {
     virtual ByteBuffer data() const override { return ByteBuffer::copy(m_rd_keys, sizeof(m_rd_keys)); };
-    virtual void expand_encrypt_key(const ByteBuffer& user_key, size_t bits) override;
-    virtual void expand_decrypt_key(const ByteBuffer& user_key, size_t bits) override;
+    virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override;
+    virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override;
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
     String to_string() const;
     const u32* round_keys() const
@@ -84,7 +84,7 @@ struct AESCipherKey : public CipherKey {
         return (const u32*)m_rd_keys;
     }
 
-    AESCipherKey(const ByteBuffer& user_key, size_t key_bits, Intent intent)
+    AESCipherKey(ReadonlyBytes user_key, size_t key_bits, Intent intent)
         : m_bits(key_bits)
     {
         if (intent == Intent::Encryption)
@@ -119,7 +119,7 @@ public:
 
     constexpr static size_t BlockSizeInBits = BlockType::BlockSizeInBits;
 
-    AESCipher(const ByteBuffer& user_key, size_t key_bits, Intent intent = Intent::Encryption, PaddingMode mode = PaddingMode::CMS)
+    AESCipher(ReadonlyBytes user_key, size_t key_bits, Intent intent = Intent::Encryption, PaddingMode mode = PaddingMode::CMS)
         : Cipher<AESCipherKey, AESCipherBlock>(mode)
         , m_key(user_key, key_bits, intent)
     {

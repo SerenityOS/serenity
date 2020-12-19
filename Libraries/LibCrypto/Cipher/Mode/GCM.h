@@ -71,7 +71,7 @@ public:
     virtual size_t IV_length() const override { return IVSizeInBits / 8; }
 
     // FIXME: This overload throws away the auth stuff, think up a better way to return more than a single bytebuffer.
-    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* = nullptr) override
+    virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* = nullptr) override
     {
         ASSERT(!ivec.is_empty());
 
@@ -79,7 +79,7 @@ public:
 
         encrypt(in, out, ivec, dummy, dummy);
     }
-    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) override
+    virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) override
     {
         encrypt(in, out, ivec);
     }
@@ -108,7 +108,7 @@ public:
         block0.get().bytes().copy_to(tag);
     }
 
-    VerificationConsistency decrypt(const ReadonlyBytes& in, Bytes out, const ReadonlyBytes& iv_in, const ReadonlyBytes& aad, const ReadonlyBytes& tag)
+    VerificationConsistency decrypt(ReadonlyBytes in, Bytes out, ReadonlyBytes iv_in, ReadonlyBytes aad, ReadonlyBytes tag)
     {
         auto iv_buf = ByteBuffer::copy(iv_in.data(), iv_in.size());
         auto iv = iv_buf.bytes();

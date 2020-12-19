@@ -56,7 +56,7 @@ public:
 
     virtual size_t IV_length() const override { return IVSizeInBits / 8; }
 
-    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr) override
+    virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* ivec_out = nullptr) override
     {
         auto length = in.size();
         if (length == 0)
@@ -97,7 +97,7 @@ public:
             __builtin_memcpy(ivec_out->data(), iv, min(IV_length(), ivec_out->size()));
     }
 
-    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) override
+    virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) override
     {
         auto length = in.size();
         if (length == 0)
