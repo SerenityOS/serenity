@@ -583,6 +583,10 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
             return;
         }
         if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
+            if (s_interrupt_handler[interrupt_number]->type() == HandlerType::SpuriousInterruptHandler) {
+                static_cast<SpuriousInterruptHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+                return;
+            }
             ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
             auto& previous_handler = *s_interrupt_handler[interrupt_number];
             s_interrupt_handler[interrupt_number] = nullptr;
