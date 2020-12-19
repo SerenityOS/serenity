@@ -134,18 +134,18 @@ public:
     ALWAYS_INLINE constexpr bool is_null() const { return this->m_values == nullptr; }
     ALWAYS_INLINE constexpr bool is_empty() const { return this->m_size == 0; }
 
-    ALWAYS_INLINE constexpr Span slice(size_t start, size_t length) const
+    [[nodiscard]] ALWAYS_INLINE constexpr Span slice(size_t start, size_t length) const
     {
         ASSERT(start + length <= size());
         return { this->m_values + start, length };
     }
-    ALWAYS_INLINE constexpr Span slice(size_t start) const
+    [[nodiscard]] ALWAYS_INLINE constexpr Span slice(size_t start) const
     {
         ASSERT(start <= size());
         return { this->m_values + start, size() - start };
     }
 
-    ALWAYS_INLINE constexpr Span trim(size_t length) const
+    [[nodiscard]] ALWAYS_INLINE constexpr Span trim(size_t length) const
     {
         return { this->m_values, min(size(), length) };
     }
