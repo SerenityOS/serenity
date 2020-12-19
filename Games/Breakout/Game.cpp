@@ -29,6 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/StandardCursor.h>
 
 namespace Breakout {
@@ -39,6 +40,7 @@ Game::Game()
     auto level_dialog = LevelSelectDialog::show(m_board, window());
     if (level_dialog != GUI::Dialog::ExecOK)
         m_board = -1;
+    set_paused(false);
     start_timer(16);
     reset();
 }
@@ -56,6 +58,9 @@ void Game::reset_paddle()
 
 void Game::reset()
 {
+    m_lives = 3;
+    m_pause_count = 0;
+    m_cheater = false;
     reset_ball();
     reset_paddle();
     generate_bricks();
@@ -63,6 +68,8 @@ void Game::reset()
 
 void Game::generate_bricks()
 {
+    m_bricks = {};
+
     Gfx::Color colors[] = {
         Gfx::Color::Red,
         Gfx::Color::Green,
@@ -105,8 +112,24 @@ void Game::generate_bricks()
     }
 }
 
+void Game::set_paused(bool paused)
+{
+    m_paused = paused;
+
+    if (m_paused) {
+        set_override_cursor(Gfx::StandardCursor::None);
+        m_pause_count++;
+    } else {
+        set_override_cursor(Gfx::StandardCursor::Hidden);
+    }
+
+    update();
+}
+
 void Game::timer_event(Core::TimerEvent&)
 {
+    if (m_paused)
+        return;
     tick();
 }
 
@@ -125,10 +148,23 @@ void Game::paint_event(GUI::PaintEvent& event)
         if (!brick.dead)
             painter.fill_rect(enclosing_int_rect(brick.rect), brick.color);
     }
+
+    int msg_width = font().width(String::formatted("Lives: {}", m_lives));
+    int msg_height = font().glyph_height();
+    painter.draw_text({ (game_width - msg_width - 2), 2, msg_width, msg_height }, String::formatted("Lives: {}", m_lives), Gfx::TextAlignment::Center, Color::White);
+
+    if (m_paused) {
+        const char* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
+        int msg_width = font().width(msg);
+        int msg_height = font().glyph_height();
+        painter.draw_text({ (game_width / 2) - (msg_width / 2), (game_height / 2) - (msg_height / 2), msg_width, msg_height }, msg, Gfx::TextAlignment::Center, Color::White);
+    }
 }
 
 void Game::keyup_event(GUI::KeyEvent& event)
 {
+    if (m_paused)
+        return;
     switch (event.key()) {
     case Key_Left:
         m_paddle.moving_left = false;
@@ -143,6 +179,8 @@ void Game::keyup_event(GUI::KeyEvent& event)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
+    if (m_paused)
+        return;
     switch (event.key()) {
     case Key_Escape:
         GUI::Application::the()->quit();
@@ -160,6 +198,8 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
 void Game::mousemove_event(GUI::MouseEvent& event)
 {
+    if (m_paused)
+        return;
     float new_paddle_x = event.x() - m_paddle.rect.width() / 2;
     new_paddle_x = max(0.0f, new_paddle_x);
     new_paddle_x = min(game_width - m_paddle.rect.width(), new_paddle_x);
@@ -185,7 +225,13 @@ void Game::reset_ball()
 void Game::hurt()
 {
     stop_timer();
-    GUI::MessageBox::show(window(), "Ouch!", "Breakout", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OK);
+    m_lives--;
+    if (m_lives <= 0) {
+        update();
+        GUI::MessageBox::show(window(), "You lose!", "Breakout", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
+        reset();
+    }
+    sleep(1);
     reset_ball();
     reset_paddle();
     start_timer(16);
@@ -194,7 +240,12 @@ void Game::hurt()
 void Game::win()
 {
     stop_timer();
-    GUI::MessageBox::show(window(), "You win!", "Breakout", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
+    update();
+    if (m_cheater) {
+        GUI::MessageBox::show(window(), "You cheated not only the game, but yourself.", "Breakout", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
+    } else {
+        GUI::MessageBox::show(window(), "You win!", "Breakout", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
+    }
     reset();
     start_timer(16);
 }
@@ -267,6 +318,9 @@ void Game::tick()
     }
 
     m_ball = new_ball;
+
+    if (m_pause_count > 50)
+        m_cheater = true;
 
     update();
 }
