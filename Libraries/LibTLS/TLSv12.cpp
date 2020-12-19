@@ -579,7 +579,7 @@ void TLSv12::consume(ReadonlyBytes record)
 #endif
             break;
         }
-        auto consumed = handle_message(m_context.message_buffer.slice_view(index, length));
+        auto consumed = handle_message(m_context.message_buffer.bytes().slice(index, length));
 
 #ifdef TLS_DEBUG
         if (consumed > 0)

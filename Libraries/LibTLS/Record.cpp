@@ -65,7 +65,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
         if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
             u8 handshake_type = packet[header_size];
             if (handshake_type != HandshakeType::HelloRequest && handshake_type != HandshakeType::HelloVerifyRequest) {
-                update_hash(packet.slice_view(header_size, packet.size() - header_size));
+                update_hash(packet.bytes().slice(header_size, packet.size() - header_size));
             }
         }
         if (m_context.cipher_spec_set && m_context.crypto.created) {
@@ -272,7 +272,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     if (m_context.cipher_spec_set && type != MessageType::ChangeCipher) {
 #ifdef TLS_DEBUG
         dbg() << "Encrypted: ";
-        print_buffer(buffer.slice_view(header_size, length));
+        print_buffer(buffer.slice(header_size, length));
 #endif
 
         if (is_aead()) {
