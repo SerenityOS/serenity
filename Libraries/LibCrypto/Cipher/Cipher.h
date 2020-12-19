@@ -106,8 +106,8 @@ struct CipherKey {
     virtual ~CipherKey() { }
 
 protected:
-    virtual void expand_encrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
-    virtual void expand_decrypt_key(const ByteBuffer& user_key, size_t bits) = 0;
+    virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) = 0;
+    virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) = 0;
     size_t bits { 0 };
 };
 

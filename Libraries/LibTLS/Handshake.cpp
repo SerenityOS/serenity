@@ -160,7 +160,7 @@ ByteBuffer TLSv12::build_finished()
     auto hashbuf = ByteBuffer::wrap(const_cast<u8*>(digest.immutable_data()), m_context.handshake_hash.digest_size());
     pseudorandom_function(outbuffer, m_context.master_key, (const u8*)"client finished", 15, hashbuf, dummy);
 
-    builder.append(outbuffer);
+    builder.append(outbuffer.bytes());
     auto packet = builder.build();
     update_packet(packet);
 

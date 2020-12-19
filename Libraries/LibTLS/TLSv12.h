@@ -41,18 +41,21 @@
 
 namespace TLS {
 
-inline void print_buffer(const ByteBuffer& buffer)
+inline void print_buffer(ReadonlyBytes buffer)
 {
     for (size_t i { 0 }; i < buffer.size(); ++i)
         dbgprintf("%02x ", buffer[i]);
     dbgprintf("\n");
 }
 
+inline void print_buffer(const ByteBuffer& buffer)
+{
+    print_buffer(buffer.bytes());
+}
+
 inline void print_buffer(const u8* buffer, size_t size)
 {
-    for (size_t i { 0 }; i < size; ++i)
-        dbgprintf("%02x ", buffer[i]);
-    dbgprintf("\n");
+    print_buffer(ReadonlyBytes { buffer, size });
 }
 
 class Socket;
@@ -277,13 +280,13 @@ public:
         m_context.SNI = sni;
     }
 
-    Optional<Certificate> parse_asn1(const ByteBuffer& buffer, bool client_cert = false) const;
-    bool load_certificates(const ByteBuffer& pem_buffer);
-    bool load_private_key(const ByteBuffer& pem_buffer);
+    Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false) const;
+    bool load_certificates(ReadonlyBytes pem_buffer);
+    bool load_private_key(ReadonlyBytes pem_buffer);
 
     void set_root_certificates(Vector<Certificate>);
 
-    bool add_client_key(const ByteBuffer& certificate_pem_buffer, const ByteBuffer& key_pem_buffer);
+    bool add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes key_pem_buffer);
     bool add_client_key(Certificate certificate)
     {
         m_context.client_certificates.append(move(certificate));
@@ -313,7 +316,7 @@ public:
     Optional<ByteBuffer> read();
     ByteBuffer read(size_t max_size);
 
-    bool write(const ByteBuffer& buffer);
+    bool write(ReadonlyBytes);
     void alert(AlertLevel, AlertDescription);
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }
@@ -332,13 +335,13 @@ private:
 
     virtual bool common_connect(const struct sockaddr*, socklen_t) override;
 
-    void consume(const ByteBuffer& record);
+    void consume(ReadonlyBytes record);
 
     ByteBuffer hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local = false);
     void ensure_hmac(size_t digest_size, bool local);
 
     void update_packet(ByteBuffer& packet);
-    void update_hash(const ByteBuffer& in);
+    void update_hash(ReadonlyBytes in);
 
     void write_packet(ByteBuffer& packet);
 
@@ -360,19 +363,19 @@ private:
 
     bool check_connection_state(bool read);
 
-    ssize_t handle_hello(const ByteBuffer& buffer, WritePacketStage&);
-    ssize_t handle_finished(const ByteBuffer& buffer, WritePacketStage&);
-    ssize_t handle_certificate(const ByteBuffer& buffer);
-    ssize_t handle_server_key_exchange(const ByteBuffer& buffer);
-    ssize_t handle_server_hello_done(const ByteBuffer& buffer);
-    ssize_t handle_verify(const ByteBuffer& buffer);
-    ssize_t handle_payload(const ByteBuffer& buffer);
-    ssize_t handle_message(const ByteBuffer& buffer);
-    ssize_t handle_random(const ByteBuffer& buffer);
+    ssize_t handle_hello(ReadonlyBytes, WritePacketStage&);
+    ssize_t handle_finished(ReadonlyBytes, WritePacketStage&);
+    ssize_t handle_certificate(ReadonlyBytes);
+    ssize_t handle_server_key_exchange(ReadonlyBytes);
+    ssize_t handle_server_hello_done(ReadonlyBytes);
+    ssize_t handle_verify(ReadonlyBytes);
+    ssize_t handle_payload(ReadonlyBytes);
+    ssize_t handle_message(ReadonlyBytes);
+    ssize_t handle_random(ReadonlyBytes);
 
-    size_t asn1_length(const ByteBuffer& buffer, size_t* octets);
+    size_t asn1_length(ReadonlyBytes, size_t* octets);
 
-    void pseudorandom_function(ByteBuffer& output, const ByteBuffer& secret, const u8* label, size_t label_length, const ByteBuffer& seed, const ByteBuffer& seed_b);
+    void pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
     size_t key_length() const
     {

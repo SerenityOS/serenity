@@ -41,8 +41,8 @@ public:
     {
     }
 
-    virtual void encode(const ByteBuffer& in, ByteBuffer& out, size_t em_bits) = 0;
-    virtual VerificationConsistency verify(const ByteBuffer& msg, const ByteBuffer& emsg, size_t em_bits) = 0;
+    virtual void encode(ReadonlyBytes in, ByteBuffer& out, size_t em_bits) = 0;
+    virtual VerificationConsistency verify(ReadonlyBytes msg, ReadonlyBytes emsg, size_t em_bits) = 0;
 
     const HashFunction& hasher() const { return m_hasher; }
     HashFunction& hasher() { return m_hasher; }

@@ -178,11 +178,11 @@ public:
         m_private_key = pair.private_key;
     }
 
-    virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) override;
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) override;
+    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
 
-    virtual void sign(const ByteBuffer& in, ByteBuffer& out) override;
-    virtual void verify(const ByteBuffer& in, ByteBuffer& out) override;
+    virtual void sign(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void verify(ReadonlyBytes in, ByteBuffer& out) override;
 
     virtual String class_name() const override { return "RSA"; }
 
@@ -203,8 +203,8 @@ public:
     {
     }
 
-    void sign(const ByteBuffer& in, ByteBuffer& out);
-    VerificationConsistency verify(const ByteBuffer& in);
+    void sign(ReadonlyBytes in, ByteBuffer& out);
+    VerificationConsistency verify(ReadonlyBytes in);
 
 private:
     EMSA_PSS<HashFunction, HashFunction::DigestSize> m_emsa_pss;
@@ -222,11 +222,11 @@ public:
 
     ~RSA_PKCS1_EME() { }
 
-    virtual void encrypt(const ByteBuffer& in, ByteBuffer& out) override;
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out) override;
+    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
 
-    virtual void sign(const ByteBuffer&, ByteBuffer&) override;
-    virtual void verify(const ByteBuffer&, ByteBuffer&) override;
+    virtual void sign(ReadonlyBytes, ByteBuffer&) override;
+    virtual void verify(ReadonlyBytes, ByteBuffer&) override;
 
     virtual String class_name() const override { return "RSA_PKCS1-EME"; }
     virtual size_t output_size() const override { return m_public_key.length(); }

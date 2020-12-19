@@ -131,7 +131,7 @@ public:
 
     virtual size_t IV_length() const override { return IVSizeInBits / 8; }
 
-    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr) override
+    virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* ivec_out = nullptr) override
     {
         // Our interpretation of "ivec" is what AES-CTR
         // would define as nonce + IV + 4 zero bytes.
@@ -143,7 +143,7 @@ public:
         this->encrypt_or_stream(nullptr, out, ivec, ivec_out);
     }
 
-    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) override
+    virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) override
     {
         // XOR (and thus CTR) is the most symmetric mode.
         this->encrypt(in, out, ivec);
@@ -156,7 +156,7 @@ private:
 protected:
     constexpr static IncrementFunctionType increment {};
 
-    void encrypt_or_stream(const ReadonlyBytes* in, Bytes& out, const Bytes& ivec, Bytes* ivec_out = nullptr)
+    void encrypt_or_stream(const ReadonlyBytes* in, Bytes& out, ReadonlyBytes ivec, Bytes* ivec_out = nullptr)
     {
         size_t length;
         if (in) {

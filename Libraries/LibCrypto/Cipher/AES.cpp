@@ -59,7 +59,7 @@ String AESCipherKey::to_string() const
     return builder.build();
 }
 
-void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
+void AESCipherKey::expand_encrypt_key(ReadonlyBytes user_key, size_t bits)
 {
     u32* round_key;
     u32 temp;
@@ -170,7 +170,7 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
     }
 }
 
-void AESCipherKey::expand_decrypt_key(const ByteBuffer& user_key, size_t bits)
+void AESCipherKey::expand_decrypt_key(ReadonlyBytes user_key, size_t bits)
 {
     u32* round_key;
 

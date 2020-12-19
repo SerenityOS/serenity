@@ -73,7 +73,7 @@ String TLSv12::read_line(size_t max_size)
     return String::copy(buffer, Chomp);
 }
 
-bool TLSv12::write(const ByteBuffer& buffer)
+bool TLSv12::write(ReadonlyBytes buffer)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
 #ifdef TLS_DEBUG
