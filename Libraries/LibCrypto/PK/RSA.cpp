@@ -204,7 +204,7 @@ void RSA_EMSA_PSS<HashFunction>::sign(ReadonlyBytes in, ByteBuffer& out)
     auto mod_bits = m_rsa.private_key().modulus().trimmed_length() * sizeof(u32) * 8;
 
     u8 EM[mod_bits];
-    auto EM_buf = ByteBuffer::wrap(EM, mod_bits);
+    auto EM_buf = Bytes { EM, mod_bits };
     m_emsa_pss.encode(in, EM_buf, mod_bits - 1);
 
     // -- sign via RSA

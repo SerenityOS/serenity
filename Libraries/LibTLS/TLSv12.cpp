@@ -644,7 +644,7 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
         break;
     }
 
-    auto hmac = make<Crypto::Authentication::HMAC<Crypto::Hash::Manager>>(ByteBuffer::wrap(local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, digest_size), hash_kind);
+    auto hmac = make<Crypto::Authentication::HMAC<Crypto::Hash::Manager>>(ReadonlyBytes { local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, digest_size }, hash_kind);
     if (local)
         m_hmac_local = move(hmac);
     else

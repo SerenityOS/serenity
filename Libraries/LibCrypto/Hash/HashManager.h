@@ -117,6 +117,8 @@ struct MultiHashDigestVariant {
 
 class Manager final : public HashFunction<0, MultiHashDigestVariant> {
 public:
+    using HashFunction::update;
+
     Manager()
     {
         m_pre_init_buffer = ByteBuffer::create_zeroed(0);
@@ -142,8 +144,6 @@ public:
         m_md5 = nullptr;
     }
 
-    virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
-    virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
     inline size_t digest_size() const
     {
         switch (m_kind) {

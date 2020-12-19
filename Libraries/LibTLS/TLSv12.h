@@ -375,7 +375,7 @@ private:
 
     size_t asn1_length(ReadonlyBytes, size_t* octets);
 
-    void pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
+    void pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
     size_t key_length() const
     {

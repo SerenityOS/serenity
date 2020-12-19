@@ -41,7 +41,7 @@ public:
     EMSA_PSS(Args... args)
         : Code<HashFunction>(args...)
     {
-        m_buffer = ByteBuffer::wrap(m_data_buffer, sizeof(m_data_buffer));
+        m_buffer = Bytes { m_data_buffer, sizeof(m_data_buffer) };
     }
 
     static constexpr auto SaltLength = SaltSize;
@@ -72,7 +72,7 @@ public:
         auto hash = hash_fn.digest();
 
         u8 DB_data[em_length - HashFunction::DigestSize - 1];
-        auto DB = ByteBuffer::wrap(DB_data, em_length - HashFunction::DigestSize - 1);
+        auto DB = Bytes { DB_data, em_length - HashFunction::DigestSize - 1 };
         auto DB_offset = 0;
 
         for (size_t i = 0; i < em_length - SaltLength - HashFunction::DigestSize - 2; ++i)
@@ -85,7 +85,7 @@ public:
         auto mask_length = em_length - HashFunction::DigestSize - 1;
 
         u8 DB_mask[mask_length];
-        auto DB_mask_buffer = ByteBuffer::wrap(DB_mask, mask_length);
+        auto DB_mask_buffer = Bytes { DB_mask, mask_length };
         // FIXME: we should probably allow reading from u8*
         MGF1(ReadonlyBytes { hash.data, HashFunction::DigestSize }, mask_length, DB_mask_buffer);
 
@@ -123,7 +123,7 @@ public:
                 return VerificationConsistency::Inconsistent;
 
         u8 DB_mask[mask_length];
-        auto DB_mask_buffer = ByteBuffer::wrap(DB_mask, mask_length);
+        auto DB_mask_buffer = Bytes { DB_mask, mask_length };
         MGF1(H, mask_length, DB_mask_buffer);
 
         u8 DB[mask_length];
@@ -145,7 +145,7 @@ public:
         auto* salt = DB + mask_length - SaltLength;
         u8 m_prime[8 + HashFunction::DigestSize + SaltLength] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        auto m_prime_buffer = ByteBuffer::wrap(m_prime, sizeof(m_prime));
+        auto m_prime_buffer = Bytes { m_prime, sizeof(m_prime) };
 
         m_prime_buffer.overwrite(8, message_hash.data, HashFunction::DigestSize);
         m_prime_buffer.overwrite(8 + HashFunction::DigestSize, salt, SaltLength);
@@ -159,7 +159,7 @@ public:
         return VerificationConsistency::Consistent;
     }
 
-    void MGF1(ReadonlyBytes seed, size_t length, ByteBuffer& out)
+    void MGF1(ReadonlyBytes seed, size_t length, Bytes out)
     {
         auto& hash_fn = this->hasher();
         ByteBuffer T = ByteBuffer::create_zeroed(0);
@@ -173,7 +173,7 @@ public:
 
 private:
     u8 m_data_buffer[8 + HashFunction::DigestSize + SaltLength];
-    ByteBuffer m_buffer;
+    Bytes m_buffer;
 };
 
 }

@@ -68,12 +68,10 @@ public:
         m_inner_hasher.update(message, length);
     }
 
-    TagType process(const ReadonlyBytes& span) { return process(span.data(), span.size()); }
-    TagType process(const ByteBuffer& buffer) { return process(buffer.data(), buffer.size()); }
+    TagType process(ReadonlyBytes span) { return process(span.data(), span.size()); }
     TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
 
-    void update(const ReadonlyBytes& span) { return update(span.data(), span.size()); }
-    void update(const ByteBuffer& buffer) { return update(buffer.data(), buffer.size()); }
+    void update(ReadonlyBytes span) { return update(span.data(), span.size()); }
     void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
 
     TagType digest()
@@ -106,7 +104,7 @@ private:
         auto block_size = m_inner_hasher.block_size();
         u8 v_key[block_size];
         __builtin_memset(v_key, 0, block_size);
-        ByteBuffer key_buffer = ByteBuffer::wrap(v_key, block_size);
+        auto key_buffer = Bytes { v_key, block_size };
         // m_key_data is zero'd, so copying the data in
         // the first few bytes leaves the rest zero, which
         // is exactly what we want (zero padding)
@@ -129,8 +127,8 @@ private:
         }
     }
 
-    void derive_key(const ByteBuffer& key) { derive_key(key.data(), key.size()); }
-    void derive_key(const StringView& key) { derive_key((const u8*)key.characters_without_null_termination(), key.length()); }
+    void derive_key(ReadonlyBytes key) { derive_key(key.data(), key.size()); }
+    void derive_key(const StringView& key) { derive_key(key.bytes()); }
 
     HashType m_inner_hasher, m_outer_hasher;
     u8 m_key_data[2048];
