@@ -181,8 +181,8 @@ public:
     virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
     virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
 
-    virtual void sign(ReadonlyBytes in, ByteBuffer& out) override;
-    virtual void verify(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void sign(ReadonlyBytes in, Bytes& out) override;
+    virtual void verify(ReadonlyBytes in, Bytes& out) override;
 
     virtual String class_name() const override { return "RSA"; }
 
@@ -203,7 +203,7 @@ public:
     {
     }
 
-    void sign(ReadonlyBytes in, ByteBuffer& out);
+    void sign(ReadonlyBytes in, Bytes& out);
     VerificationConsistency verify(ReadonlyBytes in);
 
 private:
@@ -225,8 +225,8 @@ public:
     virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
     virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
 
-    virtual void sign(ReadonlyBytes, ByteBuffer&) override;
-    virtual void verify(ReadonlyBytes, ByteBuffer&) override;
+    virtual void sign(ReadonlyBytes, Bytes&) override;
+    virtual void verify(ReadonlyBytes, Bytes&) override;
 
     virtual String class_name() const override { return "RSA_PKCS1-EME"; }
     virtual size_t output_size() const override { return m_public_key.length(); }
