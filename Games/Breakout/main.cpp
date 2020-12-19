@@ -59,16 +59,24 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);
+    window->set_resizable(false);
+    window->set_double_buffering_enabled(false);
+    window->set_title("Breakout");
     auto app_icon = GUI::Icon::default_icon("app-breakout");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("Breakout");
-    window->set_double_buffering_enabled(false);
-    window->set_main_widget<Breakout::Game>();
+    auto& game = window->set_main_widget<Breakout::Game>();
     window->show();
 
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Breakout");
+    app_menu.add_action(GUI::Action::create_checkable("Pause", { {}, Key_P }, [&](auto& action) {
+        game.set_paused(action.is_checked());
+        return;
+    }));
+
+    app_menu.add_separator();
+
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
         return;
