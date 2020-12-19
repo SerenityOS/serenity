@@ -51,7 +51,8 @@ public:
         NVMe
     };
     virtual Type type() const = 0;
-    virtual RefPtr<StorageDevice> device(u32 index) = 0;
+    virtual RefPtr<StorageDevice> device(u32 index) const = 0;
+    virtual size_t devices_count() const = 0;
 
 protected:
     explicit StorageController(PCI::Address address)
