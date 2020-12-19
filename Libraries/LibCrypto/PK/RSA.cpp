@@ -113,7 +113,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
     return keypair;
 }
 
-void RSA::encrypt(ReadonlyBytes in, ByteBuffer& out)
+void RSA::encrypt(ReadonlyBytes in, Bytes& out)
 {
 #ifdef CRYPTO_DEBUG
     dbg() << "in size: " << in.size();
@@ -121,7 +121,7 @@ void RSA::encrypt(ReadonlyBytes in, ByteBuffer& out)
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
         dbg() << "value too large for key";
-        out.clear();
+        out = {};
         return;
     }
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
@@ -133,7 +133,7 @@ void RSA::encrypt(ReadonlyBytes in, ByteBuffer& out)
     }
 }
 
-void RSA::decrypt(ReadonlyBytes in, ByteBuffer& out)
+void RSA::decrypt(ReadonlyBytes in, Bytes& out)
 {
     // FIXME: Actually use the private key properly
 
@@ -228,7 +228,7 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
     return m_emsa_pss.verify(in, EM, mod_bytes * 8 - 1);
 }
 
-void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, ByteBuffer& out)
+void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
 #ifdef CRYPTO_DEBUG
@@ -236,7 +236,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, ByteBuffer& out)
 #endif
     if (in.size() > mod_len - 11) {
         dbg() << "message too long :(";
-        out.trim(0);
+        out = out.trim(0);
         return;
     }
     if (out.size() < mod_len) {
@@ -263,7 +263,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, ByteBuffer& out)
     out.overwrite(2, ps, ps_length);
     out.overwrite(2 + ps_length, paddings, 1);
     out.overwrite(3 + ps_length, in.data(), in.size());
-    out.trim(3 + ps_length + in.size()); // should be a single block
+    out = out.trim(3 + ps_length + in.size()); // should be a single block
 
 #ifdef CRYPTO_DEBUG
     dbg() << "padded output size: " << 3 + ps_length + in.size() << " buffer size: " << out.size();
@@ -271,12 +271,12 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, ByteBuffer& out)
 
     RSA::encrypt(out, out);
 }
-void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, ByteBuffer& out)
+void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
     if (in.size() != mod_len) {
         dbg() << "decryption error: wrong amount of data: " << in.size();
-        out.trim(0);
+        out = out.trim(0);
         return;
     }
 
@@ -284,7 +284,7 @@ void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, ByteBuffer& out)
 
     if (out.size() < RSA::output_size()) {
         dbg() << "decryption error: not enough data after decryption: " << out.size();
-        out.trim(0);
+        out = out.trim(0);
         return;
     }
 

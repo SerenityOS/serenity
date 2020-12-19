@@ -781,7 +781,7 @@ static void aes_ctr_test_name()
         PASS;
 }
 
-#define AS_BB(x) (ByteBuffer::wrap((x), sizeof((x)) / sizeof((x)[0])))
+#define AS_BB(x) (ReadonlyBytes { (x), sizeof((x)) / sizeof((x)[0]) })
 static void aes_ctr_test_encrypt()
 {
     auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
@@ -1808,7 +1808,7 @@ static void rsa_test_encrypt()
             "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
             "65537"_bigint);
         u8 buffer[rsa.output_size()];
-        auto buf = ByteBuffer::wrap(buffer, sizeof(buffer));
+        auto buf = Bytes { buffer, sizeof(buffer) };
         rsa.encrypt(data, buf);
         if (memcmp(result, buf.data(), buf.size())) {
             FAIL(Invalid encryption result);
@@ -1825,7 +1825,7 @@ static void rsa_test_encrypt()
             "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
             "65537"_bigint);
         u8 buffer[rsa.output_size()];
-        auto buf = ByteBuffer::wrap(buffer, sizeof(buffer));
+        auto buf = Bytes { buffer, sizeof(buffer) };
         rsa.encrypt(data, buf);
         rsa.decrypt(buf, buf);
 
@@ -2000,8 +2000,13 @@ static void rsa_test_encrypt_decrypt()
         "39542231845947188736992321577701849924317746648774438832456325878966594812143638244746284968851807975097653255909707366086606867657273809465195392910913"_bigint,
         "65537"_bigint);
     dbg() << "Output size: " << rsa.output_size();
-    auto dec = ByteBuffer::create_zeroed(rsa.output_size());
-    auto enc = ByteBuffer::create_zeroed(rsa.output_size());
+
+    u8 enc_buffer[rsa.output_size()];
+    u8 dec_buffer[rsa.output_size()];
+
+    auto enc = Bytes { enc_buffer, rsa.output_size() };
+    auto dec = Bytes { dec_buffer, rsa.output_size() };
+
     enc.overwrite(0, "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64);
 
     rsa.encrypt(enc, dec);

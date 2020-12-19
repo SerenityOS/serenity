@@ -153,14 +153,14 @@ ByteBuffer TLSv12::build_finished()
     builder.append_u24(out_size);
 
     u8 out[out_size];
-    auto outbuffer = ByteBuffer::wrap(out, out_size);
+    auto outbuffer = Bytes { out, out_size };
     auto dummy = ByteBuffer::create_zeroed(0);
 
     auto digest = m_context.handshake_hash.digest();
     auto hashbuf = ReadonlyBytes { digest.immutable_data(), m_context.handshake_hash.digest_size() };
     pseudorandom_function(outbuffer, m_context.master_key, (const u8*)"client finished", 15, hashbuf, dummy);
 
-    builder.append(outbuffer.bytes());
+    builder.append(outbuffer);
     auto packet = builder.build();
     update_packet(packet);
 

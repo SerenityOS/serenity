@@ -290,7 +290,7 @@ void TLSv12::build_random(PacketBuilder& builder)
     Crypto::PK::RSA_PKCS1_EME rsa(certificate.public_key.modulus(), 0, certificate.public_key.public_exponent());
 
     u8 out[rsa.output_size()];
-    auto outbuf = ByteBuffer::wrap(out, rsa.output_size());
+    auto outbuf = Bytes { out, rsa.output_size() };
     rsa.encrypt(m_context.premaster_key, outbuf);
 
 #ifdef TLS_DEBUG
@@ -305,7 +305,7 @@ void TLSv12::build_random(PacketBuilder& builder)
 
     builder.append_u24(outbuf.size() + 2);
     builder.append((u16)outbuf.size());
-    builder.append(outbuf.bytes());
+    builder.append(outbuf);
 }
 
 ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
