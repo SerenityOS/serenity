@@ -178,8 +178,8 @@ public:
         m_private_key = pair.private_key;
     }
 
-    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
-    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void encrypt(ReadonlyBytes in, Bytes& out) override;
+    virtual void decrypt(ReadonlyBytes in, Bytes& out) override;
 
     virtual void sign(ReadonlyBytes in, Bytes& out) override;
     virtual void verify(ReadonlyBytes in, Bytes& out) override;
@@ -222,8 +222,8 @@ public:
 
     ~RSA_PKCS1_EME() { }
 
-    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) override;
-    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) override;
+    virtual void encrypt(ReadonlyBytes in, Bytes& out) override;
+    virtual void decrypt(ReadonlyBytes in, Bytes& out) override;
 
     virtual void sign(ReadonlyBytes, Bytes&) override;
     virtual void verify(ReadonlyBytes, Bytes&) override;

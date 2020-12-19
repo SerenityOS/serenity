@@ -49,8 +49,8 @@ public:
     {
     }
 
-    virtual void encrypt(ReadonlyBytes in, ByteBuffer& out) = 0;
-    virtual void decrypt(ReadonlyBytes in, ByteBuffer& out) = 0;
+    virtual void encrypt(ReadonlyBytes in, Bytes& out) = 0;
+    virtual void decrypt(ReadonlyBytes in, Bytes& out) = 0;
 
     virtual void sign(ReadonlyBytes in, Bytes& out) = 0;
     virtual void verify(ReadonlyBytes in, Bytes& out) = 0;
