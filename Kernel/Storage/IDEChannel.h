@@ -41,11 +41,11 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
+#include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
@@ -59,8 +59,9 @@ struct PhysicalRegionDescriptor {
     u16 end_of_table { 0 };
 };
 
-class PATADiskDevice;
-class PATAChannel final : public PCI::Device {
+class IDEController;
+class IDEChannel final : public IRQHandler {
+    friend class IDEController;
     friend class PATADiskDevice;
     AK_MAKE_ETERNAL
 public:
@@ -69,13 +70,46 @@ public:
         Secondary
     };
 
-public:
-    static OwnPtr<PATAChannel> create(ChannelType type, bool force_pio);
-    PATAChannel(PCI::Address address, ChannelType type, bool force_pio);
-    virtual ~PATAChannel() override;
+    struct IOAddressGroup {
+        IOAddressGroup(IOAddress io_base, IOAddress control_base, IOAddress bus_master_base)
+            : m_io_base(io_base)
+            , m_control_base(control_base)
+            , m_bus_master_base(bus_master_base)
+        {
+        }
 
-    RefPtr<PATADiskDevice> master_device() { return m_master; };
-    RefPtr<PATADiskDevice> slave_device() { return m_slave; };
+        // Disable default implementations that would use surprising integer promotion.
+        bool operator==(const IOAddressGroup&) const = delete;
+        bool operator<=(const IOAddressGroup&) const = delete;
+        bool operator>=(const IOAddressGroup&) const = delete;
+        bool operator<(const IOAddressGroup&) const = delete;
+        bool operator>(const IOAddressGroup&) const = delete;
+
+        IOAddress io_base() const { return m_io_base; };
+        IOAddress control_base() const { return m_control_base; }
+        IOAddress bus_master_base() const { return m_bus_master_base; }
+
+        const IOAddressGroup& operator=(const IOAddressGroup& group)
+        {
+            m_io_base = group.io_base();
+            m_control_base = group.control_base();
+            m_bus_master_base = group.bus_master_base();
+            return *this;
+        }
+
+    private:
+        IOAddress m_io_base;
+        IOAddress m_control_base;
+        IOAddress m_bus_master_base;
+    };
+
+public:
+    static NonnullOwnPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    virtual ~IDEChannel() override;
+
+    RefPtr<StorageDevice> master_device();
+    RefPtr<StorageDevice> slave_device();
 
     virtual const char* purpose() const override { return "PATA Channel"; }
 
@@ -98,24 +132,25 @@ private:
 
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
-    IOAddress m_io_base;
-    IOAddress m_control_base;
+
     volatile u8 m_device_error { 0 };
 
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
     RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
-    IOAddress m_bus_master_base;
     Lockable<bool> m_dma_enabled;
     EntropySource m_entropy_source;
 
-    RefPtr<PATADiskDevice> m_master;
-    RefPtr<PATADiskDevice> m_slave;
+    RefPtr<StorageDevice> m_master;
+    RefPtr<StorageDevice> m_slave;
 
     AsyncBlockDeviceRequest* m_current_request { nullptr };
     u32 m_current_request_block_index { 0 };
     bool m_current_request_uses_dma { false };
     bool m_current_request_flushing_cache { false };
     SpinLock<u8> m_request_lock;
+
+    IOAddressGroup m_io_group;
+    NonnullRefPtr<IDEController> m_parent_controller;
 };
 }

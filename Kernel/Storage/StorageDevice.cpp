@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,51 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define PATA_DEVICE_DEBUG
+//#define STORAGE_DEVICE_DEBUG
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Devices/PATAChannel.h>
-#include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
-NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, DriveType type, int major, int minor)
-{
-    return adopt(*new PATADiskDevice(channel, type, major, minor));
-}
-
-PATADiskDevice::PATADiskDevice(PATAChannel& channel, DriveType type, int major, int minor)
-    : BlockDevice(major, minor, 512)
-    , m_drive_type(type)
-    , m_channel(channel)
+StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, size_t max_addressable_block)
+    : BlockDevice(major, minor, sector_size)
+    , m_storage_controller(controller)
+    , m_max_addressable_block(max_addressable_block)
 {
 }
 
-PATADiskDevice::~PATADiskDevice()
+const char* StorageDevice::class_name() const
 {
+    return "StorageDevice";
 }
 
-const char* PATADiskDevice::class_name() const
+NonnullRefPtr<StorageController> StorageDevice::controller() const
 {
-    return "PATADiskDevice";
+    return m_storage_controller;
 }
 
-void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
-{
-    bool use_dma = !m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource();
-    m_channel.start_request(request, use_dma, is_slave());
-}
-
-void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)
-{
-    m_cylinders = cyls;
-    m_heads = heads;
-    m_sectors_per_track = spt;
-}
-
-KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
+KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -83,8 +65,8 @@ KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKe
         remaining = 0;
     }
 
-#ifdef PATA_DEVICE_DEBUG
-    klog() << "PATADiskDevice::read() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
+#ifdef STORAGE_DEVICE_DEBUG
+    klog() << "StorageDevice::read() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 
     if (whole_blocks > 0) {
@@ -130,12 +112,12 @@ KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKe
     return pos + remaining;
 }
 
-bool PATADiskDevice::can_read(const FileDescription&, size_t offset) const
+bool StorageDevice::can_read(const FileDescription&, size_t offset) const
 {
-    return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
+    return offset < (max_addressable_block() * block_size());
 }
 
-KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -150,8 +132,8 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const U
         remaining = 0;
     }
 
-#ifdef PATA_DEVICE_DEBUG
-    klog() << "PATADiskDevice::write() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
+#ifdef STORAGE_DEVICE_DEBUG
+    klog() << "StorageDevice::write() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 
     if (whole_blocks > 0) {
@@ -222,14 +204,9 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const U
     return pos + remaining;
 }
 
-bool PATADiskDevice::can_write(const FileDescription&, size_t offset) const
+bool StorageDevice::can_write(const FileDescription&, size_t offset) const
 {
-    return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
-}
-
-bool PATADiskDevice::is_slave() const
-{
-    return m_drive_type == DriveType::Slave;
+    return offset < (max_addressable_block() * block_size());
 }
 
 }
