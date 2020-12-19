@@ -214,7 +214,7 @@ protected:
             if (message_size == 0 || bytes.size() - index - sizeof(uint32_t) < message_size)
                 break;
             index += sizeof(message_size);
-            auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
+            auto remaining_bytes = ReadonlyBytes { bytes.data() + index, bytes.size() - index };
             if (auto message = LocalEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
                 m_unprocessed_messages.append(message.release_nonnull());
             } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
@@ -229,12 +229,13 @@ protected:
             // Sometimes we might receive a partial message. That's okay, just stash away
             // the unprocessed bytes and we'll prepend them to the next incoming message
             // in the next run of this function.
-            auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
+            auto remaining_bytes = ByteBuffer::copy(bytes.data() + index, bytes.size() - index);
             if (!m_unprocessed_bytes.is_empty()) {
                 dbg() << *this << "::drain_messages_from_peer: Already have unprocessed bytes";
                 shutdown();
+                return false;
             }
-            m_unprocessed_bytes = remaining_bytes.isolated_copy();
+            m_unprocessed_bytes = remaining_bytes;
         }
 
         if (!m_unprocessed_messages.is_empty()) {
