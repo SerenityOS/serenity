@@ -40,17 +40,17 @@ DwarfInfo::DwarfInfo(NonnullRefPtr<const ELF::Loader> elf)
     populate_compilation_units();
 }
 
-ByteBuffer DwarfInfo::section_data(const String& section_name)
+ReadonlyBytes DwarfInfo::section_data(const String& section_name) const
 {
     auto section = m_elf->image().lookup_section(section_name);
     if (section.is_undefined())
         return {};
-    return section.wrapping_byte_buffer();
+    return section.bytes();
 }
 
 void DwarfInfo::populate_compilation_units()
 {
-    if (m_debug_info_data.is_null())
+    if (!m_debug_info_data.data())
         return;
 
     InputMemoryStream stream { m_debug_info_data };
