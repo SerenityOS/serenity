@@ -39,6 +39,8 @@ public:
 
     virtual ~Game() override;
 
+    void set_paused(bool paused);
+
 private:
     Game();
 
@@ -94,7 +96,11 @@ private:
         }
     };
 
+    bool m_paused;
+    int m_lives;
     int m_board;
+    long m_pause_count;
+    bool m_cheater;
     Ball m_ball;
     Paddle m_paddle;
     Vector<Brick> m_bricks;
