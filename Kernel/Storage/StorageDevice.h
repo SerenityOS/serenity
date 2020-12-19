@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,61 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//
-// A Disk Device Connected to a PATA Channel
-//
-
 #pragma once
 
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Storage/StorageController.h>
 
 namespace Kernel {
 
-class PATAChannel;
-
-class PATADiskDevice final : public BlockDevice {
+class StorageDevice : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
-    // Type of drive this IDEDiskDevice is on the ATA channel.
-    //
-    // Each PATA channel can contain only two devices, which (I think) are
-    // jumper selectable on the drive itself by shorting two pins.
-    enum class DriveType : u8 {
-        Master,
-        Slave
+    enum class Type : u8 {
+        IDE,
+        NVMe,
     };
 
 public:
-    static NonnullRefPtr<PATADiskDevice> create(PATAChannel&, DriveType, int major, int minor);
-    virtual ~PATADiskDevice() override;
+    virtual Type type() const = 0;
+    virtual size_t max_addressable_block() const { return m_max_addressable_block; }
 
-    void set_drive_geometry(u16, u16, u16);
+    NonnullRefPtr<StorageController> controller() const;
 
     // ^BlockDevice
-    virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
 
 protected:
-    explicit PATADiskDevice(PATAChannel&, DriveType, int, int);
-
-private:
+    StorageDevice(const StorageController&, int, int, size_t, size_t);
     // ^DiskDevice
     virtual const char* class_name() const override;
 
-    bool is_slave() const;
-
-    Lock m_lock { "IDEDiskDevice" };
-    u16 m_cylinders { 0 };
-    u16 m_heads { 0 };
-    u16 m_sectors_per_track { 0 };
-    DriveType m_drive_type { DriveType::Master };
-
-    PATAChannel& m_channel;
+private:
+    NonnullRefPtr<StorageController> m_storage_controller;
+    size_t m_max_addressable_block;
 };
 
 }
