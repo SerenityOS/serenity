@@ -106,8 +106,7 @@ void DebugInfo::prepare_lines()
     if (section.is_undefined())
         return;
 
-    auto buffer = section.wrapping_byte_buffer();
-    InputMemoryStream stream { buffer };
+    InputMemoryStream stream { section.bytes() };
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {

@@ -132,7 +132,7 @@ public:
         unsigned entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
         u32 address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
-        ByteBuffer wrapping_byte_buffer() { return ByteBuffer::wrap(const_cast<char*>(raw_data()), size()); }
+        ReadonlyBytes bytes() const { return { raw_data(), size() }; }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
         const RelocationSection relocations() const;
         u32 flags() const { return m_section_header.sh_flags; }

@@ -40,9 +40,9 @@ class DwarfInfo : public RefCounted<DwarfInfo> {
 public:
     static NonnullRefPtr<DwarfInfo> create(NonnullRefPtr<const ELF::Loader> elf) { return adopt(*new DwarfInfo(move(elf))); }
 
-    const ByteBuffer& debug_info_data() const { return m_debug_info_data; }
-    const ByteBuffer& abbreviation_data() const { return m_abbreviation_data; }
-    const ByteBuffer& debug_strings_data() const { return m_debug_strings_data; }
+    ReadonlyBytes debug_info_data() const { return m_debug_info_data; }
+    ReadonlyBytes abbreviation_data() const { return m_abbreviation_data; }
+    ReadonlyBytes debug_strings_data() const { return m_debug_strings_data; }
 
     template<typename Callback>
     void for_each_compilation_unit(Callback) const;
@@ -51,12 +51,12 @@ private:
     explicit DwarfInfo(NonnullRefPtr<const ELF::Loader> elf);
     void populate_compilation_units();
 
-    ByteBuffer section_data(const String& section_name);
+    ReadonlyBytes section_data(const String& section_name) const;
 
     NonnullRefPtr<const ELF::Loader> m_elf;
-    ByteBuffer m_debug_info_data;
-    ByteBuffer m_abbreviation_data;
-    ByteBuffer m_debug_strings_data;
+    ReadonlyBytes m_debug_info_data;
+    ReadonlyBytes m_abbreviation_data;
+    ReadonlyBytes m_debug_strings_data;
 
     Vector<Dwarf::CompilationUnit> m_compilation_units;
 };
