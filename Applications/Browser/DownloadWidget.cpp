@@ -61,7 +61,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);
     };
-    m_download->on_finish = [this](bool success, auto& payload, auto payload_storage, auto& response_headers, auto) {
+    m_download->on_finish = [this](bool success, auto payload, auto payload_storage, auto& response_headers, auto) {
         did_finish(success, payload, payload_storage, response_headers);
     };
 
@@ -156,7 +156,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
     }
 }
 
-void DownloadWidget::did_finish(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
+void DownloadWidget::did_finish(bool success, ReadonlyBytes payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
 {
     (void)payload;
     (void)payload_storage;
