@@ -1187,15 +1187,17 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
         return false;
     }
 
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.file_bytes + context.data_offset), context.file_size - context.data_offset);
+    ByteBuffer rle_buffer;
+    ReadonlyBytes bytes { context.file_bytes + context.data_offset, context.file_size - context.data_offset };
 
     if (context.dib.info.compression == Compression::RLE4 || context.dib.info.compression == Compression::RLE8
         || context.dib.info.compression == Compression::RLE24) {
-        if (!uncompress_bmp_rle_data(context, buffer))
+        if (!uncompress_bmp_rle_data(context, rle_buffer))
             return false;
+        bytes = rle_buffer.bytes();
     }
 
-    Streamer streamer(buffer.data(), buffer.size());
+    Streamer streamer(bytes.data(), bytes.size());
 
     auto process_row = [&](u32 row) -> bool {
         u32 space_remaining_before_consuming_row = streamer.remaining();
