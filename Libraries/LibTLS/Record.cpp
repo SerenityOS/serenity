@@ -371,7 +371,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             memcpy(temp_buf, buffer.offset_pointer(0), 3);
             *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);
             auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
-            auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
+            auto message_mac = ReadonlyBytes { message_hmac, mac_size };
             if (hmac != message_mac) {
                 dbg() << "integrity check failed (mac length " << mac_size << ")";
                 dbg() << "mac received:";

@@ -92,7 +92,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
         m_context.session_id_size = session_length;
 #ifdef TLS_DEBUG
         dbg() << "Remote session ID:";
-        print_buffer(ByteBuffer::wrap(m_context.session_id, session_length));
+        print_buffer(ReadonlyBytes { m_context.session_id, session_length });
 #endif
     } else {
         m_context.session_id_size = 0;
