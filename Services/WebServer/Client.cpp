@@ -65,12 +65,12 @@ void Client::start()
 
         dbg() << "Got raw request: '" << String::copy(raw_request) << "'";
 
-        handle_request(move(raw_request));
+        handle_request(raw_request.bytes());
         die();
     };
 }
 
-void Client::handle_request(ByteBuffer raw_request)
+void Client::handle_request(ReadonlyBytes raw_request)
 {
     auto request_or_error = HTTP::HttpRequest::from_raw_request(raw_request);
     if (!request_or_error.has_value())
