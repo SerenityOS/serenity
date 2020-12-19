@@ -56,15 +56,14 @@ struct SHA1Digest {
 
 class SHA1 final : public HashFunction<512, SHA1Digest<160 / 8>> {
 public:
+    using HashFunction::update;
+
     SHA1()
     {
         reset();
     }
 
     virtual void update(const u8*, size_t) override;
-
-    virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
-    virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;

@@ -156,6 +156,13 @@ public:
         return this->m_values + start;
     }
 
+    ALWAYS_INLINE constexpr void overwrite(size_t offset, const void* data, size_t data_size)
+    {
+        // make sure we're not told to write past the end
+        ASSERT(offset + data_size <= size());
+        __builtin_memcpy(this->data() + offset, data, data_size);
+    }
+
     ALWAYS_INLINE constexpr size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
     {
         ASSERT(other.size() >= size());

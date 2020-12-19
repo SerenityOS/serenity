@@ -33,7 +33,7 @@ namespace TLS {
 bool TLSv12::expand_key()
 {
     u8 key[192]; // soooooooo many constants
-    auto key_buffer = ByteBuffer::wrap(key, 192);
+    auto key_buffer = Bytes { key, sizeof(key) };
 
     auto is_aead = this->is_aead();
 
@@ -108,7 +108,7 @@ bool TLSv12::expand_key()
     return true;
 }
 
-void TLSv12::pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
+void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     if (!secret.size()) {
         dbg() << "null secret";
@@ -124,7 +124,7 @@ void TLSv12::pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, con
 
     auto l_seed_size = label_length + seed.size() + seed_b.size();
     u8 l_seed[l_seed_size];
-    auto label_seed_buffer = ByteBuffer::wrap(l_seed, l_seed_size);
+    auto label_seed_buffer = Bytes { l_seed, l_seed_size };
     label_seed_buffer.overwrite(0, label, label_length);
     label_seed_buffer.overwrite(label_length, seed.data(), seed.size());
     label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
@@ -133,7 +133,7 @@ void TLSv12::pseudorandom_function(ByteBuffer& output, ReadonlyBytes secret, con
 
     u8 digest[digest_size];
 
-    auto digest_0 = ByteBuffer::wrap(digest, digest_size);
+    auto digest_0 = Bytes { digest, digest_size };
 
     digest_0.overwrite(0, hmac.process(label_seed_buffer).immutable_data(), digest_size);
 

@@ -96,15 +96,14 @@ struct SHA2Digest {
 // FIXME: I want template<size_t BlockSize> but the compiler gets confused
 class SHA256 final : public HashFunction<512, SHA2Digest<256 / 8>> {
 public:
+    using HashFunction::update;
+
     SHA256()
     {
         reset();
     }
 
     virtual void update(const u8*, size_t) override;
-
-    virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
-    virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;
@@ -149,15 +148,14 @@ private:
 
 class SHA512 final : public HashFunction<1024, SHA2Digest<512 / 8>> {
 public:
+    using HashFunction::update;
+
     SHA512()
     {
         reset();
     }
 
     virtual void update(const u8*, size_t) override;
-
-    virtual void update(const ByteBuffer& buffer) override { update(buffer.data(), buffer.size()); };
-    virtual void update(const StringView& string) override { update((const u8*)string.characters_without_null_termination(), string.length()); };
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;
