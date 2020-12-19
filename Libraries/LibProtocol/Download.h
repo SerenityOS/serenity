@@ -53,7 +53,7 @@ public:
     int id() const { return m_download_id; }
     bool stop();
 
-    Function<void(bool success, const ByteBuffer& payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> on_finish;
+    Function<void(bool success, ReadonlyBytes payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> on_finish;
     Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
     Function<CertificateAndKey()> on_certificate_requested;
 

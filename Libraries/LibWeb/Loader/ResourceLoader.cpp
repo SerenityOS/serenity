@@ -170,7 +170,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBu
                 error_callback("Failed to initiate load");
             return;
         }
-        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, const ByteBuffer& payload, auto, auto& response_headers, auto status_code) {
+        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, ReadonlyBytes payload, auto, auto& response_headers, auto status_code) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();

@@ -116,12 +116,12 @@ private:
     bool m_might_be_wrong { false };
 };
 
-static void do_write(const ByteBuffer& payload)
+static void do_write(ReadonlyBytes payload)
 {
     size_t length_remaining = payload.size();
     size_t length_written = 0;
     while (length_remaining > 0) {
-        auto nwritten = fwrite(payload.offset_pointer(length_written), sizeof(char), length_remaining, stdout);
+        auto nwritten = fwrite(payload.data() + length_written, sizeof(char), length_remaining, stdout);
         if (nwritten > 0) {
             length_remaining -= nwritten;
             length_written += nwritten;
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
         previous_downloaded_size = downloaded_size;
         prev_time = current_time;
     };
-    download->on_finish = [&](bool success, auto& payload, auto, auto& response_headers, auto) {
+    download->on_finish = [&](bool success, auto payload, auto, auto& response_headers, auto) {
         fprintf(stderr, "\033]9;-1;\033\\");
         fprintf(stderr, "\n");
         if (success && save_at_provided_name) {
