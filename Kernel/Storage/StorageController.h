@@ -46,13 +46,19 @@ class StorageController : public RefCounted<StorageController>
     , public PCI::DeviceController {
     AK_MAKE_ETERNAL
 public:
+    enum class Type : u8 {
+        IDE,
+        NVMe
+    };
+    virtual Type type() const = 0;
+    virtual RefPtr<StorageDevice> device(u32 index) = 0;
+
 protected:
     explicit StorageController(PCI::Address address)
         : PCI::DeviceController(address)
     {
     }
 
-    virtual RefPtr<StorageDevice> device(u32 index) = 0;
     virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) = 0;
 
 protected:
