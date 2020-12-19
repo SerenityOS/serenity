@@ -69,7 +69,7 @@ public:
 
     void set_headers(const HashMap<String, String>&);
 
-    static Optional<HttpRequest> from_raw_request(const ByteBuffer&);
+    static Optional<HttpRequest> from_raw_request(ReadonlyBytes);
 
 private:
     URL m_url;

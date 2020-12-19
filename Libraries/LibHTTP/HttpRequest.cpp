@@ -79,7 +79,7 @@ ByteBuffer HttpRequest::to_raw_request() const
     return builder.to_byte_buffer();
 }
 
-Optional<HttpRequest> HttpRequest::from_raw_request(const ByteBuffer& raw_request)
+Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
 {
     enum class State {
         InMethod,
