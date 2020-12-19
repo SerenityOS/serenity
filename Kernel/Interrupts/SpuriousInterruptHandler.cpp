@@ -34,17 +34,25 @@ void SpuriousInterruptHandler::initialize(u8 interrupt_number)
     new SpuriousInterruptHandler(interrupt_number);
 }
 
-void SpuriousInterruptHandler::register_handler(GenericInterruptHandler&)
+void SpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
 {
+    ASSERT(!m_real_handler);
+    m_real_handler = &handler;
 }
 void SpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
 {
+    TODO();
 }
 
 bool SpuriousInterruptHandler::eoi()
 {
-    // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call EOI with the correct interrupt number.
-    m_responsible_irq_controller->eoi(*this);
+    // Actually check if IRQ7 or IRQ15 are spurious, and if not, call EOI with the correct interrupt number.
+    if (m_real_irq) {
+        m_responsible_irq_controller->eoi(*this);
+        m_real_irq = false; // return to default state!
+        return true;
+    }
+    m_responsible_irq_controller->spurious_eoi(*this);
     return false;
 }
 
@@ -58,9 +66,15 @@ SpuriousInterruptHandler::~SpuriousInterruptHandler()
 {
 }
 
-void SpuriousInterruptHandler::handle_interrupt(const RegisterState&)
+void SpuriousInterruptHandler::handle_interrupt(const RegisterState& state)
 {
-    // FIXME: Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
+    // Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
+    if (m_responsible_irq_controller->get_isr() & (1 << 15)) {
+        m_real_irq = true; // remember that we had a real IRQ, when EOI later!
+        m_real_handler->increment_invoking_counter();
+        m_real_handler->handle_interrupt(state);
+        return;
+    }
     klog() << "Spurious Interrupt, vector " << interrupt_number();
 }
 
@@ -74,6 +88,7 @@ void SpuriousInterruptHandler::enable_interrupt_vector()
 
 void SpuriousInterruptHandler::disable_interrupt_vector()
 {
+    ASSERT(!m_real_irq); // this flag should not be set when we call this method
     if (!m_enabled)
         return;
     m_enabled = false;

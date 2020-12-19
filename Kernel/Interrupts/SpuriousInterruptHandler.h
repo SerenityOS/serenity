@@ -58,6 +58,7 @@ private:
     void disable_interrupt_vector();
     explicit SpuriousInterruptHandler(u8 interrupt_number);
     bool m_enabled;
+    bool m_real_irq { false };
     RefPtr<IRQController> m_responsible_irq_controller;
     OwnPtr<GenericInterruptHandler> m_real_handler;
 };
