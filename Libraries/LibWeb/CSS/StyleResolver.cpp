@@ -248,6 +248,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document);
+        return;
     }
 
     if (property_id == CSS::PropertyID::BorderTop
