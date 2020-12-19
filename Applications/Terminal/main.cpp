@@ -193,10 +193,28 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 
     auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (Audible) System Bell");
     auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (Visual) Terminal Bell");
-    sysbell_radio.set_checked(terminal.should_beep());
-    visbell_radio.set_checked(!terminal.should_beep());
-    sysbell_radio.on_checked = [&terminal](const bool checked) {
-        terminal.set_should_beep(checked);
+    auto& nobell_radio = radio_container.add<GUI::RadioButton>("Disable Terminal Bell");
+
+    switch (terminal.bell_mode()) {
+    case TerminalWidget::BellMode::Visible:
+        sysbell_radio.set_checked(true);
+        break;
+    case TerminalWidget::BellMode::AudibleBeep:
+        visbell_radio.set_checked(true);
+        break;
+    case TerminalWidget::BellMode::Disabled:
+        nobell_radio.set_checked(true);
+        break;
+    }
+
+    sysbell_radio.on_checked = [&terminal](const bool) {
+        terminal.set_bell_mode(TerminalWidget::BellMode::AudibleBeep);
+    };
+    visbell_radio.on_checked = [&terminal](const bool) {
+        terminal.set_bell_mode(TerminalWidget::BellMode::Visible);
+    };
+    nobell_radio.on_checked = [&terminal](const bool) {
+        terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
     };
 
     auto& slider_container = settings.add<GUI::GroupBox>("Background Opacity");
@@ -316,7 +334,15 @@ int main(int argc, char** argv)
     terminal.apply_size_increments_to_window(*window);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
-    terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
+
+    auto bell = config->read_entry("Window", "Bell", "Visible");
+    if (bell == "AudibleBeep") {
+        terminal.set_bell_mode(TerminalWidget::BellMode::AudibleBeep);
+    } else if (bell == "Disabled") {
+        terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
+    } else {
+        terminal.set_bell_mode(TerminalWidget::BellMode::Visible);
+    }
 
     RefPtr<GUI::Window> settings_window;
 

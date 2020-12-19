@@ -61,8 +61,15 @@ public:
 
     void set_opacity(u8);
     float opacity() { return m_opacity; };
-    bool should_beep() { return m_should_beep; }
-    void set_should_beep(bool sb) { m_should_beep = sb; };
+
+    enum class BellMode {
+        Visible,
+        AudibleBeep,
+        Disabled
+    };
+
+    BellMode bell_mode() { return m_bell_mode; }
+    void set_bell_mode(BellMode bm) { m_bell_mode = bm; };
 
     RefPtr<Core::ConfigFile> config() const { return m_config; }
 
@@ -151,7 +158,7 @@ private:
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
     String m_context_menu_href;
 
-    bool m_should_beep { false };
+    BellMode m_bell_mode { BellMode::Visible };
     bool m_belling { false };
     bool m_alt_key_held { false };
     bool m_rectangle_selection { false };
