@@ -123,8 +123,8 @@ mknod mnt/dev/ptmx c 5 2
 chmod 666 mnt/dev/ptmx
 mknod mnt/dev/hda b 3 0
 mknod mnt/dev/hdb b 3 1
-mknod mnt/dev/hdc b 4 0
-mknod mnt/dev/hdd b 4 1
+mknod mnt/dev/hdc b 3 2
+mknod mnt/dev/hdd b 3 3
 for hd in a b c d; do
     chmod 600 mnt/dev/hd$hd
 done
