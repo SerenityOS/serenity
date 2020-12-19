@@ -356,11 +356,10 @@ void IDEChannel::detect_disks()
             continue;
         klog() << "IDEChannel: Name=" << ((char*)bbuf.data() + 54) << ", C/H/Spt=" << cyls << "/" << heads << "/" << spt;
 
-        int major = (m_channel_number == 0) ? 3 : 4;
         if (i == 0) {
-            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, cyls, heads, spt, major, 0);
+            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, cyls, heads, spt, 3, (m_channel_number == 0) ? 0 : 2);
         } else {
-            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, cyls, heads, spt, major, 1);
+            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, cyls, heads, spt, 3, (m_channel_number == 0) ? 1 : 3);
         }
     }
 }
