@@ -62,7 +62,7 @@ static_assert(sizeof(PNG_IHDR) == 13);
 
 struct Scanline {
     u8 filter { 0 };
-    ByteBuffer data {};
+    ReadonlyBytes data {};
 };
 
 struct [[gnu::packed]] PaletteEntry
@@ -162,11 +162,11 @@ public:
         return true;
     }
 
-    bool wrap_bytes(ByteBuffer& buffer, size_t count)
+    bool wrap_bytes(ReadonlyBytes& buffer, size_t count)
     {
         if (m_size_remaining < count)
             return false;
-        buffer = ByteBuffer::wrap(const_cast<u8*>(m_data_ptr), count);
+        buffer = ReadonlyBytes { m_data_ptr, count };
         m_data_ptr += count;
         m_size_remaining -= count;
         return true;
@@ -368,7 +368,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             auto pixels_per_byte = 8 / context.bit_depth;
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
-                auto* gray_values = (u8*)context.scanlines[y].data.data();
+                auto* gray_values = context.scanlines[y].data.data();
                 for (int x = 0; x < context.width; ++x) {
                     auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (x % pixels_per_byte));
                     auto value = (gray_values[x / pixels_per_byte] >> bit_offset) & mask;
@@ -424,7 +424,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
     case 3:
         if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
-                auto* palette_index = (u8*)context.scanlines[y].data.data();
+                auto* palette_index = context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     auto& color = context.palette_data.at((int)palette_index[i]);
@@ -441,7 +441,7 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             auto pixels_per_byte = 8 / context.bit_depth;
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
-                auto* palette_indexes = (u8*)context.scanlines[y].data.data();
+                auto* palette_indexes = context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
                     auto palette_index = (palette_indexes[i / pixels_per_byte] >> bit_offset) & mask;
@@ -811,7 +811,7 @@ static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 
-static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
+static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
@@ -877,19 +877,19 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
     return true;
 }
 
-static bool process_IDAT(const ByteBuffer& data, PNGLoadingContext& context)
+static bool process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
     context.compressed_data.append(data.data(), data.size());
     return true;
 }
 
-static bool process_PLTE(const ByteBuffer& data, PNGLoadingContext& context)
+static bool process_PLTE(ReadonlyBytes data, PNGLoadingContext& context)
 {
     context.palette_data.append((const PaletteEntry*)data.data(), data.size() / 3);
     return true;
 }
 
-static bool process_tRNS(const ByteBuffer& data, PNGLoadingContext& context)
+static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
 {
     switch (context.color_type) {
     case 3:
@@ -916,7 +916,7 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 #endif
         return false;
     }
-    ByteBuffer chunk_data;
+    ReadonlyBytes chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
 #ifdef PNG_DEBUG
         printf("Bail at chunk_data\n");
