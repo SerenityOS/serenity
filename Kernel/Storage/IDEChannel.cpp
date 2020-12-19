@@ -114,11 +114,11 @@ NonnullOwnPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IO
     return make<IDEChannel>(controller, io_group, type, force_pio);
 }
 
-RefPtr<StorageDevice> IDEChannel::master_device()
+RefPtr<StorageDevice> IDEChannel::master_device() const
 {
     return m_master;
 }
-RefPtr<StorageDevice> IDEChannel::slave_device()
+RefPtr<StorageDevice> IDEChannel::slave_device() const
 {
     return m_slave;
 }
