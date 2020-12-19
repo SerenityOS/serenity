@@ -43,6 +43,7 @@ set(KERNEL_SOURCES
     Storage/IDEController.cpp
     Storage/IDEChannel.cpp
     Storage/PATADiskDevice.cpp
+    Storage/StorageManagement.cpp
     DoubleBuffer.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
