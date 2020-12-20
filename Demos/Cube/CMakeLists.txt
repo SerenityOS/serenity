@@ -2,5 +2,5 @@ set(SOURCES
     Cube.cpp
 )
 
-serenity_bin(Cube)
+serenity_app(Cube ICON app-cube)
 target_link_libraries(Cube LibGUI)

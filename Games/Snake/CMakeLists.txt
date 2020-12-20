@@ -3,5 +3,5 @@ set(SOURCES
     SnakeGame.cpp
 )
 
-serenity_bin(Snake)
+serenity_app(Snake ICON app-snake)
 target_link_libraries(Snake LibGUI)

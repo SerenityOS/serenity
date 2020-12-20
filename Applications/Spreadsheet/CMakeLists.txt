@@ -24,5 +24,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(Spreadsheet)
+serenity_app(Spreadsheet ICON app-spreadsheet)
 target_link_libraries(Spreadsheet LibGUI LibJS LibWeb)

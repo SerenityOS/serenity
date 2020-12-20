@@ -7,5 +7,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(FontEditor)
+serenity_app(FontEditor ICON app-font-editor)
 target_link_libraries(FontEditor LibGUI LibGfx)

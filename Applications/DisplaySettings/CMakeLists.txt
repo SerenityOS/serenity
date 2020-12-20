@@ -4,5 +4,5 @@ set(SOURCES
     MonitorWidget.cpp
 )
 
-serenity_bin(DisplaySettings)
+serenity_app(DisplaySettings ICON app-display-settings)
 target_link_libraries(DisplaySettings LibGUI)
