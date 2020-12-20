@@ -45,6 +45,7 @@ private:
     struct PropertyValuePair {
         String property;
         String value;
+        Optional<URL> link = {};
     };
 
     struct PermissionMasks {
