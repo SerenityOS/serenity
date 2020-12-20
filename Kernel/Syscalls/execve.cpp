@@ -188,8 +188,9 @@ int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPt
         return 0;
     }
 
-    // TODO: This should be randomized for ASLR
-    constexpr FlatPtr interpreter_load_offset = 0x08000000;
+    // TODO: I'm sure this can be randomized even better. :^)
+    FlatPtr random_offset = get_good_random<u16>() * PAGE_SIZE;
+    FlatPtr interpreter_load_offset = 0x08000000 + random_offset;
 
     auto interpreter_load_result = load_elf_object(*interpreter_description, interpreter_load_offset, ShouldAllocateTls::No);
     if (interpreter_load_result.is_error())
