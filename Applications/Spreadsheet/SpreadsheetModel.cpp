@@ -57,8 +57,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         if (!cell)
             return String::empty();
 
-        if (cell->kind == Spreadsheet::Cell::Formula) {
-            if (auto object = as_error(cell->evaluated_data)) {
+        if (cell->kind() == Spreadsheet::Cell::Formula) {
+            if (auto object = as_error(cell->evaluated_data())) {
                 StringBuilder builder;
                 auto error = object->get("message").to_string_without_side_effects();
                 builder.append("Error: ");
@@ -86,8 +86,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         if (!cell)
             return {};
 
-        if (cell->kind == Spreadsheet::Cell::Formula) {
-            if (as_error(cell->evaluated_data))
+        if (cell->kind() == Spreadsheet::Cell::Formula) {
+            if (as_error(cell->evaluated_data()))
                 return Color(Color::Red);
         }
 
