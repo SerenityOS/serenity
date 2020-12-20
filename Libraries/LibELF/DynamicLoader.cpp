@@ -327,17 +327,32 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         }
         case R_386_GLOB_DAT: {
             auto symbol = relocation.symbol();
-            if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
-                || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")
-                || !strcmp(symbol.name(), "__cxa_finalize") // __cxa_finalize will be called from libc's exit()
-            ) {
-                // We do not support these
-                break;
-            }
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
             auto res = lookup_symbol(symbol);
+            if (!res.found) {
+                // We do not support these
+                // TODO: Can we tell gcc not to generate the piece of code that uses these?
+                // (--disable-tm-clone-registry flag in gcc conifugraion?)
+                if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
+                    || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")) {
+                    break;
+                }
+
+                // The "__do_global_dtors_aux" function in libgcc_s.so needs this symbol,
+                // but we do not use that function so we don't actually need to resolve this symbol.
+                // The reason we can't resolve it here is that the symbol is defined in libc.so,
+                // but there's a circular dependecy between libgcc_s.so and libc.so,
+                // we deal with it by first loading libgcc_s and then libc.
+                // So we cannot find this symbol at this time (libc is not yet loaded).
+                if (m_filename == "libgcc_s.so" && !strcmp(symbol.name(), "__cxa_finalize")) {
+                    break;
+                }
+
+                // Symbol not found
+                ASSERT_NOT_REACHED();
+            }
             VERBOSE("was symbol found? %d, address: 0x%x\n", res.found, res.address);
-            ASSERT(res.found);
+            VERBOSE("object: %s\n", m_filename.characters());
 
             if (!res.found) {
                 // TODO this is a hack

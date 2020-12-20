@@ -99,8 +99,7 @@ function(serenity_lib target_name fs_name)
     serenity_install_headers(${target_name})
     serenity_install_sources("Libraries/${target_name}")
     #add_library(${target_name} SHARED ${SOURCES} ${GENERATED_SOURCES})
-    add_library(${target_name} SHARED ${SOURCES} ${GENERATED_SOURCES} ${CMAKE_SOURCE_DIR}/Libraries/LibC/crt0_shared.cpp)
-    #library_sources("{target_name}" PRIVATE ${CMAKE_SOURCE_DIR}/Libraries/LibC/crt0_shared.cpp)
+    add_library(${target_name} SHARED ${SOURCES} ${GENERATED_SOURCES})
     install(TARGETS ${target_name} DESTINATION usr/lib)
     set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
     serenity_generated_sources(${target_name})
@@ -138,7 +137,6 @@ endfunction()
 
 function(serenity_bin target_name)
     add_executable(${target_name} ${SOURCES})
-    target_sources(${target_name} PRIVATE ${CMAKE_SOURCE_DIR}/Libraries/LibC/crt0_shared.cpp)
     install(TARGETS ${target_name} RUNTIME DESTINATION bin)
     serenity_generated_sources(${target_name})
 endfunction()
@@ -244,8 +242,8 @@ add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 add_compile_definitions(DEBUG SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostartfiles -pie -fpic")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
+ 
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Libraries/LibC)
