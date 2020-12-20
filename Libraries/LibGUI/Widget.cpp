@@ -936,7 +936,8 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
 bool Widget::load_from_gml(const StringView& gml_string)
 {
     auto value = parse_gml(gml_string);
-    ASSERT(value.is_object());
+    if (!value.is_object())
+        return false;
     return load_from_json(value.as_object());
 }
 

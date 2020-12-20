@@ -47,22 +47,26 @@ static void swallow_whitespace(GenericLexer& scanner)
     scanner.consume_while([](auto ch) { return isspace(ch); });
 }
 
-static JsonValue parse_core_object(GenericLexer& scanner)
+static Optional<JsonValue> parse_core_object(GenericLexer& scanner)
 {
     JsonObject object;
     JsonArray children;
 
     // '@Foo' means new Core::Object of class Foo
-    if (!scanner.consume_specific('@'))
-        ASSERT_NOT_REACHED();
+    if (!scanner.consume_specific('@')) {
+        dbgln("Expected '@'");
+        return {};
+    }
 
     auto class_name = scanner.consume_while([](auto ch) { return is_valid_class_name_character(ch); });
     object.set("class", JsonValue(class_name));
 
     swallow_whitespace(scanner);
 
-    if (!scanner.consume_specific('{'))
-        ASSERT_NOT_REACHED();
+    if (!scanner.consume_specific('{')) {
+        dbgln("Expected '{{'");
+        return {};
+    }
 
     swallow_whitespace(scanner);
 
@@ -77,34 +81,57 @@ static JsonValue parse_core_object(GenericLexer& scanner)
         if (scanner.peek() == '@') {
             // It's a child object.
             auto value = parse_core_object(scanner);
-            ASSERT(value.is_object());
-            children.append(move(value));
+            if (!value.has_value())
+                return {};
+            if (!value.value().is_object()) {
+                dbgln("Expected child to be Core::Object");
+                return {};
+            }
+            children.append(value.release_value());
         } else {
             // It's a property.
             auto property_name = scanner.consume_while([](auto ch) { return is_valid_property_name_character(ch); });
             swallow_whitespace(scanner);
 
-            ASSERT(!property_name.is_empty());
+            if (property_name.is_empty()) {
+                dbgln("Expected non-empty property name");
+                return {};
+            }
 
-            if (!scanner.consume_specific(':'))
-                ASSERT_NOT_REACHED();
+            if (!scanner.consume_specific(':')) {
+                dbgln("Expected ':'");
+                return {};
+            }
 
             swallow_whitespace(scanner);
 
             JsonValue value;
             if (scanner.peek() == '@') {
-                value = parse_core_object(scanner);
-                ASSERT(value.is_object());
+                auto parsed_value = parse_core_object(scanner);
+                if (!parsed_value.has_value())
+                    return {};
+                if (!parsed_value.value().is_object()) {
+                    dbgln("Expected property to be Core::Object");
+                    return {};
+                }
+                value = parsed_value.release_value();
             } else {
                 auto value_string = scanner.consume_line();
-                value = JsonValue::from_string(value_string).release_value();
+                auto parsed_value = JsonValue::from_string(value_string);
+                if (!parsed_value.has_value()) {
+                    dbgln("Expected property to be JSON value");
+                    return {};
+                }
+                value = parsed_value.release_value();
             }
             object.set(property_name, move(value));
         }
     }
 
-    if (!scanner.consume_specific('}'))
-        ASSERT_NOT_REACHED();
+    if (!scanner.consume_specific('}')) {
+        dbgln("Expected '}'");
+        return {};
+    }
 
     if (!children.is_empty())
         object.set("children", move(children));
@@ -117,10 +144,10 @@ JsonValue parse_gml(const StringView& string)
     GenericLexer scanner(string);
     auto root = parse_core_object(scanner);
 
-    if (root.is_null())
+    if (!root.has_value())
         return JsonValue();
 
-    return root;
+    return root.release_value();
 }
 
 }
