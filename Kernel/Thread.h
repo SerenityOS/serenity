@@ -36,6 +36,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/SafeMem.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/LockMode.h>

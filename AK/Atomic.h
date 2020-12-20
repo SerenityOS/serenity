@@ -31,6 +31,11 @@
 
 namespace AK {
 
+static inline void atomic_thread_fence(MemoryOrder order) noexcept
+{
+    return __atomic_thread_fence(order);
+}
+
 template<typename T>
 static inline T atomic_exchange(volatile T* var, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
 {

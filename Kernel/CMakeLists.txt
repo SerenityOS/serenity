@@ -12,6 +12,7 @@ set(KERNEL_SOURCES
     ACPI/Parser.cpp
     Arch/i386/CPU.cpp
     Arch/i386/ProcessorInfo.cpp
+    Arch/i386/SafeMem.cpp
     Arch/PC/BIOS.cpp
     CMOS.cpp
     CommandLine.cpp

@@ -37,6 +37,16 @@ struct StringArgument;
 String copy_string_from_user(const char*, size_t);
 String copy_string_from_user(Userspace<const char*>, size_t);
 
+[[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_load_relaxed(volatile u32* var);
+[[nodiscard]] bool user_atomic_store_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val);
+
 extern "C" {
 
 [[nodiscard]] bool copy_to_user(void*, const void*, size_t);

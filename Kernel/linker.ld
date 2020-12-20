@@ -13,6 +13,14 @@ SECTIONS
         start_of_kernel_text = .;
         *(.text)
         *(.text.startup)
+
+        start_of_safemem_text = .;
+        *(.text.safemem)
+        end_of_safemem_text = .;
+        start_of_safemem_atomic_text = .;
+        *(.text.safemem.atomic)
+        end_of_safemem_atomic_text = .;
+
         end_of_kernel_text = .;
     }
 
