@@ -60,25 +60,36 @@ struct TypeErasedParameter {
         Custom
     };
 
+    static Type get_type_from_size(size_t size, bool is_unsigned)
+    {
+        if (is_unsigned) {
+            if (size == 1)
+                return Type::UInt8;
+            if (size == 2)
+                return Type::UInt16;
+            if (size == 4)
+                return Type::UInt32;
+            if (size == 8)
+                return Type::UInt64;
+        } else {
+            if (size == 1)
+                return Type::Int8;
+            if (size == 2)
+                return Type::Int16;
+            if (size == 4)
+                return Type::Int32;
+            if (size == 8)
+                return Type::Int64;
+        }
+
+        ASSERT_NOT_REACHED();
+    }
+
     template<typename T>
     static Type get_type()
     {
-        if (IsSame<T, u8>::value)
-            return Type::UInt8;
-        if (IsSame<T, u16>::value)
-            return Type::UInt16;
-        if (IsSame<T, u32>::value)
-            return Type::UInt32;
-        if (IsSame<T, u64>::value)
-            return Type::UInt64;
-        if (IsSame<T, i8>::value)
-            return Type::Int8;
-        if (IsSame<T, i16>::value)
-            return Type::Int16;
-        if (IsSame<T, i32>::value)
-            return Type::Int32;
-        if (IsSame<T, i64>::value)
-            return Type::Int64;
+        if (IsIntegral<T>::value)
+            return get_type_from_size(sizeof(T), IsUnsigned<T>::value);
 
         return Type::Custom;
     }
