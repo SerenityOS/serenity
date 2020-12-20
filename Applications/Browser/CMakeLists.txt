@@ -1,5 +1,5 @@
-compile_json_gui(BrowserWindow.json BrowserWindowUI.h browser_window_ui_json)
-compile_json_gui(Tab.json TabUI.h tab_ui_json)
+compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
+compile_gml(Tab.gml TabGML.h tab_gml)
 
 set(SOURCES
     BookmarksBarWidget.cpp
@@ -11,8 +11,8 @@ set(SOURCES
     main.cpp
     Tab.cpp
     WindowActions.cpp
-    BrowserWindowUI.h
-    TabUI.h
+    BrowserWindowGML.h
+    TabGML.h
 )
 
 serenity_bin(Browser)

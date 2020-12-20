@@ -1,9 +1,9 @@
-compile_json_gui(MainWindow.json MainWindowUI.h main_window_ui_json)
+compile_gml(MainWindow.gml MainWindowGML.h main_window_gml)
 
 set(SOURCES
     main.cpp
     TextEditorWidget.cpp
-    MainWindowUI.h
+    MainWindowGML.h
 )
 
 serenity_bin(TextEditor)
