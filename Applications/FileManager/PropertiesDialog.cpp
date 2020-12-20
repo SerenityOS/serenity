@@ -27,10 +27,12 @@
 #include "PropertiesDialog.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/Link.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TabWidget.h>
 #include <grp.h>
@@ -116,14 +118,18 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
 
     auto properties = Vector<PropertyValuePair>();
     properties.append({ "Type:", get_description(m_mode) });
-    properties.append({ "Location:", path });
+    auto parent_link = URL::create_with_file_protocol(m_parent_path);
+    properties.append(PropertyValuePair { "Location:", path, Optional(parent_link) });
 
     if (S_ISLNK(m_mode)) {
         auto link_destination = Core::File::read_link(path);
         if (link_destination.is_null()) {
             perror("readlink");
         } else {
-            properties.append({ "Link target:", link_destination });
+            auto link_directory = LexicalPath(link_destination);
+            ASSERT(link_directory.is_valid());
+            auto link_parent = URL::create_with_file_protocol(link_directory.dirname());
+            properties.append({ "Link target:", link_destination, Optional(link_parent) });
         }
     }
 
@@ -279,7 +285,15 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
         label_property.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label_property.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
 
-        label_container.add<GUI::Label>(pair.value).set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        if (!pair.link.has_value()) {
+            label_container.add<GUI::Label>(pair.value).set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        } else {
+            auto& link = label_container.add<GUI::Link>(pair.value);
+            link.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            link.on_click = [pair]() {
+                Desktop::Launcher::open(pair.link.value());
+            };
+        }
 
         max_width = max(max_width, label_property.font().width(pair.property));
         property_labels.append(label_property);
