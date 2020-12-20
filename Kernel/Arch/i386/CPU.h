@@ -284,10 +284,6 @@ void flush_idt();
 void load_task_register(u16 selector);
 void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
-[[nodiscard]] bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at);
-[[nodiscard]] ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at);
-[[nodiscard]] bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at);
-
 #define LSW(x) ((u32)(x)&0xFFFF)
 #define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x)&0xFF)
