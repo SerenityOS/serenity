@@ -44,8 +44,8 @@ public:
     int min() const { return m_min; }
     int max() const { return m_max; }
 
-    String caption() const { return m_caption; }
-    void set_caption(const StringView& caption) { m_caption = caption; }
+    String text() const { return m_text; }
+    void set_text(String text) { m_text = move(text); }
 
     enum Format {
         NoText,
@@ -65,7 +65,7 @@ private:
     int m_min { 0 };
     int m_max { 100 };
     int m_value { 0 };
-    String m_caption;
+    String m_text;
 };
 
 }

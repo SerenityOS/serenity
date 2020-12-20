@@ -48,6 +48,7 @@
 
         @GUI::ProgressBar {
             name: "progressbar"
+            text: "Generating thumbnails: "
             visible: false
         }
     }

@@ -34,6 +34,7 @@ namespace GUI {
 
 ProgressBar::ProgressBar()
 {
+    REGISTER_STRING_PROPERTY("text", text, set_text);
 }
 
 ProgressBar::~ProgressBar()
@@ -70,7 +71,7 @@ void ProgressBar::paint_event(PaintEvent& event)
         // Then we draw the progress text over the gradient.
         // We draw it twice, once offset (1, 1) for a drop shadow look.
         StringBuilder builder;
-        builder.append(m_caption);
+        builder.append(m_text);
         if (m_format == Format::Percentage) {
             float range_size = m_max - m_min;
             float progress = (m_value - m_min) / range_size;
