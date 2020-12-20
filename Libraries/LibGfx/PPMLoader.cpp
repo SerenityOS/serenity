@@ -319,6 +319,10 @@ static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
         return false;
 
     context.bitmap = Bitmap::create_purgeable(BitmapFormat::RGB32, { context.width, context.height });
+    if (!context.bitmap) {
+        context.state = PPMLoadingContext::State::Error;
+        return false;
+    }
 
     size_t index = 0;
     for (int y = 0; y < context.height; ++y) {

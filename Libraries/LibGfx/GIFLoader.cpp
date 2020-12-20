@@ -297,7 +297,11 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
     if (context.state < GIFLoadingContext::State::FrameComplete) {
         start_frame = 0;
         context.frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        if (!context.frame_buffer)
+            return false;
         context.prev_frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        if (!context.prev_frame_buffer)
+            return false;
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
     }
