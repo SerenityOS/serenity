@@ -292,6 +292,8 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     }
 
     desc.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { desc.width, desc.height });
+    if (!desc.bitmap)
+        return false;
     Bitmap& bitmap = *desc.bitmap;
     const u8* image_base = context.data + desc.offset + sizeof(info);
     const BMP_ARGB* data_base = (const BMP_ARGB*)image_base;

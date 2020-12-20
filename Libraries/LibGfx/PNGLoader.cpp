@@ -734,6 +734,8 @@ static bool decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
     context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
+    if (!context.bitmap)
+        return false;
 
     for (int pass = 1; pass <= 7; ++pass) {
         if (!decode_adam7_pass(context, streamer, pass))

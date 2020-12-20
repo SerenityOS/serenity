@@ -1126,9 +1126,11 @@ static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& m
     }
 }
 
-static void compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>& macroblocks)
+static bool compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>& macroblocks)
 {
     context.bitmap = Bitmap::create_purgeable(BitmapFormat::RGB32, { context.frame.width, context.frame.height });
+    if (!context.bitmap)
+        return false;
 
     for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {
         const u32 block_row = y / 8;
@@ -1142,6 +1144,8 @@ static void compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>&
             context.bitmap->set_pixel(x, y, color);
         }
     }
+
+    return true;
 }
 
 static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
@@ -1288,7 +1292,8 @@ static bool decode_jpg(JPGLoadingContext& context)
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
     ycbcr_to_rgb(context, macroblocks);
-    compose_bitmap(context, macroblocks);
+    if (!compose_bitmap(context, macroblocks))
+        return false;
     return true;
 }
 
