@@ -105,8 +105,7 @@ void MemoryStatsWidget::refresh()
     ASSERT(json_result.has_value());
     auto json = json_result.value().as_object();
 
-    unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
-    (void)kmalloc_eternal_allocated;
+    [[maybe_unused]] unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
     unsigned kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
     unsigned kmalloc_available = json.get("kmalloc_available").to_u32();
     unsigned user_physical_allocated = json.get("user_physical_allocated").to_u32();

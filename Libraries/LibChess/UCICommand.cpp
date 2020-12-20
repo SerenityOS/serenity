@@ -316,9 +316,8 @@ String BestMoveCommand::to_string() const
     return builder.build();
 }
 
-InfoCommand InfoCommand::from_string(const StringView& command)
+InfoCommand InfoCommand::from_string([[maybe_unused]] const StringView& command)
 {
-    (void)command;
     // FIXME: Implement this.
     ASSERT_NOT_REACHED();
 }

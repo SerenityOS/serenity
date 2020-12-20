@@ -65,7 +65,7 @@ TEST_CASE(negative_operator_lt)
 {
     ByteBuffer a = ByteBuffer::copy("Hello, world", 10);
     ByteBuffer b = ByteBuffer::copy("Hello, friend", 10);
-    (void)(a < b);
+    [[maybe_unused]] auto res = a < b;
     // error: error: use of deleted function ‘bool AK::ByteBuffer::operator<(const AK::ByteBuffer&) const’
 }
 #endif /* COMPILE_NEGATIVE_TESTS */

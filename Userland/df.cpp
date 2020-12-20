@@ -78,13 +78,10 @@ int main(int argc, char** argv)
         auto fs = fs_object.get("class_name").to_string();
         auto total_block_count = fs_object.get("total_block_count").to_u32();
         auto free_block_count = fs_object.get("free_block_count").to_u32();
-        auto total_inode_count = fs_object.get("total_inode_count").to_u32();
-        auto free_inode_count = fs_object.get("free_inode_count").to_u32();
+        [[maybe_unused]] auto total_inode_count = fs_object.get("total_inode_count").to_u32();
+        [[maybe_unused]] auto free_inode_count = fs_object.get("free_inode_count").to_u32();
         auto block_size = fs_object.get("block_size").to_u32();
         auto mount_point = fs_object.get("mount_point").to_string();
-
-        (void)total_inode_count;
-        (void)free_inode_count;
 
         printf("%-10s", fs.characters());
 

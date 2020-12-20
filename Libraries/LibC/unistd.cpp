@@ -515,11 +515,8 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-long fpathconf(int fd, int name)
+long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
 {
-    (void)fd;
-    (void)name;
-
     switch (name) {
     case _PC_PATH_MAX:
         return PATH_MAX;
@@ -530,10 +527,8 @@ long fpathconf(int fd, int name)
     ASSERT_NOT_REACHED();
 }
 
-long pathconf(const char* path, int name)
+long pathconf([[maybe_unused]] const char* path, int name)
 {
-    (void)path;
-
     switch (name) {
     case _PC_PATH_MAX:
         return PATH_MAX;
@@ -614,9 +609,8 @@ void sysbeep()
     syscall(SC_beep);
 }
 
-int fsync(int fd)
+int fsync([[maybe_unused]] int fd)
 {
-    UNUSED_PARAM(fd);
     dbgprintf("FIXME: Implement fsync()\n");
     return 0;
 }

@@ -146,8 +146,7 @@ int main(int argc, char** argv)
 
     auto& radio1 = radio_button_container.add<GUI::RadioButton>("RadioButton 1");
     radio1.set_checked(true);
-    auto& radio2 = radio_button_container.add<GUI::RadioButton>("RadioButton 2");
-    (void)radio2;
+    [[maybe_unused]] auto& radio2 = radio_button_container.add<GUI::RadioButton>("RadioButton 2");
     auto& radio3 = radio_button_container.add<GUI::RadioButton>("RadioButton 3");
     radio3.set_enabled(false);
 
@@ -186,13 +185,11 @@ int main(int argc, char** argv)
     auto& checkbox2 = checkbox_container.add<GUI::CheckBox>("CheckBox 2");
     checkbox2.set_enabled(false);
 
-    auto& label1 = label_container.add<GUI::Label>("Label 1");
-    (void)label1;
+    [[maybe_unused]] auto& label1 = label_container.add<GUI::Label>("Label 1");
     auto& label2 = label_container.add<GUI::Label>("Label 2");
     label2.set_enabled(false);
 
-    auto& spinbox1 = spin_container.add<GUI::SpinBox>();
-    (void)spinbox1;
+    [[maybe_unused]] auto& spinbox1 = spin_container.add<GUI::SpinBox>();
     auto& spinbox2 = spin_container.add<GUI::SpinBox>();
     spinbox2.set_enabled(false);
 
@@ -213,8 +210,7 @@ int main(int argc, char** argv)
     auto& button2 = button_vert1_container.add<GUI::Button>("Button 2");
     button2.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"));
     button2.set_enabled(false);
-    auto& button3 = button_vert2_container.add<GUI::Button>("\xF0\x9F\x98\x88 Button 3");
-    (void)button3;
+    [[maybe_unused]] auto& button3 = button_vert2_container.add<GUI::Button>("\xF0\x9F\x98\x88 Button 3");
     auto& button4 = button_vert2_container.add<GUI::Button>("\xF0\x9F\x8D\x86 Button 4");
     button4.set_enabled(false);
 
@@ -334,8 +330,7 @@ int main(int argc, char** argv)
     horizontal_slider_container2.set_layout<GUI::HorizontalBoxLayout>();
     horizontal_slider_container2.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& slider1 = horizontal_slider_container.add<GUI::HorizontalSlider>();
-    (void)slider1;
+    [[maybe_unused]] auto& slider1 = horizontal_slider_container.add<GUI::HorizontalSlider>();
     auto& slider2 = horizontal_slider_container.add<GUI::HorizontalSlider>();
     slider2.set_enabled(false);
     slider2.set_value(50);

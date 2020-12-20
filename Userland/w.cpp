@@ -85,8 +85,7 @@ int main()
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
-        auto pid = entry.get("pid").to_i32();
-        (void)pid;
+        [[maybe_unused]] auto pid = entry.get("pid").to_i32();
 
         auto login_time = Core::DateTime::from_timestamp(entry.get("login_at").to_number<time_t>());
         auto login_at = login_time.to_string("%b%d %H:%M:%S");

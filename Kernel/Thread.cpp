@@ -213,7 +213,7 @@ void Thread::die_if_needed()
         return;
 
     u32 unlock_count;
-    (void)unlock_process_if_locked(unlock_count);
+    [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
 
     ScopedCritical critical;
     set_should_die();
@@ -240,7 +240,7 @@ void Thread::exit(void* exit_value)
     m_join_condition.thread_did_exit(exit_value);
     set_should_die();
     u32 unlock_count;
-    (void)unlock_process_if_locked(unlock_count);
+    [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
     die_if_needed();
 }
 

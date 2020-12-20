@@ -116,7 +116,7 @@ void CoreDump::write_elf_header()
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    (void)m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf32_Ehdr));
+    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf32_Ehdr));
 }
 
 void CoreDump::write_program_headers(size_t notes_size)
@@ -142,7 +142,7 @@ void CoreDump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        (void)m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(Elf32_Phdr));
+        [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(Elf32_Phdr));
     }
 
     Elf32_Phdr notes_pheader {};
@@ -155,7 +155,7 @@ void CoreDump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    (void)m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf32_Phdr));
+    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf32_Phdr));
 }
 
 void CoreDump::write_regions()
@@ -182,14 +182,14 @@ void CoreDump::write_regions()
                 //       (A page may not be backed by a physical page because it has never been faulted in when the process ran).
                 src_buffer = UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }
-            (void)m_fd->write(src_buffer.value(), PAGE_SIZE);
+            [[maybe_unused]] auto rc = m_fd->write(src_buffer.value(), PAGE_SIZE);
         }
     }
 }
 
 void CoreDump::write_notes_segment(ByteBuffer& notes_segment)
 {
-    (void)m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
+    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
 }
 
 ByteBuffer CoreDump::create_notes_threads_data() const
@@ -264,7 +264,7 @@ void CoreDump::write()
     write_regions();
     write_notes_segment(notes_segment);
 
-    (void)m_fd->chmod(0400); // Make coredump file readable
+    [[maybe_unused]] auto rc = m_fd->chmod(0400); // Make coredump file readable
 }
 
 }

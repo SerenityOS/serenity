@@ -337,7 +337,6 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
 JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)
 {
     // FIXME: Figure out what we should do here. Just ignore attempts to set window.document for now.
-    UNUSED_PARAM(value);
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)

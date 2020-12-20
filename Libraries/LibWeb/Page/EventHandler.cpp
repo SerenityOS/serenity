@@ -301,9 +301,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     return true;
 }
 
-void EventHandler::dump_selection(const char* event_name) const
+void EventHandler::dump_selection([[maybe_unused]] const char* event_name) const
 {
-    UNUSED_PARAM(event_name);
 #ifdef SELECTION_DEBUG
     dbg() << event_name << " selection start: "
           << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "

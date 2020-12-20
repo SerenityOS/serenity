@@ -61,8 +61,8 @@ struct syslog_data {
 #define LOG_DAEMON   ( 3 << 3)
 #define LOG_AUTH     ( 4 << 3)
 #define LOG_SYSLOG   ( 5 << 3)
-#define LOG_LPR      ( 6 << 3) 
-#define LOG_NEWS     ( 7 << 3) 
+#define LOG_LPR      ( 6 << 3)
+#define LOG_NEWS     ( 7 << 3)
 #define LOG_UUCP     ( 8 << 3)
 #define LOG_CRON     ( 9 << 3)
 #define LOG_AUTHPRIV (10 << 3)
@@ -169,7 +169,7 @@ void vsyslog(int, const char* message, va_list);
 void vsyslog_r(int, struct syslog_data* data, const char* message, va_list);
 void openlog(const char*, int, int);
 void openlog_r(const char*, int, int, struct syslog_data*);
-void closelog(void);
+void closelog();
 void closelog_r(struct syslog_data*);
 int setlogmask(int);
 int setlogmask_r(int, struct syslog_data*);

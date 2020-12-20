@@ -460,19 +460,13 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
-int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param)
+int pthread_getschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int* policy, [[maybe_unused]] struct sched_param* param)
 {
-    (void)thread;
-    (void)policy;
-    (void)param;
     return 0;
 }
 
-int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param)
+int pthread_setschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int policy, [[maybe_unused]] const struct sched_param* param)
 {
-    (void)thread;
-    (void)policy;
-    (void)param;
     return 0;
 }
 

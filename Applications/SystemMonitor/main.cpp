@@ -278,8 +278,7 @@ int main(int argc, char** argv)
     process_context_menu->add_separator();
     process_context_menu->add_action(profile_action);
     process_context_menu->add_action(inspect_action);
-    process_table_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
-        (void)index;
+    process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         process_context_menu->popup(event.screen_position());
     };
 

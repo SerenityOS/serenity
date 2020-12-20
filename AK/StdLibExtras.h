@@ -26,8 +26,6 @@
 
 #pragma once
 
-#define UNUSED_PARAM(x) (void)x
-
 constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_two)
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;

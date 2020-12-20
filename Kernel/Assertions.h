@@ -31,7 +31,7 @@
 
 #ifdef DEBUG
 [[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
-#    define ASSERT(expr) (static_cast<bool>(expr) ? (void)0 : __assertion_failed(#    expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
+#    define ASSERT(expr) (static_cast<bool>(expr) ? void(0) : __assertion_failed(#    expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
 #    define ASSERT_NOT_REACHED() ASSERT(false)
 #else
 #    define ASSERT(expr)

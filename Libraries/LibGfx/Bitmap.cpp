@@ -364,13 +364,11 @@ Bitmap::~Bitmap()
     delete[] m_palette;
 }
 
-void Bitmap::set_mmap_name(const StringView& name)
+void Bitmap::set_mmap_name([[maybe_unused]] const StringView& name)
 {
     ASSERT(m_needs_munmap);
 #ifdef __serenity__
     ::set_mmap_name(m_data, size_in_bytes(), name.to_string().characters());
-#else
-    (void)name;
 #endif
 }
 
@@ -431,7 +429,7 @@ ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
     return ShareableBitmap(*bitmap);
 }
 
-Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, Purgeable purgeable)
+Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, [[maybe_unused]] Purgeable purgeable)
 {
     if (size_would_overflow(format, size))
         return {};
@@ -444,7 +442,6 @@ Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
     data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
 #else
-    UNUSED_PARAM(purgeable);
     int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
     data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif

@@ -63,7 +63,7 @@ public:
         if (!m_setter)
             return;
         // FIXME: It might be nice if we had a way to communicate to our caller if an exception happened after this.
-        (void)vm().call(*m_setter, this_value, setter_value);
+        [[maybe_unused]] auto rc = vm().call(*m_setter, this_value, setter_value);
     }
 
     void visit_edges(Cell::Visitor& visitor) override

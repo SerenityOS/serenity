@@ -48,10 +48,9 @@ namespace Web::DOM {
 
 // FIXME: This shouldn't be here, as retargeting is not only used by the event dispatcher.
 //        When moving this function, it needs to be generalized. https://dom.spec.whatwg.org/#retarget
-static EventTarget* retarget(EventTarget* left, EventTarget* right)
+static EventTarget* retarget(EventTarget* left, [[maybe_unused]] EventTarget* right)
 {
     // FIXME
-    UNUSED_PARAM(right);
     for (;;) {
         if (!is<Node>(left))
             return left;
@@ -110,7 +109,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
         auto* this_value = Bindings::wrap(global, *event.current_target());
         auto* wrapped_event = Bindings::wrap(global, event);
         auto& vm = global.vm();
-        (void)vm.call(listener.listener->function(), this_value, wrapped_event);
+        [[maybe_unused]] auto rc = vm.call(listener.listener->function(), this_value, wrapped_event);
         if (vm.exception()) {
             vm.clear_exception();
             // FIXME: Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)

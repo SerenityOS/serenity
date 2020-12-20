@@ -82,7 +82,7 @@ static void start_download(const URL& url)
     window->set_resizable(false);
     window->set_main_widget<DownloadWidget>(url);
     window->show();
-    (void)window.leak_ref();
+    [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
 Tab::Tab(Type type)
@@ -308,7 +308,7 @@ Tab::Tab(Type type)
                 window->set_title(url);
                 window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
                 window->show();
-                (void)window.leak_ref();
+                [[maybe_unused]] auto& unused = window.leak_ref();
             } else {
                 TODO();
             }

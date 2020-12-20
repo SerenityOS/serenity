@@ -271,11 +271,10 @@ void Job::on_socket_connected()
 
                     // we've read everything, now let's get the next chunk
                     size = -1;
-                    auto line = read_line(PAGE_SIZE);
+                    [[maybe_unused]] auto line = read_line(PAGE_SIZE);
 #ifdef JOB_DEBUG
                     dbg() << "Line following (should be empty): _" << line << "_";
 #endif
-                    (void)line;
                 }
                 m_current_chunk_remaining_size = size;
             }
