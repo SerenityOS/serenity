@@ -373,8 +373,6 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     auto sheet = adopt(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(default_row_count);
     auto columns = object.get("columns");
-    if (!columns.is_array())
-        return nullptr;
     auto name = object.get("name").as_string_or("Sheet");
 
     sheet->set_name(name);
@@ -383,10 +381,12 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
         sheet->add_row();
 
     // FIXME: Better error checking.
-    columns.as_array().for_each([&](auto& value) {
-        sheet->m_columns.append(value.as_string());
-        return IterationDecision::Continue;
-    });
+    if (columns.is_array()) {
+        columns.as_array().for_each([&](auto& value) {
+            sheet->m_columns.append(value.as_string());
+            return IterationDecision::Continue;
+        });
+    }
 
     if (sheet->m_columns.size() < default_column_count && sheet->columns_are_standard()) {
         for (size_t i = sheet->m_columns.size(); i < default_column_count; ++i)
