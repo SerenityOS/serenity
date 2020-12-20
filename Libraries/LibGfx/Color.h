@@ -101,19 +101,19 @@ public:
         m_value |= value << 24;
     }
 
-    void set_red(u8 value)
+    constexpr void set_red(u8 value)
     {
         m_value &= 0xff00ffff;
         m_value |= value << 16;
     }
 
-    void set_green(u8 value)
+    constexpr void set_green(u8 value)
     {
         m_value &= 0xffff00ff;
         m_value |= value << 8;
     }
 
-    void set_blue(u8 value)
+    constexpr void set_blue(u8 value)
     {
         m_value &= 0xffffff00;
         m_value |= value;
