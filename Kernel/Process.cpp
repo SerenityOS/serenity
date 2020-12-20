@@ -401,8 +401,8 @@ void Process::dump_regions()
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
-extern void signal_trampoline_dummy(void);
-void signal_trampoline_dummy(void)
+extern void signal_trampoline_dummy();
+void signal_trampoline_dummy()
 {
     // The trampoline preserves the current eax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
@@ -426,8 +426,8 @@ void signal_trampoline_dummy(void)
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 }
 
-extern "C" void asm_signal_trampoline(void);
-extern "C" void asm_signal_trampoline_end(void);
+extern "C" void asm_signal_trampoline();
+extern "C" void asm_signal_trampoline_end();
 
 void create_signal_trampolines()
 {

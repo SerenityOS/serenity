@@ -150,7 +150,7 @@ void E1000NetworkAdapter::detect()
         if (id != qemu_bochs_vbox_id)
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        (void)adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
     });
 }
 

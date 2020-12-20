@@ -773,9 +773,8 @@ void IRCClient::handle_rpl_whoisuser(const Message& msg)
     auto& nick = msg.arguments[1];
     auto& username = msg.arguments[2];
     auto& host = msg.arguments[3];
-    auto& asterisk = msg.arguments[4];
+    [[maybe_unused]] auto& asterisk = msg.arguments[4];
     auto& realname = msg.arguments[5];
-    (void)asterisk;
     add_server_message(String::formatted("* {} is {}@{}, real name: {}", nick, username, host, realname));
 }
 

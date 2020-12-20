@@ -118,10 +118,8 @@ static int read_number(Streamer& streamer)
     return sb.to_string().to_uint().value_or(0);
 }
 
-static bool read_comment(PBMLoadingContext& context, Streamer& streamer)
+static bool read_comment([[maybe_unused]] PBMLoadingContext& context, Streamer& streamer)
 {
-    (void)context;
-
     bool exist = false;
     u8 byte;
 

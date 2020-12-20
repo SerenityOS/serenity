@@ -391,7 +391,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
             VERBOSE("patching plt reloaction: 0x%x\n", relocation.offset_in_section());
-            (void)m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
+            [[maybe_unused]] auto rc = m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
             // LAZY-ily bind the PLT slots by just adding the base address to the offsets stored there
             // This avoids doing symbol lookup, which might be expensive
@@ -408,7 +408,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
 }
 
 // Defined in <arch>/plt_trampoline.S
-extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
+extern "C" void _plt_trampoline() __attribute__((visibility("hidden")));
 
 void DynamicLoader::setup_plt_trampoline()
 {

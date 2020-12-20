@@ -166,7 +166,7 @@ bool Decoder::decode(Dictionary& dictionary)
     return true;
 }
 
-bool Decoder::decode(File& file)
+bool Decoder::decode([[maybe_unused]] File& file)
 {
 #ifdef __serenity__
     int fd = recvfd(m_sockfd);
@@ -177,8 +177,7 @@ bool Decoder::decode(File& file)
     file = File(fd);
     return true;
 #else
-    (void)file;
-    (void)m_sockfd;
+    [[maybe_unused]] auto fd = m_sockfd;
     warnln("fd passing is not supported on this platform, sorry :(");
     return false;
 #endif

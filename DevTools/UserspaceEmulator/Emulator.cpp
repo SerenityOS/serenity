@@ -1149,10 +1149,8 @@ int Emulator::virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t size)
     return rc;
 }
 
-int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
+int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unused]] FlatPtr arg)
 {
-    (void)fd;
-    (void)arg;
     if (request == TIOCGWINSZ) {
         struct winsize ws;
         int rc = syscall(SC_ioctl, fd, TIOCGWINSZ, &ws);
@@ -1493,8 +1491,8 @@ void Emulator::dispatch_one_pending_signal()
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
-extern void signal_trampoline_dummy(void);
-void signal_trampoline_dummy(void)
+extern void signal_trampoline_dummy();
+void signal_trampoline_dummy()
 {
     // The trampoline preserves the current eax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
@@ -1518,8 +1516,8 @@ void signal_trampoline_dummy(void)
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 }
 
-extern "C" void asm_signal_trampoline(void);
-extern "C" void asm_signal_trampoline_end(void);
+extern "C" void asm_signal_trampoline();
+extern "C" void asm_signal_trampoline_end();
 
 void Emulator::setup_signal_trampoline()
 {

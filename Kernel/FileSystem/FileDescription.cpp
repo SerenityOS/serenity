@@ -71,7 +71,7 @@ FileDescription::~FileDescription()
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     // FIXME: Should this error path be observed somehow?
-    (void)m_file->close();
+    [[maybe_unused]] auto rc = m_file->close();
     m_inode = nullptr;
 }
 

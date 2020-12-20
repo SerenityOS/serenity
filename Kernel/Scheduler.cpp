@@ -253,14 +253,13 @@ bool Scheduler::yield()
     return true;
 }
 
-bool Scheduler::donate_to_and_switch(Thread* beneficiary, const char* reason)
+bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const char* reason)
 {
     ASSERT(g_scheduler_lock.own_lock());
 
     auto& proc = Processor::current();
     ASSERT(proc.in_critical() == 1);
 
-    (void)reason;
     unsigned ticks_left = Thread::current()->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return Scheduler::yield();

@@ -87,9 +87,8 @@ Object* iterator_next(Object& iterator, Value value)
     return &result.as_object();
 }
 
-void iterator_close(Object& iterator)
+void iterator_close([[maybe_unused]] Object& iterator)
 {
-    (void)iterator;
     TODO();
 }
 

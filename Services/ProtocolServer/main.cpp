@@ -41,7 +41,7 @@ int main(int, char**)
     }
 
     // Ensure the certificates are read out here.
-    (void)DefaultRootCACertificates::the();
+    [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
@@ -58,9 +58,9 @@ int main(int, char**)
         return 1;
     }
 
-    (void)*new ProtocolServer::GeminiProtocol;
-    (void)*new ProtocolServer::HttpProtocol;
-    (void)*new ProtocolServer::HttpsProtocol;
+    [[maybe_unused]] auto gemini = new ProtocolServer::GeminiProtocol;
+    [[maybe_unused]] auto http = new ProtocolServer::HttpProtocol;
+    [[maybe_unused]] auto https = new ProtocolServer::HttpsProtocol;
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     ASSERT(socket);

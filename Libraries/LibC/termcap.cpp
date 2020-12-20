@@ -39,10 +39,8 @@ char PC;
 char* UP;
 char* BC;
 
-int tgetent(char* bp, const char* name)
+int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
-    (void)bp;
-    (void)name;
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
 #endif
@@ -120,9 +118,8 @@ char* tgetstr(const char* id, char** area)
 
 #pragma GCC diagnostic pop
 
-int tgetflag(const char* id)
+int tgetflag([[maybe_unused]] const char* id)
 {
-    (void)id;
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetflag: '%s'\n", id);
 #endif
@@ -143,17 +140,13 @@ int tgetnum(const char* id)
     ASSERT_NOT_REACHED();
 }
 
-char* tgoto(const char* cap, int col, int row)
+char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
-    (void)cap;
-    (void)col;
-    (void)row;
     ASSERT_NOT_REACHED();
 }
 
-int tputs(const char* str, int affcnt, int (*putc)(int))
+int tputs(const char* str, [[maybe_unused]] int affcnt, int (*putc)(int))
 {
-    (void)affcnt;
     size_t len = strlen(str);
     for (size_t i = 0; i < len; ++i)
         putc(str[i]);

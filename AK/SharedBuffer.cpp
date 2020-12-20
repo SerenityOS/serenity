@@ -89,7 +89,7 @@ RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
     return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
 
-bool SharedBuffer::share_with(pid_t peer)
+bool SharedBuffer::share_with([[maybe_unused]] pid_t peer)
 {
 #    if defined(__serenity__)
     int ret = shbuf_allow_pid(shbuf_id(), peer);
@@ -97,8 +97,6 @@ bool SharedBuffer::share_with(pid_t peer)
         perror("shbuf_allow_pid");
         return false;
     }
-#    else
-    (void)peer;
 #    endif
     return true;
 }

@@ -1179,15 +1179,13 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     return vsscanf(buffer, fmt, ap);
 }
 
-void flockfile(FILE* filehandle)
+void flockfile([[maybe_unused]] FILE* filehandle)
 {
-    (void)filehandle;
     dbgprintf("FIXME: Implement flockfile()\n");
 }
 
-void funlockfile(FILE* filehandle)
+void funlockfile([[maybe_unused]] FILE* filehandle)
 {
-    (void)filehandle;
     dbgprintf("FIXME: Implement funlockfile()\n");
 }
 

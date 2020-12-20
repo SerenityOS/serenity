@@ -138,10 +138,8 @@ static bool read_number(Streamer& streamer, u16* value)
     return true;
 }
 
-static bool read_comment(PPMLoadingContext& context, Streamer& streamer)
+static bool read_comment([[maybe_unused]] PPMLoadingContext& context, Streamer& streamer)
 {
-    (void)context;
-
     bool exist = false;
     u8 byte;
 
