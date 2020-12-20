@@ -27,10 +27,12 @@
 #include "SpreadsheetWidget.h"
 #include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
+#include "LibGUI/InputBox.h"
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
@@ -80,6 +82,28 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     if (!m_workbook->has_sheets() && should_add_sheet_if_empty)
         m_workbook->add_sheet("Sheet 1");
+
+    m_tab_context_menu = GUI::Menu::construct();
+    auto rename_action = GUI::Action::create("Rename...", [this](auto&) {
+        ASSERT(m_tab_context_menu_sheet_view);
+
+        auto& sheet = m_tab_context_menu_sheet_view->sheet();
+        String new_name;
+        if (GUI::InputBox::show(new_name, window(), String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+            sheet.set_name(new_name);
+            sheet.update();
+            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
+        }
+    });
+    m_tab_context_menu->add_action(rename_action);
+    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", [this](auto&) {
+        String name;
+        if (GUI::InputBox::show(name, window(), "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
+            NonnullRefPtrVector<Sheet> new_sheets;
+            new_sheets.append(m_workbook->add_sheet(name));
+            setup_tabs(move(new_sheets));
+        }
+    }));
 
     setup_tabs(m_workbook->sheets());
 }
@@ -158,6 +182,11 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
     m_tab_widget->on_change = [change = move(change)](auto& selected_widget) {
         change(selected_widget);
+    };
+
+    m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
+        m_tab_context_menu_sheet_view = widget;
+        m_tab_context_menu->popup(event.screen_position());
     };
 }
 
