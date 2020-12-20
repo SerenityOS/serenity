@@ -229,10 +229,14 @@ Optional<JsonValue> JsonParser::parse_number()
         if (to_unsigned_result.has_value()) {
             value = JsonValue(to_unsigned_result.value());
         } else {
-            auto number = number_string.to_int();
+            auto number = number_string.to_int<i64>();
             if (!number.has_value())
                 return {};
-            value = JsonValue(number.value());
+            if (number.value() <= AK::NumericLimits<i32>::max()) {
+                value = JsonValue((i32)number.value());
+            } else {
+                value = JsonValue(number.value());
+            }
         }
 #ifndef KERNEL
     }
