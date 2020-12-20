@@ -30,6 +30,7 @@
 #include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
+#include <AK/MappedFile.h>
 #include <AK/Types.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -200,6 +201,14 @@ private:
     FlatPtr m_signal_trampoline { 0 };
     Optional<FlatPtr> m_loader_text_base;
     Optional<size_t> m_loader_text_size;
+
+    struct CachedELF {
+        MappedFile mapped_file;
+        NonnullRefPtr<ELF::Loader> elf_loader;
+        OwnPtr<Debug::DebugInfo> debug_info;
+    };
+
+    HashMap<String, CachedELF> m_dynamic_library_cache;
 };
 
 ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const

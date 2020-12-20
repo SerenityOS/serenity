@@ -302,24 +302,29 @@ String Emulator::create_backtrace_line(FlatPtr address)
     String lib_name = region->name().substring(0, separator_index.value());
     String lib_path = lib_name;
     if (region->name().contains(".so"))
-        lib_path = String::format("/usr/lib/%s", lib_path.characters());
+        lib_path = String::formatted("/usr/lib/{}", lib_path);
 
-    auto mapped_file = make<MappedFile>(lib_path);
-    if (!mapped_file->is_valid())
-        return minimal;
+    if (!m_dynamic_library_cache.contains(lib_path)) {
+        MappedFile mapped_file { lib_path };
+        if (!mapped_file.is_valid())
+            return minimal;
 
-    auto loader = ELF::Loader::create((const u8*)mapped_file->data(), mapped_file->size());
-    String symbol = loader->symbolicate(address - region->base());
+        auto loader = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
+        auto debug_info = make<Debug::DebugInfo>(loader);
+        m_dynamic_library_cache.set(lib_path, CachedELF { move(mapped_file), move(loader), move(debug_info) });
+    }
+
+    auto it = m_dynamic_library_cache.find(lib_path);
+    auto& loader = *it->value.elf_loader;
+    String symbol = loader.symbolicate(address - region->base());
 
     auto line_without_source_info = String::format("=={%d}==    %p  [%s]: %s", getpid(), address, lib_name.characters(), symbol.characters());
-    auto debug_info = make<Debug::DebugInfo>(loader);
 
-    auto source_position = debug_info->get_source_position(address - region->base());
+    auto source_position = it->value.debug_info->get_source_position(address - region->base());
     if (source_position.has_value())
         return String::format("=={%d}==    %p  [%s]: %s (\033[34;1m%s\033[0m:%u)", getpid(), address, lib_name.characters(), symbol.characters(), LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
-    else {
-        return line_without_source_info;
-    }
+
+    return line_without_source_info;
 }
 
 void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
