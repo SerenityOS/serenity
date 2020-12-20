@@ -25,15 +25,18 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/MappedFile.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibELF/Image.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/PNGLoader.h>
 #include <sys/stat.h>
 
 namespace GUI {
@@ -126,28 +129,71 @@ Icon FileIconProvider::icon_for_path(const String& path)
 
 static Icon icon_for_executable(const String& path)
 {
-    // FIXME: This is a huge hack and it would be much nicer if executables had icons embedded in them somehow.
     static HashMap<String, Icon> app_icon_cache;
-
-    if (app_icon_cache.is_empty()) {
-        Core::DirIterator dt("/res/apps");
-        while (dt.has_next()) {
-            auto app_file = Core::ConfigFile::open(dt.next_full_path());
-            Icon app_icon;
-            auto icon16_path = app_file->read_entry("Icons", "16x16");
-            auto icon32_path = app_file->read_entry("Icons", "32x32");
-            if (auto icon16 = Gfx::Bitmap::load_from_file(icon16_path))
-                app_icon.set_bitmap_for_size(16, move(icon16));
-            if (auto icon32 = Gfx::Bitmap::load_from_file(icon32_path))
-                app_icon.set_bitmap_for_size(32, move(icon32));
-            app_icon_cache.set(app_file->read_entry("App", "Executable"), move(app_icon));
-        }
-    }
 
     if (auto it = app_icon_cache.find(path); it != app_icon_cache.end())
         return it->value;
 
-    return s_executable_icon;
+    // If the icon for an app isn't in the cache we attempt to load the file as an ELF image and extract
+    // the serenity_app_icon_* sections which should contain the icons as raw PNG data. In the future it would
+    // be better if the binary signalled the image format being used or we deduced it, e.g. using magic bytes.
+    auto mapped_file = make<MappedFile>(path);
+    if (!mapped_file->is_valid()) {
+        app_icon_cache.set(path, s_executable_icon);
+        return s_executable_icon;
+    }
+
+    if (mapped_file->size() < SELFMAG) {
+        app_icon_cache.set(path, s_executable_icon);
+        return s_executable_icon;
+    }
+
+    if (memcmp(mapped_file->data(), ELFMAG, SELFMAG) != 0) {
+        app_icon_cache.set(path, s_executable_icon);
+        return s_executable_icon;
+    }
+
+    auto image = ELF::Image((const u8*)mapped_file->data(), mapped_file->size());
+    if (!image.is_valid()) {
+        app_icon_cache.set(path, s_executable_icon);
+        return s_executable_icon;
+    }
+
+    // If any of the required sections are missing then use the defaults
+    Icon icon;
+    struct IconSection {
+        const char* section_name;
+        int image_size;
+    };
+
+    static const IconSection icon_sections[] = { { .section_name = "serenity_icon_s", .image_size = 16 }, { .section_name = "serenity_icon_m", .image_size = 32 } };
+
+    bool had_error = false;
+    for (const auto& icon_section : icon_sections) {
+        auto section = image.lookup_section(icon_section.section_name);
+
+        RefPtr<Gfx::Bitmap> bitmap;
+        if (section.is_undefined()) {
+            bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size)->clone();
+        } else {
+            bitmap = Gfx::load_png_from_memory(reinterpret_cast<const u8*>(section.raw_data()), section.size());
+        }
+
+        if (!bitmap) {
+            dbgln("Failed to find embedded icon and failed to clone default icon for application {} at icon size {}", path, icon_section.image_size);
+            had_error = true;
+            continue;
+        }
+
+        icon.set_bitmap_for_size(icon_section.image_size, std::move(bitmap));
+    }
+
+    if (had_error) {
+        app_icon_cache.set(path, s_executable_icon);
+        return s_executable_icon;
+    }
+    app_icon_cache.set(path, icon);
+    return icon;
 }
 
 Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
