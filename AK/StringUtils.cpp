@@ -103,7 +103,7 @@ Optional<T> convert_to_int(const StringView& str)
     if (str_trimmed.is_empty())
         return {};
 
-    bool negative = false;
+    T sign = 1;
     size_t i = 0;
     const auto characters = str_trimmed.characters_without_null_termination();
 
@@ -111,17 +111,22 @@ Optional<T> convert_to_int(const StringView& str)
         if (str_trimmed.length() == 1)
             return {};
         i++;
-        negative = (characters[0] == '-');
+        if (characters[0] == '-')
+            sign = -1;
     }
 
     T value = 0;
     for (; i < str_trimmed.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
-        value = value * 10;
-        value += characters[i] - '0';
+
+        if (__builtin_mul_overflow(value, 10, &value))
+            return {};
+
+        if (__builtin_add_overflow(value, sign * (characters[i] - '0'), &value))
+            return {};
     }
-    return negative ? -value : value;
+    return value;
 }
 
 template Optional<i8> convert_to_int(const StringView& str);
@@ -143,8 +148,11 @@ Optional<T> convert_to_uint(const StringView& str)
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
-        value = value * 10;
-        value += characters[i] - '0';
+        if (__builtin_mul_overflow(value, 10, &value))
+            return {};
+
+        if (__builtin_add_overflow(value, characters[i] - '0', &value))
+            return {};
     }
     return value;
 }
@@ -163,10 +171,13 @@ Optional<T> convert_to_uint_from_hex(const StringView& str)
 
     T value = 0;
     const auto count = str_trimmed.length();
+    const T upper_bound = AK::NumericLimits<T>::max();
 
     for (size_t i = 0; i < count; i++) {
         char digit = str_trimmed[i];
         u8 digit_val;
+        if (value > (upper_bound >> 4))
+            return {};
 
         if (digit >= '0' && digit <= '9') {
             digit_val = digit - '0';
