@@ -25,6 +25,7 @@
  */
 
 #include "PBMLoader.h"
+#include "Streamer.h"
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -57,48 +58,6 @@ struct PBMLoadingContext {
     int width { -1 };
     int height { -1 };
     RefPtr<Gfx::Bitmap> bitmap;
-};
-
-class Streamer {
-public:
-    Streamer(const u8* data, size_t size)
-        : m_data_ptr(data)
-        , m_size_remaining(size)
-    {
-    }
-
-    template<typename T>
-    bool read(T& value)
-    {
-        if (m_size_remaining < sizeof(T))
-            return false;
-        value = *((const NetworkOrdered<T>*)m_data_ptr);
-        m_data_ptr += sizeof(T);
-        m_size_remaining -= sizeof(T);
-        return true;
-    }
-
-    bool read_bytes(u8* buffer, size_t count)
-    {
-        if (m_size_remaining < count)
-            return false;
-        memcpy(buffer, m_data_ptr, count);
-        m_data_ptr += count;
-        m_size_remaining -= count;
-        return true;
-    }
-
-    bool at_end() const { return !m_size_remaining; }
-
-    void step_back()
-    {
-        m_data_ptr -= 1;
-        m_size_remaining += 1;
-    }
-
-private:
-    const u8* m_data_ptr { nullptr };
-    size_t m_size_remaining { 0 };
 };
 
 static int read_number(Streamer& streamer)
