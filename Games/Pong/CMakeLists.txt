@@ -3,5 +3,5 @@ set(SOURCES
     Game.cpp
 )
 
-serenity_bin(Pong)
+serenity_app(Pong ICON app-pong)
 target_link_libraries(Pong LibGUI)

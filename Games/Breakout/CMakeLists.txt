@@ -4,5 +4,5 @@ set(SOURCES
     LevelSelectDialog.cpp
 )
 
-serenity_bin(Breakout)
+serenity_app(Breakout ICON app-breakout)
 target_link_libraries(Breakout LibGUI)

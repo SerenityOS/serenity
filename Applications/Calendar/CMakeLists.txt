@@ -3,5 +3,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(Calendar)
+serenity_app(Calendar ICON app-calendar)
 target_link_libraries(Calendar LibGUI)

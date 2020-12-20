@@ -5,5 +5,5 @@ set(SOURCES
     Engine.cpp
 )
 
-serenity_bin(Chess)
+serenity_app(Chess ICON app-chess)
 target_link_libraries(Chess LibChess LibGUI LibCore)

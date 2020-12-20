@@ -12,5 +12,5 @@ set(SOURCES
     ThreadStackWidget.cpp
 )
 
-serenity_bin(SystemMonitor)
+serenity_app(SystemMonitor ICON app-system-monitor)
 target_link_libraries(SystemMonitor LibGUI LibPCIDB)
