@@ -1,7 +1,6 @@
 set(LIBC_SOURCES
     arpa/inet.cpp
     assert.cpp
-    crt0_shared.cpp
     ctype.cpp
     cxxabi.cpp
     dirent.cpp
@@ -63,6 +62,11 @@ add_library(crt0 STATIC crt0.cpp)
 add_custom_command(
     TARGET crt0
     COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
+)
+add_library(crt0_shared STATIC crt0_shared.cpp)
+add_custom_command(
+    TARGET crt0_shared
+    COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
 )
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
