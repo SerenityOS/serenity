@@ -33,32 +33,32 @@ namespace Spreadsheet {
 
 void Cell::set_data(String new_data)
 {
-    if (data == new_data)
+    if (m_data == new_data)
         return;
 
     if (new_data.starts_with("=")) {
         new_data = new_data.substring(1, new_data.length() - 1);
-        kind = Formula;
+        m_kind = Formula;
     } else {
-        kind = LiteralString;
+        m_kind = LiteralString;
     }
 
-    data = move(new_data);
-    dirty = true;
-    evaluated_externally = false;
+    m_data = move(new_data);
+    m_dirty = true;
+    m_evaluated_externally = false;
 }
 
 void Cell::set_data(JS::Value new_data)
 {
-    dirty = true;
-    evaluated_externally = true;
+    m_dirty = true;
+    m_evaluated_externally = true;
 
     StringBuilder builder;
 
     builder.append(new_data.to_string_without_side_effects());
-    data = builder.build();
+    m_data = builder.build();
 
-    evaluated_data = move(new_data);
+    m_evaluated_data = move(new_data);
 }
 
 void Cell::set_type(const CellType* type)
@@ -86,8 +86,8 @@ const CellType& Cell::type() const
     if (m_type)
         return *m_type;
 
-    if (kind == LiteralString) {
-        if (data.to_int().has_value())
+    if (m_kind == LiteralString) {
+        if (m_data.to_int().has_value())
             return *CellType::get_by_name("Numeric");
     }
 
@@ -104,22 +104,22 @@ JS::Value Cell::typed_js_data() const
     return type().js_value(const_cast<Cell&>(*this), m_type_metadata);
 }
 
-void Cell::update_data()
+void Cell::update_data(Badge<Sheet>)
 {
-    TemporaryChange cell_change { sheet->current_evaluated_cell(), this };
-    if (!dirty)
+    TemporaryChange cell_change { m_sheet->current_evaluated_cell(), this };
+    if (!m_dirty)
         return;
 
-    if (dirty) {
-        dirty = false;
-        if (kind == Formula) {
-            if (!evaluated_externally)
-                evaluated_data = sheet->evaluate(data, this);
+    if (m_dirty) {
+        m_dirty = false;
+        if (m_kind == Formula) {
+            if (!m_evaluated_externally)
+                m_evaluated_data = m_sheet->evaluate(m_data, this);
         }
 
-        for (auto& ref : referencing_cells) {
+        for (auto& ref : m_referencing_cells) {
             if (ref) {
-                ref->dirty = true;
+                ref->m_dirty = true;
                 ref->update();
             }
         }
@@ -134,7 +134,7 @@ void Cell::update_data()
             builder.append("return (");
             builder.append(fmt.condition);
             builder.append(')');
-            auto value = sheet->evaluate(builder.string_view(), this);
+            auto value = m_sheet->evaluate(builder.string_view(), this);
             if (value.to_boolean()) {
                 if (fmt.background_color.has_value())
                     m_evaluated_formats.background_color = fmt.background_color;
@@ -147,26 +147,26 @@ void Cell::update_data()
 
 void Cell::update()
 {
-    sheet->update(*this);
+    m_sheet->update(*this);
 }
 
 JS::Value Cell::js_data()
 {
-    if (dirty)
+    if (m_dirty)
         update();
 
-    if (kind == Formula)
-        return evaluated_data;
+    if (m_kind == Formula)
+        return m_evaluated_data;
 
-    return JS::js_string(sheet->interpreter().heap(), data);
+    return JS::js_string(m_sheet->interpreter().heap(), m_data);
 }
 
 String Cell::source() const
 {
     StringBuilder builder;
-    if (kind == Formula)
+    if (m_kind == Formula)
         builder.append('=');
-    builder.append(data);
+    builder.append(m_data);
     return builder.to_string();
 }
 
@@ -176,10 +176,23 @@ void Cell::reference_from(Cell* other)
     if (!other || other == this)
         return;
 
-    if (!referencing_cells.find([other](auto& ptr) { return ptr.ptr() == other; }).is_end())
+    if (!m_referencing_cells.find([other](auto& ptr) { return ptr.ptr() == other; }).is_end())
         return;
 
-    referencing_cells.append(other->make_weak_ptr());
+    m_referencing_cells.append(other->make_weak_ptr());
+}
+
+void Cell::copy_from(const Cell& other)
+{
+    m_dirty = true;
+    m_evaluated_externally = other.m_evaluated_externally;
+    m_data = other.m_data;
+    m_evaluated_data = other.m_evaluated_data;
+    m_kind = other.m_kind;
+    m_type = other.m_type;
+    m_type_metadata = other.m_type_metadata;
+    m_conditional_formats = other.m_conditional_formats;
+    m_evaluated_formats = other.m_evaluated_formats;
 }
 
 }

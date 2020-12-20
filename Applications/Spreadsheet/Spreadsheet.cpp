@@ -60,8 +60,8 @@ Sheet::Sheet(Workbook& workbook)
     : m_workbook(workbook)
 {
     m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
-    m_global_object->set_prototype(&m_workbook.global_object());
     m_global_object->initialize();
+    m_global_object->put("workbook", m_workbook.workbook_object());
     m_global_object->put("thisSheet", m_global_object); // Self-reference is unfortunate, but required.
 
     // Sadly, these have to be evaluated once per sheet.
@@ -160,26 +160,23 @@ void Sheet::update()
     for (auto& it : m_cells)
         cells_copy.append(it.value);
 
-    for (auto& cell : cells_copy) {
-        if (has_been_visited(cell))
-            continue;
-        m_visited_cells_in_update.set(cell);
-        if (cell->dirty) {
-            // Re-evaluate the cell value, if any.
-            cell->update({});
-        }
-    }
+    for (auto& cell : cells_copy)
+        update(*cell);
 
     m_visited_cells_in_update.clear();
 }
 
 void Sheet::update(Cell& cell)
 {
-    if (has_been_visited(&cell))
-        return;
-
-    m_visited_cells_in_update.set(&cell);
-    cell.update({});
+    if (cell.dirty()) {
+        if (has_been_visited(&cell)) {
+            // This may be part of an cyclic reference chain
+            // just break the chain, but leave the cell dirty.
+            return;
+        }
+        m_visited_cells_in_update.set(&cell);
+        cell.update_data({});
+    }
 }
 
 JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
@@ -323,10 +320,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
             return;
         }
 
-        auto ref_cells = target_cell.referencing_cells;
-        target_cell = *source_cell;
-        target_cell.dirty = true;
-        target_cell.referencing_cells = move(ref_cells);
+        target_cell.copy_from(*source_cell);
     };
 
     if (from.size() == to.size()) {
@@ -467,7 +461,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
         auto evaluated_format = obj.get("evaluated_formats");
         if (evaluated_format.is_object()) {
             auto& evaluated_format_obj = evaluated_format.as_object();
-            auto& evaluated_fmts = cell->m_evaluated_formats;
+            auto& evaluated_fmts = cell->evaluated_formats();
 
             read_format(evaluated_fmts, evaluated_format_obj);
         }
@@ -535,14 +529,14 @@ JsonObject Sheet::to_json() const
         auto key = builder.to_string();
 
         JsonObject data;
-        data.set("kind", it.value->kind == Cell::Kind::Formula ? "Formula" : "LiteralString");
-        if (it.value->kind == Cell::Formula) {
-            data.set("source", it.value->data);
+        data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
+        if (it.value->kind() == Cell::Formula) {
+            data.set("source", it.value->data());
             auto json = interpreter().global_object().get("JSON");
-            auto stringified = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
+            auto stringified = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data());
             data.set("value", stringified.to_string_without_side_effects());
         } else {
-            data.set("value", it.value->data);
+            data.set("value", it.value->data());
         }
 
         // Set type & meta
