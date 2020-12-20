@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
             if (!first)
                 text_builder.append('\t');
             if (cell_data)
-                text_builder.append(cell_data->data);
+                text_builder.append(cell_data->data());
             first = false;
         }
         HashMap<String, String> metadata;

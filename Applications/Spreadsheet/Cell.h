@@ -38,21 +38,26 @@
 namespace Spreadsheet {
 
 struct Cell : public Weakable<Cell> {
+    enum Kind {
+        LiteralString,
+        Formula,
+    };
+
     Cell(String data, Position position, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(data))
-        , kind(LiteralString)
-        , sheet(sheet)
+        : m_dirty(false)
+        , m_data(move(data))
+        , m_kind(LiteralString)
+        , m_sheet(sheet)
         , m_position(move(position))
     {
     }
 
     Cell(String source, JS::Value&& cell_value, Position position, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(source))
-        , evaluated_data(move(cell_value))
-        , kind(Formula)
-        , sheet(sheet)
+        : m_dirty(false)
+        , m_data(move(source))
+        , m_evaluated_data(move(cell_value))
+        , m_kind(Formula)
+        , m_sheet(sheet)
         , m_position(move(position))
     {
     }
@@ -61,6 +66,12 @@ struct Cell : public Weakable<Cell> {
 
     void set_data(String new_data);
     void set_data(JS::Value new_data);
+    bool dirty() const { return m_dirty; }
+
+    const String& data() const { return m_data; }
+    const JS::Value& evaluated_data() const { return m_evaluated_data; }
+    Kind kind() const { return m_kind; }
+    const Vector<WeakPtr<Cell>>& referencing_cells() const { return m_referencing_cells; }
 
     void set_type(const StringView& name);
     void set_type(const CellType*);
@@ -69,15 +80,16 @@ struct Cell : public Weakable<Cell> {
     const Position& position() const { return m_position; }
     void set_position(Position position, Badge<Sheet>)
     {
-        dirty = true;
+        m_dirty = true;
         m_position = move(position);
     }
 
     const Format& evaluated_formats() const { return m_evaluated_formats; }
+    Format& evaluated_formats() { return m_evaluated_formats; }
     const Vector<ConditionalFormat>& conditional_formats() const { return m_conditional_formats; }
     void set_conditional_formats(Vector<ConditionalFormat>&& fmts)
     {
-        dirty = true;
+        m_dirty = true;
         m_conditional_formats = move(fmts);
     }
 
@@ -92,30 +104,28 @@ struct Cell : public Weakable<Cell> {
 
     JS::Value js_data();
 
-    void update(Badge<Sheet>) { update_data(); }
     void update();
+    void update_data(Badge<Sheet>);
 
-    enum Kind {
-        LiteralString,
-        Formula,
-    };
+    const Sheet& sheet() const { return *m_sheet; }
+    Sheet& sheet() { return *m_sheet; }
 
-    bool dirty { false };
-    bool evaluated_externally { false };
-    String data;
-    JS::Value evaluated_data;
-    Kind kind { LiteralString };
-    WeakPtr<Sheet> sheet;
-    Vector<WeakPtr<Cell>> referencing_cells;
+    void copy_from(const Cell&);
+
+private:
+    bool m_dirty { false };
+    bool m_evaluated_externally { false };
+    String m_data;
+    JS::Value m_evaluated_data;
+    Kind m_kind { LiteralString };
+    WeakPtr<Sheet> m_sheet;
+    Vector<WeakPtr<Cell>> m_referencing_cells;
     const CellType* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
     Position m_position;
 
     Vector<ConditionalFormat> m_conditional_formats;
     Format m_evaluated_formats;
-
-private:
-    void update_data();
 };
 
 }
