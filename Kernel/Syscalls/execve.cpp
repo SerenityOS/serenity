@@ -451,7 +451,9 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         if (elf_header->e_type != ET_DYN)
             return KResult(-ENOEXEC);
 
+#ifdef EXEC_DEBUG
         dbg() << "exec(" << path << "): Using program interpreter " << interpreter_path;
+#endif
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
             dbg() << "exec(" << path << "): Unable to open program interpreter " << interpreter_path;
