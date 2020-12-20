@@ -2,5 +2,5 @@ set(SOURCES
     Screensaver.cpp
 )
 
-serenity_bin(Screensaver)
+serenity_app(Screensaver ICON app-screensaver)
 target_link_libraries(Screensaver LibGUI LibCore LibGfx)

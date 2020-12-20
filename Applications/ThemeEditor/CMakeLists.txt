@@ -3,5 +3,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(ThemeEditor)
+serenity_app(ThemeEditor ICON app-theme-editor)
 target_link_libraries(ThemeEditor LibGUI)

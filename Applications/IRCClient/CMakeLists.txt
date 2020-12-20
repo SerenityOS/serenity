@@ -10,5 +10,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(IRCClient)
+serenity_app(IRCClient ICON app-irc-client)
 target_link_libraries(IRCClient LibWeb LibGUI)

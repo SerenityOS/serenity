@@ -5,5 +5,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(2048)
+serenity_app(2048 ICON app-2048)
 target_link_libraries(2048 LibGUI)

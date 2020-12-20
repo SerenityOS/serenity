@@ -6,5 +6,5 @@ set(SOURCES
     ManualSectionNode.cpp
 )
 
-serenity_bin(Help)
+serenity_app(Help ICON app-help)
 target_link_libraries(Help LibWeb LibMarkdown LibGUI LibDesktop)

@@ -3,5 +3,5 @@ set(SOURCES
     EyesWidget.cpp
 )
 
-serenity_bin(Eyes)
+serenity_app(Eyes ICON app-eyes)
 target_link_libraries(Eyes LibGUI LibGfx)

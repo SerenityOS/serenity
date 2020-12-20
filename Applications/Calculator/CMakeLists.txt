@@ -5,5 +5,5 @@ set(SOURCES
     Keypad.cpp
 )
 
-serenity_bin(Calculator)
+serenity_app(Calculator ICON app-calculator)
 target_link_libraries(Calculator LibGUI)

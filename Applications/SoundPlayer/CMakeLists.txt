@@ -5,5 +5,5 @@ set(SOURCES
     SoundPlayerWidget.cpp
 )
 
-serenity_bin(SoundPlayer)
+serenity_app(SoundPlayer ICON app-sound-player)
 target_link_libraries(SoundPlayer LibAudio LibGUI)

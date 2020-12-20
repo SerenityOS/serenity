@@ -3,5 +3,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(Minesweeper)
+serenity_app(Minesweeper ICON app-minesweeper)
 target_link_libraries(Minesweeper LibGUI)

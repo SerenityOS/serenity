@@ -15,5 +15,5 @@ set(SOURCES
     TabGML.h
 )
 
-serenity_bin(Browser)
+serenity_app(Browser ICON app-browser)
 target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop)

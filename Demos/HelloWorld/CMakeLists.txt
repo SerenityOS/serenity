@@ -2,5 +2,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_bin(HelloWorld)
+serenity_app(HelloWorld ICON app-hello-world)
 target_link_libraries(HelloWorld LibGUI)

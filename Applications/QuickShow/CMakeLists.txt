@@ -3,5 +3,5 @@ set(SOURCES
     QSWidget.cpp
 )
 
-serenity_bin(QuickShow)
+serenity_app(QuickShow ICON filetype-image)
 target_link_libraries(QuickShow LibGUI LibGfx)

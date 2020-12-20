@@ -164,6 +164,23 @@ function(serenity_bin target_name)
     serenity_generated_sources(${target_name})
 endfunction()
 
+function(serenity_app target_name)
+    cmake_parse_arguments(SERENITY_APP "" "ICON" "" ${ARGN})
+
+    serenity_bin("${target_name}")
+    set(small_icon "${CMAKE_SOURCE_DIR}/Base/res/icons/16x16/${SERENITY_APP_ICON}.png")
+    set(medium_icon "${CMAKE_SOURCE_DIR}/Base/res/icons/32x32/${SERENITY_APP_ICON}.png")
+    
+    if (EXISTS "${small_icon}")
+        embed_resource("${target_name}" serenity_icon_s "${small_icon}")
+    endif()
+    if (EXISTS "${medium_icon}")
+        embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
+    endif()
+
+    # TODO: Issue warnings if the app icons don't exist
+endfunction()
+
 function(compile_gml source output string_name)
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
@@ -189,6 +206,19 @@ function(compile_ipc source output)
     )
     get_filename_component(output_name ${output} NAME)
     add_custom_target(generate_${output_name} DEPENDS ${output})
+endfunction()
+
+function(embed_resource target section file)
+    get_filename_component(asm_file "${file}" NAME)
+    set(asm_file "${CMAKE_CURRENT_BINARY_DIR}/${target}-${section}.s")
+    get_filename_component(input_file "${file}" ABSOLUTE)
+    add_custom_command(
+        OUTPUT "${asm_file}"
+        COMMAND "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh" "${asm_file}" "${section}" "${input_file}" 
+        DEPENDS "${input_file}" "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh"
+        COMMENT "Generating ${asm_file}"
+    )
+    target_sources("${target}" PRIVATE "${asm_file}")
 endfunction()
 
 find_program(CCACHE_PROGRAM ccache)

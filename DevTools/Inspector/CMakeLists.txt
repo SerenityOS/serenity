@@ -6,5 +6,5 @@ set(SOURCES
     RemoteProcess.cpp
 )
 
-serenity_bin(Inspector)
+serenity_app(Inspector ICON app-inspector)
 target_link_libraries(Inspector LibGUI)

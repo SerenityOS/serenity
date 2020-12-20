@@ -5,5 +5,5 @@ set(SOURCES
     SolitaireWidget.cpp
 )
 
-serenity_bin(Solitaire)
+serenity_app(Solitaire ICON app-solitaire)
 target_link_libraries(Solitaire LibGUI LibGfx LibCore)
