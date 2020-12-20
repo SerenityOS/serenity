@@ -571,8 +571,8 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
     for (auto& region : m_super_physical_regions) {
         physical_pages = region.take_contiguous_free_pages((count), true);
-        if (physical_pages.is_empty())
-            continue;
+        if (!physical_pages.is_empty())
+            break;
     }
 
     if (physical_pages.is_empty()) {
@@ -598,8 +598,8 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
     for (auto& region : m_super_physical_regions) {
         page = region.take_free_page(true);
-        if (page.is_null())
-            continue;
+        if (!page.is_null())
+            break;
     }
 
     if (!page) {
