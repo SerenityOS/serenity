@@ -1,0 +1,110 @@
+diff -ur a/stress-stack.c b/stress-stack.c
+--- a/stress-stack.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-stack.c	2020-11-08 22:55:15.567668500 -0800
+@@ -98,6 +98,7 @@
+ {
+ 	char *start_ptr = shim_sbrk(0);
+ 	void *altstack;
++	size_t SIGSTKSZ = 9000;
+ 	ssize_t altstack_size = (SIGSTKSZ +
+ 				 STACK_ALIGNMENT +
+ 				 args->page_size) & ~(args->page_size -1);
+diff -ur a/stress-str.c b/stress-str.c
+--- a/stress-str.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-str.c	2020-11-08 22:55:55.887668500 -0800
+@@ -597,8 +597,6 @@
+ 	{ "all",		stress_str_all,		NULL },	/* Special "all test */
+ 
+ #if defined(HAVE_STRINGS_H)
+-	{ "index",		stress_index,		index },
+-	{ "rindex",		stress_rindex,		rindex  },
+ 	{ "strcasecmp",		stress_strcasecmp,	strcasecmp },
+ #endif
+ #if defined(HAVE_STRLCAT)
+diff -ur a/stress-vm.c b/stress-vm.c
+--- a/stress-vm.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-vm.c	2020-11-08 22:58:41.267668500 -0800
+@@ -2124,7 +2124,7 @@
+ 
+ 	ret = stress_oomable_child(args, &context, stress_vm_child, STRESS_OOMABLE_NORMAL);
+ 
+-	(void)shim_msync(context.bit_error_count, page_size, MS_SYNC);
++	(void)shim_msync(context.bit_error_count, page_size, 0);
+ 	if (*context.bit_error_count > 0) {
+ 		pr_fail("%s: detected %" PRIu64 " bit errors while "
+ 			"stressing memory\n",
+diff -ur a/stress-sigsegv.c b/stress-sigsegv.c
+--- a/stress-sigsegv.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-sigsegv.c	2020-11-08 22:50:22.327668500 -0800
+@@ -143,11 +143,13 @@
+ 				pr_fail("%s: expecting SIGSEGV/SIGILL/SIGBUS, got %s instead\n",
+ 					args->name, strsignal(signo));
+ 			}
++#if 0
+ 			if (verify && (signo == SIGBUS) && (code != SEGV_ACCERR)) {
+ 				pr_fail("%s: expecting SIGBUS si_code SEGV_ACCERR (%d), got %d instead\n",
+ 					args->name, SEGV_ACCERR, code);
+ 			}
+ #endif
++#endif
+ 			inc_counter(args);
+ 		} else {
+ #if defined(SA_SIGINFO)
+diff -ur a/stress-link.c b/stress-link.c
+--- a/stress-link.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-link.c	2020-11-08 22:44:34.267668500 -0800
+@@ -97,8 +97,7 @@
+ 			(void)stress_temp_filename_args(args,
+ 				newpath, sizeof(newpath), i);
+ 			if (linkfunc(oldpath, newpath) < 0) {
+-				if ((errno == EDQUOT) ||
+-				    (errno == ENOMEM) ||
++				if ((errno == ENOMEM) ||
+ 				    (errno == ENOSPC)) {
+ 					/* Try again */
+ 					continue;
+diff -ur a/stress-mmap.c b/stress-mmap.c
+--- a/stress-mmap.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-mmap.c	2020-11-08 22:45:51.767668500 -0800
+@@ -243,7 +243,9 @@
+ 	const bool mmap_file = context->mmap_file;
+ 	const int fd = context->fd;
+ 	int no_mem_retries = 0;
++#if 0
+ 	const int ms_flags = context->mmap_async ? MS_ASYNC : MS_SYNC;
++#endif
+ 	uint8_t *mapped, **mappings;
+ 
+ 	mapped = calloc(pages4k, sizeof(*mapped));
+@@ -322,7 +324,7 @@
+ 		no_mem_retries = 0;
+ 		if (mmap_file) {
+ 			(void)memset(buf, 0xff, sz);
+-			(void)shim_msync((void *)buf, sz, ms_flags);
++			(void)shim_msync((void *)buf, sz, 0);
+ 		}
+ 		(void)stress_madvise_random(buf, sz);
+ 		(void)stress_mincore_touch_pages(buf, context->mmap_bytes);
+@@ -424,7 +426,7 @@
+ 								"not contain expected data\n", args->name, page_size);
+ 						if (mmap_file) {
+ 							(void)memset(mappings[page], n, page_size);
+-							(void)shim_msync((void *)mappings[page], page_size, ms_flags);
++							(void)shim_msync((void *)mappings[page], page_size, 0);
+ #if defined(FALLOC_FL_KEEP_SIZE) && defined(FALLOC_FL_PUNCH_HOLE)
+ 							(void)shim_fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+ 								offset, page_size);
+diff -ur a/stress-mmapmany.c b/stress-mmapmany.c
+--- a/stress-mmapmany.c	2020-11-07 10:52:22.000000000 -0800
++++ b/stress-mmapmany.c	2020-11-08 22:47:27.567668500 -0800
+@@ -35,7 +35,8 @@
+ static int stress_mmapmany_child(const stress_args_t *args, void *context)
+ {
+ 	const size_t page_size = args->page_size;
+-	ssize_t max = sysconf(_SC_MAPPED_FILES);
++	/* Just make up a constant for Serenity */
++	ssize_t max = 6400; 
+ 	uint8_t **mappings;
+ 	max = STRESS_MAXIMUM(max, MMAP_MAX);
+ 
+d
