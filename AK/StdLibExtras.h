@@ -326,6 +326,7 @@ constexpr T&& forward(typename RemoveReference<T>::Type&& param) noexcept
 
 template<typename T>
 struct MakeUnsigned {
+    using Type = void;
 };
 template<>
 struct MakeUnsigned<signed char> {
@@ -506,6 +507,9 @@ using Void = void;
 
 template<typename... _Ignored>
 constexpr auto DependentFalse = false;
+
+template<typename T>
+using IsUnsigned = IsSame<T, MakeUnsigned<T>>;
 
 }
 

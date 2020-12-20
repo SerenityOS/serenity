@@ -29,6 +29,12 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 
+TEST_CASE(is_integral_works_properly)
+{
+    EXPECT(!IsIntegral<const char*>::value);
+    EXPECT(IsIntegral<unsigned long>::value);
+}
+
 TEST_CASE(format_string_literals)
 {
     EXPECT_EQ(String::formatted("prefix-{}-suffix", "abc"), "prefix-abc-suffix");
@@ -122,6 +128,11 @@ TEST_CASE(replacement_field)
     EXPECT_EQ(String::formatted("{:{2}}", -5, 8, 16), "              -5");
     EXPECT_EQ(String::formatted("{{{:*^{1}}}}", 1, 3), "{*1*}");
     EXPECT_EQ(String::formatted("{:0{}}", 1, 3), "001");
+}
+
+TEST_CASE(replacement_field_regression)
+{
+    EXPECT_EQ(String::formatted("{:{}}", "", static_cast<unsigned long>(6)), "      ");
 }
 
 TEST_CASE(complex_string_specifiers)
