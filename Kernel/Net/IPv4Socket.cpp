@@ -203,11 +203,10 @@ int IPv4Socket::allocate_local_port_if_needed()
     return port;
 }
 
-KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
+KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
 {
     LOCKER(lock());
 
-    (void)flags;
     if (addr && addr_length != sizeof(sockaddr_in))
         return KResult(-EINVAL);
 
@@ -621,7 +620,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 
 KResult IPv4Socket::close()
 {
-    (void)shutdown(SHUT_RDWR);
+    [[maybe_unused]] auto rc = shutdown(SHUT_RDWR);
     return KSuccess;
 }
 

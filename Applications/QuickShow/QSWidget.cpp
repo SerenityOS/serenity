@@ -200,10 +200,7 @@ void QSWidget::mousedown_event(GUI::MouseEvent& event)
     m_saved_pan_origin = m_pan_origin;
 }
 
-void QSWidget::mouseup_event(GUI::MouseEvent& event)
-{
-    UNUSED_PARAM(event);
-}
+void QSWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event) { }
 
 void QSWidget::mousemove_event(GUI::MouseEvent& event)
 {

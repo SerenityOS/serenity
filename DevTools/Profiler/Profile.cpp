@@ -95,9 +95,8 @@ static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region
     return String::format("[%s] %s", name.characters(), lib_data->lib_elf->symbolicate(eip - region->region_start, &offset).characters());
 }
 
-static String symbolicate_from_coredump(CoreDumpReader& coredump, u32 ptr, u32& offset)
+static String symbolicate_from_coredump(CoreDumpReader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
 {
-    (void)offset;
     auto* region = coredump.region_containing((FlatPtr)ptr);
     if (!region) {
         dbgln("did not find region for eip: {:p}", ptr);

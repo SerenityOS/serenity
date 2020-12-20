@@ -804,11 +804,9 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-int mbtowc(wchar_t* wch, const char* data, size_t data_size)
+int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
 {
     // FIXME: This needs a real implementation.
-    UNUSED_PARAM(data_size);
-
     if (wch && data) {
         *wch = *data;
         return 1;
@@ -1023,7 +1021,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
 // Serenity's PRNG is not cryptographically secure. Do not rely on this for
 // any real crypto! These functions (for now) are for compatibility.
 // TODO: In the future, rand can be made deterministic and this not.
-uint32_t arc4random(void)
+uint32_t arc4random()
 {
     char buf[4];
     syscall(SC_getrandom, buf, 4, 0);
@@ -1073,15 +1071,13 @@ int posix_openpt(int flags)
     return open("/dev/ptmx", flags);
 }
 
-int grantpt(int fd)
+int grantpt([[maybe_unused]] int fd)
 {
-    (void)fd;
     return 0;
 }
 
-int unlockpt(int fd)
+int unlockpt([[maybe_unused]] int fd)
 {
-    (void)fd;
     return 0;
 }
 }

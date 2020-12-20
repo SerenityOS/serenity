@@ -165,21 +165,18 @@ void APICTimer::reset_to_default_ticks_per_second()
 {
 }
 
-bool APICTimer::try_to_set_frequency(size_t frequency)
+bool APICTimer::try_to_set_frequency([[maybe_unused]] size_t frequency)
 {
-    (void)frequency;
     return true;
 }
 
-bool APICTimer::is_capable_of_frequency(size_t frequency) const
+bool APICTimer::is_capable_of_frequency([[maybe_unused]] size_t frequency) const
 {
-    (void)frequency;
     return false;
 }
 
-size_t APICTimer::calculate_nearest_possible_frequency(size_t frequency) const
+size_t APICTimer::calculate_nearest_possible_frequency([[maybe_unused]] size_t frequency) const
 {
-    (void)frequency;
     return 0;
 }
 

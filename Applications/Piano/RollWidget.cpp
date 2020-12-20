@@ -204,9 +204,8 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
     update();
 }
 
-void RollWidget::mouseup_event(GUI::MouseEvent& event)
+void RollWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event)
 {
-    (void)event;
     m_note_drag_start = {};
     m_note_drag_location = {};
 }

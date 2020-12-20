@@ -770,8 +770,7 @@ Board::Result Board::game_result() const
         return Result::InsufficientMaterial;
 
     bool are_legal_moves = false;
-    generate_moves([&](Move m) {
-        (void)m;
+    generate_moves([&]([[maybe_unused]] Move m) {
         are_legal_moves = true;
         return IterationDecision::Break;
     });

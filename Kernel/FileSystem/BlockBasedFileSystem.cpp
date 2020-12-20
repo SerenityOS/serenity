@@ -290,7 +290,7 @@ void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
             file_description().seek(base_offset, SEEK_SET);
             // FIXME: Should this error path be surfaced somehow?
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-            (void)file_description().write(entry_data_buffer, block_size());
+            [[maybe_unused]] auto rc = file_description().write(entry_data_buffer, block_size());
             cleaned_entries.append(&entry);
         }
     });
@@ -311,7 +311,7 @@ void BlockBasedFS::flush_writes_impl()
         file_description().seek(base_offset, SEEK_SET);
         // FIXME: Should this error path be surfaced somehow?
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-        (void)file_description().write(entry_data_buffer, block_size());
+        [[maybe_unused]] auto rc = file_description().write(entry_data_buffer, block_size());
         ++count;
     });
     cache().mark_all_clean();

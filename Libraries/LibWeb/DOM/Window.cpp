@@ -98,7 +98,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         m_timers.remove(timer.id());
     }
 
-    (void)vm.call(timer.callback(), wrapper());
+    [[maybe_unused]] auto rc = vm.call(timer.callback(), wrapper());
     if (vm.exception())
         vm.clear_exception();
 }
@@ -132,7 +132,7 @@ i32 Window::request_animation_frame(JS::Function& callback)
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& vm = function.vm();
         fake_timestamp += 10;
-        (void)vm.call(function, {}, JS::Value(fake_timestamp));
+        [[maybe_unused]] auto rc = vm.call(function, {}, JS::Value(fake_timestamp));
         if (vm.exception())
             vm.clear_exception();
         GUI::DisplayLink::unregister_callback(link_id);

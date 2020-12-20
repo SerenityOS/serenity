@@ -36,15 +36,13 @@ int sched_yield()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int sched_get_priority_min(int policy)
+int sched_get_priority_min([[maybe_unused]] int policy)
 {
-    (void)policy;
     return 0; // Idle
 }
 
-int sched_get_priority_max(int policy)
+int sched_get_priority_max([[maybe_unused]] int policy)
 {
-    (void)policy;
     return 3; // High
 }
 

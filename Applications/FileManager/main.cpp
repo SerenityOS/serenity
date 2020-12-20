@@ -183,13 +183,12 @@ void show_properties(const String& container_dir_path, const String& path, const
     properties->exec();
 }
 
-int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
+int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 {
     static constexpr const char* process_name = "FileManager (Desktop)";
     set_process_name(process_name, strlen(process_name));
     pthread_setname_np(pthread_self(), process_name);
 
-    (void)config;
     auto window = GUI::Window::construct();
     window->set_title("Desktop Manager");
     window->set_window_type(GUI::WindowType::Desktop);
@@ -198,8 +197,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
     auto& desktop_widget = window->set_main_widget<FileManager::DesktopWidget>();
     desktop_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
-    (void)directory_view;
+    [[maybe_unused]] auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
 
     auto copy_action = GUI::CommonActions::make_copy_action(
         [&](auto&) {

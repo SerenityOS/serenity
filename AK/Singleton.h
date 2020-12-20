@@ -114,7 +114,7 @@ public:
 
     void ensure_instance()
     {
-        (void)ptr();
+        ptr();
     }
 
 private:

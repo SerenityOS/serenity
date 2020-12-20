@@ -210,7 +210,7 @@ void APIC::write_icr(const ICRReg& icr)
 #define APIC_LVT_TRIGGER_LEVEL (1 << 14)
 #define APIC_LVT(iv, dm) (((iv)&0xff) | (((dm)&0x7) << 8))
 
-extern "C" void apic_ap_start(void);
+extern "C" void apic_ap_start();
 extern "C" u16 apic_ap_start_size;
 extern "C" u32 ap_cpu_init_stacks;
 extern "C" u32 ap_cpu_init_processor_info_array;

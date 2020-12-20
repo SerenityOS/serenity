@@ -361,10 +361,8 @@ void WindowManager::notify_modal_unparented(Window& window)
     tell_wm_listeners_window_state_changed(window);
 }
 
-void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
+void WindowManager::notify_rect_changed(Window& window, [[maybe_unused]] const Gfx::IntRect& old_rect, [[maybe_unused]] const Gfx::IntRect& new_rect)
 {
-    UNUSED_PARAM(old_rect);
-    UNUSED_PARAM(new_rect);
 #ifdef RESIZE_DEBUG
     dbg() << "[WM] Window " << &window << " rect changed " << old_rect << " -> " << new_rect;
 #endif

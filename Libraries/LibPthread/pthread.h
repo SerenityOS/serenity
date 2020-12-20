@@ -67,7 +67,7 @@ int pthread_attr_setstack(pthread_attr_t* attr, void*, size_t);
 int pthread_attr_getstacksize(const pthread_attr_t*, size_t*);
 int pthread_attr_setstacksize(pthread_attr_t*, size_t);
 
-int pthread_once(pthread_once_t*, void (*)(void));
+int pthread_once(pthread_once_t*, void (*)());
 #define PTHREAD_ONCE_INIT 0
 void* pthread_getspecific(pthread_key_t key);
 int pthread_setspecific(pthread_key_t key, const void* value);
@@ -100,14 +100,14 @@ int pthread_cancel(pthread_t);
 int pthread_cond_destroy(pthread_cond_t*);
 int pthread_cond_timedwait(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
 
-void pthread_testcancel(void);
+void pthread_testcancel();
 
 int pthread_spin_destroy(pthread_spinlock_t*);
 int pthread_spin_init(pthread_spinlock_t*, int);
 int pthread_spin_lock(pthread_spinlock_t*);
 int pthread_spin_trylock(pthread_spinlock_t*);
 int pthread_spin_unlock(pthread_spinlock_t*);
-pthread_t pthread_self(void);
+pthread_t pthread_self();
 int pthread_detach(pthread_t);
 int pthread_equal(pthread_t, pthread_t);
 int pthread_mutexattr_init(pthread_mutexattr_t*);

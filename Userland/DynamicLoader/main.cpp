@@ -188,8 +188,7 @@ static void allocate_tls()
         total_tls_size += data.value->tls_size();
     }
     if (total_tls_size) {
-        void* tls_address = allocate_tls(total_tls_size);
-        (void)tls_address;
+        [[maybe_unused]] void* tls_address = allocate_tls(total_tls_size);
         VERBOSE("from userspace, tls_address: %p", tls_address);
     }
     g_total_tls_size = total_tls_size;
@@ -211,7 +210,7 @@ static void initialize_libc()
 
     res = global_symbol_lookup("__libc_init");
     ASSERT(res.found);
-    typedef void libc_init_func(void);
+    typedef void libc_init_func();
     ((libc_init_func*)res.address)();
 }
 
@@ -262,8 +261,7 @@ static FlatPtr loader_main(auxv_t* auxvp)
     map_dependencies(main_program_name);
 
     VERBOSE("loaded all dependencies");
-    for (auto& lib : g_loaders) {
-        (void)lib;
+    for ([[maybe_unused]] auto& lib : g_loaders) {
         VERBOSE("%s - tls size: $u, tls offset: %u", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
     }
 
@@ -301,8 +299,7 @@ void _start(int argc, char** argv, char** envp)
 
     FlatPtr entry = loader_main(auxvp);
     VERBOSE("Loaded libs:\n");
-    for (auto& obj : g_loaded_objects) {
-        (void)obj;
+    for ([[maybe_unused]] auto& obj : g_loaded_objects) {
         VERBOSE("%s: %p\n", obj.key.characters(), obj.value->base_address().as_ptr());
     }
 

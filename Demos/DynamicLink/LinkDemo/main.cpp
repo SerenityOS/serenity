@@ -74,7 +74,7 @@ int main(int argc, char** argv, char** envp)
     outln("Global lib variable is {}", *ptr_global);
 
     // Test getting a method from the library and calling it
-    void (*lib_func)(void) = (void (*)(void))dlsym(handle, "global_lib_function");
+    void (*lib_func)() = (void (*)())dlsym(handle, "global_lib_function");
 
     outln("Found global lib function address: {}", lib_func);
 

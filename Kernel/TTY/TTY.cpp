@@ -57,7 +57,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
 {
     if (Process::current()->pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
-        (void)Process::current()->send_signal(SIGTTIN, nullptr);
+        [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTIN, nullptr);
         return KResult(-EINTR);
     }
 
@@ -104,7 +104,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
 KResultOr<size_t> TTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        (void)Process::current()->send_signal(SIGTTOU, nullptr);
+        [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTOU, nullptr);
         return KResult(-EINTR);
     }
 
@@ -172,7 +172,7 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
             if (auto original_process_parent = m_original_process_parent.strong_ref())
-                (void)original_process_parent->send_signal(SIGCHLD, nullptr);
+                [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
             // TODO: Else send it to the session leader maybe?
             return;
         }
@@ -288,7 +288,7 @@ void TTY::generate_signal(int signal)
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbg() << tty_name() << ": Send signal " << signal << " to " << process;
         // FIXME: Should this error be propagated somehow?
-        (void)process.send_signal(signal, nullptr);
+        [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
 }

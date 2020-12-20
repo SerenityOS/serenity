@@ -31,18 +31,14 @@
 
 extern "C" {
 
-long ulimit(int cmd, long newlimit)
+long ulimit([[maybe_unused]] int cmd, [[maybe_unused]] long newlimit)
 {
-    (void)cmd;
-    (void)newlimit;
     ASSERT_NOT_REACHED();
     return -1;
 }
 
-int getrusage(int who, struct rusage* usage)
+int getrusage([[maybe_unused]] int who, [[maybe_unused]] struct rusage* usage)
 {
-    (void)who;
-    (void)usage;
     dbg() << "LibC: getrusage is not implemented";
     return -1;
 }

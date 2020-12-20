@@ -359,7 +359,7 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
         m_first_child = m_last_child;
     if (notify)
         node->inserted_into(static_cast<T&>(*this));
-    (void)node.leak_ref();
+    [[maybe_unused]] auto& rc = node.leak_ref();
 
     if (notify)
         static_cast<T*>(this)->children_changed();
@@ -394,7 +394,7 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
     node->m_parent = static_cast<T*>(this);
     if (notify)
         node->inserted_into(static_cast<T&>(*this));
-    (void)node.leak_ref();
+    [[maybe_unused]] auto& rc = node.leak_ref();
 
     if (notify)
         static_cast<T*>(this)->children_changed();
@@ -416,7 +416,7 @@ inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
     if (!m_last_child)
         m_last_child = m_first_child;
     node->inserted_into(static_cast<T&>(*this));
-    (void)node.leak_ref();
+    [[maybe_unused]] auto& rc = node.leak_ref();
 
     static_cast<T*>(this)->children_changed();
 }

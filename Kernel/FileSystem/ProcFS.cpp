@@ -1647,9 +1647,8 @@ KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)
     return KResult(-EPERM);
 }
 
-KResult ProcFSInode::remove_child(const StringView& name)
+KResult ProcFSInode::remove_child([[maybe_unused]] const StringView& name)
 {
-    (void)name;
     return KResult(-EPERM);
 }
 

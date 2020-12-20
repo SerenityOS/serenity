@@ -51,11 +51,8 @@ static MACAddress mac_from_string(const String& str)
     };
 }
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
-    (void)argc;
-    (void)argv;
-
     if (pledge("stdio unix inet cpath rpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;

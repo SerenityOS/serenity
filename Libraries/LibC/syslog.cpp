@@ -94,7 +94,7 @@ void closelog_r(struct syslog_data* data)
     data->maskpri = LOG_UPTO(LOG_DEBUG);
 }
 
-void closelog(void)
+void closelog()
 {
     closelog_r(&global_log_data);
 }

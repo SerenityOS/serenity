@@ -138,8 +138,7 @@ bool Utf8View::validate(size_t& valid_bytes) const
 size_t Utf8View::calculate_length() const
 {
     size_t length = 0;
-    for (auto code_point : *this) {
-        (void)code_point;
+    for ([[maybe_unused]] auto code_point : *this) {
         ++length;
     }
     return length;
@@ -170,7 +169,6 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
 
     ASSERT(first_byte_makes_sense);
-    (void)value;
 
     ASSERT(code_point_length_in_bytes <= m_length);
     m_ptr += code_point_length_in_bytes;

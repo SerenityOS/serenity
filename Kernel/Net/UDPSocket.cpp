@@ -79,9 +79,8 @@ NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
     return adopt(*new UDPSocket(protocol));
 }
 
-KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags)
+KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
-    (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.

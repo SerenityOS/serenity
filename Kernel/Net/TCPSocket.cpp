@@ -144,7 +144,7 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
     ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
     // FIXME: Should we observe this error somehow?
-    (void)queue_connection_from(*socket);
+    [[maybe_unused]] auto rc = queue_connection_from(*socket);
 }
 
 TCPSocket::TCPSocket(int protocol)
@@ -167,9 +167,8 @@ NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
     return adopt(*new TCPSocket(protocol));
 }
 
-KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags)
+KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
 {
-    (void)flags;
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
@@ -464,7 +463,7 @@ void TCPSocket::shut_down_for_writing()
 #ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN/ACK from Established and moving into FinWait1";
 #endif
-        (void)send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::FinWait1);
     } else {
         dbg() << " Shutting down TCPSocket for writing but not moving to FinWait1 since state is " << to_string(state());
@@ -479,7 +478,7 @@ KResult TCPSocket::close()
 #ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN from CloseWait and moving into LastAck";
 #endif
-        (void)send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
 

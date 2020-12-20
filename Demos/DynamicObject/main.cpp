@@ -39,12 +39,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int main(int argc, char** argv, char** env)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused]] char** env)
 {
-    (void)argc;
-    (void)argv;
-    (void)env;
-
     printf("Well Hello Friends!\n");
     printf("trying to open /etc/fstab for writing..\n");
     int rc = open("/etc/fstab", O_RDWR);

@@ -29,11 +29,8 @@
 #include <LibCore/LocalServer.h>
 #include <stdio.h>
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
-    (void)argc;
-    (void)argv;
-
     if (pledge("stdio accept unix inet cpath rpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;

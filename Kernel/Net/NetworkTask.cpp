@@ -374,6 +374,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
     socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
 
+    [[maybe_unused]] int unused_rc {};
     switch (socket->state()) {
     case TCPSocket::State::Closed:
         klog() << "handle_tcp: unexpected flags in Closed state";
@@ -381,7 +382,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
         return;
     case TCPSocket::State::TimeWait:
         klog() << "handle_tcp: unexpected flags in TimeWait state";
-        (void)socket->send_tcp_packet(TCPFlags::RST);
+        unused_rc = socket->send_tcp_packet(TCPFlags::RST);
         socket->set_state(TCPSocket::State::Closed);
         return;
     case TCPSocket::State::Listen:
@@ -403,46 +404,46 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 #endif
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
+            [[maybe_unused]] auto rc2 = client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
             client->set_state(TCPSocket::State::SynReceived);
             return;
         }
         default:
             klog() << "handle_tcp: unexpected flags in Listen state";
-            // (void)socket->send_tcp_packet(TCPFlags::RST);
+            // socket->send_tcp_packet(TCPFlags::RST);
             return;
         }
     case TCPSocket::State::SynSent:
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_tcp_packet(TCPFlags::ACK);
+            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::SynReceived);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_tcp_packet(TCPFlags::ACK);
+            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
             return;
         case TCPFlags::ACK | TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_tcp_packet(TCPFlags::ACK);
+            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::FINDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-            (void)socket->send_tcp_packet(TCPFlags::ACK);
+            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::RSTDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         default:
             klog() << "handle_tcp: unexpected flags in SynSent state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
@@ -457,7 +458,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             case TCPSocket::Direction::Incoming:
                 if (!socket->has_originator()) {
                     klog() << "handle_tcp: connection doesn't have an originating socket; maybe it went away?";
-                    (void)socket->send_tcp_packet(TCPFlags::RST);
+                    unused_rc = socket->send_tcp_packet(TCPFlags::RST);
                     socket->set_state(TCPSocket::State::Closed);
                     return;
                 }
@@ -473,7 +474,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
                 return;
             default:
                 klog() << "handle_tcp: got ACK in SynReceived state but direction is invalid (" << TCPSocket::to_string(socket->direction()) << ")";
-                (void)socket->send_tcp_packet(TCPFlags::RST);
+                unused_rc = socket->send_tcp_packet(TCPFlags::RST);
                 socket->set_state(TCPSocket::State::Closed);
                 return;
             }
@@ -481,7 +482,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in SynReceived state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -489,7 +490,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
         switch (tcp_packet.flags()) {
         default:
             klog() << "handle_tcp: unexpected flags in CloseWait state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -501,7 +502,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in LastAck state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -517,7 +518,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in FinWait1 state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -532,7 +533,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in FinWait2 state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -544,7 +545,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in Closing state";
-            (void)socket->send_tcp_packet(TCPFlags::RST);
+            unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -554,7 +555,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
 
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            (void)socket->send_tcp_packet(TCPFlags::ACK);
+            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::CloseWait);
             socket->set_connected(false);
             return;
@@ -568,7 +569,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
         if (payload_size) {
             if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp))
-                (void)socket->send_tcp_packet(TCPFlags::ACK);
+                unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
         }
     }
 }

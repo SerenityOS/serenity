@@ -170,8 +170,7 @@ int main(int argc, char** argv)
         Crash("Division by zero", []() {
             volatile int lala = 10;
             volatile int zero = 0;
-            volatile int test = lala / zero;
-            UNUSED_PARAM(test);
+            [[maybe_unused]] volatile int test = lala / zero;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -196,8 +195,7 @@ int main(int argc, char** argv)
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
-            volatile auto x = uninitialized_memory[0][0];
-            UNUSED_PARAM(x);
+            [[maybe_unused]] volatile auto x = uninitialized_memory[0][0];
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -209,8 +207,7 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             free(uninitialized_memory);
-            volatile auto x = uninitialized_memory[4][0];
-            UNUSED_PARAM(x);
+            [[maybe_unused]] volatile auto x = uninitialized_memory[4][0];
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -305,8 +302,7 @@ int main(int argc, char** argv)
 
             free(ptr);
             dbgprintf("ptr = %p\n", ptr);
-            volatile auto foo = *ptr;
-            UNUSED_PARAM(foo);
+            [[maybe_unused]] volatile auto foo = *ptr;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

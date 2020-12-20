@@ -156,11 +156,8 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
     }
 }
 
-void DownloadWidget::did_finish(bool success, ReadonlyBytes payload, RefPtr<SharedBuffer> payload_storage, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
+void DownloadWidget::did_finish(bool success, [[maybe_unused]] ReadonlyBytes payload, [[maybe_unused]] RefPtr<SharedBuffer> payload_storage, [[maybe_unused]] const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
 {
-    (void)payload;
-    (void)payload_storage;
-    (void)response_headers;
     dbg() << "did_finish, success=" << success;
 
     m_close_button->set_enabled(true);

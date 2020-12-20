@@ -1480,7 +1480,7 @@ Vector<size_t, 2> Editor::vt_dsr()
 
     do {
         more_junk_to_read = false;
-        (void)select(1, &readfds, nullptr, nullptr, &timeout);
+        [[maybe_unused]] auto rc = select(1, &readfds, nullptr, nullptr, &timeout);
         if (FD_ISSET(0, &readfds)) {
             auto nread = read(0, buf, 16);
             if (nread < 0) {

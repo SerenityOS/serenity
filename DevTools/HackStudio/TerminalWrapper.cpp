@@ -107,13 +107,13 @@ void TerminalWrapper::run_command(const String& command)
         tcsetpgrp(pts_fd, getpid());
 
         // NOTE: It's okay if this fails.
-        (void)ioctl(0, TIOCNOTTY);
+        int rc = ioctl(0, TIOCNOTTY);
 
         close(0);
         close(1);
         close(2);
 
-        int rc = dup2(pts_fd, 0);
+        rc = dup2(pts_fd, 0);
         if (rc < 0) {
             perror("dup2");
             exit(1);
@@ -164,7 +164,7 @@ void TerminalWrapper::kill_running_command()
     ASSERT(m_pid != -1);
 
     // Kill our child process and its whole process group.
-    (void)killpg(m_pid, SIGTERM);
+    [[maybe_unused]] auto rc = killpg(m_pid, SIGTERM);
 }
 
 TerminalWrapper::TerminalWrapper(bool user_spawned)

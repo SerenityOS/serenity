@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
@@ -45,8 +45,6 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    (void)argc;
-    (void)argv;
     auto f = Core::File::construct("/proc/dmesg");
     if (!f->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "open: failed to open /proc/dmesg: %s\n", f->error_string());

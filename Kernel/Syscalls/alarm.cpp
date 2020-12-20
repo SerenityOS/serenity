@@ -49,7 +49,7 @@ unsigned Process::sys$alarm(unsigned seconds)
         auto deadline = TimeManagement::the().current_time(CLOCK_REALTIME).value();
         timespec_add(deadline, { seconds, 0 }, deadline);
         m_alarm_timer = TimerQueue::the().add_timer_without_id(CLOCK_REALTIME, deadline, [this]() {
-            (void)send_signal(SIGALRM, nullptr);
+            [[maybe_unused]] auto rc = send_signal(SIGALRM, nullptr);
         });
     }
     return previous_alarm_remaining;

@@ -364,7 +364,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             new_interpreter.run(new_interpreter.global_object(), *file_program.value());
 
             auto& before_initial_page_load = new_interpreter.vm().get_variable("__BeforeInitialPageLoad__", new_interpreter.global_object()).as_function();
-            (void)new_interpreter.vm().call(before_initial_page_load, JS::js_undefined());
+            [[maybe_unused]] auto rc_before = new_interpreter.vm().call(before_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
                 new_interpreter.vm().clear_exception();
 
@@ -374,7 +374,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
             // Finally run the test by calling "__AfterInitialPageLoad__"
             auto& after_initial_page_load = new_interpreter.vm().get_variable("__AfterInitialPageLoad__", new_interpreter.global_object()).as_function();
-            (void)new_interpreter.vm().call(after_initial_page_load, JS::js_undefined());
+            [[maybe_unused]] auto rc_after = new_interpreter.vm().call(after_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
                 new_interpreter.vm().clear_exception();
 

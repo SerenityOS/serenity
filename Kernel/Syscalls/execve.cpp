@@ -371,7 +371,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         new_main_thread->set_state(Thread::State::Runnable);
     }
     u32 lock_count_to_restore;
-    (void)big_lock().force_unlock_if_locked(lock_count_to_restore);
+    [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
     return 0;

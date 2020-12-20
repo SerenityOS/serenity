@@ -225,10 +225,7 @@ public:
     template<typename... Args>
     [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)
     {
-        // Are there any values in this argpack?
-        // args = [] -> if constexpr (false)
-        // args = [x, y, z] -> if constexpr ((void)x, true || ...)
-        if constexpr ((((void)args, true) || ...)) {
+        if constexpr (sizeof...(Args) > 0) {
             MarkedValueList arglist { heap() };
             (..., arglist.append(move(args)));
             return call(function, this_value, move(arglist));

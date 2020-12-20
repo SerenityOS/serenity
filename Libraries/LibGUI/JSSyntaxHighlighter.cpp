@@ -63,9 +63,8 @@ bool JSSyntaxHighlighter::is_identifier(void* token) const
     return js_token == JS::TokenType::Identifier;
 }
 
-bool JSSyntaxHighlighter::is_navigatable(void* token) const
+bool JSSyntaxHighlighter::is_navigatable([[maybe_unused]] void* token) const
 {
-    (void)token;
     return false;
 }
 
