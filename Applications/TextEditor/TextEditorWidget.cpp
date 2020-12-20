@@ -30,7 +30,7 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <Applications/TextEditor/MainWindowUI.h>
+#include <Applications/TextEditor/MainWindowGML.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
@@ -61,7 +61,7 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    load_from_json(main_window_ui_json);
+    load_from_gml(main_window_gml);
 
     auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
 

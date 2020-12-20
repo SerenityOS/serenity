@@ -30,7 +30,7 @@
 #include "Tab.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
-#include <Applications/Browser/BrowserWindowUI.h>
+#include <Applications/Browser/BrowserWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     window->set_title("Browser");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.load_from_json(browser_window_ui_json);
+    widget.load_from_gml(browser_window_gml);
 
     auto& tab_widget = static_cast<GUI::TabWidget&>(*widget.find_descendant_by_name("tab_widget"));
 

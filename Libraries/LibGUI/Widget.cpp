@@ -33,6 +33,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/GMLParser.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
@@ -926,18 +927,11 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
         window->update_cursor({});
 }
 
-bool Widget::load_from_json(const StringView& json_string)
+bool Widget::load_from_gml(const StringView& gml_string)
 {
-    auto json_value = JsonValue::from_string(json_string);
-    if (!json_value.has_value()) {
-        dbg() << "load_from_json parse failed: _" << json_string << "_";
-        return false;
-    }
-    if (!json_value.value().is_object()) {
-        dbg() << "load_from_json parse non-object";
-        return false;
-    }
-    return load_from_json(json_value.value().as_object());
+    auto value = parse_gml(gml_string);
+    ASSERT(value.is_object());
+    return load_from_json(value.as_object());
 }
 
 bool Widget::load_from_json(const JsonObject& json)

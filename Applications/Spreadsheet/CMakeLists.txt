@@ -1,5 +1,5 @@
-compile_json_gui(CondFormatting.json CondFormattingUI.h cond_fmt_ui_json)
-compile_json_gui(CondView.json CondFormattingViewUI.h cond_fmt_view_ui_json)
+compile_gml(CondFormatting.gml CondFormattingGML.h cond_fmt_gml)
+compile_gml(CondView.gml CondFormattingViewGML.h cond_fmt_view_gml)
 
 set(SOURCES
     Cell.cpp
@@ -11,8 +11,8 @@ set(SOURCES
     CellType/String.cpp
     CellType/Type.cpp
     CellTypeDialog.cpp
-    CondFormattingUI.h
-    CondFormattingViewUI.h
+    CondFormattingGML.h
+    CondFormattingViewGML.h
     HelpWindow.cpp
     JSIntegration.cpp
     Readers/XSV.cpp

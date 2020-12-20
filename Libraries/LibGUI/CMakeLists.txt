@@ -30,6 +30,7 @@ set(SOURCES
     FileSystemModel.cpp
     FilteringProxyModel.cpp
     Frame.cpp
+    GMLParser.cpp
     GroupBox.cpp
     HeaderView.cpp
     INILexer.cpp

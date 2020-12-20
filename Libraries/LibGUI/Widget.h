@@ -300,8 +300,8 @@ public:
     Gfx::StandardCursor override_cursor() const { return m_override_cursor; }
     void set_override_cursor(Gfx::StandardCursor);
 
-    bool load_from_json(const StringView&);
-    bool load_from_json(const JsonObject&);
+    bool load_from_gml(const StringView&);
+
     Widget* find_child_by_name(const String&);
     Widget* find_descendant_by_name(const String&);
 
@@ -348,6 +348,8 @@ private:
     void focus_next_widget(FocusSource);
 
     void show_tooltip();
+
+    bool load_from_json(const JsonObject&);
 
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;

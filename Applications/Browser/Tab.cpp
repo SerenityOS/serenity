@@ -32,7 +32,7 @@
 #include "InspectorWidget.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
-#include <Applications/Browser/TabUI.h>
+#include <Applications/Browser/TabGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -88,7 +88,7 @@ static void start_download(const URL& url)
 Tab::Tab(Type type)
     : m_type(type)
 {
-    load_from_json(tab_ui_json);
+    load_from_gml(tab_gml);
 
     m_toolbar_container = static_cast<GUI::ToolBarContainer&>(*find_descendant_by_name("toolbar_container"));
     auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));

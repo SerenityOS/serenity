@@ -28,8 +28,8 @@
 #include "Cell.h"
 #include "Spreadsheet.h"
 #include <AK/StringBuilder.h>
-#include <Applications/Spreadsheet/CondFormattingUI.h>
-#include <Applications/Spreadsheet/CondFormattingViewUI.h>
+#include <Applications/Spreadsheet/CondFormattingGML.h>
+#include <Applications/Spreadsheet/CondFormattingViewGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -356,7 +356,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional Format");
-    conditional_fmt_tab.load_from_json(cond_fmt_ui_json);
+    conditional_fmt_tab.load_from_gml(cond_fmt_gml);
     {
         auto& view = static_cast<Spreadsheet::ConditionsView&>(*conditional_fmt_tab.find_descendant_by_name("conditions_view"));
         view.set_formats(&m_conditional_formats);
@@ -429,7 +429,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
 ConditionView::ConditionView(ConditionalFormat& fmt)
     : m_format(fmt)
 {
-    load_from_json(cond_fmt_view_ui_json);
+    load_from_gml(cond_fmt_view_gml);
 
     auto& fg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("foreground_input"));
     auto& bg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("background_input"));
