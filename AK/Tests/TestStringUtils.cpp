@@ -134,6 +134,34 @@ TEST_CASE(convert_to_int)
     actual = AK::StringUtils::convert_to_int(" \t-12345 \n\n");
     EXPECT_EQ(actual.has_value(), true);
     EXPECT_EQ(actual.value(), -12345);
+
+    auto actual_i8 = AK::StringUtils::convert_to_int<i8>("-1");
+    EXPECT(actual_i8.has_value());
+    EXPECT_EQ(actual_i8.value(), -1);
+    EXPECT_EQ(sizeof(actual_i8.value()), (size_t)1);
+    actual_i8 = AK::StringUtils::convert_to_int<i8>("128");
+    EXPECT(!actual_i8.has_value());
+
+    auto actual_i16 = AK::StringUtils::convert_to_int<i16>("-1");
+    EXPECT(actual_i16.has_value());
+    EXPECT_EQ(actual_i16.value(), -1);
+    EXPECT_EQ(sizeof(actual_i16.value()), (size_t)2);
+    actual_i16 = AK::StringUtils::convert_to_int<i16>("32768");
+    EXPECT(!actual_i16.has_value());
+
+    auto actual_i32 = AK::StringUtils::convert_to_int<i32>("-1");
+    EXPECT(actual_i32.has_value());
+    EXPECT_EQ(actual_i32.value(), -1);
+    EXPECT_EQ(sizeof(actual_i32.value()), (size_t)4);
+    actual_i32 = AK::StringUtils::convert_to_int<i32>("2147483648");
+    EXPECT(!actual_i32.has_value());
+
+    auto actual_i64 = AK::StringUtils::convert_to_int<i64>("-1");
+    EXPECT(actual_i64.has_value());
+    EXPECT_EQ(actual_i64.value(), -1);
+    EXPECT_EQ(sizeof(actual_i64.value()), (size_t)8);
+    actual_i64 = AK::StringUtils::convert_to_int<i64>("9223372036854775808");
+    EXPECT(!actual_i64.has_value());
 }
 
 TEST_CASE(convert_to_uint)
@@ -178,6 +206,34 @@ TEST_CASE(convert_to_uint)
     actual = AK::StringUtils::convert_to_uint(" \t12345 \n\n");
     EXPECT_EQ(actual.has_value(), true);
     EXPECT_EQ(actual.value(), 12345u);
+
+    auto actual_u8 = AK::StringUtils::convert_to_uint<u8>("255");
+    EXPECT(actual_u8.has_value());
+    EXPECT_EQ(actual_u8.value(), 255u);
+    EXPECT_EQ(sizeof(actual_u8.value()), (size_t)1);
+    actual_u8 = AK::StringUtils::convert_to_uint<u8>("256");
+    EXPECT(!actual_u8.has_value());
+
+    auto actual_u16 = AK::StringUtils::convert_to_uint<u16>("65535");
+    EXPECT(actual_u16.has_value());
+    EXPECT_EQ(actual_u16.value(), 65535u);
+    EXPECT_EQ(sizeof(actual_u16.value()), (size_t)2);
+    actual_u16 = AK::StringUtils::convert_to_uint<u16>("65536");
+    EXPECT(!actual_u16.has_value());
+
+    auto actual_u32 = AK::StringUtils::convert_to_uint<u32>("4294967295");
+    EXPECT(actual_u32.has_value());
+    EXPECT_EQ(actual_u32.value(), 4294967295ul);
+    EXPECT_EQ(sizeof(actual_u32.value()), (size_t)4);
+    actual_u32 = AK::StringUtils::convert_to_uint<u32>("4294967296");
+    EXPECT(!actual_u32.has_value());
+
+    auto actual_u64 = AK::StringUtils::convert_to_uint<u64>("18446744073709551615");
+    EXPECT(actual_u64.has_value());
+    EXPECT_EQ(actual_u64.value(), 18446744073709551615ull);
+    EXPECT_EQ(sizeof(actual_u64.value()), (size_t)8);
+    actual_u64 = AK::StringUtils::convert_to_uint<u64>("18446744073709551616");
+    EXPECT(!actual_u64.has_value());
 }
 
 TEST_CASE(ends_with)
