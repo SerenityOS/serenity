@@ -65,3 +65,6 @@
 #define SCNdMAX __PRI64_PREFIX "d"
 #define SCNoMAX __PRI64_PREFIX "o"
 #define SCNuMAX __PRI64_PREFIX "u"
+
+#define SCNu64 __PRI64_PREFIX "u"
+#define SCNd64 __PRI64_PREFIX "d"
