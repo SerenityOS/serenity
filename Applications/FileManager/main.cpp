@@ -31,6 +31,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
+#include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
@@ -292,36 +293,30 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     window->set_rect({ left, top, width, height });
 
     auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.set_fill_with_background_color(true);
-    widget.layout()->set_spacing(2);
 
-    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
+    widget.load_from_gml(file_manager_window_gml);
 
-    auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
-    auto& location_toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& main_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("main_toolbar");
+    auto& location_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("location_toolbar");
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
 
-    location_toolbar.set_visible(false);
-
-    auto& location_label = location_toolbar.add<GUI::Label>("Location: ");
+    auto& location_label = (GUI::Label&)*widget.find_descendant_by_name("location_label");
     location_label.size_to_fit();
 
-    auto& location_textbox = location_toolbar.add<GUI::TextBox>();
-    location_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    location_textbox.set_preferred_size(0, 22);
+    auto& location_textbox = (GUI::TextBox&)*widget.find_descendant_by_name("location_textbox");
 
-    auto& breadcrumb_toolbar = toolbar_container.add<GUI::ToolBar>(Gfx::Orientation::Horizontal, 16);
+    auto& breadcrumb_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("breadcrumb_toolbar");
     breadcrumb_toolbar.layout()->set_margins({});
-    auto& breadcrumb_bar = breadcrumb_toolbar.add<GUI::BreadcrumbBar>();
+    auto& breadcrumb_bar = (GUI::BreadcrumbBar&)*widget.find_descendant_by_name("breadcrumb_bar");
 
     location_textbox.on_focusout = [&] {
         location_toolbar.set_visible(false);
         breadcrumb_toolbar.set_visible(true);
     };
 
-    auto& splitter = widget.add<GUI::HorizontalSplitter>();
-    auto& tree_view = splitter.add<GUI::TreeView>();
+    auto& splitter = (GUI::HorizontalSplitter&)*widget.find_descendant_by_name("splitter");
+    auto& tree_view = (GUI::TreeView&)*widget.find_descendant_by_name("tree_view");
+
     auto directories_model = GUI::FileSystemModel::create({}, GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view.set_model(directories_model);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::Icon, true);
@@ -332,8 +327,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::ModificationTime, true);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::Inode, true);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
-    tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    tree_view.set_preferred_size(175, 0);
     bool is_reacting_to_tree_view_selection_change = false;
 
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
@@ -345,12 +338,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     // Open the root directory. FIXME: This is awkward.
     tree_view.toggle_index(directories_model->index(0, 0, {}));
 
-    auto& statusbar = widget.add<GUI::StatusBar>();
+    auto& statusbar = (GUI::StatusBar&)*widget.find_descendant_by_name("statusbar");
 
-    auto& progressbar = statusbar.add<GUI::ProgressBar>();
+    auto& progressbar = (GUI::ProgressBar&)*widget.find_descendant_by_name("progressbar");
     progressbar.set_caption("Generating thumbnails: ");
     progressbar.set_format(GUI::ProgressBar::Format::ValueSlashMax);
-    progressbar.set_visible(false);
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
     progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
     progressbar.set_frame_thickness(1);
