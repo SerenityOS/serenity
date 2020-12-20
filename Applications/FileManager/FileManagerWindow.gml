@@ -13,8 +13,8 @@
             visible: false
 
             @GUI::Label {
-                name: "location_label"
                 text: "Location: "
+                autosize: true
             }
 
             @GUI::TextBox {

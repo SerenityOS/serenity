@@ -300,9 +300,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& location_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("location_toolbar");
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
 
-    auto& location_label = (GUI::Label&)*widget.find_descendant_by_name("location_label");
-    location_label.size_to_fit();
-
     auto& location_textbox = (GUI::TextBox&)*widget.find_descendant_by_name("location_textbox");
 
     auto& breadcrumb_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("breadcrumb_toolbar");

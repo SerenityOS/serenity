@@ -42,10 +42,20 @@ Label::Label(const StringView& text)
     set_foreground_role(Gfx::ColorRole::WindowText);
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
 }
 
 Label::~Label()
 {
+}
+
+void Label::set_autosize(bool autosize)
+{
+    if (m_autosize == autosize)
+        return;
+    m_autosize = autosize;
+    if (m_autosize)
+        size_to_fit();
 }
 
 void Label::set_icon(const Gfx::Bitmap* icon)
@@ -61,6 +71,8 @@ void Label::set_text(const StringView& text)
     if (text == m_text)
         return;
     m_text = text;
+    if (m_autosize)
+        size_to_fit();
     update();
 }
 
