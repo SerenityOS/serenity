@@ -1,0 +1,177 @@
+diff -ur stress-ng-master/core-helper.c stress-ng-master-2/core-helper.c
+--- stress-ng-master/core-helper.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/core-helper.c	2020-11-08 23:17:03.777668500 -0800
+@@ -1102,7 +1102,7 @@
+  */
+ uint64_t stress_get_prime64(const uint64_t n)
+ {
+-	static uint p = 1009;
++	static uint64_t p = 1009;
+ 
+ 	if (n != p)
+ 		return p;
+@@ -1149,6 +1149,9 @@
+  */
+ size_t stress_get_file_limit(void)
+ {
++	/* Just return a constant for serenity */
++	return 65536;
++#if 0
+ 	struct rlimit rlim;
+ 	size_t i, opened = 0, max = 65536;	/* initial guess */
+ 
+@@ -1161,6 +1164,7 @@
+ 			opened++;
+ 	}
+ 	return max - opened;
++#endif
+ }
+ 
+ /*
+@@ -2026,3 +2030,8 @@
+ 	return 0;
+ #endif
+ }
++
++int pause(void)
++{
++	asm ("pause");
++}
+diff -ur stress-ng-master/core-job.c stress-ng-master-2/core-job.c
+--- stress-ng-master/core-job.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/core-job.c	2020-11-08 22:32:06.607668500 -0800
+@@ -28,7 +28,7 @@
+ #define RUN_SEQUENTIAL	(0x01)
+ #define RUN_PARALLEL	(0x02)
+ 
+-#define ISBLANK(ch)	isblank((int)(ch))
++#define ISBLANK(ch)	(ch == ' ' || ch == '\t')
+ 
+ /*
+  *  stress_chop()
+diff -ur stress-ng-master/core-limit.c stress-ng-master-2/core-limit.c
+--- stress-ng-master/core-limit.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/core-limit.c	2020-11-08 22:32:39.497668500 -0800
+@@ -80,6 +80,7 @@
+  */
+ void stress_set_max_limits(void)
+ {
++#if 0
+ 	size_t i;
+ 	struct rlimit rlim;
+ 
+@@ -90,6 +91,7 @@
+ 		(void)setrlimit(limits[i], &rlim);
+ 	}
+ 
++#endif
+ #if defined(RLIMIT_NOFILE)
+ 	{
+ 		uint64_t max_fd = 0;
+diff -ur stress-ng-master/core-net.c stress-ng-master-2/core-net.c
+--- stress-ng-master/core-net.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/core-net.c	2020-11-08 22:33:09.007668500 -0800
+@@ -32,7 +32,6 @@
+ 
+ static const stress_domain_t domains[] = {
+ 	{ "ipv4",	AF_INET,	DOMAIN_INET },
+-	{ "ipv6",	AF_INET6,	DOMAIN_INET6 },
+ 	{ "unix",	AF_UNIX,	DOMAIN_UNIX },
+ };
+ 
+diff -ur stress-ng-master/core-sched.c stress-ng-master-2/core-sched.c
+--- stress-ng-master/core-sched.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/core-sched.c	2020-11-08 23:21:44.497668500 -0800
+@@ -263,6 +263,7 @@
+ 			pr_dbg("%s: setting scheduler class '%s'\n", prefix, sched_name);
+ 		break;
+ 	}
++#if 0
+ 	rc = sched_setscheduler(pid, sched, &param);
+ 	if (rc < 0) {
+ 		rc = -errno;
+@@ -273,6 +274,7 @@
+ 				errno, strerror(errno));
+ 		return rc;
+ 	}
++#endif
+ 	return 0;
+ }
+ #endif
+diff -ur stress-ng-master/stress-chown.c stress-ng-master-2/stress-chown.c
+--- stress-ng-master/stress-chown.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/stress-chown.c	2020-11-08 22:35:41.107668500 -0800
+@@ -219,6 +219,9 @@
+ 				pr_fail("%s: chown %s failed, errno=%d (%s)\n",
+ 					args->name, filename, errno, strerror(errno));
+ 		}
++
++/* No lchown support in serenity */
++#if 0
+ 		ret = do_chown(lchown, filename, cap_chown, uid, gid);
+ 		if (ret < 0) {
+ 			if (ret == -ENOENT || ret == -ENOTDIR) {
+@@ -233,6 +236,7 @@
+ 				pr_fail("%s: chown %s failed, errno=%d (%s)\n",
+ 					args->name, filename, errno, strerror(errno));
+ 		}
++#endif
+ 		inc_counter(args);
+ 	} while (keep_stressing());
+ 
+diff -ur stress-ng-master/stress-cyclic.c stress-ng-master-2/stress-cyclic.c
+--- stress-ng-master/stress-cyclic.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/stress-cyclic.c	2020-11-08 22:37:33.407668500 -0800
+@@ -587,7 +587,11 @@
+ 	const stress_cyclic_method_info_t *cyclic_method = &cyclic_methods[0];
+ 	const uint32_t num_instances = args->num_instances;
+ 	struct sigaction old_action_xcpu;
++
++/* No RLIMIT_CPU support in serenity */
++#if 0
+ 	struct rlimit rlim;
++#endif
+ 	pid_t pid;
+ 	NOCLOBBER uint64_t timeout;
+ 	uint64_t cyclic_sleep = DEFAULT_DELAY_NS;
+@@ -692,6 +696,8 @@
+ 		} while (keep_stressing() && count < num_instances);
+ #endif
+ 
++/* No RLIMIT_CPU support in serenity */
++#if 0
+ 		/*
+ 		 * We run the stressor as a child so that
+ 		 * if we the hard time timits the child is
+@@ -701,6 +707,7 @@
+ 		rlim.rlim_cur = timeout;
+ 		rlim.rlim_max = timeout;
+ 		(void)setrlimit(RLIMIT_CPU, &rlim);
++#endif
+ 
+ #if defined(RLIMIT_RTTIME)
+ 		rlim.rlim_cur = 1000000 * timeout;
+diff -ur stress-ng-master/stress-dirdeep.c stress-ng-master-2/stress-dirdeep.c
+--- stress-ng-master/stress-dirdeep.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/stress-dirdeep.c	2020-11-08 22:38:40.877668500 -0800
+@@ -98,7 +98,7 @@
+ 	errno = 0;
+ 	if (mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR) < 0) {
+ 		if ((errno == ENOSPC) || (errno == ENOMEM) ||
+-		    (errno == ENAMETOOLONG) || (errno == EDQUOT) ||
++		    (errno == ENAMETOOLONG) ||
+ 		    (errno == EMLINK)) {
+ 			return;
+ 		}
+diff -ur stress-ng-master/stress-epoll.c stress-ng-master-2/stress-epoll.c
+--- stress-ng-master/stress-epoll.c	2020-11-07 10:52:22.000000000 -0800
++++ stress-ng-master-2/stress-epoll.c	2020-11-08 22:39:49.607668500 -0800
+@@ -85,7 +85,6 @@
+ 
+ 	switch (epoll_domain) {
+ 	case AF_INET:
+-	case AF_INET6:
+ 		max_servers = 4;
+ 		break;
+ 	case AF_UNIX:
+
