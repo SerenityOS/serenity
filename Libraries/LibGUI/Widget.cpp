@@ -29,6 +29,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/BreadcrumbBar.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
@@ -39,6 +40,7 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/ProgressBar.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Slider.h>
@@ -48,6 +50,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -58,6 +61,7 @@
 
 namespace GUI {
 
+REGISTER_WIDGET(GUI, BreadcrumbBar)
 REGISTER_WIDGET(GUI, Button)
 REGISTER_WIDGET(GUI, CheckBox)
 REGISTER_WIDGET(GUI, ColorInput)
@@ -65,6 +69,7 @@ REGISTER_WIDGET(GUI, Frame)
 REGISTER_WIDGET(GUI, GroupBox)
 REGISTER_WIDGET(GUI, HorizontalSplitter)
 REGISTER_WIDGET(GUI, Label)
+REGISTER_WIDGET(GUI, ProgressBar)
 REGISTER_WIDGET(GUI, RadioButton)
 REGISTER_WIDGET(GUI, ScrollBar)
 REGISTER_WIDGET(GUI, Slider)
@@ -74,6 +79,7 @@ REGISTER_WIDGET(GUI, TextBox)
 REGISTER_WIDGET(GUI, TextEditor)
 REGISTER_WIDGET(GUI, ToolBar)
 REGISTER_WIDGET(GUI, ToolBarContainer)
+REGISTER_WIDGET(GUI, TreeView)
 REGISTER_WIDGET(GUI, Widget)
 
 static HashMap<String, WidgetClassRegistration*>& widget_classes()
