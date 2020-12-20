@@ -341,7 +341,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& statusbar = (GUI::StatusBar&)*widget.find_descendant_by_name("statusbar");
 
     auto& progressbar = (GUI::ProgressBar&)*widget.find_descendant_by_name("progressbar");
-    progressbar.set_caption("Generating thumbnails: ");
     progressbar.set_format(GUI::ProgressBar::Format::ValueSlashMax);
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
     progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
