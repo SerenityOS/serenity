@@ -617,6 +617,11 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
 
     context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
 
+    if (!context.bitmap) {
+        context.state = PNGLoadingContext::State::Error;
+        return false;
+    }
+
     unfilter(context);
 
     return true;
