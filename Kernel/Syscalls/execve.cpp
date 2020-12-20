@@ -237,11 +237,41 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     dbg() << "Process " << pid().value() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
+    // NOTE: We switch credentials before altering the memory layout of the process.
+    //       This ensures that ptrace access control takes the right credentials into account.
+
+    // FIXME: This still feels rickety. Perhaps it would be better to simply block ptrace
+    //        clients until we're ready to be traced? Or reject them with EPERM?
+
+    auto main_program_metadata = main_program_description->metadata();
+
+    auto old_euid = m_euid;
+    auto old_suid = m_suid;
+    auto old_egid = m_egid;
+    auto old_sgid = m_sgid;
+
+    ArmedScopeGuard cred_restore_guard = [&] {
+        m_euid = old_euid;
+        m_suid = old_suid;
+        m_egid = old_egid;
+        m_sgid = old_sgid;
+    };
+
+    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+        if (main_program_metadata.is_setuid())
+            m_euid = m_suid = main_program_metadata.uid;
+        if (main_program_metadata.is_setgid())
+            m_egid = m_sgid = main_program_metadata.gid;
+    }
+
     int load_rc = load(main_program_description, interpreter_description);
     if (load_rc) {
         klog() << "do_exec: Failed to load main program or interpreter";
         return load_rc;
     }
+
+    // We can commit to the new credentials at this point.
+    cred_restore_guard.disarm();
 
     kill_threads_except_self();
 
@@ -256,15 +286,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
-
-    auto main_program_metadata = main_program_description->metadata();
-
-    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
-        if (main_program_metadata.is_setuid())
-            m_euid = m_suid = main_program_metadata.uid;
-        if (main_program_metadata.is_setgid())
-            m_egid = m_sgid = main_program_metadata.gid;
-    }
 
     current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
