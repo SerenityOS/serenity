@@ -41,6 +41,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
@@ -458,6 +459,13 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
+    m_gml_highlight = GUI::Action::create_checkable("GML", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_gml_highlight);
+    syntax_menu.add_action(*m_gml_highlight);
+
     m_ini_highlight = GUI::Action::create_checkable("INI File", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
         m_editor->update();
@@ -510,6 +518,8 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
         m_cpp_highlight->activate();
     } else if (m_extension == "js" || m_extension == "json") {
         m_js_highlight->activate();
+    } else if (m_extension == "gml") {
+        m_gml_highlight->activate();
     } else if (m_extension == "ini") {
         m_ini_highlight->activate();
     } else {
