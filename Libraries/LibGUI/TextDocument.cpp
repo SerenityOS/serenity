@@ -679,7 +679,7 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
     const bool should_auto_indent = client.is_automatic_indentation_enabled();
 
     StringBuilder builder;
-    size_t column = dest_line.length();
+    size_t column = m_range.start().column();
     size_t line_indentation = dest_line.leading_spaces();
     bool at_start_of_line = line_indentation == column;
 
