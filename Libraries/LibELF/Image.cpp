@@ -76,6 +76,8 @@ StringView Image::section_index_to_string(unsigned index) const
 unsigned Image::symbol_count() const
 {
     ASSERT(m_valid);
+    if (!section_count())
+        return 0;
     return section(m_symbol_table_section_index).entry_count();
 }
 
