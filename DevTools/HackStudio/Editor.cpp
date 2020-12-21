@@ -35,6 +35,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
+#include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
@@ -466,6 +467,9 @@ void Editor::set_document(GUI::TextDocument& doc)
     case Language::Cpp:
         set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
         m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
+        break;
+    case Language::GML:
+        set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         break;
     case Language::JavaScript:
         set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());

@@ -31,6 +31,7 @@ enum class Language {
     Unknown,
     Cpp,
     JavaScript,
+    GML,
     Ini,
     Shell,
 };

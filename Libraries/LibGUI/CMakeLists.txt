@@ -32,6 +32,7 @@ set(SOURCES
     Frame.cpp
     GMLLexer.cpp
     GMLParser.cpp
+    GMLSyntaxHighlighter.cpp
     GroupBox.cpp
     HeaderView.cpp
     INILexer.cpp

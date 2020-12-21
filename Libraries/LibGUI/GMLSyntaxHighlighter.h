@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,45 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CodeDocument.h"
+#pragma once
 
-namespace HackStudio {
+#include <LibGUI/SyntaxHighlighter.h>
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(const String& file_path, Client* client)
-{
-    return adopt(*new CodeDocument(file_path, client));
-}
+namespace GUI {
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
-{
-    return adopt(*new CodeDocument(client));
-}
+class GMLSyntaxHighlighter final : public SyntaxHighlighter {
+public:
+    GMLSyntaxHighlighter() { }
+    virtual ~GMLSyntaxHighlighter() override;
 
-CodeDocument::CodeDocument(const String& file_path, Client* client)
-    : TextDocument(client)
-    , m_file_path(file_path)
-{
-    LexicalPath lexical_path(file_path);
+    virtual bool is_identifier(void*) const override;
 
-    if (lexical_path.has_extension(".cpp") || lexical_path.has_extension(".h"))
-        m_language = Language::Cpp;
-    else if (lexical_path.has_extension(".js"))
-        m_language = Language::JavaScript;
-    else if (lexical_path.has_extension(".gml"))
-        m_language = Language::GML;
-    else if (lexical_path.has_extension(".ini"))
-        m_language = Language::Ini;
-    else if (lexical_path.has_extension(".sh"))
-        m_language = Language::Shell;
-}
+    virtual SyntaxLanguage language() const override { return SyntaxLanguage::INI; }
+    virtual void rehighlight(Gfx::Palette) override;
 
-CodeDocument::CodeDocument(Client* client)
-    : TextDocument(client)
-{
-}
-
-CodeDocument::~CodeDocument()
-{
-}
+protected:
+    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
+    virtual bool token_types_equal(void*, void*) const override;
+};
 
 }
