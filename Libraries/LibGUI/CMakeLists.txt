@@ -46,6 +46,7 @@ set(SOURCES
     Label.cpp
     Layout.cpp
     LazyWidget.cpp
+    Link.cpp
     ListView.cpp
     Menu.cpp
     MenuBar.cpp
