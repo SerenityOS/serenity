@@ -98,6 +98,10 @@ private:
     int virt$shbuf_release(int shbuf_id);
     int virt$shbuf_seal(int shbuf_id);
     int virt$shbuf_set_volatile(int shbuf_id, bool);
+    int virt$profiling_enable(pid_t);
+    int virt$profiling_disable(pid_t);
+    int virt$disown(pid_t);
+    int virt$purge(int mode);
     u32 virt$mmap(u32);
     u32 virt$mount(u32);
     u32 virt$munmap(FlatPtr address, u32 size);

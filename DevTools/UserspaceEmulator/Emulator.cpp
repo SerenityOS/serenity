@@ -395,6 +395,14 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shbuf_seal(arg1);
     case SC_shbuf_set_volatile:
         return virt$shbuf_set_volatile(arg1, arg2);
+    case SC_profiling_enable:
+        return virt$profiling_enable(arg1);
+    case SC_profiling_disable:
+        return virt$profiling_disable(arg1);
+    case SC_disown:
+        return virt$disown(arg1);
+    case SC_purge:
+        return virt$purge(arg1);
     case SC_mmap:
         return virt$mmap(arg1);
     case SC_mount:
@@ -588,6 +596,26 @@ int Emulator::virt$shbuf_set_volatile(int shbuf_id, bool is_volatile)
     auto* region = m_mmu.shbuf_region(shbuf_id);
     ASSERT(region);
     return region->set_volatile(is_volatile);
+}
+
+int Emulator::virt$profiling_enable(pid_t pid)
+{
+    return syscall(SC_profiling_enable, pid);
+}
+
+int Emulator::virt$profiling_disable(pid_t pid)
+{
+    return syscall(SC_profiling_disable, pid);
+}
+
+int Emulator::virt$disown(pid_t pid)
+{
+    return syscall(SC_disown, pid);
+}
+
+int Emulator::virt$purge(int mode)
+{
+    return syscall(SC_purge, mode);
 }
 
 int Emulator::virt$fstat(int fd, FlatPtr statbuf)
