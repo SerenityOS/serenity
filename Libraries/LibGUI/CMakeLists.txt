@@ -30,6 +30,7 @@ set(SOURCES
     FileSystemModel.cpp
     FilteringProxyModel.cpp
     Frame.cpp
+    GMLLexer.cpp
     GMLParser.cpp
     GroupBox.cpp
     HeaderView.cpp

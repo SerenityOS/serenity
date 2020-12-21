@@ -27,87 +27,81 @@
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Queue.h>
+#include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLParser.h>
 #include <ctype.h>
 
 namespace GUI {
 
-static bool is_valid_class_name_character(char ch)
-{
-    return isalpha(ch) || ch == ':';
-}
-
-static bool is_valid_property_name_character(char ch)
-{
-    return isalpha(ch) || ch == '_';
-}
-
-static void swallow_whitespace(GenericLexer& scanner)
-{
-    scanner.consume_while([](auto ch) { return isspace(ch); });
-}
-
-static Optional<JsonValue> parse_core_object(GenericLexer& scanner)
+static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
 {
     JsonObject object;
     JsonArray children;
 
-    // '@Foo' means new Core::Object of class Foo
-    if (!scanner.consume_specific('@')) {
-        dbgln("Expected '@'");
+    auto peek = [&] {
+        if (tokens.is_empty())
+            return GMLToken::Type::Unknown;
+        return tokens.head().m_type;
+    };
+
+    if (peek() != GMLToken::Type::ClassMarker) {
+        dbgln("Expected class marker");
         return {};
     }
 
-    auto class_name = scanner.consume_while([](auto ch) { return is_valid_class_name_character(ch); });
-    object.set("class", JsonValue(class_name));
+    tokens.dequeue();
 
-    swallow_whitespace(scanner);
-
-    if (!scanner.consume_specific('{')) {
-        dbgln("Expected '{{'");
+    if (peek() != GMLToken::Type::ClassName) {
+        dbgln("Expected class name");
         return {};
     }
 
-    swallow_whitespace(scanner);
+    auto class_name = tokens.dequeue();
+    object.set("class", JsonValue(class_name.m_view));
+
+    if (peek() != GMLToken::Type::LeftCurly) {
+        dbgln("Expected {{");
+        return {};
+    }
+    tokens.dequeue();
 
     for (;;) {
-        swallow_whitespace(scanner);
-
-        if (scanner.peek() == '}') {
+        if (peek() == GMLToken::Type::RightCurly) {
             // End of object
             break;
         }
 
-        if (scanner.peek() == '@') {
+        if (peek() == GMLToken::Type::ClassMarker) {
             // It's a child object.
-            auto value = parse_core_object(scanner);
-            if (!value.has_value())
+            auto value = parse_core_object(tokens);
+            if (!value.has_value()) {
+                dbgln("Parsing child object failed");
                 return {};
+            }
             if (!value.value().is_object()) {
                 dbgln("Expected child to be Core::Object");
                 return {};
             }
             children.append(value.release_value());
-        } else {
+        } else if (peek() == GMLToken::Type::Identifier) {
             // It's a property.
-            auto property_name = scanner.consume_while([](auto ch) { return is_valid_property_name_character(ch); });
-            swallow_whitespace(scanner);
+            auto property_name = tokens.dequeue();
 
-            if (property_name.is_empty()) {
+            if (property_name.m_view.is_empty()) {
                 dbgln("Expected non-empty property name");
                 return {};
             }
 
-            if (!scanner.consume_specific(':')) {
+            if (peek() != GMLToken::Type::Colon) {
                 dbgln("Expected ':'");
                 return {};
             }
-
-            swallow_whitespace(scanner);
+            tokens.dequeue();
 
             JsonValue value;
-            if (scanner.peek() == '@') {
-                auto parsed_value = parse_core_object(scanner);
+            if (peek() == GMLToken::Type::ClassMarker) {
+                auto parsed_value = parse_core_object(tokens);
                 if (!parsed_value.has_value())
                     return {};
                 if (!parsed_value.value().is_object()) {
@@ -115,23 +109,27 @@ static Optional<JsonValue> parse_core_object(GenericLexer& scanner)
                     return {};
                 }
                 value = parsed_value.release_value();
-            } else {
-                auto value_string = scanner.consume_line();
-                auto parsed_value = JsonValue::from_string(value_string);
+            } else if (peek() == GMLToken::Type::JsonValue) {
+                auto value_string = tokens.dequeue();
+                auto parsed_value = JsonValue::from_string(value_string.m_view);
                 if (!parsed_value.has_value()) {
                     dbgln("Expected property to be JSON value");
                     return {};
                 }
                 value = parsed_value.release_value();
             }
-            object.set(property_name, move(value));
+            object.set(property_name.m_view, move(value));
+        } else {
+            dbgln("Expected child, property, or }}");
+            return {};
         }
     }
 
-    if (!scanner.consume_specific('}')) {
-        dbgln("Expected '}'");
+    if (peek() != GMLToken::Type::RightCurly) {
+        dbgln("Expected }}");
         return {};
     }
+    tokens.dequeue();
 
     if (!children.is_empty())
         object.set("children", move(children));
@@ -141,8 +139,13 @@ static Optional<JsonValue> parse_core_object(GenericLexer& scanner)
 
 JsonValue parse_gml(const StringView& string)
 {
-    GenericLexer scanner(string);
-    auto root = parse_core_object(scanner);
+    auto lexer = GMLLexer(string);
+
+    Queue<GMLToken> tokens;
+    for (auto& token : lexer.lex())
+        tokens.enqueue(token);
+
+    auto root = parse_core_object(tokens);
 
     if (!root.has_value())
         return JsonValue();
