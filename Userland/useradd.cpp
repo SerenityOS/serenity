@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     int uid = 0;
     int gid = USERS_GID;
     bool create_home_dir = false;
+    const char* password = "";
     const char* shell = DEFAULT_SHELL;
     const char* gecos = "";
     const char* username = nullptr;
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
     args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
     args_parser.add_option(uid, "User ID (uid) for the new user", "uid", 'u', "uid");
     args_parser.add_option(gid, "Group ID (gid) for the new user", "gid", 'g', "gid");
+    args_parser.add_option(password, "Encrypted password of the new user", "password", 'p', "password");
     args_parser.add_option(create_home_dir, "Create home directory if it does not exist", "create-home", 'm');
     args_parser.add_option(shell, "Path to the default shell binary for the new user", "shell", 's', "path-to-shell");
     args_parser.add_option(gecos, "GECOS name of the new user", "gecos", 'n', "general-info");
@@ -123,6 +125,7 @@ int main(int argc, char** argv)
 
     struct passwd p;
     p.pw_name = const_cast<char*>(username);
+    p.pw_passwd = const_cast<char*>(password);
     p.pw_dir = const_cast<char*>(home.characters());
     p.pw_uid = static_cast<uid_t>(uid);
     p.pw_gid = static_cast<gid_t>(gid);
