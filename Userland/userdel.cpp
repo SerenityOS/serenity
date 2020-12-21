@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -116,27 +117,30 @@ int main(int argc, char** argv)
     }
 
     if (remove_home) {
-        if (home_directory == "/") {
+        if (access(home_directory.characters(), F_OK) == -1)
+            return 0;
+
+        String real_path = Core::File::real_path_for(home_directory);
+
+        if (real_path == "/") {
             fprintf(stderr, "home directory is /, not deleted!\n");
             return 12;
         }
 
-        if (access(home_directory.characters(), F_OK) != -1) {
-            pid_t child;
-            const char* argv[] = { "rm", "-r", home_directory.characters(), nullptr };
-            if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                perror("posix_spawn");
-                return 12;
-            }
-            int wstatus;
-            if (waitpid(child, &wstatus, 0) < 0) {
-                perror("waitpid");
-                return 12;
-            }
-            if (WEXITSTATUS(wstatus)) {
-                fprintf(stderr, "failed to remove the home directory\n");
-                return 12;
-            }
+        pid_t child;
+        const char* argv[] = { "rm", "-r", home_directory.characters(), nullptr };
+        if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+            return 12;
+        }
+        int wstatus;
+        if (waitpid(child, &wstatus, 0) < 0) {
+            perror("waitpid");
+            return 12;
+        }
+        if (WEXITSTATUS(wstatus)) {
+            fprintf(stderr, "failed to remove the home directory\n");
+            return 12;
         }
     }
 
