@@ -241,7 +241,7 @@ static RefPtr<File> stdin_file;
 static RefPtr<File> stdout_file;
 static RefPtr<File> stderr_file;
 
-NonnullRefPtr<File> File::stdin()
+NonnullRefPtr<File> File::standard_input()
 {
     if (!stdin_file) {
         stdin_file = File::construct();
@@ -250,7 +250,7 @@ NonnullRefPtr<File> File::stdin()
     return *stdin_file;
 }
 
-NonnullRefPtr<File> File::stdout()
+NonnullRefPtr<File> File::standard_output()
 {
     if (!stdout_file) {
         stdout_file = File::construct();
@@ -259,7 +259,7 @@ NonnullRefPtr<File> File::stdout()
     return *stdout_file;
 }
 
-NonnullRefPtr<File> File::stderr()
+NonnullRefPtr<File> File::standard_error()
 {
     if (!stderr_file) {
         stderr_file = File::construct();

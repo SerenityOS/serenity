@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     RefPtr<Core::File> file;
 
     if (!path) {
-        file = Core::File::stdin();
+        file = Core::File::standard_input();
     } else {
         auto file_or_error = Core::File::open(path, Core::File::ReadOnly);
         if (file_or_error.is_error()) {
