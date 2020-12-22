@@ -235,6 +235,23 @@ bool copy_file(const String& dst_path, const struct stat& src_stat, Core::File& 
     return true;
 }
 
+bool link_file(const String& src_path, const String& dst_path)
+{
+    int duplicate_count = 0;
+    while (access(get_duplicate_name(dst_path, duplicate_count).characters(), F_OK) == 0) {
+        ++duplicate_count;
+    }
+    if (duplicate_count != 0) {
+        return link_file(src_path, get_duplicate_name(dst_path, duplicate_count));
+    }
+    int rc = symlink(src_path.characters(), dst_path.characters());
+    if (rc < 0) {
+        return false;
+    }
+
+    return true;
+}
+
 String get_duplicate_name(const String& path, int duplicate_count)
 {
     if (duplicate_count == 0) {
