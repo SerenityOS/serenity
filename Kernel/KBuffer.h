@@ -63,6 +63,7 @@ public:
             return nullptr;
         if (!region->commit())
             return nullptr;
+        memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
         return adopt(*new KBufferImpl(region.release_nonnull(), bytes.size()));
     }
 
