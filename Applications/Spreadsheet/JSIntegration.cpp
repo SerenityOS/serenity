@@ -151,7 +151,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
 {
-    if (vm.argument_count() != 2) {
+    if (vm.argument_count() != 1) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to column_index()");
         return {};
     }
