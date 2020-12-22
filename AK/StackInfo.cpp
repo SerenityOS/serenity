@@ -45,12 +45,13 @@ StackInfo::StackInfo()
         VERIFY_NOT_REACHED();
     }
 #elif __linux__
+    int rc;
     pthread_attr_t attr = {};
-    if (int rc = pthread_getattr_np(pthread_self(), &attr) != 0) {
+    if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
         fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
         VERIFY_NOT_REACHED();
     }
-    if (int rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size) != 0) {
+    if ((rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size)) != 0) {
         fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
         VERIFY_NOT_REACHED();
     }
