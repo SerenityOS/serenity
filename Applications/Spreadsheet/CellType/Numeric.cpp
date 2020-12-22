@@ -28,6 +28,7 @@
 #include "../Cell.h"
 #include "../Spreadsheet.h"
 #include "Format.h"
+#include <AK/ScopeGuard.h>
 
 namespace Spreadsheet {
 
@@ -42,6 +43,12 @@ NumericCell::~NumericCell()
 
 String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 {
+    ScopeGuard propagate_exception { [&cell] {
+        if (auto exc = cell.sheet().interpreter().exception()) {
+            cell.sheet().interpreter().vm().clear_exception();
+            cell.set_exception(exc);
+        }
+    } };
     auto value = js_value(cell, metadata);
     String string;
     if (metadata.format.is_empty())
@@ -57,6 +64,12 @@ String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 
 JS::Value NumericCell::js_value(Cell& cell, const CellTypeMetadata&) const
 {
+    ScopeGuard propagate_exception { [&cell] {
+        if (auto exc = cell.sheet().interpreter().exception()) {
+            cell.sheet().interpreter().vm().clear_exception();
+            cell.set_exception(exc);
+        }
+    } };
     return cell.js_data().to_number(cell.sheet().global_object());
 }
 

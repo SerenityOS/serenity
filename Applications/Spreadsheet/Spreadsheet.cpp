@@ -59,10 +59,11 @@ Sheet::Sheet(const StringView& name, Workbook& workbook)
 Sheet::Sheet(Workbook& workbook)
     : m_workbook(workbook)
 {
+    JS::DeferGC defer_gc(m_workbook.interpreter().heap());
     m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
-    m_global_object->initialize();
-    m_global_object->put("workbook", m_workbook.workbook_object());
-    m_global_object->put("thisSheet", m_global_object); // Self-reference is unfortunate, but required.
+    global_object().initialize();
+    global_object().put("workbook", m_workbook.workbook_object());
+    global_object().put("thisSheet", &global_object()); // Self-reference is unfortunate, but required.
 
     // Sadly, these have to be evaluated once per sheet.
     auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::IODevice::OpenMode::ReadOnly);
@@ -179,26 +180,26 @@ void Sheet::update(Cell& cell)
     }
 }
 
-JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
+Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
 {
     TemporaryChange cell_change { m_current_cell_being_evaluated, on_behalf_of };
+    ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
 
     auto parser = JS::Parser(JS::Lexer(source));
-    if (parser.has_errors())
-        return JS::js_undefined();
+    if (parser.has_errors() || interpreter().exception())
+        return { JS::js_undefined(), interpreter().exception() };
 
     auto program = parser.parse_program();
     interpreter().run(global_object(), program);
     if (interpreter().exception()) {
-        auto exc = interpreter().exception()->value();
-        interpreter().vm().clear_exception();
-        return exc;
+        auto exc = interpreter().exception();
+        return { JS::js_undefined(), exc };
     }
 
     auto value = interpreter().vm().last_value();
     if (value.is_empty())
-        return JS::js_undefined();
-    return value;
+        return { JS::js_undefined(), {} };
+    return { value, {} };
 }
 
 Cell* Sheet::at(const StringView& name)

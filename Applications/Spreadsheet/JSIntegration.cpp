@@ -87,6 +87,16 @@ void SheetGlobalObject::initialize()
     define_native_function("column_index", column_index, 1);
 }
 
+void SheetGlobalObject::visit_edges(Visitor& visitor)
+{
+    GlobalObject::visit_edges(visitor);
+    for (auto& it : m_sheet.cells()) {
+        if (it.value->exception())
+            visitor.visit(it.value->exception());
+        visitor.visit(it.value->evaluated_data());
+    }
+}
+
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
     if (vm.argument_count() != 1) {
@@ -229,6 +239,13 @@ void WorkbookObject::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
     define_native_function("sheet", sheet, 1);
+}
+
+void WorkbookObject::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& sheet : m_workbook.sheets())
+        visitor.visit(&sheet.global_object());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)

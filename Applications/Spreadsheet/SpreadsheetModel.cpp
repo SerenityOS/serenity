@@ -37,16 +37,6 @@ SheetModel::~SheetModel()
 {
 }
 
-static inline JS::Object* as_error(JS::Value value)
-{
-    if (value.is_object()) {
-        auto& object = value.as_object();
-        return object.is_error() ? &object : nullptr;
-    }
-
-    return nullptr;
-}
-
 GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     if (!index.is_valid())
@@ -58,10 +48,22 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             return String::empty();
 
         if (cell->kind() == Spreadsheet::Cell::Formula) {
-            if (auto object = as_error(cell->evaluated_data())) {
+            if (auto exception = cell->exception()) {
                 StringBuilder builder;
-                auto error = object->get("message").to_string_without_side_effects();
                 builder.append("Error: ");
+                auto value = exception->value();
+                if (value.is_object()) {
+                    auto& object = value.as_object();
+                    if (object.is_error()) {
+                        auto error = object.get("message").to_string_without_side_effects();
+                        builder.append(error);
+                        return builder.to_string();
+                    }
+                }
+                auto error = value.to_string(cell->sheet().global_object());
+                // This is annoying, but whatever.
+                cell->sheet().interpreter().vm().clear_exception();
+
                 builder.append(error);
                 return builder.to_string();
             }
@@ -87,7 +89,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
             return {};
 
         if (cell->kind() == Spreadsheet::Cell::Formula) {
-            if (as_error(cell->evaluated_data()))
+            if (cell->exception())
                 return Color(Color::Red);
         }
 
