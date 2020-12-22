@@ -84,8 +84,10 @@ struct Cell : public Weakable<Cell> {
     const Position& position() const { return m_position; }
     void set_position(Position position, Badge<Sheet>)
     {
-        m_dirty = true;
-        m_position = move(position);
+        if (position != m_position) {
+            m_dirty = true;
+            m_position = move(position);
+        }
     }
 
     const Format& evaluated_formats() const { return m_evaluated_formats; }
