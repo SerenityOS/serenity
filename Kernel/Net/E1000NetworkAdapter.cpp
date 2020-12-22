@@ -140,14 +140,52 @@ namespace Kernel {
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
 
+// https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
+static bool is_valid_device_id(u16 device_id)
+{
+    // FIXME: It would be nice to distinguish which particular device it is.
+    //        Especially since it's needed to determine which registers we can access.
+    //        The reason I haven't done it now is because there's some IDs with multiple devices
+    //        and some devices with multiple IDs.
+    switch (device_id) {
+    case 0x1019: // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
+    case 0x101A: // 82547EI-B0
+    case 0x1010: // 82546EB-A1
+    case 0x1012: // 82546EB-A1
+    case 0x101D: // 82546EB-A1
+    case 0x1079: // 82546GB-B0
+    case 0x107A: // 82546GB-B0
+    case 0x107B: // 82546GB-B0
+    case 0x100F: // 82545EM-A
+    case 0x1011: // 82545EM-A
+    case 0x1026: // 82545GM-B
+    case 0x1027: // 82545GM-B
+    case 0x1028: // 82545GM-B
+    case 0x1107: // 82544EI-A4
+    case 0x1112: // 82544GC-A4
+    case 0x1013: // 82541EI-A0, 82541EI-B0
+    case 0x1018: // 82541EI-B0
+    case 0x1076: // 82541GI-B1, 82541PI-C0
+    case 0x1077: // 82541GI-B1
+    case 0x1078: // 82541ER-C0
+    case 0x1017: // 82540EP-A
+    case 0x1016: // 82540EP-A
+    case 0x100E: // 82540EM-A
+    case 0x1015: // 82540EM-A
+        return true;
+    default:
+        return false;
+    }
+}
+
 void E1000NetworkAdapter::detect()
 {
-    static const PCI::ID qemu_bochs_vbox_id = { 0x8086, 0x100e };
-
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
-        if (id != qemu_bochs_vbox_id)
+        if (id.vendor_id != 0x8086)
+            return;
+        if (!is_valid_device_id(id.device_id))
             return;
         u8 irq = PCI::get_interrupt_line(address);
         [[maybe_unused]] auto& unused = adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
