@@ -43,6 +43,8 @@ class MemoryManager;
 class PageDirectory;
 class PageTableEntry;
 
+static constexpr u32 safe_eflags_mask = 0xdff;
+
 struct [[gnu::packed]] DescriptorTablePointer
 {
     u16 limit;

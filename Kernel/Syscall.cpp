@@ -161,6 +161,14 @@ void syscall_handler(TrapFrame* trap)
     asm volatile(""
                  : "=m"(*ptr));
 
+    static constexpr u32 iopl_mask = 3u << 12;
+
+    if ((regs.eflags & (iopl_mask)) != 0) {
+        dbgln("Syscall from process with IOPL != 0");
+        handle_crash(regs, "Non-zero IOPL on syscall entry", SIGSEGV);
+        ASSERT_NOT_REACHED();
+    }
+
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
