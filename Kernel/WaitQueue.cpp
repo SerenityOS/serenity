@@ -55,7 +55,7 @@ void WaitQueue::wake_one()
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_one";
 #endif
-    bool did_unblock_one = do_unblock_some([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+    bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
@@ -79,7 +79,7 @@ void WaitQueue::wake_n(u32 wake_count)
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_n(" << wake_count << ")";
 #endif
-    bool did_unblock_some = do_unblock_some([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
+    bool did_unblock_some = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
@@ -103,14 +103,16 @@ void WaitQueue::wake_all()
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_all";
 #endif
-    bool did_unblock_any = do_unblock_all([&](Thread::Blocker& b, void* data) {
+    bool did_unblock_any = do_unblock([&](Thread::Blocker& b, void* data, bool&) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue @ " << this << ": wake_all unblocking " << *static_cast<Thread*>(data);
 #endif
-        return blocker.unblock();
+        bool did_unblock = blocker.unblock();
+        ASSERT(did_unblock);
+        return true;
     });
     m_wake_requested = !did_unblock_any;
 }
