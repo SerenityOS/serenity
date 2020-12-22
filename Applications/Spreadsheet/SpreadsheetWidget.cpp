@@ -31,6 +31,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -214,6 +215,33 @@ void SpreadsheetWidget::load(const StringView& filename)
     }
 
     setup_tabs(m_workbook->sheets());
+}
+
+bool SpreadsheetWidget::request_close()
+{
+    if (!m_workbook->dirty())
+        return true;
+
+    auto result = GUI::MessageBox::show(window(), "The spreadsheet has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+
+    if (result == GUI::MessageBox::ExecYes) {
+        if (current_filename().is_empty()) {
+            String name = "workbook";
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
+            if (!save_path.has_value())
+                return false;
+
+            save(save_path.value());
+        } else {
+            save(current_filename());
+        }
+        return true;
+    }
+
+    if (result == GUI::MessageBox::ExecNo)
+        return true;
+
+    return false;
 }
 
 void SpreadsheetWidget::add_sheet()
