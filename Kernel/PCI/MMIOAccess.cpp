@@ -29,6 +29,8 @@
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 
+//#define PCI_DEBUG
+
 namespace Kernel {
 namespace PCI {
 
@@ -80,8 +82,12 @@ uint8_t MMIOAccess::segment_end_bus(u32 seg) const
 
 void MMIOAccess::initialize(PhysicalAddress mcfg)
 {
-    if (!Access::is_initialized())
+    if (!Access::is_initialized()) {
         new MMIOAccess(mcfg);
+#ifdef PCI_DEBUG
+        dbg() << "PCI: MMIO access initialised.";
+#endif
+    }
 }
 
 MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
@@ -133,6 +139,9 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
 
 Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Getting device configuration space for " << address;
+#endif
     for (auto& mapping : m_mapped_device_regions) {
         auto checked_address = mapping.address();
 #ifdef PCI_DEBUG
@@ -148,6 +157,9 @@ Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address addr
             return mapping.vaddr();
         }
     }
+#ifdef PCI_DEBUG
+    dbg() << "PCI: No device configuration space found for " << address;
+#endif
     return {};
 }
 
@@ -156,7 +168,7 @@ u8 MMIOAccess::read8_field(Address address, u32 field)
     InterruptDisabler disabler;
     ASSERT(field <= 0xfff);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Reading field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")";
+    dbg() << "PCI: MMIO Reading 8-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
 #endif
     return *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -166,7 +178,7 @@ u16 MMIOAccess::read16_field(Address address, u32 field)
     InterruptDisabler disabler;
     ASSERT(field < 0xfff);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Reading field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")";
+    dbg() << "PCI: MMIO Reading 16-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
 #endif
     return *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -176,7 +188,7 @@ u32 MMIOAccess::read32_field(Address address, u32 field)
     InterruptDisabler disabler;
     ASSERT(field <= 0xffc);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Reading field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ")";
+    dbg() << "PCI: MMIO Reading 32-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
 #endif
     return *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -186,7 +198,7 @@ void MMIOAccess::write8_field(Address address, u32 field, u8 value)
     InterruptDisabler disabler;
     ASSERT(field <= 0xfff);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Writing to field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ") value 0x" << String::format("%x", value);
+    dbg() << "PCI: MMIO Writing to 8-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:02x}", value) << " for " << address;
 #endif
     *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }
@@ -195,7 +207,7 @@ void MMIOAccess::write16_field(Address address, u32 field, u16 value)
     InterruptDisabler disabler;
     ASSERT(field < 0xfff);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Writing to field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ") value 0x" << String::format("%x", value);
+    dbg() << "PCI: MMIO Writing to 16-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:04x}", value) << " for " << address;
 #endif
     *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }
@@ -204,7 +216,7 @@ void MMIOAccess::write32_field(Address address, u32 field, u32 value)
     InterruptDisabler disabler;
     ASSERT(field <= 0xffc);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Writing to field " << field << ", Address(" << String::format("%w", address.seg()) << ":" << String::format("%b", address.bus()) << ":" << String::format("%b", address.slot()) << "." << String::format("%b", address.function()) << ") value 0x" << String::format("%x", value);
+    dbg() << "PCI: MMIO Writing to 32-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:08x}", value) << " for " << address;
 #endif
     *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }
