@@ -257,6 +257,27 @@ public:
         --m_size;
     }
 
+    void remove(size_t index, size_t count)
+    {
+        if (count == 0)
+            return;
+        ASSERT(index + count > index);
+        ASSERT(index + count <= m_size);
+
+        if constexpr (Traits<T>::is_trivial()) {
+            TypedTransfer<T>::copy(slot(index), slot(index + count), m_size - index - count);
+        } else {
+            for (size_t i = index; i < index + count; i++)
+                at(i).~T();
+            for (size_t i = index + count; i < m_size; ++i) {
+                new (slot(i - count)) T(move(at(i)));
+                at(i).~T();
+            }
+        }
+
+        m_size -= count;
+    }
+
     void insert(size_t index, T&& value)
     {
         ASSERT(index <= size());
