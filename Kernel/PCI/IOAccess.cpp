@@ -27,13 +27,19 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI/IOAccess.h>
 
+//#define PCI_DEBUG
+
 namespace Kernel {
 namespace PCI {
 
 void IOAccess::initialize()
 {
-    if (!Access::is_initialized())
+    if (!Access::is_initialized()) {
         new IOAccess();
+#ifdef PCI_DEBUG
+        dbg() << "PCI: IO access initialised.";
+#endif
+    }
 }
 
 IOAccess::IOAccess()
@@ -46,37 +52,58 @@ IOAccess::IOAccess()
 
 u8 IOAccess::read8_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Reading 8-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     return Access::early_read8_field(address, field);
 }
 
 u16 IOAccess::read16_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Reading 16-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     return Access::early_read16_field(address, field);
 }
 
 u32 IOAccess::read32_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Reading 32-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     return Access::early_read32_field(address, field);
 }
 
 void IOAccess::write8_field(Address address, u32 field, u8 value)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Writing to 8-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:02x}", value) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out8(PCI_VALUE_PORT + (field & 3), value);
 }
 void IOAccess::write16_field(Address address, u32 field, u16 value)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Writing to 16-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:04x}", value) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out16(PCI_VALUE_PORT + (field & 2), value);
 }
 void IOAccess::write32_field(Address address, u32 field, u32 value)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO Writing to 32-bit field 0x" << String::formatted("{:08x}", field) << ", value=0x" << String::formatted("{:08x}", value) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out32(PCI_VALUE_PORT, value);
 }
 
 void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: IO enumerating hardware";
+#endif
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
         enumerate_bus(-1, 0, callback);
