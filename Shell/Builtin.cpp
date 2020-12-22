@@ -256,6 +256,15 @@ int Shell::builtin_dirs(int argc, const char** argv)
     return 0;
 }
 
+int Shell::builtin_exec(int argc, const char** argv)
+{
+    Vector<const char*> argv_vector;
+    argv_vector.append(argv + 1, argc - 1);
+    argv_vector.append(nullptr);
+
+    execute_process(move(argv_vector));
+}
+
 int Shell::builtin_exit(int argc, const char** argv)
 {
     int exit_code = 0;

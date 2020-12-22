@@ -45,6 +45,7 @@
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
+    __ENUMERATE_SHELL_BUILTIN(exec)    \
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \
     __ENUMERATE_SHELL_BUILTIN(unset)   \
@@ -92,6 +93,8 @@ public:
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
+
+    [[noreturn]] void execute_process(Vector<const char*>&& argv);
 
     static String expand_tilde(const String&);
     static Vector<String> expand_globs(const StringView& path, StringView base);
