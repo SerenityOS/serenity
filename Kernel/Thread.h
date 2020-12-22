@@ -398,36 +398,14 @@ public:
 
     protected:
         template<typename UnblockOne>
-        void unblock(UnblockOne unblock_one)
+        bool unblock(UnblockOne unblock_one)
         {
             ScopedSpinLock lock(m_lock);
-            do_unblock(unblock_one);
+            return do_unblock(unblock_one);
         }
 
         template<typename UnblockOne>
-        void do_unblock(UnblockOne unblock_one)
-        {
-            ASSERT(m_lock.is_locked());
-            for (size_t i = 0; i < m_blockers.size();) {
-                auto& info = m_blockers[i];
-                if (unblock_one(*info.blocker, info.data)) {
-                    m_blockers.remove(i);
-                    continue;
-                }
-
-                i++;
-            }
-        }
-
-        template<typename UnblockOne>
-        bool unblock_some(UnblockOne unblock_one)
-        {
-            ScopedSpinLock lock(m_lock);
-            return do_unblock_some(unblock_one);
-        }
-
-        template<typename UnblockOne>
-        bool do_unblock_some(UnblockOne unblock_one)
+        bool do_unblock(UnblockOne unblock_one)
         {
             ASSERT(m_lock.is_locked());
             bool stop_iterating = false;
@@ -441,27 +419,6 @@ public:
                 i++;
             }
             return !stop_iterating;
-        }
-
-        template<typename UnblockOne>
-        bool unblock_all(UnblockOne unblock_one)
-        {
-            ScopedSpinLock lock(m_lock);
-            return do_unblock_all(unblock_one);
-        }
-
-        template<typename UnblockOne>
-        bool do_unblock_all(UnblockOne unblock_one)
-        {
-            ASSERT(m_lock.is_locked());
-            bool unblocked_any = false;
-            for (auto& info : m_blockers) {
-                bool did_unblock = unblock_one(*info.blocker, info.data);
-                unblocked_any |= did_unblock;
-                ASSERT(did_unblock);
-            }
-            m_blockers.clear();
-            return unblocked_any;
         }
 
         virtual bool should_add_blocker(Blocker&, void*) { return true; }
@@ -1167,7 +1124,7 @@ private:
     private:
         void do_unblock_joiner()
         {
-            do_unblock_all([&](Blocker& b, void*) {
+            do_unblock([&](Blocker& b, void*, bool&) {
                 ASSERT(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);

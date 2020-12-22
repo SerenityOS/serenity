@@ -77,7 +77,7 @@ class ARPTableBlockCondition : public Thread::BlockCondition {
 public:
     void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
     {
-        unblock_all([&](auto& b, void*) {
+        BlockCondition::unblock([&](auto& b, void*, bool&) {
             ASSERT(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock(false, ip_addr, addr);

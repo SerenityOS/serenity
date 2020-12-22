@@ -469,7 +469,7 @@ bool Plan9FS::Plan9FSBlockCondition::should_add_blocker(Thread::Blocker& b, void
 
 void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
 {
-    unblock([&](Thread::Blocker& b, void*) {
+    unblock([&](Thread::Blocker& b, void*, bool&) {
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock(tag);
@@ -478,7 +478,7 @@ void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
 
 void Plan9FS::Plan9FSBlockCondition::unblock_all()
 {
-    BlockCondition::unblock_all([&](Thread::Blocker& b, void*) {
+    unblock([&](Thread::Blocker& b, void*, bool&) {
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock();
