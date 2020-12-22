@@ -248,6 +248,9 @@ Optional<String> Sheet::column_arithmetic(const StringView& column_name, int off
     if (!maybe_index.has_value())
         return {};
 
+    if (offset < 0 && maybe_index.value() < (size_t)(0 - offset))
+        return m_columns.first();
+
     auto index = maybe_index.value() + offset;
     if (m_columns.size() > index)
         return m_columns[index];
