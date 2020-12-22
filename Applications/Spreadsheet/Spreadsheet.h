@@ -118,7 +118,11 @@ public:
     void update();
     void update(Cell&);
 
-    JS::Value evaluate(const StringView&, Cell* = nullptr);
+    struct ValueAndException {
+        JS::Value value;
+        JS::Exception* exception { nullptr };
+    };
+    ValueAndException evaluate(const StringView&, Cell* = nullptr);
     JS::Interpreter& interpreter() const;
     SheetGlobalObject& global_object() const { return *m_global_object; }
 

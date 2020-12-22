@@ -110,11 +110,16 @@ void Cell::update_data(Badge<Sheet>)
     if (!m_dirty)
         return;
 
+    m_js_exception = {};
+
     if (m_dirty) {
         m_dirty = false;
         if (m_kind == Formula) {
-            if (!m_evaluated_externally)
-                m_evaluated_data = m_sheet->evaluate(m_data, this);
+            if (!m_evaluated_externally) {
+                auto [value, exception] = m_sheet->evaluate(m_data, this);
+                m_evaluated_data = value;
+                m_js_exception = move(exception);
+            }
         }
 
         for (auto& ref : m_referencing_cells) {
@@ -127,19 +132,25 @@ void Cell::update_data(Badge<Sheet>)
 
     m_evaluated_formats.background_color.clear();
     m_evaluated_formats.foreground_color.clear();
-    StringBuilder builder;
-    for (auto& fmt : m_conditional_formats) {
-        if (!fmt.condition.is_empty()) {
-            builder.clear();
-            builder.append("return (");
-            builder.append(fmt.condition);
-            builder.append(')');
-            auto value = m_sheet->evaluate(builder.string_view(), this);
-            if (value.to_boolean()) {
-                if (fmt.background_color.has_value())
-                    m_evaluated_formats.background_color = fmt.background_color;
-                if (fmt.foreground_color.has_value())
-                    m_evaluated_formats.foreground_color = fmt.foreground_color;
+    if (!m_js_exception) {
+        StringBuilder builder;
+        for (auto& fmt : m_conditional_formats) {
+            if (!fmt.condition.is_empty()) {
+                builder.clear();
+                builder.append("return (");
+                builder.append(fmt.condition);
+                builder.append(')');
+                auto [value, exception] = m_sheet->evaluate(builder.string_view(), this);
+                if (exception) {
+                    m_js_exception = move(exception);
+                } else {
+                    if (value.to_boolean()) {
+                        if (fmt.background_color.has_value())
+                            m_evaluated_formats.background_color = fmt.background_color;
+                        if (fmt.foreground_color.has_value())
+                            m_evaluated_formats.foreground_color = fmt.foreground_color;
+                    }
+                }
             }
         }
     }
@@ -193,6 +204,8 @@ void Cell::copy_from(const Cell& other)
     m_type_metadata = other.m_type_metadata;
     m_conditional_formats = other.m_conditional_formats;
     m_evaluated_formats = other.m_evaluated_formats;
+    if (!other.m_js_exception)
+        m_js_exception = other.m_js_exception;
 }
 
 }

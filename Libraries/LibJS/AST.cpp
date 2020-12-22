@@ -51,7 +51,7 @@
 
 namespace JS {
 
-static void update_function_name(Value value, const FlyString& name, HashTable<const JS::Cell*>& visited)
+static void update_function_name(Value value, const FlyString& name, HashTable<JS::Cell*>& visited)
 {
     if (!value.is_object())
         return;
@@ -73,7 +73,7 @@ static void update_function_name(Value value, const FlyString& name, HashTable<c
 
 static void update_function_name(Value value, const FlyString& name)
 {
-    HashTable<const JS::Cell*> visited;
+    HashTable<JS::Cell*> visited;
     update_function_name(value, name, visited);
 }
 
