@@ -76,6 +76,7 @@ static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
 static void do_copy(const Vector<String>& selected_file_paths);
 static void do_paste(const String& target_directory, GUI::Window* window);
+static void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window);
 static void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window);
 
 int main(int argc, char** argv)
@@ -168,6 +169,17 @@ void do_paste(const String& target_directory, GUI::Window* window)
             auto error_message = String::formatted("Could not paste {}.", url.path());
             GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
         }
+    }
+}
+
+void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window)
+{
+    auto path = selected_file_paths.first();
+    auto title = LexicalPath(path.view()).title();
+    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), title);
+    if (!FileUtils::link_file(path, destination)) {
+        GUI::MessageBox::show(window, "Could not create desktop shortcut", "File Manager",
+            GUI::MessageBox::Type::Error);
     }
 }
 
@@ -442,6 +454,20 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
     copy_action->set_enabled(false);
 
+    auto shortcut_action
+        = GUI::Action::create(
+            "Create desktop shortcut",
+            {},
+            Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"),
+            [&](const GUI::Action&) {
+                auto paths = directory_view.selected_file_paths();
+                if (paths.is_empty()) {
+                    return;
+                }
+                do_create_link(paths, directory_view.window());
+            },
+            window);
+
     auto properties_action
         = GUI::Action::create(
             "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
@@ -695,6 +721,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(directory_view.delete_action());
+    directory_context_menu->add_action(shortcut_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
@@ -736,6 +763,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_action(shortcut_action);
 
                 file_context_menu->add_separator();
                 bool added_open_menu_items = false;
