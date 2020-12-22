@@ -590,7 +590,9 @@ void Process::finalize()
     if (is_profiling()) {
         auto coredump = CoreDump::create(*this, String::formatted("/tmp/profiler_coredumps/{}", pid().value()));
         if (coredump) {
-            coredump->write();
+            auto result = coredump->write();
+            if (result.is_error())
+                dbgln("Core dump generation failed: {}", result.error());
         } else {
             dbgln("Could not create coredump");
         }
@@ -601,7 +603,9 @@ void Process::finalize()
         auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
         auto coredump = CoreDump::create(*this, coredump_path);
         if (coredump) {
-            coredump->write();
+            auto result = coredump->write();
+            if (result.is_error())
+                dbgln("Core dump generation failed: {}", result.error());
         } else {
             dbgln("Could not create coredump");
         }
