@@ -409,7 +409,9 @@ void ChessWidget::input_engine_move()
     if (drag_was_enabled)
         set_drag_enabled(false);
 
+    set_override_cursor(Gfx::StandardCursor::Wait);
     m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](Chess::Move move) {
+        set_override_cursor(Gfx::StandardCursor::None);
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
