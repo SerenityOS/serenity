@@ -65,6 +65,8 @@ public:
     T* cell() { return static_cast<T*>(m_impl->cell()); }
     const T* cell() const { return static_cast<const T*>(m_impl->cell()); }
 
+    bool is_null() const { return m_impl.is_null(); }
+
 private:
     explicit Handle(NonnullRefPtr<HandleImpl> impl)
         : m_impl(move(impl))

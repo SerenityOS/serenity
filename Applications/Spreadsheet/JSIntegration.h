@@ -50,6 +50,7 @@ public:
     JS_DECLARE_NATIVE_FUNCTION(column_arithmetic);
 
 private:
+    virtual void visit_edges(Visitor&) override;
     Sheet& m_sheet;
 };
 
@@ -66,6 +67,7 @@ public:
     JS_DECLARE_NATIVE_FUNCTION(sheet);
 
 private:
+    virtual void visit_edges(Visitor&) override;
     Workbook& m_workbook;
 };
 
