@@ -184,9 +184,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
 
-    // FIXME: For some reason, this causes an MMIO fault on VirtualBox.
-    //        Removing it allows the system to boot to desktop, but will be hit by an interrupt storm soon after.
-    out16(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
+    out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
 
     initialize_rx_descriptors();
     initialize_tx_descriptors();
