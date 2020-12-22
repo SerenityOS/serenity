@@ -58,9 +58,9 @@ public:
     };
     bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescriptor);
 
-    static NonnullRefPtr<File> stdin();
-    static NonnullRefPtr<File> stdout();
-    static NonnullRefPtr<File> stderr();
+    static NonnullRefPtr<File> standard_input();
+    static NonnullRefPtr<File> standard_output();
+    static NonnullRefPtr<File> standard_error();
 
 private:
     File(Object* parent = nullptr)

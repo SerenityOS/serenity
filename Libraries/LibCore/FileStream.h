@@ -128,14 +128,14 @@ public:
         return Buffered<OutputFileStream> { file_result.value() };
     }
 
-    static OutputFileStream stdout()
+    static OutputFileStream standard_output()
     {
-        return OutputFileStream { Core::File::stdout() };
+        return OutputFileStream { Core::File::standard_output() };
     }
 
     static Buffered<OutputFileStream> stdout_buffered()
     {
-        return Buffered<OutputFileStream> { Core::File::stdout() };
+        return Buffered<OutputFileStream> { Core::File::standard_output() };
     }
 
     size_t write(ReadonlyBytes bytes) override
