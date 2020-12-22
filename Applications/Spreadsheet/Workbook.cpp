@@ -183,6 +183,7 @@ Result<bool, String> Workbook::save(const StringView& filename)
     }
 
     set_filename(filename);
+    set_dirty(false);
     return true;
 }
 
