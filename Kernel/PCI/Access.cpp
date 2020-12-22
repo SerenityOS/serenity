@@ -28,6 +28,8 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/IOAccess.h>
 
+//#define PCI_DEBUG
+
 namespace Kernel {
 namespace PCI {
 
@@ -73,29 +75,44 @@ PhysicalID Access::get_physical_id(Address address) const
 
 u8 Access::early_read8_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Early reading 8-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in8(PCI_VALUE_PORT + (field & 3));
 }
 
 u16 Access::early_read16_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Early reading 16-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in16(PCI_VALUE_PORT + (field & 2));
 }
 
 u32 Access::early_read32_field(Address address, u32 field)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Early reading 32-bit field 0x" << String::formatted("{:08x}", field) << " for " << address;
+#endif
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in32(PCI_VALUE_PORT);
 }
 
 u16 Access::early_read_type(Address address)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Early reading type for " << address;
+#endif
     return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
 }
 
 void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Enumerating function type=" << type << ", bus=" << bus << ", slot=" << slot << ", function=" << function;
+#endif
     Address address(0, bus, slot, function);
     if (type == -1 || type == early_read_type(address))
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
@@ -111,6 +128,9 @@ void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Functio
 
 void Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Enumerating slot type=" << type << ", bus=" << bus << ", slot=" << slot;
+#endif
     Address address(0, bus, slot, 0);
     if (early_read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
         return;
@@ -126,6 +146,9 @@ void Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID
 
 void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Enumerating bus type=" << type << ", bus=" << bus;
+#endif
     for (u8 slot = 0; slot < 32; ++slot)
         enumerate_slot(type, bus, slot, callback);
 }
@@ -144,9 +167,18 @@ void enumerate(Function<void(Address, ID)> callback)
 
 Optional<u8> get_capabilities_pointer(Address address)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Getting capabilities pointer for " << address;
+#endif
     if (PCI::read16(address, PCI_STATUS) & (1 << 4)) {
+#ifdef PCI_DEBUG
+        dbg() << "PCI: Found capabilities pointer for " << address;
+#endif
         return PCI::read8(address, PCI_CAPABILITIES_POINTER);
     }
+#ifdef PCI_DEBUG
+    dbg() << "PCI: No capabilities pointer for " << address;
+#endif
     return {};
 }
 
@@ -157,12 +189,22 @@ PhysicalID get_physical_id(Address address)
 
 Vector<Capability> get_capabilities(Address address)
 {
+#ifdef PCI_DEBUG
+    dbg() << "PCI: Getting capabilities for " << address;
+#endif
     auto capabilities_pointer = PCI::get_capabilities_pointer(address);
-    if (!capabilities_pointer.has_value())
+    if (!capabilities_pointer.has_value()) {
+#ifdef PCI_DEBUG
+        dbg() << "PCI: No capabilities for " << address;
+#endif
         return {};
+    }
     Vector<Capability> capabilities;
     auto capability_pointer = capabilities_pointer.value();
     while (capability_pointer != 0) {
+#ifdef PCI_DEBUG
+        dbg() << "PCI: Reading in capability at 0x" << String::formatted("{:02x}", capability_pointer) << " for " << address;
+#endif
         u16 capability_header = PCI::read16(address, capability_pointer);
         u8 capability_id = capability_header & 0xff;
         capability_pointer = capability_header >> 8;
