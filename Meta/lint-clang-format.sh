@@ -44,6 +44,6 @@ echo "Using ${CLANG_FORMAT}"
         ':!:Libraries/LibCore/puff.cpp' \
         ':!:Libraries/LibELF/exec_elf.h' \
     || echo "'git ls-files failed!'"
-} | xargs -d'\n' clang-format-10 -style=file -i
+} | xargs -d'\n' "${CLANG_FORMAT}" -style=file -i
 
 echo "Maybe some files have changed. Sorry, but clang-format doesn't indicate what happened."
