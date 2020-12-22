@@ -41,6 +41,7 @@ public:
 
     void save(const StringView& filename);
     void load(const StringView& filename);
+    bool request_close();
     void add_sheet();
     void add_sheet(NonnullRefPtr<Sheet>&&);
 

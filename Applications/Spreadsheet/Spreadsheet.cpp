@@ -163,8 +163,10 @@ void Sheet::update()
 
     // Grab a copy as updates might insert cells into the table.
     for (auto& it : m_cells) {
-        if (it.value->dirty())
+        if (it.value->dirty()) {
             cells_copy.append(it.value);
+            m_workbook.set_dirty(true);
+        }
     }
 
     for (auto& cell : cells_copy)

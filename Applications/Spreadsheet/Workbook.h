@@ -42,6 +42,8 @@ public:
 
     const String& current_filename() const { return m_current_filename; }
     bool set_filename(const String& filename);
+    bool dirty() { return m_dirty; }
+    void set_dirty(bool dirty) { m_dirty = dirty; }
 
     bool has_sheets() const { return !m_sheets.is_empty(); }
 
@@ -70,6 +72,7 @@ private:
     WorkbookObject* m_workbook_object { nullptr };
 
     String m_current_filename;
+    bool m_dirty { false };
 };
 
 }

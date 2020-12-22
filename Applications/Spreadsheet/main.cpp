@@ -114,8 +114,16 @@ int main(int argc, char* argv[])
     app_menu.add_separator();
 
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        if (!spreadsheet_widget.request_close())
+            return;
         app->quit(0);
     }));
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (spreadsheet_widget.request_close())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     auto& file_menu = menubar->add_menu("File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
