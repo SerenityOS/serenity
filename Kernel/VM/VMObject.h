@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -37,6 +38,12 @@ namespace Kernel {
 
 class Inode;
 class PhysicalPage;
+
+class VMObjectDeletedHandler {
+public:
+    virtual ~VMObjectDeletedHandler() { }
+    virtual void vmobject_deleted(VMObject&) = 0;
+};
 
 class VMObject : public RefCounted<VMObject>
     , public Weakable<VMObject>
@@ -71,6 +78,15 @@ public:
     ALWAYS_INLINE void unref_region() { m_regions_count--; }
     ALWAYS_INLINE bool is_shared_by_multiple_regions() const { return m_regions_count > 1; }
 
+    void register_on_deleted_handler(VMObjectDeletedHandler& handler)
+    {
+        m_on_deleted.set(&handler);
+    }
+    void unregister_on_deleted_handler(VMObjectDeletedHandler& handler)
+    {
+        m_on_deleted.remove(&handler);
+    }
+
 protected:
     explicit VMObject(size_t);
     explicit VMObject(const VMObject&);
@@ -89,6 +105,8 @@ private:
     VMObject(VMObject&&) = delete;
 
     Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_regions_count { 0 };
+    HashTable<VMObjectDeletedHandler*> m_on_deleted;
+    SpinLock<u8> m_on_deleted_lock;
 };
 
 }

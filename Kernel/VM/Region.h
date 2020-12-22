@@ -192,6 +192,11 @@ public:
         return m_offset_in_vmobject;
     }
 
+    size_t offset_in_vmobject_from_vaddr(VirtualAddress vaddr) const
+    {
+        return m_offset_in_vmobject + vaddr.get() - this->vaddr().get();
+    }
+
     size_t amount_resident() const;
     size_t amount_shared() const;
     size_t amount_dirty() const;
