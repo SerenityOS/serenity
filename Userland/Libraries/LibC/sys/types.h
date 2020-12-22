@@ -78,7 +78,7 @@ struct utimbuf {
 
 typedef int pthread_t;
 typedef int pthread_key_t;
-typedef int32_t pthread_once_t;
+typedef uint32_t pthread_once_t;
 
 typedef struct __pthread_mutex_t {
     uint32_t lock;
@@ -93,7 +93,7 @@ typedef struct __pthread_mutexattr_t {
 } pthread_mutexattr_t;
 
 typedef struct __pthread_cond_t {
-    int32_t value;
+    uint32_t value;
     uint32_t previous;
     int clockid; // clockid_t
 } pthread_cond_t;

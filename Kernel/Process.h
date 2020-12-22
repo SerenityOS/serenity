@@ -38,6 +38,7 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
+#include <Kernel/FutexQueue.h>
 #include <Kernel/Lock.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
@@ -93,6 +94,8 @@ enum class VeilState {
     Dropped,
     Locked,
 };
+
+typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 
 class Process
     : public RefCounted<Process>
@@ -542,6 +545,8 @@ private:
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
+    void clear_futex_queues_on_exec();
+
     RefPtr<PageDirectory> m_page_directory;
 
     Process* m_prev { nullptr };
@@ -637,10 +642,10 @@ private:
     VeilState m_veil_state { VeilState::None };
     UnveilNode m_unveiled_paths { "/", { .full_path = "/", .unveil_inherited_from_root = true } };
 
-    WaitQueue& futex_queue(Userspace<const i32*>);
-    HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
-
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
+
+    FutexQueues m_futex_queues;
+    SpinLock<u8> m_futex_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,36 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
+#pragma once
+
+#include <AK/Atomic.h>
+#include <AK/RefCounted.h>
+#include <Kernel/SpinLock.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 
-VMObject::VMObject(const VMObject& other)
-    : m_physical_pages(other.m_physical_pages)
-{
-    MM.register_vmobject(*this);
-}
+class FutexQueue : public Thread::BlockCondition
+    , public RefCounted<FutexQueue>
+    , public VMObjectDeletedHandler {
+public:
+    FutexQueue(FlatPtr user_address_or_offset, VMObject* vmobject = nullptr);
+    virtual ~FutexQueue();
 
-VMObject::VMObject(size_t size)
-{
-    m_physical_pages.resize(ceil_div(size, PAGE_SIZE));
-    MM.register_vmobject(*this);
-}
+    u32 wake_n_requeue(u32, const Function<FutexQueue*()>&, u32, bool&, bool&);
+    u32 wake_n(u32, const Optional<u32>&, bool&);
+    u32 wake_all(bool&);
 
-VMObject::~VMObject()
-{
+    template<class... Args>
+    Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
     {
-        ScopedSpinLock lock(m_on_deleted_lock);
-        for (auto& it : m_on_deleted)
-            it->vmobject_deleted(*this);
-        m_on_deleted.clear();
+        return Thread::current()->block<Thread::FutexBlocker>(timeout, *this, forward<Args>(args)...);
     }
 
-    MM.unregister_vmobject(*this);
-    ASSERT(m_regions_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
-}
+    virtual void vmobject_deleted(VMObject&) override;
+
+protected:
+    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
+
+private:
+    // For private futexes we just use the user space address.
+    // But for global futexes we use the offset into the VMObject
+    const FlatPtr m_user_address_or_offset;
+    WeakPtr<VMObject> m_vmobject;
+    const bool m_is_global;
+};
 
 }

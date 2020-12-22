@@ -71,14 +71,15 @@ void WaitQueue::wake_one()
     m_wake_requested = !did_unblock_one;
 }
 
-void WaitQueue::wake_n(u32 wake_count)
+u32 WaitQueue::wake_n(u32 wake_count)
 {
     if (wake_count == 0)
-        return; // should we assert instead?
+        return 0; // should we assert instaed?
     ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_n(" << wake_count << ")";
 #endif
+    u32 did_wake = 0;
     bool did_unblock_some = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
@@ -86,23 +87,25 @@ void WaitQueue::wake_n(u32 wake_count)
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue @ " << this << ": wake_n unblocking " << *static_cast<Thread*>(data);
 #endif
-        ASSERT(wake_count > 0);
+        ASSERT(did_wake < wake_count);
         if (blocker.unblock()) {
-            if (--wake_count == 0)
+            if (++did_wake >= wake_count)
                 stop_iterating = true;
             return true;
         }
         return false;
     });
     m_wake_requested = !did_unblock_some;
+    return did_wake;
 }
 
-void WaitQueue::wake_all()
+u32 WaitQueue::wake_all()
 {
     ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_all";
 #endif
+    u32 did_wake = 0;
     bool did_unblock_any = do_unblock([&](Thread::Blocker& b, void* data, bool&) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
@@ -110,11 +113,14 @@ void WaitQueue::wake_all()
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue @ " << this << ": wake_all unblocking " << *static_cast<Thread*>(data);
 #endif
-        bool did_unblock = blocker.unblock();
-        ASSERT(did_unblock);
-        return true;
+        if (blocker.unblock()) {
+            did_wake++;
+            return true;
+        }
+        return false;
     });
     m_wake_requested = !did_unblock_any;
+    return did_wake;
 }
 
 }

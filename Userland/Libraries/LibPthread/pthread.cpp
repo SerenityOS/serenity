@@ -495,12 +495,25 @@ int pthread_cond_destroy(pthread_cond_t*)
     return 0;
 }
 
+static int futex_wait(uint32_t& futex_addr, uint32_t value, const struct timespec* abstime)
+{
+    int saved_errno = errno;
+    // NOTE: FUTEX_WAIT takes a relative timeout, so use FUTEX_WAIT_BITSET instead!
+    int rc = futex(&futex_addr, FUTEX_WAIT_BITSET, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
+    if (rc < 0 && errno == EAGAIN) {
+        // If we didn't wait, that's not an error
+        errno = saved_errno;
+        rc = 0;
+    }
+    return rc;
+}
+
 static int cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
 {
-    i32 value = cond->value;
+    u32 value = cond->value;
     cond->previous = value;
     pthread_mutex_unlock(mutex);
-    int rc = futex(&cond->value, FUTEX_WAIT, value, abstime);
+    int rc = futex_wait(cond->value, value, abstime);
     pthread_mutex_lock(mutex);
     return rc;
 }
@@ -538,7 +551,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
 {
     u32 value = cond->previous + 1;
     cond->value = value;
-    int rc = futex(&cond->value, FUTEX_WAKE, 1, nullptr);
+    int rc = futex(&cond->value, FUTEX_WAKE, 1, nullptr, nullptr, 0);
     ASSERT(rc == 0);
     return 0;
 }
@@ -547,7 +560,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
 {
     u32 value = cond->previous + 1;
     cond->value = value;
-    int rc = futex(&cond->value, FUTEX_WAKE, INT32_MAX, nullptr);
+    int rc = futex(&cond->value, FUTEX_WAKE, INT32_MAX, nullptr, nullptr, 0);
     ASSERT(rc == 0);
     return 0;
 }

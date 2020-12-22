@@ -66,6 +66,7 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
+    FutexQueue.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IOAPIC.cpp

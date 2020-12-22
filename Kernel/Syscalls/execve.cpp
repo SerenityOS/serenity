@@ -530,7 +530,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
 
-    m_futex_queues.clear();
+    clear_futex_queues_on_exec();
 
     m_region_lookup_cache = {};
 

@@ -148,6 +148,52 @@ bool Thread::QueueBlocker::unblock()
     return true;
 }
 
+Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
+    : m_bitset(bitset)
+{
+    if (!set_block_condition(futex_queue, Thread::current()))
+        m_should_block = false;
+}
+
+Thread::FutexBlocker::~FutexBlocker()
+{
+}
+
+void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
+{
+    ASSERT(m_lock.own_lock());
+    set_block_condition_raw_locked(&futex_queue);
+    // We can now releas the lock
+    m_lock.unlock(m_relock_flags);
+}
+
+bool Thread::FutexBlocker::unblock_bitset(u32 bitset)
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        if (m_did_unblock || (bitset != FUTEX_BITSET_MATCH_ANY && (m_bitset & bitset) == 0))
+            return false;
+
+        m_did_unblock = true;
+    }
+
+    unblock_from_blocker();
+    return true;
+}
+
+bool Thread::FutexBlocker::unblock(bool force)
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        if (m_did_unblock)
+            return force;
+        m_did_unblock = true;
+    }
+
+    unblock_from_blocker();
+    return true;
+}
+
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags)
     : m_blocked_description(description)
     , m_flags(flags)
