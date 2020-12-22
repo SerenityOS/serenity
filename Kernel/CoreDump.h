@@ -42,16 +42,16 @@ public:
     static OwnPtr<CoreDump> create(Process&, const String& output_path);
 
     ~CoreDump();
-    void write();
+    [[nodiscard]] KResult write();
 
 private:
     CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
     static RefPtr<FileDescription> create_target_file(const Process&, const String& output_path);
 
-    void write_elf_header();
-    void write_program_headers(size_t notes_size);
-    void write_regions();
-    void write_notes_segment(ByteBuffer&);
+    [[nodiscard]] KResult write_elf_header();
+    [[nodiscard]] KResult write_program_headers(size_t notes_size);
+    [[nodiscard]] KResult write_regions();
+    [[nodiscard]] KResult write_notes_segment(ByteBuffer&);
 
     ByteBuffer create_notes_segment_data() const;
     ByteBuffer create_notes_threads_data() const;

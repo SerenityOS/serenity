@@ -84,7 +84,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
     return fd_or_error.value();
 }
 
-void CoreDump::write_elf_header()
+KResult CoreDump::write_elf_header()
 {
     Elf32_Ehdr elf_file_header;
     elf_file_header.e_ident[EI_MAG0] = 0x7f;
@@ -116,10 +116,13 @@ void CoreDump::write_elf_header()
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf32_Ehdr));
+    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf32_Ehdr));
+    if (result.is_error())
+        return result.error();
+    return KSuccess;
 }
 
-void CoreDump::write_program_headers(size_t notes_size)
+KResult CoreDump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(Elf32_Ehdr) + m_num_program_headers * sizeof(Elf32_Phdr);
     for (auto& region : m_process.m_regions) {
@@ -155,10 +158,13 @@ void CoreDump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf32_Phdr));
+    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf32_Phdr));
+    if (result.is_error())
+        return result.error();
+    return KSuccess;
 }
 
-void CoreDump::write_regions()
+KResult CoreDump::write_regions()
 {
     for (auto& region : m_process.m_regions) {
         if (region.is_kernel())
@@ -182,14 +188,20 @@ void CoreDump::write_regions()
                 //       (A page may not be backed by a physical page because it has never been faulted in when the process ran).
                 src_buffer = UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }
-            [[maybe_unused]] auto rc = m_fd->write(src_buffer.value(), PAGE_SIZE);
+            auto result = m_fd->write(src_buffer.value(), PAGE_SIZE);
+            if (result.is_error())
+                return result.error();
         }
     }
+    return KSuccess;
 }
 
-void CoreDump::write_notes_segment(ByteBuffer& notes_segment)
+KResult CoreDump::write_notes_segment(ByteBuffer& notes_segment)
 {
-    [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
+    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(notes_segment.data()), notes_segment.size());
+    if (result.is_error())
+        return result.error();
+    return KSuccess;
 }
 
 ByteBuffer CoreDump::create_notes_threads_data() const
@@ -253,18 +265,26 @@ ByteBuffer CoreDump::create_notes_segment_data() const
     return notes_buffer;
 }
 
-void CoreDump::write()
+KResult CoreDump::write()
 {
     ProcessPagingScope scope(m_process);
 
     ByteBuffer notes_segment = create_notes_segment_data();
 
-    write_elf_header();
-    write_program_headers(notes_segment.size());
-    write_regions();
-    write_notes_segment(notes_segment);
+    auto result = write_elf_header();
+    if (result.is_error())
+        return result;
+    result = write_program_headers(notes_segment.size());
+    if (result.is_error())
+        return result;
+    result = write_regions();
+    if (result.is_error())
+        return result;
+    result = write_notes_segment(notes_segment);
+    if (result.is_error())
+        return result;
 
-    [[maybe_unused]] auto rc = m_fd->chmod(0400); // Make coredump file readable
+    return m_fd->chmod(0400); // Make coredump file readable
 }
 
 }
