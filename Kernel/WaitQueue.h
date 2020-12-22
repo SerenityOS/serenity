@@ -35,8 +35,8 @@ namespace Kernel {
 class WaitQueue : public Thread::BlockCondition {
 public:
     void wake_one();
-    void wake_n(u32 wake_count);
-    void wake_all();
+    u32 wake_n(u32 wake_count);
+    u32 wake_all();
 
     template<class... Args>
     Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
