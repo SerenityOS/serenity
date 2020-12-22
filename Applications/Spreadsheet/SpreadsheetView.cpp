@@ -86,6 +86,10 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         if (!index.is_valid())
             return TableView::mousemove_event(event);
 
+        auto& sheet = static_cast<SheetModel&>(*model).sheet();
+        sheet.disable_updates();
+        ScopeGuard sheet_update_enabler { [&] { sheet.enable_updates(); } };
+
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Left);
         auto rect = content_rect(index);
         auto distance = rect.center().absolute_relative_distance_to(event.position());

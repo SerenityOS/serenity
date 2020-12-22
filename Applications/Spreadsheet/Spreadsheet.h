@@ -117,6 +117,15 @@ public:
 
     void update();
     void update(Cell&);
+    void disable_updates() { m_should_ignore_updates = true; }
+    void enable_updates()
+    {
+        m_should_ignore_updates = false;
+        if (m_update_requested) {
+            m_update_requested = false;
+            update();
+        }
+    }
 
     struct ValueAndException {
         JS::Value value;
@@ -154,6 +163,8 @@ private:
     Cell* m_current_cell_being_evaluated { nullptr };
 
     HashTable<Cell*> m_visited_cells_in_update;
+    bool m_should_ignore_updates { false };
+    bool m_update_requested { false };
 };
 
 }

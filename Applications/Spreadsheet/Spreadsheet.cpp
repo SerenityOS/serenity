@@ -154,12 +154,18 @@ String Sheet::add_column()
 
 void Sheet::update()
 {
+    if (m_should_ignore_updates) {
+        m_update_requested = true;
+        return;
+    }
     m_visited_cells_in_update.clear();
     Vector<Cell*> cells_copy;
 
     // Grab a copy as updates might insert cells into the table.
-    for (auto& it : m_cells)
-        cells_copy.append(it.value);
+    for (auto& it : m_cells) {
+        if (it.value->dirty())
+            cells_copy.append(it.value);
+    }
 
     for (auto& cell : cells_copy)
         update(*cell);
@@ -169,10 +175,15 @@ void Sheet::update()
 
 void Sheet::update(Cell& cell)
 {
+    if (m_should_ignore_updates) {
+        m_update_requested = true;
+        return;
+    }
     if (cell.dirty()) {
         if (has_been_visited(&cell)) {
-            // This may be part of an cyclic reference chain
-            // just break the chain, but leave the cell dirty.
+            // This may be part of an cyclic reference chain,
+            // so just ignore it.
+            cell.clear_dirty();
             return;
         }
         m_visited_cells_in_update.set(&cell);
