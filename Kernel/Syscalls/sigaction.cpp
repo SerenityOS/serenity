@@ -109,7 +109,7 @@ int Process::sys$sigreturn(RegisterState& registers)
     registers.eip = *stack_ptr;
     stack_ptr++;
 
-    registers.eflags = *stack_ptr;
+    registers.eflags = (registers.eflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
     stack_ptr++;
 
     registers.userspace_esp = registers.esp;

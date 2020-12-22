@@ -183,7 +183,8 @@ void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, con
     kernel_regs.esi = ptrace_regs.esi;
     kernel_regs.edi = ptrace_regs.edi;
     kernel_regs.eip = ptrace_regs.eip;
-    kernel_regs.eflags = ptrace_regs.eflags;
+
+    kernel_regs.eflags = (kernel_regs.eflags & ~safe_eflags_mask) | (ptrace_regs.eflags & safe_eflags_mask);
 }
 
 }
