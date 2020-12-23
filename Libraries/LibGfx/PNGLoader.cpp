@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -465,43 +464,43 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
         break;
     }
 
-    auto dummy_scanline = ByteBuffer::create_zeroed(context.width * sizeof(RGBA32));
+    u8 dummy_scanline[context.width * sizeof(RGBA32)];
 
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
         if (filter == 0) {
             if (context.has_alpha())
-                unfilter_impl<true, 0>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<true, 0>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 0>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<false, 0>(*context.bitmap, y, dummy_scanline);
             continue;
         }
         if (filter == 1) {
             if (context.has_alpha())
-                unfilter_impl<true, 1>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<true, 1>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 1>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<false, 1>(*context.bitmap, y, dummy_scanline);
             continue;
         }
         if (filter == 2) {
             if (context.has_alpha())
-                unfilter_impl<true, 2>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<true, 2>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 2>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<false, 2>(*context.bitmap, y, dummy_scanline);
             continue;
         }
         if (filter == 3) {
             if (context.has_alpha())
-                unfilter_impl<true, 3>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<true, 3>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 3>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<false, 3>(*context.bitmap, y, dummy_scanline);
             continue;
         }
         if (filter == 4) {
             if (context.has_alpha())
-                unfilter_impl<true, 4>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<true, 4>(*context.bitmap, y, dummy_scanline);
             else
-                unfilter_impl<false, 4>(*context.bitmap, y, dummy_scanline.data());
+                unfilter_impl<false, 4>(*context.bitmap, y, dummy_scanline);
             continue;
         }
     }
