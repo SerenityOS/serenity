@@ -30,7 +30,7 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <Applications/TextEditor/MainWindowGML.h>
+#include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
@@ -62,7 +62,7 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    load_from_gml(main_window_gml);
+    load_from_gml(text_editor_window_gml);
 
     auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
 
