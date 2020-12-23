@@ -69,7 +69,7 @@ String Text::render_to_html() const
             { "b", &Style::strong },
             { "code", &Style::code }
         };
-        auto it = open_tags.find([&](const String& open_tag) {
+        auto it = open_tags.find_if([&](const String& open_tag) {
             if (open_tag == "a" && current_style.href != span.style.href)
                 return true;
             if (open_tag == "img" && current_style.img != span.style.img)
