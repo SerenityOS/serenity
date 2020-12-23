@@ -44,6 +44,12 @@ class PageDirectory;
 class PageTableEntry;
 
 static constexpr u32 safe_eflags_mask = 0xdff;
+static constexpr u32 iopl_mask = 3u << 12;
+
+inline u32 get_iopl_from_eflags(u32 eflags)
+{
+    return (eflags & iopl_mask) >> 12;
+}
 
 struct [[gnu::packed]] DescriptorTablePointer
 {

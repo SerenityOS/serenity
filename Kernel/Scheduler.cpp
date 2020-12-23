@@ -356,6 +356,14 @@ bool Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread, false);
     ASSERT(thread == Thread::current());
 
+#if ARCH(I386)
+    auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
+    if (thread->process().is_user_process() && iopl != 0) {
+        dbgln("PANIC: Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
+        Processor::halt();
+    }
+#endif
+
     return true;
 }
 
