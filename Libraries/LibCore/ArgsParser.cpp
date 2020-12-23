@@ -109,7 +109,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
             index_of_found_long_option = -1;
         } else {
             // It was a short option, look it up.
-            auto it = m_options.find([c](auto& opt) { return c == opt.short_name; });
+            auto it = m_options.find_if([c](auto& opt) { return c == opt.short_name; });
             ASSERT(!it.is_end());
             found_option = &*it;
         }

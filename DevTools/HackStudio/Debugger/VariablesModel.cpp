@@ -80,7 +80,7 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
     if (variable.is_enum_type()) {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
         ASSERT(value.has_value());
-        auto it = variable.type->members.find([enumerator_value = value.value()](auto& enumerator) {
+        auto it = variable.type->members.find_if([&enumerator_value = value.value()](const auto& enumerator) {
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
         ASSERT(!it.is_end());
@@ -116,7 +116,7 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
         if (string_value.starts_with(prefix_string))
             string_to_use = string_value.substring_view(prefix_string.length(), string_value.length() - prefix_string.length());
 
-        auto it = variable.type->members.find([string_to_use](auto& enumerator) {
+        auto it = variable.type->members.find_if([string_to_use](const auto& enumerator) {
             return enumerator->name == string_to_use;
         });
 

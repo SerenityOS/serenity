@@ -182,7 +182,7 @@ void DevicesModel::update()
             unsigned _major = major(statbuf.st_rdev);
             unsigned _minor = minor(statbuf.st_rdev);
 
-            auto it = m_devices.find([_major, _minor](auto& device_info) {
+            auto it = m_devices.find_if([_major, _minor](const auto& device_info) {
                 return device_info.major == _major && device_info.minor == _minor;
             });
             if (it != m_devices.end()) {

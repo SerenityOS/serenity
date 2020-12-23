@@ -398,7 +398,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 }
                 payload_res = handle_certificate(buffer.slice(1, payload_size));
                 if (m_context.certificates.size()) {
-                    auto it = m_context.certificates.find([&](auto& cert) { return cert.is_valid(); });
+                    auto it = m_context.certificates.find_if([](const auto& cert) { return cert.is_valid(); });
 
                     if (it.is_end()) {
                         // no valid certificates

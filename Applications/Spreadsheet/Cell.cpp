@@ -187,7 +187,7 @@ void Cell::reference_from(Cell* other)
     if (!other || other == this)
         return;
 
-    if (!m_referencing_cells.find([other](auto& ptr) { return ptr.ptr() == other; }).is_end())
+    if (!m_referencing_cells.find_if([other](const auto& ptr) { return ptr.ptr() == other; }).is_end())
         return;
 
     m_referencing_cells.append(other->make_weak_ptr());
