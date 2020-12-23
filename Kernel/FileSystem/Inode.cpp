@@ -71,7 +71,7 @@ void Inode::sync()
     }
 }
 
-KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptor) const
+KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* description) const
 {
     KBufferBuilder builder;
 
@@ -80,7 +80,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptor
     off_t offset = 0;
     for (;;) {
         auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
-        nread = read_bytes(offset, sizeof(buffer), buf, descriptor);
+        nread = read_bytes(offset, sizeof(buffer), buf, description);
         if (nread < 0)
             return KResult(nread);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
