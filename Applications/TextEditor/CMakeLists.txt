@@ -1,9 +1,9 @@
-compile_gml(MainWindow.gml MainWindowGML.h main_window_gml)
+compile_gml(TextEditorWindow.gml TextEditorWindowGML.h text_editor_window_gml)
 
 set(SOURCES
     main.cpp
     TextEditorWidget.cpp
-    MainWindowGML.h
+    TextEditorWindowGML.h
 )
 
 serenity_app(TextEditor ICON app-text-editor)
