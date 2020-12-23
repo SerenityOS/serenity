@@ -184,10 +184,8 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 ByteBuffer Socket::receive(int max_size)
 {
     auto buffer = read(max_size);
-    if (eof()) {
-        dbg() << *this << " connection appears to have closed in receive().";
+    if (eof())
         m_connected = false;
-    }
     return buffer;
 }
 
