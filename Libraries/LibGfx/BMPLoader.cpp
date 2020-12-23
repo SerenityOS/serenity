@@ -336,7 +336,7 @@ static u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
     return color;
 }
 
-static void populate_dib_mask_info(BMPLoadingContext& context)
+static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
 {
     if (context.dib.info.masks.is_empty())
         return;
@@ -439,8 +439,6 @@ static bool set_dib_bitmasks(BMPLoadingContext& context, Streamer& streamer)
         context.dib.info.masks.append({ 0x7c00, 0x03e0, 0x001f });
         context.dib.info.mask_shifts.append({ 7, 2, -3 });
         context.dib.info.mask_sizes.append({ 5, 5, 5 });
-
-        populate_dib_mask_info(context);
     } else if (type == DIBType::Info && (compression == Compression::BITFIELDS || compression == Compression::ALPHABITFIELDS)) {
         // Consume the extra BITFIELDS bytes
         auto number_of_mask_fields = compression == Compression::ALPHABITFIELDS ? 4 : 3;
@@ -450,12 +448,9 @@ static bool set_dib_bitmasks(BMPLoadingContext& context, Streamer& streamer)
                 return false;
             context.dib.info.masks.append(streamer.read_u32());
         }
-
-        populate_dib_mask_info(context);
-    } else if (type >= DIBType::V2 && compression == Compression::BITFIELDS) {
-        populate_dib_mask_info(context);
     }
 
+    populate_dib_mask_info_if_needed(context);
     return true;
 }
 
