@@ -552,7 +552,10 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
         auto it = context.components.find(component_id);
         if (it != context.components.end()) {
             component = &it->value;
-            ASSERT(i == component->serial_id);
+            if (i != component->serial_id) {
+                dbgln("JPEG decode failed (i != component->serial_id)");
+                return false;
+            }
         } else {
 #ifdef JPG_DEBUG
             dbg() << stream.offset() << String::format(": Unsupported component id: %i!", component_id);
