@@ -35,7 +35,7 @@ template<typename T>
 struct GenericTraits {
     using PeekType = T;
     static constexpr bool is_trivial() { return false; }
-    static bool equals(const T& a, const T& b) { return a == b; }
+    static constexpr bool equals(const T& a, const T& b) { return a == b; }
 };
 
 template<typename T>
