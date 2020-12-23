@@ -333,7 +333,8 @@ static OwnPtr<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
             if (region.vmobject().is_purgeable()) {
                 region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile());
             }
-            region_object.add("purgeable", region.vmobject().is_purgeable());
+            region_object.add("cacheable", region.is_cacheable());
+            region_object.add("kernel", region.is_kernel());
             region_object.add("address", region.vaddr().get());
             region_object.add("size", region.size());
             region_object.add("amount_resident", region.amount_resident());
