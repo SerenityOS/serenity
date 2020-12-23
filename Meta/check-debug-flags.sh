@@ -11,7 +11,7 @@ while IFS= read -r FLAG; do
     # We simply search whether the CMakeLists.txt *ever* sets the flag.
     # There are (basically) no false positives, but there might be false negatives,
     # for example we intentionally don't check for commented-out lines here.
-    if ! grep -qP "add_compile_definitions\(\"${FLAG}" Meta/all_the_debug_macros.cmake ; then
+    if ! grep -qP "add_compile_definitions\(\"${FLAG}" Meta/CMake/all_the_debug_macros.cmake ; then
         echo "ALL_THE_DEBUG_MACROS probably doesn't include ${FLAG}"
         MISSING_FLAGS=y
     fi
