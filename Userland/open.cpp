@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
         URL url = URL::create_with_url_or_path(path);
         if (url.protocol() == "file" && realpath_errno) {
-            warnln("Failed to open '{}': {}\n", url.path(), strerror(realpath_errno));
+            warnln("Failed to open '{}': {}", url.path(), strerror(realpath_errno));
             all_ok = false;
             continue;
         }
