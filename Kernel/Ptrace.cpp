@@ -129,21 +129,20 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         Kernel::Syscall::SC_ptrace_peek_params peek_params;
         if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
             return -EFAULT;
-
-        // read validation is done inside 'peek_user_data'
-        auto result = peer->process().peek_user_data((FlatPtr)peek_params.address);
-        if (result.is_error())
+        if (!is_user_address(VirtualAddress { peek_params.address }))
             return -EFAULT;
+        auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
+        if (result.is_error())
+            return result.error();
         if (!copy_to_user(peek_params.out_data, &result.value()))
             return -EFAULT;
         break;
     }
 
-    case PT_POKE: {
-        Userspace<u32*> addr = reinterpret_cast<FlatPtr>(params.addr);
-        // write validation is done inside 'poke_user_data'
-        return peer->process().poke_user_data(addr, params.data);
-    }
+    case PT_POKE:
+        if (!is_user_address(VirtualAddress { params.addr }))
+            return -EFAULT;
+        return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
 
     default:
         return -EINVAL;

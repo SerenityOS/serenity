@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
@@ -59,6 +60,7 @@ public:
     Userspace(FlatPtr ptr)
         : m_ptr(ptr)
     {
+        ASSERT(m_ptr < 0xc0000000);
     }
 
     FlatPtr ptr() const { return m_ptr; }
