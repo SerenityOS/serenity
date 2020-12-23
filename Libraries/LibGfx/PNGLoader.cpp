@@ -818,6 +818,16 @@ static RefPtr<Gfx::Bitmap> load_png_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 
+static bool is_valid_compression_method(u8 compression_method)
+{
+    return compression_method == 0;
+}
+
+static bool is_valid_filter_method(u8 filter_method)
+{
+    return filter_method <= 4;
+}
+
 static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
@@ -826,6 +836,16 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 
     if (ihdr.width > NumericLimits<i32>::max() || ihdr.height > NumericLimits<i32>::max()) {
         dbgln("PNG has invalid geometry {}x{}", (u32)ihdr.width, (u32)ihdr.height);
+        return false;
+    }
+
+    if (!is_valid_compression_method(ihdr.compression_method)) {
+        dbgln("PNG has invalid compression method {}", ihdr.compression_method);
+        return false;
+    }
+
+    if (!is_valid_filter_method(ihdr.filter_method)) {
+        dbgln("PNG has invalid filter method {}", ihdr.filter_method);
         return false;
     }
 
