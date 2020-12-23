@@ -41,7 +41,7 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
         } while (0)
 #    define ASSERT_NOT_REACHED() assert(false)
 #else
-#    define assert(expr) (void(0))
+#    define assert(expr) ((void)(0))
 #    define ASSERT_NOT_REACHED() CRASH()
 #endif
 
