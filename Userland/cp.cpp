@@ -37,8 +37,10 @@
 #include <unistd.h>
 
 bool copy_file_or_directory(String, String, bool);
-bool copy_file(String, String, struct stat, int);
+bool copy_file(String, String, const struct stat&, int);
 bool copy_directory(String, String);
+
+static mode_t my_umask = 0;
 
 int main(int argc, char** argv)
 {
@@ -58,6 +60,9 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(sources, "Source file path", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
     args_parser.parse(argc, argv);
+
+    auto my_umask = umask(0);
+    umask(my_umask);
 
     for (auto& source : sources) {
         bool ok = copy_file_or_directory(source, destination, recursion_allowed);
@@ -106,9 +111,12 @@ bool copy_file_or_directory(String src_path, String dst_path, bool recursion_all
  *
  * To avoid repeated work, the source file's stat and file descriptor are required.
  */
-bool copy_file(String src_path, String dst_path, struct stat src_stat, int src_fd)
+bool copy_file(String src_path, String dst_path, const struct stat& src_stat, int src_fd)
 {
-    int dst_fd = creat(dst_path.characters(), 0666);
+    // NOTE: We don't copy the set-uid and set-gid bits.
+    mode_t mode = (src_stat.st_mode & ~my_umask) & ~06000;
+
+    int dst_fd = creat(dst_path.characters(), mode);
     if (dst_fd < 0) {
         if (errno != EISDIR) {
             perror("open dst");
@@ -154,14 +162,6 @@ bool copy_file(String src_path, String dst_path, struct stat src_stat, int src_f
             remaining_to_write -= nwritten;
             bufptr += nwritten;
         }
-    }
-
-    auto my_umask = umask(0);
-    umask(my_umask);
-    int rc = fchmod(dst_fd, src_stat.st_mode & ~my_umask);
-    if (rc < 0) {
-        perror("fchmod dst");
-        return false;
     }
 
     close(src_fd);
