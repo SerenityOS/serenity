@@ -644,7 +644,7 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     auto copy_user_strings = [](const auto& list, auto& output) {
         if (!list.length)
             return true;
-        Checked size = sizeof(list.length);
+        Checked size = sizeof(list.strings);
         size *= list.length;
         if (size.has_overflow())
             return false;
