@@ -128,27 +128,27 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     case PT_PEEK: {
         Kernel::Syscall::SC_ptrace_peek_params peek_params;
         if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
-            return -EFAULT;
+            return KResult(-EFAULT);
         if (!is_user_address(VirtualAddress { peek_params.address }))
-            return -EFAULT;
+            return KResult(-EFAULT);
         auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
         if (result.is_error())
             return result.error();
         if (!copy_to_user(peek_params.out_data, &result.value()))
-            return -EFAULT;
+            return KResult(-EFAULT);
         break;
     }
 
     case PT_POKE:
         if (!is_user_address(VirtualAddress { params.addr }))
-            return -EFAULT;
+            return KResult(-EFAULT);
         return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
 
     default:
-        return -EINVAL;
+        return KResult(-EINVAL);
     }
 
-    return 0;
+    return KSuccess;
 }
 
 void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
