@@ -11,15 +11,17 @@ Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA IDE disk. Some old
 
 You must be willing to wipe your disk's contents to allow for writing the Serenity image so be sure to back up any important data on your disk first! Serenity uses the GRUB2 bootloader so it should be possible to multiboot it with any other OS that can be booted from GRUB2 post-installation.
 
-Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 32 MB RAM and a Pentium III class CPU are required.
+Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 128 MB RAM and a Pentium III class CPU are required.
 
 At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon VESA BIOS extensions to provide its display output and so it only runs on BIOS-based PCs. There is no WiFi support and the only physical network card chipset currently supported is the RTL8139. The sole sound card supported is the SoundBlaster 16 ISA.
 
+For more details on known working hardware see the [SerenityOS Hardware Compatibility List](https://github.com/SerenityOS/serenity/blob/master/Documentation/HardwareCompatibility.md).
+
 ## Creating a Serenity GRUB disk image
 
-Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md). Follow those instructions up to and including running **make install**. After the OS has built, run **make grub-image** to create a new file called **grub_disk_image** that has GRUB2 installed that can be booted on a real PC.
+Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md). Follow those instructions up to and including running **make install**. After the OS has built, run **make grub-image** to create a new file called **grub_disk_image** with GRUB2 installed that can be booted on a real PC.
 
-The final step is copying **grub_disk_image** onto the disk you wish to boot Serenity off using a command such as:
+The final step is copying **grub_disk_image** onto the disk you wish to use to boot Serenity using a command such as:
 
 ```
 $ sudo dd if=grub_disk_image of=/dev/sdx bs=64M && sync
