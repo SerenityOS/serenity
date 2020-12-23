@@ -394,4 +394,30 @@ TEST_CASE(should_compare_vectors_of_different_sizes)
     EXPECT(a != b);
 }
 
+TEST_CASE(should_find_value)
+{
+    AK::Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+
+    const auto expected = v.begin() + 4;
+
+    EXPECT_EQ(expected, v.find(0));
+}
+
+TEST_CASE(should_find_predicate)
+{
+    AK::Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+
+    const auto expected = v.begin() + 4;
+
+    EXPECT_EQ(expected, v.find_if([](const auto v) { return v == 0; }));
+}
+
+TEST_CASE(should_find_index)
+{
+    AK::Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+
+    EXPECT_EQ(4u, v.find_first_index(0).value());
+    EXPECT(!v.find_first_index(42).has_value());
+}
+
 TEST_MAIN(Vector)

@@ -162,7 +162,7 @@ void MenuManager::event(Core::Event& event)
         if (event.type() == Event::KeyDown) {
 
             if (key_event.key() == Key_Left) {
-                auto it = m_open_menu_stack.find([&](auto& other) { return m_current_menu == other.ptr(); });
+                auto it = m_open_menu_stack.find_if([&](const auto& other) { return m_current_menu == other.ptr(); });
                 ASSERT(!it.is_end());
 
                 // Going "back" a menu should be the previous menu in the stack
@@ -390,7 +390,7 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
         menu.menu_window()->set_visible(true);
     }
 
-    if (m_open_menu_stack.find([&menu](auto& other) { return &menu == other.ptr(); }).is_end())
+    if (m_open_menu_stack.find_if([&menu](auto& other) { return &menu == other.ptr(); }).is_end())
         m_open_menu_stack.append(menu);
 
     if (as_current_menu || !current_menu()) {
