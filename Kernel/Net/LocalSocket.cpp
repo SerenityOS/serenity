@@ -286,37 +286,42 @@ KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const UserOr
 {
     if (!has_attached_peer(description))
         return KResult(-EPIPE);
-    ssize_t nwritten = send_buffer_for(description).write(data, data_size);
+    auto* socket_buffer = send_buffer_for(description);
+    if (!socket_buffer)
+        return KResult(-EINVAL);
+    ssize_t nwritten = socket_buffer->write(data, data_size);
     if (nwritten > 0)
         Thread::current()->did_unix_socket_write(nwritten);
     return nwritten;
 }
 
-DoubleBuffer& LocalSocket::receive_buffer_for(FileDescription& description)
+DoubleBuffer* LocalSocket::receive_buffer_for(FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
-        return m_for_server;
+        return &m_for_server;
     if (role == Role::Connected)
-        return m_for_client;
-    ASSERT_NOT_REACHED();
+        return &m_for_client;
+    return nullptr;
 }
 
-DoubleBuffer& LocalSocket::send_buffer_for(FileDescription& description)
+DoubleBuffer* LocalSocket::send_buffer_for(FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
-        return m_for_server;
+        return &m_for_server;
     if (role == Role::Accepted)
-        return m_for_client;
-    ASSERT_NOT_REACHED();
+        return &m_for_client;
+    return nullptr;
 }
 
 KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, timeval&)
 {
-    auto& buffer_for_me = receive_buffer_for(description);
+    auto* socket_buffer = receive_buffer_for(description);
+    if (!socket_buffer)
+        return KResult(-EINVAL);
     if (!description.is_blocking()) {
-        if (buffer_for_me.is_empty()) {
+        if (socket_buffer->is_empty()) {
             if (!has_attached_peer(description))
                 return 0;
             return KResult(-EAGAIN);
@@ -326,10 +331,10 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
         if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblock_flags).was_interrupted())
             return KResult(-EINTR);
     }
-    if (!has_attached_peer(description) && buffer_for_me.is_empty())
+    if (!has_attached_peer(description) && socket_buffer->is_empty())
         return 0;
-    ASSERT(!buffer_for_me.is_empty());
-    int nread = buffer_for_me.read(buffer, buffer_size);
+    ASSERT(!socket_buffer->is_empty());
+    auto nread = socket_buffer->read(buffer, buffer_size);
     if (nread > 0)
         Thread::current()->did_unix_socket_read(nread);
     return nread;
