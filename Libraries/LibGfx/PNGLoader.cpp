@@ -130,6 +130,20 @@ struct PNGLoadingContext {
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
+
+    Checked<int> compute_row_size_for_width(int width)
+    {
+        Checked<int> row_size = width;
+        row_size *= channels;
+        row_size *= bit_depth;
+        row_size += 7;
+        row_size /= 8;
+        if (row_size.has_overflow()) {
+            dbgln("PNG too large, integer overflow while computing row size");
+            state = State::Error;
+        }
+        return row_size;
+    }
 };
 
 class Streamer {
@@ -607,8 +621,11 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
 
         context.scanlines.append({ filter });
         auto& scanline_buffer = context.scanlines.last().data;
-        auto row_size = ((context.width * context.channels * context.bit_depth) + 7) / 8;
-        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
+        auto row_size = context.compute_row_size_for_width(context.width);
+        if (row_size.has_overflow())
+            return false;
+
+        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -710,8 +727,11 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 
         subimage_context.scanlines.append({ filter });
         auto& scanline_buffer = subimage_context.scanlines.last().data;
-        auto row_size = ((subimage_context.width * context.channels * context.bit_depth) + 7) / 8;
-        if (!streamer.wrap_bytes(scanline_buffer, row_size)) {
+
+        auto row_size = context.compute_row_size_for_width(subimage_context.width);
+        if (row_size.has_overflow())
+            return false;
+        if (!streamer.wrap_bytes(scanline_buffer, row_size.value())) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
