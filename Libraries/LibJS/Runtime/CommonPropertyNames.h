@@ -176,6 +176,7 @@ namespace JS {
     P(pop)                                   \
     P(pow)                                   \
     P(preventExtensions)                     \
+    P(propertyIsEnumerable)                  \
     P(prototype)                             \
     P(push)                                  \
     P(random)                                \
