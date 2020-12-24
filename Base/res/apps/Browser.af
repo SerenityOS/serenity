@@ -9,4 +9,4 @@ Category=Internet
 
 [Launcher]
 FileTypes=html,htm,md
-Protocols=http,https
+Protocols=gemini,http,https
