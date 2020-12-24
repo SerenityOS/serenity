@@ -37,7 +37,7 @@ enum State : i32 {
     PERFORMING_WITH_WAITERS,
 };
 
-int pthread_once(pthread_once_t* self, void (*callback)())
+int pthread_once(pthread_once_t* self, void (*callback)(void))
 {
     auto& state = reinterpret_cast<Atomic<State>&>(*self);
 

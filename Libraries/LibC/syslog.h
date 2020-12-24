@@ -169,7 +169,7 @@ void vsyslog(int, const char* message, va_list);
 void vsyslog_r(int, struct syslog_data* data, const char* message, va_list);
 void openlog(const char*, int, int);
 void openlog_r(const char*, int, int, struct syslog_data*);
-void closelog();
+void closelog(void);
 void closelog_r(struct syslog_data*);
 int setlogmask(int);
 int setlogmask_r(int, struct syslog_data*);

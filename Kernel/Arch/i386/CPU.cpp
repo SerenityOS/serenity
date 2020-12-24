@@ -64,9 +64,9 @@ static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_C
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap);
 extern "C" u32 do_init_context(Thread* thread, u32 flags);
-extern "C" void exit_kernel_thread();
-extern "C" void pre_init_finished();
-extern "C" void post_init_finished();
+extern "C" void exit_kernel_thread(void);
+extern "C" void pre_init_finished(void);
+extern "C" void post_init_finished(void);
 extern "C" void handle_interrupt(TrapFrame*);
 
 #define EH_ENTRY(ec, title)                         \
@@ -1514,7 +1514,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     Scheduler::leave_on_first_switch(trap->regs->eflags);
 }
 
-extern "C" void thread_context_first_enter();
+extern "C" void thread_context_first_enter(void);
 asm(
 // enter_thread_context returns to here first time a thread is executing
 ".globl thread_context_first_enter \n"
@@ -1530,7 +1530,7 @@ asm(
 "    jmp common_trap_exit \n"
 );
 
-void exit_kernel_thread()
+void exit_kernel_thread(void)
 {
     Thread::current()->exit();
 }
@@ -1675,7 +1675,7 @@ void Processor::assume_context(Thread& thread, u32 flags)
     ASSERT_NOT_REACHED();
 }
 
-extern "C" void pre_init_finished()
+extern "C" void pre_init_finished(void)
 {
     ASSERT(g_scheduler_lock.own_lock());
 
@@ -1688,7 +1688,7 @@ extern "C" void pre_init_finished()
     Scheduler::leave_on_first_switch(prev_flags);
 }
 
-extern "C" void post_init_finished()
+extern "C" void post_init_finished(void)
 {
     // We need to re-acquire the scheduler lock before a context switch
     // transfers control into the idle loop, which needs the lock held

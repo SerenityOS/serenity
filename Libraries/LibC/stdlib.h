@@ -41,13 +41,13 @@ __BEGIN_DECLS
 __attribute__((malloc)) __attribute__((alloc_size(1))) void* malloc(size_t);
 __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nmemb, size_t);
 size_t malloc_size(void*);
-void serenity_dump_malloc_stats();
+void serenity_dump_malloc_stats(void);
 void free(void*);
 __attribute__((alloc_size(2))) void* realloc(void* ptr, size_t);
 char* getenv(const char* name);
 int putenv(char*);
 int unsetenv(const char*);
-int clearenv();
+int clearenv(void);
 int setenv(const char* name, const char* value, int overwrite);
 int atoi(const char*);
 long atol(const char*);
@@ -87,7 +87,7 @@ void srand(unsigned seed);
 long int random();
 void srandom(unsigned seed);
 
-uint32_t arc4random();
+uint32_t arc4random(void);
 void arc4random_buf(void*, size_t);
 uint32_t arc4random_uniform(uint32_t);
 
