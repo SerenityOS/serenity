@@ -425,8 +425,8 @@ void signal_trampoline_dummy()
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 }
 
-extern "C" void asm_signal_trampoline();
-extern "C" void asm_signal_trampoline_end();
+extern "C" void asm_signal_trampoline(void);
+extern "C" void asm_signal_trampoline_end(void);
 
 void create_signal_trampolines()
 {

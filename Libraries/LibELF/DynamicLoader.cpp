@@ -444,7 +444,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
 }
 
 // Defined in <arch>/plt_trampoline.S
-extern "C" void _plt_trampoline() __attribute__((visibility("hidden")));
+extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 
 void DynamicLoader::setup_plt_trampoline()
 {
