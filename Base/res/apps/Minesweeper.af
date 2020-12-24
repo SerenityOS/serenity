@@ -2,7 +2,3 @@
 Name=Minesweeper
 Executable=/bin/Minesweeper
 Category=Games
-
-[Icons]
-16x16=/res/icons/16x16/app-minesweeper.png
-32x32=/res/icons/32x32/app-minesweeper.png

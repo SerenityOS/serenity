@@ -2,7 +2,3 @@
 Name=Display settings
 Executable=/bin/DisplaySettings
 Category=Settings
-
-[Icons]
-16x16=/res/icons/16x16/app-display-settings.png
-32x32=/res/icons/32x32/app-display-settings.png

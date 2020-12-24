@@ -2,7 +2,3 @@
 Name=Widget Gallery
 Executable=/bin/WidgetGallery
 Category=Demos
-
-[Icons]
-16x16=/res/icons/16x16/app-widget-gallery.png
-32x32=/res/icons/32x32/app-widget-gallery.png

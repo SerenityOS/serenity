@@ -2,7 +2,3 @@
 Name=Hello World
 Executable=/bin/HelloWorld
 Category=Demos
-
-[Icons]
-16x16=/res/icons/16x16/app-hello-world.png
-32x32=

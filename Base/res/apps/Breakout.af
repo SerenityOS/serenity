@@ -2,7 +2,3 @@
 Name=Breakout
 Executable=/bin/Breakout
 Category=Games
-
-[Icons]
-16x16=/res/icons/16x16/app-breakout.png
-32x32=/res/icons/32x32/app-breakout.png

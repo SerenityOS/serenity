@@ -2,7 +2,3 @@
 Name=PixelPaint
 Executable=/bin/PixelPaint
 Category=Graphics
-
-[Icons]
-16x16=/res/icons/16x16/app-pixel-paint.png
-32x32=/res/icons/32x32/app-pixel-paint.png

@@ -3,10 +3,6 @@ Name=Browser
 Executable=/bin/Browser
 Category=Internet
 
-[Icons]
-16x16=/res/icons/16x16/app-browser.png
-32x32=/res/icons/32x32/app-browser.png
-
 [Launcher]
 FileTypes=html,htm,md
 Protocols=gemini,http,https
