@@ -32,7 +32,9 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -114,14 +116,14 @@ void TaskbarWindow::create_quick_launch_bar()
         auto af = Core::ConfigFile::open(af_path);
         auto app_executable = af->read_entry("App", "Executable");
         auto app_name = af->read_entry("App", "Name");
-        auto app_icon_path = af->read_entry("Icons", "16x16");
+        auto app_icon = GUI::FileIconProvider::icon_for_path(app_executable).bitmap_for_size(16);
 
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button.set_preferred_size(24, 24);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
-        button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
+        button.set_icon(app_icon);
         button.set_tooltip(app_name);
         button.on_click = [app_executable](auto) {
             pid_t pid = fork();
