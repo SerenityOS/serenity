@@ -853,8 +853,8 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
         return false;
     auto& ihdr = *(const PNG_IHDR*)data.data();
 
-    if (ihdr.width > NumericLimits<i32>::max() || ihdr.height > NumericLimits<i32>::max()) {
-        dbgln("PNG has invalid geometry {}x{}", (u32)ihdr.width, (u32)ihdr.height);
+    if (ihdr.width > maximum_width_for_decoded_images || ihdr.height > maximum_height_for_decoded_images) {
+        dbgln("This PNG is too large for comfort: {}x{}", (u32)ihdr.width, (u32)ihdr.height);
         return false;
     }
 

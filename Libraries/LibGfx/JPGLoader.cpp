@@ -776,6 +776,12 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
 #endif
         return false;
     }
+
+    if (context.frame.width > maximum_width_for_decoded_images || context.frame.height > maximum_height_for_decoded_images) {
+        dbgln("This JPEG is too large for comfort: {}x{}", context.frame.width, context.frame.height);
+        return false;
+    }
+
     set_macroblock_metadata(context);
 
     stream >> context.component_count;

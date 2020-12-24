@@ -60,8 +60,8 @@ struct PBMLoadingContext {
     State state { State::NotDecoded };
     const u8* data { nullptr };
     size_t data_size { 0 };
-    int width { -1 };
-    int height { -1 };
+    size_t width { 0 };
+    size_t height { 0 };
     RefPtr<Gfx::Bitmap> bitmap;
 };
 
