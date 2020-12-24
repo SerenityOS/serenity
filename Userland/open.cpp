@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
         }
 
         if (!Desktop::Launcher::open(url)) {
-            warnln("Failed to open '{}'", url.path());
+            warnln("Failed to open '{}'", url);
             all_ok = false;
         }
     }
