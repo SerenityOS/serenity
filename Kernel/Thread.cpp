@@ -40,7 +40,6 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/signal_numbers.h>
-#include <LibELF/Loader.h>
 
 //#define SIGNAL_DEBUG
 //#define THREAD_DEBUG
@@ -1039,7 +1038,7 @@ struct RecognizedSymbol {
     const KernelSymbol* symbol { nullptr };
 };
 
-static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder, Process::ELFBundle* elf_bundle)
+static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder)
 {
     if (!symbol.address)
         return false;
@@ -1049,10 +1048,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
-            if (elf_bundle && elf_bundle->elf_loader->has_symbols())
-                builder.appendf("%p  %s\n", symbol.address, elf_bundle->elf_loader->symbolicate(symbol.address).characters());
-            else
-                builder.appendf("%p\n", symbol.address);
+            builder.appendff("{:p}\n", symbol.address);
         }
         return true;
     }
@@ -1070,11 +1066,6 @@ String Thread::backtrace_impl()
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
     auto& process = const_cast<Process&>(this->process());
-    OwnPtr<Process::ELFBundle> elf_bundle;
-    if (!Processor::current().in_irq()) {
-        // If we're handling IRQs we can't really safely symbolicate
-        elf_bundle = process.elf_bundle();
-    }
     auto stack_trace = Processor::capture_stack_trace(*this);
     ASSERT(!g_scheduler_lock.own_lock());
     ProcessPagingScope paging_scope(process);
@@ -1088,7 +1079,7 @@ String Thread::backtrace_impl()
 
     StringBuilder builder;
     for (auto& symbol : recognized_symbols) {
-        if (!symbolicate(symbol, process, builder, elf_bundle.ptr()))
+        if (!symbolicate(symbol, process, builder))
             break;
     }
     return builder.to_string();

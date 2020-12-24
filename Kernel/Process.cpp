@@ -52,7 +52,6 @@
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
-#include <LibELF/Loader.h>
 
 //#define DEBUG_IO
 //#define DEBUG_POLL_SELECT
@@ -462,8 +461,6 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
         if (eip >= 0xc0000000 && g_kernel_symbols_available) {
             auto* symbol = symbolicate_kernel_address(eip);
             dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (symbol ? demangle(symbol->name) : "(k?)") << " +" << (symbol ? eip - symbol->address : 0) << "\033[0m\n";
-        } else if (auto elf_bundle = this->elf_bundle()) {
-            dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << elf_bundle->elf_loader->symbolicate(eip) << "\033[0m\n";
         } else {
             dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
         }
@@ -889,23 +886,6 @@ Region& Process::add_region(NonnullOwnPtr<Region> region)
 void Process::set_tty(TTY* tty)
 {
     m_tty = tty;
-}
-
-OwnPtr<Process::ELFBundle> Process::elf_bundle() const
-{
-    if (!m_executable)
-        return nullptr;
-    auto bundle = make<ELFBundle>();
-    if (!m_executable->inode().shared_vmobject()) {
-        return nullptr;
-    }
-    ASSERT(m_executable->inode().shared_vmobject());
-    auto& vmobject = *m_executable->inode().shared_vmobject();
-    bundle->region = MM.allocate_kernel_region_with_vmobject(const_cast<SharedInodeVMObject&>(vmobject), vmobject.size(), "ELF bundle", Region::Access::Read);
-    if (!bundle->region)
-        return nullptr;
-    bundle->elf_loader = ELF::Loader::create(bundle->region->vaddr().as_ptr(), bundle->region->size());
-    return bundle;
 }
 
 void Process::start_tracing_from(ProcessID tracer)
