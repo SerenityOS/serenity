@@ -30,6 +30,7 @@
 #include <Kernel/API/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,18 +55,31 @@ int main(int argc, char** argv)
 {
     Vector<const char*> child_argv;
 
+    const char* output_filename = nullptr;
+    auto trace_file = Core::File::standard_output();
+
     Core::ArgsParser parser;
     parser.set_general_help(
         "Trace all syscalls and their result.");
     parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
+    parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output");
     parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
 
+    if (output_filename != nullptr) {
+        auto open_result = Core::File::open(output_filename, Core::IODevice::OpenMode::WriteOnly);
+        if (open_result.is_error()) {
+            outln(stderr, "Failed to open output file: {}", open_result.error());
+            return 1;
+        }
+        trace_file = open_result.value();
+    }
+
     int status;
     if (g_pid == -1) {
         if (child_argv.is_empty()) {
-            fprintf(stderr, "strace: Expected either a pid or some arguments\n");
+            outln(stderr, "strace: Expected either a pid or some arguments\n");
             return 1;
         }
 
@@ -145,7 +159,7 @@ int main(int argc, char** argv)
 
         u32 res = regs.eax;
 
-        fprintf(stderr, "%s(0x%x, 0x%x, 0x%x)\t=%d\n",
+        trace_file->printf("%s(0x%x, 0x%x, 0x%x)\t=%d\n",
             Syscall::to_string(
                 (Syscall::Function)syscall_index),
             arg1,
