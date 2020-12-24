@@ -39,6 +39,8 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
+#include <LibGUI/FileIconProvider.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -858,10 +860,9 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto af_path = String::format("/res/apps/%s.af", LexicalPath(handler).basename().characters());
             auto af = Core::ConfigFile::open(af_path);
             auto handler_name = af->read_entry("App", "Name", handler);
-            auto handler_icon = af->read_entry("Icons", "16x16", {});
-
-            auto icon = Gfx::Bitmap::load_from_file(handler_icon);
-            auto action = GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this, handler](auto&) {
+            auto handler_executable = af->read_entry("App", "Executable");
+            auto handler_icon = GUI::FileIconProvider::icon_for_path(handler_executable).bitmap_for_size(16);
+            auto action = GUI::Action::create(String::format("Open in %s", handler_name.characters()), handler_icon, [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
             });
 
