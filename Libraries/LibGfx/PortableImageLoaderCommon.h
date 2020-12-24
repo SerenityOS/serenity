@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers, Hüseyin ASLITÜRK <asliturk@hotmail.com>
+ * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2020, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +27,6 @@
 
 #pragma once
 
-#include "Streamer.h"
 #include <AK/Array.h>
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
@@ -36,6 +36,10 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Color.h>
+#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/Streamer.h>
 
 //#define PORTABLE_IMAGE_LOADER_DEBUG
 
@@ -216,8 +220,8 @@ template<typename TContext>
 static void set_adjusted_pixels(TContext& context, const AK::Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
-    for (int y = 0; y < context.height; ++y) {
-        for (int x = 0; x < context.width; ++x) {
+    for (size_t y = 0; y < context.height; ++y) {
+        for (size_t x = 0; x < context.width; ++x) {
             Color color = color_data.at(index);
             if (context.max_val < 255) {
                 color = adjust_color(context.max_val, color);
@@ -232,8 +236,8 @@ template<typename TContext>
 static void set_pixels(TContext& context, const AK::Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
-    for (int y = 0; y < context.height; ++y) {
-        for (int x = 0; x < context.width; ++x) {
+    for (size_t y = 0; y < context.height; ++y) {
+        for (size_t x = 0; x < context.width; ++x) {
             context.bitmap->set_pixel(x, y, color_data.at(index));
             index++;
         }
@@ -266,6 +270,11 @@ static bool decode(TContext& context)
 
     if (!read_height(context, streamer))
         return false;
+
+    if (context.width > maximum_width_for_decoded_images || context.height > maximum_height_for_decoded_images) {
+        dbgln("This portable network image is too large for comfort: {}x{}", context.width, context.height);
+        return false;
+    }
 
     if (!read_white_space(context, streamer))
         return false;

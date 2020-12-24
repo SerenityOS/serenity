@@ -424,6 +424,11 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (stream.handle_any_error())
         return false;
 
+    if (context.logical_screen.width > maximum_width_for_decoded_images || context.logical_screen.height > maximum_height_for_decoded_images) {
+        dbgln("This GIF is too large for comfort: {}x{}", context.logical_screen.width, context.logical_screen.height);
+        return false;
+    }
+
     u8 gcm_info = 0;
     stream >> gcm_info;
 
