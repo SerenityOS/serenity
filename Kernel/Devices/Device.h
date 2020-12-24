@@ -75,7 +75,7 @@ public:
         {
             ScopedSpinLock lock(m_requests_lock);
             was_empty = m_requests.is_empty();
-            m_requests.append(request);
+            m_requests.append(RefPtr<AsyncDeviceRequest>(request));
         }
         if (was_empty)
             request->do_start({});

@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Find.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 
@@ -60,13 +61,11 @@ template<typename T>
 class DoublyLinkedList {
 private:
     struct Node {
-        explicit Node(const T& v)
-            : value(v)
+        template<typename U>
+        explicit Node(U&& v)
+            : value(forward<U>(v))
         {
-        }
-        explicit Node(T&& v)
-            : value(move(v))
-        {
+            static_assert(IsSame<T, U>::value);
         }
         T value;
         Node* next { nullptr };
@@ -77,7 +76,7 @@ public:
     DoublyLinkedList() { }
     ~DoublyLinkedList() { clear(); }
 
-    bool is_empty() const { return !head(); }
+    bool is_empty() const { return !m_head; }
 
     void clear()
     {
@@ -92,48 +91,64 @@ public:
 
     T& first()
     {
-        ASSERT(head());
-        return head()->value;
+        ASSERT(m_head);
+        return m_head->value;
     }
     const T& first() const
     {
-        ASSERT(head());
-        return head()->value;
+        ASSERT(m_head);
+        return m_head->value;
     }
     T& last()
     {
-        ASSERT(head());
-        return tail()->value;
+        ASSERT(m_head);
+        return m_tail->value;
     }
     const T& last() const
     {
-        ASSERT(head());
-        return tail()->value;
+        ASSERT(m_head);
+        return m_tail->value;
     }
 
-    void append(T&& value)
+    template<typename U>
+    void append(U&& value)
     {
-        append_node(new Node(move(value)));
+        static_assert(IsSame<T, U>::value);
+        auto* node = new Node(forward<U>(value));
+        if (!m_head) {
+            ASSERT(!m_tail);
+            m_head = node;
+            m_tail = node;
+            return;
+        }
+        ASSERT(m_tail);
+        ASSERT(!node->next);
+        m_tail->next = node;
+        node->prev = m_tail;
+        m_tail = node;
     }
 
-    void append(const T& value)
+    template<typename U>
+    void prepend(U&& value)
     {
-        append_node(new Node(value));
-    }
-
-    void prepend(T&& value)
-    {
-        prepend_node(new Node(move(value)));
-    }
-
-    void prepend(const T& value)
-    {
-        prepend_node(new Node(value));
+        static_assert(IsSame<T, U>::value);
+        auto* node = new Node(forward<U>(value));
+        if (!m_head) {
+            ASSERT(!m_tail);
+            m_head = node;
+            m_tail = node;
+            return;
+        }
+        ASSERT(m_tail);
+        ASSERT(!node->prev);
+        m_head->prev = node;
+        node->next = m_head;
+        m_head = node;
     }
 
     bool contains_slow(const T& value) const
     {
-        return find_node(value) != nullptr;
+        return find(value) != end();
     }
 
     using Iterator = DoublyLinkedListIterator<DoublyLinkedList, T>;
@@ -148,18 +163,12 @@ public:
 
     ConstIterator find(const T& value) const
     {
-        Node* node = find_node(value);
-        if (node)
-            return ConstIterator(node);
-        return end();
+        return AK::find(begin(), end(), value);
     }
 
     Iterator find(const T& value)
     {
-        Node* node = find_node(value);
-        if (node)
-            return Iterator(node);
-        return end();
+        return AK::find(begin(), end(), value);
     }
 
     void remove(Iterator it)
@@ -184,51 +193,6 @@ public:
     }
 
 private:
-    void append_node(Node* node)
-    {
-        if (!m_head) {
-            ASSERT(!m_tail);
-            m_head = node;
-            m_tail = node;
-            return;
-        }
-        ASSERT(m_tail);
-        ASSERT(!node->next);
-        m_tail->next = node;
-        node->prev = m_tail;
-        m_tail = node;
-    }
-
-    void prepend_node(Node* node)
-    {
-        if (!m_head) {
-            ASSERT(!m_tail);
-            m_head = node;
-            m_tail = node;
-            return;
-        }
-        ASSERT(m_tail);
-        ASSERT(!node->prev);
-        m_head->prev = node;
-        node->next = m_head;
-        m_head = node;
-    }
-
-    Node* find_node(const T& value) const
-    {
-        for (auto* node = m_head; node; node = node->next) {
-            if (Traits<T>::equals(node->value, value))
-                return node;
-        }
-        return nullptr;
-    }
-
-    Node* head() { return m_head; }
-    const Node* head() const { return m_head; }
-
-    Node* tail() { return m_tail; }
-    const Node* tail() const { return m_tail; }
-
     Node* m_head { nullptr };
     Node* m_tail { nullptr };
 };
