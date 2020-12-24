@@ -7,8 +7,8 @@ getuid, getgid - get real user / group id
 ```**c++
 #include <unistd.h>
 
-uid_t getuid();
-gid_t getgid();
+uid_t getuid(void);
+gid_t getgid(void);
 ```
 
 ## Description

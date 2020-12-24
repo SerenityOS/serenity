@@ -1021,7 +1021,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
 // Serenity's PRNG is not cryptographically secure. Do not rely on this for
 // any real crypto! These functions (for now) are for compatibility.
 // TODO: In the future, rand can be made deterministic and this not.
-uint32_t arc4random()
+uint32_t arc4random(void)
 {
     char buf[4];
     syscall(SC_getrandom, buf, 4, 0);
