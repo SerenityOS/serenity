@@ -61,9 +61,13 @@ char* __static_environ[] = { nullptr }; // We don't get the environment without 
 static HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> g_loaders;
 static HashMap<String, NonnullRefPtr<ELF::DynamicObject>> g_loaded_objects;
 
+using MainFunction = int (*)(int, char**, char**);
+using LibCExitFunction = void (*)(int);
+
 static size_t g_current_tls_offset = 0;
 static size_t g_total_tls_size = 0;
 static char** g_envp = nullptr;
+static LibCExitFunction g_libc_exit = nullptr;
 
 static void init_libc()
 {
@@ -208,6 +212,10 @@ static void initialize_libc()
     ASSERT(res.found);
     *((bool*)res.address) = false;
 
+    res = global_symbol_lookup("exit");
+    ASSERT(res.found);
+    g_libc_exit = (LibCExitFunction)res.address;
+
     res = global_symbol_lookup("__libc_init");
     ASSERT(res.found);
     typedef void libc_init_func();
@@ -262,7 +270,7 @@ static FlatPtr loader_main(auxv_t* auxvp)
 
     VERBOSE("loaded all dependencies");
     for ([[maybe_unused]] auto& lib : g_loaders) {
-        VERBOSE("%s - tls size: $u, tls offset: %u", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
+        VERBOSE("%s - tls size: %u, tls offset: %u", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
     }
 
     allocate_tls();
@@ -283,8 +291,6 @@ extern "C" {
 
 // The compiler expects a previous declaration
 void _start(int, char**, char**);
-
-using MainFunction = int (*)(int, char**, char**);
 
 void _start(int argc, char** argv, char** envp)
 {
@@ -307,6 +313,10 @@ void _start(int argc, char** argv, char** envp)
     VERBOSE("jumping to main program entry point: %p", main_function);
     int rc = main_function(argc, argv, envp);
     VERBOSE("rc: %d", rc);
-    _exit(rc);
+    if (g_libc_exit != nullptr) {
+        g_libc_exit(rc);
+    } else {
+        _exit(rc);
+    }
 }
 }
