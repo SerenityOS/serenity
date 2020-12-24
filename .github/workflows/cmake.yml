@@ -79,6 +79,7 @@ jobs:
     - name: Run CMake tests
       working-directory: ${{ github.workspace }}/Build
       run: CTEST_OUTPUT_ON_FAILURE=1 ninja test
+      timeout-minutes: 2
     - name: Run JS tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
       run: DISABLE_DBG_OUTPUT=1 ./test-js
