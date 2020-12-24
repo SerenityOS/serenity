@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,18 +45,17 @@ int main(int argc, char* argv[])
     bool all_ok = true;
 
     for (auto& url_or_path : urls_or_paths) {
-        String path;
-        auto realpath_errno = 0;
-        if (path = Core::File::real_path_for(url_or_path); path.is_null()) {
-            realpath_errno = errno; // This *should* be preserved from Core::File::real_path_for().
-            path = url_or_path;
-        }
+        auto url = URL::create_with_url_or_path(url_or_path);
 
-        URL url = URL::create_with_url_or_path(path);
-        if (url.protocol() == "file" && realpath_errno) {
-            warnln("Failed to open '{}': {}", url.path(), strerror(realpath_errno));
-            all_ok = false;
-            continue;
+        if (url.protocol() == "file") {
+            auto real_path = Core::File::real_path_for(url.path());
+            if (real_path.is_null()) {
+                // errno *should* be preserved from Core::File::real_path_for().
+                warnln("Failed to open '{}': {}", url.path(), strerror(errno));
+                all_ok = false;
+                continue;
+            }
+            url = URL::create_with_url_or_path(real_path);
         }
 
         if (!Desktop::Launcher::open(url)) {
