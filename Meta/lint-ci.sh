@@ -6,6 +6,7 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "${script_path}/.." || exit 1
 
 for cmd in \
+        Meta/check-ak-test-files.sh \
         Meta/check-debug-flags.sh \
         Meta/check-style.sh \
         Meta/lint-executable-resources.sh \
