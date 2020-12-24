@@ -48,10 +48,6 @@
 #include <LibC/signal_numbers.h>
 #include <LibELF/AuxiliaryVector.h>
 
-namespace ELF {
-class Loader;
-}
-
 namespace Kernel {
 
 timeval kgettimeofday();
@@ -470,12 +466,6 @@ public:
     {
         return m_big_lock;
     }
-
-    struct ELFBundle {
-        OwnPtr<Region> region;
-        RefPtr<ELF::Loader> elf_loader;
-    };
-    OwnPtr<ELFBundle> elf_bundle() const;
 
     int icon_id() const
     {

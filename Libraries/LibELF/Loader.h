@@ -87,9 +87,8 @@ private:
         Optional<Image::Symbol> symbol;
 #endif
     };
-#ifdef KERNEL
-    mutable OwnPtr<Kernel::Region> m_sorted_symbols_region;
-#else
+
+#ifndef KERNEL
     mutable Vector<SortedSymbol> m_sorted_symbols;
 #endif
 };

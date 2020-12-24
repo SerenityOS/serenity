@@ -30,7 +30,6 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <LibELF/Loader.h>
 
 namespace Kernel {
 
@@ -129,11 +128,6 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         return;
     }
 
-    OwnPtr<Process::ELFBundle> elf_bundle;
-    auto current_process = Process::current();
-    if (current_process)
-        elf_bundle = current_process->elf_bundle();
-
     struct RecognizedSymbol {
         FlatPtr address;
         const KernelSymbol* symbol { nullptr };
@@ -170,18 +164,14 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         if (!symbol.address)
             break;
         if (!symbol.symbol) {
-            if (elf_bundle && elf_bundle->elf_loader->has_symbols()) {
-                dbg() << String::format("%p", symbol.address) << "  " << elf_bundle->elf_loader->symbolicate(symbol.address);
-            } else {
-                dbg() << String::format("%p", symbol.address) << " (no ELF symbols for process)";
-            }
+            dbgln("{:p}", symbol.address);
             continue;
         }
         size_t offset = symbol.address - symbol.symbol->address;
         if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
-            dbg() << String::format("%p", symbol.address);
+            dbgln("{:p}", symbol.address);
         else
-            dbg() << String::format("%p", symbol.address) << "  " << demangle(symbol.symbol->name) << " +" << offset;
+            dbgln("{:p}  {} +{}", symbol.address, demangle(symbol.symbol->name), offset);
     }
 }
 
