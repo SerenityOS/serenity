@@ -33,6 +33,8 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FileIconProvider.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
@@ -44,7 +46,6 @@
 struct AppMetadata {
     String executable;
     String name;
-    String icon_path;
     String category;
 };
 Vector<AppMetadata> g_apps;
@@ -111,8 +112,7 @@ Vector<String> discover_apps_and_categories()
         auto app_name = af->read_entry("App", "Name");
         auto app_executable = af->read_entry("App", "Executable");
         auto app_category = af->read_entry("App", "Category");
-        auto app_icon_path = af->read_entry("Icons", "16x16");
-        g_apps.append({ app_executable, app_name, app_icon_path, app_category });
+        g_apps.append({ app_executable, app_name, app_category });
         seen_app_categories.set(app_category);
     }
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
@@ -149,9 +149,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (const auto& app : g_apps) {
-        RefPtr<Gfx::Bitmap> icon;
-        if (!app.icon_path.is_empty())
-            icon = Gfx::Bitmap::load_from_file(app.icon_path);
+        auto icon = GUI::FileIconProvider::icon_for_path(app.executable).bitmap_for_size(16);
 
 #ifdef SYSTEM_MENU_DEBUG
         if (icon)
@@ -159,7 +157,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
 #endif
 
         auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
-        parent_menu->add_action(GUI::Action::create(app.name, icon.ptr(), [app_identifier](auto&) {
+        parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
             dbg() << "Activated app with ID " << app_identifier;
             const auto& bin = g_apps[app_identifier].executable;
             pid_t child_pid;
