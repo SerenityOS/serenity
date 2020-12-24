@@ -2,7 +2,3 @@
 Name=Eyes
 Executable=/bin/Eyes
 Category=Demos
-
-[Icons]
-16x16=/res/icons/16x16/app-eyes.png
-32x32=/res/icons/32x32/app-eyes.png

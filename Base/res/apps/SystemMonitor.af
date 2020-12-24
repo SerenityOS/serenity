@@ -2,7 +2,3 @@
 Name=System Monitor
 Executable=/bin/SystemMonitor
 Category=Utilities
-
-[Icons]
-16x16=/res/icons/16x16/app-system-monitor.png
-32x32=/res/icons/32x32/app-system-monitor.png
