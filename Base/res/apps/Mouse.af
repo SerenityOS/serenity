@@ -2,7 +2,3 @@
 Name=Mouse
 Executable=/bin/Mouse
 Category=Demos
-
-[Icons]
-16x16=/res/icons/16x16/app-mouse.png
-32x32=/res/icons/32x32/app-mouse.png
