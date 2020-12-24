@@ -107,8 +107,12 @@ void Launcher::load_handlers(const String& af_dir)
         HashTable<String> table;
 
         auto config_value = af->read_entry("Launcher", key, {});
-        for (auto& key : config_value.split(','))
-            table.set(key.to_lowercase());
+        for (auto& entry : config_value.split(',')) {
+            auto key = entry.trim_whitespace().to_lowercase();
+            if (key.is_empty())
+                continue;
+            table.set(key);
+        }
 
         return table;
     };
@@ -140,11 +144,17 @@ void Launcher::load_handlers(const String& af_dir)
 void Launcher::load_config(const Core::ConfigFile& cfg)
 {
     for (auto key : cfg.keys("FileType")) {
-        m_file_handlers.set(key.to_lowercase(), cfg.read_entry("FileType", key));
+        auto handler = cfg.read_entry("FileType", key).trim_whitespace();
+        if (handler.is_empty())
+            continue;
+        m_file_handlers.set(key.to_lowercase(), handler);
     }
 
     for (auto key : cfg.keys("Protocol")) {
-        m_protocol_handlers.set(key.to_lowercase(), cfg.read_entry("Protocol", key));
+        auto handler = cfg.read_entry("Protocol", key).trim_whitespace();
+        if (handler.is_empty())
+            continue;
+        m_protocol_handlers.set(key.to_lowercase(), handler);
     }
 }
 
