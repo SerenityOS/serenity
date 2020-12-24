@@ -196,7 +196,7 @@ bool Launcher::open_url(const URL& url, const String& handler_name)
     if (url.protocol() == "file")
         return open_file_url(url);
 
-    return open_with_user_preferences(m_protocol_handlers, url.protocol(), url.to_string(), "/bin/Browser");
+    return open_with_user_preferences(m_protocol_handlers, url.protocol(), url.to_string());
 }
 
 bool Launcher::open_with_handler_name(const URL& url, const String& handler_name)
@@ -252,9 +252,11 @@ bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_pr
     if (program_path.has_value())
         return spawn(program_path.value(), argument);
 
-    // Absolute worst case, try the provided default
+    // Absolute worst case, try the provided default program, if any
+    if (!default_program.is_empty())
+        return spawn(default_program, argument);
 
-    return spawn(default_program, argument);
+    return false;
 }
 
 void Launcher::for_each_handler(const String& key, HashMap<String, String>& user_preference, Function<bool(const Handler&)> f)
