@@ -187,7 +187,7 @@ int main(int argc, char** argv)
 
     if (!files.size() && !recursive) {
         auto stdin_file = Core::File::standard_input();
-        for (;;) {
+        while (!stdin_file->eof()) {
             auto line = stdin_file->read_line();
             bool is_binary = line.bytes().contains_slow(0);
 
