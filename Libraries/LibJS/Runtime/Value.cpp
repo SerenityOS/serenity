@@ -102,6 +102,22 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
+bool Value::is_regexp(GlobalObject& global_object) const
+{
+    // 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
+
+    if (!is_object())
+        return false;
+
+    auto matcher = as_object().get(global_object.vm().well_known_symbol_match());
+    if (global_object.vm().exception())
+        return false;
+    if (!matcher.is_empty() && !matcher.is_undefined())
+        return matcher.to_boolean();
+
+    return as_object().is_regexp_object();
+}
+
 String Value::to_string_without_side_effects() const
 {
     switch (m_type) {
