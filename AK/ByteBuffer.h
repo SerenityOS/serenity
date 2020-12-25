@@ -123,6 +123,7 @@ public:
     static ByteBuffer create_uninitialized(size_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
     static ByteBuffer create_zeroed(size_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
     static ByteBuffer copy(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    static ByteBuffer copy(ReadonlyBytes bytes) { return ByteBuffer(ByteBufferImpl::copy(bytes.data(), bytes.size())); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }
