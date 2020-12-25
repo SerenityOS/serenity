@@ -25,7 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <Kernel/Devices/MBRPartitionTable.h>
+#include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 #ifndef MBR_DEBUG
 #    define MBR_DEBUG

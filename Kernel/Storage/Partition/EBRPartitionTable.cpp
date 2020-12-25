@@ -25,7 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <Kernel/Devices/EBRPartitionTable.h>
+#include <Kernel/Storage/Partition/EBRPartitionTable.h>
 
 #ifndef EBR_DEBUG
 #    define EBR_DEBUG

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,44 +28,55 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/DiskPartition.h>
-#include <Kernel/Devices/MBRPartitionTable.h>
+#include <Kernel/Storage/Partition/DiskPartition.h>
 
 namespace Kernel {
 
-struct [[gnu::packed]] EBRPartitionExtension
+#define MBR_SIGNATURE 0xaa55
+#define MBR_PROTECTIVE 0xEE
+#define EBR_CHS_CONTAINER 0x05
+#define EBR_LBA_CONTAINER 0x0F
+
+struct [[gnu::packed]] MBRPartitionEntry
 {
-    u8 unused_area[446];
-    MBRPartitionEntry entry;
-    MBRPartitionEntry next_chained_ebr_extension;
-    MBRPartitionEntry unused[2];
+    u8 status;
+    u8 chs1[3];
+    u8 type;
+    u8 chs2[3];
+    u32 offset;
+    u32 length;
+};
+
+struct [[gnu::packed]] MBRPartitionHeader
+{
+    u8 code1[218];
+    u16 ts_zero;
+    u8 ts_drive, ts_seconds, ts_minutes, ts_hours;
+    u8 code2[216];
+    u32 disk_signature;
+    u16 disk_signature_zero;
+    MBRPartitionEntry entry[4];
     u16 mbr_signature;
 };
 
-class EBRPartitionTable {
+class MBRPartitionTable {
+    AK_MAKE_ETERNAL
 
 public:
-    explicit EBRPartitionTable(NonnullRefPtr<BlockDevice>);
-    ~EBRPartitionTable();
+    explicit MBRPartitionTable(NonnullRefPtr<BlockDevice>);
+    ~MBRPartitionTable();
 
     bool initialize();
+    bool is_protective_mbr() const;
+    bool contains_ebr() const;
     RefPtr<DiskPartition> partition(unsigned index);
 
 private:
-    int index_of_ebr_container() const;
     NonnullRefPtr<BlockDevice> m_device;
 
     const MBRPartitionHeader& header() const;
-    const EBRPartitionExtension& ebr_extension() const;
 
-    bool index_is_extended_partition(unsigned index) const;
-
-    RefPtr<DiskPartition> get_extended_partition(unsigned index);
-    RefPtr<DiskPartition> get_non_extended_partition(unsigned index);
-    u8 m_ebr_container_id { 0 };
-    size_t m_ebr_chained_extensions_count { 0 };
-    u8 m_cached_mbr_header[512];
-    u8 m_cached_ebr_header[512];
+    u8 m_cached_header[512];
 };
 
 }

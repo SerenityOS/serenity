@@ -29,7 +29,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/Storage/Partition/DiskPartition.h>
 
 namespace Kernel {
 

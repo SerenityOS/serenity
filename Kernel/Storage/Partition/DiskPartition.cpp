@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Storage/Partition/DiskPartition.h>
 
 // #define OFFD_DEBUG
 
