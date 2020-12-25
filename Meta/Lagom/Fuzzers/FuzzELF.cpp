@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <stddef.h>
 #include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    ELF::Loader::create(data, size, /*name=*/ {}, /*verbose_logging=*/false);
+    ELF::Image elf(data, size, /*verbose_logging=*/false);
     return 0;
 }

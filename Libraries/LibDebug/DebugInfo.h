@@ -33,14 +33,16 @@
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/LineProgram.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <sys/arch/i386/regs.h>
 
 namespace Debug {
 
 class DebugInfo {
 public:
-    explicit DebugInfo(NonnullRefPtr<const ELF::Loader> elf);
+    explicit DebugInfo(NonnullOwnPtr<const ELF::Image>);
+
+    const ELF::Image& elf() const { return *m_elf; }
 
     struct SourcePosition {
         FlyString file_path;
@@ -117,8 +119,8 @@ private:
     void parse_scopes_impl(const Dwarf::DIE& die);
     OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&) const;
 
-    NonnullRefPtr<const ELF::Loader> m_elf;
-    NonnullRefPtr<Dwarf::DwarfInfo> m_dwarf_info;
+    NonnullOwnPtr<const ELF::Image> m_elf;
+    Dwarf::DwarfInfo m_dwarf_info;
 
     Vector<VariablesScope> m_scopes;
     Vector<Dwarf::LineProgram::LineInfo> m_sorted_lines;

@@ -27,7 +27,7 @@
 #include "DisassemblyModel.h"
 #include "Profile.h"
 #include <AK/MappedFile.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <LibGUI/Painter.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
@@ -65,16 +65,16 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     if (!m_file->is_valid())
         return;
 
-    auto elf_loader = ELF::Loader::create((const u8*)m_file->data(), m_file->size());
+    auto elf = ELF::Image((const u8*)m_file->data(), m_file->size());
 
-    auto symbol = elf_loader->find_symbol(node.address());
+    auto symbol = elf.find_symbol(node.address());
     if (!symbol.has_value())
         return;
     ASSERT(symbol.has_value());
 
     auto view = symbol.value().raw_data();
 
-    X86::ELFSymbolProvider symbol_provider(*elf_loader);
+    X86::ELFSymbolProvider symbol_provider(elf);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 

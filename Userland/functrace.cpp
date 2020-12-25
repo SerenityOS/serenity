@@ -86,7 +86,7 @@ static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
 {
     [[maybe_unused]] auto r = demangle("foo"); // Required for linked with __cxa_demangle
     auto instrumented = make<HashMap<void*, X86::Instruction>>();
-    g_debug_session->elf().image().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
+    g_debug_session->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (section.name() != ".text")
             return IterationDecision::Continue;
 

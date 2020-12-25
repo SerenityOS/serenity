@@ -32,7 +32,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <getopt.h>
 #include <pthread.h>
 #include <string.h>

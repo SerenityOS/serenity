@@ -32,13 +32,13 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 
 namespace Debug::Dwarf {
 
-class DwarfInfo : public RefCounted<DwarfInfo> {
+class DwarfInfo {
 public:
-    static NonnullRefPtr<DwarfInfo> create(NonnullRefPtr<const ELF::Loader> elf) { return adopt(*new DwarfInfo(move(elf))); }
+    explicit DwarfInfo(const ELF::Image&);
 
     ReadonlyBytes debug_info_data() const { return m_debug_info_data; }
     ReadonlyBytes abbreviation_data() const { return m_abbreviation_data; }
@@ -48,12 +48,11 @@ public:
     void for_each_compilation_unit(Callback) const;
 
 private:
-    explicit DwarfInfo(NonnullRefPtr<const ELF::Loader> elf);
     void populate_compilation_units();
 
     ReadonlyBytes section_data(const String& section_name) const;
 
-    NonnullRefPtr<const ELF::Loader> m_elf;
+    const ELF::Image& m_elf;
     ReadonlyBytes m_debug_info_data;
     ReadonlyBytes m_abbreviation_data;
     ReadonlyBytes m_debug_strings_data;

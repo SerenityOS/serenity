@@ -224,7 +224,6 @@ set(AK_SOURCES
 
 set(ELF_SOURCES
     ../Libraries/LibELF/Image.cpp
-    ../Libraries/LibELF/Loader.cpp
     ../Libraries/LibELF/Validation.cpp
 )
 

@@ -309,14 +309,13 @@ String Emulator::create_backtrace_line(FlatPtr address)
         if (!mapped_file.is_valid())
             return minimal;
 
-        auto loader = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
-        auto debug_info = make<Debug::DebugInfo>(loader);
-        m_dynamic_library_cache.set(lib_path, CachedELF { move(mapped_file), move(loader), move(debug_info) });
+        auto debug_info = make<Debug::DebugInfo>(make<ELF::Image>((const u8*)mapped_file.data(), mapped_file.size()));
+        m_dynamic_library_cache.set(lib_path, CachedELF { move(mapped_file), move(debug_info) });
     }
 
     auto it = m_dynamic_library_cache.find(lib_path);
-    auto& loader = *it->value.elf_loader;
-    String symbol = loader.symbolicate(address - region->base());
+    auto& elf = it->value.debug_info->elf();
+    String symbol = elf.symbolicate(address - region->base());
 
     auto line_without_source_info = String::format("=={%d}==    %p  [%s]: %s", getpid(), address, lib_name.characters(), symbol.characters());
 

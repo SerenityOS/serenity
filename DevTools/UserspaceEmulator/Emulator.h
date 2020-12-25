@@ -34,7 +34,7 @@
 #include <AK/Types.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -208,8 +208,7 @@ private:
 
     struct CachedELF {
         MappedFile mapped_file;
-        NonnullRefPtr<ELF::Loader> elf_loader;
-        OwnPtr<Debug::DebugInfo> debug_info;
+        NonnullOwnPtr<Debug::DebugInfo> debug_info;
     };
 
     HashMap<String, CachedELF> m_dynamic_library_cache;
