@@ -31,6 +31,7 @@ set(LIBC_SOURCES
     string.cpp
     strings.cpp
     syslog.cpp
+    sys/prctl.cpp
     sys/ptrace.cpp
     sys/select.cpp
     sys/socket.cpp

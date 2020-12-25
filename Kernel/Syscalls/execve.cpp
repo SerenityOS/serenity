@@ -363,19 +363,25 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     auto old_suid = m_suid;
     auto old_egid = m_egid;
     auto old_sgid = m_sgid;
+    auto was_dumpable = is_dumpable();
 
     ArmedScopeGuard cred_restore_guard = [&] {
         m_euid = old_euid;
         m_suid = old_suid;
         m_egid = old_egid;
         m_sgid = old_sgid;
+        set_dumpable(was_dumpable);
     };
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
-        if (main_program_metadata.is_setuid())
+        if (main_program_metadata.is_setuid()) {
+            set_dumpable(false);
             m_euid = m_suid = main_program_metadata.uid;
-        if (main_program_metadata.is_setgid())
+        }
+        if (main_program_metadata.is_setgid()) {
+            set_dumpable(false);
             m_egid = m_sgid = main_program_metadata.gid;
+        }
     }
 
     auto load_result_or_error = load(main_program_description, interpreter_description);

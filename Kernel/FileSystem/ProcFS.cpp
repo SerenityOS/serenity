@@ -879,6 +879,7 @@ static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_purgeable_volatile", process.amount_purgeable_volatile());
         process_object.add("amount_purgeable_nonvolatile", process.amount_purgeable_nonvolatile());
         process_object.add("icon_id", process.icon_id());
+        process_object.add("dumpable", process.is_dumpable());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
             auto thread_object = thread_array.add_object();
@@ -1137,22 +1138,20 @@ InodeMetadata ProcFSInode::metadata() const
     if (is_process_related_file(identifier())) {
         ProcessID pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
-        if (process) {
+        if (process && process->is_dumpable()) {
             metadata.uid = process->euid();
             metadata.gid = process->egid();
         } else {
-            // TODO: How to handle this?
             metadata.uid = 0;
             metadata.gid = 0;
         }
     } else if (is_thread_related_file(identifier())) {
         ThreadID tid = to_tid(identifier());
         auto thread = Thread::from_tid(tid);
-        if (thread) {
+        if (thread && thread->process().is_dumpable()) {
             metadata.uid = thread->process().euid();
             metadata.gid = thread->process().egid();
         } else {
-            // TODO: How to handle this?
             metadata.uid = 0;
             metadata.gid = 0;
         }

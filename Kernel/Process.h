@@ -192,6 +192,9 @@ public:
     gid_t sgid() const { return m_sgid; }
     ProcessID ppid() const { return m_ppid; }
 
+    bool is_dumpable() const { return m_dumpable; }
+    void set_dumpable(bool dumpable) { m_dumpable = dumpable; }
+
     ThreadID exec_tid() const { return m_exec_tid; }
 
     mode_t umask() const { return m_umask; }
@@ -371,6 +374,7 @@ public:
     long sys$sysconf(int name);
     int sys$disown(ProcessID);
     void* sys$allocate_tls(size_t);
+    int sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -626,6 +630,8 @@ private:
 
     ProcessID m_ppid { 0 };
     mode_t m_umask { 022 };
+
+    bool m_dumpable { true };
 
     Vector<gid_t> m_extra_gids;
 
