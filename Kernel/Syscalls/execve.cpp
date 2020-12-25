@@ -63,7 +63,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 {
     auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
-    if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
+    if (vmobject->writable_mappings()) {
         dbgln("Refusing to execute a write-mapped program");
         return KResult(-ETXTBSY);
     }
