@@ -63,7 +63,7 @@ if [ "$1" = "mbr" ]; then
     partition_number="p1"
     partition_scheme="mbr"
 elif [ "$1" = "gpt" ]; then
-    parted -s "${dev}" mklabel gpt mkpart BIOSBOOT ext3 1MiB 8MiB mkpart OS ext2 8MiB 700MiB set 1 bios_grub || die "couldn't partition disk"
+    parted -s "${dev}" mklabel gpt mkpart BIOSBOOT ext3 1MiB 8MiB mkpart OS ext2 8MiB 290MiB set 1 bios_grub || die "couldn't partition disk"
     partition_number="p2"
     partition_scheme="gpt"
 elif [ "$1" = "ebr" ]; then
