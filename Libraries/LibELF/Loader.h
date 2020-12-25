@@ -48,12 +48,6 @@ public:
     static NonnullRefPtr<Loader> create(const u8* data, size_t size, String&& name = String::empty(), bool verbose_logging = true) { return adopt(*new Loader(data, size, move(name), verbose_logging)); }
     ~Loader();
 
-    bool load();
-#if defined(KERNEL)
-    Function<void*(VirtualAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
-    Function<void*(size_t, size_t)> tls_section_hook;
-    Function<void*(VirtualAddress, size_t, size_t, size_t, bool r, bool w, bool x, const String&)> map_section_hook;
-#endif
     VirtualAddress entry() const
     {
         return m_image.entry();
@@ -75,22 +69,17 @@ private:
     bool layout();
 
     Image m_image;
-    String m_name;
 
     size_t m_symbol_count { 0 };
 
     struct SortedSymbol {
         u32 address;
         StringView name;
-#ifndef KERNEL
         String demangled_name;
         Optional<Image::Symbol> symbol;
-#endif
     };
 
-#ifndef KERNEL
     mutable Vector<SortedSymbol> m_sorted_symbols;
-#endif
 };
 
 } // end namespace ELF
