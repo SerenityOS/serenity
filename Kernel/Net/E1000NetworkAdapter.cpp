@@ -458,7 +458,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
         m_wait_queue.wait_on(nullptr, "E1000NetworkAdapter");
     }
 #ifdef E1000_DEBUG
-    dbgln("E1000: Sent packet, status is now {:#02x}!", descriptor.status);
+    dbgln("E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
 #endif
 }
 
