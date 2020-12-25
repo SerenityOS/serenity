@@ -177,8 +177,9 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
         return WindowManager::the().move_cursor();
     case Gfx::StandardCursor::Wait:
         return WindowManager::the().wait_cursor();
+    default:
+        ASSERT_NOT_REACHED();
     }
-    ASSERT_NOT_REACHED();
 }
 
 }

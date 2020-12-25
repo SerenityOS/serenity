@@ -27,6 +27,7 @@
 #include <AK/Badge.h>
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/StandardCursor.h>
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
@@ -609,6 +610,10 @@ OwnPtr<Messages::WindowServer::SetWindowCursorResponse> ClientConnection::handle
         return nullptr;
     }
     auto& window = *(*it).value;
+    if (message.cursor_type() < 0 || message.cursor_type() >= (i32)Gfx::StandardCursor::__Count) {
+        did_misbehave("SetWindowCursor: Bad cursor type");
+        return nullptr;
+    }
     window.set_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
     Compositor::the().invalidate_cursor();
     return make<Messages::WindowServer::SetWindowCursorResponse>();
