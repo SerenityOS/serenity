@@ -93,6 +93,7 @@ namespace JS {
     P(description)                           \
     P(done)                                  \
     P(dotAll)                                \
+    P(endsWith)                              \
     P(entries)                               \
     P(enumerable)                            \
     P(error)                                 \
