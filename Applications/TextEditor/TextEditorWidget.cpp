@@ -296,7 +296,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::show(window(), "Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+            auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
@@ -316,7 +316,7 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (m_document_dirty) {
-            auto save_document_first_result = GUI::MessageBox::show(window(), "Save Document First?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+            auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
