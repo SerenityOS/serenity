@@ -287,8 +287,10 @@ template<typename F>
 inline void Image::for_each_program_header(F func) const
 {
     auto program_header_count = this->program_header_count();
-    for (unsigned i = 0; i < program_header_count; ++i)
-        func(program_header(i));
+    for (unsigned i = 0; i < program_header_count; ++i) {
+        if (func(program_header(i)) == IterationDecision::Break)
+            return;
+    }
 }
 
 } // end namespace ELF
