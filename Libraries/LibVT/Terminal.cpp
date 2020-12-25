@@ -824,7 +824,7 @@ void Terminal::DSR(const ParamVector& params)
 void Terminal::on_input(u8 ch)
 {
 #ifdef TERMINAL_DEBUG
-    dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
+    dbgln("Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
 
     auto fail_utf8_parse = [this] {

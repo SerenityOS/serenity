@@ -390,10 +390,6 @@ struct PrintfImpl {
     {
         return print_hex(m_putch, m_bufptr, NextArgument<int>()(ap), false, state.alternate_form, false, true, 4);
     }
-    ALWAYS_INLINE int format_b(const ModifierState& state, ArgumentListRefT ap) const
-    {
-        return print_hex(m_putch, m_bufptr, NextArgument<int>()(ap), false, state.alternate_form, false, true, 2);
-    }
     ALWAYS_INLINE int format_c(const ModifierState& state, ArgumentListRefT ap) const
     {
         char c = NextArgument<int>()(ap);
@@ -502,7 +498,6 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 PRINTF_IMPL_DELEGATE_TO_IMPL(P);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(Q);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(X);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(b);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(c);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(d);
 #ifndef KERNEL

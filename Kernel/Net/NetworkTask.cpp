@@ -128,7 +128,7 @@ void NetworkTask_main(void*)
 
 #ifdef ETHERNET_VERY_DEBUG
         for (size_t i = 0; i < packet_size; i++) {
-            klog() << String::format("%b", buffer[i]);
+            klog() << String::format("%#02x", buffer[i]);
 
             switch (i % 16) {
             case 7:
@@ -249,7 +249,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
 {
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
 #ifdef ICMP_DEBUG
-    klog() << "handle_icmp: source=" << ipv4_packet.source().to_string().characters() << ", destination=" << ipv4_packet.destination().to_string().characters() << ", type=" << String::format("%b", icmp_header.type()) << ", code=" << String::format("%b", icmp_header.code());
+    dbgln("handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 #endif
 
     {

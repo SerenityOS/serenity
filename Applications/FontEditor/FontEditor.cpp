@@ -345,7 +345,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         m_glyph_editor_widget->set_glyph(glyph);
         glyph_width_spinbox.set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         StringBuilder builder;
-        builder.appendf("0x%b (", glyph);
+        builder.appendff("{:#02x} (", glyph);
         if (glyph < 128) {
             builder.append(glyph);
         } else {

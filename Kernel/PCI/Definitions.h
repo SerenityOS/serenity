@@ -144,7 +144,7 @@ protected:
 
 inline const LogStream& operator<<(const LogStream& stream, const Address value)
 {
-    return stream << "PCI [" << String::format("%w", value.seg()) << ":" << String::format("%b", value.bus()) << ":" << String::format("%b", value.slot()) << "." << String::format("%b", value.function()) << "]";
+    return stream << "PCI [" << String::formatted("{:04x}:{:02x}:{:02x}:{:02x}", value.seg(), value.bus(), value.slot(), value.function()) << "]";
 }
 
 struct ChangeableAddress : public Address {

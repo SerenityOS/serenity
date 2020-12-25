@@ -296,7 +296,7 @@ void KeyboardDevice::irq_handle_byte_read(u8 byte)
     }
 
 #ifdef KEYBOARD_DEBUG
-    dbg() << "Keyboard::irq_handle_byte_read: " << String::format("%b", ch) << " " << (pressed ? "down" : "up");
+    dbgln("Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
 #endif
     switch (ch) {
     case 0x38:

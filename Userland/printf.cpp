@@ -46,10 +46,6 @@ struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentL
     {
     }
 
-    ALWAYS_INLINE int format_b(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
-    {
-        fail("format specifier 'b' is not supported");
-    }
     ALWAYS_INLINE int format_q(const PrintfImplementation::ModifierState& state, ArgumentListRefT& ap) const
     {
         auto state_copy = state;

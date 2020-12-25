@@ -217,7 +217,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     klog() << "E1000: Has EEPROM? " << m_has_eeprom;
     read_mac_address();
     const auto& mac = mac_address();
-    klog() << "E1000: MAC address: " << String::format("%b", mac[0]) << ":" << String::format("%b", mac[1]) << ":" << String::format("%b", mac[2]) << ":" << String::format("%b", mac[3]) << ":" << String::format("%b", mac[4]) << ":" << String::format("%b", mac[5]);
+    klog() << "E1000: MAC address: " << mac.to_string();
 
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
@@ -458,7 +458,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
         m_wait_queue.wait_on(nullptr, "E1000NetworkAdapter");
     }
 #ifdef E1000_DEBUG
-    klog() << "E1000: Sent packet, status is now " << String::format("%b", descriptor.status) << "!";
+    dbgln("E1000: Sent packet, status is now {:#02x}!", descriptor.status);
 #endif
 }
 
