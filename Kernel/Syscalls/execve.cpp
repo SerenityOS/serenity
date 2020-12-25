@@ -38,12 +38,15 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/limits.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 
 //#define EXEC_DEBUG
 
 namespace Kernel {
+
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd);
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
@@ -84,7 +87,6 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
-    m_entry_eip = 0;
     FlatPtr load_base_address = 0;
 
     MM.enter_process_paging_scope(*this);
@@ -202,7 +204,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     };
 }
 
-int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description)
+KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description)
 {
     RefPtr<PageDirectory> old_page_directory;
     NonnullOwnPtrVector<Region> old_regions;
@@ -229,14 +231,8 @@ int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPt
         if (result.is_error())
             return result.error();
 
-        m_load_base = result.value().load_base;
-        m_entry_eip = result.value().entry_eip;
-        m_master_tls_region = result.value().tls_region;
-        m_master_tls_size = result.value().tls_size;
-        m_master_tls_alignment = result.value().tls_alignment;
-
         rollback_regions_guard.disarm();
-        return 0;
+        return result;
     }
 
     // TODO: I'm sure this can be randomized even better. :^)
@@ -247,16 +243,13 @@ int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPt
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
 
-    m_load_base = interpreter_load_result.value().load_base;
-    m_entry_eip = interpreter_load_result.value().entry_eip;
-
     // TLS allocation will be done in userspace by the loader
-    m_master_tls_region = nullptr;
-    m_master_tls_size = 0;
-    m_master_tls_alignment = 0;
+    ASSERT(!interpreter_load_result.value().tls_region);
+    ASSERT(!interpreter_load_result.value().tls_alignment);
+    ASSERT(!interpreter_load_result.value().tls_size);
 
     rollback_regions_guard.disarm();
-    return 0;
+    return interpreter_load_result;
 }
 
 int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
@@ -312,11 +305,12 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             m_egid = m_sgid = main_program_metadata.gid;
     }
 
-    int load_rc = load(main_program_description, interpreter_description);
-    if (load_rc) {
-        klog() << "do_exec: Failed to load main program or interpreter";
-        return load_rc;
+    auto load_result_or_error = load(main_program_description, interpreter_description);
+    if (load_result_or_error.is_error()) {
+        dbgln("do_exec({}): Failed to load main program or interpreter", path);
+        return load_result_or_error.error();
     }
+    auto& load_result = load_result_or_error.value();
 
     // We can commit to the new credentials at this point.
     cred_restore_guard.disarm();
@@ -350,12 +344,13 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
             description_and_flags = {};
     }
 
+    int main_program_fd = -1;
     if (interpreter_description) {
-        m_main_program_fd = alloc_fd();
-        ASSERT(m_main_program_fd >= 0);
+        main_program_fd = alloc_fd();
+        ASSERT(main_program_fd >= 0);
         main_program_description->seek(0, SEEK_SET);
         main_program_description->set_readable(true);
-        m_fds[m_main_program_fd].set(move(main_program_description), FD_CLOEXEC);
+        m_fds[main_program_fd].set(move(main_program_description), FD_CLOEXEC);
     }
 
     new_main_thread = nullptr;
@@ -369,7 +364,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     }
     ASSERT(new_main_thread);
 
-    auto auxv = generate_auxiliary_vector();
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, m_uid, m_euid, m_gid, m_egid, path, main_program_fd);
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
@@ -405,7 +400,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.ss = GDT_SELECTOR_DATA3 | 3;
     tss.fs = GDT_SELECTOR_DATA3 | 3;
     tss.gs = GDT_SELECTOR_TLS | 3;
-    tss.eip = m_entry_eip;
+    tss.eip = load_result.entry_eip;
     tss.esp = new_userspace_esp;
     tss.cr3 = m_page_directory->cr3();
     tss.ss2 = m_pid.value();
@@ -424,20 +419,20 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     return 0;
 }
 
-Vector<ELF::AuxiliaryValue> Process::generate_auxiliary_vector() const
+static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd)
 {
     Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
     // PH*
     auxv.append({ ELF::AuxiliaryValue::PageSize, PAGE_SIZE });
-    auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)m_load_base });
+    auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)load_base });
 
-    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)m_entry_eip });
+    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
     // NOTELF
-    auxv.append({ ELF::AuxiliaryValue::Uid, (long)m_uid });
-    auxv.append({ ELF::AuxiliaryValue::EUid, (long)m_euid });
-    auxv.append({ ELF::AuxiliaryValue::Gid, (long)m_gid });
-    auxv.append({ ELF::AuxiliaryValue::EGid, (long)m_egid });
+    auxv.append({ ELF::AuxiliaryValue::Uid, (long)uid });
+    auxv.append({ ELF::AuxiliaryValue::EUid, (long)euid });
+    auxv.append({ ELF::AuxiliaryValue::Gid, (long)gid });
+    auxv.append({ ELF::AuxiliaryValue::EGid, (long)egid });
 
     // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
     auxv.append({ ELF::AuxiliaryValue::Platform, "i386" });
@@ -447,16 +442,16 @@ Vector<ELF::AuxiliaryValue> Process::generate_auxiliary_vector() const
     auxv.append({ ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() });
 
     // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
-    auxv.append({ ELF::AuxiliaryValue::Secure, ((m_uid != m_euid) || (m_gid != m_egid)) ? 1 : 0 });
+    auxv.append({ ELF::AuxiliaryValue::Secure, ((uid != euid) || (gid != egid)) ? 1 : 0 });
 
     char random_bytes[16] {};
     get_fast_random_bytes((u8*)random_bytes, sizeof(random_bytes));
 
     auxv.append({ ELF::AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
 
-    auxv.append({ ELF::AuxiliaryValue::ExecFilename, m_executable->absolute_path() });
+    auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
-    auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, m_main_program_fd });
+    auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd });
 
     auxv.append({ ELF::AuxiliaryValue::Null, 0L });
     return auxv;
