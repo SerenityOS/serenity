@@ -39,6 +39,9 @@ public:
     static void initialize();
     static NullDevice& the();
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0666; }
+
 private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;

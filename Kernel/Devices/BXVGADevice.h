@@ -44,6 +44,9 @@ public:
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot, bool shared) override;
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0660; }
+
 private:
     virtual const char* class_name() const override { return "BXVGA"; }
     virtual bool can_read(const FileDescription&, size_t) const override { return true; }
