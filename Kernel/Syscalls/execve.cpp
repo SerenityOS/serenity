@@ -42,7 +42,6 @@
 #include <LibELF/Validation.h>
 
 //#define EXEC_DEBUG
-//#define MM_DEBUG
 
 namespace Kernel {
 
@@ -65,14 +64,14 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
     if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
-        dbg() << "Refusing to execute a write-mapped program";
+        dbgln("Refusing to execute a write-mapped program");
         return KResult(-ETXTBSY);
     }
     InodeMetadata loader_metadata = object_description.metadata();
 
     auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
     if (!region) {
-        dbg() << "Could not allocate memory for ELF loading";
+        dbgln("Could not allocate memory for ELF loading");
         return KResult(-ENOMEM);
     }
 
@@ -95,7 +94,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             ASSERT(program_header.size_in_memory());
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbg() << "Shenanigans! ELF PT_TLS header sneaks outside of executable.";
+                dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
                 failed = true;
                 return;
             }
@@ -121,7 +120,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             ASSERT(program_header.alignment() == PAGE_SIZE);
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbg() << "Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.";
+                dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
                 failed = true;
                 return;
             }
@@ -173,12 +172,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     });
 
     if (failed) {
-        klog() << "do_exec: Failure loading program";
+        dbgln("do_exec: Failure loading program");
         return KResult(-ENOEXEC);
     }
 
     if (!elf_image.entry().offset(load_offset).get()) {
-        klog() << "do_exec: Failure loading program, entry pointer is invalid! (" << elf_image.entry().offset(load_offset) << ")";
+        dbgln("do_exec: Failure loading program, entry pointer is invalid! {})", elf_image.entry().offset(load_offset));
         return KResult(-ENOEXEC);
     }
 
@@ -257,7 +256,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
 #ifdef EXEC_DEBUG
-    dbg() << "do_exec(" << path << ")";
+    dbgln("do_exec({})", path);
 #endif
 
     // FIXME: How much stack space does process startup need?
@@ -276,10 +275,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // No other thread from this process will be scheduled to run
     auto current_thread = Thread::current();
     m_exec_tid = current_thread->tid();
-
-#ifdef MM_DEBUG
-    dbg() << "Process " << pid().value() << " exec: PD=" << m_page_directory.ptr() << " created";
-#endif
 
     // NOTE: We switch credentials before altering the memory layout of the process.
     //       This ensures that ptrace access control takes the right credentials into account.
@@ -320,7 +315,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     kill_threads_except_self();
 
 #ifdef EXEC_DEBUG
-    klog() << "Memory layout after ELF load:";
+    dbgln("Memory layout after ELF load:");
     dump_regions();
 #endif
 
@@ -500,25 +495,25 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
     auto elf_header = (Elf32_Ehdr*)first_page;
     if (!ELF::validate_elf_header(*elf_header, file_size)) {
-        dbg() << "exec(" << path << "): File has invalid ELF header";
+        dbgln("exec({}): File has invalid ELF header", path);
         return KResult(-ENOEXEC);
     }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELF::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, &interpreter_path)) {
-        dbg() << "exec(" << path << "): File has invalid ELF Program headers";
+        dbgln("exec({}): File has invalid ELF Program headers", path);
         return KResult(-ENOEXEC);
     }
 
     if (!interpreter_path.is_empty()) {
 
 #ifdef EXEC_DEBUG
-        dbg() << "exec(" << path << "): Using program interpreter " << interpreter_path;
+        dbgln("exec({}): Using program interpreter {}", path, interpreter_path);
 #endif
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
-            dbg() << "exec(" << path << "): Unable to open program interpreter " << interpreter_path;
+            dbgln("exec({}): Unable to open program interpreter {}", path, interpreter_path);
             return interp_result.error();
         }
         auto interpreter_description = interp_result.value();
@@ -543,21 +538,21 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 
         elf_header = (Elf32_Ehdr*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
-            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF header";
+            dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
             return KResult(-ENOEXEC);
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
-            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has invalid ELF Program headers";
+            dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_description->absolute_path());
             return KResult(-ENOEXEC);
         }
 
         // FIXME: Uncomment this
         //        How do we get gcc to not insert an interpreter section to /usr/lib/Loader.so itself?
         // if (!interpreter_interpreter_path.is_empty()) {
-        //     dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has its own interpreter (" << interpreter_interpreter_path << ")! No thank you!";
+        //     dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
         //     return KResult(-ELOOP);
         // }
 
@@ -577,7 +572,7 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
-        dbg() << "exec(" << path << "): SHENANIGANS! recursed too far trying to find #! interpreter";
+        dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
         return -ELOOP;
     }
 
