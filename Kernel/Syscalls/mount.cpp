@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
@@ -104,6 +105,8 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
         fs = ProcFS::create();
     } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {
         fs = DevPtsFS::create();
+    } else if (fs_type == "dev" || fs_type == "DevFS") {
+        fs = DevFS::create();
     } else if (fs_type == "tmp" || fs_type == "TmpFS") {
         fs = TmpFS::create();
     } else {
