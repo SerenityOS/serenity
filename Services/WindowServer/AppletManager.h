@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
