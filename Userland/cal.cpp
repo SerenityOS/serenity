@@ -155,14 +155,12 @@ int main(int argc, char** argv)
             insert_month_to_print(0, i++, year);
             insert_month_to_print(1, i++, year);
             insert_month_to_print(2, i, year);
-            printf(print_buffer);
-            printf("\n");
+            printf("%s\n", print_buffer);
             clean_buffers();
         }
     } else {
         insert_month_to_print(0, month, year);
-        printf(print_buffer);
-        printf("\n\n");
+        printf("%s\n\n", print_buffer);
         clean_buffers();
     }
 

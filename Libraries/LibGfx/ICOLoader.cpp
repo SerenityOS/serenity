@@ -208,7 +208,7 @@ static bool load_ico_directory(ICOLoadingContext& context)
             return false;
         }
 #ifdef ICO_DEBUG
-        printf("load_ico_directory: index %lu width: %u height: %u offset: %lu size: %lu\n",
+        printf("load_ico_directory: index %zu width: %u height: %u offset: %lu size: %lu\n",
             i, desc.width, desc.height, desc.offset, desc.size);
 #endif
         context.images.append(desc);

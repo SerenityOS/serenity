@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 struct Testcase {
     const char* dest;
     size_t dest_n;
