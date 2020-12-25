@@ -87,7 +87,7 @@ struct ID {
 };
 inline const LogStream& operator<<(const LogStream& stream, const ID value)
 {
-    return stream << "(" << String::format("%w", value.vendor_id) << ":" << String::format("%w", value.device_id) << ")";
+    return stream << String::formatted("({:04x}:{:04x})", value.vendor_id, value.device_id);
 }
 struct Address {
 public:
