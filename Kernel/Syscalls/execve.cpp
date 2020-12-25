@@ -75,6 +75,11 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return KResult(-ENOMEM);
     }
 
+    auto elf_image = ELF::Image(region->vaddr().as_ptr(), loader_metadata.size);
+
+    if (!elf_image.is_valid())
+        return KResult(-ENOEXEC);
+
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
@@ -83,8 +88,6 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
     MM.enter_process_paging_scope(*this);
     String elf_name = object_description.absolute_path();
-    auto elf_image = ELF::Image(region->vaddr().as_ptr(), loader_metadata.size);
-
     ASSERT(!Processor::current().in_critical());
 
     bool failed = false;
