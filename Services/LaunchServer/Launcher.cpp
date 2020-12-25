@@ -79,12 +79,6 @@ String Handler::to_details_str() const
     default:
         break;
     }
-    if (!icons.is_empty()) {
-        JsonObject icons_obj;
-        for (auto& icon : icons)
-            icons_obj.set(icon.key, icon.value);
-        obj.add("icons", move(icons_obj));
-    }
     obj.finish();
     return builder.build();
 }
@@ -116,14 +110,6 @@ void Launcher::load_handlers(const String& af_dir)
 
         return table;
     };
-    auto load_hashmap = [](auto& af, auto& group) {
-        HashMap<String, String> map;
-        auto keys = af->keys(group);
-        for (auto& key : keys)
-            map.set(key, af->read_entry(group, key));
-
-        return map;
-    };
 
     Core::DirIterator dt(af_dir, Core::DirIterator::SkipDots);
     while (dt.has_next()) {
@@ -136,8 +122,7 @@ void Launcher::load_handlers(const String& af_dir)
         auto app_executable = af->read_entry("App", "Executable");
         auto file_types = load_hashtable(af, "FileTypes");
         auto protocols = load_hashtable(af, "Protocols");
-        auto icons = load_hashmap(af, "Icons");
-        m_handlers.set(app_executable, { Handler::Type::Default, move(app_name), app_executable, move(file_types), move(protocols), move(icons) });
+        m_handlers.set(app_executable, { Handler::Type::Default, move(app_name), app_executable, move(file_types), move(protocols) });
     }
 }
 

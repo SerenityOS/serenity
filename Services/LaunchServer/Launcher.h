@@ -45,7 +45,6 @@ struct Handler {
     String executable;
     HashTable<String> file_types {};
     HashTable<String> protocols {};
-    HashMap<String, String> icons {};
 
     static String name_from_executable(const StringView&);
     void from_executable(Type, const String&);
