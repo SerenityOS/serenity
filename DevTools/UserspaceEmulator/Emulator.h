@@ -76,8 +76,8 @@ private:
 
     OwnPtr<MallocTracer> m_malloc_tracer;
 
-    void setup_stack(Vector<AuxiliaryValue>);
-    Vector<AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const;
+    void setup_stack(Vector<ELF::AuxiliaryValue>);
+    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const;
     void register_signal_handlers();
     void setup_signal_trampoline();
 

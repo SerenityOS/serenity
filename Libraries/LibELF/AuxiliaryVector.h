@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/String.h>
+#include <AK/Types.h>
+
 /* Auxiliary Vector types, from Intel386 ABI ver 1.0 section 2.3.3 */
 typedef struct
 {
@@ -63,9 +66,7 @@ typedef struct
 #define AT_EXE_BASE 32      /* a_ptr holds base address where main program was loaded into memory */
 #define AT_EXE_SIZE 33      /* a_val holds the size of the main program in memory */
 
-#ifdef __cplusplus
-#    include <AK/String.h>
-#    include <AK/Types.h>
+namespace ELF {
 
 struct AuxiliaryValue {
     enum Type {
@@ -117,4 +118,4 @@ struct AuxiliaryValue {
     String optional_string;
 };
 
-#endif /* __cplusplus */
+}

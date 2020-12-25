@@ -534,7 +534,7 @@ private:
     ssize_t do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
-    Vector<AuxiliaryValue> generate_auxiliary_vector() const;
+    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector() const;
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();

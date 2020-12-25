@@ -84,7 +84,7 @@ static void perform_self_relocations(auxv_t* auxvp)
     FlatPtr base_address = 0;
     bool found_base_address = false;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
-        if (auxvp->a_type == AuxiliaryValue::BaseAddress) {
+        if (auxvp->a_type == ELF::AuxiliaryValue::BaseAddress) {
             base_address = auxvp->a_un.a_val;
             found_base_address = true;
         }
@@ -255,10 +255,10 @@ static FlatPtr loader_main(auxv_t* auxvp)
     int main_program_fd = -1;
     String main_program_name;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
-        if (auxvp->a_type == AuxiliaryValue::ExecFileDescriptor) {
+        if (auxvp->a_type == ELF::AuxiliaryValue::ExecFileDescriptor) {
             main_program_fd = auxvp->a_un.a_val;
         }
-        if (auxvp->a_type == AuxiliaryValue::ExecFilename) {
+        if (auxvp->a_type == ELF::AuxiliaryValue::ExecFilename) {
             main_program_name = (const char*)auxvp->a_un.a_ptr;
         }
     }
