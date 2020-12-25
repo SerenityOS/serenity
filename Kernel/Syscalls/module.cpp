@@ -29,7 +29,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
 #include <Kernel/Process.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 
 namespace Kernel {
 

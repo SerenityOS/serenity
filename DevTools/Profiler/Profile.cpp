@@ -33,7 +33,7 @@
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
 #include <LibCoreDump/CoreDumpReader.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -58,7 +58,7 @@ static String object_name(StringView memory_region_name)
 
 struct CachedLibData {
     OwnPtr<MappedFile> file;
-    NonnullRefPtr<ELF::Loader> lib_elf;
+    ELF::Image lib_elf;
 };
 
 static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region, u32& offset)
@@ -86,13 +86,13 @@ static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region
         auto lib_file = make<MappedFile>(path);
         if (!lib_file->is_valid())
             return {};
-        auto loader = ELF::Loader::create((const u8*)lib_file->data(), lib_file->size());
-        cached_libs.set(path, make<CachedLibData>(move(lib_file), loader));
+        auto image = ELF::Image((const u8*)lib_file->data(), lib_file->size());
+        cached_libs.set(path, make<CachedLibData>(move(lib_file), move(image)));
     }
 
     auto lib_data = cached_libs.get(path).value();
 
-    return String::format("[%s] %s", name.characters(), lib_data->lib_elf->symbolicate(eip - region->region_start, &offset).characters());
+    return String::format("[%s] %s", name.characters(), lib_data->lib_elf.symbolicate(eip - region->region_start, &offset).characters());
 }
 
 static String symbolicate_from_coredump(CoreDumpReader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
@@ -288,9 +288,9 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
     }
 
     MappedFile kernel_elf_file("/boot/Kernel");
-    RefPtr<ELF::Loader> kernel_elf_loader;
+    OwnPtr<ELF::Image> kernel_elf;
     if (kernel_elf_file.is_valid())
-        kernel_elf_loader = ELF::Loader::create(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
+        kernel_elf = make<ELF::Image>(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
 
     auto events_value = object.get("events");
     if (!events_value.is_array())
@@ -325,8 +325,8 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
             String symbol;
 
             if (ptr >= 0xc0000000) {
-                if (kernel_elf_loader) {
-                    symbol = kernel_elf_loader->symbolicate(ptr, &offset);
+                if (kernel_elf) {
+                    symbol = kernel_elf->symbolicate(ptr, &offset);
                 } else {
                     symbol = "??";
                 }

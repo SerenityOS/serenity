@@ -38,7 +38,6 @@
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
-#include <LibELF/Loader.h>
 #include <LibELF/exec_elf.h>
 #include <dlfcn.h>
 #include <string.h>

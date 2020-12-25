@@ -35,7 +35,6 @@
 #include <AK/String.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibELF/Loader.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
@@ -99,8 +98,7 @@ public:
     template<typename Callback>
     void run(Callback callback);
 
-    const ELF::Loader& elf() const { return *m_elf; }
-    NonnullRefPtr<const ELF::Loader> elf_ref() const { return m_elf; }
+    const ELF::Image& elf() const { return m_debug_info.elf(); }
     const MappedFile& executable() const { return m_executable; }
     const DebugInfo& debug_info() const { return m_debug_info; }
 
@@ -130,7 +128,6 @@ private:
     bool m_is_debuggee_dead { false };
 
     MappedFile m_executable;
-    NonnullRefPtr<const ELF::Loader> m_elf;
     DebugInfo m_debug_info;
 
     HashMap<void*, BreakPoint> m_breakpoints;

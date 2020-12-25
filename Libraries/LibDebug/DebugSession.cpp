@@ -33,8 +33,7 @@ namespace Debug {
 DebugSession::DebugSession(pid_t pid)
     : m_debuggee_pid(pid)
     , m_executable(map_executable_for_process(pid))
-    , m_elf(ELF::Loader::create(reinterpret_cast<const u8*>(m_executable.data()), m_executable.size()))
-    , m_debug_info(m_elf)
+    , m_debug_info(make<ELF::Image>(reinterpret_cast<const u8*>(m_executable.data()), m_executable.size()))
 {
 }
 

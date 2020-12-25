@@ -210,6 +210,10 @@ public:
 
     Optional<Symbol> find_demangled_function(const String& name) const;
 
+    bool has_symbols() const { return symbol_count(); }
+    String symbolicate(u32 address, u32* offset = nullptr) const;
+    Optional<Image::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
+
 private:
     const char* raw_data(unsigned offset) const;
     const Elf32_Ehdr& header() const;
@@ -227,6 +231,15 @@ private:
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
+
+    struct SortedSymbol {
+        u32 address;
+        StringView name;
+        String demangled_name;
+        Optional<Image::Symbol> symbol;
+    };
+
+    mutable Vector<SortedSymbol> m_sorted_symbols;
 };
 
 template<typename F>

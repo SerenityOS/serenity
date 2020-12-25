@@ -30,9 +30,10 @@
 #include <AK/LogStream.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/DirectoryWatcher.h>
+#include <LibCore/File.h>
 #include <LibCoreDump/CoreDumpReader.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -63,78 +64,62 @@ static String object_name(StringView memory_region_name)
     return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
 }
 
-struct ElfObjectInfo : public RefCounted<ElfObjectInfo> {
-
-    ElfObjectInfo(MappedFile&& file, NonnullRefPtr<ELF::Loader>&& loader, Debug::DebugInfo&& debug_info)
+struct ElfObjectInfo {
+    ElfObjectInfo(MappedFile&& file, Debug::DebugInfo&& debug_info)
         : file(move(file))
-        , loader(move(loader))
         , debug_info(move(debug_info))
     {
     }
 
     MappedFile file;
-    NonnullRefPtr<ELF::Loader> loader;
     Debug::DebugInfo debug_info;
 };
 
 // FIXME: This cache has to be invalidated when libraries/programs are re-compiled.
 // We can store the last-modified timestamp of the elf files in ElfObjectInfo to invalidate cache entries.
-static HashMap<String, RefPtr<ElfObjectInfo>> s_debug_info_cache;
+static HashMap<String, NonnullOwnPtr<ElfObjectInfo>> s_debug_info_cache;
 
-static RefPtr<ElfObjectInfo> object_info_for_region(const ELF::Core::MemoryRegionInfo* region)
+static const ElfObjectInfo* object_info_for_region(const ELF::Core::MemoryRegionInfo* region)
 {
-    StringView region_name { region->region_name };
-
-    auto name = object_name(region_name);
+    auto name = object_name(region->region_name);
 
     String path;
     if (name.contains(".so"))
-        path = String::format("/usr/lib/%s", name.characters());
+        path = String::formatted("/usr/lib/{}", name);
     else {
         path = name;
     }
 
-    auto cached_value = s_debug_info_cache.get(path);
-    if (cached_value.has_value())
-        return cached_value.value();
+    if (auto it = s_debug_info_cache.find(path); it != s_debug_info_cache.end())
+        return it->value.ptr();
 
-    struct stat st;
-    if (stat(path.characters(), &st)) {
+    if (!Core::File::exists(path.characters()))
         return nullptr;
-    }
 
     MappedFile object_file(path);
     if (!object_file.is_valid())
         return nullptr;
 
-    auto loader = ELF::Loader::create((const u8*)object_file.data(), object_file.size());
-    Debug::DebugInfo debug_info(loader);
-
-    RefPtr<ElfObjectInfo> info = adopt(*new ElfObjectInfo(
-        move(object_file),
-        move(loader),
-        move(debug_info)));
-
-    s_debug_info_cache.set(path, info);
-    return info;
+    auto info = make<ElfObjectInfo>(move(object_file), Debug::DebugInfo { make<ELF::Image>((const u8*)object_file.data(), object_file.size()) });
+    auto* info_ptr = info.ptr();
+    s_debug_info_cache.set(path, move(info));
+    return info_ptr;
 }
 
 static String backtrace_line(const CoreDumpReader& coredump, FlatPtr eip)
 {
     auto* region = coredump.region_containing((FlatPtr)eip);
-    if (!region) {
+    if (!region)
         return String::format("%p: ???", eip);
-    }
 
-    StringView region_name { region->region_name };
-    if (region_name.contains("Loader.so"))
+    if (StringView { region->region_name }.contains("Loader.so"))
         return {};
 
-    auto object_info = object_info_for_region(region);
-    if (object_info.is_null())
+    auto* object_info = object_info_for_region(region);
+    if (!object_info)
         return {};
 
-    auto func_name = object_info->loader->symbolicate(eip - region->region_start);
+    auto func_name = object_info->debug_info.elf().symbolicate(eip - region->region_start);
 
     auto source_position = object_info->debug_info.get_source_position(eip - region->region_start);
 
@@ -142,7 +127,7 @@ static String backtrace_line(const CoreDumpReader& coredump, FlatPtr eip)
     if (source_position.has_value())
         source_position_string = String::format(" (\033[34;1m%s\033[0m:%u)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
 
-    return String::format("%p: [%s] %s%s", eip, object_name(region_name).characters(), func_name.is_null() ? "???" : func_name.characters(), source_position_string.characters());
+    return String::format("%p: [%s] %s%s", eip, object_name(region->region_name).characters(), func_name.is_null() ? "???" : func_name.characters(), source_position_string.characters());
 }
 
 static void backtrace(const String& coredump_path)

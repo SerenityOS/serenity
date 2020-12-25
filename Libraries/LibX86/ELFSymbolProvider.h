@@ -26,23 +26,23 @@
 
 #pragma once
 
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 
 namespace X86 {
 
 class ELFSymbolProvider final : public SymbolProvider {
 public:
-    ELFSymbolProvider(ELF::Loader& loader)
-        : m_loader(loader)
+    ELFSymbolProvider(const ELF::Image& elf)
+        : m_elf(elf)
     {
     }
 
     virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const override
     {
-        return m_loader.symbolicate(address, offset);
+        return m_elf.symbolicate(address, offset);
     }
 
 private:
-    ELF::Loader& m_loader;
+    const ELF::Image& m_elf;
 };
 }

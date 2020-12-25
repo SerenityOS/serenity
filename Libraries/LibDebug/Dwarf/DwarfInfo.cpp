@@ -30,7 +30,7 @@
 
 namespace Debug::Dwarf {
 
-DwarfInfo::DwarfInfo(NonnullRefPtr<const ELF::Loader> elf)
+DwarfInfo::DwarfInfo(const ELF::Image& elf)
     : m_elf(elf)
 {
     m_debug_info_data = section_data(".debug_info");
@@ -42,7 +42,7 @@ DwarfInfo::DwarfInfo(NonnullRefPtr<const ELF::Loader> elf)
 
 ReadonlyBytes DwarfInfo::section_data(const String& section_name) const
 {
-    auto section = m_elf->image().lookup_section(section_name);
+    auto section = m_elf.lookup_section(section_name);
     if (section.is_undefined())
         return {};
     return section.bytes();

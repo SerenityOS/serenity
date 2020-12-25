@@ -35,9 +35,9 @@
 
 namespace Debug {
 
-DebugInfo::DebugInfo(NonnullRefPtr<const ELF::Loader> elf)
-    : m_elf(elf)
-    , m_dwarf_info(Dwarf::DwarfInfo::create(m_elf))
+DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf)
+    : m_elf(move(elf))
+    , m_dwarf_info(*m_elf)
 {
     prepare_variable_scopes();
     prepare_lines();
@@ -45,7 +45,7 @@ DebugInfo::DebugInfo(NonnullRefPtr<const ELF::Loader> elf)
 
 void DebugInfo::prepare_variable_scopes()
 {
-    m_dwarf_info->for_each_compilation_unit([&](const Dwarf::CompilationUnit& unit) {
+    m_dwarf_info.for_each_compilation_unit([&](const Dwarf::CompilationUnit& unit) {
         auto root = unit.root_die();
         parse_scopes_impl(root);
     });
@@ -102,7 +102,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
 void DebugInfo::prepare_lines()
 {
-    auto section = m_elf->image().lookup_section(".debug_line");
+    auto section = elf().lookup_section(".debug_line");
     if (section.is_undefined())
         return;
 
