@@ -36,6 +36,7 @@ set(KERNEL_SOURCES
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Storage/Partition/DiskPartition.cpp
+    Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
     Storage/Partition/GPTPartitionTable.cpp
     Storage/Partition/MBRPartitionTable.cpp
