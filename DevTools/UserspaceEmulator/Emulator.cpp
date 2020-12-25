@@ -267,11 +267,11 @@ Vector<FlatPtr> Emulator::raw_backtrace()
 
     u32 frame_ptr = m_cpu.ebp().value();
     while (frame_ptr) {
-        u32 ret_ptr = m_mmu.read32({ 0x20, frame_ptr + 4 }).value();
+        u32 ret_ptr = m_mmu.read32({ 0x23, frame_ptr + 4 }).value();
         if (!ret_ptr)
             break;
         backtrace.append(ret_ptr);
-        frame_ptr = m_mmu.read32({ 0x20, frame_ptr }).value();
+        frame_ptr = m_mmu.read32({ 0x23, frame_ptr }).value();
     }
     return backtrace;
 }
@@ -984,7 +984,7 @@ int Emulator::virt$pipe(FlatPtr vm_pipefd, int flags)
 
 u32 Emulator::virt$munmap(FlatPtr address, u32 size)
 {
-    auto* region = mmu().find_region({ 0x20, address });
+    auto* region = mmu().find_region({ 0x23, address });
     ASSERT(region);
     if (region->size() != round_up_to_power_of_two(size, PAGE_SIZE))
         TODO();

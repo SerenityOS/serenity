@@ -55,7 +55,7 @@ public:
 
     ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
     {
-        if (address.selector() == 0x28)
+        if (address.selector() == 0x2b)
             return m_tls_region.ptr();
 
         size_t page_index = (address.offset() & ~(PAGE_SIZE - 1)) / PAGE_SIZE;

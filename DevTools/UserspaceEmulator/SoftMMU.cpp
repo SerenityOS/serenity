@@ -41,7 +41,7 @@ SoftMMU::SoftMMU(Emulator& emulator)
 
 void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
-    ASSERT(!find_region({ 0x20, region->base() }));
+    ASSERT(!find_region({ 0x23, region->base() }));
 
     // FIXME: More sanity checks pls
     if (region->is_shared_buffer())
@@ -114,7 +114,7 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        reportln("SoftMMU::read32: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::read32: No region for @ {:04x}:{:p}", address.selector(), address.offset());
         m_emulator.dump_backtrace();
         TODO();
     }
@@ -221,14 +221,14 @@ void SoftMMU::copy_to_vm(FlatPtr destination, const void* source, size_t size)
 {
     // FIXME: We should have a way to preserve the shadow data here as well.
     for (size_t i = 0; i < size; ++i)
-        write8({ 0x20, destination + i }, shadow_wrap_as_initialized(((const u8*)source)[i]));
+        write8({ 0x23, destination + i }, shadow_wrap_as_initialized(((const u8*)source)[i]));
 }
 
 void SoftMMU::copy_from_vm(void* destination, const FlatPtr source, size_t size)
 {
     // FIXME: We should have a way to preserve the shadow data here as well.
     for (size_t i = 0; i < size; ++i)
-        ((u8*)destination)[i] = read8({ 0x20, source + i }).value();
+        ((u8*)destination)[i] = read8({ 0x23, source + i }).value();
 }
 
 ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
