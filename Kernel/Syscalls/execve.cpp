@@ -91,7 +91,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     String elf_name = object_description.absolute_path();
     ASSERT(!Processor::current().in_critical());
 
-    bool failed = false;
+    KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
             ASSERT(should_allocate_tls == ShouldAllocateTls::Yes);
@@ -99,34 +99,36 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
-                failed = true;
-                return;
+                ph_load_result = KResult(-ENOEXEC);
+                return IterationDecision::Break;
             }
 
             master_tls_region = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE);
             if (!master_tls_region) {
-                failed = true;
-                return;
+                ph_load_result = KResult(-ENOMEM);
+                return IterationDecision::Break;
             }
             master_tls_size = program_header.size_in_memory();
             master_tls_alignment = program_header.alignment();
 
             if (!copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image())) {
-                failed = false;
-                return;
+                ph_load_result = KResult(-EFAULT);
+                return IterationDecision::Break;
             }
-            return;
+            return IterationDecision::Continue;
         }
         if (program_header.type() != PT_LOAD)
-            return;
+            return IterationDecision::Continue;
+
         if (program_header.is_writable()) {
+            // Writable section: create a copy in memory.
             ASSERT(program_header.size_in_memory());
             ASSERT(program_header.alignment() == PAGE_SIZE);
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
-                failed = true;
-                return;
+                ph_load_result = KResult(-ENOEXEC);
+                return IterationDecision::Break;
             }
 
             int prot = 0;
@@ -137,8 +139,8 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
             auto* region = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot);
             if (!region) {
-                failed = true;
-                return;
+                ph_load_result = KResult(-ENOMEM);
+                return IterationDecision::Break;
             }
 
             // It's not always the case with PIE executables (and very well shouldn't be) that the
@@ -151,33 +153,36 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             auto page_offset = program_header.vaddr();
             page_offset.mask(~PAGE_MASK);
             if (!copy_to_user((u8*)region->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
-                failed = false;
-                return;
+                ph_load_result = KResult(-EFAULT);
+                return IterationDecision::Break;
             }
-        } else {
-            ASSERT(program_header.size_in_memory());
-            ASSERT(program_header.alignment() == PAGE_SIZE);
-            int prot = 0;
-            if (program_header.is_readable())
-                prot |= PROT_READ;
-            if (program_header.is_writable())
-                prot |= PROT_WRITE;
-            if (program_header.is_executable())
-                prot |= PROT_EXEC;
-            auto* region = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot);
-            if (!region) {
-                failed = true;
-                return;
-            }
-            region->set_shared(true);
-            if (program_header.offset() == 0)
-                load_base_address = (FlatPtr)region->vaddr().as_ptr();
+            return IterationDecision::Continue;
         }
+
+        // Non-writable section: map the executable itself in memory.
+        ASSERT(program_header.size_in_memory());
+        ASSERT(program_header.alignment() == PAGE_SIZE);
+        int prot = 0;
+        if (program_header.is_readable())
+            prot |= PROT_READ;
+        if (program_header.is_writable())
+            prot |= PROT_WRITE;
+        if (program_header.is_executable())
+            prot |= PROT_EXEC;
+        auto* region = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot);
+        if (!region) {
+            ph_load_result = KResult(-ENOMEM);
+            return IterationDecision::Break;
+        }
+        region->set_shared(true);
+        if (program_header.offset() == 0)
+            load_base_address = (FlatPtr)region->vaddr().as_ptr();
+        return IterationDecision::Continue;
     });
 
-    if (failed) {
-        dbgln("do_exec: Failure loading program");
-        return KResult(-ENOEXEC);
+    if (ph_load_result.is_error()) {
+        dbgln("do_exec: Failure loading program ({})", ph_load_result.error());
+        return ph_load_result;
     }
 
     if (!elf_image.entry().offset(load_offset).get()) {

@@ -108,6 +108,7 @@ void Image::dump() const
         dbgprintf("       flags: %x\n", program_header.flags());
         dbgprintf("        \n");
         dbgprintf("    }\n");
+        return IterationDecision::Continue;
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {

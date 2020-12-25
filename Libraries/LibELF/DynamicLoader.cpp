@@ -101,6 +101,7 @@ RefPtr<DynamicObject> DynamicLoader::dynamic_object_from_image() const
         if (program_header.type() == PT_DYNAMIC) {
             dynamic_section_address = VirtualAddress(program_header.raw_data());
         }
+        return IterationDecision::Continue;
     });
     ASSERT(!dynamic_section_address.is_null());
 
@@ -114,6 +115,7 @@ size_t DynamicLoader::calculate_tls_size() const
         if (program_header.type() == PT_TLS) {
             tls_size = program_header.size_in_memory();
         }
+        return IterationDecision::Continue;
     });
     return tls_size;
 }
@@ -232,6 +234,7 @@ void DynamicLoader::load_program_headers()
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
         }
+        return IterationDecision::Continue;
     });
 
     ASSERT(text_region_ptr && data_region_ptr);

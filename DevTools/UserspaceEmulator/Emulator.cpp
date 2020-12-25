@@ -208,8 +208,10 @@ bool Emulator::load_elf()
                 m_loader_text_size = region->size();
             }
             mmu().add_region(move(region));
-            return;
+            return IterationDecision::Continue;
         }
+
+        return IterationDecision::Continue;
     });
 
     auto entry_point = interpreter_image.entry().offset(interpreter_load_offset).get();
