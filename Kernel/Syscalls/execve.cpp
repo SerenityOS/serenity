@@ -62,6 +62,73 @@ static bool validate_stack_size(const Vector<String>& arguments, const Vector<St
     return (total_blob_size + total_meta_size) < Thread::default_userspace_stack_size;
 }
 
+static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, Vector<String> arguments, Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
+{
+    FlatPtr new_esp = region.vaddr().offset(Thread::default_userspace_stack_size).get();
+
+    auto push_on_new_stack = [&new_esp](u32 value) {
+        new_esp -= 4;
+        Userspace<u32*> stack_ptr = new_esp;
+        return copy_to_user(stack_ptr, &value);
+    };
+
+    auto push_aux_value_on_new_stack = [&new_esp](auxv_t value) {
+        new_esp -= sizeof(auxv_t);
+        Userspace<auxv_t*> stack_ptr = new_esp;
+        return copy_to_user(stack_ptr, &value);
+    };
+
+    auto push_string_on_new_stack = [&new_esp](const String& string) {
+        new_esp -= round_up_to_power_of_two(string.length() + 1, 4);
+        Userspace<u32*> stack_ptr = new_esp;
+        return copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+    };
+
+    Vector<FlatPtr> argv_entries;
+    for (auto& argument : arguments) {
+        push_string_on_new_stack(argument);
+        argv_entries.append(new_esp);
+    }
+
+    Vector<FlatPtr> env_entries;
+    for (auto& variable : environment) {
+        push_string_on_new_stack(variable);
+        env_entries.append(new_esp);
+    }
+
+    for (auto& value : auxiliary_values) {
+        if (!value.optional_string.is_empty()) {
+            push_string_on_new_stack(value.optional_string);
+            value.auxv.a_un.a_ptr = (void*)new_esp;
+        }
+    }
+
+    for (ssize_t i = auxiliary_values.size() - 1; i >= 0; --i) {
+        auto& value = auxiliary_values[i];
+        push_aux_value_on_new_stack(value.auxv);
+    }
+
+    push_on_new_stack(0);
+    for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
+        push_on_new_stack(env_entries[i]);
+    FlatPtr envp = new_esp;
+
+    push_on_new_stack(0);
+    for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
+        push_on_new_stack(argv_entries[i]);
+    FlatPtr argv = new_esp;
+
+    // NOTE: The stack needs to be 16-byte aligned.
+    new_esp -= new_esp % 16;
+
+    push_on_new_stack((FlatPtr)envp);
+    push_on_new_stack((FlatPtr)argv);
+    push_on_new_stack((FlatPtr)argv_entries.size());
+    push_on_new_stack(0);
+
+    return new_esp;
+}
+
 KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls should_allocate_tls)
 {
     auto& inode = *(object_description.inode());
@@ -192,6 +259,11 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return KResult(-ENOEXEC);
     }
 
+    auto* stack_region = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
+    if (!stack_region)
+        return KResult(-ENOMEM);
+    stack_region->set_stack(true);
+
     return LoadResult {
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
@@ -200,7 +272,8 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         elf_image.program_header_count(),
         master_tls_region ? master_tls_region->make_weak_ptr() : nullptr,
         master_tls_size,
-        master_tls_alignment
+        master_tls_alignment,
+        stack_region->make_weak_ptr()
     };
 }
 
@@ -368,7 +441,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    auto make_stack_result = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment), move(auxv));
+    auto make_stack_result = make_userspace_stack_for_main_thread(*load_result.stack_region.unsafe_ptr(), move(arguments), move(environment), move(auxv));
     if (make_stack_result.is_error())
         return make_stack_result.error();
     u32 new_userspace_esp = make_stack_result.value();

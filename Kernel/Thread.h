@@ -975,8 +975,6 @@ public:
     void set_default_signal_dispositions();
     bool push_value_on_stack(FlatPtr);
 
-    KResultOr<u32> make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<ELF::AuxiliaryValue>);
-
     KResult make_thread_specific_region(Badge<Process>);
 
     unsigned syscall_count() const { return m_syscall_count; }
