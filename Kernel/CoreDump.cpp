@@ -42,6 +42,11 @@ namespace Kernel {
 
 OwnPtr<CoreDump> CoreDump::create(Process& process, const String& output_path)
 {
+    if (!process.is_dumpable()) {
+        dbgln("Refusing to generate CoreDump for non-dumpable process {}", process.pid().value());
+        return nullptr;
+    }
+
     auto fd = create_target_file(process, output_path);
     if (!fd)
         return nullptr;

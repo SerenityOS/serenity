@@ -35,6 +35,8 @@ int Process::sys$seteuid(uid_t euid)
     if (euid != m_uid && euid != m_suid && !is_superuser())
         return -EPERM;
 
+    if (m_euid != euid)
+        set_dumpable(false);
     m_euid = euid;
     return 0;
 }
@@ -46,6 +48,9 @@ int Process::sys$setegid(gid_t egid)
     if (egid != m_gid && egid != m_sgid && !is_superuser())
         return -EPERM;
 
+    if (m_egid != egid)
+        set_dumpable(false);
+
     m_egid = egid;
     return 0;
 }
@@ -56,6 +61,9 @@ int Process::sys$setuid(uid_t uid)
 
     if (uid != m_uid && uid != m_euid && !is_superuser())
         return -EPERM;
+
+    if (m_euid != uid)
+        set_dumpable(false);
 
     m_uid = uid;
     m_euid = uid;
@@ -69,6 +77,9 @@ int Process::sys$setgid(gid_t gid)
 
     if (gid != m_gid && gid != m_egid && !is_superuser())
         return -EPERM;
+
+    if (m_egid != gid)
+        set_dumpable(false);
 
     m_gid = gid;
     m_egid = gid;
@@ -91,6 +102,9 @@ int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
     if ((!ok(ruid) || !ok(euid) || !ok(suid)) && !is_superuser())
         return -EPERM;
 
+    if (m_euid != euid)
+        set_dumpable(false);
+
     m_uid = ruid;
     m_euid = euid;
     m_suid = suid;
@@ -111,6 +125,9 @@ int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
     auto ok = [this](gid_t id) { return id == m_gid || id == m_egid || id == m_sgid; };
     if ((!ok(rgid) || !ok(egid) || !ok(sgid)) && !is_superuser())
         return -EPERM;
+
+    if (m_egid != egid)
+        set_dumpable(false);
 
     m_gid = rgid;
     m_egid = egid;

@@ -59,6 +59,9 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         || (peer->process().uid() != peer->process().euid())) // Disallow tracing setuid processes
         return KResult(-EACCES);
 
+    if (!peer->process().is_dumpable())
+        return KResult(-EACCES);
+
     auto& peer_process = peer->process();
     if (params.request == PT_ATTACH) {
         if (peer_process.tracer()) {
