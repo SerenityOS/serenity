@@ -36,6 +36,9 @@ public:
     FullDevice();
     virtual ~FullDevice() override;
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0600; }
+
 private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;

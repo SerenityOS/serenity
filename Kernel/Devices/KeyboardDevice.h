@@ -74,6 +74,9 @@ public:
         enable_irq();
     }
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0440; }
+
 private:
     // ^IRQHandler
     virtual void handle_irq(const RegisterState&) override;

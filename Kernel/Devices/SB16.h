@@ -53,6 +53,9 @@ public:
 
     virtual const char* purpose() const override { return class_name(); }
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0220; }
+
 private:
     // ^IRQHandler
     virtual void handle_irq(const RegisterState&) override;

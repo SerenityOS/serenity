@@ -44,6 +44,9 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0600; }
+
 private:
     virtual const char* class_name() const override;
 

@@ -55,6 +55,9 @@ public:
 
     void notify_master_destroyed(Badge<MasterPTY>, unsigned index);
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0666; }
+
 private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "PTYMultiplexer"; }

@@ -51,6 +51,9 @@ public:
 
     const CircularQueue<char, 16384>& logbuffer() const { return m_logbuffer; }
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0666; }
+
 private:
     CircularQueue<char, 16384> m_logbuffer;
 };

@@ -48,6 +48,9 @@ public:
 
     virtual String absolute_path(const FileDescription&) const override;
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0640; }
+
 private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
