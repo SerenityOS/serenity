@@ -67,15 +67,16 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         dbgln("Refusing to execute a write-mapped program");
         return KResult(-ETXTBSY);
     }
-    InodeMetadata loader_metadata = object_description.metadata();
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
+    size_t executable_size = inode.size();
+
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF loading", Region::Access::Read);
     if (!region) {
         dbgln("Could not allocate memory for ELF loading");
         return KResult(-ENOMEM);
     }
 
-    auto elf_image = ELF::Image(region->vaddr().as_ptr(), loader_metadata.size);
+    auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
 
     if (!elf_image.is_valid())
         return KResult(-ENOEXEC);
@@ -187,7 +188,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     return LoadResult {
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
-        (size_t)loader_metadata.size,
+        executable_size,
         VirtualAddress(elf_image.program_header_table_offset()).offset(load_offset).get(),
         elf_image.program_header_count(),
         master_tls_region ? master_tls_region->make_weak_ptr() : nullptr,
