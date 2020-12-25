@@ -46,7 +46,6 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
-#include <LibELF/AuxiliaryVector.h>
 
 namespace Kernel {
 
@@ -437,7 +436,7 @@ public:
         Yes,
     };
 
-    int load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description);
+    KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description);
     KResultOr<LoadResult> load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls);
 
     bool is_superuser() const
@@ -534,7 +533,6 @@ private:
     ssize_t do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
-    Vector<ELF::AuxiliaryValue> generate_auxiliary_vector() const;
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
@@ -574,9 +572,6 @@ private:
     gid_t m_sgid { 0 };
 
     ThreadID m_exec_tid { 0 };
-    FlatPtr m_load_base { 0U };
-    FlatPtr m_entry_eip { 0U };
-    int m_main_program_fd { -1 };
 
     OwnPtr<ThreadTracer> m_tracer;
 
