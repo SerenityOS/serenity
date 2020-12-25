@@ -38,7 +38,7 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/limits.h>
-#include <LibELF/Loader.h>
+#include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 
 //#define EXEC_DEBUG
@@ -84,8 +84,9 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
     MM.enter_process_paging_scope(*this);
     String object_name = LexicalPath(object_description.absolute_path()).basename();
-    RefPtr<ELF::Loader> loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size, move(object_name));
-    loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
+    auto elf_image = ELF::Image(region->vaddr().as_ptr(), loader_metadata.size);
+
+    auto map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
         ASSERT(size);
         ASSERT(alignment == PAGE_SIZE);
         int prot = 0;
@@ -103,7 +104,8 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         }
         return nullptr;
     };
-    loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
+
+    auto alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
         ASSERT(size);
         ASSERT(alignment == PAGE_SIZE);
         int prot = 0;
@@ -115,36 +117,101 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             return region->vaddr().as_ptr();
         return nullptr;
     };
-    if (should_allocate_tls == ShouldAllocateTls::Yes) {
-        loader->tls_section_hook = [&](size_t size, size_t alignment) {
-            ASSERT(size);
-            master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
-            master_tls_size = size;
-            master_tls_alignment = alignment;
-            return master_tls_region->vaddr().as_ptr();
-        };
-    }
+
+    auto tls_section_hook = [&](size_t size, size_t alignment) {
+        ASSERT(should_allocate_tls == ShouldAllocateTls::Yes);
+        ASSERT(size);
+        master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+        master_tls_size = size;
+        master_tls_alignment = alignment;
+        return master_tls_region->vaddr().as_ptr();
+    };
 
     ASSERT(!Processor::current().in_critical());
-    bool success = loader->load();
-    if (!success) {
+
+    bool failed = false;
+    elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
+        if (program_header.type() == PT_TLS) {
+            auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
+            if (!tls_image) {
+                failed = true;
+                return;
+            }
+            if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+                dbg() << "Shenanigans! ELF PT_TLS header sneaks outside of executable.";
+                failed = true;
+                return;
+            }
+            if (!copy_to_user(tls_image, program_header.raw_data(), program_header.size_in_image())) {
+                failed = false;
+                return;
+            }
+            return;
+        }
+        if (program_header.type() != PT_LOAD)
+            return;
+        if (program_header.is_writable()) {
+            auto* allocated_section = alloc_section_hook(
+                program_header.vaddr(),
+                program_header.size_in_memory(),
+                program_header.alignment(),
+                program_header.is_readable(),
+                program_header.is_writable(),
+                String::format("%s-alloc-%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
+            if (!allocated_section) {
+                failed = true;
+                return;
+            }
+            if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+                dbg() << "Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.";
+                failed = true;
+                return;
+            }
+            // It's not always the case with PIE executables (and very well shouldn't be) that the
+            // virtual address in the program header matches the one we end up giving the process.
+            // In order to copy the data image correctly into memory, we need to copy the data starting at
+            // the right initial page offset into the pages allocated for the elf_alloc-XX section.
+            // FIXME: There's an opportunity to munmap, or at least mprotect, the padding space between
+            //     the .text and .data PT_LOAD sections of the executable.
+            //     Accessing it would definitely be a bug.
+            auto page_offset = program_header.vaddr();
+            page_offset.mask(~PAGE_MASK);
+            if (!copy_to_user((u8*)allocated_section + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
+                failed = false;
+                return;
+            }
+        } else {
+            auto* mapped_section = map_section_hook(
+                program_header.vaddr(),
+                program_header.size_in_memory(),
+                program_header.alignment(),
+                program_header.offset(),
+                program_header.is_readable(),
+                program_header.is_writable(),
+                program_header.is_executable(),
+                String::format("%s-map-%s%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
+            if (!mapped_section) {
+                failed = true;
+            }
+        }
+    });
+
+    if (failed) {
         klog() << "do_exec: Failure loading program";
         return KResult(-ENOEXEC);
     }
 
-    if (!loader->entry().offset(load_offset).get()) {
-        klog() << "do_exec: Failure loading program, entry pointer is invalid! (" << loader->entry().offset(load_offset) << ")";
+    if (!elf_image.entry().offset(load_offset).get()) {
+        klog() << "do_exec: Failure loading program, entry pointer is invalid! (" << elf_image.entry().offset(load_offset) << ")";
         return KResult(-ENOEXEC);
     }
 
-    // NOTE: At this point, we've committed to the new executable.
-
     return LoadResult {
         load_base_address,
-        loader->entry().offset(load_offset).get(),
+        elf_image.entry().offset(load_offset).get(),
         (size_t)loader_metadata.size,
-        VirtualAddress(loader->image().program_header_table_offset()).offset(load_offset).get(),
-        loader->image().program_header_count(),
+        VirtualAddress(elf_image.program_header_table_offset()).offset(load_offset).get(),
+        elf_image.program_header_count(),
         master_tls_region ? master_tls_region->make_weak_ptr() : nullptr,
         master_tls_size,
         master_tls_alignment

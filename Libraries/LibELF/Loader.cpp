@@ -29,20 +29,12 @@
 #include <AK/Memory.h>
 #include <AK/QuickSort.h>
 
-#ifdef KERNEL
-#    include <Kernel/VM/MemoryManager.h>
-#    define do_memcpy copy_to_user
-#else
-#    define do_memcpy memcpy
-#endif
-
 //#define Loader_DEBUG
 
 namespace ELF {
 
-Loader::Loader(const u8* buffer, size_t size, String&& name, bool verbose_logging)
+Loader::Loader(const u8* buffer, size_t size, String&&, bool verbose_logging)
     : m_image(buffer, size, verbose_logging)
-    , m_name(move(name))
 {
     if (m_image.is_valid())
         m_symbol_count = m_image.symbol_count();
@@ -50,98 +42,6 @@ Loader::Loader(const u8* buffer, size_t size, String&& name, bool verbose_loggin
 
 Loader::~Loader()
 {
-}
-
-bool Loader::load()
-{
-#ifdef Loader_DEBUG
-    m_image.dump();
-#endif
-    if (!m_image.is_valid())
-        return false;
-
-    if (!layout())
-        return false;
-
-    return true;
-}
-
-bool Loader::layout()
-{
-    bool failed = false;
-    m_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
-        if (program_header.type() == PT_TLS) {
-#ifdef KERNEL
-            auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
-            if (!tls_image) {
-                failed = true;
-                return;
-            }
-            if (!m_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbg() << "Shenanigans! ELF PT_TLS header sneaks outside of executable.";
-                failed = true;
-                return;
-            }
-            if (!do_memcpy(tls_image, program_header.raw_data(), program_header.size_in_image())) {
-                failed = false;
-                return;
-            }
-#endif
-            return;
-        }
-        if (program_header.type() != PT_LOAD)
-            return;
-#ifdef KERNEL
-#    ifdef Loader_DEBUG
-        kprintf("PH: V%p %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
-#    endif
-        if (program_header.is_writable()) {
-            auto* allocated_section = alloc_section_hook(
-                program_header.vaddr(),
-                program_header.size_in_memory(),
-                program_header.alignment(),
-                program_header.is_readable(),
-                program_header.is_writable(),
-                String::format("%s-alloc-%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
-            if (!allocated_section) {
-                failed = true;
-                return;
-            }
-            if (!m_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
-                dbg() << "Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.";
-                failed = true;
-                return;
-            }
-            // It's not always the case with PIE executables (and very well shouldn't be) that the
-            // virtual address in the program header matches the one we end up giving the process.
-            // In order to copy the data image correctly into memory, we need to copy the data starting at
-            // the right initial page offset into the pages allocated for the elf_alloc-XX section.
-            // FIXME: There's an opportunity to munmap, or at least mprotect, the padding space between
-            //     the .text and .data PT_LOAD sections of the executable.
-            //     Accessing it would definitely be a bug.
-            auto page_offset = program_header.vaddr();
-            page_offset.mask(~PAGE_MASK);
-            if (!do_memcpy((u8*)allocated_section + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
-                failed = false;
-                return;
-            }
-        } else {
-            auto* mapped_section = map_section_hook(
-                program_header.vaddr(),
-                program_header.size_in_memory(),
-                program_header.alignment(),
-                program_header.offset(),
-                program_header.is_readable(),
-                program_header.is_writable(),
-                program_header.is_executable(),
-                String::format("%s-map-%s%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
-            if (!mapped_section) {
-                failed = true;
-            }
-        }
-#endif
-    });
-    return !failed;
 }
 
 #ifndef KERNEL
