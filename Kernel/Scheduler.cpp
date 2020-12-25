@@ -141,15 +141,15 @@ bool Scheduler::pick_next()
     dbg() << "Scheduler[" << Processor::current().id() << "]: Non-runnables:";
     Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
         if (thread.state() == Thread::Dying)
-            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::formatted("{:04x}:{:08x}", thread.tss().cs, thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
         else
-            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::formatted("{:04x}:{:08x}", thread.tss().cs, thread.tss().eip);
         return IterationDecision::Continue;
     });
 
     dbg() << "Scheduler[" << Processor::current().id() << "]: Runnables:";
     Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
-        dbg() << "  " << String::format("%3u", thread.effective_priority()) << "/" << String::format("%2u", thread.priority()) << " " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
+        dbg() << "  " << String::format("%3u", thread.effective_priority()) << "/" << String::format("%2u", thread.priority()) << " " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::formatted("{:04x}:{:08x}", thread.tss().cs, thread.tss().eip);
         return IterationDecision::Continue;
     });
 #endif
@@ -331,7 +331,7 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbg() << "Scheduler[" << Processor::current().id() << "]: " << *from_thread << " -> " << *thread << " [" << thread->priority() << "] " << String::format("%w", thread->tss().cs) << ":" << String::format("%x", thread->tss().eip);
+        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::current().id(), from_thread->tid().value(), thread->tid().value(), thread->priority(), thread->tss().cs, thread->tss().eip);
 #endif
     }
 

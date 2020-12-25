@@ -77,7 +77,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child_tss.ss = regs.userspace_ss;
 
 #ifdef FORK_DEBUG
-    dbg() << "fork: child will begin executing at " << String::format("%w", child_tss.cs) << ":" << String::format("%x", child_tss.eip) << " with stack " << String::format("%w", child_tss.ss) << ":" << String::format("%x", child_tss.esp) << ", kstack " << String::format("%w", child_tss.ss0) << ":" << String::format("%x", child_tss.esp0);
+    dbgln("fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
 #endif
 
     SharedBuffer::share_all_shared_buffers(*this, *child);

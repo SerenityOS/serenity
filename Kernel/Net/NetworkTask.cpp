@@ -123,7 +123,7 @@ void NetworkTask_main(void*)
         }
         auto& eth = *(const EthernetFrameHeader*)buffer;
 #ifdef ETHERNET_DEBUG
-        klog() << "NetworkTask: From " << eth.source().to_string().characters() << " to " << eth.destination().to_string().characters() << ", ether_type=" << String::format("%w", eth.ether_type()) << ", packet_length=" << packet_size;
+        dbgln("NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
 #endif
 
 #ifdef ETHERNET_VERY_DEBUG
@@ -171,16 +171,21 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     }
     auto& packet = *static_cast<const ARPPacket*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
-        klog() << "handle_arp: Hardware type not ethernet (" << String::format("%w", packet.hardware_type()) << ", len=" << packet.hardware_address_length() << ")";
+        dbgln("handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
         return;
     }
     if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
-        klog() << "handle_arp: Protocol type not IPv4 (" << String::format("%w", packet.hardware_type()) << ", len=" << packet.protocol_address_length() << ")";
+        dbgln("handle_arp: Protocol type not IPv4 ({:#04x}, len={})", packet.protocol_type(), packet.protocol_address_length());
         return;
     }
 
 #ifdef ARP_DEBUG
-    klog() << "handle_arp: operation=" << String::format("%w", packet.operation()) << ", sender=" << packet.sender_hardware_address().to_string().characters() << "/" << packet.sender_protocol_address().to_string().characters() << ", target=" << packet.target_hardware_address().to_string().characters() << "/" << packet.target_protocol_address().to_string().characters();
+    dbgln("handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
+        packet.operation(),
+        packet.sender_hardware_address().to_string(),
+        packet.sender_protocol_address().to_string(),
+        packet.target_hardware_address().to_string(),
+        packet.target_protocol_address().to_string());
 #endif
 
     if (!packet.sender_hardware_address().is_zero() && !packet.sender_protocol_address().is_zero()) {
@@ -341,7 +346,20 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
 #ifdef TCP_DEBUG
-    klog() << "handle_tcp: source=" << ipv4_packet.source().to_string().characters() << ":" << tcp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << tcp_packet.destination_port() << " seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", flags=" << String::format("%w", tcp_packet.flags()) << " (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << "), window_size=" << tcp_packet.window_size() << ", payload_size=" << payload_size;
+    dbgln("handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
+        ipv4_packet.source().to_string(),
+        tcp_packet.source_port(),
+        ipv4_packet.destination().to_string(),
+        tcp_packet.destination_port(),
+        tcp_packet.sequence_number(),
+        tcp_packet.ack_number(),
+        tcp_packet.flags(),
+        tcp_packet.has_syn() ? "SYN " : "",
+        tcp_packet.has_ack() ? "ACK " : "",
+        tcp_packet.has_fin() ? "FIN " : "",
+        tcp_packet.has_rst() ? "RST " : "",
+        tcp_packet.window_size(),
+        payload_size);
 #endif
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
@@ -358,8 +376,20 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
-        klog() << "handle_tcp: No TCP socket for tuple " << tuple.to_string().characters();
-        klog() << "handle_tcp: source=" << ipv4_packet.source().to_string().characters() << ":" << tcp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << tcp_packet.destination_port() << " seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", flags=" << String::format("%w", tcp_packet.flags()) << " (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << "), window_size=" << tcp_packet.window_size() << ", payload_size=" << payload_size;
+        dbgln("handle_tcp: No TCP socket for tuple {}", tuple.to_string());
+        dbgln("handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
+            ipv4_packet.source().to_string(), tcp_packet.source_port(),
+            ipv4_packet.destination().to_string(),
+            tcp_packet.destination_port(),
+            tcp_packet.sequence_number(),
+            tcp_packet.ack_number(),
+            tcp_packet.flags(),
+            tcp_packet.has_syn() ? "SYN " : "",
+            tcp_packet.has_ack() ? "ACK " : "",
+            tcp_packet.has_fin() ? "FIN " : "",
+            tcp_packet.has_rst() ? "RST " : "",
+            tcp_packet.window_size(),
+            payload_size);
         return;
     }
 

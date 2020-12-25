@@ -830,7 +830,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
 #ifdef SIGNAL_DEBUG
-    klog() << "signal: Okay, " << *this << " {" << state_string() << "} has been primed with signal handler " << String::format("%w", m_tss.cs) << ":" << String::format("%x", m_tss.eip) << " to deliver " << signal;
+    dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
 #endif
     return DispatchSignalResult::Continue;
 }

@@ -386,10 +386,6 @@ struct PrintfImpl {
         m_putch(m_bufptr, '%');
         return 1;
     }
-    ALWAYS_INLINE int format_w(const ModifierState& state, ArgumentListRefT ap) const
-    {
-        return print_hex(m_putch, m_bufptr, NextArgument<int>()(ap), false, state.alternate_form, false, true, 4);
-    }
     ALWAYS_INLINE int format_c(const ModifierState& state, ArgumentListRefT ap) const
     {
         char c = NextArgument<int>()(ap);
@@ -511,7 +507,6 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 PRINTF_IMPL_DELEGATE_TO_IMPL(q);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(s);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(u);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(w);
                 PRINTF_IMPL_DELEGATE_TO_IMPL(x);
             default:
                 ret += impl.format_unrecognized(*p, fmt, state, ap);
