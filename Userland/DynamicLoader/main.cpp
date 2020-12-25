@@ -188,7 +188,7 @@ static void allocate_tls()
 {
     size_t total_tls_size = 0;
     for (const auto& data : g_loaders) {
-        VERBOSE("%s: TLS Size: %u\n", data.key.characters(), data.value->tls_size());
+        VERBOSE("%s: TLS Size: %zu\n", data.key.characters(), data.value->tls_size());
         total_tls_size += data.value->tls_size();
     }
     if (total_tls_size) {
@@ -270,7 +270,7 @@ static FlatPtr loader_main(auxv_t* auxvp)
 
     VERBOSE("loaded all dependencies");
     for ([[maybe_unused]] auto& lib : g_loaders) {
-        VERBOSE("%s - tls size: %u, tls offset: %u\n", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
+        VERBOSE("%s - tls size: %zu, tls offset: %zu\n", lib.key.characters(), lib.value->tls_size(), lib.value->tls_offset());
     }
 
     allocate_tls();
@@ -283,7 +283,7 @@ static FlatPtr loader_main(auxv_t* auxvp)
     if (main_program_lib->is_dynamic())
         entry_point += reinterpret_cast<FlatPtr>(main_program_lib->text_segment_load_address().as_ptr());
 
-    VERBOSE("entry point: %p\n", entry_point);
+    VERBOSE("entry point: %p\n", (void*)entry_point);
 
     // This will unmap the temporary memory maps we had for loading the libraries
     clear_temporary_objects_mappings();

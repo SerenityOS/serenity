@@ -48,7 +48,7 @@ void BoxLayout::run(Widget& widget)
     should_log = true;
 #endif
     if (should_log)
-        dbgprintf("BoxLayout: running layout on %s{%p}, entry count: %d\n", widget.class_name(), &widget, m_entries.size());
+        dbgprintf("BoxLayout: running layout on %s{%p}, entry count: %zu\n", widget.class_name(), &widget, m_entries.size());
 
     if (m_entries.is_empty())
         return;
@@ -94,7 +94,7 @@ void BoxLayout::run(Widget& widget)
     available_size -= { margins().left() + margins().right(), margins().top() + margins().bottom() };
 
     if (should_log)
-        dbgprintf("BoxLayout:  Number of visible: %d/%d\n", number_of_visible_entries, m_entries.size());
+        dbgprintf("BoxLayout:  Number of visible: %d/%zu\n", number_of_visible_entries, m_entries.size());
 
     int number_of_entries_with_automatic_size = number_of_visible_entries - number_of_entries_with_fixed_size;
 

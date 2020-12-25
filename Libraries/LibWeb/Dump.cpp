@@ -393,7 +393,7 @@ void dump_rule(const CSS::StyleRule& rule)
 
 void dump_sheet(const CSS::StyleSheet& sheet)
 {
-    dbgprintf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
+    dbgprintf("StyleSheet{%p}: %zu rule(s)\n", &sheet, sheet.rules().size());
 
     for (auto& rule : sheet.rules()) {
         dump_rule(rule);

@@ -246,7 +246,7 @@ void Terminal::escape$t(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
-    dbgprintf("FIXME: escape$t: Ps: %u (param count: %d)\n", params[0], params.size());
+    dbgprintf("FIXME: escape$t: Ps: %u (param count: %zu)\n", params[0], params.size());
 }
 
 void Terminal::DECSTBM(const ParamVector& params)
