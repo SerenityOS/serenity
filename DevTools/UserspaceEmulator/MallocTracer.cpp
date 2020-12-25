@@ -60,7 +60,7 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
 {
     if (m_emulator.is_in_loader_code())
         return;
-    auto* region = m_emulator.mmu().find_region({ 0x20, address });
+    auto* region = m_emulator.mmu().find_region({ 0x23, address });
     ASSERT(region);
     ASSERT(region->is_mmap());
     auto& mmap_region = static_cast<MmapRegion&>(*region);
@@ -143,7 +143,7 @@ void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t si
 {
     if (m_emulator.is_in_loader_code())
         return;
-    auto* region = m_emulator.mmu().find_region({ 0x20, address });
+    auto* region = m_emulator.mmu().find_region({ 0x23, address });
     ASSERT(region);
     ASSERT(region->is_mmap());
     auto& mmap_region = static_cast<MmapRegion&>(*region);
@@ -309,7 +309,7 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
             return IterationDecision::Continue;
         size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
-            auto value = m_emulator.mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
+            auto value = m_emulator.mmu().read32({ 0x23, other_mallocation.address + i * sizeof(u32) });
             if (value.value() == mallocation.address && !value.is_uninitialized()) {
 #ifdef REACHABLE_DEBUG
                 reportln("mallocation {:p} is reachable from other mallocation {:p}", mallocation.address, other_mallocation.address);
