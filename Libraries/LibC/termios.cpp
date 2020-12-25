@@ -53,7 +53,8 @@ int tcsetattr(int fd, int optional_actions, const struct termios* t)
 
 int tcflow([[maybe_unused]] int fd, [[maybe_unused]] int action)
 {
-    ASSERT_NOT_REACHED();
+    errno = EINVAL;
+    return -1;
 }
 
 int tcflush(int fd, int queue_selector)
