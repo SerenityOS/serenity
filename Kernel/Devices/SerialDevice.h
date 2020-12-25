@@ -123,6 +123,9 @@ public:
         DataReady = 0x01 << 0
     };
 
+    // ^Device
+    virtual mode_t required_mode() const override { return 0620; }
+
 private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }
