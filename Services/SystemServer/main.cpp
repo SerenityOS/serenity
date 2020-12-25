@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -84,6 +85,84 @@ static void parse_boot_mode()
     dbg() << "Booting in " << g_boot_mode << " mode";
 }
 
+static void prepare_devfs()
+{
+    // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
+
+    int rc = mount(-1, "/dev", "dev", 0);
+    if (rc != 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = mkdir("/dev/pts", 0755);
+    if (rc != 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = mount(-1, "/dev/pts", "devpts", 0);
+    if (rc != 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = symlink("/dev/random", "/dev/urandom");
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    // FIXME: Find a better way to chown without hardcoding the gid!
+    rc = chown("/dev/fb0", 0, 3);
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    // FIXME: Find a better way to chown without hardcoding the gid!
+    rc = chown("/dev/keyboard", 0, 3);
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    // FIXME: Find a better way to chown without hardcoding the gid!
+    rc = chown("/dev/mouse", 0, 3);
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    for (size_t index = 0; index < 4; index++) {
+        // FIXME: Find a better way to chown without hardcoding the gid!
+        rc = chown(String::format("/dev/tty%d", index).characters(), 0, 2);
+        if (rc < 0) {
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    for (size_t index = 0; index < 4; index++) {
+        // FIXME: Find a better way to chown without hardcoding the gid!
+        rc = chown(String::format("/dev/ttyS%d", index).characters(), 0, 2);
+        if (rc < 0) {
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    // FIXME: Find a better way to chown without hardcoding the gid!
+    rc = chown("/dev/audio", 0, 4);
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = symlink("/proc/self/fd/0", "/dev/stdin");
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+    rc = symlink("/proc/self/fd/1", "/dev/stdout");
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+    rc = symlink("/proc/self/fd/2", "/dev/stderr");
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+}
+
 static void mount_all_filesystems()
 {
     dbg() << "Spawning mount -a to mount all filesystems.";
@@ -103,6 +182,8 @@ static void mount_all_filesystems()
 
 int main(int, char**)
 {
+    prepare_devfs();
+
     if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;

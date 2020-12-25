@@ -3,9 +3,7 @@
 set -e
 
 wheel_gid=1
-tty_gid=2
 phys_gid=3
-audio_gid=4
 utmp_gid=5
 window_uid=13
 window_gid=13
@@ -82,57 +80,8 @@ chown 0:$utmp_gid mnt/var/run/utmp
 chmod 664 mnt/var/run/utmp
 echo "done"
 
-printf "setting up device nodes... "
+printf "setting up device nodes folder... "
 mkdir -p mnt/dev
-mkdir -p mnt/dev/pts
-mknod mnt/dev/fb0 b 29 0
-chmod 660 mnt/dev/fb0
-chown 0:$phys_gid mnt/dev/fb0
-mknod mnt/dev/tty0 c 4 0
-mknod mnt/dev/tty1 c 4 1
-mknod mnt/dev/tty2 c 4 2
-mknod mnt/dev/tty3 c 4 3
-mknod mnt/dev/ttyS0 c 4 64
-mknod mnt/dev/ttyS1 c 4 65
-mknod mnt/dev/ttyS2 c 4 66
-mknod mnt/dev/ttyS3 c 4 67
-for tty in 0 1 2 3 S0 S1 S2 S3; do
-    chmod 620 mnt/dev/tty$tty
-    chown 0:$tty_gid mnt/dev/tty$tty
-done
-mknod mnt/dev/random c 1 8
-mknod mnt/dev/null c 1 3
-mknod mnt/dev/zero c 1 5
-mknod mnt/dev/full c 1 7
-# random, is failing (randomly) on fuse-ext2 on macos :)
-chmod 666 mnt/dev/random || true
-ln -s random mnt/dev/urandom
-chmod 666 mnt/dev/null
-chmod 666 mnt/dev/zero
-chmod 666 mnt/dev/full
-mknod mnt/dev/keyboard c 85 1
-chmod 440 mnt/dev/keyboard
-chown 0:$phys_gid mnt/dev/keyboard
-mknod mnt/dev/mouse c 10 1
-chmod 440 mnt/dev/mouse
-chown 0:$phys_gid mnt/dev/mouse
-mknod mnt/dev/audio c 42 42
-chmod 220 mnt/dev/audio
-chown 0:$audio_gid mnt/dev/audio
-mknod mnt/dev/ptmx c 5 2
-chmod 666 mnt/dev/ptmx
-mknod mnt/dev/hda b 3 0
-mknod mnt/dev/hdb b 3 1
-mknod mnt/dev/hdc b 3 2
-mknod mnt/dev/hdd b 3 3
-for hd in a b c d; do
-    chmod 600 mnt/dev/hd$hd
-done
-
-ln -s /proc/self/fd/0 mnt/dev/stdin
-ln -s /proc/self/fd/1 mnt/dev/stdout
-ln -s /proc/self/fd/2 mnt/dev/stderr
-echo "done"
 
 printf "writing version file... "
 GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | head -c 7) || true )

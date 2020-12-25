@@ -47,6 +47,7 @@ set(KERNEL_SOURCES
     DoubleBuffer.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
+    FileSystem/DevFS.cpp
     FileSystem/DevPtsFS.cpp
     FileSystem/Ext2FileSystem.cpp
     FileSystem/FIFO.cpp
