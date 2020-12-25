@@ -75,3 +75,10 @@ inline const LogStream& operator<<(const LogStream& stream, VirtualAddress value
 {
     return stream << 'V' << value.as_ptr();
 }
+
+namespace AK {
+template<>
+struct Formatter<VirtualAddress> : Formatter<StringView> {
+    void format(TypeErasedFormatParams&, FormatBuilder&, const VirtualAddress&);
+};
+}
