@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -45,10 +46,7 @@ namespace FileManager {
 
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
 {
-    RefPtr<Gfx::Bitmap> icon;
-    auto icon_file = details().icons.get("16x16");
-    if (icon_file.has_value())
-        icon = Gfx::Bitmap::load_from_file(icon_file.value());
+    auto icon = GUI::FileIconProvider::icon_for_path(details().executable).bitmap_for_size(16);
     return GUI::Action::create(details().name, move(icon), [this, launch_handler = move(launch_handler)](auto&) {
         launch_handler(*this);
     });
