@@ -30,7 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 
-const char* g_usage = R"(Usage:
+const char* const g_usage = R"(Usage:
     seq [-h|--help]
     seq LAST
     seq FIRST LAST
@@ -39,7 +39,7 @@ const char* g_usage = R"(Usage:
 
 static void print_usage(FILE* stream)
 {
-    fprintf(stream, g_usage);
+    fputs(g_usage, stream);
     return;
 }
 
