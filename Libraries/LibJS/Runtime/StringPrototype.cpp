@@ -75,6 +75,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
     define_native_function(vm.names.repeat, repeat, 1, attr);
     define_native_function(vm.names.startsWith, starts_with, 1, attr);
+    define_native_function(vm.names.endsWith, ends_with, 1, attr);
     define_native_function(vm.names.indexOf, index_of, 1, attr);
     define_native_function(vm.names.toLowerCase, to_lowercase, 0, attr);
     define_native_function(vm.names.toUpperCase, to_uppercase, 0, attr);
@@ -182,6 +183,51 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
         return Value(false);
     if (search_string_length == 0)
         return Value(true);
+    return Value(string.substring(start, search_string_length) == search_string);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (string.is_null())
+        return {};
+
+    auto search_string_value = vm.argument(0);
+
+    bool search_is_regexp = search_string_value.is_regexp(global_object);
+    if (vm.exception())
+        return {};
+    if (search_is_regexp) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return {};
+    }
+
+    auto search_string = search_string_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto string_length = string.length();
+    auto search_string_length = search_string.length();
+
+    size_t pos = string_length;
+
+    auto end_position_value = vm.argument(1);
+    if (!end_position_value.is_undefined()) {
+        auto number = end_position_value.to_number(global_object);
+        if (vm.exception())
+            return {};
+        double pos_as_double = number.to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+        pos = clamp(pos_as_double, static_cast<double>(0), static_cast<double>(string_length));
+    }
+
+    if (search_string_length == 0)
+        return Value(true);
+    if (pos < search_string_length)
+        return Value(false);
+
+    auto start = pos - search_string_length;
     return Value(string.substring(start, search_string_length) == search_string);
 }
 
