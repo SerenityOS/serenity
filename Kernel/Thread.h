@@ -758,7 +758,8 @@ public:
     const char* state_string() const;
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
-    size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
+    size_t thread_specific_region_size() const;
+    size_t thread_specific_region_alignment() const;
 
     ALWAYS_INLINE void yield_if_stopped()
     {
@@ -1198,7 +1199,6 @@ private:
     u32 m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
-    size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
 

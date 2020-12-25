@@ -862,7 +862,6 @@ RefPtr<Thread> Thread::clone(Process& process)
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_thread_specific_data = m_thread_specific_data;
-    clone->m_thread_specific_region_size = m_thread_specific_region_size;
     return clone;
 }
 
@@ -1037,19 +1036,28 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     return backtrace;
 }
 
+size_t Thread::thread_specific_region_alignment() const
+{
+    return max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
+}
+
+size_t Thread::thread_specific_region_size() const
+{
+    return align_up_to(process().m_master_tls_size, thread_specific_region_alignment()) + sizeof(ThreadSpecificData);
+}
+
 KResult Thread::make_thread_specific_region(Badge<Process>)
 {
     // The process may not require a TLS region
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
-    m_thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
-    auto* region = process().allocate_region({}, m_thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    auto* region = process().allocate_region({}, thread_specific_region_size(), "Thread-specific", PROT_READ | PROT_WRITE, true);
     if (!region)
         return KResult(-ENOMEM);
+
     SmapDisabler disabler;
-    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
+    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;

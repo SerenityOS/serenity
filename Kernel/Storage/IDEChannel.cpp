@@ -256,7 +256,7 @@ void IDEChannel::handle_irq(const RegisterState&)
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
-        klog() << "IDEChannel: Error " << String::format("%b", m_device_error) << "!";
+        dbgln("IDEChannel: Error {:#02x}!", (u8)m_device_error);
         complete_current_request(AsyncDeviceRequest::Failure);
         return;
     }
@@ -557,8 +557,8 @@ void IDEChannel::ata_do_write_sector()
     ASSERT(status & ATA_SR_DRQ);
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
-#ifdef PATA_DEBUG
-    dbg() << "IDEChannel: Writing 512 bytes (part " << m_current_request_block_index << ") (status=" << String::format("%b", status) << ")...";
+#ifndef PATA_DEBUG
+    dbgln("IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
 #endif
     ssize_t nread = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](const u8* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
