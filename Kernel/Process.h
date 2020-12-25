@@ -426,9 +426,10 @@ public:
         size_t size { 0 };
         FlatPtr program_headers { 0 };
         size_t num_program_headers { 0 };
-        AK::WeakPtr<Region> tls_region;
+        WeakPtr<Region> tls_region;
         size_t tls_size { 0 };
         size_t tls_alignment { 0 };
+        WeakPtr<Region> stack_region;
     };
 
     enum class ShouldAllocateTls {
