@@ -25,7 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <Kernel/Devices/GPTPartitionTable.h>
+#include <Kernel/Storage/Partition/GPTPartitionTable.h>
 
 #ifndef GPT_DEBUG
 #    define GPT_DEBUG

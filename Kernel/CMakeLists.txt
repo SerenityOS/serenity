@@ -21,14 +21,10 @@ set(KERNEL_SOURCES
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
-    Devices/Device.cpp
-    Devices/DiskPartition.cpp
-    Devices/EBRPartitionTable.cpp
+    Devices/Device.cpp    
     Devices/FullDevice.cpp
-    Devices/GPTPartitionTable.cpp
     Devices/I8042Controller.cpp
     Devices/KeyboardDevice.cpp
-    Devices/MBRPartitionTable.cpp
     Devices/MBVGADevice.cpp
     Devices/NullDevice.cpp
     Devices/PCSpeaker.cpp
@@ -39,6 +35,10 @@ set(KERNEL_SOURCES
     Devices/UHCIController.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
+    Storage/Partition/DiskPartition.cpp
+    Storage/Partition/EBRPartitionTable.cpp
+    Storage/Partition/GPTPartitionTable.cpp
+    Storage/Partition/MBRPartitionTable.cpp
     Storage/StorageDevice.cpp
     Storage/IDEController.cpp
     Storage/IDEChannel.cpp

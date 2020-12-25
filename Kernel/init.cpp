@@ -32,12 +32,8 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BXVGADevice.h>
-#include <Kernel/Devices/DiskPartition.h>
-#include <Kernel/Devices/EBRPartitionTable.h>
 #include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/GPTPartitionTable.h>
 #include <Kernel/Devices/I8042Controller.h>
-#include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
@@ -65,6 +61,10 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/Partition/EBRPartitionTable.h>
+#include <Kernel/Storage/Partition/GPTPartitionTable.h>
+#include <Kernel/Storage/Partition/MBRPartitionTable.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
