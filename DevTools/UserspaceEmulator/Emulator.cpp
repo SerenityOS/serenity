@@ -89,30 +89,30 @@ Emulator::Emulator(const String& executable_path, const Vector<String>& argument
     setup_signal_trampoline();
 }
 
-Vector<AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const
+Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const
 {
     // FIXME: This is not fully compatible with the auxiliary vector the kernel generates, this is just the bare
     //        minimum to get the loader going.
-    Vector<AuxiliaryValue> auxv;
+    Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
     // PH*
-    auxv.append({ AuxiliaryValue::PageSize, PAGE_SIZE });
-    auxv.append({ AuxiliaryValue::BaseAddress, (void*)load_base });
+    auxv.append({ ELF::AuxiliaryValue::PageSize, PAGE_SIZE });
+    auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)load_base });
 
-    auxv.append({ AuxiliaryValue::Entry, (void*)entry_eip });
+    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
 
     // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
-    auxv.append({ AuxiliaryValue::Platform, "i386" });
+    auxv.append({ ELF::AuxiliaryValue::Platform, "i386" });
 
-    auxv.append({ AuxiliaryValue::ExecFilename, executable_path });
+    auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
-    auxv.append({ AuxiliaryValue::ExecFileDescriptor, executable_fd });
+    auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, executable_fd });
 
-    auxv.append({ AuxiliaryValue::Null, 0L });
+    auxv.append({ ELF::AuxiliaryValue::Null, 0L });
     return auxv;
 }
 
-void Emulator::setup_stack(Vector<AuxiliaryValue> aux_vector)
+void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 {
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);

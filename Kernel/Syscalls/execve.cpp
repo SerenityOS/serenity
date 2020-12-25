@@ -424,41 +424,41 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     return 0;
 }
 
-Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
+Vector<ELF::AuxiliaryValue> Process::generate_auxiliary_vector() const
 {
-    Vector<AuxiliaryValue> auxv;
+    Vector<ELF::AuxiliaryValue> auxv;
     // PHDR/EXECFD
     // PH*
-    auxv.append({ AuxiliaryValue::PageSize, PAGE_SIZE });
-    auxv.append({ AuxiliaryValue::BaseAddress, (void*)m_load_base });
+    auxv.append({ ELF::AuxiliaryValue::PageSize, PAGE_SIZE });
+    auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)m_load_base });
 
-    auxv.append({ AuxiliaryValue::Entry, (void*)m_entry_eip });
+    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)m_entry_eip });
     // NOTELF
-    auxv.append({ AuxiliaryValue::Uid, (long)m_uid });
-    auxv.append({ AuxiliaryValue::EUid, (long)m_euid });
-    auxv.append({ AuxiliaryValue::Gid, (long)m_gid });
-    auxv.append({ AuxiliaryValue::EGid, (long)m_egid });
+    auxv.append({ ELF::AuxiliaryValue::Uid, (long)m_uid });
+    auxv.append({ ELF::AuxiliaryValue::EUid, (long)m_euid });
+    auxv.append({ ELF::AuxiliaryValue::Gid, (long)m_gid });
+    auxv.append({ ELF::AuxiliaryValue::EGid, (long)m_egid });
 
     // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
-    auxv.append({ AuxiliaryValue::Platform, "i386" });
+    auxv.append({ ELF::AuxiliaryValue::Platform, "i386" });
     // FIXME: This is platform specific
-    auxv.append({ AuxiliaryValue::HwCap, (long)CPUID(1).edx() });
+    auxv.append({ ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() });
 
-    auxv.append({ AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() });
+    auxv.append({ ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() });
 
     // FIXME: Also take into account things like extended filesystem permissions? That's what linux does...
-    auxv.append({ AuxiliaryValue::Secure, ((m_uid != m_euid) || (m_gid != m_egid)) ? 1 : 0 });
+    auxv.append({ ELF::AuxiliaryValue::Secure, ((m_uid != m_euid) || (m_gid != m_egid)) ? 1 : 0 });
 
     char random_bytes[16] {};
     get_fast_random_bytes((u8*)random_bytes, sizeof(random_bytes));
 
-    auxv.append({ AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
+    auxv.append({ ELF::AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
 
-    auxv.append({ AuxiliaryValue::ExecFilename, m_executable->absolute_path() });
+    auxv.append({ ELF::AuxiliaryValue::ExecFilename, m_executable->absolute_path() });
 
-    auxv.append({ AuxiliaryValue::ExecFileDescriptor, m_main_program_fd });
+    auxv.append({ ELF::AuxiliaryValue::ExecFileDescriptor, m_main_program_fd });
 
-    auxv.append({ AuxiliaryValue::Null, 0L });
+    auxv.append({ ELF::AuxiliaryValue::Null, 0L });
     return auxv;
 }
 
