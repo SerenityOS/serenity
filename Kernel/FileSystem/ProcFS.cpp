@@ -1138,8 +1138,8 @@ InodeMetadata ProcFSInode::metadata() const
         ProcessID pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (process) {
-            metadata.uid = process->sys$getuid();
-            metadata.gid = process->sys$getgid();
+            metadata.uid = process->euid();
+            metadata.gid = process->egid();
         } else {
             // TODO: How to handle this?
             metadata.uid = 0;
@@ -1149,8 +1149,8 @@ InodeMetadata ProcFSInode::metadata() const
         ThreadID tid = to_tid(identifier());
         auto thread = Thread::from_tid(tid);
         if (thread) {
-            metadata.uid = thread->process().sys$getuid();
-            metadata.gid = thread->process().sys$getgid();
+            metadata.uid = thread->process().euid();
+            metadata.gid = thread->process().egid();
         } else {
             // TODO: How to handle this?
             metadata.uid = 0;
