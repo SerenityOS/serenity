@@ -86,6 +86,6 @@ struct tm* gmtime_r(const time_t* timep, struct tm* result);
 struct tm* localtime_r(const time_t* timep, struct tm* result);
 
 double difftime(time_t, time_t);
-size_t strftime(char* s, size_t max, const char* format, const struct tm*);
+size_t strftime(char* s, size_t max, const char* format, const struct tm*) __attribute__((format(strftime, 3, 0)));
 
 __END_DECLS
