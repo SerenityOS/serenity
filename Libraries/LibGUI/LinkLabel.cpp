@@ -39,8 +39,9 @@ LinkLabel::LinkLabel(String text)
     set_foreground_role(Gfx::ColorRole::Link);
 }
 
-void LinkLabel::mousedown_event(MouseEvent&)
+void LinkLabel::mousedown_event(MouseEvent& event)
 {
+    Label::mousedown_event(event);
     if (on_click) {
         on_click();
     }
@@ -56,32 +57,39 @@ void LinkLabel::paint_event(PaintEvent& event)
             Widget::palette().link());
 }
 
-void LinkLabel::enter_event(Core::Event&)
+void LinkLabel::enter_event(Core::Event& event)
 {
+    Label::enter_event(event);
     m_hovered = true;
     update();
 }
 
-void LinkLabel::leave_event(Core::Event&)
+void LinkLabel::leave_event(Core::Event& event)
 {
+    Label::leave_event(event);
     m_hovered = false;
     update();
 }
 
-void LinkLabel::second_paint_event(PaintEvent&)
+void LinkLabel::did_change_text()
 {
-    if (window()->width() < font().width(text())) {
-        set_tooltip(text());
-    }
+    Label::did_change_text();
+    update_tooltip_if_needed();
 }
 
-void LinkLabel::resize_event(ResizeEvent&)
+void LinkLabel::update_tooltip_if_needed()
 {
-    if (window()->width() < font().width(text())) {
+    if (width() < font().width(text())) {
         set_tooltip(text());
     } else {
         set_tooltip({});
     }
+}
+
+void LinkLabel::resize_event(ResizeEvent& event)
+{
+    Label::resize_event(event);
+    update_tooltip_if_needed();
 }
 
 }

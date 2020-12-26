@@ -42,9 +42,12 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
-    virtual void second_paint_event(PaintEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
+
+    virtual void did_change_text() override;
+
+    void update_tooltip_if_needed();
 
     bool m_hovered { false };
 };
