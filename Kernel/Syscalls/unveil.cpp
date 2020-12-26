@@ -109,9 +109,14 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
     auto it = lexical_path.parts().begin();
     auto& matching_node = m_unveiled_paths.traverse_until_last_accessible_node(it, lexical_path.parts().end());
     if (it.is_end()) {
-        if (new_permissions & ~matching_node.permissions())
-            return -EPERM;
-        matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
+        auto old_permissions = matching_node.permissions();
+        // Allow "elevating" the permissions when the permissions are inherited from root (/),
+        // as that would be the first time this path is unveiled.
+        if (old_permissions != UnveilAccess::None || !matching_node.permissions_inherited_from_root()) {
+            if (new_permissions & ~old_permissions)
+                return -EPERM;
+        }
+        matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true, false });
         return 0;
     }
 
@@ -119,7 +124,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         it,
         lexical_path.parts().end(),
         { new_unveiled_path, (UnveilAccess)new_permissions, true },
-        [](auto& parent, auto& it) -> Optional<UnveilMetadata> { return UnveilMetadata { String::formatted("{}/{}", parent.path(), *it), parent.permissions(), false }; });
+        [](auto& parent, auto& it) -> Optional<UnveilMetadata> { return UnveilMetadata { String::formatted("{}/{}", parent.path(), *it), parent.permissions(), false, parent.permissions_inherited_from_root() }; });
     ASSERT(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;
     return 0;

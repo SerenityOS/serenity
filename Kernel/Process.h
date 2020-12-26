@@ -640,7 +640,7 @@ private:
     u32 m_execpromises { 0 };
 
     VeilState m_veil_state { VeilState::None };
-    UnveilNode m_unveiled_paths { "/", { "/" } };
+    UnveilNode m_unveiled_paths { "/", { .full_path = "/", .unveil_inherited_from_root = true } };
 
     WaitQueue& futex_queue(Userspace<const i32*>);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
