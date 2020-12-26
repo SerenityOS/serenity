@@ -46,7 +46,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -fdiagnostics-color=always -ftls-model=initial-exec)
+add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always -ftls-model=initial-exec)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fconcepts)
