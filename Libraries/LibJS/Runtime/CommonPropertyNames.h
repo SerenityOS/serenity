@@ -194,6 +194,7 @@ namespace JS {
     P(sin)                                   \
     P(slice)                                 \
     P(some)                                  \
+    P(sort)                                  \
     P(source)                                \
     P(splice)                                \
     P(sqrt)                                  \

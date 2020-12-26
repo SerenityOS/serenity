@@ -70,6 +70,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.reduce, reduce, 1, attr);
     define_native_function(vm.names.reduceRight, reduce_right, 1, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
+    define_native_function(vm.names.sort, sort, 1, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.find, find, 1, attr);
@@ -596,6 +597,167 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     }
 
     array->set_indexed_property_elements(move(array_reverse));
+
+    return array;
+}
+
+static void array_merge_sort(VM& vm, GlobalObject& global_object, Function* compare_func, MarkedValueList& arr_to_sort)
+{
+    // FIXME: it would probably be better to switch to insertion sort for small arrays for
+    // better performance
+    if (arr_to_sort.size() <= 1)
+        return;
+
+    MarkedValueList left(vm.heap());
+    MarkedValueList right(vm.heap());
+
+    left.ensure_capacity(arr_to_sort.size() / 2);
+    right.ensure_capacity(arr_to_sort.size() / 2 + (arr_to_sort.size() & 1));
+
+    for (size_t i = 0; i < arr_to_sort.size(); ++i) {
+        if (i < arr_to_sort.size() / 2) {
+            left.append(arr_to_sort[i]);
+        } else {
+            right.append(arr_to_sort[i]);
+        }
+    }
+
+    array_merge_sort(vm, global_object, compare_func, left);
+    if (vm.exception())
+        return;
+    array_merge_sort(vm, global_object, compare_func, right);
+    if (vm.exception())
+        return;
+
+    arr_to_sort.clear();
+
+    size_t left_index = 0, right_index = 0;
+
+    while (left_index < left.size() && right_index < right.size()) {
+        auto x = left[left_index];
+        auto y = right[right_index];
+
+        double comparison_result;
+
+        if (x.is_undefined() && y.is_undefined()) {
+            comparison_result = 0;
+        } else if (x.is_undefined()) {
+            comparison_result = 1;
+        } else if (y.is_undefined()) {
+            comparison_result = -1;
+        } else if (compare_func) {
+            auto call_result = vm.call(*compare_func, js_undefined(), left[left_index], right[right_index]);
+            if (vm.exception())
+                return;
+
+            if (call_result.is_nan()) {
+                comparison_result = 0;
+            } else {
+                comparison_result = call_result.to_double(global_object);
+                if (vm.exception())
+                    return;
+            }
+        } else {
+            // FIXME: It would probably be much better to be smarter about this and implement
+            // the Abstract Relational Comparison in line once iterating over code points, rather
+            // than calling it twice after creating two primitive strings.
+
+            auto x_string = x.to_primitive_string(global_object);
+            if (vm.exception())
+                return;
+            auto y_string = y.to_primitive_string(global_object);
+            if (vm.exception())
+                return;
+
+            auto x_string_value = Value(x_string);
+            auto y_string_value = Value(y_string);
+
+            // Because they are called with primitive strings, these abstract_relation calls
+            // should never result in a VM exception.
+            auto x_lt_y_relation = abstract_relation(global_object, true, x_string_value, y_string_value);
+            ASSERT(x_lt_y_relation != TriState::Unknown);
+            auto y_lt_x_relation = abstract_relation(global_object, true, y_string_value, x_string_value);
+            ASSERT(y_lt_x_relation != TriState::Unknown);
+
+            if (x_lt_y_relation == TriState::True) {
+                comparison_result = -1;
+            } else if (y_lt_x_relation == TriState::True) {
+                comparison_result = 1;
+            } else {
+                comparison_result = 0;
+            }
+        }
+
+        if (comparison_result <= 0) {
+            arr_to_sort.append(left[left_index]);
+            left_index++;
+        } else {
+            arr_to_sort.append(right[right_index]);
+            right_index++;
+        }
+    }
+
+    while (left_index < left.size()) {
+        arr_to_sort.append(left[left_index]);
+        left_index++;
+    }
+
+    while (right_index < right.size()) {
+        arr_to_sort.append(right[right_index]);
+        right_index++;
+    }
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
+{
+    auto* array = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    auto callback = vm.argument(0);
+    if (!callback.is_undefined() && !callback.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return {};
+    }
+
+    auto original_length = get_length(vm, *array);
+    if (vm.exception())
+        return {};
+
+    MarkedValueList values_to_sort(vm.heap());
+
+    for (size_t i = 0; i < original_length; ++i) {
+        auto element_val = array->get(i);
+        if (vm.exception())
+            return {};
+
+        if (!element_val.is_empty())
+            values_to_sort.append(element_val);
+    }
+
+    // Perform sorting by merge sort. This isn't as efficient compared to quick sort, but
+    // quicksort can't be used in all cases because the spec requires Array.prototype.sort()
+    // to be stable. FIXME: when initially scanning through the array, maintain a flag
+    // for if an unstable sort would be indistinguishable from a stable sort (such as just
+    // just strings or numbers), and in that case use quick sort instead for better performance.
+    array_merge_sort(vm, global_object, callback.is_undefined() ? nullptr : &callback.as_function(), values_to_sort);
+    if (vm.exception())
+        return {};
+
+    for (size_t i = 0; i < values_to_sort.size(); ++i) {
+        array->put(i, values_to_sort[i]);
+        if (vm.exception())
+            return {};
+    }
+
+    // The empty parts of the array are always sorted to the end, regardless of the
+    // compare function. FIXME: For performance, a similar process could be used
+    // for undefined, which are sorted to right before the empty values.
+    for (size_t i = values_to_sort.size(); i < original_length; ++i) {
+        array->delete_property(i);
+        if (vm.exception())
+            return {};
+    }
 
     return array;
 }
