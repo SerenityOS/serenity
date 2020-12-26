@@ -112,12 +112,103 @@ private:
     String m_name;
 };
 
+class Statement : public ASTNode {
+public:
+    bool is_statement() const override { return true; }
+};
+
+class Expression : public ASTNode {
+public:
+    explicit Expression(RefPtr<Variable>& result)
+        : m_result(result)
+    {
+    }
+    bool is_expression() const override { return true; }
+
+    const RefPtr<Variable>& result() const { return m_result; }
+
+private:
+    RefPtr<Variable> m_result;
+};
+
+class BinaryExpression : public Expression {
+public:
+    enum class Kind {
+        Addition,
+        Multiplication,
+        Subtraction
+    };
+    BinaryExpression(Kind kind, NonnullRefPtr<ASTNode>& left, NonnullRefPtr<ASTNode>& right, RefPtr<Variable> result)
+        : Expression(result)
+        , m_binary_operation(kind)
+        , m_left(left)
+        , m_right(right)
+    {
+    }
+
+    bool is_binary_expression() const override { return true; }
+
+    const NonnullRefPtr<ASTNode>& left() const { return m_left; }
+    NonnullRefPtr<ASTNode>& left() { return m_left; }
+    const NonnullRefPtr<ASTNode>& right() const { return m_right; }
+    NonnullRefPtr<ASTNode>& right() { return m_right; }
+    Kind binary_operation() const { return m_binary_operation; }
+
+private:
+    Kind m_binary_operation;
+    NonnullRefPtr<ASTNode> m_left;
+    NonnullRefPtr<ASTNode> m_right;
+};
+
+class PrimaryExpression : public Expression {
+public:
+    explicit PrimaryExpression(RefPtr<Variable> result)
+        : Expression(result)
+    {
+    }
+    bool is_primary_expression() const override { return false; }
+};
+
+class IdentifierExpression : public PrimaryExpression {
+public:
+    //TODO: m_identifier should disapear to replace result
+    explicit IdentifierExpression(String& identifier, RefPtr<Variable>& result)
+        : PrimaryExpression(result)
+        , m_identifier(identifier)
+    {
+    }
+    bool is_identifier_expression() const override { return true; }
+
+private:
+    String m_identifier;
+};
+
+class ReturnStatement : public Statement {
+public:
+    explicit ReturnStatement()
+    {
+    }
+    explicit ReturnStatement(RefPtr<Expression>& expression)
+        : m_expression(expression)
+    {
+    }
+    bool is_return_statement() const override { return true; }
+
+    const RefPtr<ASTNode>& expression() const { return m_expression; }
+    RefPtr<ASTNode>& expression() { return m_expression; }
+    void set_expression(NonnullRefPtr<ASTNode>& expression) { m_expression = expression; }
+
+private:
+    RefPtr<ASTNode> m_expression;
+};
+
 class Function : public RefCounted<Function> {
 public:
-    Function(NonnullRefPtr<Type>& return_type, String& name, NonnullRefPtrVector<Variable>& parameters)
+    Function(NonnullRefPtr<Type>& return_type, String& name, NonnullRefPtrVector<Variable>& parameters, NonnullRefPtrVector<ASTNode>& body)
         : m_return_type(return_type)
         , m_name(name)
         , m_parameters(parameters)
+        , m_body(body)
     {
     }
 
@@ -126,8 +217,8 @@ public:
     const NonnullRefPtr<Type>& return_type() const { return m_return_type; }
     const NonnullRefPtrVector<Variable>& parameters() const { return m_parameters; }
     NonnullRefPtrVector<Variable>& parameters() { return m_parameters; }
-    NonnullRefPtrVector<ASTNode> &body() { return m_body; }
-    const NonnullRefPtrVector<ASTNode> &body() const { return m_body; }
+    NonnullRefPtrVector<ASTNode>& body() { return m_body; }
+    const NonnullRefPtrVector<ASTNode>& body() const { return m_body; }
 
 private:
     NonnullRefPtr<Type> m_return_type;
@@ -157,6 +248,7 @@ create_ast_node(Args&&... args)
     return adopt(*new T(forward<Args>(args)...));
 }
 
-void process_internal_representation(SIR::TranslationUnit&);
+void run_intermediate_representation_passes(SIR::TranslationUnit&);
+
 }
 using SIR::create_ast_node;

@@ -81,5 +81,27 @@ private:
     TranslationUnit m_tu;
     NonnullRefPtrVector<ASTNode> parse_compound_statement();
     NonnullRefPtrVector<ASTNode> parse_function_body();
+    NonnullRefPtr<Expression> parse_primary_expression();
+    NonnullRefPtr<Expression> parse_postfix_expression();
+    NonnullRefPtr<Expression> parse_unary_expression();
+    NonnullRefPtr<Expression> parse_cast_expression();
+    NonnullRefPtr<Expression> parse_pm_expression();
+    NonnullRefPtr<Expression> parse_multiplicative_expression();
+    NonnullRefPtr<Expression> parse_additive_expression();
+    NonnullRefPtr<Expression> parse_shift_expression();
+    NonnullRefPtr<Expression> parse_compare_expression();
+    NonnullRefPtr<Expression> parse_relational_expression();
+    NonnullRefPtr<Expression> parse_equality_expression();
+    NonnullRefPtr<Expression> parse_and_expression();
+    NonnullRefPtr<Expression> parse_exclusive_or_operation();
+    NonnullRefPtr<Expression> parse_inclusive_or_expression();
+    NonnullRefPtr<Expression> parse_logical_and_expression();
+    NonnullRefPtr<Expression> parse_logical_or_expression();
+    NonnullRefPtr<Expression> parse_assignment_expression();
+    NonnullRefPtr<Expression> parse_expression();
+    NonnullRefPtr<Expression> parse_expr_or_braced_init_list();
+    NonnullRefPtr<Statement> parse_jump_statement();
+    NonnullRefPtr<Statement> parse_statement();
+    NonnullRefPtr<Statement> parse_statement_seq();
 };
 }

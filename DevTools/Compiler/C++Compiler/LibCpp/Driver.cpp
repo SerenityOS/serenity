@@ -38,7 +38,7 @@ void Cpp::CppCompiler::run(int ac, const char** av)
     auto tu = Cpp::Parser::parse(options);
     auto ir = Cpp::IR::to_internal_representation(tu);
 
-    SIR::process_internal_representation(ir);
+    SIR::run_intermediate_representation_passes(ir);
     auto assembly = BackEnd::I386BackEnd(ir, options);
 
     assembly.print_asm();

@@ -38,6 +38,9 @@
 
 namespace Cpp {
 
+// all the parse_* methods and their comments are based on https://isocpp.org/files/papers/N4860.pdf
+
+
 Token Parser::get_next_token_skip_comment_and_whitespaces()
 {
     if (m_saved_token.has_value())
@@ -256,6 +259,219 @@ Optional<Parser::Declarator> Parser::parse_declarator()
     return {};
 }
 
+// primary-expression:
+//      - id-expression
+NonnullRefPtr<Expression> Parser::parse_primary_expression()
+{
+    SCOPE_LOGGER();
+    auto id = parse_id_expression();
+    if (id.has_value()) {
+        auto return_type = RefPtr<Variable>();
+        return create_ast_node<IdentifierExpression>(id.value(), return_type);
+    } else {
+        parse_error("expected identifier");
+    }
+}
+
+// postfix-expression
+//      - primary-expression
+NonnullRefPtr<Expression> Parser::parse_postfix_expression()
+{
+    SCOPE_LOGGER();
+    return parse_primary_expression();
+}
+
+// unary-expression:
+//      - postfix-expression
+NonnullRefPtr<Expression> Parser::parse_unary_expression()
+{
+    SCOPE_LOGGER();
+    return parse_postfix_expression();
+}
+
+// cast-expression:
+//      - unary-expression
+NonnullRefPtr<Expression> Parser::parse_cast_expression()
+{
+    SCOPE_LOGGER();
+    return parse_unary_expression();
+}
+
+// pm-expression:
+//      - cast-expression
+NonnullRefPtr<Expression> Parser::parse_pm_expression()
+{
+    SCOPE_LOGGER();
+    return parse_cast_expression();
+}
+
+// multiplicative-expression:
+//      - pm-expression
+//      - multiplicative-expression * pm-expression
+NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
+{
+    SCOPE_LOGGER();
+    NonnullRefPtr<ASTNode> left = parse_pm_expression();
+    if (peek().m_type == Token::Type::Asterisk) {
+        consume();
+        NonnullRefPtr<ASTNode> right = parse_multiplicative_expression();
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, left, right, nullptr);
+    }
+    return left;
+}
+
+// additive-expression:
+//      - multiplicative-expression
+//      - additive-expression + multiplicative-expression
+//      - additive-expression - multiplicative-expression
+NonnullRefPtr<Expression> Parser::parse_additive_expression()
+{
+    SCOPE_LOGGER();
+    NonnullRefPtr<ASTNode> left = parse_multiplicative_expression();
+    if (peek().m_type == Token::Type::Plus) {
+        consume();
+        NonnullRefPtr<ASTNode> right = parse_additive_expression();
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Addition, left, right, nullptr);
+    } else if (peek().m_type == Token::Type::Minus) {
+        consume();
+        NonnullRefPtr<ASTNode> right = parse_additive_expression();
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Subtraction, left, right, nullptr);
+    }
+    return left;
+}
+
+// shift-expression:
+//      - additive-expression
+NonnullRefPtr<Expression> Parser::parse_shift_expression()
+{
+    SCOPE_LOGGER();
+    return parse_additive_expression();
+}
+
+// compare-expression:
+//      - shift-expression
+NonnullRefPtr<Expression> Parser::parse_compare_expression()
+{
+    SCOPE_LOGGER();
+    return parse_shift_expression();
+}
+
+// relational-expression
+//      - compare-expression
+NonnullRefPtr<Expression> Parser::parse_relational_expression()
+{
+    SCOPE_LOGGER();
+    return parse_compare_expression();
+}
+
+// equality-expression:
+//      - relational-expression
+NonnullRefPtr<Expression> Parser::parse_equality_expression()
+{
+    SCOPE_LOGGER();
+    return parse_relational_expression();
+}
+
+// and-expression
+//      - equality-expression
+NonnullRefPtr<Expression> Parser::parse_and_expression()
+{
+    SCOPE_LOGGER();
+    return parse_equality_expression();
+}
+
+// exclusive-or-expression
+//      - and-expression
+NonnullRefPtr<Expression> Parser::parse_exclusive_or_operation()
+{
+    SCOPE_LOGGER();
+    return parse_and_expression();
+}
+
+// inclusive-or-expression:
+//      - exclusive-or-expression
+NonnullRefPtr<Expression> Parser::parse_inclusive_or_expression()
+{
+    SCOPE_LOGGER();
+    return parse_exclusive_or_operation();
+}
+
+// logical-and-expression:
+//      - inclusive-or-expression
+NonnullRefPtr<Expression> Parser::parse_logical_and_expression()
+{
+    SCOPE_LOGGER();
+    return parse_inclusive_or_expression();
+}
+
+// logical-or-expression:
+//      - logical-and-expression
+NonnullRefPtr<Expression> Parser::parse_logical_or_expression()
+{
+    SCOPE_LOGGER();
+    return parse_logical_and_expression();
+}
+
+// assignment-expression:
+//      - logical-or-expression
+NonnullRefPtr<Expression> Parser::parse_assignment_expression()
+{
+    SCOPE_LOGGER();
+    return parse_logical_or_expression();
+}
+
+// expression:
+//      - assignment-expression
+NonnullRefPtr<Expression> Parser::parse_expression()
+{
+    SCOPE_LOGGER();
+    return parse_assignment_expression();
+}
+
+// expr-or-braced-init-list
+//      - expression
+NonnullRefPtr<Expression> Parser::parse_expr_or_braced_init_list()
+{
+    SCOPE_LOGGER();
+
+    return parse_expression();
+}
+
+
+
+// parse_jump_statement
+//      - return expr-or-braced-init-list ;
+NonnullRefPtr<Statement> Parser::parse_jump_statement()
+{
+    SCOPE_LOGGER();
+    assert(consume(Token::Type::Keyword).m_known_keyword == Token::KnownKeyword::Return);
+
+    RefPtr expression = parse_expr_or_braced_init_list();
+
+    expect(Token::Type::Semicolon);
+    return create_ast_node<ReturnStatement>(expression);
+}
+
+// statement:
+//      - jump-statement
+NonnullRefPtr<Statement> Parser::parse_statement()
+{
+    SCOPE_LOGGER();
+    return parse_jump_statement();
+}
+
+// statement-seq:
+//      - statement
+NonnullRefPtr<Statement> Parser::parse_statement_seq()
+{
+    SCOPE_LOGGER();
+    return parse_statement();
+}
+
+
+
+
+
 // compound-statement:
 //      - { [statement-seq] }
 NonnullRefPtrVector<ASTNode> Parser::parse_compound_statement()
@@ -263,6 +479,8 @@ NonnullRefPtrVector<ASTNode> Parser::parse_compound_statement()
     SCOPE_LOGGER();
     NonnullRefPtrVector<ASTNode> body;
     expect(Token::Type::LeftCurly);
+    if (peek().m_type != Token::Type::RightCurly)
+        body.append(parse_statement_seq());
     expect(Token::Type::RightCurly);
     return body;
 }
@@ -284,8 +502,8 @@ NonnullRefPtr<Function> Parser::parse_function_definition()
     auto declarator = parse_declarator();
 
     if (declarator.has_value()) {
-        parse_function_body();
-        return create_ast_node<Function>(return_type, declarator.value().name, declarator.value().parameters);
+        auto body = parse_function_body();
+        return create_ast_node<Function>(return_type, declarator.value().name, declarator.value().parameters, body);
     }
     parse_error("expected identifier");
 }

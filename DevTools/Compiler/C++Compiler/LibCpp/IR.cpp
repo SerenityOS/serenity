@@ -29,6 +29,65 @@
 #include <LibMiddleEnd/Utils.h>
 
 namespace Cpp {
+
+static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters);
+
+static void add_binary_operation_to_body(Cpp::BinaryExpression& binary_expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+{
+    add_node_to_body(binary_expression.left(), new_body, parameters);
+    add_node_to_body(binary_expression.right(), new_body, parameters);
+    auto& left = reinterpret_cast<NonnullRefPtr<SIR::Variable>&>(new_body.ptr_at(new_body.size() - 2));
+    auto& right = reinterpret_cast<NonnullRefPtr<SIR::Variable>&>(new_body.ptr_at(new_body.size() - 1));
+    auto operation = MiddleEnd::Utils::create_binary_operation(left, right, binary_expression.binary_operation());
+
+    new_body.append(operation);
+}
+
+static void add_expression_to_body(Cpp::ASTNode& expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+{
+    if (expression.is_binary_expression()) {
+        add_binary_operation_to_body(reinterpret_cast<SIR::BinaryExpression&>(expression), new_body, parameters);
+    } else if (expression.is_identifier_expression()) {
+        //TODO: fix later when names are bound to a variable
+        auto identifier_expression = parameters.ptr_at(0);
+        auto var = create_ast_node<SIR::Variable>(identifier_expression->node_type(), identifier_expression->name());
+        new_body.append(var);
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+}
+
+static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+{
+    if (statement.is_return_statement()) {
+        auto& return_statement = reinterpret_cast<SIR::ReturnStatement&>(statement);
+        if (return_statement.expression()) {
+            add_expression_to_body(return_statement.expression().release_nonnull(), new_body, parameters);
+            return_statement.set_expression(new_body.ptr_at(new_body.size() - 1));
+            return_statement.expression()->ref();
+        } else {
+            TODO();
+        }
+        new_body.append(return_statement);
+    } else
+        ASSERT_NOT_REACHED();
+}
+
+static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+{
+    if (node.is_expression())
+        add_expression_to_body(node, new_body, parameters);
+    else if (node.is_statement())
+        add_statement_to_body(node, new_body, parameters);
+    else if (node.is_variable()) {
+        auto& var = reinterpret_cast<SIR::Variable&>(node);
+
+        assert(var.is_variable());
+        new_body.append(MiddleEnd::Utils::create_store(var.node_type(), var.name()));
+    } else
+        ASSERT_NOT_REACHED();
+}
+
 SIR::TranslationUnit IR::to_internal_representation(Cpp::TranslationUnit& tu)
 {
     NonnullRefPtrVector<SIR::Function> functions;
@@ -40,6 +99,8 @@ SIR::TranslationUnit IR::to_internal_representation(Cpp::TranslationUnit& tu)
             auto var = fun.parameters().ptr_at(i);
             new_body.append(MiddleEnd::Utils::create_store(var->node_type(), var->name()));
         }
+        for (size_t i = 0; i < fun.body().size(); i++)
+            add_node_to_body(fun.body().ptr_at(i), new_body, fun.parameters());
 
         fun.body().clear();
         fun.body().append(new_body);

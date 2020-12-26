@@ -50,10 +50,41 @@ void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
     m_output_file->printf("\tpushl\t%%ebp\n");
     m_output_file->printf("\tmovl\t%%esp, %%ebp\n");
 
-    for (auto& param : function.parameters()) {
-        m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", allocated_stack);
+    auto variables_already_seen = HashMap<String, size_t>();
 
-        allocated_stack += param.node_type()->size_in_bytes();
+    for (auto& operation : function.body()) {
+        if (operation.is_binary_expression()) {
+            auto& binop = reinterpret_cast<const SIR::BinaryExpression&>(operation);
+
+            switch (binop.binary_operation()) {
+            case SIR::BinaryExpression::Kind::Addition:
+                m_output_file->printf("\taddl\t12(%%ebp), %%eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::Multiplication:
+                m_output_file->printf("\timull\t12(%%ebp), %%eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::Subtraction:
+                m_output_file->printf("\tsubl\t12(%%ebp), %%eax\n");
+                break;
+            }
+        } else if (operation.is_statement()) {
+            m_output_file->printf("\tpopl\t%%ebp\n");
+            m_output_file->printf("\tret\n");
+        } else if (operation.is_variable()) {
+            auto& variable = reinterpret_cast<const SIR::Variable&>(operation);
+            auto variable_already_seen = variables_already_seen.get(variable.name());
+
+            if (!variable.name().is_empty() && variable_already_seen.has_value()) {
+                m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", variable_already_seen.value());
+            } else {
+                m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", allocated_stack);
+                variables_already_seen.set(variable.name(), allocated_stack);
+
+                allocated_stack += variable.node_type()->size_in_bytes();
+            }
+        } else {
+            ASSERT_NOT_REACHED();
+        }
     }
     m_output_file->printf("\tpopl\t%%ebp\n");
     m_output_file->printf("\tret\n");
