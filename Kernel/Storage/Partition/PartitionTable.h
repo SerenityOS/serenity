@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,65 +27,41 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
+#include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
-#define GPT_SIGNATURE2 0x54524150
-#define GPT_SIGNATURE 0x20494645
-#define BytesPerSector 512
-
-struct [[gnu::packed]] GPTPartitionEntry
-{
-    u32 partition_guid[4];
-    u32 unique_guid[4];
-
-    u32 first_lba[2];
-    u32 last_lba[2];
-
-    u64 attributes;
-    u8 partition_name[72];
-};
-
-struct [[gnu::packed]] GPTPartitionHeader
-{
-    u32 sig[2];
-    u32 revision;
-    u32 header_size;
-    u32 crc32_header;
-    u32 reserved;
-    u64 current_lba;
-    u64 backup_lba;
-
-    u64 first_usable_lba;
-    u64 last_usable_lba;
-
-    u64 disk_guid1[2];
-
-    u64 partition_array_start_lba;
-
-    u32 entries_count;
-    u32 partition_entry_size;
-    u32 crc32_entries_array;
-};
-
-class GPTPartitionTable {
+class PartitionTable {
+public:
+    enum class Type {
+        MBR,
+        EBR,
+        GPT,
+        BSD
+    };
+    enum class Error {
+        Invalid,
+        MBRProtective,
+        ConatinsEBR,
+    };
 
 public:
-    explicit GPTPartitionTable(BlockDevice&);
-    ~GPTPartitionTable();
+    Optional<DiskPartitionMetadata> partition(unsigned index);
+    size_t partitions_count() const { return m_partitions.size(); }
+    virtual Type type() const = 0;
+    virtual ~PartitionTable() { }
+    virtual bool is_valid() const = 0;
 
-    bool initialize();
-    RefPtr<DiskPartition> partition(unsigned index);
+    Vector<DiskPartitionMetadata> partitions() const { return m_partitions; }
 
-private:
-    NonnullRefPtr<BlockDevice> m_device;
+protected:
+    explicit PartitionTable(const StorageDevice&);
 
-    const GPTPartitionHeader& header() const;
-
-    u8 m_cached_header[512];
+    NonnullRefPtr<StorageDevice> m_device;
+    Vector<DiskPartitionMetadata> m_partitions;
 };
 
 }

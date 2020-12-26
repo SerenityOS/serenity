@@ -45,6 +45,12 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Byt
     ASSERT(!m_partition_type.is_empty());
     ASSERT(!m_unique_guid.is_empty());
 }
+
+DiskPartitionMetadata DiskPartitionMetadata::offset(u64 blocks_count) const
+{
+    return DiskPartitionMetadata({ blocks_count + m_start_block, blocks_count + m_end_block, m_partition_type });
+}
+
 u64 DiskPartitionMetadata::start_block() const
 {
     return m_start_block;

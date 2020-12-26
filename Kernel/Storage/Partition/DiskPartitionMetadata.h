@@ -38,6 +38,8 @@ public:
     u64 start_block() const;
     u64 end_block() const;
 
+    DiskPartitionMetadata offset(u64 blocks_count) const;
+
     Optional<u64> special_attributes() const;
     Optional<String> name() const;
     Optional<ByteBuffer> partition_type() const;
@@ -48,7 +50,7 @@ private:
     u64 m_end_block;
     ByteBuffer m_partition_type;
     ByteBuffer m_unique_guid;
-    u64 m_attributes;
+    u64 m_attributes { 0 };
     String m_name;
 };
 

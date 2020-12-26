@@ -411,7 +411,10 @@ String DevFSDeviceInode::determine_name() const
         }
 
         case 100:
-            return "hda1";
+            // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
+            size_t drive_index = (u8)'a' + (m_attached_device->minor() / 16);
+            char drive_letter = (u8)drive_index;
+            return String::format("hd%c%d", drive_letter, m_attached_device->minor() + 1);
         }
     }
 

@@ -61,10 +61,6 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
-#include <Kernel/Storage/Partition/EBRPartitionTable.h>
-#include <Kernel/Storage/Partition/GPTPartitionTable.h>
-#include <Kernel/Storage/Partition/MBRPartitionTable.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
@@ -271,73 +267,7 @@ void init_stage2(void*)
     auto root = kernel_command_line().lookup("root").value_or("/dev/hda");
 
     StorageManagement::initialize(root, force_pio);
-    NonnullRefPtr<BlockDevice> root_dev = StorageManagement::the().boot_device();
-
-    root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
-
-    if (root.length()) {
-        auto partition_number = root.to_uint();
-
-        if (!partition_number.has_value()) {
-            klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
-            Processor::halt();
-        }
-
-        MBRPartitionTable mbr(root_dev);
-
-        if (!mbr.initialize()) {
-            klog() << "init_stage2: couldn't read MBR from disk";
-            Processor::halt();
-        }
-
-        if (mbr.is_protective_mbr()) {
-            dbg() << "GPT Partitioned Storage Detected!";
-            GPTPartitionTable gpt(root_dev);
-            if (!gpt.initialize()) {
-                klog() << "init_stage2: couldn't read GPT from disk";
-                Processor::halt();
-            }
-            auto partition = gpt.partition(partition_number.value());
-            if (!partition) {
-                klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                Processor::halt();
-            }
-            root_dev = *partition;
-        } else {
-            dbg() << "MBR Partitioned Storage Detected!";
-            if (mbr.contains_ebr()) {
-                EBRPartitionTable ebr(root_dev);
-                if (!ebr.initialize()) {
-                    klog() << "init_stage2: couldn't read EBR from disk";
-                    Processor::halt();
-                }
-                auto partition = ebr.partition(partition_number.value());
-                if (!partition) {
-                    klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                    Processor::halt();
-                }
-                root_dev = *partition;
-            } else {
-                if (partition_number.value() < 1 || partition_number.value() > 4) {
-                    klog() << "init_stage2: invalid partition number " << partition_number.value() << "; expected 1 to 4";
-                    Processor::halt();
-                }
-                auto partition = mbr.partition(partition_number.value());
-                if (!partition) {
-                    klog() << "init_stage2: couldn't get partition " << partition_number.value();
-                    Processor::halt();
-                }
-                root_dev = *partition;
-            }
-        }
-    }
-    auto e2fs = Ext2FS::create(*FileDescription::create(root_dev));
-    if (!e2fs->initialize()) {
-        klog() << "init_stage2: couldn't open root filesystem";
-        Processor::halt();
-    }
-
-    if (!VFS::the().mount_root(e2fs)) {
+    if (!VFS::the().mount_root(StorageManagement::the().root_filesystem())) {
         klog() << "VFS::mount_root failed";
         Processor::halt();
     }

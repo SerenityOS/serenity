@@ -26,47 +26,32 @@
 
 #pragma once
 
-#include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Lock.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
-#include <Kernel/Storage/StorageController.h>
+#include <AK/RefPtr.h>
+#include <AK/Result.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+#include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {
 
-class StorageDevice : public BlockDevice {
-    friend class StorageManagement;
-    AK_MAKE_ETERNAL
+struct GUIDPartitionHeader;
+class GUIDPartitionTable final : public MBRPartitionTable {
 public:
-    enum class Type : u8 {
-        IDE,
-        NVMe,
-    };
+    virtual ~GUIDPartitionTable() {};
 
-public:
-    virtual Type type() const = 0;
-    virtual size_t max_addressable_block() const { return m_max_addressable_block; }
+    static Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
+    explicit GUIDPartitionTable(const StorageDevice&);
 
-    NonnullRefPtr<StorageController> controller() const;
-
-    // ^BlockDevice
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-
-    // ^Device
-    virtual mode_t required_mode() const override { return 0600; }
-
-protected:
-    StorageDevice(const StorageController&, int, int, size_t, size_t);
-    // ^DiskDevice
-    virtual const char* class_name() const override;
+    virtual Type type() const override { return Type::GPT; };
+    virtual bool is_valid() const override { return m_valid; };
 
 private:
-    NonnullRefPtr<StorageController> m_storage_controller;
-    NonnullRefPtrVector<DiskPartition> m_partitions;
-    size_t m_max_addressable_block;
+    bool is_unused_entry(ByteBuffer) const;
+    const GUIDPartitionHeader& header() const;
+    bool initialize();
+
+    bool m_valid { true };
+    ByteBuffer m_cached_header;
 };
 
 }
