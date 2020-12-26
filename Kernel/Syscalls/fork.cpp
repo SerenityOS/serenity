@@ -46,7 +46,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
     child->m_veil_state = m_veil_state;
-    child->m_unveiled_paths = m_unveiled_paths;
+    child->m_unveiled_paths = m_unveiled_paths.deep_copy();
     child->m_fds = m_fds;
     child->m_sid = m_sid;
     child->m_pg = m_pg;
