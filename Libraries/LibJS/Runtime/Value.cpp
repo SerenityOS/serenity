@@ -80,6 +80,136 @@ ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
     return lhs.is_bigint() && rhs.is_bigint();
 }
 
+static String double_to_string(double d)
+{
+    // https://tc39.es/ecma262/#sec-numeric-types-number-tostring
+    if (isnan(d))
+        return "NaN";
+    if (d == +0.0 || d == -0.0)
+        return "0";
+    if (d < +0.0) {
+        StringBuilder builder;
+        builder.append('-');
+        builder.append(double_to_string(-d));
+        return builder.to_string();
+    }
+    if (d == INFINITY)
+        return "Infinity";
+
+    StringBuilder number_string_builder;
+
+    size_t start_index = 0;
+    size_t end_index = 0;
+    size_t intpart_end = 0;
+
+    // generate integer part (reversed)
+    double intPart;
+    double frac_part;
+    frac_part = modf(d, &intPart);
+    while (intPart > 0) {
+        number_string_builder.append('0' + (int)fmod(intPart, 10));
+        end_index++;
+        intPart = floor(intPart / 10);
+    }
+
+    auto reversed_integer_part = number_string_builder.to_string().reverse();
+    number_string_builder.clear();
+    number_string_builder.append(reversed_integer_part);
+
+    intpart_end = end_index;
+
+    int exponent = 0;
+
+    // generate fractional part
+    while (frac_part > 0) {
+        double old_frac_part = frac_part;
+        frac_part *= 10;
+        frac_part = modf(frac_part, &intPart);
+        if (old_frac_part == frac_part)
+            break;
+        number_string_builder.append('0' + (int)intPart);
+        end_index++;
+        exponent--;
+    }
+
+    auto number_string = number_string_builder.to_string();
+
+    // HACK: (sunverwerth) I'm not sure how the ECMAScript spec deals with numbers that
+    // can not be exactly represented in IEE754 so I'm cutting off after the 15th fractional digit.
+    // Otherwise 3.14.toString() would come out as "3.140000000000000124344978758017532527446746826171875"
+    // Chrome and Firefox output the expected "3.14" here
+    if (end_index > intpart_end + 15) {
+        exponent += end_index - intpart_end - 15;
+        end_index = intpart_end + 15;
+    }
+    // HACK end
+
+    // remove leading zeroes
+    while (start_index < end_index && number_string[start_index] == '0') {
+        start_index++;
+    }
+
+    // remove trailing zeroes
+    while (end_index > 0 && number_string[end_index - 1] == '0') {
+        end_index--;
+        exponent++;
+    }
+
+    if (end_index <= start_index)
+        return "0";
+
+    auto digits = number_string.substring_view(start_index, end_index - start_index);
+
+    int number_of_digits = end_index - start_index;
+
+    exponent += number_of_digits;
+
+    StringBuilder builder;
+
+    if (number_of_digits <= exponent && exponent <= 21) {
+        builder.append(digits);
+        builder.append(String::repeated('0', exponent - number_of_digits));
+        return builder.to_string();
+    }
+    if (0 < exponent && exponent <= 21) {
+        builder.append(digits.substring_view(0, exponent));
+        builder.append('.');
+        builder.append(digits.substring_view(exponent));
+        return builder.to_string();
+    }
+    if (-6 < exponent && exponent <= 0) {
+        builder.append("0.");
+        builder.append(String::repeated('0', -exponent));
+        builder.append(digits);
+        return builder.to_string();
+    }
+    if (number_of_digits == 1) {
+        builder.append(digits);
+        builder.append('e');
+
+        if (exponent - 1 > 0)
+            builder.append('+');
+        else
+            builder.append('-');
+
+        builder.append(String::format("%d", abs(exponent - 1)));
+        return builder.to_string();
+    }
+
+    builder.append(digits[0]);
+    builder.append('.');
+    builder.append(digits.substring_view(1));
+    builder.append('e');
+
+    if (exponent - 1 > 0)
+        builder.append('+');
+    else
+        builder.append('-');
+
+    builder.append(String::format("%d", abs(exponent - 1)));
+    return builder.to_string();
+}
+
 bool Value::is_array() const
 {
     return is_object() && as_object().is_array();
@@ -128,14 +258,7 @@ String Value::to_string_without_side_effects() const
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
     case Type::Number:
-        if (is_nan())
-            return "NaN";
-        if (is_infinity())
-            return is_negative_infinity() ? "-Infinity" : "Infinity";
-        if (is_integer())
-            return String::number(as_i32());
-        // FIXME: This should be more sophisticated: don't cut off decimals, don't include trailing zeros
-        return String::formatted("{:.4}", m_value.as_double);
+        return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
@@ -173,14 +296,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
     case Type::Number:
-        if (is_nan())
-            return "NaN";
-        if (is_infinity())
-            return is_negative_infinity() ? "-Infinity" : "Infinity";
-        if (is_integer())
-            return String::number(as_i32());
-        // FIXME: This should be more sophisticated: don't cut off decimals, don't include trailing zeros
-        return String::formatted("{:.4}", m_value.as_double);
+        return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:

@@ -40,10 +40,15 @@ describe("correct behavior", () => {
     });
 
     test("numeric keys", () => {
-        expect({0x10:true}).toBe({16:true});
-        expect({0b10:true}).toBe({2:true});
-        expect({0o10:true}).toBe({8:true});
-        expect({.5:true}).toBe({"0.5":true});
+        const hex = {0x10: "16"};
+        const oct = {0o10: "8"};
+        const bin = {0b10: "2"};
+        const float = {.5: "0.5"};
+        
+        expect(hex["16"]).toBe("16");
+        expect(oct["8"]).toBe("8");
+        expect(bin["2"]).toBe("2");
+        expect(float["0.5"]).toBe("0.5");
     });
 
     test("computed properties", () => {

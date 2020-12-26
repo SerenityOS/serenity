@@ -258,6 +258,7 @@ public:
     StringView view() const;
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
+    String reverse() const;
 
     template<typename T, typename... Rest>
     bool is_one_of(const T& string, Rest... rest) const

@@ -364,6 +364,15 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
     return positions.size();
 }
 
+String String::reverse() const
+{
+    StringBuilder reversed_string;
+    for (size_t i = length(); i-- > 0;) {
+        reversed_string.append(characters()[i]);
+    }
+    return reversed_string.to_string();
+}
+
 String escape_html_entities(const StringView& html)
 {
     StringBuilder builder;
