@@ -25,7 +25,7 @@ let __AfterInitialPageLoad__ = () => {};
 let afterInitialPageLoad;
 
 (() => {
-    loadPage = (page) => __PageToLoad__ = page;
-    beforeInitialPageLoad = (callback) => __BeforeInitialPageLoad__ = callback;
-    afterInitialPageLoad = (callback) => __AfterInitialPageLoad__ = callback;
+    loadPage = page => (__PageToLoad__ = page);
+    beforeInitialPageLoad = callback => (__BeforeInitialPageLoad__ = callback);
+    afterInitialPageLoad = callback => (__AfterInitialPageLoad__ = callback);
 })();

@@ -10,8 +10,9 @@ test("Toplevel break inside loop", () => {
 test("break inside sub-blocks", () => {
     var j = 0;
     for (var i = 0; i < 9; ++i) {
-        if (j == 4)
+        if (j == 4) {
             break;
+        }
         ++j;
     }
     expect(j).toBe(4);

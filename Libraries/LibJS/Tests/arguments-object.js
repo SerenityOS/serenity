@@ -13,4 +13,3 @@ test("basic arguments object", () => {
     expect(bar("hello", "friends", ":^)")).toBe("friends");
     expect(bar("hello")).toBe(undefined);
 });
-

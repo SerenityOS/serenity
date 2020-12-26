@@ -1,5 +1,5 @@
 test("basic with statement functionality", () => {
-    var object = { "foo": 5, "bar": 6, "baz": 7 };
+    var object = { foo: 5, bar: 6, baz: 7 };
     var qux = 1;
 
     var bar = 99;
