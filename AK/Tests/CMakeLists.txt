@@ -33,6 +33,7 @@ set(AK_TEST_SOURCES
     TestString.cpp
     TestStringUtils.cpp
     TestStringView.cpp
+    TestTrie.cpp
     TestTypedTransfer.cpp
     TestURL.cpp
     TestUtf8.cpp
