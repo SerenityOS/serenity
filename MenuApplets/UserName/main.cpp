@@ -69,12 +69,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
+    auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
-    if (unveil("/tmp", "rwc") < 0) {
+    if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
     }
@@ -86,8 +88,6 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto app = GUI::Application::construct(argc, argv);
-
     auto window = GUI::Window::construct();
     window->set_title("UserName");
     window->set_window_type(GUI::WindowType::MenuApplet);
@@ -95,11 +95,6 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<UserNameWidget>();
     window->resize(widget.get_width(), 16);
     window->show();
-
-    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     return app->exec();
 }
