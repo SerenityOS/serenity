@@ -213,16 +213,18 @@ public:
     struct SubHeap {
         HeapType heap;
         SubHeap* next { nullptr };
+        size_t memory_size { 0 };
 
         template<typename... Args>
-        SubHeap(Args&&... args)
+        SubHeap(size_t memory_size, Args&&... args)
             : heap(forward<Args>(args)...)
+            , memory_size(memory_size)
         {
         }
     };
 
     ExpandableHeap(u8* memory, size_t memory_size, const ExpandHeapType& expand = ExpandHeapType())
-        : m_heaps(memory, memory_size)
+        : m_heaps(memory_size, memory, memory_size)
         , m_expand(expand)
     {
     }
@@ -286,17 +288,32 @@ public:
             if (subheap->heap.contains(ptr)) {
                 subheap->heap.deallocate(ptr);
                 if (subheap->heap.allocated_chunks() == 0 && subheap != &m_heaps && !m_expanding) {
-                    // Since remove_memory may free subheap, we need to save the
-                    // next pointer before calling it
-                    auto* next_subheap = subheap->next;
-                    if (ExpandableHeapTraits<ExpandHeap>::remove_memory(m_expand, subheap)) {
+                    // remove_memory expects the memory to be unused and
+                    // may deallocate the memory. We need to therefore first
+                    // unlink the subheap and destroy it. If remove_memory
+                    // ends up not not removing the memory, we'll initialize
+                    // a new subheap and re-add it.
+                    // We need to remove the subheap before calling remove_memory
+                    // because it's possible that remove_memory itself could
+                    // cause a memory allocation that we don't want to end up
+                    // potentially being made in the subheap we're about to remove.
+                    {
                         auto* subheap2 = m_heaps.next;
                         auto** subheap_link = &m_heaps.next;
                         while (subheap2 != subheap) {
                             subheap_link = &subheap2->next;
                             subheap2 = subheap2->next;
                         }
-                        *subheap_link = next_subheap;
+                        *subheap_link = subheap->next;
+                    }
+
+                    auto memory_size = subheap->memory_size;
+                    subheap->~SubHeap();
+
+                    if (!ExpandableHeapTraits<ExpandHeap>::remove_memory(m_expand, subheap)) {
+                        // Removal of the subheap was rejected, add it back in and
+                        // re-initialize with a clean subheap.
+                        add_subheap(subheap, memory_size);
                     }
                 }
                 return;
@@ -323,7 +340,7 @@ public:
         // Place the SubHeap structure at the beginning of the new memory block
         memory_size -= sizeof(SubHeap);
         SubHeap* new_heap = (SubHeap*)memory;
-        new (new_heap) SubHeap((u8*)(new_heap + 1), memory_size);
+        new (new_heap) SubHeap(memory_size, (u8*)(new_heap + 1), memory_size);
 
         // Add the subheap to the list (but leave the main heap where it is)
         SubHeap* next_heap = m_heaps.next;
