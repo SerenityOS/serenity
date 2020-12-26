@@ -71,10 +71,17 @@ TEST_CASE(iterate)
     for (size_t i = 0; i < input.size(); ++i)
         input[i] = i;
 
+    bunch_of_numbers.insert(input.begin(), input.end());
+
     // Iteration order is preorder (order between adjacent nodes is not defined, but parents come before children)
     // in this case, the tree is linear.
     size_t i = 0;
+    bool is_root = true;
     for (auto& node : bunch_of_numbers) {
+        if (is_root) {
+            is_root = false;
+            continue;
+        }
         EXPECT_EQ(input[i], node.value());
         ++i;
     }
