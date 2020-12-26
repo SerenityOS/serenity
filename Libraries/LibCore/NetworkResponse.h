@@ -36,13 +36,11 @@ public:
     virtual ~NetworkResponse();
 
     bool is_error() const { return m_error; }
-    const ByteBuffer& payload() const { return m_payload; }
 
 protected:
-    explicit NetworkResponse(ByteBuffer&&);
+    explicit NetworkResponse();
 
     bool m_error { false };
-    ByteBuffer m_payload;
 };
 
 }

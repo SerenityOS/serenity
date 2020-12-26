@@ -37,8 +37,8 @@ namespace Gemini {
 class GeminiJob final : public Job {
     C_OBJECT(GeminiJob)
 public:
-    explicit GeminiJob(const GeminiRequest& request, const Vector<Certificate>* override_certificates = nullptr)
-        : Job(request)
+    explicit GeminiJob(const GeminiRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certificates = nullptr)
+        : Job(request, output_stream)
         , m_override_ca_certificates(override_certificates)
     {
     }
@@ -61,7 +61,7 @@ protected:
     virtual bool can_read() const override;
     virtual ByteBuffer receive(size_t) override;
     virtual bool eof() const override;
-    virtual bool write(const ByteBuffer&) override;
+    virtual bool write(ReadonlyBytes) override;
     virtual bool is_established() const override { return m_socket->is_established(); }
     virtual bool should_fail_on_empty_payload() const override { return false; }
     virtual void read_while_data_available(Function<IterationDecision()>) override;
