@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/Stream.h>
 #include <LibCore/Object.h>
 
 namespace Core {
@@ -43,6 +44,8 @@ public:
     };
     virtual ~NetworkJob() override;
 
+    // Could fire twice, after Headers and after Trailers!
+    Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<void(bool success)> on_finish;
     Function<void(Optional<u32>, u32)> on_progress;
 
@@ -62,13 +65,16 @@ public:
     }
 
 protected:
-    NetworkJob();
+    NetworkJob(OutputStream&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
     void did_progress(Optional<u32> total_size, u32 downloaded);
 
+    size_t do_write(ReadonlyBytes bytes) { return m_output_stream.write(bytes); }
+
 private:
     RefPtr<NetworkResponse> m_response;
+    OutputStream& m_output_stream;
     Error m_error { Error::None };
 };
 

@@ -68,13 +68,43 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
     return buf;
 }
 
-Job::Job(const HttpRequest& request)
-    : m_request(request)
+Job::Job(const HttpRequest& request, OutputStream& output_stream)
+    : Core::NetworkJob(output_stream)
+    , m_request(request)
 {
 }
 
 Job::~Job()
 {
+}
+
+void Job::flush_received_buffers()
+{
+    if (!m_can_stream_response || m_buffered_size == 0)
+        return;
+#ifdef JOB_DEBUG
+    dbg() << "Job: Flushing received buffers: have " << m_buffered_size << " bytes in " << m_received_buffers.size() << " buffers";
+#endif
+    for (size_t i = 0; i < m_received_buffers.size(); ++i) {
+        auto& payload = m_received_buffers[i];
+        auto written = do_write(payload);
+        m_buffered_size -= written;
+        if (written == payload.size()) {
+            // FIXME: Make this a take-first-friendly object?
+            m_received_buffers.take_first();
+            --i;
+            continue;
+        }
+        ASSERT(written < payload.size());
+        payload = payload.slice(written, payload.size() - written);
+#ifdef JOB_DEBUG
+        dbg() << "Job: Flushing received buffers done: have " << m_buffered_size << " bytes in " << m_received_buffers.size() << " buffers";
+#endif
+        return;
+    }
+#ifdef JOB_DEBUG
+    dbg() << "Job: Flushing received buffers done: have " << m_buffered_size << " bytes in " << m_received_buffers.size() << " buffers";
+#endif
 }
 
 void Job::on_socket_connected()
@@ -135,6 +165,8 @@ void Job::on_socket_connected()
                 if (m_state == State::Trailers) {
                     return finish_up();
                 } else {
+                    if (on_headers_received)
+                        on_headers_received(m_headers, m_code > 0 ? m_code : Optional<u32> {});
                     m_state = State::InBody;
                 }
                 return;
@@ -163,6 +195,13 @@ void Job::on_socket_connected()
             }
             auto value = line.substring(name.length() + 2, line.length() - name.length() - 2);
             m_headers.set(name, value);
+            if (name.equals_ignoring_case("Content-Encoding")) {
+                // Assume that any content-encoding means that we can't decode it as a stream :(
+#ifdef JOB_DEBUG
+                dbg() << "Content-Encoding " << value << " detected, cannot stream output :(";
+#endif
+                m_can_stream_response = false;
+            }
 #ifdef JOB_DEBUG
             dbg() << "Job: [" << name << "] = '" << value << "'";
 #endif
@@ -252,7 +291,9 @@ void Job::on_socket_connected()
             }
 
             m_received_buffers.append(payload);
+            m_buffered_size += payload.size();
             m_received_size += payload.size();
+            flush_received_buffers();
 
             if (m_current_chunk_remaining_size.has_value()) {
                 auto size = m_current_chunk_remaining_size.value() - payload.size();
@@ -313,20 +354,37 @@ void Job::on_socket_connected()
 void Job::finish_up()
 {
     m_state = State::Finished;
-    auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
-    u8* flat_ptr = flattened_buffer.data();
-    for (auto& received_buffer : m_received_buffers) {
-        memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
-        flat_ptr += received_buffer.size();
-    }
-    m_received_buffers.clear();
+    if (!m_can_stream_response) {
+        auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
+        u8* flat_ptr = flattened_buffer.data();
+        for (auto& received_buffer : m_received_buffers) {
+            memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
+            flat_ptr += received_buffer.size();
+        }
+        m_received_buffers.clear();
 
-    auto content_encoding = m_headers.get("Content-Encoding");
-    if (content_encoding.has_value()) {
-        flattened_buffer = handle_content_encoding(flattened_buffer, content_encoding.value());
+        // For the time being, we cannot stream stuff with content-encoding set to _anything_.
+        auto content_encoding = m_headers.get("Content-Encoding");
+        if (content_encoding.has_value()) {
+            flattened_buffer = handle_content_encoding(flattened_buffer, content_encoding.value());
+        }
+
+        m_buffered_size = flattened_buffer.size();
+        m_received_buffers.append(move(flattened_buffer));
+        m_can_stream_response = true;
     }
 
-    auto response = HttpResponse::create(m_code, move(m_headers), move(flattened_buffer));
+    flush_received_buffers();
+    if (m_buffered_size != 0) {
+        // FIXME: What do we do? ignore it?
+        //        "Transmission failed" is not strictly correct, but let's roll with it for now.
+        deferred_invoke([this](auto&) {
+            did_fail(Error::TransmissionFailed);
+        });
+        return;
+    }
+
+    auto response = HttpResponse::create(m_code, move(m_headers));
     deferred_invoke([this, response](auto&) {
         did_finish(move(response));
     });

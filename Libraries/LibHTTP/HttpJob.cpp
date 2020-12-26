@@ -98,9 +98,9 @@ bool HttpJob::eof() const
     return m_socket->eof();
 }
 
-bool HttpJob::write(const ByteBuffer& data)
+bool HttpJob::write(ReadonlyBytes bytes)
 {
-    return m_socket->write(data);
+    return m_socket->write(bytes);
 }
 
 }

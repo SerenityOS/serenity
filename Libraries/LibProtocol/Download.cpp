@@ -41,31 +41,93 @@ bool Download::stop()
     return m_client->stop_download({}, *this);
 }
 
-void Download::did_finish(Badge<Client>, bool success, Optional<u32> status_code, u32 total_size, i32 shbuf_id, const IPC::Dictionary& response_headers)
+void Download::stream_into(OutputStream& stream)
+{
+    ASSERT(!m_internal_stream_data);
+
+    auto notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
+
+    m_internal_stream_data = make<InternalStreamData>(fd());
+    m_internal_stream_data->read_notifier = notifier;
+
+    auto user_on_finish = move(on_finish);
+    on_finish = [this](auto success, auto total_size) {
+        m_internal_stream_data->success = success;
+        m_internal_stream_data->total_size = total_size;
+        m_internal_stream_data->download_done = true;
+    };
+
+    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
+        constexpr size_t buffer_size = 1 * KiB;
+        static char buf[buffer_size];
+        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
+        if (!stream.write_or_error({ buf, nread })) {
+            // FIXME: What do we do here?
+            TODO();
+        }
+
+        if (m_internal_stream_data->read_stream.eof() || (m_internal_stream_data->download_done && !m_internal_stream_data->success)) {
+            m_internal_stream_data->read_notifier->close();
+            user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
+        } else {
+            m_internal_stream_data->read_stream.handle_any_error();
+        }
+    };
+}
+
+void Download::set_should_buffer_all_input(bool value)
+{
+    if (m_should_buffer_all_input == value)
+        return;
+
+    if (m_internal_buffered_data && !value) {
+        m_internal_buffered_data = nullptr;
+        m_should_buffer_all_input = false;
+        return;
+    }
+
+    ASSERT(!m_internal_stream_data);
+    ASSERT(!m_internal_buffered_data);
+    ASSERT(on_buffered_download_finish); // Not having this set makes no sense.
+    m_internal_buffered_data = make<InternalBufferedData>(fd());
+    m_should_buffer_all_input = true;
+
+    on_headers_received = [this](auto& headers, auto response_code) {
+        m_internal_buffered_data->response_headers = headers;
+        m_internal_buffered_data->response_code = move(response_code);
+    };
+
+    on_finish = [this](auto success, u32 total_size) {
+        auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
+        on_buffered_download_finish(
+            success,
+            total_size,
+            m_internal_buffered_data->response_headers,
+            m_internal_buffered_data->response_code,
+            output_buffer);
+    };
+
+    stream_into(m_internal_buffered_data->payload_stream);
+}
+
+void Download::did_finish(Badge<Client>, bool success, u32 total_size)
 {
     if (!on_finish)
         return;
 
-    ReadonlyBytes payload;
-    RefPtr<SharedBuffer> shared_buffer;
-    if (success && shbuf_id != -1) {
-        shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
-        payload = { shared_buffer->data<void>(), total_size };
-    }
-
-    // FIXME: It's a bit silly that we copy the response headers here just so we can move them into a HashMap with different traits.
-    HashMap<String, String, CaseInsensitiveStringTraits> caseless_response_headers;
-    response_headers.for_each_entry([&](auto& name, auto& value) {
-        caseless_response_headers.set(name, value);
-    });
-
-    on_finish(success, payload, move(shared_buffer), caseless_response_headers, status_code);
+    on_finish(success, total_size);
 }
 
 void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)
 {
     if (on_progress)
         on_progress(total_size, downloaded_size);
+}
+
+void Download::did_receive_headers(Badge<Client>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
+{
+    if (on_headers_received)
+        on_headers_received(response_headers, response_code);
 }
 
 void Download::did_request_certificates(Badge<Client>)

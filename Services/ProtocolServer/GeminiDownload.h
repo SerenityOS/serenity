@@ -36,10 +36,10 @@ namespace ProtocolServer {
 class GeminiDownload final : public Download {
 public:
     virtual ~GeminiDownload() override;
-    static NonnullOwnPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
+    static NonnullOwnPtr<GeminiDownload> create_with_job(Badge<GeminiProtocol>, ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>, NonnullOwnPtr<OutputFileStream>&&);
 
 private:
-    explicit GeminiDownload(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>);
+    explicit GeminiDownload(ClientConnection&, NonnullRefPtr<Gemini::GeminiJob>, NonnullOwnPtr<OutputFileStream>&&);
 
     virtual void set_certificate(String certificate, String key) override;
 

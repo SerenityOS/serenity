@@ -36,10 +36,10 @@ namespace ProtocolServer {
 class HttpDownload final : public Download {
 public:
     virtual ~HttpDownload() override;
-    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
+    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
 private:
-    explicit HttpDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>);
+    explicit HttpDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
     NonnullRefPtr<HTTP::HttpJob> m_job;
 };

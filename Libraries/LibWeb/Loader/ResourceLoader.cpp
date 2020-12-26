@@ -53,13 +53,13 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load_sync(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load_sync(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     Core::EventLoop loop;
 
     load(
         url,
-        [&](auto& data, auto& response_headers) {
+        [&](auto data, auto& response_headers) {
             success_callback(data, response_headers);
             loop.quit(0);
         },
@@ -97,7 +97,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
 
     load(
         request,
-        [=](auto& data, auto& headers) {
+        [=](auto data, auto& headers) {
             const_cast<Resource&>(*resource).did_load({}, data, headers);
         },
         [=](auto& error) {
@@ -107,7 +107,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     return resource;
 }
 
-void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     auto& url = request.url();
     if (is_port_blocked(url.port())) {
@@ -170,7 +170,12 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBu
                 error_callback("Failed to initiate load");
             return;
         }
-        download->on_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback)](bool success, ReadonlyBytes payload, auto, auto& response_headers, auto status_code) {
+        download->on_buffered_download_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), download](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
+            if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
+                if (error_callback)
+                    error_callback(String::format("HTTP error (%u)", status_code.value()));
+                return;
+            }
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -179,13 +184,9 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBu
                     error_callback("HTTP load failed");
                 return;
             }
-            if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
-                if (error_callback)
-                    error_callback(String::format("HTTP error (%u)", status_code.value()));
-                return;
-            }
-            success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
+            success_callback(payload, response_headers);
         };
+        download->set_should_buffer_all_input(true);
         download->on_certificate_requested = []() -> Protocol::Download::CertificateAndKey {
             return {};
         };
@@ -199,7 +200,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBu
         error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
 }
 
-void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);

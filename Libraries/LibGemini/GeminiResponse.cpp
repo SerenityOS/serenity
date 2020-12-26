@@ -28,9 +28,8 @@
 
 namespace Gemini {
 
-GeminiResponse::GeminiResponse(int status, String meta, ByteBuffer&& payload)
-    : Core::NetworkResponse(move(payload))
-    , m_status(status)
+GeminiResponse::GeminiResponse(int status, String meta)
+    : m_status(status)
     , m_meta(meta)
 {
 }

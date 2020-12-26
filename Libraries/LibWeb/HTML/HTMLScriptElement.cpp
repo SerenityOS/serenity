@@ -128,7 +128,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
         // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
         ResourceLoader::the().load_sync(
             url,
-            [this, url](auto& data, auto&) {
+            [this, url](auto data, auto&) {
                 if (data.is_null()) {
                     dbg() << "HTMLScriptElement: Failed to load " << url;
                     return;

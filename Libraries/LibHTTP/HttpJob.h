@@ -38,8 +38,8 @@ namespace HTTP {
 class HttpJob final : public Job {
     C_OBJECT(HttpJob)
 public:
-    explicit HttpJob(const HttpRequest& request)
-        : Job(request)
+    explicit HttpJob(const HttpRequest& request, OutputStream& output_stream)
+        : Job(request, output_stream)
     {
     }
 
@@ -59,7 +59,7 @@ protected:
     virtual bool can_read() const override;
     virtual ByteBuffer receive(size_t) override;
     virtual bool eof() const override;
-    virtual bool write(const ByteBuffer&) override;
+    virtual bool write(ReadonlyBytes) override;
     virtual bool is_established() const override { return true; }
 
 private:
