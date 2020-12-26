@@ -32,8 +32,8 @@
 
 namespace GUI {
 
-Label::Label(const StringView& text)
-    : m_text(text)
+Label::Label(String text)
+    : m_text(move(text))
 {
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
@@ -66,14 +66,15 @@ void Label::set_icon(const Gfx::Bitmap* icon)
     update();
 }
 
-void Label::set_text(const StringView& text)
+void Label::set_text(String text)
 {
     if (text == m_text)
         return;
-    m_text = text;
+    m_text = move(text);
     if (m_autosize)
         size_to_fit();
     update();
+    did_change_text();
 }
 
 void Label::paint_event(PaintEvent& event)

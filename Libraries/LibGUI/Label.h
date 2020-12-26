@@ -32,12 +32,13 @@
 namespace GUI {
 
 class Label : public Frame {
-    C_OBJECT(Label)
+    C_OBJECT(Label);
+
 public:
     virtual ~Label() override;
 
     String text() const { return m_text; }
-    void set_text(const StringView&);
+    void set_text(String);
 
     void set_icon(const Gfx::Bitmap*);
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
@@ -53,9 +54,10 @@ public:
     void set_autosize(bool);
 
 protected:
-    explicit Label(const StringView& text = {});
+    explicit Label(String text = {});
 
     virtual void paint_event(PaintEvent&) override;
+    virtual void did_change_text() { }
 
 private:
     void size_to_fit();
