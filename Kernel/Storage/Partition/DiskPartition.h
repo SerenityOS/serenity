@@ -28,12 +28,13 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Storage/Partition/DiskPartitionMetadata.h>
 
 namespace Kernel {
 
 class DiskPartition final : public BlockDevice {
 public:
-    static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned block_offset, unsigned block_limit);
+    static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned, DiskPartitionMetadata);
     virtual ~DiskPartition();
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
@@ -50,11 +51,10 @@ public:
 private:
     virtual const char* class_name() const override;
 
-    DiskPartition(BlockDevice&, unsigned block_offset, unsigned block_limit);
+    DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
 
     NonnullRefPtr<BlockDevice> m_device;
-    unsigned m_block_offset;
-    unsigned m_block_limit;
+    DiskPartitionMetadata m_metadata;
 };
 
 }
