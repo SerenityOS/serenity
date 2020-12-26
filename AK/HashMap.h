@@ -49,7 +49,20 @@ private:
 public:
     HashMap() { }
 
-    bool is_empty() const { return m_table.is_empty(); }
+//TODO: add tests
+#ifndef SERENITY_LIBC_BUILD
+    HashMap(std::initializer_list<Entry> list)
+    {
+        ensure_capacity(list.size());
+        for (auto& entry : list)
+            set(entry.key, entry.value);
+    }
+#endif
+
+    bool is_empty() const
+    {
+        return m_table.is_empty();
+    }
     size_t size() const { return m_table.size(); }
     size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
