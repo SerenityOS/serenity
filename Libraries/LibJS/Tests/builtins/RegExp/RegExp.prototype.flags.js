@@ -6,5 +6,6 @@ test("basic functionality", () => {
     expect(/foo/s.flags).toBe("s");
     expect(/foo/u.flags).toBe("u");
     expect(/foo/y.flags).toBe("y");
+    // prettier-ignore
     expect(/foo/sgimyu.flags).toBe("gimsuy");
 });

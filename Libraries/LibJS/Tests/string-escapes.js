@@ -40,7 +40,9 @@ describe("octal escapes", () => {
         expect("\5").toBe("\u0005");
         expect("\6").toBe("\u0006");
         expect("\7").toBe("\u0007");
+        // prettier-ignore
         expect("\8").toBe("8");
+        // prettier-ignore
         expect("\9").toBe("9");
         expect("\128").toBe("\n8");
         expect("\141bc").toBe("abc");

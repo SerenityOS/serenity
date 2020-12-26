@@ -302,7 +302,7 @@ class ExpectationError extends Error {
         // Test for syntax errors; target must be a string
         toEval() {
             this.__expect(typeof this.target === "string");
-            const success = canParseSource(this.target)
+            const success = canParseSource(this.target);
             this.__expect(this.inverted ? !success : success);
         }
 

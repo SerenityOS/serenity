@@ -1,6 +1,4 @@
-// This file must not be formatted by prettier. Make sure your IDE
-// respects the .prettierignore file!
-
+// prettier-ignore
 test("new-expression parsing", () => {
     function Foo() {
         this.x = 1;
@@ -21,6 +19,7 @@ test("new-expression parsing", () => {
     expect(foo).toBe("[object Object]2");
 });
 
+// prettier-ignore
 test("new-expressions with object keys", () => {
     let a = {
         b: function () {

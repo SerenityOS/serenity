@@ -40,7 +40,7 @@ describe("[[Set]] trap normal behavior", () => {
         expect(p.foo).toBe(20);
         p.foo = 10;
         expect(p.foo).toBe(10);
-        p[Symbol.hasInstance] = "foo"
+        p[Symbol.hasInstance] = "foo";
         expect(p[Symbol.hasInstance]).toBe("foo");
     });
 

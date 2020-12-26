@@ -1,14 +1,11 @@
-// This file must not be formatted by prettier. Make sure your IDE
-// respects the .prettierignore file!
-
 test("basic functionality", () => {
     const A = class {
         constructor(x) {
-           this.x = x;
+            this.x = x;
         }
 
         getX() {
-           return this.x * 2;
+            return this.x * 2;
         }
     };
 
@@ -16,6 +13,7 @@ test("basic functionality", () => {
 });
 
 test("inline instantiation", () => {
+    // prettier-ignore
     const a = new class {
         constructor() {
             this.x = 10;
@@ -30,6 +28,7 @@ test("inline instantiation", () => {
 });
 
 test("inline instantiation with argument", () => {
+    // prettier-ignore
     const a = new class {
         constructor(x) {
             this.x = x;
@@ -53,7 +52,7 @@ test("extending class expressions", () => {
             super(y);
             this.y = y * 2;
         }
-    };
+    }
 
     const a = new A(10);
     expect(a.x).toBe(10);
@@ -61,9 +60,9 @@ test("extending class expressions", () => {
 });
 
 test("class expression name", () => {
-    let A = class {}
+    let A = class {};
     expect(A.name).toBe("A");
 
-    let B = class C {}
+    let B = class C {};
     expect(B.name).toBe("C");
 });

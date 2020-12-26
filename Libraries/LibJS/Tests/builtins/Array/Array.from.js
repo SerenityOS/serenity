@@ -50,8 +50,9 @@ describe("normal behavior", () => {
                     let value = begin - 1;
                     return {
                         next() {
-                            if (value < end)
+                            if (value < end) {
                                 value += 1;
+                            }
                             return { value: value, done: value >= end };
                         },
                     };
