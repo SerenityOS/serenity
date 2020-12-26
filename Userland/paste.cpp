@@ -28,7 +28,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 int main(int argc, char* argv[])
@@ -48,17 +47,17 @@ int main(int argc, char* argv[])
     auto data_and_type = clipboard.data_and_type();
 
     if (data_and_type.mime_type.is_null()) {
-        fprintf(stderr, "Nothing copied\n");
+        warnln("Nothing copied");
         return 1;
     }
 
     if (!print_type) {
-        printf("%s", data_and_type.data.data());
+        out("{}", StringView(data_and_type.data));
         // Append a newline to text contents, unless the caller says otherwise.
         if (data_and_type.mime_type.starts_with("text/") && !no_newline)
-            putchar('\n');
+            outln();
     } else {
-        printf("%s\n", data_and_type.mime_type.characters());
+        outln("{}", data_and_type.mime_type);
     }
 
     return 0;
