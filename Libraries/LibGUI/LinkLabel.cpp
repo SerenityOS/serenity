@@ -26,7 +26,7 @@
 
 #include <LibCore/Event.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Link.h>
+#include <LibGUI/LinkLabel.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
@@ -35,20 +35,20 @@
 
 namespace GUI {
 
-Link::Link(const StringView& text)
+LinkLabel::LinkLabel(const StringView& text)
     : Label(text)
 {
     set_foreground_role(Gfx::ColorRole::Link);
 }
 
-void Link::mousedown_event(MouseEvent&)
+void LinkLabel::mousedown_event(MouseEvent&)
 {
     if (on_click) {
         on_click();
     }
 }
 
-void Link::paint_event(PaintEvent& event)
+void LinkLabel::paint_event(PaintEvent& event)
 {
     Label::paint_event(event);
     GUI::Painter painter(*this);
@@ -58,26 +58,26 @@ void Link::paint_event(PaintEvent& event)
             Widget::palette().link());
 }
 
-void Link::enter_event(Core::Event&)
+void LinkLabel::enter_event(Core::Event&)
 {
     m_hovered = true;
     update();
 }
 
-void Link::leave_event(Core::Event&)
+void LinkLabel::leave_event(Core::Event&)
 {
     m_hovered = false;
     update();
 }
 
-void Link::second_paint_event(PaintEvent&)
+void LinkLabel::second_paint_event(PaintEvent&)
 {
     if (window()->width() < font().width(text())) {
         set_tooltip(text());
     }
 }
 
-void Link::resize_event(ResizeEvent&)
+void LinkLabel::resize_event(ResizeEvent&)
 {
     if (window()->width() < font().width(text())) {
         set_tooltip(text());

@@ -30,10 +30,11 @@
 #include <LibGUI/Label.h>
 
 namespace GUI {
-class Link : public Label {
-    C_OBJECT(Link)
+class LinkLabel : public Label {
+    C_OBJECT(LinkLabel);
+
 public:
-    Link(const StringView&);
+    LinkLabel(const StringView&);
     Function<void()> on_click;
 
 private:
