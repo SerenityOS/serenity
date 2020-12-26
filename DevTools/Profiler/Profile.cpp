@@ -263,29 +263,23 @@ void Profile::rebuild_tree()
     m_model->update();
 }
 
-OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
+Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
 {
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        warnln("Unable to open {}, error: {}", path, file->error_string());
-        return nullptr;
-    }
+    if (!file->open(Core::IODevice::ReadOnly))
+        return String::formatted("Unable to open {}, error: {}", path, file->error_string());
 
     auto json = JsonValue::from_string(file->read_all());
     ASSERT(json.has_value());
-    if (!json.value().is_object()) {
-        warnln("Invalid perfcore format (not a JSON object)");
-        return nullptr;
-    }
+    if (!json.value().is_object())
+        return String { "Invalid perfcore format (not a JSON object)" };
 
     auto& object = json.value().as_object();
     auto executable_path = object.get("executable").to_string();
 
-    auto coredump = CoreDumpReader::create(String::format("/tmp/profiler_coredumps/%d", object.get("pid").as_u32()));
-    if (!coredump) {
-        warnln("Could not open coredump");
-        return nullptr;
-    }
+    auto coredump = CoreDumpReader::create(String::formatted("/tmp/profiler_coredumps/{}", object.get("pid").as_u32()));
+    if (!coredump)
+        return String { "Could not open coredump" };
 
     MappedFile kernel_elf_file("/boot/Kernel");
     OwnPtr<ELF::Image> kernel_elf;
@@ -294,11 +288,11 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 
     auto events_value = object.get("events");
     if (!events_value.is_array())
-        return nullptr;
+        return String { "Malformed profile (events is not an array)" };
 
     auto& perf_events = events_value.as_array();
     if (perf_events.is_empty())
-        return nullptr;
+        return String { "No events captured (targeted process was never on CPU)" };
 
     Vector<Event> events;
 
@@ -346,7 +340,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
         events.append(move(event));
     }
 
-    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(executable_path, move(events)));
+    return adopt_own(*new Profile(executable_path, move(events)));
 }
 
 void ProfileNode::sort_children()

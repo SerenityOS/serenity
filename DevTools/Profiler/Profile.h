@@ -32,6 +32,7 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/Result.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -128,7 +129,7 @@ private:
 
 class Profile {
 public:
-    static OwnPtr<Profile> load_from_perfcore_file(const StringView& path);
+    static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(const StringView& path);
     ~Profile();
 
     GUI::Model& model();
