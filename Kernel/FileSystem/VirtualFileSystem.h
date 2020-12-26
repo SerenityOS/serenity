@@ -37,13 +37,13 @@
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
+#include <Kernel/UnveilNode.h>
 
 namespace Kernel {
 
 class Custody;
 class Device;
 class FileDescription;
-struct UnveiledPath;
 
 struct UidAndGid {
     uid_t uid;
@@ -122,7 +122,7 @@ public:
 private:
     friend class FileDescription;
 
-    const UnveiledPath* find_matching_unveiled_path(StringView path);
+    const UnveilNode* find_matching_unveiled_path(StringView path);
     KResult validate_path_against_process_veil(StringView path, int options);
 
     bool is_vfs_root(InodeIdentifier) const;
