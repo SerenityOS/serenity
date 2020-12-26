@@ -42,11 +42,14 @@ describe("[[Get]] trap normal behavior", () => {
     });
 
     test("custom receiver value", () => {
-        let p = new Proxy({}, {
-            get(target, property, receiver) {
-                return receiver;
-            },
-        });
+        let p = new Proxy(
+            {},
+            {
+                get(target, property, receiver) {
+                    return receiver;
+                },
+            }
+        );
 
         expect(Reflect.get(p, "foo", 42)).toBe(42);
     });

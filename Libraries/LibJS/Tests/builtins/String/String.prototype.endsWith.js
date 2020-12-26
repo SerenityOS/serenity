@@ -34,6 +34,9 @@ test("basic functionality", () => {
     expect(s.endsWith("", -1)).toBeTrue();
     expect(s.endsWith("", 42)).toBeTrue();
     expect("12undefined".endsWith()).toBeTrue();
-    expect(() => s.endsWith(/foobar/)).toThrowWithMessage(TypeError, "searchString is not a string, but a regular expression");
+    expect(() => s.endsWith(/foobar/)).toThrowWithMessage(
+        TypeError,
+        "searchString is not a string, but a regular expression"
+    );
     expect(s.endsWith("bar", undefined)).toBeTrue();
 });

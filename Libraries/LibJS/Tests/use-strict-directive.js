@@ -6,6 +6,7 @@ test("valid 'use strict; directive", () => {
         })()
     ).toBeTrue();
     expect(
+        // prettier-ignore
         (() => {
             'use strict';
             return isStrictMode();

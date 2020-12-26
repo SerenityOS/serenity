@@ -49,7 +49,7 @@ afterInitialPageLoad(() => {
 
     // FIXME: Add this in once removeChild is implemented.
     test.skip("Nullable", () => {
-       document.documentElement.removeChild(document.body);
-       expect(document.body).toBeNull();
+        document.documentElement.removeChild(document.body);
+        expect(document.body).toBeNull();
     });
 });

@@ -37,7 +37,7 @@ test("tuple constructor", () => {
     expect(new Date(2019, 11).getMilliseconds()).toBe(0);
     expect(new Date(2019, 11).getDay()).toBe(0);
 
-    let date = new Date(2019, 11, 15,  9, 16, 14, 123); // Note: Month is 0-based.
+    let date = new Date(2019, 11, 15, 9, 16, 14, 123); // Note: Month is 0-based.
     expect(date.getFullYear()).toBe(2019);
     expect(date.getMonth()).toBe(11);
     expect(date.getDate()).toBe(15);
@@ -48,14 +48,14 @@ test("tuple constructor", () => {
     expect(date.getDay()).toBe(0);
 
     // getTime() returns a time stamp in UTC, but we can at least check it's in the right interval, which will be true independent of the local timezone if the range is big enough.
-    let timestamp_lower_bound = 1575072000000;  // 2019-12-01T00:00:00Z
-    let timestamp_upper_bound = 1577750400000;  // 2019-12-31T00:00:00Z
+    let timestamp_lower_bound = 1575072000000; // 2019-12-01T00:00:00Z
+    let timestamp_upper_bound = 1577750400000; // 2019-12-31T00:00:00Z
     expect(date.getTime()).toBeGreaterThan(timestamp_lower_bound);
     expect(date.getTime()).toBeLessThan(timestamp_upper_bound);
 });
 
 test("tuple constructor overflow", () => {
-    let date = new Date(2019, 13, 33,  30, 70, 80, 2345);
+    let date = new Date(2019, 13, 33, 30, 70, 80, 2345);
     expect(date.getFullYear()).toBe(2020);
     expect(date.getMonth()).toBe(2);
     expect(date.getDate()).toBe(5);
@@ -65,7 +65,7 @@ test("tuple constructor overflow", () => {
     expect(date.getMilliseconds()).toBe(345);
     expect(date.getDay()).toBe(4);
 
-    let date = new Date(2019, -13, -33,  -30, -70, -80, -2345);
+    let date = new Date(2019, -13, -33, -30, -70, -80, -2345);
     expect(date.getFullYear()).toBe(2017);
     expect(date.getMonth()).toBe(9);
     expect(date.getDate()).toBe(26);
