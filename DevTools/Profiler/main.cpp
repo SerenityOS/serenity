@@ -71,12 +71,13 @@ int main(int argc, char** argv)
         path = argv[1];
     }
 
-    auto profile = Profile::load_from_perfcore_file(path);
-
-    if (!profile) {
-        warnln("Unable to load profile '{}'", path);
-        return 1;
+    auto profile_or_error = Profile::load_from_perfcore_file(path);
+    if (profile_or_error.is_error()) {
+        GUI::MessageBox::show(nullptr, profile_or_error.error(), "Profiler", GUI::MessageBox::Type::Error);
+        return 0;
     }
+
+    auto& profile = profile_or_error.value();
 
     auto window = GUI::Window::construct();
     window->set_title("Profiler");
