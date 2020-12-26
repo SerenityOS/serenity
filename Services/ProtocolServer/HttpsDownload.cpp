@@ -30,15 +30,21 @@
 
 namespace ProtocolServer {
 
-HttpsDownload::HttpsDownload(ClientConnection& client, NonnullRefPtr<HTTP::HttpsJob> job)
-    : Download(client)
+HttpsDownload::HttpsDownload(ClientConnection& client, NonnullRefPtr<HTTP::HttpsJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+    : Download(client, move(output_stream))
     , m_job(job)
 {
+    m_job->on_headers_received = [this](auto& headers, auto response_code) {
+        if (response_code.has_value())
+            set_status_code(response_code.value());
+        set_response_headers(headers);
+    };
+
     m_job->on_finish = [this](bool success) {
         if (auto* response = m_job->response()) {
             set_status_code(response->code());
-            set_payload(response->payload());
             set_response_headers(response->headers());
+            set_downloaded_size(this->output_stream().size());
         }
 
         // if we didn't know the total size, pretend that the download finished successfully
@@ -68,9 +74,9 @@ HttpsDownload::~HttpsDownload()
     m_job->shutdown();
 }
 
-NonnullOwnPtr<HttpsDownload> HttpsDownload::create_with_job(Badge<HttpsProtocol>, ClientConnection& client, NonnullRefPtr<HTTP::HttpsJob> job)
+NonnullOwnPtr<HttpsDownload> HttpsDownload::create_with_job(Badge<HttpsProtocol>, ClientConnection& client, NonnullRefPtr<HTTP::HttpsJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
 {
-    return adopt_own(*new HttpsDownload(client, move(job)));
+    return adopt_own(*new HttpsDownload(client, move(job), move(output_stream)));
 }
 
 }

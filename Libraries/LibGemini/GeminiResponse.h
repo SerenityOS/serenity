@@ -34,16 +34,16 @@ namespace Gemini {
 class GeminiResponse : public Core::NetworkResponse {
 public:
     virtual ~GeminiResponse() override;
-    static NonnullRefPtr<GeminiResponse> create(int status, String meta, ByteBuffer&& payload)
+    static NonnullRefPtr<GeminiResponse> create(int status, String meta)
     {
-        return adopt(*new GeminiResponse(status, meta, move(payload)));
+        return adopt(*new GeminiResponse(status, meta));
     }
 
     int status() const { return m_status; }
     String meta() const { return m_meta; }
 
 private:
-    GeminiResponse(int status, String, ByteBuffer&&);
+    GeminiResponse(int status, String);
 
     int m_status { 0 };
     String m_meta;

@@ -84,10 +84,10 @@ static String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
-void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
+void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
 {
     ASSERT(!m_loaded);
-    m_encoded_data = data;
+    m_encoded_data = ByteBuffer::copy(data);
     m_response_headers = headers;
     m_loaded = true;
 

@@ -30,13 +30,13 @@
 
 namespace ProtocolServer {
 
-GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
-    : Download(client)
+GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+    : Download(client, move(output_stream))
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
         if (auto* response = m_job->response()) {
-            set_payload(response->payload());
+            set_downloaded_size(this->output_stream().size());
             if (!response->meta().is_empty()) {
                 HashMap<String, String, CaseInsensitiveStringTraits> headers;
                 headers.set("meta", response->meta());
@@ -76,9 +76,9 @@ GeminiDownload::~GeminiDownload()
     m_job->shutdown();
 }
 
-NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job)
+NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
 {
-    return adopt_own(*new GeminiDownload(client, move(job)));
+    return adopt_own(*new GeminiDownload(client, move(job), move(output_stream)));
 }
 
 }

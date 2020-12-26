@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FileStream.h>
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
@@ -116,29 +117,50 @@ private:
     bool m_might_be_wrong { false };
 };
 
-static void do_write(ReadonlyBytes payload)
-{
-    size_t length_remaining = payload.size();
-    size_t length_written = 0;
-    while (length_remaining > 0) {
-        auto nwritten = fwrite(payload.data() + length_written, sizeof(char), length_remaining, stdout);
-        if (nwritten > 0) {
-            length_remaining -= nwritten;
-            length_written += nwritten;
-            continue;
-        }
+template<typename ConditionT>
+class ConditionalOutputFileStream final : public OutputFileStream {
+public:
+    template<typename... Args>
+    ConditionalOutputFileStream(ConditionT&& condition, Args... args)
+        : OutputFileStream(args...)
+        , m_condition(condition)
+    {
+    }
 
-        if (feof(stdout)) {
-            fprintf(stderr, "pro: unexpected eof while writing\n");
+    ~ConditionalOutputFileStream()
+    {
+        if (!m_condition())
             return;
-        }
 
-        if (ferror(stdout)) {
-            fprintf(stderr, "pro: error while writing\n");
-            return;
+        if (!m_buffer.is_empty()) {
+            OutputFileStream::write(m_buffer);
+            m_buffer.clear();
         }
     }
-}
+
+private:
+    size_t write(ReadonlyBytes bytes) override
+    {
+        if (!m_condition()) {
+        write_to_buffer:;
+            m_buffer.append(bytes.data(), bytes.size());
+            return bytes.size();
+        }
+
+        if (!m_buffer.is_empty()) {
+            auto size = OutputFileStream::write(m_buffer);
+            m_buffer = m_buffer.slice(size, m_buffer.size() - size);
+        }
+
+        if (!m_buffer.is_empty())
+            goto write_to_buffer;
+
+        return OutputFileStream::write(bytes);
+    }
+
+    ConditionT m_condition;
+    ByteBuffer m_buffer;
+};
 
 int main(int argc, char** argv)
 {
@@ -195,6 +217,8 @@ int main(int argc, char** argv)
     timeval prev_time, current_time, time_diff;
     gettimeofday(&prev_time, nullptr);
 
+    bool received_actual_headers = false;
+
     download->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
         fprintf(stderr, "\r\033[2K");
         if (maybe_total_size.has_value()) {
@@ -215,10 +239,13 @@ int main(int argc, char** argv)
         previous_downloaded_size = downloaded_size;
         prev_time = current_time;
     };
-    download->on_finish = [&](bool success, auto payload, auto, auto& response_headers, auto) {
-        fprintf(stderr, "\033]9;-1;\033\\");
-        fprintf(stderr, "\n");
-        if (success && save_at_provided_name) {
+
+    if (save_at_provided_name) {
+        download->on_headers_received = [&](auto& response_headers, auto status_code) {
+            if (received_actual_headers)
+                return;
+            dbg() << "Received headers! response code = " << status_code.value_or(0);
+            received_actual_headers = true; // And not trailers!
             String output_name;
             if (auto content_disposition = response_headers.get("Content-Disposition"); content_disposition.has_value()) {
                 auto& value = content_disposition.value();
@@ -245,17 +272,26 @@ int main(int argc, char** argv)
 
             if (freopen(output_name.characters(), "w", stdout) == nullptr) {
                 perror("freopen");
-                success = false; // oops!
                 loop.quit(1);
+                return;
             }
-        }
-        if (success)
-            do_write(payload);
-        else
+        };
+    }
+    download->on_finish = [&](bool success, auto) {
+        fprintf(stderr, "\033]9;-1;\033\\");
+        fprintf(stderr, "\n");
+        if (!success)
             fprintf(stderr, "Download failed :(\n");
         loop.quit(0);
     };
+
+    auto output_stream = ConditionalOutputFileStream { [&] { return save_at_provided_name ? received_actual_headers : true; }, stdout };
+    download->stream_into(output_stream);
+
     dbgprintf("started download with id %d\n", download->id());
 
-    return loop.exec();
+    auto rc = loop.exec();
+    // FIXME: This shouldn't be needed.
+    fclose(stdout);
+    return rc;
 }

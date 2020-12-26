@@ -38,8 +38,8 @@ namespace HTTP {
 class HttpsJob final : public Job {
     C_OBJECT(HttpsJob)
 public:
-    explicit HttpsJob(const HttpRequest& request, const Vector<Certificate>* override_certs = nullptr)
-        : Job(request)
+    explicit HttpsJob(const HttpRequest& request, OutputStream& output_stream, const Vector<Certificate>* override_certs = nullptr)
+        : Job(request, output_stream)
         , m_override_ca_certificates(override_certs)
     {
     }
@@ -62,7 +62,7 @@ protected:
     virtual bool can_read() const override;
     virtual ByteBuffer receive(size_t) override;
     virtual bool eof() const override;
-    virtual bool write(const ByteBuffer&) override;
+    virtual bool write(ReadonlyBytes) override;
     virtual bool is_established() const override { return m_socket->is_established(); }
     virtual bool should_fail_on_empty_payload() const override { return false; }
     virtual void read_while_data_available(Function<IterationDecision()>) override;

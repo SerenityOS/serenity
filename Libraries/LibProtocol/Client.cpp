@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FileStream.h>
 #include <AK/SharedBuffer.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
@@ -47,16 +48,20 @@ bool Client::is_supported_protocol(const String& protocol)
     return send_sync<Messages::ProtocolServer::IsSupportedProtocol>(protocol)->supported();
 }
 
-RefPtr<Download> Client::start_download(const String& method, const String& url, const HashMap<String, String>& request_headers, const ByteBuffer& request_body)
+template<typename RequestHashMapTraits>
+RefPtr<Download> Client::start_download(const String& method, const String& url, const HashMap<String, String, RequestHashMapTraits>& request_headers, ReadonlyBytes request_body)
 {
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
 
-    i32 download_id = send_sync<Messages::ProtocolServer::StartDownload>(method, url, header_dictionary, String::copy(request_body))->download_id();
-    if (download_id < 0)
+    auto response = send_sync<Messages::ProtocolServer::StartDownload>(method, url, header_dictionary, ByteBuffer::copy(request_body));
+    auto download_id = response->download_id();
+    auto response_fd = response->response_fd().fd();
+    if (download_id < 0 || response_fd < 0)
         return nullptr;
     auto download = Download::create_from_id({}, *this, download_id);
+    download->set_download_fd({}, response_fd);
     m_downloads.set(download_id, download);
     return download;
 }
@@ -79,9 +84,8 @@ void Client::handle(const Messages::ProtocolClient::DownloadFinished& message)
 {
     RefPtr<Download> download;
     if ((download = m_downloads.get(message.download_id()).value_or(nullptr))) {
-        download->did_finish({}, message.success(), message.status_code(), message.total_size(), message.shbuf_id(), message.response_headers());
+        download->did_finish({}, message.success(), message.total_size());
     }
-    send_sync<Messages::ProtocolServer::DisownSharedBuffer>(message.shbuf_id());
     m_downloads.remove(message.download_id());
 }
 
@@ -89,6 +93,15 @@ void Client::handle(const Messages::ProtocolClient::DownloadProgress& message)
 {
     if (auto download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr))) {
         download->did_progress({}, message.total_size(), message.downloaded_size());
+    }
+}
+
+void Client::handle(const Messages::ProtocolClient::HeadersBecameAvailable& message)
+{
+    if (auto download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr))) {
+        HashMap<String, String, CaseInsensitiveStringTraits> headers;
+        message.response_headers().for_each_entry([&](auto& name, auto& value) { headers.set(name, value); });
+        download->did_receive_headers({}, headers, message.status_code());
     }
 }
 
@@ -102,3 +115,6 @@ OwnPtr<Messages::ProtocolClient::CertificateRequestedResponse> Client::handle(co
 }
 
 }
+
+template RefPtr<Protocol::Download> Protocol::Client::start_download(const String& method, const String& url, const HashMap<String, String>& request_headers, ReadonlyBytes request_body);
+template RefPtr<Protocol::Download> Protocol::Client::start_download(const String& method, const String& url, const HashMap<String, String, CaseInsensitiveStringTraits>& request_headers, ReadonlyBytes request_body);

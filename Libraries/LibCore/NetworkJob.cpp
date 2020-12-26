@@ -32,7 +32,8 @@
 
 namespace Core {
 
-NetworkJob::NetworkJob()
+NetworkJob::NetworkJob(OutputStream& output_stream)
+    : m_output_stream(output_stream)
 {
 }
 

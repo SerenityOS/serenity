@@ -28,8 +28,7 @@
 
 namespace Core {
 
-NetworkResponse::NetworkResponse(ByteBuffer&& payload)
-    : m_payload(payload)
+NetworkResponse::NetworkResponse()
 {
 }
 

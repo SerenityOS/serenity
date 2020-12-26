@@ -40,12 +40,22 @@ GeminiProtocol::~GeminiProtocol()
 {
 }
 
-OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const String&, const URL& url, const HashMap<String, String>&, const ByteBuffer&)
+OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const String&, const URL& url, const HashMap<String, String>&, ReadonlyBytes)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
-    auto job = Gemini::GeminiJob::construct(request);
-    auto download = GeminiDownload::create_with_job({}, client, (Gemini::GeminiJob&)*job);
+
+    int fd_pair[2] { 0 };
+    if (pipe(fd_pair) != 0) {
+        auto saved_errno = errno;
+        dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
+        return nullptr;
+    }
+    auto output_stream = make<OutputFileStream>(fd_pair[1]);
+    output_stream->make_unbuffered();
+    auto job = Gemini::GeminiJob::construct(request, *output_stream);
+    auto download = GeminiDownload::create_with_job({}, client, (Gemini::GeminiJob&)*job, move(output_stream));
+    download->set_download_fd(fd_pair[0]);
     job->start();
     return download;
 }

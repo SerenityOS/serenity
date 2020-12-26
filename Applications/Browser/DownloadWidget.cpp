@@ -29,6 +29,7 @@
 #include <AK/SharedBuffer.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
+#include <LibCore/FileStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -61,9 +62,19 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);
     };
-    m_download->on_finish = [this](bool success, auto payload, auto payload_storage, auto& response_headers, auto) {
-        did_finish(success, payload, payload_storage, response_headers);
-    };
+
+    {
+        auto file_or_error = Core::File::open(m_destination_path, Core::IODevice::WriteOnly);
+        if (file_or_error.is_error()) {
+            GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed", GUI::MessageBox::Type::Error);
+            window()->close();
+            return;
+        }
+        m_output_file_stream = make<Core::OutputFileStream>(*file_or_error.value());
+    }
+
+    m_download->on_finish = [this](bool success, auto) { did_finish(success); };
+    m_download->stream_into(*m_output_file_stream);
 
     set_fill_with_background_color(true);
     auto& layout = set_layout<GUI::VerticalBoxLayout>();
@@ -149,7 +160,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
     }
 }
 
-void DownloadWidget::did_finish(bool success, [[maybe_unused]] ReadonlyBytes payload, [[maybe_unused]] RefPtr<SharedBuffer> payload_storage, [[maybe_unused]] const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
+void DownloadWidget::did_finish(bool success)
 {
     dbg() << "did_finish, success=" << success;
 
@@ -166,17 +177,6 @@ void DownloadWidget::did_finish(bool success, [[maybe_unused]] ReadonlyBytes pay
         window()->close();
         return;
     }
-
-    auto file_or_error = Core::File::open(m_destination_path, Core::IODevice::WriteOnly);
-    if (file_or_error.is_error()) {
-        GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed", GUI::MessageBox::Type::Error);
-        window()->close();
-        return;
-    }
-
-    auto& file = *file_or_error.value();
-    bool write_success = file.write(payload.data(), payload.size());
-    ASSERT(write_success);
 }
 
 }

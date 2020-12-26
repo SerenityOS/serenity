@@ -33,13 +33,31 @@
 
 namespace Gemini {
 
-Job::Job(const GeminiRequest& request)
-    : m_request(request)
+Job::Job(const GeminiRequest& request, OutputStream& output_stream)
+    : Core::NetworkJob(output_stream)
+    , m_request(request)
 {
 }
 
 Job::~Job()
 {
+}
+
+void Job::flush_received_buffers()
+{
+    for (size_t i = 0; i < m_received_buffers.size(); ++i) {
+        auto& payload = m_received_buffers[i];
+        auto written = do_write(payload);
+        m_received_size -= written;
+        if (written == payload.size()) {
+            // FIXME: Make this a take-first-friendly object?
+            m_received_buffers.take_first();
+            continue;
+        }
+        ASSERT(written < payload.size());
+        payload = payload.slice(written, payload.size() - written);
+        return;
+    }
 }
 
 void Job::on_socket_connected()
@@ -126,6 +144,7 @@ void Job::on_socket_connected()
 
             m_received_buffers.append(payload);
             m_received_size += payload.size();
+            flush_received_buffers();
 
             deferred_invoke([this](auto&) { did_progress({}, m_received_size); });
 
@@ -144,15 +163,17 @@ void Job::on_socket_connected()
 void Job::finish_up()
 {
     m_state = State::Finished;
-    auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
-    u8* flat_ptr = flattened_buffer.data();
-    for (auto& received_buffer : m_received_buffers) {
-        memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
-        flat_ptr += received_buffer.size();
+    flush_received_buffers();
+    if (m_received_size != 0) {
+        // FIXME: What do we do? ignore it?
+        //        "Transmission failed" is not strictly correct, but let's roll with it for now.
+        deferred_invoke([this](auto&) {
+            did_fail(Error::TransmissionFailed);
+        });
+        return;
     }
-    m_received_buffers.clear();
 
-    auto response = GeminiResponse::create(m_status, m_meta, move(flattened_buffer));
+    auto response = GeminiResponse::create(m_status, m_meta);
     deferred_invoke([this, response](auto&) {
         did_finish(move(response));
     });
