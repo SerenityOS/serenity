@@ -77,6 +77,17 @@ void Label::set_text(String text)
     did_change_text();
 }
 
+Gfx::IntRect Label::text_rect() const
+{
+    int indent = 0;
+    if (frame_thickness() > 0)
+        indent = font().glyph_width('x') / 2;
+    auto rect = frame_inner_rect();
+    rect.move_by(indent, 0);
+    rect.set_width(rect.width() - indent * 2);
+    return rect;
+}
+
 void Label::paint_event(PaintEvent& event)
 {
     Frame::paint_event(event);
@@ -94,12 +105,7 @@ void Label::paint_event(PaintEvent& event)
     }
     if (text().is_empty())
         return;
-    int indent = 0;
-    if (frame_thickness() > 0)
-        indent = font().glyph_width('x') / 2;
-    auto text_rect = frame_inner_rect();
-    text_rect.move_by(indent, 0);
-    text_rect.set_width(text_rect.width() - indent * 2);
+    auto text_rect = this->text_rect();
 
     if (is_enabled()) {
         painter.draw_text(text_rect, text(), m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);

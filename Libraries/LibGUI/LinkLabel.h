@@ -44,6 +44,7 @@ private:
     virtual void resize_event(ResizeEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
+    virtual void keydown_event(KeyEvent&) override;
 
     virtual void did_change_text() override;
 

@@ -53,6 +53,8 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool);
 
+    Gfx::IntRect text_rect() const;
+
 protected:
     explicit Label(String text = {});
 

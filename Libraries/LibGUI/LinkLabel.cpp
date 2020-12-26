@@ -37,6 +37,7 @@ LinkLabel::LinkLabel(String text)
     : Label(move(text))
 {
     set_foreground_role(Gfx::ColorRole::Link);
+    set_focus_policy(FocusPolicy::TabFocus);
 }
 
 void LinkLabel::mousedown_event(MouseEvent& event)
@@ -47,14 +48,25 @@ void LinkLabel::mousedown_event(MouseEvent& event)
     }
 }
 
+void LinkLabel::keydown_event(KeyEvent& event)
+{
+    Label::keydown_event(event);
+    if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
+        if (on_click)
+            on_click();
+    }
+}
+
 void LinkLabel::paint_event(PaintEvent& event)
 {
     Label::paint_event(event);
     GUI::Painter painter(*this);
 
     if (m_hovered)
-        painter.draw_line({ 0, rect().bottom() }, { font().width(text()), rect().bottom() },
-            Widget::palette().link());
+        painter.draw_line({ 0, rect().bottom() }, { font().width(text()), rect().bottom() }, palette().link());
+
+    if (is_focused())
+        painter.draw_focus_rect(text_rect(), palette().focus_outline());
 }
 
 void LinkLabel::enter_event(Core::Event& event)
