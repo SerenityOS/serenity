@@ -118,6 +118,7 @@ private:
         unsigned times_scheduled;
         unsigned ticks_user;
         unsigned ticks_kernel;
+        String executable;
         String name;
         String state;
         String user;
@@ -143,7 +144,6 @@ private:
         unsigned file_read_bytes;
         unsigned file_write_bytes;
         float cpu_percent;
-        int icon_id;
     };
 
     struct Thread {

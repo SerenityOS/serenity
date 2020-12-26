@@ -32,6 +32,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibGUI/FileIconProvider.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -274,16 +275,12 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
-        case Column::Icon:
-            if (thread.current_state.icon_id != -1) {
-                auto icon_buffer = SharedBuffer::create_from_shbuf_id(thread.current_state.icon_id);
-                if (icon_buffer) {
-                    auto icon_bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, { 16, 16 });
-                    if (icon_bitmap)
-                        return *icon_bitmap;
-                }
-            }
+        case Column::Icon: {
+            auto icon = GUI::FileIconProvider::icon_for_path(thread.current_state.executable);
+            if (auto* bitmap = icon.bitmap_for_size(16))
+                return *bitmap;
             return *m_generic_process_icon;
+        }
         case Column::PID:
             return thread.current_state.pid;
         case Column::TID:
@@ -384,9 +381,9 @@ void ProcessModel::update()
             state.amount_clean_inode = it.value.amount_clean_inode;
             state.amount_purgeable_volatile = it.value.amount_purgeable_volatile;
             state.amount_purgeable_nonvolatile = it.value.amount_purgeable_nonvolatile;
-            state.icon_id = it.value.icon_id;
 
             state.name = thread.name;
+            state.executable = it.value.executable;
 
             state.ppid = it.value.ppid;
             state.tid = thread.tid;
