@@ -66,6 +66,7 @@ struct ProcessStatistics {
     pid_t ppid;
     unsigned nfds;
     String name;
+    String executable;
     String tty;
     String pledge;
     String veil;

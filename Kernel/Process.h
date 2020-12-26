@@ -391,10 +391,8 @@ public:
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
     Custody& current_directory();
-    Custody* executable()
-    {
-        return m_executable.ptr();
-    }
+    Custody* executable() { return m_executable.ptr(); }
+    const Custody* executable() const { return m_executable.ptr(); }
 
     int number_of_open_file_descriptors() const;
     int max_open_file_descriptors() const
