@@ -39,13 +39,13 @@ class Process;
 
 class CoreDump {
 public:
-    static OwnPtr<CoreDump> create(Process&, const String& output_path);
+    static OwnPtr<CoreDump> create(NonnullRefPtr<Process>, const String& output_path);
 
     ~CoreDump();
     [[nodiscard]] KResult write();
 
 private:
-    CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
+    CoreDump(NonnullRefPtr<Process>, NonnullRefPtr<FileDescription>&&);
     static RefPtr<FileDescription> create_target_file(const Process&, const String& output_path);
 
     [[nodiscard]] KResult write_elf_header();
@@ -57,7 +57,7 @@ private:
     ByteBuffer create_notes_threads_data() const;
     ByteBuffer create_notes_regions_data() const;
 
-    Process& m_process;
+    NonnullRefPtr<Process> m_process;
     NonnullRefPtr<FileDescription> m_fd;
     const size_t m_num_program_headers;
 };
