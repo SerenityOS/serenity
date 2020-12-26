@@ -2,7 +2,8 @@ endpoint ProtocolClient = 13
 {
     // Download notifications
     DownloadProgress(i32 download_id, Optional<u32> total_size, u32 downloaded_size) =|
-    DownloadFinished(i32 download_id, bool success, Optional<u32> status_code, u32 total_size, i32 shbuf_id, IPC::Dictionary response_headers) =|
+    DownloadFinished(i32 download_id, bool success, u32 total_size) =|
+    HeadersBecameAvailable(i32 download_id, IPC::Dictionary response_headers, Optional<u32> status_code) =|
 
     // Certificate requests
     CertificateRequested(i32 download_id) => ()

@@ -142,9 +142,9 @@ bool GeminiJob::eof() const
     return m_socket->eof();
 }
 
-bool GeminiJob::write(const ByteBuffer& data)
+bool GeminiJob::write(ReadonlyBytes bytes)
 {
-    return m_socket->write(data);
+    return m_socket->write(bytes);
 }
 
 }

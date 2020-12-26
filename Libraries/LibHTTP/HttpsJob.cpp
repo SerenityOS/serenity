@@ -143,7 +143,7 @@ bool HttpsJob::eof() const
     return m_socket->eof();
 }
 
-bool HttpsJob::write(const ByteBuffer& data)
+bool HttpsJob::write(ReadonlyBytes data)
 {
     return m_socket->write(data);
 }

@@ -62,7 +62,8 @@ public:
     void set_method(Method method) { m_method = method; }
 
     const ByteBuffer& body() const { return m_body; }
-    void set_body(const ByteBuffer& body) { m_body = body; }
+    void set_body(ReadonlyBytes body) { m_body = ByteBuffer::copy(body); }
+    void set_body(ByteBuffer&& body) { m_body = move(body); }
 
     String method_name() const;
     ByteBuffer to_raw_request() const;

@@ -35,7 +35,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio inet shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio inet shared_buffer accept unix rpath cpath fattr sendfd recvfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -45,7 +45,7 @@ int main(int, char**)
 
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
-    if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
+    if (pledge("stdio inet shared_buffer accept unix sendfd recvfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

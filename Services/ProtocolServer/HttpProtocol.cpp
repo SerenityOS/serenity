@@ -28,6 +28,7 @@
 #include <LibHTTP/HttpRequest.h>
 #include <ProtocolServer/HttpDownload.h>
 #include <ProtocolServer/HttpProtocol.h>
+#include <fcntl.h>
 
 namespace ProtocolServer {
 
@@ -40,7 +41,7 @@ HttpProtocol::~HttpProtocol()
 {
 }
 
-OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, const ByteBuffer& request_body)
+OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
 {
     HTTP::HttpRequest request;
     if (method.equals_ignoring_case("post"))
@@ -49,9 +50,20 @@ OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const St
         request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);
     request.set_headers(headers);
-    request.set_body(request_body);
-    auto job = HTTP::HttpJob::construct(request);
-    auto download = HttpDownload::create_with_job({}, client, (HTTP::HttpJob&)*job);
+    request.set_body(body);
+
+    int fd_pair[2] { 0 };
+    if (pipe(fd_pair) != 0) {
+        auto saved_errno = errno;
+        dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
+        return nullptr;
+    }
+
+    auto output_stream = make<OutputFileStream>(fd_pair[1]);
+    output_stream->make_unbuffered();
+    auto job = HTTP::HttpJob::construct(request, *output_stream);
+    auto download = HttpDownload::create_with_job({}, client, (HTTP::HttpJob&)*job, move(output_stream));
+    download->set_download_fd(fd_pair[0]);
     job->start();
     return download;
 }
