@@ -214,6 +214,7 @@ void Service::spawn(int socket_fd)
                 dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", account.gid(), account.uid());
                 exit(1);
             }
+            setenv("HOME", account.home_directory().characters(), true);
         }
 
         for (String& env : m_environment)
