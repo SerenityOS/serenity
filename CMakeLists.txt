@@ -99,7 +99,6 @@ foreach(lang ASM C CXX OBJC OBJCXX)
     unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
     unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
     unset(CMAKE_${lang}_SYSROOT_FLAG)
-    unset(CMAKE_SHARED_LIBRARY_SONAME_${lang}_FLAG)
 endforeach()
 
 set(CMAKE_INSTALL_NAME_TOOL "true")
