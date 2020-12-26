@@ -144,14 +144,37 @@ int main(int argc, char** argv)
 {
     const char* url_str = nullptr;
     bool save_at_provided_name = false;
+    const char* data = nullptr;
+    String method = "GET";
+    HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
         "Download a file from an arbitrary URL. This command uses ProtocolServer, "
         "and thus supports at least http, https, and gemini.");
     args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
+    args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Add a header entry to the request",
+        .long_name = "header",
+        .short_name = 'H',
+        .value_name = "header-value",
+        .accept_value = [&](auto* s) {
+            StringView header { s };
+            auto split = header.find_first_of(':');
+            if (!split.has_value())
+                return false;
+            request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));
+            return true;
+        } });
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(argc, argv);
+
+    if (data) {
+        method = "POST";
+        // FIXME: Content-Type?
+    }
 
     URL url(url_str);
     if (!url.is_valid()) {
@@ -162,7 +185,7 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
     auto protocol_client = Protocol::Client::construct();
 
-    auto download = protocol_client->start_download("GET", url.to_string());
+    auto download = protocol_client->start_download(method, url.to_string(), request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
     if (!download) {
         fprintf(stderr, "Failed to start download for '%s'\n", url_str);
         return 1;
