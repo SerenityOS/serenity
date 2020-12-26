@@ -276,16 +276,12 @@ struct RemovePointer<T* const volatile> {
 
 template<typename T, typename U>
 struct IsSame {
-    enum {
-        value = 0
-    };
+    static constexpr bool value = false;
 };
 
 template<typename T>
 struct IsSame<T, T> {
-    enum {
-        value = 1
-    };
+    static constexpr bool value = true;
 };
 
 template<bool condition, class TrueType, class FalseType>
