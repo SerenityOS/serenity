@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Option.h"
+#include <LibCore/ArgsParser.h>
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+namespace Cpp {
+Option Option::parse_options(int ac, const char** av)
+{
+    Core::ArgsParser args_parser;
+    Option options = {};
+    const char* input_file = nullptr;
+    const char* output_file = nullptr;
 
-namespace LanguageServers::Cpp {
+    args_parser.add_positional_argument(input_file, "the input file", "input_file");
+    args_parser.add_option(output_file, "the file to output the assembly", nullptr, 'o', "output_file");
+    args_parser.parse(ac, const_cast<char**>(av));
 
-using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
+    options.input_file = input_file;
+    options.output_file = output_file;
+    if (!output_file) {
+        ASSERT(options.input_file.ends_with(".cpp"));
+        options.output_file = options.input_file;
+        auto num_replacements = options.output_file.replace(".cpp", ".s");
 
-class AutoComplete {
-public:
-    AutoComplete() = delete;
-
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
-
-private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
-
+        assert(num_replacements == 1);
+    }
+    return options;
+}
 }

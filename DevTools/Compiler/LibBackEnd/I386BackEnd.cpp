@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "I386BackEnd.h"
+#include <LibCpp/Option.h>
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+namespace BackEnd {
 
-namespace LanguageServers::Cpp {
+NonnullRefPtr<Core::File> I386BackEnd::get_output_file()
+{
+    auto output_file = Core::File::open(m_options.output_file, Core::IODevice::WriteOnly);
+    assert(!output_file.is_error());
 
-using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
+    return output_file.value();
+}
 
-class AutoComplete {
-public:
-    AutoComplete() = delete;
+void I386BackEnd::print_asm()
+{
+    //TODO: implement String.last_index_of
+    auto input_file_name = m_options.input_file;
+    while (input_file_name.contains("/")) {
+        auto new_path = input_file_name.index_of("/");
 
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
+        assert(new_path.has_value());
+        input_file_name = input_file_name.substring(new_path.value() + 1);
+    }
+    m_output_file->printf("\t.file \"%s\"\n", input_file_name.characters());
+    m_output_file->printf("\t.ident \"Serenity-c++ compiler V0.0.0\"\n");
+    m_output_file->printf("\t.section \".note.GNU-stack\",\"\",@progbits\n");
 
-private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
-
+}
 }

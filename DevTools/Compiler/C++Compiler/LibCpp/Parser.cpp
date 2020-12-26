@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Parser.h"
+#include "AST.h"
+#include "Option.h"
+#include <LibCore/File.h>
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+#define DEBUG_LOG_SPAM
+#include <AK/ScopeLogger.h>
 
-namespace LanguageServers::Cpp {
+#if defined DEBUG_LOG_SPAM && !defined DEBUG_CXX_PARSER
+#    define DEBUG_CXX_PARSER
+#endif
 
-using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
+namespace Cpp {
 
-class AutoComplete {
-public:
-    AutoComplete() = delete;
+// translation-unit:
+//      - [declaration-seq]
+Cpp::TranslationUnit Parser::parse_translation_unit()
+{
+    SCOPE_LOGGER();
+    return { };
+}
 
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
+TranslationUnit Parser::parse(const Cpp::Option& options)
+{
+    Parser parser(options.input_file);
 
-private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
+    return parser.parse_translation_unit();
+}
+
+
+ByteBuffer Parser::get_input_file_content(const String& filename)
+{
+    //TODO: maybe give the filename to the lexer.
+    auto file = Core::File::open(filename, Core::IODevice::ReadOnly);
+    assert(!file.is_error());
+    return file.value()->read_all();
+}
+
+Parser::Parser(const String& filename)
+    : m_file_content(get_input_file_content(filename))
+    , m_lexer(m_file_content)
+{
+}
+
 
 }

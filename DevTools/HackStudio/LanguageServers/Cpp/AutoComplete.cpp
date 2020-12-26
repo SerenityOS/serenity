@@ -26,7 +26,6 @@
 
 #include "AutoComplete.h"
 #include <AK/HashTable.h>
-#include <LibCpp/Lexer.h>
 
 // #define DEBUG_AUTOCOMPLETE
 

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -96,11 +97,20 @@ namespace Cpp {
     __TOKEN(Float)                 \
     __TOKEN(Keyword)               \
     __TOKEN(KnownType)             \
-    __TOKEN(Identifier)
+    __TOKEN(Identifier)            \
+    __TOKEN(EndOfFile)
+
+#define FOR_EACH_CPP_KNOWN_TYPE \
+    __KNOWN_TYPE(Void, "void")  \
+    __KNOWN_TYPE(Int, "int")
+
+#define FOR_EACH_CPP_KNOWN_KEYWORD \
+    __KNOWN_KEYWORD(Return, "return")
 
 struct Position {
     size_t line;
     size_t column;
+    size_t index;
 };
 
 struct Token {
@@ -108,6 +118,17 @@ struct Token {
 #define __TOKEN(x) x,
         FOR_EACH_TOKEN_TYPE
 #undef __TOKEN
+    };
+    enum class KnownKeyword {
+#define __KNOWN_KEYWORD(keyword, string) keyword,
+        FOR_EACH_CPP_KNOWN_KEYWORD
+#undef __KNOWN_KEYWORD
+    };
+
+    enum class KnownType {
+#define __KNOWN_TYPE(type, string) type,
+        FOR_EACH_CPP_KNOWN_TYPE
+#undef __KNOWN_TYPE
     };
 
     const char* to_string() const
@@ -125,6 +146,9 @@ struct Token {
     Type m_type { Type::Unknown };
     Position m_start;
     Position m_end;
+    KnownKeyword m_known_keyword;
+    KnownType m_known_type;
+    String m_identifier;
 };
 
 class Lexer {
@@ -132,6 +156,7 @@ public:
     Lexer(const StringView&);
 
     Vector<Token> lex();
+    Token lex_one_token();
 
 private:
     char peek(size_t offset = 0) const;
@@ -139,8 +164,8 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    Position m_previous_position { 0, 0 };
-    Position m_position { 0, 0 };
+    Position m_previous_position { 0, 0, 0 };
+    Position m_position { 0, 0, 0 };
 };
 
 }

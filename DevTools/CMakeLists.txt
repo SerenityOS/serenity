@@ -1,3 +1,4 @@
+add_subdirectory(Compiler)
 add_subdirectory(HackStudio)
 add_subdirectory(Inspector)
 add_subdirectory(Playground)

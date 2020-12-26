@@ -40,6 +40,7 @@ done < <(git ls-files -- \
     '*.cpp' \
     '*.h' \
     ':!:Base' \
+    ':!:DevTools/Compiler/Tests' \
     ':!:Kernel/FileSystem/ext2_fs.h' \
     ':!:Libraries/LibC/getopt.cpp' \
     ':!:Libraries/LibCore/puff.h' \

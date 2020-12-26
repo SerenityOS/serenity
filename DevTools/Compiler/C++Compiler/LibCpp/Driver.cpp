@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Driver.h"
+#include "IR.h"
+#include "Option.h"
+#include "Parser.h"
+#include <LibBackEnd/I386BackEnd.h>
+#include <LibMiddleEnd/SIR.h>
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+namespace Cpp {
+void Cpp::CppCompiler::run(int ac, const char** av)
+{
+    auto options = Cpp::Option::parse_options(ac, av);
+    auto tu = Cpp::Parser::parse(options);
+    auto ir = Cpp::IR::to_internal_representation(tu);
 
-namespace LanguageServers::Cpp {
+    SIR::process_internal_representation(ir);
+    auto assembly = BackEnd::I386BackEnd(ir, options);
 
-using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
-
-class AutoComplete {
-public:
-    AutoComplete() = delete;
-
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
-
-private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
-
+    assembly.print_asm();
+}
 }

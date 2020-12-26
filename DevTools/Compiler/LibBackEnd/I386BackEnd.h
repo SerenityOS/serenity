@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,27 +26,32 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+#include <AK/NonnullRefPtr.h>
+#include <LibCore/File.h>
 
-namespace LanguageServers::Cpp {
+namespace Cpp {
+class Option;
+}
+namespace SIR {
+class TranslationUnit;
+}
 
-using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
-
-class AutoComplete {
+namespace BackEnd {
+class I386BackEnd {
 public:
-    AutoComplete() = delete;
-
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
+    I386BackEnd(const SIR::TranslationUnit& tu, const Cpp::Option& options)
+        : m_tu(tu)
+        , m_options(options)
+        , m_output_file(get_output_file())
+    {
+    }
+    void print_asm();
 
 private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
+    NonnullRefPtr<Core::File> get_output_file();
 
+    const SIR::TranslationUnit& m_tu;
+    const Cpp::Option& m_options;
+    NonnullRefPtr<Core::File> m_output_file;
+};
 }
