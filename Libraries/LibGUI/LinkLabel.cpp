@@ -24,19 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/Event.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/SystemTheme.h>
 
 namespace GUI {
 
-LinkLabel::LinkLabel(const StringView& text)
-    : Label(text)
+LinkLabel::LinkLabel(String text)
+    : Label(move(text))
 {
     set_foreground_role(Gfx::ColorRole::Link);
 }
