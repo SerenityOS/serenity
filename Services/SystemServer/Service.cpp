@@ -40,42 +40,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct UidAndGids {
-    uid_t uid;
-    gid_t gid;
-    Vector<gid_t> extra_gids;
-};
-
-static HashMap<String, UidAndGids>* s_user_map;
 static HashMap<pid_t, Service*> s_service_map;
-
-void Service::resolve_user()
-{
-    if (s_user_map == nullptr) {
-        s_user_map = new HashMap<String, UidAndGids>;
-        for (struct passwd* passwd = getpwent(); passwd; passwd = getpwent()) {
-            Vector<gid_t> extra_gids;
-            for (struct group* group = getgrent(); group; group = getgrent()) {
-                for (size_t m = 0; group->gr_mem[m]; ++m) {
-                    if (!strcmp(group->gr_mem[m], passwd->pw_name))
-                        extra_gids.append(group->gr_gid);
-                }
-            }
-            endgrent();
-            s_user_map->set(passwd->pw_name, { passwd->pw_uid, passwd->pw_gid, move(extra_gids) });
-        }
-        endpwent();
-    }
-
-    auto user = s_user_map->get(m_user);
-    if (!user.has_value()) {
-        dbg() << "Failed to resolve user name " << m_user;
-        ASSERT_NOT_REACHED();
-    }
-    m_uid = user.value().uid;
-    m_gid = user.value().gid;
-    m_extra_gids = user.value().extra_gids;
-}
 
 Service* Service::find_by_pid(pid_t pid)
 {
@@ -102,9 +67,12 @@ void Service::setup_socket()
         ASSERT_NOT_REACHED();
     }
 
-    if (fchown(m_socket_fd, m_uid, m_gid) < 0) {
-        perror("fchown");
-        ASSERT_NOT_REACHED();
+    if (m_account.has_value()) {
+        auto& account = m_account.value();
+        if (fchown(m_socket_fd, account.uid(), account.gid()) < 0) {
+            perror("fchown");
+            ASSERT_NOT_REACHED();
+        }
     }
 
     if (fchmod(m_socket_fd, m_socket_permissions) < 0) {
@@ -240,9 +208,10 @@ void Service::spawn(int socket_fd)
             setenv("SOCKET_TAKEOVER", "1", true);
         }
 
-        if (!m_user.is_null()) {
-            if (setgid(m_gid) < 0 || setgroups(m_extra_gids.size(), m_extra_gids.data()) < 0 || setuid(m_uid) < 0) {
-                dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", m_gid, m_uid);
+        if (m_account.has_value()) {
+            auto& account = m_account.value();
+            if (setgid(account.gid()) < 0 || setgroups(account.extra_gids().size(), account.extra_gids().data()) < 0 || setuid(account.uid()) < 0) {
+                dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", account.gid(), account.uid());
                 exit(1);
             }
         }
@@ -324,8 +293,13 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     m_lazy = config.read_bool_entry(name, "Lazy");
 
     m_user = config.read_entry(name, "User");
-    if (!m_user.is_null())
-        resolve_user();
+    if (!m_user.is_null()) {
+        auto result = Core::Account::from_name(m_user.characters());
+        if (result.is_error())
+            warnln("Failed to resolve user {}: {}", m_user, result.error());
+        else
+            m_account = result.value();
+    }
 
     m_working_directory = config.read_entry(name, "WorkingDirectory");
     m_environment = config.read_entry(name, "Environment").split(' ');
@@ -382,8 +356,6 @@ void Service::save_to(JsonObject& json)
     json.set("socket_permissions", m_socket_permissions);
     json.set("lazy", m_lazy);
     json.set("user", m_user);
-    json.set("uid", m_uid);
-    json.set("gid", m_gid);
     json.set("multi_instance", m_multi_instance);
     json.set("accept_socket_connections", m_accept_socket_connections);
 

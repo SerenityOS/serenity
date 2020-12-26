@@ -28,6 +28,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <LibCore/Account.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
@@ -71,9 +72,6 @@ private:
     bool m_lazy;
     // The name of the user we should run this service as.
     String m_user;
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
-    Vector<gid_t> m_extra_gids;
     // The working directory in which to spawn the service.
     String m_working_directory;
     // Boot modes to run this service in. By default, this is the graphical mode.
@@ -82,6 +80,9 @@ private:
     bool m_multi_instance { false };
     // Environment variables to pass to the service.
     Vector<String> m_environment;
+
+    // The resolved user account to run this service as.
+    Optional<Core::Account> m_account;
 
     // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };
@@ -95,7 +96,6 @@ private:
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
 
-    void resolve_user();
     void setup_socket();
     void setup_notifier();
     void handle_socket_connection();
