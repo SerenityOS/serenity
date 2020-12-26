@@ -26,18 +26,19 @@
 
 #pragma once
 
-#include <LibGUI/Event.h>
 #include <LibGUI/Label.h>
 
 namespace GUI {
+
 class LinkLabel : public Label {
     C_OBJECT(LinkLabel);
 
 public:
-    LinkLabel(const StringView&);
     Function<void()> on_click;
 
 private:
+    explicit LinkLabel(String);
+
     virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
@@ -45,6 +46,7 @@ private:
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
-    bool m_hovered = false;
+    bool m_hovered { false };
 };
+
 }
