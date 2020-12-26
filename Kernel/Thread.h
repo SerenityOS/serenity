@@ -113,7 +113,7 @@ public:
         m_is_joinable = false;
     }
 
-    bool is_joinable() const
+    [[nodiscard]] bool is_joinable() const
     {
         ScopedSpinLock lock(m_lock);
         return m_is_joinable;
@@ -181,7 +181,7 @@ public:
             return m_type != type;
         }
 
-        bool was_interrupted() const
+        [[nodiscard]] bool was_interrupted() const
         {
             switch (m_type) {
             case InterruptedBySignal:
@@ -192,7 +192,7 @@ public:
             }
         }
 
-        bool timed_out() const
+        [[nodiscard]] bool timed_out() const
         {
             return m_type == InterruptedByTimeout;
         }
@@ -330,7 +330,7 @@ public:
         {
             return m_was_interrupted_by_signal;
         }
-        bool was_interrupted() const
+        [[nodiscard]] bool was_interrupted() const
         {
             return m_was_interrupted_by_death || m_was_interrupted_by_signal != 0;
         }
@@ -734,10 +734,10 @@ public:
 
     void resume_from_stopped();
 
-    bool should_be_stopped() const;
-    bool is_stopped() const { return m_state == Stopped; }
-    bool is_blocked() const { return m_state == Blocked; }
-    bool is_in_block() const
+    [[nodiscard]] bool should_be_stopped() const;
+    [[nodiscard]] bool is_stopped() const { return m_state == Stopped; }
+    [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
+    [[nodiscard]] bool is_in_block() const
     {
         ScopedSpinLock lock(m_block_lock);
         return m_in_block;
@@ -932,7 +932,7 @@ public:
     // Tell this thread to unblock if needed,
     // gracefully unwind the stack and die.
     void set_should_die();
-    bool should_die() const { return m_should_die; }
+    [[nodiscard]] bool should_die() const { return m_should_die; }
     void die_if_needed();
 
     void exit(void* = nullptr);
@@ -946,7 +946,7 @@ public:
 
     void set_state(State, u8 = 0);
 
-    bool is_initialized() const { return m_initialized; }
+    [[nodiscard]] bool is_initialized() const { return m_initialized; }
     void set_initialized(bool initialized) { m_initialized = initialized; }
 
     void send_urgent_signal_to_self(u8 signal);
@@ -963,11 +963,11 @@ public:
     DispatchSignalResult try_dispatch_one_pending_signal(u8 signal);
     DispatchSignalResult dispatch_signal(u8 signal);
     void check_dispatch_pending_signal();
-    bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
+    [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     void terminate_due_to_signal(u8 signal);
-    bool should_ignore_signal(u8 signal) const;
-    bool has_signal_handler(u8 signal) const;
-    bool has_pending_signal(u8 signal) const;
+    [[nodiscard]] bool should_ignore_signal(u8 signal) const;
+    [[nodiscard]] bool has_signal_handler(u8 signal) const;
+    [[nodiscard]] bool has_pending_signal(u8 signal) const;
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
@@ -1030,12 +1030,13 @@ public:
     {
         m_is_active.store(active, AK::memory_order_release);
     }
-    bool is_active() const
+
+    [[nodiscard]] bool is_active() const
     {
         return m_is_active.load(AK::MemoryOrder::memory_order_acquire);
     }
 
-    bool is_finalizable() const
+    [[nodiscard]] bool is_finalizable() const
     {
         // We can't finalize as long as this thread is still running
         // Note that checking for Running state here isn't sufficient
@@ -1060,7 +1061,7 @@ public:
     template<typename Callback>
     static IterationDecision for_each(Callback);
 
-    static bool is_runnable_state(Thread::State state)
+    [[nodiscard]] static bool is_runnable_state(Thread::State state)
     {
         return state == Thread::State::Running || state == Thread::State::Runnable;
     }

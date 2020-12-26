@@ -87,12 +87,12 @@ public:
         m_pools[pool].update(reinterpret_cast<const u8*>(&event_data), sizeof(T));
     }
 
-    bool is_seeded() const
+    [[nodiscard]] bool is_seeded() const
     {
         return m_reseed_number > 0;
     }
 
-    bool is_ready() const
+    [[nodiscard]] bool is_ready() const
     {
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
