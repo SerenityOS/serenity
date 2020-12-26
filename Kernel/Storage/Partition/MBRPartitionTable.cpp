@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,38 +33,105 @@
 
 namespace Kernel {
 
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<BlockDevice> device)
-    : m_device(move(device))
+#define MBR_SIGNATURE 0xaa55
+#define MBR_PROTECTIVE 0xEE
+#define EBR_CHS_CONTAINER 0x05
+#define EBR_LBA_CONTAINER 0x0F
+
+Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> MBRPartitionTable::try_to_initialize(const StorageDevice& device)
 {
+    auto table = make<MBRPartitionTable>(device);
+    if (table->contains_ebr())
+        return { PartitionTable::Error::ConatinsEBR };
+    if (table->is_protective_mbr())
+        return { PartitionTable::Error::MBRProtective };
+    if (!table->is_valid())
+        return { PartitionTable::Error::Invalid };
+    return table;
+}
+
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(const StorageDevice& device, u32 start_lba)
+{
+    auto table = make<MBRPartitionTable>(device, start_lba);
+    if (!table->is_valid())
+        return nullptr;
+    return table;
+}
+
+bool MBRPartitionTable::read_boot_record()
+{
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_header.data());
+    if (!m_device->read_block(m_start_lba, buffer))
+        return false;
+    m_header_valid = true;
+    return m_header_valid;
+}
+
+MBRPartitionTable::MBRPartitionTable(const StorageDevice& device, u32 start_lba)
+    : PartitionTable(device)
+    , m_start_lba(start_lba)
+    , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()))
+{
+    if (!read_boot_record() || !initialize())
+        return;
+
+    m_header_valid = true;
+
+    auto& header = this->header();
+    for (size_t index = 0; index < 4; index++) {
+        auto& entry = header.entry[index];
+        if (entry.offset == 0x00) {
+            continue;
+        }
+        auto partition_type = ByteBuffer::create_zeroed(sizeof(u8));
+        partition_type.data()[0] = entry.type;
+        m_partitions.append(DiskPartitionMetadata({ entry.offset, (entry.offset + entry.length), partition_type }));
+    }
+    m_valid = true;
+}
+
+MBRPartitionTable::MBRPartitionTable(const StorageDevice& device)
+    : PartitionTable(device)
+    , m_start_lba(0)
+    , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()))
+{
+    if (!read_boot_record() || contains_ebr() || is_protective_mbr() || !initialize())
+        return;
+
+    auto& header = this->header();
+    for (size_t index = 0; index < 4; index++) {
+        auto& entry = header.entry[index];
+        if (entry.offset == 0x00) {
+            continue;
+        }
+        auto partition_type = ByteBuffer::create_zeroed(sizeof(u8));
+        partition_type.data()[0] = entry.type;
+        m_partitions.append(DiskPartitionMetadata({ entry.offset, (entry.offset + entry.length), partition_type }));
+    }
+    m_valid = true;
 }
 
 MBRPartitionTable::~MBRPartitionTable()
 {
 }
 
-const MBRPartitionHeader& MBRPartitionTable::header() const
+const MBRPartitionTable::Header& MBRPartitionTable::header() const
 {
-    return *reinterpret_cast<const MBRPartitionHeader*>(m_cached_header);
+    return *(const MBRPartitionTable::Header*)m_cached_header.data();
 }
 
 bool MBRPartitionTable::initialize()
 {
-    auto header_buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_header);
-    if (!m_device->read_block(0, header_buffer)) {
-        return false;
-    }
-
     auto& header = this->header();
-
 #ifdef MBR_DEBUG
-    klog() << "MBRPartitionTable::initialize: mbr_signature=0x" << String::format("%x", header.mbr_signature);
-#endif
 
+    klog() << "Master Boot Record: mbr_signature=0x" << String::format("%x", header.mbr_signature);
+
+#endif
     if (header.mbr_signature != MBR_SIGNATURE) {
-        klog() << "MBRPartitionTable::initialize: bad mbr signature 0x" << String::format("%x", header.mbr_signature);
+        klog() << "Master Boot Record: invalid signature";
         return false;
     }
-
     return true;
 }
 
@@ -80,37 +147,6 @@ bool MBRPartitionTable::contains_ebr() const
 bool MBRPartitionTable::is_protective_mbr() const
 {
     return header().entry[0].type == MBR_PROTECTIVE;
-}
-
-RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
-{
-    ASSERT(index >= 1 && index <= 4);
-
-    auto& header = this->header();
-    auto& entry = header.entry[index - 1];
-
-    if (header.mbr_signature != MBR_SIGNATURE) {
-        klog() << "MBRPartitionTable::initialize: bad mbr signature - not initialized? 0x" << String::format("%x", header.mbr_signature);
-        return nullptr;
-    }
-
-#ifdef MBR_DEBUG
-    klog() << "MBRPartitionTable::partition: status=0x" << String::format("%x", entry.status) << " offset=0x" << String::format("%x", entry.offset);
-#endif
-
-    if (entry.offset == 0x00) {
-#ifdef MBR_DEBUG
-        klog() << "MBRPartitionTable::partition: missing partition requested index=" << index;
-#endif
-
-        return nullptr;
-    }
-
-#ifdef MBR_DEBUG
-    klog() << "MBRPartitionTable::partition: found partition index=" << index << " type=" << String::format("%x", entry.type);
-#endif
-
-    return DiskPartition::create(m_device, entry.offset, (entry.offset + entry.length));
 }
 
 }

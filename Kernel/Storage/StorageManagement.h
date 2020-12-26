@@ -29,11 +29,14 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
+class PartitionTable;
 class StorageManagement {
     AK_MAKE_ETERNAL;
 
@@ -43,16 +46,27 @@ public:
     static void initialize(String root_device, bool force_pio);
     static StorageManagement& the();
 
-    NonnullRefPtr<StorageDevice> boot_device() const;
+    NonnullRefPtr<FS> root_filesystem() const;
+
     NonnullRefPtrVector<StorageController> ide_controllers() const;
-    NonnullRefPtrVector<StorageDevice> storage_devices() const;
 
 private:
+    NonnullRefPtr<BlockDevice> boot_block_device() const;
+
     NonnullRefPtrVector<StorageController> enumerate_controllers(bool force_pio) const;
+    NonnullRefPtrVector<StorageDevice> enumerate_storage_devices() const;
+    NonnullRefPtrVector<DiskPartition> enumerate_disk_partitions() const;
+
     NonnullRefPtr<StorageDevice> determine_boot_device(String root_device) const;
+    NonnullRefPtr<BlockDevice> determine_boot_block_device(String root_device) const;
+
+    OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&) const;
 
     NonnullRefPtrVector<StorageController> m_controllers;
+    NonnullRefPtrVector<StorageDevice> m_storage_devices;
+    NonnullRefPtrVector<DiskPartition> m_disk_partitions;
     NonnullRefPtr<StorageDevice> m_boot_device;
+    NonnullRefPtr<BlockDevice> m_boot_block_device;
 };
 
 }

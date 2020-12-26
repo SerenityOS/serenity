@@ -26,46 +26,29 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {
 
-struct [[gnu::packed]] EBRPartitionExtension
-{
-    u8 unused_area[446];
-    MBRPartitionEntry entry;
-    MBRPartitionEntry next_chained_ebr_extension;
-    MBRPartitionEntry unused[2];
-    u16 mbr_signature;
-};
-
-class EBRPartitionTable {
-
+struct EBRPartitionHeader;
+class EBRPartitionTable : public MBRPartitionTable {
 public:
-    explicit EBRPartitionTable(NonnullRefPtr<BlockDevice>);
     ~EBRPartitionTable();
 
-    bool initialize();
-    RefPtr<DiskPartition> partition(unsigned index);
+    static Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
+    explicit EBRPartitionTable(const StorageDevice&);
+    virtual bool is_valid() const override { return m_valid; };
+    virtual Type type() const override { return Type::EBR; };
 
 private:
-    int index_of_ebr_container() const;
-    NonnullRefPtr<BlockDevice> m_device;
+    void search_extended_partition(const StorageDevice&, MBRPartitionTable&, u64, size_t limit);
 
-    const MBRPartitionHeader& header() const;
-    const EBRPartitionExtension& ebr_extension() const;
-
-    bool index_is_extended_partition(unsigned index) const;
-
-    RefPtr<DiskPartition> get_extended_partition(unsigned index);
-    RefPtr<DiskPartition> get_non_extended_partition(unsigned index);
-    u8 m_ebr_container_id { 0 };
-    size_t m_ebr_chained_extensions_count { 0 };
-    u8 m_cached_mbr_header[512];
-    u8 m_cached_ebr_header[512];
+    bool m_valid { false };
+    size_t m_partitions_count { 0 };
 };
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,57 +26,64 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/RefPtr.h>
+#include <AK/Result.h>
 #include <AK/Vector.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/Partition/PartitionTable.h>
 
 namespace Kernel {
 
-#define MBR_SIGNATURE 0xaa55
-#define MBR_PROTECTIVE 0xEE
-#define EBR_CHS_CONTAINER 0x05
-#define EBR_LBA_CONTAINER 0x0F
-
-struct [[gnu::packed]] MBRPartitionEntry
-{
-    u8 status;
-    u8 chs1[3];
-    u8 type;
-    u8 chs2[3];
-    u32 offset;
-    u32 length;
-};
-
-struct [[gnu::packed]] MBRPartitionHeader
-{
-    u8 code1[218];
-    u16 ts_zero;
-    u8 ts_drive, ts_seconds, ts_minutes, ts_hours;
-    u8 code2[216];
-    u32 disk_signature;
-    u16 disk_signature_zero;
-    MBRPartitionEntry entry[4];
-    u16 mbr_signature;
-};
-
-class MBRPartitionTable {
-    AK_MAKE_ETERNAL
+class MBRPartitionTable : public PartitionTable {
+public:
+    struct [[gnu::packed]] Entry
+    {
+        u8 status;
+        u8 chs1[3];
+        u8 type;
+        u8 chs2[3];
+        u32 offset;
+        u32 length;
+    };
+    struct [[gnu::packed]] Header
+    {
+        u8 code1[218];
+        u16 ts_zero;
+        u8 ts_drive;
+        u8 ts_seconds;
+        u8 ts_minutes;
+        u8 ts_hours;
+        u8 code2[216];
+        u32 disk_signature;
+        u16 disk_signature_zero;
+        Entry entry[4];
+        u16 mbr_signature;
+    };
 
 public:
-    explicit MBRPartitionTable(NonnullRefPtr<BlockDevice>);
     ~MBRPartitionTable();
 
-    bool initialize();
+    static Result<NonnullOwnPtr<MBRPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(const StorageDevice&, u32 start_lba);
+    explicit MBRPartitionTable(const StorageDevice&);
+    MBRPartitionTable(const StorageDevice&, u32 start_lba);
+
     bool is_protective_mbr() const;
     bool contains_ebr() const;
-    RefPtr<DiskPartition> partition(unsigned index);
+    virtual Type type() const override { return Type::MBR; };
+    virtual bool is_valid() const override { return m_valid; };
+
+protected:
+    const Header& header() const;
+    bool is_header_valid() const { return m_header_valid; };
 
 private:
-    NonnullRefPtr<BlockDevice> m_device;
-
-    const MBRPartitionHeader& header() const;
-
-    u8 m_cached_header[512];
+    bool read_boot_record();
+    bool initialize();
+    bool m_valid { false };
+    bool m_header_valid { false };
+    const u32 m_start_lba;
+    ByteBuffer m_cached_header;
+    size_t m_partitions_count { 0 };
 };
-
 }

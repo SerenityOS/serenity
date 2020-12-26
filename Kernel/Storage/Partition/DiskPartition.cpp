@@ -31,16 +31,15 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned block_offset, unsigned block_limit)
+NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)
 {
-    return adopt(*new DiskPartition(device, block_offset, block_limit));
+    return adopt(*new DiskPartition(device, minor_number, metadata));
 }
 
-DiskPartition::DiskPartition(BlockDevice& device, unsigned block_offset, unsigned block_limit)
-    : BlockDevice(100, 0, device.block_size())
+DiskPartition::DiskPartition(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)
+    : BlockDevice(100, minor_number, device.block_size())
     , m_device(device)
-    , m_block_offset(block_offset)
-    , m_block_limit(block_limit)
+    , m_metadata(metadata)
 {
 }
 
@@ -51,12 +50,12 @@ DiskPartition::~DiskPartition()
 void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
 {
     request.add_sub_request(m_device->make_request<AsyncBlockDeviceRequest>(request.request_type(),
-        request.block_index() + m_block_offset, request.block_count(), request.buffer(), request.buffer_size()));
+        request.block_index() + m_metadata.start_block(), request.block_count(), request.buffer(), request.buffer_size()));
 }
 
 KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
 {
-    unsigned adjust = m_block_offset * block_size();
+    unsigned adjust = m_metadata.start_block() * block_size();
 
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::read offset=" << fd.offset() << " adjust=" << adjust << " len=" << len;
@@ -67,7 +66,7 @@ KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, UserOr
 
 bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
 {
-    unsigned adjust = m_block_offset * block_size();
+    unsigned adjust = m_metadata.start_block() * block_size();
 
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::can_read offset=" << offset << " adjust=" << adjust;
@@ -78,7 +77,7 @@ bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
 
 KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
-    unsigned adjust = m_block_offset * block_size();
+    unsigned adjust = m_metadata.start_block() * block_size();
 
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::write offset=" << offset << " adjust=" << adjust << " len=" << len;
@@ -89,7 +88,7 @@ KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const
 
 bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
 {
-    unsigned adjust = m_block_offset * block_size();
+    unsigned adjust = m_metadata.start_block() * block_size();
 
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::can_write offset=" << offset << " adjust=" << adjust;

@@ -38,8 +38,9 @@ set(KERNEL_SOURCES
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
-    Storage/Partition/GPTPartitionTable.cpp
+    Storage/Partition/GUIDPartitionTable.cpp
     Storage/Partition/MBRPartitionTable.cpp
+    Storage/Partition/PartitionTable.cpp
     Storage/StorageDevice.cpp
     Storage/IDEController.cpp
     Storage/IDEChannel.cpp
