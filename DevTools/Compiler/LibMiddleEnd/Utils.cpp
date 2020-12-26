@@ -24,38 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Utils.h"
 
-#include <AK/NonnullRefPtr.h>
-#include <LibCore/File.h>
-
-namespace Cpp {
-class Option;
-}
-namespace SIR {
-class TranslationUnit;
-class Function;
+namespace MiddleEnd::Utils {
+NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>& type, String& name)
+{
+    return create_ast_node<SIR::Variable>(type, name);
 }
 
-namespace BackEnd {
-class I386BackEnd {
-public:
-    I386BackEnd(const SIR::TranslationUnit& tu, const Cpp::Option& options)
-        : m_tu(tu)
-        , m_options(options)
-        , m_output_file(get_output_file())
-    {
-    }
-    void print_asm();
-
-private:
-    NonnullRefPtr<Core::File> get_output_file();
-    void print_assembly_for_function(const SIR::Function&);
-
-    const SIR::TranslationUnit& m_tu;
-    const Cpp::Option& m_options;
-    NonnullRefPtr<Core::File> m_output_file;
-
-    constexpr static size_t m_stack_start = 8;
-};
 }

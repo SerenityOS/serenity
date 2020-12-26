@@ -29,5 +29,55 @@
 #include <LibMiddleEnd/SIR.h>
 
 namespace Cpp {
-using TranslationUnit = SIR::TranslationUnit;
+
+using VoidType = SIR::VoidType;
+using Type = SIR::Type;
+using ASTNode = SIR::ASTNode;
+using Variable = SIR::Variable;
+
+class IntegerType : public SIR::IntegerType {
+public:
+    enum Kind {
+        SignedInt,
+    };
+    explicit IntegerType(Kind kind, size_t size_in_bits, size_t size_in_bytes, bool is_signed)
+        : SIR::IntegerType(size_in_bits, size_in_bytes, is_signed)
+        , m_integer_kind(kind)
+    {
+    }
+
+private:
+    Kind m_integer_kind;
+};
+
+class SignedIntType : public IntegerType {
+public:
+    SignedIntType()
+        : IntegerType(Kind::SignedInt, 32, 4, true)
+    {
+    }
+};
+
+class Function : public SIR::Function {
+public:
+    Function(NonnullRefPtr<SIR::Type>& return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable>& parameters)
+        : SIR::Function(return_type, unmangled_name, parameters)
+        , m_unmangled_name(unmangled_name)
+    {
+        set_name(mangle());
+    }
+
+    String mangle();
+
+private:
+    String m_unmangled_name;
+};
+
+class TranslationUnit {
+public:
+    NonnullRefPtrVector<Function>& functions() { return m_functions; }
+
+private:
+    NonnullRefPtrVector<Function> m_functions;
+};
 }

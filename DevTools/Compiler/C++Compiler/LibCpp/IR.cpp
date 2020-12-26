@@ -25,8 +25,26 @@
  */
 
 #include "IR.h"
+#include "AST.h"
+#include <LibMiddleEnd/Utils.h>
 
-SIR::TranslationUnit Cpp::IR::to_internal_representation(Cpp::TranslationUnit&)
+namespace Cpp {
+SIR::TranslationUnit IR::to_internal_representation(Cpp::TranslationUnit& tu)
 {
-    return {};
+    NonnullRefPtrVector<SIR::Function> functions;
+
+    for (auto& fun : tu.functions()) {
+        NonnullRefPtrVector<SIR::ASTNode> new_body;
+
+        for (size_t i = 0; i < fun.parameters().size(); i++) {
+            auto var = fun.parameters().ptr_at(i);
+            new_body.append(MiddleEnd::Utils::create_store(var->node_type(), var->name()));
+        }
+
+        fun.body().clear();
+        fun.body().append(new_body);
+        functions.append(fun);
+    }
+    return { functions };
+}
 }

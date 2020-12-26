@@ -37,13 +37,49 @@ public:
     static TranslationUnit parse(const Cpp::Option& options);
 
 private:
+    struct TypeSpecifier {
+        bool is_void { false };
+        bool is_int { false };
+    };
+
+    struct Declarator {
+        String name;
+        NonnullRefPtrVector<Variable> parameters;
+    };
+
     explicit Parser(const String&);
     static ByteBuffer get_input_file_content(const String& filename);
     [[nodiscard]] Token get_next_token_skip_comment_and_whitespaces();
+    [[nodiscard]] Token peek();
+    Token consume(Token::Type expected_type);
+    void consume();
+    [[noreturn]] void parse_error(StringView message);
 
     TranslationUnit parse_translation_unit();
+    Optional<String> parse_unqualified_id();
+    Optional<String> parse_id_expression();
+    Optional<String> parse_declarator_id();
+    Optional<String> parse_noptr_declarator();
+    Optional<Declarator> parse_declarator();
+    NonnullRefPtr<Function> parse_function_definition();
+    NonnullRefPtr<Function> parse_declaration();
+    NonnullRefPtrVector<Function> parse_declaration_sequence();
+    void expect(Token::Type expected_type);
+    NonnullRefPtr<Type> parse_decl_specifier_seq();
+    TypeSpecifier parse_decl_specifier();
+    TypeSpecifier parse_defining_type_specifier();
+    void parse_type_specifier(TypeSpecifier& type_specifier);
+    void parse_simple_type_specifier(TypeSpecifier& type_specifier);
+    NonnullRefPtr<Variable> parse_parameter_declaration();
+    NonnullRefPtrVector<Variable> parse_parameter_declaration_list();
+    NonnullRefPtrVector<Variable> parse_parameter_declaration_clause();
+    NonnullRefPtrVector<Variable> parse_parameters_and_qualifiers();
 
     ByteBuffer m_file_content;
     Lexer m_lexer;
+    Optional<Token> m_saved_token;
+    TranslationUnit m_tu;
+    NonnullRefPtrVector<ASTNode> parse_compound_statement();
+    NonnullRefPtrVector<ASTNode> parse_function_body();
 };
 }

@@ -31,7 +31,7 @@
 #include <LibMiddleEnd/SIR.h>
 
 namespace Cpp {
-using TranslationUnit = SIR::TranslationUnit;
+class TranslationUnit;
 }
 
 namespace Cpp::IR {

@@ -24,38 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/NonnullRefPtr.h>
-#include <LibCore/File.h>
+#include "AST.h"
+#include <AK/StringBuilder.h>
 
 namespace Cpp {
-class Option;
-}
-namespace SIR {
-class TranslationUnit;
-class Function;
+
+template<typename A, typename... Args>
+NonnullRefPtr<A> create(Args... args)
+{
+    return adopt(*new A(args...));
 }
 
-namespace BackEnd {
-class I386BackEnd {
-public:
-    I386BackEnd(const SIR::TranslationUnit& tu, const Cpp::Option& options)
-        : m_tu(tu)
-        , m_options(options)
-        , m_output_file(get_output_file())
-    {
+String Function::mangle()
+{
+    StringBuilder sb;
+
+    sb.appendf("_Z%zu%s", m_unmangled_name.length(), m_unmangled_name.characters());
+    if (parameters().is_empty()) {
+        sb.append('v');
+    } else {
+        for (auto& param : parameters()) {
+            if (param.node_type()->kind() == Type::Kind::Integer)
+                sb.append('i');
+            else
+                TODO();
+        }
     }
-    void print_asm();
-
-private:
-    NonnullRefPtr<Core::File> get_output_file();
-    void print_assembly_for_function(const SIR::Function&);
-
-    const SIR::TranslationUnit& m_tu;
-    const Cpp::Option& m_options;
-    NonnullRefPtr<Core::File> m_output_file;
-
-    constexpr static size_t m_stack_start = 8;
-};
+    dbgln("function mangled to {}", sb.build());
+    return sb.build();
+}
 }

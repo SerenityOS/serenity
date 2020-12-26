@@ -1,5 +1,6 @@
 set(SOURCES
     SIR.cpp
+    Utils.cpp
 )
 
 include_directories(../C++Compiler)

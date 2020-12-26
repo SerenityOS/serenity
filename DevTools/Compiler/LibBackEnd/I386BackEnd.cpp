@@ -26,6 +26,7 @@
 
 #include "I386BackEnd.h"
 #include <LibCpp/Option.h>
+#include <LibMiddleEnd/SIR.h>
 
 namespace BackEnd {
 
@@ -35,6 +36,29 @@ NonnullRefPtr<Core::File> I386BackEnd::get_output_file()
     assert(!output_file.is_error());
 
     return output_file.value();
+}
+
+void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
+{
+    size_t allocated_stack = m_stack_start;
+
+    m_output_file->printf("\t.globl %s\n", function.name().characters());
+    m_output_file->printf("\t.type %s, @function\n", function.name().characters());
+    m_output_file->printf("%s:\n", function.name().characters());
+
+    // frame pointer
+    m_output_file->printf("\tpushl\t%%ebp\n");
+    m_output_file->printf("\tmovl\t%%esp, %%ebp\n");
+
+    for (auto& param : function.parameters()) {
+        m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", allocated_stack);
+
+        allocated_stack += param.node_type()->size_in_bytes();
+    }
+    m_output_file->printf("\tpopl\t%%ebp\n");
+    m_output_file->printf("\tret\n");
+
+    m_output_file->printf("\t.size %s, .-%s\n", function.name().characters(), function.name().characters());
 }
 
 void I386BackEnd::print_asm()
@@ -51,5 +75,9 @@ void I386BackEnd::print_asm()
     m_output_file->printf("\t.ident \"Serenity-c++ compiler V0.0.0\"\n");
     m_output_file->printf("\t.section \".note.GNU-stack\",\"\",@progbits\n");
 
+    for (auto& function : m_tu.functions()) {
+        print_assembly_for_function(function);
+    }
 }
+
 }

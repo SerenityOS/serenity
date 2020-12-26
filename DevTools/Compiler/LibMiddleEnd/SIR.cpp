@@ -28,6 +28,8 @@
 
 namespace SIR {
 
+
+
 void process_internal_representation(SIR::TranslationUnit&)
 {
 }

@@ -1,4 +1,5 @@
 set(SOURCES
+    AST.cpp
     Driver.cpp
     IR.cpp
     Lexer.cpp
