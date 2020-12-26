@@ -40,23 +40,23 @@
 
 namespace Kernel {
 
-OwnPtr<CoreDump> CoreDump::create(Process& process, const String& output_path)
+OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& output_path)
 {
-    if (!process.is_dumpable()) {
-        dbgln("Refusing to generate CoreDump for non-dumpable process {}", process.pid().value());
+    if (!process->is_dumpable()) {
+        dbgln("Refusing to generate CoreDump for non-dumpable process {}", process->pid().value());
         return nullptr;
     }
 
     auto fd = create_target_file(process, output_path);
     if (!fd)
         return nullptr;
-    return adopt_own(*new CoreDump(process, fd.release_nonnull()));
+    return adopt_own(*new CoreDump(move(process), fd.release_nonnull()));
 }
 
-CoreDump::CoreDump(Process& process, NonnullRefPtr<FileDescription>&& fd)
-    : m_process(process)
+CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
+    : m_process(move(process))
     , m_fd(move(fd))
-    , m_num_program_headers(process.m_regions.size() + 1) // +1 for NOTE segment
+    , m_num_program_headers(m_process->m_regions.size() + 1) // +1 for NOTE segment
 {
 }
 
@@ -130,7 +130,7 @@ KResult CoreDump::write_elf_header()
 KResult CoreDump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(Elf32_Ehdr) + m_num_program_headers * sizeof(Elf32_Phdr);
-    for (auto& region : m_process.m_regions) {
+    for (auto& region : m_process->m_regions) {
         Elf32_Phdr phdr {};
 
         phdr.p_type = PT_LOAD;
@@ -171,16 +171,15 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
 KResult CoreDump::write_regions()
 {
-    for (auto& region : m_process.m_regions) {
+    for (auto& region : m_process->m_regions) {
         if (region.is_kernel())
             continue;
 
         region.set_readable(true);
         region.remap();
 
-        auto& vmobj = region.vmobject();
         for (size_t i = 0; i < region.page_count(); i++) {
-            PhysicalPage* page = vmobj.physical_pages()[region.first_page_index() + i];
+            auto* page = region.physical_page(i);
 
             uint8_t zero_buffer[PAGE_SIZE] = {};
             Optional<UserOrKernelBuffer> src_buffer;
@@ -213,7 +212,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 {
     ByteBuffer threads_data;
 
-    m_process.for_each_thread([&](Thread& thread) {
+    m_process->for_each_thread([&](Thread& thread) {
         ByteBuffer entry_buff;
 
         ELF::Core::ThreadInfo info {};
@@ -233,13 +232,13 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 ByteBuffer CoreDump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
-    for (size_t region_index = 0; region_index < m_process.m_regions.size(); ++region_index) {
+    for (size_t region_index = 0; region_index < m_process->m_regions.size(); ++region_index) {
 
         ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
-        auto& region = m_process.m_regions[region_index];
+        auto& region = m_process->m_regions[region_index];
         info.region_start = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
         info.region_end = reinterpret_cast<uint32_t>(region.vaddr().as_ptr() + region.size());
         info.program_header_index = region_index;
@@ -272,6 +271,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
 
 KResult CoreDump::write()
 {
+    ScopedSpinLock lock(m_process->get_lock());
     ProcessPagingScope scope(m_process);
 
     ByteBuffer notes_segment = create_notes_segment_data();
