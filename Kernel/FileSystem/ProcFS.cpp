@@ -634,18 +634,20 @@ static OwnPtr<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& unveiled_path : process->unveiled_paths()) {
+        if (!unveiled_path.was_explicitly_unveiled())
+            continue;
         auto obj = array.add_object();
-        obj.add("path", unveiled_path.path);
+        obj.add("path", unveiled_path.path());
         StringBuilder permissions_builder;
-        if (unveiled_path.permissions & UnveiledPath::Access::Read)
+        if (unveiled_path.permissions() & UnveilAccess::Read)
             permissions_builder.append('r');
-        if (unveiled_path.permissions & UnveiledPath::Access::Write)
+        if (unveiled_path.permissions() & UnveilAccess::Write)
             permissions_builder.append('w');
-        if (unveiled_path.permissions & UnveiledPath::Access::Execute)
+        if (unveiled_path.permissions() & UnveilAccess::Execute)
             permissions_builder.append('x');
-        if (unveiled_path.permissions & UnveiledPath::Access::CreateOrRemove)
+        if (unveiled_path.permissions() & UnveilAccess::CreateOrRemove)
             permissions_builder.append('c');
-        if (unveiled_path.permissions & UnveiledPath::Access::Browse)
+        if (unveiled_path.permissions() & UnveilAccess::Browse)
             permissions_builder.append('b');
         obj.add("permissions", permissions_builder.to_string());
     }

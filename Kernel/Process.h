@@ -44,6 +44,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/UnveilNode.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
 
@@ -89,19 +90,6 @@ enum class VeilState {
     None,
     Dropped,
     Locked,
-};
-
-struct UnveiledPath {
-    enum Access {
-        Read = 1,
-        Write = 2,
-        Execute = 4,
-        CreateOrRemove = 8,
-        Browse = 16,
-    };
-
-    String path;
-    unsigned permissions { 0 };
 };
 
 class Process
@@ -498,7 +486,7 @@ public:
     {
         return m_veil_state;
     }
-    const Vector<UnveiledPath>& unveiled_paths() const
+    const UnveilNode& unveiled_paths() const
     {
         return m_unveiled_paths;
     }
@@ -652,7 +640,7 @@ private:
     u32 m_execpromises { 0 };
 
     VeilState m_veil_state { VeilState::None };
-    Vector<UnveiledPath> m_unveiled_paths;
+    UnveilNode m_unveiled_paths { "/", { "/" } };
 
     WaitQueue& futex_queue(Userspace<const i32*>);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
