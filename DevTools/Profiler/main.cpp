@@ -29,6 +29,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -154,16 +155,18 @@ int main(int argc, char** argv)
     return app->exec();
 }
 
-static bool prompt_to_stop_profiling()
+static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
 {
     auto window = GUI::Window::construct();
-    window->set_title("Profiling");
-    window->resize(320, 200);
+    window->set_title(String::formatted("Profiling {}({})", process_name, pid));
+    window->resize(240, 100);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
     window->center_on_screen();
+
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& layout = widget.set_layout<GUI::VerticalBoxLayout>();
+    layout.set_margins(GUI::Margins(0, 0, 0, 16));
 
     auto& timer_label = widget.add<GUI::Label>("...");
     Core::ElapsedTimer clock;
@@ -173,6 +176,8 @@ static bool prompt_to_stop_profiling()
     });
 
     auto& stop_button = widget.add<GUI::Button>("Stop");
+    stop_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    stop_button.set_preferred_size(140, 22);
     stop_button.on_click = [&](auto) {
         GUI::Application::the()->quit();
     };
@@ -190,13 +195,21 @@ bool generate_profile(pid_t pid)
         pid = process_chooser->pid();
     }
 
+    String process_name;
+
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (auto it = all_processes.find(pid); it != all_processes.end())
+        process_name = it->value.name;
+    else
+        process_name = "(unknown)";
+
     if (profiling_enable(pid) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile PID {}: {}", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
         return false;
     }
 
-    if (!prompt_to_stop_profiling())
+    if (!prompt_to_stop_profiling(pid, process_name))
         return false;
 
     if (profiling_disable(pid) < 0) {
