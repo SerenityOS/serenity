@@ -30,6 +30,9 @@ disk_usage() {
 DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 300))
 
 echo "setting up disk image..."
+if [ "$1" = "ebr" ]; then
+    DISK_SIZE=
+fi
 dd if=/dev/zero of=grub_disk_image bs=1M count="${DISK_SIZE:-800}" status=none || die "couldn't create disk image"
 chown "$SUDO_UID":"$SUDO_GID" grub_disk_image || die "couldn't adjust permissions on disk image"
 echo "done"
