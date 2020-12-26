@@ -40,4 +40,4 @@ fi
 echo "(Not running lint-missing-resources.sh due to high false-positive rate.)"
 echo "(Also look out for check-symbols.sh, which can only be executed after the build!)"
 
-exit ${FAILURES}
+exit "${FAILURES}"
