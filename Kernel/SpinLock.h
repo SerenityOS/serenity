@@ -58,7 +58,7 @@ public:
         Processor::current().leave_critical(prev_flags);
     }
 
-    ALWAYS_INLINE bool is_locked() const
+    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
@@ -105,12 +105,12 @@ public:
         Processor::current().leave_critical(prev_flags);
     }
 
-    ALWAYS_INLINE bool is_locked() const
+    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
-    ALWAYS_INLINE bool own_lock() const
+    [[nodiscard]] ALWAYS_INLINE bool own_lock() const
     {
         return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
     }
@@ -126,7 +126,8 @@ private:
 };
 
 template<typename LockType>
-class ScopedSpinLock {
+class NO_DISCARD ScopedSpinLock {
+
     AK_MAKE_NONCOPYABLE(ScopedSpinLock);
 
 public:
@@ -175,7 +176,7 @@ public:
         m_have_lock = false;
     }
 
-    ALWAYS_INLINE bool have_lock() const
+    [[nodiscard]] ALWAYS_INLINE bool have_lock() const
     {
         return m_have_lock;
     }
