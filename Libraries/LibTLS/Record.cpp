@@ -343,7 +343,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             ASSERT(m_aes_remote.cbc);
             auto iv_size = iv_length();
 
-            auto decrypted = m_aes_remote.cbc->create_aligned_buffer(length - iv_size);
+            decrypted = m_aes_remote.cbc->create_aligned_buffer(length - iv_size);
             auto iv = buffer.slice(header_size, iv_size);
 
             Bytes decrypted_span = decrypted;
@@ -383,7 +383,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
                 return (i8)Error::IntegrityCheckFailed;
             }
-            plain = decrypted.slice(0, length);
+            plain = decrypted.bytes().slice(0, length);
         }
     }
     m_context.remote_sequence_number++;
