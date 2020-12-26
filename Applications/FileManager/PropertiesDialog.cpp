@@ -32,7 +32,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/Link.h>
+#include <LibGUI/LinkLabel.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TabWidget.h>
 #include <grp.h>
@@ -288,7 +288,7 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
         if (!pair.link.has_value()) {
             label_container.add<GUI::Label>(pair.value).set_text_alignment(Gfx::TextAlignment::CenterLeft);
         } else {
-            auto& link = label_container.add<GUI::Link>(pair.value);
+            auto& link = label_container.add<GUI::LinkLabel>(pair.value);
             link.set_text_alignment(Gfx::TextAlignment::CenterLeft);
             link.on_click = [pair]() {
                 Desktop::Launcher::open(pair.link.value());
