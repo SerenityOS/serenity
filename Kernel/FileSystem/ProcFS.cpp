@@ -872,6 +872,7 @@ static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("ppid", process.ppid().value());
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
+        process_object.add("executable", process.executable() ? process.executable()->absolute_path() : "");
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
         process_object.add("amount_virtual", process.amount_virtual());
         process_object.add("amount_resident", process.amount_resident());
