@@ -183,6 +183,21 @@ public:
         return static_cast<BaseType&>(*last_root_node);
     }
 
+    template<typename It, typename ProvideMetadataFunction>
+    BaseType& insert(
+        const It& begin, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsSame<MetadataType, decltype(nullptr)>::value)
+    {
+        auto it = begin;
+        return insert(it, end, move(metadata), move(provide_missing_metadata));
+    }
+
+    template<typename It>
+    BaseType& insert(const It& begin, const It& end) requires(IsSame<MetadataType, decltype(nullptr)>::value)
+    {
+        auto it = begin;
+        return insert(it, end);
+    }
+
     ConstIterator begin() const { return ConstIterator(*this); }
     ConstIterator end() const { return ConstIterator::end(); }
 
