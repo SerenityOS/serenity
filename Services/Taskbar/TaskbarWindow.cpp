@@ -29,10 +29,10 @@
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/AppFile.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
@@ -111,20 +111,17 @@ void TaskbarWindow::create_quick_launch_bar()
     // FIXME: Core::ConfigFile does not keep the order of the entries.
     for (auto& name : config->keys(quick_launch)) {
         auto af_name = config->read_entry(quick_launch, name);
-        ASSERT(!af_name.is_null());
-        auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = Core::ConfigFile::open(af_path);
-        auto app_executable = af->read_entry("App", "Executable");
-        auto app_name = af->read_entry("App", "Name");
-        auto app_icon = GUI::FileIconProvider::icon_for_path(app_executable).bitmap_for_size(16);
-
+        auto af_path = String::formatted("{}/{}", GUI::AppFile::APP_FILES_DIRECTORY, af_name);
+        auto af = GUI::AppFile::open(af_path);
+        if (!af->is_valid())
+            continue;
+        auto app_executable = af->executable();
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button.set_preferred_size(24, 24);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
-
-        button.set_icon(app_icon);
-        button.set_tooltip(app_name);
+        button.set_icon(af->icon().bitmap_for_size(16));
+        button.set_tooltip(af->name());
         button.on_click = [app_executable](auto) {
             pid_t pid = fork();
             if (pid < 0) {
