@@ -99,11 +99,21 @@ foreach(lang ASM C CXX OBJC OBJCXX)
     unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
     unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
     unset(CMAKE_${lang}_SYSROOT_FLAG)
+    # MacOS Workaround. Don't generate install_name flag when cross compiling
+    set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
+        "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 endforeach()
 
-set(CMAKE_INSTALL_NAME_TOOL "true")
+set(CMAKE_INSTALL_NAME_TOOL "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared")
+
+# Note: MacOS has different rpath rules from linux.
+# We disable it completely for MacOS hosts to avoid having to track down all the individual flags to unset
+# This will need to be revisited when the Loader supports RPATH/RUN_PATH.
+if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+    set(CMAKE_SKIP_RPATH TRUE)
+endif()
 
 #FIXME: -fstack-protector
 
