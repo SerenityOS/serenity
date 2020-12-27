@@ -27,13 +27,15 @@ jobs:
       # These packages are already part of the ubuntu-20.04 image:
       # clang-format-10 cmake gcc-10 g++-10 shellcheck libgmp-dev
       # These aren't:
-      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build
+      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm
       # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
       # e2fsprogs qemu-system-i386 qemu-utils
+    - name: Install prettier
+      run: sudo npm install -g prettier
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; python --version; python3 --version; ninja --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; prettier --version; python --version; python3 --version; ninja --version
 
     # === PREPARE FOR BUILDING ===
 
