@@ -54,7 +54,7 @@ static Gfx::Bitmap& minimize_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png").leak_ref();
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png").leak_ref();
     return *s_icon;
 }
 
@@ -62,7 +62,7 @@ static Gfx::Bitmap& maximize_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png").leak_ref();
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png").leak_ref();
     return *s_icon;
 }
 

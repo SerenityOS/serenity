@@ -102,14 +102,14 @@ void WindowFrame::set_button_icons()
         full_path.append(icons_path);
         full_path.append("window-minimize.png");
         if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png").leak_ref();
+            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png").leak_ref();
         full_path.clear();
     }
     if (!s_maximize_icon || s_last_title_button_icons_path != icons_path) {
         full_path.append(icons_path);
         full_path.append("window-maximize.png");
         if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png").leak_ref();
+            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png").leak_ref();
         full_path.clear();
     }
     if (!s_restore_icon || s_last_title_button_icons_path != icons_path) {
