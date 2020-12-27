@@ -193,6 +193,13 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
 
     for (size_t header_index = 0; header_index < num_program_headers; ++header_index) {
         auto& program_header = program_header_begin[header_index];
+
+        if (program_header.p_filesz > program_header.p_memsz) {
+            if (verbose)
+                dbgln("Program header ({}) has p_filesz ({}) larger than p_memsz ({})", header_index, program_header.p_filesz, program_header.p_memsz);
+            return false;
+        }
+
         switch (program_header.p_type) {
         case PT_INTERP:
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
