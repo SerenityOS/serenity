@@ -1,5 +1,6 @@
-#!/bin/sh
-set -e pipefail
+#!/bin/bash
+
+set -eo pipefail
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.."
