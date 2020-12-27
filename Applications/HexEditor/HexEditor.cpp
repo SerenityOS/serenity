@@ -229,7 +229,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         m_position = offset;
         m_in_drag_select = true;
         m_selection_start = offset;
-        m_selection_end = -1;
+        m_selection_end = offset;
         update();
         update_status();
     }
@@ -250,7 +250,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         m_byte_position = 0;
         m_in_drag_select = true;
         m_selection_start = offset;
-        m_selection_end = -1;
+        m_selection_end = offset;
         m_edit_mode = EditMode::Text;
         update();
         update_status();
@@ -314,10 +314,7 @@ void HexEditor::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         if (m_in_drag_select) {
-            if (m_selection_end == -1 || m_selection_start == -1) {
-                m_selection_start = -1;
-                m_selection_end = -1;
-            } else if (m_selection_end < m_selection_start) {
+            if (m_selection_end < m_selection_start) {
                 // lets flip these around
                 auto start = m_selection_end;
                 m_selection_end = m_selection_start;
