@@ -32,6 +32,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/AppFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
@@ -102,19 +103,10 @@ int main(int argc, char** argv)
 Vector<String> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
-    Core::DirIterator dt("/res/apps", Core::DirIterator::SkipDots);
-    while (dt.has_next()) {
-        auto af_name = dt.next_path();
-        auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = Core::ConfigFile::open(af_path);
-        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-            continue;
-        auto app_name = af->read_entry("App", "Name");
-        auto app_executable = af->read_entry("App", "Executable");
-        auto app_category = af->read_entry("App", "Category");
-        g_apps.append({ app_executable, app_name, app_category });
-        seen_app_categories.set(app_category);
-    }
+    GUI::AppFile::for_each([&](auto af) {
+        g_apps.append({ af->executable(), af->name(), af->category() });
+        seen_app_categories.set(af->category());
+    });
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
     Vector<String> sorted_app_categories;
