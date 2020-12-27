@@ -34,6 +34,15 @@
 #    define AK_ARCH_X86_64 1
 #endif
 
+#if defined(__APPLE__) && defined(__MACH__)
+#    define AK_OS_MACOS
+#    define AK_OS_BSD_GENERIC
+#endif
+
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#    define AK_OS_BSD_GENERIC
+#endif
+
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
 #ifdef ALWAYS_INLINE
@@ -87,5 +96,10 @@ ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
         }
     }
     return 0;
+#endif
+
+#ifdef AK_OS_BSD_GENERIC
+#    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
+#    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif
 }
