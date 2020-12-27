@@ -71,8 +71,8 @@ public:
     bool gets(u8*, size_t);
     bool ungetc(u8 byte) { return m_buffer.enqueue_front(byte); }
 
-    int seek(long offset, int whence);
-    long tell();
+    int seek(off_t offset, int whence);
+    off_t tell();
 
     pid_t popen_child() { return m_popen_child; }
     void set_popen_child(pid_t child_pid) { m_popen_child = child_pid; }
@@ -392,7 +392,7 @@ bool FILE::gets(u8* data, size_t size)
     return total_read > 0;
 }
 
-int FILE::seek(long offset, int whence)
+int FILE::seek(off_t offset, int whence)
 {
     bool ok = flush();
     if (!ok)
@@ -408,7 +408,7 @@ int FILE::seek(long offset, int whence)
     return 0;
 }
 
-long FILE::tell()
+off_t FILE::tell()
 {
     bool ok = flush();
     if (!ok)
@@ -795,7 +795,19 @@ int fseek(FILE* stream, long offset, int whence)
     return stream->seek(offset, whence);
 }
 
+int fseeko(FILE* stream, off_t offset, int whence)
+{
+    ASSERT(stream);
+    return stream->seek(offset, whence);
+}
+
 long ftell(FILE* stream)
+{
+    ASSERT(stream);
+    return stream->tell();
+}
+
+off_t ftello(FILE* stream)
 {
     ASSERT(stream);
     return stream->tell();
@@ -806,7 +818,7 @@ int fgetpos(FILE* stream, fpos_t* pos)
     ASSERT(stream);
     ASSERT(pos);
 
-    long val = stream->tell();
+    off_t val = stream->tell();
     if (val == -1L)
         return 1;
 
@@ -819,7 +831,7 @@ int fsetpos(FILE* stream, const fpos_t* pos)
     ASSERT(stream);
     ASSERT(pos);
 
-    return stream->seek((long)*pos, SEEK_SET);
+    return stream->seek(*pos, SEEK_SET);
 }
 
 void rewind(FILE* stream)
