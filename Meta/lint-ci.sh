@@ -19,7 +19,8 @@ for cmd in \
         Meta/check-style.sh \
         Meta/lint-executable-resources.sh \
         Meta/lint-ipc-ids.sh \
-        Meta/lint-shell-scripts.sh; do
+        Meta/lint-shell-scripts.sh \
+        Meta/lint-prettier.sh; do
     echo "Running ${cmd}... "
     if "${cmd}" "$@"; then
         echo -e "[${GREEN}OK${NC}]: ${cmd}"
