@@ -829,7 +829,7 @@ void Terminal::on_input(u8 ch)
 
     auto fail_utf8_parse = [this] {
         m_parser_state = Normal;
-        on_code_point('%');
+        on_code_point(U'�');
     };
 
     auto advance_utf8_parse = [this, ch] {
