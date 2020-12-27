@@ -417,7 +417,7 @@ Gfx::IntRect IconView::content_rect(const ModelIndex& index) const
     if (!index.is_valid())
         return {};
     auto& item_data = get_item_data(index.row());
-    return item_data.text_rect;
+    return item_data.text_rect.inflated(4, 4);
 }
 
 void IconView::did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index)
