@@ -46,10 +46,7 @@ int main(int argc, char** argv)
     editor.set_automatic_indentation_enabled(true);
 
     editor.on_change = [&] {
-        // FIXME: This is not a very expressive way to remove all children..
-        while (!preview.children().is_empty())
-            preview.children().first().remove_from_parent();
-
+        preview.remove_all_children();
         preview.load_from_gml(editor.text());
     };
 

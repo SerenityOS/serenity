@@ -105,6 +105,7 @@ public:
     void add_child(Object&);
     void insert_child_before(Object& new_child, Object& before_child);
     void remove_child(Object&);
+    void remove_all_children();
 
     void dump_tree(int indent = 0);
 
