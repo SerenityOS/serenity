@@ -130,6 +130,12 @@ void Object::remove_child(Object& object)
     ASSERT_NOT_REACHED();
 }
 
+void Object::remove_all_children()
+{
+    while (!m_children.is_empty())
+        m_children.first().remove_from_parent();
+}
+
 void Object::timer_event(Core::TimerEvent&)
 {
 }
