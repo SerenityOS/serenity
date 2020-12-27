@@ -47,7 +47,7 @@ public:
 
 class Latin2Decoder final : public Decoder {
 public:
-  virtual String to_utf8(const StringView&) override;
+    virtual String to_utf8(const StringView&) override;
 };
 
 Decoder* decoder_for(const String& encoding);
