@@ -5,6 +5,7 @@ set(SOURCES
     AbstractView.cpp
     Action.cpp
     ActionGroup.cpp
+    AppFile.cpp
     Application.cpp
     BoxLayout.cpp
     Button.cpp
