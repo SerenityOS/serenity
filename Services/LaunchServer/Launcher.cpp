@@ -304,6 +304,6 @@ bool Launcher::open_file_url(const URL& url)
     String extension = {};
     if (extension_parts.size() > 1)
         extension = extension_parts.last();
-    return open_with_user_preferences(m_file_handlers, extension, url.path(), "/bin/TextEdit");
+    return open_with_user_preferences(m_file_handlers, extension, url.path(), "/bin/TextEditor");
 }
 }
