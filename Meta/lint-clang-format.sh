@@ -20,7 +20,7 @@ else
     exit 1
 fi
 
-if [ "$#" -eq "1" ] && [ "x--overwrite-inplace" = "x$1" ] ; then
+if [ "$#" -gt "0" ] && [ "x--overwrite-inplace" = "x$1" ] ; then
     true # The only way to run this script.
 else
     # Note that this branch also covers --help, -h, -help, -?, etc.
@@ -31,19 +31,32 @@ fi
 
 echo "Using ${CLANG_FORMAT}"
 
-{
-    git ls-files -- \
-        '*.cpp' \
-        '*.h' \
-        ':!:Base' \
-        ':!:Kernel/Arch/i386/CPU.cpp' \
-        ':!:Kernel/FileSystem/ext2_fs.h' \
-        ':!:Libraries/LibC/getopt.cpp' \
-        ':!:Libraries/LibC/syslog.h' \
-        ':!:Libraries/LibCore/puff.h' \
-        ':!:Libraries/LibCore/puff.cpp' \
-        ':!:Libraries/LibELF/exec_elf.h' \
-    || echo "'git ls-files failed!'"
-} | xargs -d'\n' "${CLANG_FORMAT}" -style=file -i
+if [ "$#" -eq "1" ]; then
+    mapfile -t files < <(
+        git ls-files -- \
+            '*.cpp' \
+            '*.h' \
+            ':!:Base' \
+            ':!:Kernel/Arch/i386/CPU.cpp' \
+            ':!:Kernel/FileSystem/ext2_fs.h' \
+            ':!:Libraries/LibC/getopt.cpp' \
+            ':!:Libraries/LibC/syslog.h' \
+            ':!:Libraries/LibCore/puff.h' \
+            ':!:Libraries/LibCore/puff.cpp' \
+            ':!:Libraries/LibELF/exec_elf.h'
+    )
+else
+    files=()
+    for file in "${@:2}"; do
+        if [[ "${file}" == *".cpp" || "${file}" == *".h" ]]; then
+            files+=("${file}")
+        fi
+    done
+fi
 
-echo "Maybe some files have changed. Sorry, but clang-format doesn't indicate what happened."
+if (( ${#files[@]} )); then
+    "${CLANG_FORMAT}" -style=file -i "${files[@]}"
+    echo "Maybe some files have changed. Sorry, but clang-format doesn't indicate what happened."
+else
+    echo "No .cpp or .h files to check."
+fi
