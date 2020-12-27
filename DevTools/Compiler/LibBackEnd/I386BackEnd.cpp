@@ -40,7 +40,7 @@ NonnullRefPtr<Core::File> I386BackEnd::get_output_file()
 
 void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
 {
-    size_t allocated_stack = m_stack_start;
+    size_t param_stack = m_param_stack_start;
 
     m_output_file->printf("\t.globl %s\n", function.name().characters());
     m_output_file->printf("\t.type %s, @function\n", function.name().characters());
@@ -50,38 +50,43 @@ void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
     m_output_file->printf("\tpushl\t%%ebp\n");
     m_output_file->printf("\tmovl\t%%esp, %%ebp\n");
 
-    auto variables_already_seen = HashMap<String, size_t>();
+    auto variables_already_seen = HashMap<String, String>();
+    Optional<const SIR::Variable*> var_in_eax;
 
     for (auto& operation : function.body()) {
         if (operation.is_binary_expression()) {
             auto& binop = reinterpret_cast<const SIR::BinaryExpression&>(operation);
+            auto right_index = variables_already_seen.get(binop.right()->result()->name());
+            auto left_index = variables_already_seen.get(binop.left()->result()->name());
+
+            assert(right_index.has_value() && left_index.has_value());
+            assert(var_in_eax.has_value());
+            if (var_in_eax.value() != binop.left()->result().ptr())
+                m_output_file->printf("\tmovl\t%s, %%eax\n", left_index.value().characters());
 
             switch (binop.binary_operation()) {
             case SIR::BinaryExpression::Kind::Addition:
-                m_output_file->printf("\taddl\t12(%%ebp), %%eax\n");
+                m_output_file->printf("\taddl\t%s, %%eax\n", right_index.value().characters());
                 break;
             case SIR::BinaryExpression::Kind::Multiplication:
-                m_output_file->printf("\timull\t12(%%ebp), %%eax\n");
+                m_output_file->printf("\timull\t%s, %%eax\n", right_index.value().characters());
                 break;
             case SIR::BinaryExpression::Kind::Subtraction:
-                m_output_file->printf("\tsubl\t12(%%ebp), %%eax\n");
+                m_output_file->printf("\tsubl\t%s, %%eax\n", right_index.value().characters());
                 break;
             }
+            //TODO: clear other var in eax
+            variables_already_seen.set(binop.result()->name(), "%eax");
+            var_in_eax = binop.result();
         } else if (operation.is_statement()) {
             m_output_file->printf("\tpopl\t%%ebp\n");
             m_output_file->printf("\tret\n");
         } else if (operation.is_variable()) {
-            auto& variable = reinterpret_cast<const SIR::Variable&>(operation);
-            auto variable_already_seen = variables_already_seen.get(variable.name());
-
-            if (!variable.name().is_empty() && variable_already_seen.has_value()) {
-                m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", variable_already_seen.value());
-            } else {
-                m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", allocated_stack);
-                variables_already_seen.set(variable.name(), allocated_stack);
-
-                allocated_stack += variable.node_type()->size_in_bytes();
-            }
+            auto& var = reinterpret_cast<const SIR::Variable&>(operation);
+            m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", param_stack);
+            variables_already_seen.set(var.name(), String::format("%zu(%%ebp)", param_stack));
+            param_stack += var.node_type()->size_in_bytes();
+            var_in_eax = &var;
         } else {
             ASSERT_NOT_REACHED();
         }

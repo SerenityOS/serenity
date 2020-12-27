@@ -30,5 +30,4 @@
 
 namespace MiddleEnd::Utils {
 NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>&, String&);
-NonnullRefPtr<SIR::BinaryExpression> create_binary_operation(NonnullRefPtr<SIR::Variable>&, NonnullRefPtr<SIR::Variable>&, SIR::BinaryExpression::Kind);
 }

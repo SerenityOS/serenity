@@ -36,11 +36,8 @@ static void add_binary_operation_to_body(Cpp::BinaryExpression& binary_expressio
 {
     add_node_to_body(binary_expression.left(), new_body, parameters);
     add_node_to_body(binary_expression.right(), new_body, parameters);
-    auto& left = reinterpret_cast<NonnullRefPtr<SIR::Variable>&>(new_body.ptr_at(new_body.size() - 2));
-    auto& right = reinterpret_cast<NonnullRefPtr<SIR::Variable>&>(new_body.ptr_at(new_body.size() - 1));
-    auto operation = MiddleEnd::Utils::create_binary_operation(left, right, binary_expression.binary_operation());
 
-    new_body.append(operation);
+    new_body.append(binary_expression);
 }
 
 static void add_expression_to_body(Cpp::ASTNode& expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
@@ -48,10 +45,6 @@ static void add_expression_to_body(Cpp::ASTNode& expression, NonnullRefPtrVector
     if (expression.is_binary_expression()) {
         add_binary_operation_to_body(reinterpret_cast<SIR::BinaryExpression&>(expression), new_body, parameters);
     } else if (expression.is_identifier_expression()) {
-        //TODO: fix later when names are bound to a variable
-        auto identifier_expression = parameters.ptr_at(0);
-        auto var = create_ast_node<SIR::Variable>(identifier_expression->node_type(), identifier_expression->name());
-        new_body.append(var);
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -64,7 +57,6 @@ static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<S
         if (return_statement.expression()) {
             add_expression_to_body(return_statement.expression().release_nonnull(), new_body, parameters);
             return_statement.set_expression(new_body.ptr_at(new_body.size() - 1));
-            return_statement.expression()->ref();
         } else {
             TODO();
         }
@@ -79,12 +71,7 @@ static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNod
         add_expression_to_body(node, new_body, parameters);
     else if (node.is_statement())
         add_statement_to_body(node, new_body, parameters);
-    else if (node.is_variable()) {
-        auto& var = reinterpret_cast<SIR::Variable&>(node);
-
-        assert(var.is_variable());
-        new_body.append(MiddleEnd::Utils::create_store(var.node_type(), var.name()));
-    } else
+    else
         ASSERT_NOT_REACHED();
 }
 

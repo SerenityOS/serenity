@@ -54,6 +54,9 @@ private:
     Token consume(Token::Type expected_type);
     void consume();
     [[noreturn]] void parse_error(StringView message);
+    NonnullRefPtr<Variable> create_unnamed_var(NonnullRefPtr<Type>& type);
+    template<typename... Args>
+    BinaryExpression& maybe_correct_binop_tree(BinaryExpression& result, Expression& right, Args... args);
 
     TranslationUnit parse_translation_unit();
     Optional<String> parse_unqualified_id();
@@ -74,11 +77,6 @@ private:
     NonnullRefPtrVector<Variable> parse_parameter_declaration_list();
     NonnullRefPtrVector<Variable> parse_parameter_declaration_clause();
     NonnullRefPtrVector<Variable> parse_parameters_and_qualifiers();
-
-    ByteBuffer m_file_content;
-    Lexer m_lexer;
-    Optional<Token> m_saved_token;
-    TranslationUnit m_tu;
     NonnullRefPtrVector<ASTNode> parse_compound_statement();
     NonnullRefPtrVector<ASTNode> parse_function_body();
     NonnullRefPtr<Expression> parse_primary_expression();
@@ -103,5 +101,11 @@ private:
     NonnullRefPtr<Statement> parse_jump_statement();
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<Statement> parse_statement_seq();
+
+    ByteBuffer m_file_content;
+    Lexer m_lexer;
+    Optional<Token> m_saved_token;
+    TranslationUnit m_tu;
+    size_t m_unnamed_var_counter { 0 };
 };
 }

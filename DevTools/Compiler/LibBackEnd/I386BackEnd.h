@@ -56,6 +56,6 @@ private:
     const Cpp::Option& m_options;
     NonnullRefPtr<Core::File> m_output_file;
 
-    constexpr static size_t m_stack_start = 8;
+    constexpr static size_t m_param_stack_start = 8;
 };
 }

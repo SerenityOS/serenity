@@ -40,7 +40,6 @@ namespace Cpp {
 
 // all the parse_* methods and their comments are based on https://isocpp.org/files/papers/N4860.pdf
 
-
 Token Parser::get_next_token_skip_comment_and_whitespaces()
 {
     if (m_saved_token.has_value())
@@ -86,6 +85,39 @@ Token Parser::consume(Token::Type expected_type)
     }
     consume();
     return tok;
+}
+
+NonnullRefPtr<Variable> Parser::create_unnamed_var(NonnullRefPtr<Type>& type)
+{
+    StringBuilder sb;
+
+    sb.appendf("_.%zu", m_unnamed_var_counter++);
+    auto name = sb.build();
+    return create_ast_node<Variable>(type, name);
+}
+
+/*
+ * When parsing two operator with the same precedence, it will produce a tree with the branches inverted.
+ * `i + j - k` will have a tree like `i + (j -k)`. This method transforms that tree into `(i + j) -k`.
+ */
+template<typename... Args>
+BinaryExpression& Parser::maybe_correct_binop_tree(BinaryExpression& result, Expression& right, Args... args)
+{
+    if (right.is_binary_expression()) {
+        auto& bi_right = reinterpret_cast<BinaryExpression&>(right);
+
+        auto any_operator_match = [](auto const& expected, auto const&... rest) {
+            return ((expected == rest) || ...);
+        }(bi_right.binary_operation(), args...);
+
+        if (any_operator_match) {
+            auto right_left_node = bi_right.left();
+            result.set_right(right_left_node);
+            bi_right.set_left(result);
+            return bi_right;
+        }
+    }
+    return result;
 }
 
 void Parser::parse_error(StringView message)
@@ -266,8 +298,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     SCOPE_LOGGER();
     auto id = parse_id_expression();
     if (id.has_value()) {
-        auto return_type = RefPtr<Variable>();
-        return create_ast_node<IdentifierExpression>(id.value(), return_type);
+        //TODO: should disapear when result will be bound to a variable
+        auto return_type = create_ast_node<Variable>(create_ast_node<SignedIntType>(), id.value());
+        return create_ast_node<IdentifierExpression>(return_type);
     } else {
         parse_error("expected identifier");
     }
@@ -311,11 +344,14 @@ NonnullRefPtr<Expression> Parser::parse_pm_expression()
 NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
 {
     SCOPE_LOGGER();
-    NonnullRefPtr<ASTNode> left = parse_pm_expression();
+    auto left = parse_pm_expression();
     if (peek().m_type == Token::Type::Asterisk) {
         consume();
-        NonnullRefPtr<ASTNode> right = parse_multiplicative_expression();
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, left, right, nullptr);
+        auto right = parse_multiplicative_expression();
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        auto result = create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, left, right, create_unnamed_var(left->result()->node_type()));
+        return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Multiplication);
     }
     return left;
 }
@@ -327,15 +363,16 @@ NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
 NonnullRefPtr<Expression> Parser::parse_additive_expression()
 {
     SCOPE_LOGGER();
-    NonnullRefPtr<ASTNode> left = parse_multiplicative_expression();
-    if (peek().m_type == Token::Type::Plus) {
+    auto left = parse_multiplicative_expression();
+    if (peek().m_type == Token::Type::Plus || peek().m_type == Token::Type::Minus) {
+        auto operation = peek().m_type == Token::Type::Plus ? BinaryExpression::Kind::Addition : BinaryExpression::Kind::Subtraction;
         consume();
-        NonnullRefPtr<ASTNode> right = parse_additive_expression();
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Addition, left, right, nullptr);
-    } else if (peek().m_type == Token::Type::Minus) {
-        consume();
-        NonnullRefPtr<ASTNode> right = parse_additive_expression();
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Subtraction, left, right, nullptr);
+        auto right = parse_additive_expression();
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        auto result = create_ast_node<BinaryExpression>(operation, left, right, create_unnamed_var(left->result()->node_type()));
+
+        return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Subtraction, BinaryExpression::Kind::Addition);
     }
     return left;
 }
@@ -437,8 +474,6 @@ NonnullRefPtr<Expression> Parser::parse_expr_or_braced_init_list()
     return parse_expression();
 }
 
-
-
 // parse_jump_statement
 //      - return expr-or-braced-init-list ;
 NonnullRefPtr<Statement> Parser::parse_jump_statement()
@@ -467,10 +502,6 @@ NonnullRefPtr<Statement> Parser::parse_statement_seq()
     SCOPE_LOGGER();
     return parse_statement();
 }
-
-
-
-
 
 // compound-statement:
 //      - { [statement-seq] }

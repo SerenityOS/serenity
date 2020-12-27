@@ -95,8 +95,8 @@ private:
 
 class Variable : public ASTNode {
 public:
-    Variable(NonnullRefPtr<Type>& node_type, String& name)
-        : m_node_type(node_type)
+    Variable(NonnullRefPtr<Type> node_type, String& name)
+        : m_node_type(move(node_type))
         , m_name(name)
     {
     }
@@ -119,16 +119,17 @@ public:
 
 class Expression : public ASTNode {
 public:
-    explicit Expression(RefPtr<Variable>& result)
+    explicit Expression(NonnullRefPtr<Variable>& result)
         : m_result(result)
     {
     }
     bool is_expression() const override { return true; }
 
-    const RefPtr<Variable>& result() const { return m_result; }
+    const NonnullRefPtr<Variable>& result() const { return m_result; }
+    NonnullRefPtr<Variable>& result() { return m_result; }
 
 private:
-    RefPtr<Variable> m_result;
+    NonnullRefPtr<Variable> m_result;
 };
 
 class BinaryExpression : public Expression {
@@ -138,31 +139,33 @@ public:
         Multiplication,
         Subtraction
     };
-    BinaryExpression(Kind kind, NonnullRefPtr<ASTNode>& left, NonnullRefPtr<ASTNode>& right, RefPtr<Variable> result)
+    BinaryExpression(Kind kind, NonnullRefPtr<ASTNode> left, NonnullRefPtr<ASTNode> right, NonnullRefPtr<Variable> result)
         : Expression(result)
         , m_binary_operation(kind)
-        , m_left(left)
-        , m_right(right)
+        , m_left(move(left))
+        , m_right(move(right))
     {
     }
 
     bool is_binary_expression() const override { return true; }
 
-    const NonnullRefPtr<ASTNode>& left() const { return m_left; }
-    NonnullRefPtr<ASTNode>& left() { return m_left; }
-    const NonnullRefPtr<ASTNode>& right() const { return m_right; }
-    NonnullRefPtr<ASTNode>& right() { return m_right; }
+    const NonnullRefPtr<Expression>& left() const { return m_left; }
+    NonnullRefPtr<Expression>& left() { return m_left; }
+    const NonnullRefPtr<Expression>& right() const { return m_right; }
+    NonnullRefPtr<Expression>& right() { return m_right; }
+    void set_right(NonnullRefPtr<Expression> right) {m_right = right; }
+    void set_left(NonnullRefPtr<Expression> left) {m_left = left; }
     Kind binary_operation() const { return m_binary_operation; }
 
 private:
     Kind m_binary_operation;
-    NonnullRefPtr<ASTNode> m_left;
-    NonnullRefPtr<ASTNode> m_right;
+    NonnullRefPtr<Expression> m_left;
+    NonnullRefPtr<Expression> m_right;
 };
 
 class PrimaryExpression : public Expression {
 public:
-    explicit PrimaryExpression(RefPtr<Variable> result)
+    explicit PrimaryExpression(NonnullRefPtr<Variable> result)
         : Expression(result)
     {
     }
@@ -171,23 +174,17 @@ public:
 
 class IdentifierExpression : public PrimaryExpression {
 public:
-    //TODO: m_identifier should disapear to replace result
-    explicit IdentifierExpression(String& identifier, RefPtr<Variable>& result)
+    explicit IdentifierExpression(NonnullRefPtr<Variable> result)
         : PrimaryExpression(result)
-        , m_identifier(identifier)
+
     {
     }
     bool is_identifier_expression() const override { return true; }
-
-private:
-    String m_identifier;
 };
 
 class ReturnStatement : public Statement {
 public:
-    explicit ReturnStatement()
-    {
-    }
+    ReturnStatement() = default;
     explicit ReturnStatement(RefPtr<Expression>& expression)
         : m_expression(expression)
     {

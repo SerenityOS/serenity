@@ -124,7 +124,7 @@ static void check_expected_result(const String& test_file_name, const Vector<Exp
     for (auto& ex : expected) {
         if (!content.contains(ex.expected)) {
             warnln("test failed: {}", test_file_name);
-            warnln("could not find'{}'\nin\n'{}'\n", ex.expected, content);
+            warnln("could not find'{}'", ex.expected, content);
         }
     }
     remove(tmpname);

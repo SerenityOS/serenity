@@ -31,15 +31,4 @@ NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>& type, String
 {
     return create_ast_node<SIR::Variable>(type, name);
 }
-
-NonnullRefPtr<SIR::BinaryExpression> create_binary_operation(NonnullRefPtr<SIR::Variable>& left, NonnullRefPtr<SIR::Variable>& right, SIR::BinaryExpression::Kind operation)
-{
-    assert(left->node_type()->kind() == right->node_type()->kind());
-    assert(left->node_type()->size_in_bytes() == right->node_type()->size_in_bytes());
-    assert(left->node_type()->size_in_bits() == right->node_type()->size_in_bits());
-    auto result = RefPtr(create_store(left->node_type(), left->name()));
-
-    return create_ast_node<SIR::BinaryExpression>(operation, reinterpret_cast<NonnullRefPtr<SIR::ASTNode>&>(left), reinterpret_cast<NonnullRefPtr<SIR::ASTNode>&>(right), reinterpret_cast<RefPtr<SIR::Variable>&>(result));
-}
-
 }
