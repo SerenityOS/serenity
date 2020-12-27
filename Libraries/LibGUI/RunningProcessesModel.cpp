@@ -26,6 +26,7 @@
 
 #include <AK/SharedBuffer.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/RunningProcessesModel.h>
 
 namespace GUI {
@@ -54,13 +55,8 @@ void RunningProcessesModel::update()
         Process process;
         process.pid = it.value.pid;
         process.uid = it.value.uid;
-        if (it.value.icon_id != -1) {
-            if (auto icon_buffer = SharedBuffer::create_from_shbuf_id(it.value.icon_id)) {
-                process.icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *icon_buffer, { 16, 16 });
-            }
-        }
+        process.icon = FileIconProvider::icon_for_path(it.value.executable).bitmap_for_size(16);
         process.name = it.value.name;
-
         m_processes.append(move(process));
     }
 
