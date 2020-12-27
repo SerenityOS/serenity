@@ -217,7 +217,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         auto byte_y = (absolute_y - hex_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
-        if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
+        if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
 #ifdef HEX_DEBUG
@@ -239,7 +239,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         auto byte_y = (absolute_y - text_start_y) / line_height();
         auto offset = (byte_y * m_bytes_per_row) + byte_x;
 
-        if (offset < 0 || offset > static_cast<int>(m_buffer.size()))
+        if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
 #ifdef HEX_DEBUG
