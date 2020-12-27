@@ -49,6 +49,7 @@ public:
         None,
         Markdown,
         HTML,
+        GML
     };
 
     void set_preview_mode(PreviewMode);
@@ -61,6 +62,7 @@ private:
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();
+    void update_GML_preview();
     void update_statusbar_cursor_position();
 
     virtual void drop_event(GUI::DropEvent&) override;
@@ -86,6 +88,7 @@ private:
     GUI::ActionGroup m_preview_actions;
     RefPtr<GUI::Action> m_no_preview_action;
     RefPtr<GUI::Action> m_markdown_preview_action;
+    RefPtr<GUI::Action> m_gml_preview_action;
     RefPtr<GUI::Action> m_html_preview_action;
 
     RefPtr<GUI::StatusBar> m_statusbar;

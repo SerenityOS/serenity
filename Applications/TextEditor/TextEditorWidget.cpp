@@ -407,9 +407,16 @@ TextEditorWidget::TextEditorWidget()
         },
         this);
 
+    m_gml_preview_action = GUI::Action::create_checkable(
+        "GML preview", [this](auto&) {
+            set_preview_mode(PreviewMode::GML);
+        },
+        this);
+
     m_preview_actions.add_action(*m_no_preview_action);
     m_preview_actions.add_action(*m_markdown_preview_action);
     m_preview_actions.add_action(*m_html_preview_action);
+    m_preview_actions.add_action(*m_gml_preview_action);
     m_preview_actions.set_exclusive(true);
 
     auto& view_menu = menubar->add_menu("View");
@@ -418,6 +425,7 @@ TextEditorWidget::TextEditorWidget()
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_action(*m_html_preview_action);
+    view_menu.add_action(*m_gml_preview_action);
     view_menu.add_separator();
 
     font_actions.set_exclusive(true);
@@ -531,6 +539,8 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
             set_preview_mode(PreviewMode::Markdown);
         else if (m_extension == "html")
             set_preview_mode(PreviewMode::HTML);
+        else if (m_extension == "gml")
+            set_preview_mode(PreviewMode::GML);
         else
             set_preview_mode(PreviewMode::None);
     }
@@ -613,6 +623,10 @@ void TextEditorWidget::set_preview_mode(PreviewMode mode)
         m_markdown_preview_action->set_checked(true);
         m_page_view->set_visible(true);
         update_markdown_preview();
+    } else if (m_preview_mode == PreviewMode::GML) {
+        m_gml_preview_action->set_checked(true);
+        m_page_view->set_visible(true);
+        update_GML_preview();
     } else {
         m_no_preview_action->set_checked(true);
         m_page_view->set_visible(false);
@@ -627,6 +641,9 @@ void TextEditorWidget::update_preview()
         break;
     case PreviewMode::HTML:
         update_html_preview();
+        break;
+    case PreviewMode::GML:
+        update_GML_preview();
         break;
     default:
         break;
@@ -648,6 +665,13 @@ void TextEditorWidget::update_html_preview()
 {
     auto current_scroll_pos = m_page_view->visible_content_rect();
     m_page_view->load_html(m_editor->text(), URL::create_with_file_protocol(m_path));
+    m_page_view->scroll_into_view(current_scroll_pos, true, true);
+}
+
+void TextEditorWidget::update_GML_preview()
+{
+    auto current_scroll_pos = m_page_view->visible_content_rect();
+    m_page_view->load_from_gml(m_editor->text());
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 
