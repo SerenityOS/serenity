@@ -196,6 +196,8 @@ public:
 
     void update_cursor(Badge<Widget>) { update_cursor(); }
 
+    void did_disable_focused_widget(Badge<Widget>);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

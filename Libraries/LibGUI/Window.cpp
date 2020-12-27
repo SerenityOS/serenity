@@ -927,4 +927,9 @@ void Window::focus_a_widget_if_possible(FocusSource source)
         set_focused_widget(focusable_widgets[0], source);
 }
 
+void Window::did_disable_focused_widget(Badge<Widget>)
+{
+    focus_a_widget_if_possible(FocusSource::Mouse);
+}
+
 }
