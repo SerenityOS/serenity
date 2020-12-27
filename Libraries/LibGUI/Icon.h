@@ -29,7 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <LibGfx/Forward.h>
+#include <LibGfx/Bitmap.h>
 
 namespace GUI {
 
