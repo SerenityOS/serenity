@@ -45,6 +45,11 @@ public:
     virtual String to_utf8(const StringView&) override;
 };
 
+class Latin2Decoder final : public Decoder {
+public:
+    virtual String to_utf8(const StringView&) override;
+};
+
 Decoder* decoder_for(const String& encoding);
 String get_standardized_encoding(const String& encoding);
 bool is_standardized_encoding(const String& encoding);
