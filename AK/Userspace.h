@@ -60,7 +60,6 @@ public:
     Userspace(FlatPtr ptr)
         : m_ptr(ptr)
     {
-        ASSERT(m_ptr < 0xc0000000);
     }
 
     FlatPtr ptr() const { return m_ptr; }
