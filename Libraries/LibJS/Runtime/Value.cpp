@@ -134,15 +134,13 @@ static String double_to_string(double d)
 
     auto number_string = number_string_builder.to_string();
 
-    // HACK: (sunverwerth) I'm not sure how the ECMAScript spec deals with numbers that
-    // can not be exactly represented in IEE754 so I'm cutting off after the 15th fractional digit.
-    // Otherwise 3.14.toString() would come out as "3.140000000000000124344978758017532527446746826171875"
-    // Chrome and Firefox output the expected "3.14" here
+    // FIXME: Remove this hack.
+    // FIXME: Instead find the shortest round-trippable representation.
+    // Remove decimals after the 15th position
     if (end_index > intpart_end + 15) {
         exponent += end_index - intpart_end - 15;
         end_index = intpart_end + 15;
     }
-    // HACK end
 
     // remove leading zeroes
     while (start_index < end_index && number_string[start_index] == '0') {

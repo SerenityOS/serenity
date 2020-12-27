@@ -87,8 +87,7 @@ describe("correct behavior", () => {
     test("floating point keys", () => {
         const math = { 3.14: "pi" };
         expect(math["3.14"]).toBe("pi");
-        // FIXME: Floating point literals are coerced to i32
-        // expect(math[3.14]).toBe("pi");
+        expect(math[3.14]).toBe("pi");
     });
 
     test("keywords as property keys", () => {
