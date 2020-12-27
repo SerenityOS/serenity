@@ -176,7 +176,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_resizable(false);
-    window->resize(200, 230);
+    window->resize(200, 240);
     window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
@@ -189,7 +189,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     radio_container.set_layout<GUI::VerticalBoxLayout>();
     radio_container.layout()->set_margins({ 6, 16, 6, 6 });
     radio_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    radio_container.set_preferred_size(100, 70);
+    radio_container.set_preferred_size(100, 80);
 
     auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (Audible) System Bell");
     auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (Visual) Terminal Bell");
