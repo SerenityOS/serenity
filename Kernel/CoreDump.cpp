@@ -159,7 +159,7 @@ KResult CoreDump::write_program_headers(size_t notes_size)
     notes_pheader.p_vaddr = 0;
     notes_pheader.p_paddr = 0;
     notes_pheader.p_filesz = notes_size;
-    notes_pheader.p_memsz = 0;
+    notes_pheader.p_memsz = notes_size;
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
