@@ -728,6 +728,10 @@ void Widget::set_enabled(bool enabled)
         return IterationDecision::Continue;
     });
 
+    if (!m_enabled && window() && window()->focused_widget() == this) {
+        window()->did_disable_focused_widget({});
+    }
+
     Event e(Event::EnabledChange);
     event(e);
     update();
