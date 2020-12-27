@@ -20,17 +20,17 @@ for cmd in \
         Meta/lint-executable-resources.sh \
         Meta/lint-ipc-ids.sh \
         Meta/lint-shell-scripts.sh; do
-    echo "Running $cmd... "
-    if $cmd; then
-	echo -e "[${GREEN}OK${NC}]: ${cmd}"
+    echo "Running ${cmd}... "
+    if "${cmd}" "$@"; then
+        echo -e "[${GREEN}OK${NC}]: ${cmd}"
     else
-	echo -e "[${RED}FAIL${NC}]: ${cmd}"
-	((FAILURES+=1))
+        echo -e "[${RED}FAIL${NC}]: ${cmd}"
+        ((FAILURES+=1))
     fi
 done
 
 echo "Running Meta/lint-clang-format.sh"
-if Meta/lint-clang-format.sh --overwrite-inplace && git diff --exit-code; then
+if Meta/lint-clang-format.sh --overwrite-inplace "$@" && git diff --exit-code; then
     echo -e "[${GREEN}OK${NC}]: Meta/lint-clang-format.sh"
 else
     echo -e "[${RED}FAIL${NC}]: Meta/lint-clang-format.sh"
