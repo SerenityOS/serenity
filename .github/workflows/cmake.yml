@@ -136,3 +136,48 @@ jobs:
     - name: Build Lagom with Fuzzers
       working-directory: ${{ github.workspace }}/Meta/Lagom/Build
       run: cmake --build .
+  build_and_test_on_macos:
+    runs-on: macos-11.0
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: brew install coreutils ninja
+    - name: Check versions
+      run: set +e; g++ --version; g++-10 --version; clang --version; clang++ --version; python --version; python3 --version; ninja --version
+    - name: Toolchain cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/Toolchain/Cache/
+        # This assumes that *ALL* LibC headers have an impact on the Toolchain.
+        # This is wrong, and causes more Toolchain rebuilds than necessary.
+        # However, we want to avoid false cache hits at all costs.
+        key: ${{ runner.os }}-toolchain-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch') }}
+    - name: Restore or regenerate Toolchain
+      run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
+
+    # TODO: ccache
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: Create build environment
+      working-directory: ${{ github.workspace }}
+      # Note that this needs to run *even if* the Toolchain was built,
+      # in order to set options like BUILD_LAGOM.
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake .. -GNinja -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1 -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+
+    # === ACTUALLY BUILD AND TEST ===
+
+    - name: Build Serenity and Tests
+      working-directory: ${{ github.workspace }}/Build
+      run: cmake --build .
+    - name: Run CMake tests
+      working-directory: ${{ github.workspace }}/Build
+      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test
+      timeout-minutes: 2
+    - name: Run JS tests
+      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      run: DISABLE_DBG_OUTPUT=1 ./test-js
