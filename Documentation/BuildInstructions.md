@@ -61,7 +61,7 @@ Ensure your CMake version is >= 3.16 with `cmake --version`. If your system does
 Make sure you have all the dependencies installed:
 ```bash
 brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10
-brew cask install osxfuse
+brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
 ```
 
