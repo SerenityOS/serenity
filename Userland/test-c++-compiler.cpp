@@ -61,7 +61,8 @@ static Vector<String> get_test_paths(String& root_path)
 
 struct ExpectedTestResult {
     enum Action {
-        ScanAsm
+        FindInAsm,
+        FindNotInAsm,
     } action;
     String expected;
 };
@@ -99,7 +100,9 @@ static Vector<ExpectedTestResult> get_expected_result(const String& test_file_na
                 content.replace("[[:blank:]]", "\t", true);
 
                 if (content.starts_with("find-in-asm:")) {
-                    expected.empend(ExpectedTestResult::Action::ScanAsm, content.substring(sizeof "find-in-asm:"));
+                    expected.empend(ExpectedTestResult::Action::FindInAsm, content.substring(sizeof "find-in-asm:"));
+                } else if (content.starts_with("find-not-in-asm:")) {
+                    expected.empend(ExpectedTestResult::Action::FindNotInAsm, content.substring(sizeof "find-not-in-asm:"));
                 } else {
                     warnln("unknown action/...");
                     TODO();
@@ -122,9 +125,12 @@ static void check_expected_result(const String& test_file_name, const Vector<Exp
     auto buffer = f.value()->read_all();
     StringView content = buffer;
     for (auto& ex : expected) {
-        if (!content.contains(ex.expected)) {
+        if ((ex.action == ExpectedTestResult::Action::FindInAsm && !content.contains(ex.expected))) {
             warnln("test failed: {}", test_file_name);
-            warnln("could not find'{}'", ex.expected, content);
+            warnln("could not find '{}'", ex.expected, content);
+        } else if ((ex.action == ExpectedTestResult::Action::FindNotInAsm && content.contains(ex.expected))) {
+            warnln("test failed: {}", test_file_name);
+            warnln("should not have found '{}'", ex.expected, content);
         }
     }
     remove(tmpname);

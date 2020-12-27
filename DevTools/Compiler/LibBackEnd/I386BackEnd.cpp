@@ -78,7 +78,7 @@ void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
             //TODO: clear other var in eax
             variables_already_seen.set(binop.result()->name(), "%eax");
             var_in_eax = binop.result();
-        } else if (operation.is_statement()) {
+        } else if (operation.is_return_statement()) {
             m_output_file->printf("\tpopl\t%%ebp\n");
             m_output_file->printf("\tret\n");
         } else if (operation.is_variable()) {
@@ -91,8 +91,6 @@ void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
             ASSERT_NOT_REACHED();
         }
     }
-    m_output_file->printf("\tpopl\t%%ebp\n");
-    m_output_file->printf("\tret\n");
 
     m_output_file->printf("\t.size %s, .-%s\n", function.name().characters(), function.name().characters());
 }

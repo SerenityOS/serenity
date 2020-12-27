@@ -36,3 +36,10 @@ void f3(int, int) {}
 
 //$ find-in-asm: movl[[:blank:]]60(%ebp), %eax
 void f4(int, int, int, int, int, int, int, int, int, int, int, int, int, int) {}
+
+/*$ find-not-in-asm:
+[[:blank:]]popl[[:blank:]]%ebp
+[[:blank:]]ret
+[[:blank:]]popl[[:blank:]]%ebp
+[[:blank:]]ret
+*/
