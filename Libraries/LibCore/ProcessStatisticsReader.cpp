@@ -75,7 +75,6 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
         process.amount_clean_inode = process_object.get("amount_clean_inode").to_u32();
         process.amount_purgeable_volatile = process_object.get("amount_purgeable_volatile").to_u32();
         process.amount_purgeable_nonvolatile = process_object.get("amount_purgeable_nonvolatile").to_u32();
-        process.icon_id = process_object.get("icon_id").to_int();
 
         auto& thread_array = process_object.get_ptr("threads")->as_array();
         process.threads.ensure_capacity(thread_array.size());

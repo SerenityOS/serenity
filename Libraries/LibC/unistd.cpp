@@ -550,12 +550,6 @@ void sync()
     syscall(SC_sync);
 }
 
-int set_process_icon(int icon_id)
-{
-    int rc = syscall(SC_set_process_icon, icon_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 static String getlogin_buffer;
 
 char* getlogin()

@@ -41,20 +41,6 @@ pid_t Process::sys$getppid()
     return m_ppid.value();
 }
 
-int Process::sys$set_process_icon(int icon_id)
-{
-    REQUIRE_PROMISE(shared_buffer);
-    LOCKER(shared_buffers().lock());
-    auto it = shared_buffers().resource().find(icon_id);
-    if (it == shared_buffers().resource().end())
-        return -EINVAL;
-    auto& shared_buffer = *(*it).value;
-    if (!shared_buffer.is_shared_with(m_pid))
-        return -EPERM;
-    m_icon_id = icon_id;
-    return 0;
-}
-
 int Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(stdio);

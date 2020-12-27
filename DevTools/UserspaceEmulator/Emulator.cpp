@@ -496,8 +496,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$kill(arg1, arg2);
     case SC_set_mmap_name:
         return virt$set_mmap_name(arg1);
-    case SC_set_process_icon:
-        return virt$set_process_icon(arg1);
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -742,11 +740,6 @@ int Emulator::virt$listen(int fd, int backlog)
 int Emulator::virt$kill(pid_t pid, int signal)
 {
     return syscall(SC_kill, pid, signal);
-}
-
-int Emulator::virt$set_process_icon(int shbuf_id)
-{
-    return syscall(SC_set_process_icon, shbuf_id);
 }
 
 int Emulator::virt$gettimeofday(FlatPtr timeval)

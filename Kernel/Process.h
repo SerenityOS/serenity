@@ -340,7 +340,6 @@ public:
     int sys$shbuf_set_volatile(int shbuf_id, bool);
     int sys$halt();
     int sys$reboot();
-    int sys$set_process_icon(int icon_id);
     int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
     ssize_t sys$getrandom(Userspace<void*>, size_t, unsigned int);
     int sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
@@ -455,11 +454,6 @@ public:
     Lock& big_lock()
     {
         return m_big_lock;
-    }
-
-    int icon_id() const
-    {
-        return m_icon_id;
     }
 
     u32 priority_boost() const
@@ -629,8 +623,6 @@ private:
     mutable SpinLock<u32> m_lock;
 
     RefPtr<Timer> m_alarm_timer;
-
-    int m_icon_id { -1 };
 
     u32 m_priority_boost { 0 };
 

@@ -881,7 +881,6 @@ static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_shared", process.amount_shared());
         process_object.add("amount_purgeable_volatile", process.amount_purgeable_volatile());
         process_object.add("amount_purgeable_nonvolatile", process.amount_purgeable_nonvolatile());
-        process_object.add("icon_id", process.icon_id());
         process_object.add("dumpable", process.is_dumpable());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {

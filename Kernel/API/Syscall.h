@@ -157,7 +157,6 @@ namespace Kernel {
     S(dbgputstr)              \
     S(watch_file)             \
     S(shbuf_allow_all)        \
-    S(set_process_icon)       \
     S(mprotect)               \
     S(realpath)               \
     S(get_process_name)       \
