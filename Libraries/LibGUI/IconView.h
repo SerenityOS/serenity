@@ -38,6 +38,14 @@ class IconView : public AbstractView {
 public:
     virtual ~IconView() override;
 
+    enum class FlowDirection {
+        LeftToRight,
+        TopToBottom,
+    };
+
+    FlowDirection flow_direction() const { return m_flow_direction; }
+    void set_flow_direction(FlowDirection);
+
     int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
@@ -120,6 +128,7 @@ private:
     void get_item_rects(int item_index, ItemData& item_data, const Gfx::Font&) const;
     bool update_rubber_banding(const Gfx::IntPoint&);
     void scroll_out_of_view_timer_fired();
+    int items_per_page() const;
 
     void reinit_item_cache() const;
     int model_index_to_item_index(const ModelIndex& model_index) const
@@ -157,6 +166,8 @@ private:
     Gfx::IntPoint m_rubber_band_current;
 
     ModelIndex m_drop_candidate_index;
+
+    FlowDirection m_flow_direction { FlowDirection::LeftToRight };
 
     mutable Vector<ItemData> m_item_data_cache;
     mutable int m_selected_count_cache { 0 };

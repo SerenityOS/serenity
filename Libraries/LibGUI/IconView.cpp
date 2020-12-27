@@ -129,7 +129,9 @@ auto IconView::item_data_from_content_position(const Gfx::IntPoint& content_posi
         return nullptr;
     int row, column;
     column_row_from_content_position(content_position, row, column);
-    int item_index = row * m_visual_column_count + column;
+    int item_index = (m_flow_direction == FlowDirection::LeftToRight)
+        ? row * m_visual_column_count + column
+        : column * m_visual_row_count + row;
     if (item_index < 0 || item_index >= item_count())
         return nullptr;
     return &get_item_data(item_index);
@@ -154,14 +156,26 @@ void IconView::update_content_size()
     if (!model())
         return set_content_size({});
 
-    m_visual_column_count = max(1, available_size().width() / effective_item_size().width());
-    if (m_visual_column_count)
-        m_visual_row_count = ceil_div(model()->row_count(), m_visual_column_count);
-    else
-        m_visual_row_count = 0;
+    int content_width;
+    int content_height;
 
-    int content_width = available_size().width();
-    int content_height = m_visual_row_count * effective_item_size().height();
+    if (m_flow_direction == FlowDirection::LeftToRight) {
+        m_visual_column_count = max(1, available_size().width() / effective_item_size().width());
+        if (m_visual_column_count)
+            m_visual_row_count = ceil_div(model()->row_count(), m_visual_column_count);
+        else
+            m_visual_row_count = 0;
+        content_width = available_size().width();
+        content_height = m_visual_row_count * effective_item_size().height();
+    } else {
+        m_visual_row_count = max(1, available_size().height() / effective_item_size().height());
+        if (m_visual_row_count)
+            m_visual_column_count = ceil_div(model()->row_count(), m_visual_row_count);
+        else
+            m_visual_column_count = 0;
+        content_width = m_visual_column_count * effective_item_size().width();
+        content_height = available_size().height();
+    }
 
     set_content_size({ content_width, content_height });
 
@@ -179,8 +193,17 @@ Gfx::IntRect IconView::item_rect(int item_index) const
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return {};
-    int visual_row_index = item_index / m_visual_column_count;
-    int visual_column_index = item_index % m_visual_column_count;
+    int visual_row_index;
+    int visual_column_index;
+
+    if (m_flow_direction == FlowDirection::LeftToRight) {
+        visual_row_index = item_index / m_visual_column_count;
+        visual_column_index = item_index % m_visual_column_count;
+    } else {
+        visual_row_index = item_index % m_visual_row_count;
+        visual_column_index = item_index / m_visual_row_count;
+    }
+
     return {
         visual_column_index * effective_item_size().width(),
         visual_row_index * effective_item_size().height(),
@@ -686,6 +709,13 @@ void IconView::set_selection(const ModelIndex& new_index)
     AbstractView::set_selection(new_index);
 }
 
+int IconView::items_per_page() const
+{
+    if (m_flow_direction == FlowDirection::LeftToRight)
+        return (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
+    return (visible_content_rect().width() / effective_item_size().width()) * m_visual_row_count;
+}
+
 void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
 {
     if (!model())
@@ -697,42 +727,63 @@ void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
         return;
     }
 
-    ModelIndex new_index;
+    auto new_row = cursor_index().row();
 
     switch (movement) {
     case CursorMovement::Right:
-        new_index = model.index(cursor_index().row() + 1, cursor_index().column());
+        if (m_flow_direction == FlowDirection::LeftToRight)
+            new_row += 1;
+        else
+            new_row += m_visual_row_count;
         break;
     case CursorMovement::Left:
-        new_index = model.index(cursor_index().row() - 1, cursor_index().column());
+        if (m_flow_direction == FlowDirection::LeftToRight)
+            new_row -= 1;
+        else
+            new_row -= m_visual_row_count;
         break;
     case CursorMovement::Up:
-        new_index = model.index(cursor_index().row() - m_visual_column_count, cursor_index().column());
+        if (m_flow_direction == FlowDirection::LeftToRight)
+            new_row -= m_visual_column_count;
+        else
+            new_row -= 1;
         break;
     case CursorMovement::Down:
-        new_index = model.index(cursor_index().row() + m_visual_column_count, cursor_index().column());
+        if (m_flow_direction == FlowDirection::LeftToRight)
+            new_row += m_visual_column_count;
+        else
+            new_row += 1;
         break;
-    case CursorMovement::PageUp: {
-        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        new_index = model.index(max(0, cursor_index().row() - items_per_page), cursor_index().column());
+    case CursorMovement::PageUp:
+        new_row = max(0, cursor_index().row() - items_per_page());
         break;
-    }
-    case CursorMovement::PageDown: {
-        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        new_index = model.index(min(model.row_count() - 1, cursor_index().row() + items_per_page), cursor_index().column());
+
+    case CursorMovement::PageDown:
+        new_row = min(model.row_count() - 1, cursor_index().row() + items_per_page());
         break;
-    }
+
     case CursorMovement::Home:
-        new_index = model.index(0, model_column());
+        new_row = 0;
         break;
     case CursorMovement::End:
-        new_index = model.index(model.row_count() - 1, model_column());
+        new_row = model.row_count() - 1;
         break;
     default:
-        break;
+        return;
     }
+    auto new_index = model.index(new_row, cursor_index().column());
     if (new_index.is_valid())
         set_cursor(new_index, selection_update);
+}
+
+void IconView::set_flow_direction(FlowDirection flow_direction)
+{
+    if (m_flow_direction == flow_direction)
+        return;
+    m_flow_direction = flow_direction;
+    m_item_data_cache.clear();
+    m_item_data_cache_valid = false;
+    update();
 }
 
 template<typename Function>
@@ -745,11 +796,22 @@ inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::In
     column_row_from_content_position(rect.top_left(), begin_row, begin_column);
     int end_row, end_column;
     column_row_from_content_position(rect.bottom_right(), end_row, end_column);
-    int items_per_column = end_column - begin_column + 1;
-    int item_index = max(0, begin_row * m_visual_column_count + begin_column);
-    int last_index = min(item_count(), end_row * m_visual_column_count + end_column + 1);
+
+    int items_per_flow_axis_step;
+    int item_index;
+    int last_index;
+    if (m_flow_direction == FlowDirection::LeftToRight) {
+        items_per_flow_axis_step = end_column - begin_column + 1;
+        item_index = max(0, begin_row * m_visual_column_count + begin_column);
+        last_index = min(item_count(), end_row * m_visual_column_count + end_column + 1);
+    } else {
+        items_per_flow_axis_step = end_row - begin_row + 1;
+        item_index = max(0, begin_column * m_visual_row_count + begin_row);
+        last_index = min(item_count(), end_column * m_visual_row_count + end_row + 1);
+    }
+
     while (item_index < last_index) {
-        for (int i = item_index; i < min(item_index + items_per_column, last_index); i++) {
+        for (int i = item_index; i < min(item_index + items_per_flow_axis_step, last_index); i++) {
             auto& item_data = get_item_data(i);
             if (item_data.is_intersecting(rect)) {
                 auto decision = f(item_data);
@@ -759,6 +821,7 @@ inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::In
         }
         item_index += m_visual_column_count;
     };
+
     return IterationDecision::Continue;
 }
 
@@ -772,5 +835,4 @@ inline IterationDecision IconView::for_each_item_intersecting_rects(const Vector
     }
     return IterationDecision::Continue;
 }
-
 }
