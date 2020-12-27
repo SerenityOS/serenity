@@ -102,42 +102,10 @@ private:
     };
 
     template<typename Function>
-    IterationDecision for_each_item_intersecting_rect(const Gfx::IntRect& rect, Function f) const
-    {
-        ASSERT(model());
-        if (rect.is_empty())
-            return IterationDecision::Continue;
-        int begin_row, begin_column;
-        column_row_from_content_position(rect.top_left(), begin_row, begin_column);
-        int end_row, end_column;
-        column_row_from_content_position(rect.bottom_right(), end_row, end_column);
-        int items_per_column = end_column - begin_column + 1;
-        int item_index = max(0, begin_row * m_visual_column_count + begin_column);
-        int last_index = min(item_count(), end_row * m_visual_column_count + end_column + 1);
-        while (item_index < last_index) {
-            for (int i = item_index; i < min(item_index + items_per_column, last_index); i++) {
-                auto& item_data = get_item_data(i);
-                if (item_data.is_intersecting(rect)) {
-                    auto decision = f(item_data);
-                    if (decision != IterationDecision::Continue)
-                        return decision;
-                }
-            }
-            item_index += m_visual_column_count;
-        };
-        return IterationDecision::Continue;
-    }
+    IterationDecision for_each_item_intersecting_rect(const Gfx::IntRect&, Function) const;
 
     template<typename Function>
-    IterationDecision for_each_item_intersecting_rects(const Vector<Gfx::IntRect>& rects, Function f) const
-    {
-        for (auto& rect : rects) {
-            auto decision = for_each_item_intersecting_rect(rect, f);
-            if (decision != IterationDecision::Continue)
-                return decision;
-        }
-        return IterationDecision::Continue;
-    }
+    IterationDecision for_each_item_intersecting_rects(const Vector<Gfx::IntRect>&, Function) const;
 
     void column_row_from_content_position(const Gfx::IntPoint& content_position, int& row, int& column) const
     {
