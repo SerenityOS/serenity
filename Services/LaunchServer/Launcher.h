@@ -30,6 +30,7 @@
 #include <AK/HashTable.h>
 #include <AK/URL.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGUI/AppFile.h>
 
 namespace LaunchServer {
 
@@ -56,7 +57,7 @@ public:
     Launcher();
     static Launcher& the();
 
-    void load_handlers(const String& af_dir);
+    void load_handlers(const String& af_dir = GUI::AppFile::APP_FILES_DIRECTORY);
     void load_config(const Core::ConfigFile&);
     bool open_url(const URL&, const String& handler_name);
     Vector<String> handlers_for_url(const URL&);
