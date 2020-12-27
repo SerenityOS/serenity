@@ -57,11 +57,7 @@ BreadcrumbBar::~BreadcrumbBar()
 void BreadcrumbBar::clear_segments()
 {
     m_segments.clear();
-
-    // FIXME: Should Core::Object have something like "remove_all_children()" perhaps?
-    auto children = this->children();
-    for (auto& child : children)
-        child.remove_from_parent();
+    remove_all_children();
 }
 
 void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, const String& data)
