@@ -36,6 +36,7 @@ namespace GUI {
 LinkLabel::LinkLabel(String text)
     : Label(move(text))
 {
+    set_override_cursor(Gfx::StandardCursor::Hand);
     set_foreground_role(Gfx::ColorRole::Link);
     set_focus_policy(FocusPolicy::TabFocus);
 }
