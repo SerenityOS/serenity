@@ -26,10 +26,10 @@
 
 #define _BSD_SOURCE
 #define _DEFAULT_SOURCE
+#include <AK/Endian.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
-#include <endian.h>
 #include <inttypes.h>
 #include <math.h>
 #include <netdb.h>
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
 
         // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
         // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
-        printf("Receive latency: %" PRId64 ".%06d s\n", kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
+        printf("Receive latency: %" PRId64 ".%06d s\n", (i64)kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
     }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
