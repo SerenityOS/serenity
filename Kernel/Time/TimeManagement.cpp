@@ -366,9 +366,8 @@ void TimeManagement::increment_time_since_boot()
     // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
     // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.
     // Once we have a smarter NTP service that also adjusts the frequency instead of just slewing time, maybe we can lower this.
-    constexpr long NanosPerTick = 1'000'000; // FIXME: Don't assume that one tick is 1 ms.
-    constexpr time_t MaxSlewNanos = NanosPerTick / 100;
-    static_assert(MaxSlewNanos < NanosPerTick);
+    long NanosPerTick = 1'000'000'000 / m_time_keeper_timer->frequency();
+    time_t MaxSlewNanos = NanosPerTick / 100;
 
     u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
 
