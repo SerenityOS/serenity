@@ -1433,8 +1433,8 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
 #endif
 
     Vector<Ext2FSDirectoryEntry> entries;
-    entries.empend(".", inode->identifier(), EXT2_FT_DIR);
-    entries.empend("..", parent_id, EXT2_FT_DIR);
+    entries.empend(".", inode->identifier(), static_cast<u8>(EXT2_FT_DIR));
+    entries.empend("..", parent_id, static_cast<u8>(EXT2_FT_DIR));
 
     bool success = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     ASSERT(success);
