@@ -503,7 +503,7 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
 {
     RefPtr<Custody> old_parent_custody;
-    auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody);
+    auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR);
     if (old_custody_or_error.is_error())
         return old_custody_or_error.error();
     auto& old_custody = *old_custody_or_error.value();
