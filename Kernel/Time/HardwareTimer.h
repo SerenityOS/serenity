@@ -58,6 +58,7 @@ public:
     virtual void set_periodic() = 0;
     virtual void set_non_periodic() = 0;
     virtual void disable() = 0;
+    virtual u32 frequency() const = 0;
 
     virtual size_t ticks_per_second() const = 0;
 
@@ -87,6 +88,8 @@ public:
         enable_irq();
         return previous_callback;
     }
+
+    virtual u32 frequency() const override { return (u32)m_frequency; }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> callback = nullptr)
@@ -130,6 +133,8 @@ public:
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
     virtual const char* controller() const override { return nullptr; }
     virtual bool eoi() override;
+
+    virtual u32 frequency() const override { return (u32)m_frequency; }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> callback = nullptr)
