@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 namespace AK {
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
