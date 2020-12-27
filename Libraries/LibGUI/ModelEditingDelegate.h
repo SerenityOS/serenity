@@ -96,7 +96,12 @@ public:
         return textbox;
     }
     virtual Variant value() const override { return static_cast<const TextBox*>(widget())->text(); }
-    virtual void set_value(const Variant& value) override { static_cast<TextBox*>(widget())->set_text(value.to_string()); }
+    virtual void set_value(const Variant& value) override
+    {
+        auto& textbox = static_cast<TextBox&>(*widget());
+        textbox.set_text(value.to_string());
+        textbox.select_all();
+    }
 };
 
 }
