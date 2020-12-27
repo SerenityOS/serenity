@@ -44,6 +44,14 @@ int main(int argc, char** argv)
 
     editor.set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
     editor.set_automatic_indentation_enabled(true);
+    editor.set_text(R"~~~(@GUI::Widget {
+    layout: @GUI::VerticalBoxLayout {
+    }
+
+    // Now add some widgets!
+}
+)~~~");
+    editor.set_cursor(4, 28); // after "...widgets!"
 
     editor.on_change = [&] {
         preview.remove_all_children();
