@@ -77,7 +77,6 @@ struct ProcessStatistics {
     size_t amount_clean_inode;
     size_t amount_purgeable_volatile;
     size_t amount_purgeable_nonvolatile;
-    int icon_id;
 
     Vector<Core::ThreadStatistics> threads;
 

@@ -126,7 +126,6 @@ private:
     int virt$unlink(FlatPtr path, size_t path_length);
     int virt$get_process_name(FlatPtr buffer, int size);
     int virt$set_mmap_name(FlatPtr);
-    int virt$set_process_icon(int);
     int virt$gettimeofday(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
     int virt$clock_nanosleep(FlatPtr);

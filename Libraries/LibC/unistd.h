@@ -61,7 +61,6 @@ int fsync(int fd);
 void sysbeep();
 int gettid();
 int donate(int tid);
-int set_process_icon(int icon_id);
 int getpagesize();
 pid_t fork();
 int execv(const char* path, char* const argv[]);

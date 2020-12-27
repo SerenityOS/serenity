@@ -58,7 +58,6 @@ struct ThreadData {
     unsigned inode_faults;
     unsigned zero_faults;
     unsigned cow_faults;
-    int icon_id;
     unsigned times_scheduled;
 
     unsigned times_scheduled_since_prev { 0 };
@@ -120,7 +119,6 @@ static Snapshot get_snapshot()
             thread_data.inode_faults = thread.inode_faults;
             thread_data.zero_faults = thread.zero_faults;
             thread_data.cow_faults = thread.cow_faults;
-            thread_data.icon_id = stats.icon_id;
             thread_data.times_scheduled = thread.times_scheduled;
             thread_data.priority = thread.priority;
             thread_data.state = thread.state;
