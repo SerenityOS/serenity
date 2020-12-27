@@ -30,7 +30,8 @@
 
 namespace TextCodec {
 
-static Latin1Decoder& latin1_decoder()
+namespace {
+Latin1Decoder& latin1_decoder()
 {
     static Latin1Decoder* decoder;
     if (!decoder)
@@ -38,12 +39,22 @@ static Latin1Decoder& latin1_decoder()
     return *decoder;
 }
 
-static UTF8Decoder& utf8_decoder()
+UTF8Decoder& utf8_decoder()
 {
     static UTF8Decoder* decoder;
     if (!decoder)
         decoder = new UTF8Decoder;
     return *decoder;
+}
+
+Latin2Decoder& latin2_decoder()
+{
+    static Latin2Decoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new Latin2Decoder;
+    return *decoder;
+}
+
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -53,6 +64,8 @@ Decoder* decoder_for(const String& a_encoding)
         return &latin1_decoder();
     if (encoding.equals_ignoring_case("utf-8"))
         return &utf8_decoder();
+    if (encoding.equals_ignoring_case("iso-8859-2"))
+        return &latin2_decoder();
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
 }
@@ -166,6 +179,95 @@ String Latin1Decoder::to_utf8(const StringView& input)
         // Latin1 is the same as the first 256 Unicode code_points, so no mapping is needed, just utf-8 encoding.
         builder.append_code_point(ch);
     }
+    return builder.to_string();
+}
+
+namespace {
+u32 convert_latin2_to_utf8(u8 in)
+{
+    switch (in) {
+
+#define MAP(X, Y) \
+    case X:       \
+        return Y
+
+        MAP(0xA1, 0x104);
+        MAP(0xA2, 0x2D8);
+        MAP(0xA3, 0x141);
+        MAP(0xA5, 0x13D);
+        MAP(0xA6, 0x15A);
+        MAP(0xA9, 0x160);
+        MAP(0xAA, 0x15E);
+        MAP(0xAB, 0x164);
+        MAP(0xAC, 0x179);
+        MAP(0xAE, 0x17D);
+        MAP(0xAF, 0x17B);
+
+        MAP(0xB1, 0x104);
+        MAP(0xB2, 0x2BD);
+        MAP(0xB3, 0x142);
+        MAP(0xB5, 0x13E);
+        MAP(0xB6, 0x15B);
+        MAP(0xB7, 0x2C7);
+        MAP(0xB9, 0x161);
+        MAP(0xBA, 0x15F);
+        MAP(0xBB, 0x165);
+        MAP(0xBC, 0x17A);
+        MAP(0xBD, 0x2DD);
+        MAP(0xBE, 0x17E);
+        MAP(0xBF, 0x17C);
+
+        MAP(0xC0, 0x154);
+        MAP(0xC3, 0x102);
+        MAP(0xC5, 0x139);
+        MAP(0xC6, 0x106);
+        MAP(0xC8, 0x10C);
+        MAP(0xCA, 0x118);
+        MAP(0xCC, 0x11A);
+        MAP(0xCF, 0x10E);
+
+        MAP(0xD0, 0x110);
+        MAP(0xD1, 0x143);
+        MAP(0xD2, 0x147);
+        MAP(0xD5, 0x150);
+        MAP(0xD8, 0x158);
+        MAP(0xD9, 0x16E);
+        MAP(0xDB, 0x170);
+        MAP(0xDE, 0x162);
+
+        MAP(0xE1, 0x155);
+        MAP(0xE3, 0x103);
+        MAP(0xE5, 0x13A);
+        MAP(0xE6, 0x107);
+        MAP(0xE8, 0x10D);
+        MAP(0xEA, 0x119);
+        MAP(0xEC, 0x11B);
+        MAP(0xEF, 0x10F);
+
+        MAP(0xF0, 0x111);
+        MAP(0xF1, 0x144);
+        MAP(0xF2, 0x148);
+        MAP(0xF5, 0x151);
+        MAP(0xF8, 0x159);
+        MAP(0xF9, 0x16F);
+        MAP(0xFB, 0x171);
+        MAP(0xFE, 0x163);
+        MAP(0xFF, 0x2D9);
+#undef MAP
+
+    default:
+        return in;
+    }
+}
+}
+
+String Latin2Decoder::to_utf8(const StringView& input)
+{
+    StringBuilder builder(input.length());
+    for (auto c : input) {
+        builder.append_code_point(convert_latin2_to_utf8(c));
+    }
+
     return builder.to_string();
 }
 
