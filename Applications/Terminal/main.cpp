@@ -434,6 +434,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/etc/FileIconProvider.ini", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
