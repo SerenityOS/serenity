@@ -248,9 +248,8 @@ void Menu::draw()
                 icon_rect.center_vertically_within(text_rect);
 
                 if (&item == hovered_item() && item.is_enabled()) {
-                    auto shadow_color = palette.threed_shadow1();
-                    shadow_color = palette.menu_selection().darkened();
-                    painter.blit_filtered(icon_rect.location(), *item.icon(), item.icon()->rect(), [&shadow_color](auto) {
+                    auto shadow_color = palette.menu_selection().darkened(0.7f);
+                    painter.blit_filtered(icon_rect.location().translated(1, 1), *item.icon(), item.icon()->rect(), [&shadow_color](auto) {
                         return shadow_color;
                     });
                     icon_rect.move_by(-1, -1);
