@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(LaunchServer)
-target_link_libraries(LaunchServer LibCore LibIPC)
+target_link_libraries(LaunchServer LibCore LibIPC LibGUI)
