@@ -32,7 +32,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define C_IN 1
+const u16 C_IN = 1;
 
 DNSRequest::DNSRequest()
     : m_id(arc4random_uniform(UINT16_MAX))
