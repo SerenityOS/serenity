@@ -65,8 +65,8 @@ void Button::paint_event(PaintEvent& event)
     if (is_being_pressed() || is_checked())
         painter.translate(1, 1);
     else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::CoolBar) {
-        auto shadow_color = palette().threed_shadow1();
-        painter.blit_filtered(icon_location, *m_icon, m_icon->rect(), [&shadow_color](auto) {
+        auto shadow_color = palette().button().darkened(0.7f);
+        painter.blit_filtered(icon_location.translated(1, 1), *m_icon, m_icon->rect(), [&shadow_color](auto) {
             return shadow_color;
         });
         icon_location.move_by(-1, -1);
