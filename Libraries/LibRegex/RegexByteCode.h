@@ -191,7 +191,7 @@ public:
         ByteCode bytecode;
 
         bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
-        bytecode.empend(1); // number of arguments
+        bytecode.empend(static_cast<u64>(1)); // number of arguments
 
         ByteCode arguments;
 
@@ -209,7 +209,7 @@ public:
         ByteCode bytecode;
 
         bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
-        bytecode.empend(1); // number of arguments
+        bytecode.empend(static_cast<u64>(1)); // number of arguments
 
         ByteCode arguments;
 

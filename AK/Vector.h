@@ -398,7 +398,7 @@ public:
     void empend(Args&&... args)
     {
         grow_capacity(m_size + 1);
-        new (slot(m_size)) T(forward<Args>(args)...);
+        new (slot(m_size)) T { forward<Args>(args)... };
         ++m_size;
     }
 
