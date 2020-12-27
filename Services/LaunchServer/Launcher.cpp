@@ -32,7 +32,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibGUI/AppFile.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -97,33 +97,18 @@ Launcher& Launcher::the()
 
 void Launcher::load_handlers(const String& af_dir)
 {
-    auto load_hashtable = [](auto& af, auto& key) {
-        HashTable<String> table;
-
-        auto config_value = af->read_entry("Launcher", key, {});
-        for (auto& entry : config_value.split(',')) {
-            auto key = entry.trim_whitespace().to_lowercase();
-            if (key.is_empty())
-                continue;
-            table.set(key);
-        }
-
-        return table;
-    };
-
-    Core::DirIterator dt(af_dir, Core::DirIterator::SkipDots);
-    while (dt.has_next()) {
-        auto af_name = dt.next_path();
-        auto af_path = String::format("%s/%s", af_dir.characters(), af_name.characters());
-        auto af = Core::ConfigFile::open(af_path);
-        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-            continue;
-        auto app_name = af->read_entry("App", "Name");
-        auto app_executable = af->read_entry("App", "Executable");
-        auto file_types = load_hashtable(af, "FileTypes");
-        auto protocols = load_hashtable(af, "Protocols");
-        m_handlers.set(app_executable, { Handler::Type::Default, move(app_name), app_executable, move(file_types), move(protocols) });
-    }
+    GUI::AppFile::for_each([&](auto af) {
+        auto app_name = af->name();
+        auto app_executable = af->executable();
+        HashTable<String> file_types;
+        for (auto& file_type : af->launcher_file_types())
+            file_types.set(file_type);
+        HashTable<String> protocols;
+        for (auto& protocol : af->launcher_protocols())
+            protocols.set(protocol);
+        m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, file_types, protocols });
+    },
+        af_dir);
 }
 
 void Launcher::load_config(const Core::ConfigFile& cfg)
