@@ -202,6 +202,7 @@ void DirectoryView::setup_model()
 void DirectoryView::setup_icon_view()
 {
     m_icon_view = add<GUI::IconView>();
+    m_icon_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
     m_icon_view->set_editable(true);
     m_icon_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
     m_icon_view->aid_create_editing_delegate = [](auto&) {
@@ -236,6 +237,7 @@ void DirectoryView::setup_icon_view()
 void DirectoryView::setup_columns_view()
 {
     m_columns_view = add<GUI::ColumnsView>();
+    m_columns_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
     m_columns_view->set_editable(true);
     m_columns_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
     m_columns_view->aid_create_editing_delegate = [](auto&) {
@@ -266,6 +268,7 @@ void DirectoryView::setup_columns_view()
 void DirectoryView::setup_table_view()
 {
     m_table_view = add<GUI::TableView>();
+    m_table_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
     m_table_view->set_editable(true);
     m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
     m_table_view->aid_create_editing_delegate = [](auto&) {
