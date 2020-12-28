@@ -62,13 +62,19 @@ public:
     }
 
 private:
+    virtual void resize_event(GUI::ResizeEvent&) override;
+
     explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
     void setup_tabs(NonnullRefPtrVector<Sheet> new_sheets);
 
+    void try_generate_tip_for_input_expression(StringView source, size_t offset);
+
     SpreadsheetView* m_selected_view { nullptr };
     RefPtr<GUI::Label> m_current_cell_label;
     RefPtr<GUI::TextEditor> m_cell_value_editor;
+    RefPtr<GUI::Window> m_inline_documentation_window;
+    RefPtr<GUI::Label> m_inline_documentation_label;
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<SpreadsheetView> m_tab_context_menu_sheet_view;
