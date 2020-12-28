@@ -741,6 +741,11 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
         if (!try_skip("(?"))
             return false;
 
+        if (done()) {
+            set_error(Error::InvalidCaptureGroup);
+            return false;
+        }
+
         ByteCode assertion_stack;
         size_t length_dummy = 0;
 
