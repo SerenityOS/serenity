@@ -58,6 +58,15 @@ static RefPtr<Gfx::Bitmap> s_symlink_emblem_small;
 static HashMap<String, Icon> s_filetype_icons;
 static HashMap<String, Vector<String>> s_filetype_patterns;
 
+static void initialize_executable_icon_if_needed()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+    initialized = true;
+    s_executable_icon = Icon::default_icon("filetype-executable");
+}
+
 static void initialize_if_needed()
 {
     static bool s_initialized = false;
@@ -78,8 +87,10 @@ static void initialize_if_needed()
     s_file_icon = Icon::default_icon("filetype-unknown");
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
-    s_executable_icon = Icon::default_icon("filetype-executable");
+
     s_filetype_image_icon = Icon::default_icon("filetype-image");
+
+    initialize_executable_icon_if_needed();
 
     for (auto& filetype : config->keys("Icons")) {
         s_filetype_icons.set(filetype, Icon::default_icon(String::formatted("filetype-{}", filetype)));
@@ -127,12 +138,14 @@ Icon FileIconProvider::icon_for_path(const String& path)
     return icon_for_path(path, stat.st_mode);
 }
 
-static Icon icon_for_executable(const String& path)
+Icon FileIconProvider::icon_for_executable(const String& path)
 {
     static HashMap<String, Icon> app_icon_cache;
 
     if (auto it = app_icon_cache.find(path); it != app_icon_cache.end())
         return it->value;
+
+    initialize_executable_icon_if_needed();
 
     // If the icon for an app isn't in the cache we attempt to load the file as an ELF image and extract
     // the serenity_app_icon_* sections which should contain the icons as raw PNG data. In the future it would

@@ -36,6 +36,7 @@ class FileIconProvider {
 public:
     static Icon icon_for_path(const String&, mode_t);
     static Icon icon_for_path(const String&);
+    static Icon icon_for_executable(const String&);
 
     static Icon filetype_image_icon();
     static Icon directory_icon();

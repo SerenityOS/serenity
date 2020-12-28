@@ -141,7 +141,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (const auto& app : g_apps) {
-        auto icon = GUI::FileIconProvider::icon_for_path(app.executable).bitmap_for_size(16);
+        auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
 
 #ifdef SYSTEM_MENU_DEBUG
         if (icon)

@@ -276,7 +276,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon: {
-            auto icon = GUI::FileIconProvider::icon_for_path(thread.current_state.executable);
+            auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
             if (auto* bitmap = icon.bitmap_for_size(16))
                 return *bitmap;
             return *m_generic_process_icon;
