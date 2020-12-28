@@ -26,10 +26,8 @@
 
 #pragma once
 
-#if defined(__serenity__) || defined(__linux__)
-
-#    include <AK/RefCounted.h>
-#    include <AK/RefPtr.h>
+#include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 
 namespace AK {
 
@@ -73,5 +71,3 @@ private:
 }
 
 using AK::SharedBuffer;
-
-#endif
