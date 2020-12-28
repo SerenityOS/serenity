@@ -31,6 +31,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
 REGISTER_WIDGET(Web, OutOfProcessWebView)
@@ -76,8 +77,14 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
         return;
 
     GUI::Painter painter(*this);
-    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
+
+    if (!m_has_usable_bitmap) {
+        painter.fill_rect(frame_inner_rect(), palette().base());
+        return;
+    }
+
+    painter.add_clip_rect(frame_inner_rect());
     painter.translate(frame_thickness(), frame_thickness());
 
     ASSERT(m_front_bitmap);
@@ -92,6 +99,7 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 
     m_front_bitmap = nullptr;
     m_back_bitmap = nullptr;
+    m_has_usable_bitmap = false;
 
     if (available_size().is_empty())
         return;
@@ -143,6 +151,7 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
 {
     if (m_back_bitmap->shbuf_id() == shbuf_id) {
+        m_has_usable_bitmap = true;
         swap(m_back_bitmap, m_front_bitmap);
         update();
     }
