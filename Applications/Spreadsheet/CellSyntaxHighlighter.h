@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Cell.h"
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/SyntaxHighlighter.h>
 
@@ -37,6 +38,10 @@ public:
     virtual ~CellSyntaxHighlighter() override;
 
     virtual void rehighlight(Gfx::Palette) override;
+    void set_cell(const Cell* cell) { m_cell = cell; }
+
+private:
+    const Cell* m_cell { nullptr };
 };
 
 }

@@ -142,6 +142,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     update();
                 };
                 m_cell_value_editor->set_enabled(true);
+                static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
 
@@ -169,9 +170,11 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 }
             };
             m_cell_value_editor->set_enabled(true);
+            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(cells.first());
         };
         m_selected_view->on_selection_dropped = [&]() {
             m_cell_value_editor->set_enabled(false);
+            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
             m_cell_value_editor->set_text("");
             m_current_cell_label->set_enabled(false);
             m_current_cell_label->set_text("");
