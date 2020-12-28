@@ -77,6 +77,9 @@ public:
     void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
+    void enter_node(const ASTNode&);
+    void exit_node(const ASTNode&);
+
     Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
 
 private:
