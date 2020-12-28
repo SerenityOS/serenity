@@ -94,8 +94,8 @@ void Reader::for_each_thread_info(Func func) const
     for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
             continue;
-        auto* region = (const ELF::Core::ThreadInfo*)(it.current());
-        IterationDecision decision = func(region);
+        auto& thread_info = reinterpret_cast<const ELF::Core::ThreadInfo&>(*it.current());
+        IterationDecision decision = func(thread_info);
         if (decision == IterationDecision::Break)
             return;
     }
