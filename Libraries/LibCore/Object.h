@@ -268,26 +268,41 @@ const LogStream& operator<<(const LogStream&, const Object&);
             return true;                                               \
         });
 
+#define REGISTER_ENUM_PROPERTY(property_name, getter, setter, EnumType, ...) \
+    register_property(                                                       \
+        property_name,                                                       \
+        [this]() -> JsonValue {                                              \
+            struct {                                                         \
+                EnumType enum_value;                                         \
+                String string_value;                                         \
+            } options[] = { __VA_ARGS__ };                                   \
+            auto enum_value = getter();                                      \
+            for (size_t i = 0; i < array_size(options); ++i) {               \
+                auto& option = options[i];                                   \
+                if (enum_value == option.enum_value)                         \
+                    return option.string_value;                              \
+            }                                                                \
+            return JsonValue();                                              \
+        },                                                                   \
+        [this](auto& value) {                                                \
+            struct {                                                         \
+                EnumType enum_value;                                         \
+                String string_value;                                         \
+            } options[] = { __VA_ARGS__ };                                   \
+            auto string_value = value.as_string();                           \
+            for (size_t i = 0; i < array_size(options); ++i) {               \
+                auto& option = options[i];                                   \
+                if (string_value == option.string_value) {                   \
+                    setter(option.enum_value);                               \
+                    return true;                                             \
+                }                                                            \
+            }                                                                \
+            return false;                                                    \
+        })
+
 #define REGISTER_SIZE_POLICY_PROPERTY(property_name, getter, setter) \
-    register_property(                                               \
-        property_name, [this]() -> JsonValue {                       \
-        auto policy = this->getter();                                \
-        if (policy == GUI::SizePolicy::Fill)                         \
-            return "Fill";                                           \
-        if (policy == GUI::SizePolicy::Fixed)                        \
-            return "Fixed";                                          \
-        return JsonValue(); },                    \
-        [this](auto& value) {                                        \
-            if (!value.is_string())                                  \
-                return false;                                        \
-            if (value.as_string() == "Fill") {                       \
-                setter(GUI::SizePolicy::Fill);                       \
-                return true;                                         \
-            }                                                        \
-            if (value.as_string() == "Fixed") {                      \
-                setter(GUI::SizePolicy::Fixed);                      \
-                return true;                                         \
-            }                                                        \
-            return false;                                            \
-        });
+    REGISTER_ENUM_PROPERTY(                                          \
+        property_name, getter, setter, GUI::SizePolicy,              \
+        { GUI::SizePolicy::Fill, "Fill" },                           \
+        { GUI::SizePolicy::Fixed, "Fixed" })
 }
