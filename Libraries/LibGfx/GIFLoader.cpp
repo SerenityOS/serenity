@@ -218,6 +218,12 @@ public:
                   << m_current_bit_index << ", code table size: " << m_code_table.size();
 #endif
             return {};
+        } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
+#ifdef GIF_DEBUG
+            dbg() << "Corrupted LZW stream, valid new code but output buffer is empty: " << m_current_code
+                  << " at bit index: " << m_current_bit_index << ", code table size: " << m_code_table.size();
+#endif
+            return {};
         }
 
         m_current_bit_index += m_code_size;
@@ -234,6 +240,7 @@ public:
             new_entry.append(m_output[0]);
             extend_code_table(new_entry);
         } else if (m_current_code == m_code_table.size()) {
+            ASSERT(!m_output.is_empty());
             m_output.append(m_output[0]);
             extend_code_table(m_output);
         }
