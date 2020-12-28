@@ -12,12 +12,13 @@ echo "$DIR"
 ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local/$ARCH"
-BUILD=$(realpath "$DIR/../Build")
+BUILD="$DIR/../Build"
 SYSROOT="$BUILD/Root"
 
 MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
+REALPATH="realpath"
 
 if command -v ginstall &>/dev/null; then
     INSTALL=ginstall
@@ -29,6 +30,7 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpuonline"
+    REALPATH="readlink -f"
     export CC=egcc
     export CXX=eg++
     export with_gmp=/usr/local
@@ -40,6 +42,12 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
 fi
+
+# On at least OpenBSD, the path must exist to call realpath(3) on it
+if [ ! -d "$BUILD" ]; then
+    mkdir -p "$BUILD"
+fi
+BUILD=$($REALPATH "$BUILD")
 
 git_patch=
 while [ "$1" != "" ]; do
@@ -236,7 +244,7 @@ pushd "$DIR/Build/$ARCH"
         mkdir -p "$BUILD"
         pushd "$BUILD"
             mkdir -p Root/usr/include/
-            SRC_ROOT=$(realpath "$DIR"/..)
+            SRC_ROOT=$($REALPATH "$DIR"/..)
             FILES=$(find "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
             for header in $FILES; do
                 target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@")

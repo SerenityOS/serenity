@@ -85,7 +85,7 @@ mkdir -p mnt/dev
 echo "done"
 
 printf "writing version file... "
-GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | head -c 7) || true )
+GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | cut -c1-7) || true )
 printf "[Version]\nMajor=1\nMinor=0\nGit=%s\n" "$GIT_HASH" > mnt/res/version.ini
 echo "done"
 
