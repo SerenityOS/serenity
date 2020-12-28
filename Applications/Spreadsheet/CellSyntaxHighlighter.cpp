@@ -51,7 +51,7 @@ void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         Optional<Color> {},
         false,
         false,
-        nullptr,
+        false,
         nullptr);
 }
 

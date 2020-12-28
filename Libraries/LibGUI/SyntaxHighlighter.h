@@ -42,8 +42,8 @@ enum class SyntaxLanguage {
 };
 
 struct TextStyle {
-    Color color;
-    const Gfx::Font* font { nullptr };
+    const Color color;
+    const bool bold { false };
 };
 
 class SyntaxHighlighter {

@@ -47,9 +47,9 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenCategory::Operator:
         return { palette.syntax_operator() };
     case JS::TokenCategory::Keyword:
-        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), true };
     case JS::TokenCategory::ControlKeyword:
-        return { palette.syntax_control_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_control_keyword(), true };
     case JS::TokenCategory::Identifier:
         return { palette.syntax_identifier() };
     default:
@@ -101,7 +101,7 @@ void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         auto type = is_trivia ? JS::TokenType::Invalid : token.type();
         auto style = style_for_token_type(palette, type);
         span.color = style.color;
-        span.font = style.font;
+        span.bold = style.bold;
         span.is_skippable = is_trivia;
         span.data = reinterpret_cast<void*>(static_cast<size_t>(type));
         spans.append(span);
