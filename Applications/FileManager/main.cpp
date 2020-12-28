@@ -175,8 +175,7 @@ void do_paste(const String& target_directory, GUI::Window* window)
 void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window)
 {
     auto path = selected_file_paths.first();
-    auto title = LexicalPath(path.view()).title();
-    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), title);
+    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath { path }.basename());
     if (!FileUtils::link_file(path, destination)) {
         GUI::MessageBox::show(window, "Could not create desktop shortcut", "File Manager",
             GUI::MessageBox::Type::Error);
