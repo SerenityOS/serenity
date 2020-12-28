@@ -919,7 +919,7 @@ void Widget::set_tooltip(const StringView& tooltip)
 void Widget::show_tooltip()
 {
     if (has_tooltip())
-        Application::the()->show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2), this);
+        Application::the()->show_tooltip(m_tooltip, this);
 }
 
 Gfx::IntRect Widget::children_clip_rect() const
