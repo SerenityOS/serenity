@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
+#include <LibJS/SourceRange.h>
 #include <stdio.h>
 
 namespace JS {
@@ -102,11 +103,6 @@ public:
     RefPtr<Statement> try_parse_labelled_statement();
     RefPtr<MetaProperty> try_parse_new_target_expression();
 
-    struct Position {
-        size_t line;
-        size_t column;
-    };
-
     struct Error {
         String message;
         Optional<Position> position;
@@ -175,6 +171,30 @@ private:
     void load_state();
     Position position() const;
 
+    struct RulePosition {
+        RulePosition(Parser& parser, Position position)
+            : m_parser(parser)
+            , m_position(position)
+        {
+            m_parser.m_parser_state.m_rule_starts.append(position);
+        }
+
+        ~RulePosition()
+        {
+            auto last = m_parser.m_parser_state.m_rule_starts.take_last();
+            ASSERT(last.line == m_position.line);
+            ASSERT(last.column == m_position.column);
+        }
+
+        const Position& position() const { return m_position; }
+
+    private:
+        Parser& m_parser;
+        Position m_position;
+    };
+
+    [[nodiscard]] RulePosition push_start() { return { *this, position() }; }
+
     struct ParserState {
         Lexer m_lexer;
         Token m_current_token;
@@ -182,6 +202,7 @@ private:
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
+        Vector<Position> m_rule_starts;
         HashTable<StringView> m_labels_in_scope;
         bool m_strict_mode { false };
         bool m_allow_super_property_lookup { false };
