@@ -38,7 +38,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, IniToken::Type type)
     case IniToken::Type::LeftBracket:
     case IniToken::Type::RightBracket:
     case IniToken::Type::section:
-        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), true };
     case IniToken::Type::Name:
         return { palette.syntax_identifier() };
     case IniToken::Type::Value:
@@ -46,7 +46,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, IniToken::Type type)
     case IniToken::Type::Comment:
         return { palette.syntax_comment() };
     case IniToken::Type::Equal:
-        return { palette.syntax_operator(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_operator(), true };
     default:
         return { palette.base_text() };
     }
@@ -72,7 +72,7 @@ void IniSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(palette, token.m_type);
         span.color = style.color;
-        span.font = style.font;
+        span.bold = style.bold;
         span.is_skippable = token.m_type == IniToken::Type::Whitespace;
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);

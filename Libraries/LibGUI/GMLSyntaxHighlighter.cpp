@@ -41,7 +41,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, GMLToken::Type type)
     case GMLToken::Type::ClassMarker:
         return { palette.syntax_keyword() };
     case GMLToken::Type::ClassName:
-        return { palette.syntax_identifier(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_identifier(), true };
     case GMLToken::Type::Identifier:
         return { palette.syntax_identifier() };
     case GMLToken::Type::JsonValue:
@@ -73,7 +73,7 @@ void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(palette, token.m_type);
         span.color = style.color;
-        span.font = style.font;
+        span.bold = style.bold;
         span.is_skippable = false;
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);

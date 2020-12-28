@@ -125,7 +125,7 @@ private:
         span.range.set_start({ node->and_position().start_line.line_number, node->and_position().start_line.line_column });
         set_offset_range_end(span.range, node->and_position().end_line);
         span.color = m_palette.syntax_punctuation();
-        span.font = &Gfx::Font::default_bold_fixed_width_font();
+        span.bold = true;
     }
     virtual void visit(const AST::ListConcatenate* node) override
     {
@@ -138,7 +138,7 @@ private:
         auto& span = span_for_node(node);
         set_offset_range_start(span.range, node->position().end_line);
         span.color = m_palette.syntax_punctuation();
-        span.font = &Gfx::Font::default_bold_fixed_width_font();
+        span.bold = true;
     }
     virtual void visit(const AST::BraceExpansion* node) override
     {
@@ -151,7 +151,7 @@ private:
         auto& span = span_for_node(node);
         if (m_is_first_in_command) {
             span.color = m_palette.syntax_keyword();
-            span.font = &Gfx::Font::default_bold_fixed_width_font();
+            span.bold = true;
             m_is_first_in_command = false;
         } else if (node->text().starts_with("-")) {
             span.color = m_palette.syntax_preprocessor_statement();
@@ -213,8 +213,8 @@ private:
         end_span.is_skippable = true;
 
         if (m_is_first_in_command) {
-            start_span.font = &Gfx::Font::default_bold_fixed_width_font();
-            end_span.font = &Gfx::Font::default_bold_fixed_width_font();
+            start_span.bold = true;
+            end_span.bold = true;
         }
         m_is_first_in_command = false;
     }
@@ -348,7 +348,7 @@ private:
         span.range.set_start({ node->or_position().start_line.line_number, node->or_position().start_line.line_column });
         set_offset_range_end(span.range, node->or_position().end_line);
         span.color = m_palette.syntax_punctuation();
-        span.font = &Gfx::Font::default_bold_fixed_width_font();
+        span.bold = true;
     }
     virtual void visit(const AST::Pipe* node) override
     {
@@ -386,7 +386,7 @@ private:
         span.range.set_start({ node->separator_position().start_line.line_number, node->separator_position().start_line.line_column });
         set_offset_range_end(span.range, node->separator_position().end_line);
         span.color = m_palette.syntax_punctuation();
-        span.font = &Gfx::Font::default_bold_fixed_width_font();
+        span.bold = true;
         span.is_skippable = true;
     }
     virtual void visit(const AST::Subshell* node) override
@@ -421,7 +421,7 @@ private:
         auto& span = span_for_node(node);
         span.color = m_palette.syntax_string();
         if (m_is_first_in_command)
-            span.font = &Gfx::Font::default_bold_fixed_width_font();
+            span.bold = true;
         m_is_first_in_command = false;
     }
     virtual void visit(const AST::StringPartCompose* node) override

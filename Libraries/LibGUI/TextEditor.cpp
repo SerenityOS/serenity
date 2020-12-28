@@ -39,6 +39,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -480,7 +481,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 Gfx::IntRect character_rect = { visual_line_rect.location(), { 0, line_height() } };
                 for (size_t i = 0; i < visual_line_text.length(); ++i) {
                     u32 code_point = visual_line_text.substring_view(i, 1).code_points()[0];
-                    const Gfx::Font* font = &this->font();
+                    RefPtr<Gfx::Font> font = this->font();
                     Color color;
                     Optional<Color> background_color;
                     bool underline = false;
@@ -490,8 +491,10 @@ void TextEditor::paint_event(PaintEvent& event)
                         if (!span.range.contains(physical_position))
                             continue;
                         color = span.color;
-                        if (span.font)
-                            font = span.font;
+                        if (span.bold) {
+                            if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700))
+                                font = bold_font;
+                        }
                         background_color = span.background_color;
                         underline = span.is_underlined;
                         break;
