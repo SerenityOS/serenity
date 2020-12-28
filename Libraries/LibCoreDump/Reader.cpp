@@ -110,9 +110,9 @@ Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
 const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const
 {
     const ELF::Core::MemoryRegionInfo* ret = nullptr;
-    for_each_memory_region_info([&ret, address](const ELF::Core::MemoryRegionInfo* region_info) {
-        if (region_info->region_start <= address && region_info->region_end >= address) {
-            ret = region_info;
+    for_each_memory_region_info([&ret, address](const ELF::Core::MemoryRegionInfo& region_info) {
+        if (region_info.region_start <= address && region_info.region_end >= address) {
+            ret = &region_info;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
