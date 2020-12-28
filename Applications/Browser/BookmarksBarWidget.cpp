@@ -117,9 +117,7 @@ void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)
 
 void BookmarksBarWidget::model_did_update(unsigned)
 {
-    for (auto* child : child_widgets()) {
-        child->remove_from_parent();
-    }
+    remove_all_children();
 
     m_bookmarks.clear();
 
