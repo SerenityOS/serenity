@@ -191,9 +191,9 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     filename_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label.set_preferred_size(60, 0);
     m_filename_textbox = filename_container.add<TextBox>();
+    m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
         m_filename_textbox->set_text(file_name);
-        m_filename_textbox->set_focus(true);
         m_filename_textbox->select_all();
     }
     m_filename_textbox->on_return_pressed = [&] {
