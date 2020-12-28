@@ -35,8 +35,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
-REGISTER_WIDGET(GUI, TabWidget)
-
 namespace GUI {
 
 TabWidget::TabWidget()
