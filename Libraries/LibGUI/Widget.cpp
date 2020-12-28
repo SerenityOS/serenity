@@ -36,8 +36,10 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/GMLParser.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
+#include <LibGUI/LinkLabel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
@@ -69,7 +71,9 @@ REGISTER_WIDGET(GUI, ColorInput)
 REGISTER_WIDGET(GUI, Frame)
 REGISTER_WIDGET(GUI, GroupBox)
 REGISTER_WIDGET(GUI, HorizontalSplitter)
+REGISTER_WIDGET(GUI, ImageWidget)
 REGISTER_WIDGET(GUI, Label)
+REGISTER_WIDGET(GUI, LinkLabel)
 REGISTER_WIDGET(GUI, ProgressBar)
 REGISTER_WIDGET(GUI, RadioButton)
 REGISTER_WIDGET(GUI, ScrollBar)
