@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
-#include <LibJS/AST.h>
-#include <LibJS/Runtime/Exception.h>
-#include <LibJS/Runtime/VM.h>
+#pragma once
+
+#include <AK/Types.h>
 
 namespace JS {
 
-Exception::Exception(Value value)
-    : m_value(value)
-{
-    auto& call_stack = vm().call_stack();
-    for (ssize_t i = call_stack.size() - 1; i >= 0; --i) {
-        String function_name = call_stack[i]->function_name;
-        if (function_name.is_empty())
-            function_name = "<anonymous>";
-        m_trace.append(function_name);
-    }
+struct Position {
+    size_t line { 0 };
+    size_t column { 0 };
+};
 
-    auto& node_stack = vm().node_stack();
-    for (ssize_t i = node_stack.size() - 1; i >= 0; --i) {
-        auto* node = node_stack[i];
-        ASSERT(node);
-        m_source_ranges.append(node->source_range());
-    }
-}
-
-Exception::~Exception()
-{
-}
-
-void Exception::visit_edges(Visitor& visitor)
-{
-    Cell::visit_edges(visitor);
-    visitor.visit(m_value);
-}
+struct SourceRange {
+    Position start;
+    Position end;
+};
 
 }

@@ -143,6 +143,16 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
         vm().unwind(ScopeType::None);
 }
 
+void Interpreter::enter_node(const ASTNode& node)
+{
+    vm().push_ast_node(node);
+}
+
+void Interpreter::exit_node(const ASTNode&)
+{
+    vm().pop_ast_node();
+}
+
 void Interpreter::push_scope(ScopeFrame frame)
 {
     m_scope_stack.append(move(frame));
