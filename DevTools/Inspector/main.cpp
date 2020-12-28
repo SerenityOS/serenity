@@ -60,6 +60,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/bin", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil("/tmp", "rwc") < 0) {
         perror("unveil");
         return 1;
