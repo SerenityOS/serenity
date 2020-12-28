@@ -33,6 +33,11 @@
 
 namespace FileUtils {
 
+enum class FileOperation {
+    Copy = 0,
+    Cut
+};
+
 void delete_path(const String&, GUI::Window*);
 void delete_paths(const Vector<String>&, bool should_confirm, GUI::Window*);
 int delete_directory(String directory, String& file_that_caused_error);
