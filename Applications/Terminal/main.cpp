@@ -30,6 +30,9 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -37,6 +40,7 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
@@ -260,6 +264,85 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     return window;
 }
 
+static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
+{
+    auto window = GUI::Window::construct();
+    window->set_title("Find in Terminal");
+    window->set_resizable(false);
+    window->resize(300, 90);
+    window->set_modal(true);
+
+    auto& search = window->set_main_widget<GUI::Widget>();
+    search.set_fill_with_background_color(true);
+    search.set_background_role(ColorRole::Button);
+    search.set_layout<GUI::VerticalBoxLayout>();
+    search.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& find = search.add<GUI::Widget>();
+    find.set_layout<GUI::HorizontalBoxLayout>();
+    find.layout()->set_margins({ 4, 4, 4, 4 });
+    find.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    find.set_preferred_height(30);
+
+    auto& find_textbox = find.add<GUI::TextBox>();
+    find_textbox.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
+    find_textbox.set_preferred_width(230);
+    find_textbox.set_focus(true);
+    if (terminal.has_selection()) {
+        String selected_text = terminal.selected_text();
+        selected_text.replace("\n", " ", true);
+        find_textbox.set_text(selected_text);
+    }
+    auto& find_backwards = find.add<GUI::Button>();
+    find_backwards.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
+    find_backwards.set_preferred_width(25);
+    find_backwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"));
+    auto& find_forwards = find.add<GUI::Button>();
+    find_forwards.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
+    find_forwards.set_preferred_width(25);
+    find_forwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"));
+
+    find_textbox.on_return_pressed = [&]() {
+        find_backwards.click();
+    };
+
+    auto& match_case = search.add<GUI::CheckBox>("Case sensitive");
+    match_case.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    match_case.set_preferred_size(0, 22);
+    auto& wrap_around = search.add<GUI::CheckBox>("Wrap around");
+    wrap_around.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    wrap_around.set_preferred_size(0, 22);
+
+    find_backwards.on_click = [&](auto) {
+        auto needle = find_textbox.text();
+        if (needle.is_empty()) {
+            return;
+        }
+
+        auto found_range = terminal.find_previous(needle, terminal.normalized_selection().start(), match_case.is_checked(), wrap_around.is_checked());
+
+        if (found_range.is_valid()) {
+            terminal.scroll_to_row(found_range.start().row());
+            terminal.set_selection(found_range);
+        }
+    };
+    find_forwards.on_click = [&](auto) {
+        auto needle = find_textbox.text();
+        if (needle.is_empty()) {
+            return;
+        }
+
+        auto found_range = terminal.find_next(needle, terminal.normalized_selection().end(), match_case.is_checked(), wrap_around.is_checked());
+
+        if (found_range.is_valid()) {
+            terminal.scroll_to_row(found_range.start().row());
+            terminal.set_selection(found_range);
+        }
+    };
+
+    return window;
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix fattr sigaction", nullptr) < 0) {
@@ -345,6 +428,7 @@ int main(int argc, char** argv)
     }
 
     RefPtr<GUI::Window> settings_window;
+    RefPtr<GUI::Window> find_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal.set_opacity(new_opacity);
@@ -387,6 +471,19 @@ int main(int argc, char** argv)
     auto& edit_menu = menubar->add_menu("Edit");
     edit_menu.add_action(terminal.copy_action());
     edit_menu.add_action(terminal.paste_action());
+    edit_menu.add_separator();
+    edit_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"),
+        [&](auto&) {
+            if (!find_window) {
+                find_window = create_find_window(terminal);
+                find_window->on_close_request = [&] {
+                    find_window = nullptr;
+                    return GUI::Window::CloseRequestDecision::Close;
+                };
+            }
+            find_window->show();
+            find_window->move_to_front();
+        }));
 
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(terminal.clear_including_history_action());
