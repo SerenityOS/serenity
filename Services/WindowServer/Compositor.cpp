@@ -112,11 +112,20 @@ void Compositor::init_bitmaps()
     invalidate_screen();
 }
 
+void Compositor::did_construct_window_manager(Badge<WindowManager>)
+{
+    auto& wm = WindowManager::the();
+    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "simple"));
+    m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
+
+    invalidate_screen();
+    invalidate_occlusions();
+    compose();
+}
+
 void Compositor::compose()
 {
     auto& wm = WindowManager::the();
-    if (m_wallpaper_mode == WallpaperMode::Unchecked)
-        m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "simple"));
     auto& ws = Screen::the();
 
     {
@@ -185,10 +194,8 @@ void Compositor::compose()
     });
 
     Color background_color = wm.palette().desktop_background();
-    String background_color_entry = wm.config()->read_entry("Background", "Color", "");
-    if (!background_color_entry.is_empty()) {
-        background_color = Color::from_string(background_color_entry).value_or(background_color);
-    }
+    if (m_custom_background_color.has_value())
+        background_color = m_custom_background_color.value();
 
 #ifdef COMPOSE_DEBUG
     dbg() << "COMPOSE: invalidated: window:" << m_invalidated_window << " cursor:" << m_invalidated_cursor << " any: " << m_invalidated_any;
@@ -600,6 +607,12 @@ void Compositor::start_compose_async_timer()
 
 bool Compositor::set_background_color(const String& background_color)
 {
+    auto color = Color::from_string(background_color);
+    if (!color.has_value())
+        return false;
+
+    m_custom_background_color = color;
+
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Color", background_color);
     bool ret_val = wm.config()->sync();

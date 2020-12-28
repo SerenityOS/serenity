@@ -29,14 +29,15 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Object.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/Forward.h>
 
 namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
 class Window;
+class WindowManager;
 
 enum class WallpaperMode {
     Simple,
@@ -72,6 +73,8 @@ public:
     void decrement_display_link_count(Badge<ClientConnection>);
 
     void invalidate_occlusions() { m_occlusions_dirty = true; }
+
+    void did_construct_window_manager(Badge<WindowManager>);
 
 private:
     Compositor();
@@ -125,6 +128,8 @@ private:
 
     RefPtr<Core::Timer> m_display_link_notify_timer;
     size_t m_display_link_count { 0 };
+
+    Optional<Gfx::Color> m_custom_background_color;
 };
 
 }
