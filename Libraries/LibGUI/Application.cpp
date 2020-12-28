@@ -40,6 +40,34 @@
 
 namespace GUI {
 
+class Application::TooltipWindow final : public Window {
+    C_OBJECT(TooltipWindow);
+
+public:
+    void set_tooltip(String tooltip)
+    {
+        // FIXME: Add some kind of GUI::Label auto-sizing feature.
+        int text_width = m_label->font().width(tooltip);
+        set_rect(rect().x(), rect().y(), text_width + 10, m_label->font().glyph_height() + 8);
+        m_label->set_text(move(tooltip));
+    }
+
+private:
+    TooltipWindow()
+    {
+        set_window_type(WindowType::Tooltip);
+        m_label = set_main_widget<Label>();
+        m_label->set_background_role(Gfx::ColorRole::Tooltip);
+        m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
+        m_label->set_fill_with_background_color(true);
+        m_label->set_frame_thickness(1);
+        m_label->set_frame_shape(Gfx::FrameShape::Container);
+        m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
+    }
+
+    RefPtr<Label> m_label;
+};
+
 static NeverDestroyed<WeakPtr<Application>> s_the;
 
 Application* Application::the()
@@ -64,6 +92,14 @@ Application::Application(int argc, char** argv)
         String arg(argv[i]);
         m_args.append(move(arg));
     }
+
+    m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
+        tooltip_show_timer_did_fire();
+    });
+
+    m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
+        tooltip_hide_timer_did_fire();
+    });
 }
 
 Application::~Application()
@@ -108,65 +144,29 @@ Action* Application::action_for_key_event(const KeyEvent& event)
     return (*it).value;
 }
 
-class Application::TooltipWindow final : public Window {
-    C_OBJECT(TooltipWindow);
-
-public:
-    void set_tooltip(const StringView& tooltip)
-    {
-        // FIXME: Add some kind of GUI::Label auto-sizing feature.
-        int text_width = m_label->font().width(tooltip);
-        set_rect(rect().x(), rect().y(), text_width + 10, m_label->font().glyph_height() + 8);
-        m_label->set_text(tooltip);
-    }
-
-private:
-    TooltipWindow()
-    {
-        set_window_type(WindowType::Tooltip);
-        m_label = set_main_widget<Label>();
-        m_label->set_background_role(Gfx::ColorRole::Tooltip);
-        m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
-        m_label->set_fill_with_background_color(true);
-        m_label->set_frame_thickness(1);
-        m_label->set_frame_shape(Gfx::FrameShape::Container);
-        m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
-    }
-
-    RefPtr<Label> m_label;
-};
-
-void Application::show_tooltip(const StringView& tooltip, const Gfx::IntPoint& screen_location, const Widget* tooltip_source_widget)
+void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widget)
 {
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
         m_tooltip_window->set_double_buffering_enabled(false);
     }
-    m_tooltip_window->set_tooltip(tooltip);
+    m_tooltip_window->set_tooltip(move(tooltip));
 
-    Gfx::IntRect desktop_rect = Desktop::the().rect();
-
-    const int margin = 30;
-    Gfx::IntPoint adjusted_pos = screen_location;
-    if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
-        adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
+    if (m_tooltip_window->is_visible()) {
+        tooltip_show_timer_did_fire();
+        m_tooltip_show_timer->stop();
+        m_tooltip_hide_timer->stop();
+    } else {
+        m_tooltip_show_timer->restart();
+        m_tooltip_hide_timer->stop();
     }
-    if (adjusted_pos.y() + m_tooltip_window->height() >= desktop_rect.height() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -(m_tooltip_window->height() * 2));
-    }
-
-    m_tooltip_window->move_to(adjusted_pos);
-    m_tooltip_window->show();
 }
 
 void Application::hide_tooltip()
 {
-    m_tooltip_source_widget = nullptr;
-    if (m_tooltip_window) {
-        m_tooltip_window->hide();
-        m_tooltip_window = nullptr;
-    }
+    m_tooltip_show_timer->stop();
+    m_tooltip_hide_timer->start();
 }
 
 void Application::did_create_window(Badge<Window>)
@@ -200,6 +200,34 @@ void Application::set_palette(const Palette& palette)
 Gfx::Palette Application::palette() const
 {
     return Palette(*m_palette);
+}
+
+void Application::tooltip_show_timer_did_fire()
+{
+    ASSERT(m_tooltip_window);
+    Gfx::IntRect desktop_rect = Desktop::the().rect();
+
+    const int margin = 30;
+    Gfx::IntPoint adjusted_pos = WindowServerConnection::the().send_sync<Messages::WindowServer::GetGlobalCursorPosition>()->position();
+
+    adjusted_pos.move_by(0, 18);
+
+    if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
+        adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
+    }
+    if (adjusted_pos.y() + m_tooltip_window->height() >= desktop_rect.height() - margin) {
+        adjusted_pos = adjusted_pos.translated(0, -(m_tooltip_window->height() * 2));
+    }
+
+    m_tooltip_window->move_to(adjusted_pos);
+    m_tooltip_window->show();
+}
+
+void Application::tooltip_hide_timer_did_fire()
+{
+    m_tooltip_source_widget = nullptr;
+    if (m_tooltip_window)
+        m_tooltip_window->hide();
 }
 
 }

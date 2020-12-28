@@ -201,9 +201,9 @@ void InProcessWebView::page_did_middle_click_link(const URL& url, const String& 
         on_link_middle_click(url, target, modifiers);
 }
 
-void InProcessWebView::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
+void InProcessWebView::page_did_enter_tooltip_area([[maybe_unused]] const Gfx::IntPoint& content_position, const String& title)
 {
-    GUI::Application::the()->show_tooltip(title, screen_relative_rect().location().translated(to_widget_position(content_position)), nullptr);
+    GUI::Application::the()->show_tooltip(title, nullptr);
 }
 
 void InProcessWebView::page_did_leave_tooltip_area()

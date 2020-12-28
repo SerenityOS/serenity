@@ -54,7 +54,7 @@ public:
     void register_global_shortcut_action(Badge<Action>, Action&);
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
-    void show_tooltip(const StringView&, const Gfx::IntPoint& screen_location, const Widget* tooltip_source_widget);
+    void show_tooltip(String, const Widget* tooltip_source_widget);
     void hide_tooltip();
     Widget* tooltip_source_widget() { return m_tooltip_source_widget; };
 
@@ -79,12 +79,17 @@ public:
 private:
     Application(int argc, char** argv);
 
+    void tooltip_show_timer_did_fire();
+    void tooltip_hide_timer_did_fire();
+
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<MenuBar> m_menubar;
     RefPtr<Gfx::PaletteImpl> m_palette;
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
     class TooltipWindow;
+    RefPtr<Core::Timer> m_tooltip_show_timer;
+    RefPtr<Core::Timer> m_tooltip_hide_timer;
     RefPtr<TooltipWindow> m_tooltip_window;
     RefPtr<Widget> m_tooltip_source_widget;
     bool m_quit_when_last_window_deleted { true };
