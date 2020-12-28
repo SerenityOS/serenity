@@ -500,6 +500,7 @@ TEST_CASE(ECMA262_parse)
         { "(?", regex::Error::InvalidCaptureGroup },
         { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
     };
 
     for (auto& test : tests) {
