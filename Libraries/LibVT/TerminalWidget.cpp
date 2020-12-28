@@ -255,11 +255,11 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     // Clear the selection if we type in/behind it.
     auto future_cursor_column = (event.key() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
-    auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
-    auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
+    auto min_selection_row = min(m_selection.start().row(), m_selection.end().row());
+    auto max_selection_row = max(m_selection.start().row(), m_selection.end().row());
 
     if (future_cursor_column <= last_selection_column_on_row(m_terminal.cursor_row()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
-        m_selection_end = {};
+        m_selection.set_end({});
         update_copy_action();
         update();
     }
@@ -491,23 +491,16 @@ void TerminalWidget::set_opacity(u8 new_opacity)
     force_repaint();
 }
 
-VT::Position TerminalWidget::normalized_selection_start() const
-{
-    if (m_selection_start < m_selection_end)
-        return m_selection_start;
-    return m_selection_end;
-}
-
-VT::Position TerminalWidget::normalized_selection_end() const
-{
-    if (m_selection_start < m_selection_end)
-        return m_selection_end;
-    return m_selection_start;
-}
-
 bool TerminalWidget::has_selection() const
 {
-    return m_selection_start.is_valid() && m_selection_end.is_valid();
+    return m_selection.is_valid();
+}
+
+void TerminalWidget::set_selection(const VT::Range& selection)
+{
+    m_selection = selection;
+    update_copy_action();
+    update();
 }
 
 bool TerminalWidget::selection_contains(const VT::Position& position) const
@@ -516,6 +509,8 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
         return false;
 
     if (m_rectangle_selection) {
+        auto m_selection_start = m_selection.start();
+        auto m_selection_end = m_selection.end();
         auto min_selection_column = min(m_selection_start.column(), m_selection_end.column());
         auto max_selection_column = max(m_selection_start.column(), m_selection_end.column());
         auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
@@ -524,7 +519,8 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
         return position.column() >= min_selection_column && position.column() <= max_selection_column && position.row() >= min_selection_row && position.row() <= max_selection_row;
     }
 
-    return position >= normalized_selection_start() && position <= normalized_selection_end();
+    auto normalized_selection = m_selection.normalized();
+    return position >= normalized_selection.start() && position <= normalized_selection.end();
 }
 
 VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) const
@@ -564,8 +560,7 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
             end_column = column;
         }
 
-        m_selection_start = { position.row(), start_column };
-        m_selection_end = { position.row(), end_column };
+        m_selection.set({ position.row(), start_column }, { position.row(), end_column });
         update_copy_action();
     }
     GUI::Frame::doubleclick_event(event);
@@ -631,11 +626,9 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
             int end_column = m_terminal.columns() - 1;
 
             auto position = buffer_position_at(event.position());
-            m_selection_start = { position.row(), start_column };
-            m_selection_end = { position.row(), end_column };
+            m_selection.set({ position.row(), start_column }, { position.row(), end_column });
         } else {
-            m_selection_start = buffer_position_at(event.position());
-            m_selection_end = {};
+            m_selection.set(buffer_position_at(event.position()), {});
         }
         if (m_alt_key_held)
             m_rectangle_selection = true;
@@ -700,9 +693,9 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     else
         m_auto_scroll_direction = AutoScrollDirection::None;
 
-    auto old_selection_end = m_selection_end;
-    m_selection_end = position;
-    if (old_selection_end != m_selection_end) {
+    VT::Position old_selection_end = m_selection.end();
+    m_selection.set_end(position);
+    if (old_selection_end != m_selection.end()) {
         update_copy_action();
         update();
     }
@@ -744,8 +737,10 @@ void TerminalWidget::set_scroll_length(int length)
 String TerminalWidget::selected_text() const
 {
     StringBuilder builder;
-    auto start = normalized_selection_start();
-    auto end = normalized_selection_end();
+
+    auto normalized_selection = m_selection.normalized();
+    auto start = normalized_selection.start();
+    auto end = normalized_selection.end();
 
     for (int row = start.row(); row <= end.row(); ++row) {
         int first_column = first_selection_column_on_row(row);
@@ -774,12 +769,14 @@ String TerminalWidget::selected_text() const
 
 int TerminalWidget::first_selection_column_on_row(int row) const
 {
-    return row == normalized_selection_start().row() || m_rectangle_selection ? normalized_selection_start().column() : 0;
+    auto normalized_selection_start = m_selection.normalized().start();
+    return row == normalized_selection_start.row() || m_rectangle_selection ? normalized_selection_start.column() : 0;
 }
 
 int TerminalWidget::last_selection_column_on_row(int row) const
 {
-    return row == normalized_selection_end().row() || m_rectangle_selection ? normalized_selection_end().column() : m_terminal.columns() - 1;
+    auto normalized_selection_end = m_selection.normalized().end();
+    return row == normalized_selection_end.row() || m_rectangle_selection ? normalized_selection_end.column() : m_terminal.columns() - 1;
 }
 
 void TerminalWidget::terminal_history_changed()
