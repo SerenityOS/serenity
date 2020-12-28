@@ -227,12 +227,6 @@ void Compositor::compose()
     };
 
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
-    // clang-format off
-        // FIXME: clang-format gets confused here. Why?
-        // This function may be called multiple times with the same
-        // rect as we walk the window stack from back to front. However,
-        // there should be no overlaps with flush_rects
-    // clang-format on
 #ifdef COMPOSE_DEBUG
         dbg() << "   -> flush transparent: " << rect;
 #endif
