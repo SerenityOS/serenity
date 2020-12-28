@@ -44,6 +44,8 @@ public:
     virtual bool put(const JS::PropertyName&, JS::Value value, JS::Value receiver = {}) override;
     virtual void initialize() override;
 
+    JS_DECLARE_NATIVE_FUNCTION(get_real_cell_contents);
+    JS_DECLARE_NATIVE_FUNCTION(set_real_cell_contents);
     JS_DECLARE_NATIVE_FUNCTION(parse_cell_name);
     JS_DECLARE_NATIVE_FUNCTION(current_cell_position);
     JS_DECLARE_NATIVE_FUNCTION(column_index);

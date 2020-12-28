@@ -81,6 +81,8 @@ bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::V
 void SheetGlobalObject::initialize()
 {
     GlobalObject::initialize();
+    define_native_function("get_real_cell_contents", get_real_cell_contents, 1);
+    define_native_function("set_real_cell_contents", set_real_cell_contents, 2);
     define_native_function("parse_cell_name", parse_cell_name, 1);
     define_native_function("current_cell_position", current_cell_position, 0);
     define_native_function("column_arithmetic", column_arithmetic, 2);
@@ -95,6 +97,86 @@ void SheetGlobalObject::visit_edges(Visitor& visitor)
             visitor.visit(it.value->exception());
         visitor.visit(it.value->evaluated_data());
     }
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+
+    if (vm.argument_count() != 1) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to get_real_cell_contents()");
+        return {};
+    }
+
+    auto name_value = vm.argument(0);
+    if (!name_value.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected a String argument to get_real_cell_contents()");
+        return {};
+    }
+    auto position = Sheet::parse_cell_name(name_value.as_string().string());
+    if (!position.has_value()) {
+        vm.throw_exception<JS::TypeError>(global_object, "Invalid cell name");
+        return {};
+    }
+
+    const auto* cell = sheet_object->m_sheet.at(position.value());
+    if (!cell)
+        return JS::js_undefined();
+
+    if (cell->kind() == Spreadsheet::Cell::Kind::Formula)
+        return JS::js_string(vm.heap(), String::formatted("={}", cell->data()));
+
+    return JS::js_string(vm.heap(), cell->data());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+
+    if (vm.argument_count() != 2) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly two arguments to set_real_cell_contents()");
+        return {};
+    }
+
+    auto name_value = vm.argument(0);
+    if (!name_value.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected the first argument of set_real_cell_contents() to be a String");
+        return {};
+    }
+    auto position = Sheet::parse_cell_name(name_value.as_string().string());
+    if (!position.has_value()) {
+        vm.throw_exception<JS::TypeError>(global_object, "Invalid cell name");
+        return {};
+    }
+
+    auto new_contents_value = vm.argument(1);
+    if (!new_contents_value.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected the second argument of set_real_cell_contents() to be a String");
+        return {};
+    }
+
+    auto& cell = sheet_object->m_sheet.ensure(position.value());
+    auto& new_contents = new_contents_value.as_string().string();
+    cell.set_data(new_contents);
+    return JS::js_null();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)

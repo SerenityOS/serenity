@@ -7,6 +7,16 @@ class Position {
         this.name = `${column}${row}`;
     }
 
+    get contents() {
+        return this.sheet.get_real_cell_contents(this.name);
+    }
+
+    set contents(value) {
+        value = `${value}`;
+        this.sheet.set_real_cell_contents(this.name, value);
+        return value;
+    }
+
     static from_name(name) {
         let sheet = thisSheet;
         let obj = sheet.parse_cell_name(name);
@@ -678,8 +688,8 @@ here.__documentation = JSON.stringify({
         "- `with_row(row)`: Returns a Position with its column being this object's, and its row being the provided the value.\n" +
         "- `with_column(column)`: Similar to `with_row()`, but changes the column instead.\n" +
         "- `in_sheet(the_sheet)`: Returns a Position with the same column and row as this one, but with its sheet being `the_sheet`.\n" +
-        "- `value()`: Returns the value at the position which it represents, in the object's sheet (current sheet by default).\n\n" +
-        "**NOTE**: Currently only supports single-letter column names",
+        "- `value()`: Returns the value at the position which it represents, in the object's sheet (current sheet by default).\n" +
+        "- `contents`: An accessor for the real contents of the cell (i.e. the text as typed in the cell editor)\n",
     examples: {
         "here().up().value()": "Get the value of the cell above this one",
         "here().up().with_column('A')":
