@@ -36,29 +36,29 @@ static TextStyle style_for_token_type(Gfx::Palette palette, Cpp::Token::Type typ
 {
     switch (type) {
     case Cpp::Token::Type::Keyword:
-        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), true };
     case Cpp::Token::Type::KnownType:
-        return { palette.syntax_type(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_type(), true };
     case Cpp::Token::Type::Identifier:
-        return { palette.syntax_identifier() };
+        return { palette.syntax_identifier(), false };
     case Cpp::Token::Type::DoubleQuotedString:
     case Cpp::Token::Type::SingleQuotedString:
     case Cpp::Token::Type::RawString:
-        return { palette.syntax_string() };
+        return { palette.syntax_string(), false };
     case Cpp::Token::Type::Integer:
     case Cpp::Token::Type::Float:
-        return { palette.syntax_number() };
+        return { palette.syntax_number(), false };
     case Cpp::Token::Type::IncludePath:
-        return { palette.syntax_preprocessor_value() };
+        return { palette.syntax_preprocessor_value(), false };
     case Cpp::Token::Type::EscapeSequence:
-        return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
+        return { palette.syntax_keyword(), true };
     case Cpp::Token::Type::PreprocessorStatement:
     case Cpp::Token::Type::IncludeStatement:
-        return { palette.syntax_preprocessor_statement() };
+        return { palette.syntax_preprocessor_statement(), false };
     case Cpp::Token::Type::Comment:
-        return { palette.syntax_comment() };
+        return { palette.syntax_comment(), false };
     default:
-        return { palette.base_text() };
+        return { palette.base_text(), false };
     }
 }
 
@@ -91,7 +91,7 @@ void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(palette, token.m_type);
         span.color = style.color;
-        span.font = style.font;
+        span.bold = style.bold;
         span.is_skippable = token.m_type == Cpp::Token::Type::Whitespace;
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
