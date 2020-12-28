@@ -93,6 +93,14 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
         ++mask_ptr;
     }
 
+    if (string_ptr == string_end) {
+        // Allow ending '*' to contain nothing.
+        while (mask_ptr != mask_end && *mask_ptr == '*') {
+            record_span(string_ptr - string_start, 0);
+            ++mask_ptr;
+        }
+    }
+
     return string_ptr == string_end && mask_ptr == mask_end;
 }
 
