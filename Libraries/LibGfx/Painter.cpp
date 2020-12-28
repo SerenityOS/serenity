@@ -918,7 +918,8 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
             int new_width = font.width("...");
             if (new_width < text_width) {
                 size_t offset = 0;
-                for (auto code_point : text) {
+                for (auto it = text.begin(); it != text.end(); ++it) {
+                    auto code_point = *it;
                     int glyph_width = font.glyph_or_emoji_width(code_point);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
@@ -927,7 +928,7 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
                     if (width_with_this_glyph_included > rect.width())
                         break;
                     new_width += glyph_width + glyph_spacing;
-                    offset++;
+                    offset = text.iterator_offset(it);
                 }
                 apply_elision(final_text, elided_text, offset);
             }
