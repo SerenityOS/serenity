@@ -30,9 +30,9 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/AppFile.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
-#include <LibGUI/AppFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
 Vector<String> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
-    GUI::AppFile::for_each([&](auto af) {
+    Desktop::AppFile::for_each([&](auto af) {
         g_apps.append({ af->executable(), af->name(), af->category() });
         seen_app_categories.set(af->category());
     });

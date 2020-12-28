@@ -32,7 +32,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibGUI/AppFile.h>
+#include <LibDesktop/AppFile.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -97,7 +97,7 @@ Launcher& Launcher::the()
 
 void Launcher::load_handlers(const String& af_dir)
 {
-    GUI::AppFile::for_each([&](auto af) {
+    Desktop::AppFile::for_each([&](auto af) {
         auto app_name = af->name();
         auto app_executable = af->executable();
         HashTable<String> file_types;

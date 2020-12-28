@@ -28,9 +28,9 @@
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/AppFile.h>
+#include <LibDesktop/AppFile.h>
 
-namespace GUI {
+namespace Desktop {
 
 NonnullRefPtr<AppFile> AppFile::get_for_app(const StringView& app_name)
 {

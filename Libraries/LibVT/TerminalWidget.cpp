@@ -34,9 +34,9 @@
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
+#include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/AppFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
@@ -858,7 +858,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af = GUI::AppFile::get_for_app(LexicalPath(handler).basename());
+            auto af = Desktop::AppFile::get_for_app(LexicalPath(handler).basename());
             if (!af->is_valid())
                 continue;
             auto action = GUI::Action::create(String::formatted("Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
