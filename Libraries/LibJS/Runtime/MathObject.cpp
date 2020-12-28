@@ -68,12 +68,21 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.atanh, atanh, 1, attr);
     define_native_function(vm.names.log1p, log1p, 1, attr);
     define_native_function(vm.names.cbrt, cbrt, 1, attr);
+    define_native_function(vm.names.atan2, atan2, 2, attr);
+    define_native_function(vm.names.fround, fround, 1, attr);
+    define_native_function(vm.names.hypot, hypot, 2, attr);
+    define_native_function(vm.names.log, log, 1, attr);
+    define_native_function(vm.names.log2, log2, 1, attr);
+    define_native_function(vm.names.log10, log10, 1, attr);
+    define_native_function(vm.names.sinh, sinh, 1, attr);
+    define_native_function(vm.names.cosh, cosh, 1, attr);
+    define_native_function(vm.names.tanh, tanh, 1, attr);
 
     define_property(vm.names.E, Value(M_E), 0);
     define_property(vm.names.LN2, Value(M_LN2), 0);
     define_property(vm.names.LN10, Value(M_LN10), 0);
-    define_property(vm.names.LOG2E, Value(log2(M_E)), 0);
-    define_property(vm.names.LOG10E, Value(log10(M_E)), 0);
+    define_property(vm.names.LOG2E, Value(::log2(M_E)), 0);
+    define_property(vm.names.LOG10E, Value(::log10(M_E)), 0);
     define_property(vm.names.PI, Value(M_PI), 0);
     define_property(vm.names.SQRT1_2, Value(M_SQRT1_2), 0);
     define_property(vm.names.SQRT2, Value(M_SQRT2), 0);
@@ -293,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
     if (vm.exception())
         return {};
     if (number.as_double() < 1)
-        return JS::js_nan();
+        return js_nan();
     return Value(::acosh(number.as_double()));
 }
 
@@ -335,7 +344,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
     if (vm.exception())
         return {};
     if (number.as_double() > 1 || number.as_double() < -1)
-        return JS::js_nan();
+        return js_nan();
     return Value(::atanh(number.as_double()));
 }
 
@@ -345,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
     if (vm.exception())
         return {};
     if (number.as_double() < -1)
-        return JS::js_nan();
+        return js_nan();
     return Value(::log1p(number.as_double()));
 }
 
@@ -355,6 +364,141 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
     if (vm.exception())
         return {};
     return Value(::cbrt(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
+{
+    auto y = vm.argument(0).to_number(global_object), x = vm.argument(1).to_number(global_object);
+    auto pi_4 = M_PI_2 / 2;
+    auto three_pi_4 = pi_4 + M_PI_2;
+    if (vm.exception())
+        return {};
+    if (x.is_positive_zero()) {
+        if (y.is_positive_zero() || y.is_negative_zero())
+            return y;
+        else
+            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
+    }
+    if (x.is_negative_zero()) {
+        if (y.is_positive_zero())
+            return Value(M_PI);
+        else if (y.is_negative_zero())
+            return Value(-M_PI);
+        else
+            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
+    }
+    if (x.is_positive_infinity()) {
+        if (y.is_infinity())
+            return (y.is_positive_infinity()) ? Value(pi_4) : Value(-pi_4);
+        else
+            return (y.as_double() > 0) ? Value(+0.0) : Value(-0.0);
+    }
+    if (x.is_negative_infinity()) {
+        if (y.is_infinity())
+            return (y.is_positive_infinity()) ? Value(three_pi_4) : Value(-three_pi_4);
+        else
+            return (y.as_double() > 0) ? Value(M_PI) : Value(-M_PI);
+    }
+    if (y.is_infinity())
+        return (y.is_positive_infinity()) ? Value(M_PI_2) : Value(-M_PI_2);
+    if (y.is_positive_zero())
+        return (x.as_double() > 0) ? Value(+0.0) : Value(M_PI);
+    if (y.is_negative_zero())
+        return (x.as_double() > 0) ? Value(-0.0) : Value(-M_PI);
+
+    return Value(::atan2(y.as_double(), x.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    return Value((float)number.as_double());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
+{
+    if (!vm.argument_count())
+        return Value(0);
+
+    auto hypot = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    hypot = Value(hypot.as_double() * hypot.as_double());
+    for (size_t i = 1; i < vm.argument_count(); ++i) {
+        auto cur = vm.argument(i).to_number(global_object);
+        if (vm.exception())
+            return {};
+        hypot = Value(hypot.as_double() + cur.as_double() * cur.as_double());
+    }
+    return Value(::sqrt(hypot.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.as_double() < 0)
+        return js_nan();
+    return Value(::log(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.as_double() < 0)
+        return js_nan();
+    return Value(::log2(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.as_double() < 0)
+        return js_nan();
+    return Value(::log10(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    return Value(::sinh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    return Value(::cosh(number.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::tanh)
+{
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (number.is_nan())
+        return js_nan();
+    if (number.is_positive_infinity())
+        return Value(1);
+    if (number.is_negative_infinity())
+        return Value(-1);
+    return Value(::tanh(number.as_double()));
 }
 
 }
