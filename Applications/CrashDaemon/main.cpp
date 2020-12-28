@@ -31,7 +31,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/DirectoryWatcher.h>
 #include <LibCore/File.h>
-#include <LibCoreDump/CoreDumpReader.h>
+#include <LibCoreDump/Reader.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <fcntl.h>
@@ -106,7 +106,7 @@ static const ElfObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
     return info_ptr;
 }
 
-static String backtrace_line(const CoreDumpReader& coredump, FlatPtr eip)
+static String backtrace_line(const CoreDump::Reader& coredump, FlatPtr eip)
 {
     auto* region = coredump.region_containing((FlatPtr)eip);
     if (!region)
@@ -133,7 +133,7 @@ static String backtrace_line(const CoreDumpReader& coredump, FlatPtr eip)
 static void backtrace(const String& coredump_path)
 {
     size_t thread_index = 0;
-    auto coredump = CoreDumpReader::create(coredump_path);
+    auto coredump = CoreDump::Reader::create(coredump_path);
     coredump->for_each_thread_info([&thread_index, &coredump](const ELF::Core::ThreadInfo* thread_info) {
         dbgln("Backtrace for thread #{}, tid={}", thread_index++, thread_info->tid);
 

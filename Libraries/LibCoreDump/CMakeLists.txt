@@ -1,5 +1,5 @@
 set(SOURCES
-    CoreDumpReader.cpp
+    Reader.cpp
 )
 
 serenity_lib(LibCoreDump coredump)

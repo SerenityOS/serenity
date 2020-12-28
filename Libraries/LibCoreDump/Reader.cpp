@@ -24,18 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CoreDumpReader.h"
+#include "Reader.h"
 #include <string.h>
 
-OwnPtr<CoreDumpReader> CoreDumpReader::create(const String& path)
+namespace CoreDump {
+
+OwnPtr<Reader> Reader::create(const String& path)
 {
     auto mapped_file = make<MappedFile>(path);
     if (!mapped_file->is_valid())
         return nullptr;
-    return make<CoreDumpReader>(move(mapped_file));
+    return make<Reader>(move(mapped_file));
 }
 
-CoreDumpReader::CoreDumpReader(OwnPtr<MappedFile>&& coredump_file)
+Reader::Reader(OwnPtr<MappedFile>&& coredump_file)
     : m_coredump_file(move(coredump_file))
     , m_coredump_image((u8*)m_coredump_file->data(), m_coredump_file->size())
 {
@@ -51,17 +53,17 @@ CoreDumpReader::CoreDumpReader(OwnPtr<MappedFile>&& coredump_file)
     ASSERT(m_notes_segment_index != -1);
 }
 
-CoreDumpReader::~CoreDumpReader()
+Reader::~Reader()
 {
 }
 
-CoreDumpReader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
+Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
     : m_current((const ELF::Core::NotesEntry*)notes_data)
     , start(notes_data)
 {
 }
 
-ELF::Core::NotesEntryHeader::Type CoreDumpReader::NotesEntryIterator::type() const
+ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
 {
     ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
@@ -69,12 +71,12 @@ ELF::Core::NotesEntryHeader::Type CoreDumpReader::NotesEntryIterator::type() con
     return m_current->header.type;
 }
 
-const ELF::Core::NotesEntry* CoreDumpReader::NotesEntryIterator::current() const
+const ELF::Core::NotesEntry* Reader::NotesEntryIterator::current() const
 {
     return m_current;
 }
 
-void CoreDumpReader::NotesEntryIterator::next()
+void Reader::NotesEntryIterator::next()
 {
     ASSERT(!at_end());
     if (type() == ELF::Core::NotesEntryHeader::Type::ThreadInfo) {
@@ -89,12 +91,12 @@ void CoreDumpReader::NotesEntryIterator::next()
     }
 }
 
-bool CoreDumpReader::NotesEntryIterator::at_end() const
+bool Reader::NotesEntryIterator::at_end() const
 {
     return type() == ELF::Core::NotesEntryHeader::Type::Null;
 }
 
-Optional<uint32_t> CoreDumpReader::peek_memory(FlatPtr address) const
+Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
 {
     const auto* region = region_containing(address);
     if (!region)
@@ -105,7 +107,7 @@ Optional<uint32_t> CoreDumpReader::peek_memory(FlatPtr address) const
     return *(const uint32_t*)(&region_data[offset_in_region]);
 }
 
-const ELF::Core::MemoryRegionInfo* CoreDumpReader::region_containing(FlatPtr address) const
+const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const
 {
     const ELF::Core::MemoryRegionInfo* ret = nullptr;
     for_each_memory_region_info([&ret, address](const ELF::Core::MemoryRegionInfo* region_info) {
@@ -116,4 +118,6 @@ const ELF::Core::MemoryRegionInfo* CoreDumpReader::region_containing(FlatPtr add
         return IterationDecision::Continue;
     });
     return ret;
+}
+
 }
