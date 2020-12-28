@@ -113,7 +113,7 @@ private:
     OwnPtr<Gfx::Painter> m_cursor_back_painter;
     Gfx::IntRect m_last_cursor_rect;
     Gfx::IntRect m_last_dnd_rect;
-    Gfx::IntRect m_last_geometry_label_rect;
+    Gfx::IntRect m_last_geometry_label_damage_rect;
 
     String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
