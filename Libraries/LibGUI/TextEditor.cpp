@@ -55,6 +55,10 @@ TextEditor::TextEditor(Type type)
     : m_type(type)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_ENUM_PROPERTY("mode", mode, set_mode, Mode,
+        { Editable, "Editable" },
+        { ReadOnly, "ReadOnly" },
+        { DisplayOnly, "DisplayOnly" });
 
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_accepts_emoji_input(true);
