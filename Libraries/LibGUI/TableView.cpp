@@ -66,6 +66,8 @@ void TableView::paint_event(PaintEvent& event)
     if (!model())
         return;
 
+    auto selection_color = is_focused() ? palette().selection() : palette().inactive_selection();
+
     int exposed_width = max(content_size().width(), width());
     int x_offset = row_header().is_visible() ? row_header().width() : 0;
     int y_offset = column_header().is_visible() ? column_header().height() : 0;
@@ -88,8 +90,8 @@ void TableView::paint_event(PaintEvent& event)
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row && highlight_selected_rows()) {
-            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
-            key_column_background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+            background_color = selection_color;
+            key_column_background_color = selection_color;
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
                 background_color = widget_background_color.darkened(0.8f);
@@ -124,7 +126,7 @@ void TableView::paint_event(PaintEvent& event)
                 } else if (data.is_icon()) {
                     if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
                         if (is_selected_row) {
-                            auto tint = palette().selection().with_alpha(100);
+                            auto tint = selection_color.with_alpha(100);
                             painter.blit_filtered(cell_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
                         } else if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row()) {
                             painter.blit_brightened(cell_rect.location(), *bitmap, bitmap->rect());

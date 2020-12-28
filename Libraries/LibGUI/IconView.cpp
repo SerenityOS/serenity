@@ -517,10 +517,12 @@ void IconView::paint_event(PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
+    auto selection_color = is_focused() ? palette().selection() : palette().inactive_selection();
+
     for_each_item_intersecting_rect(to_content_rect(event.rect()), [&](auto& item_data) -> IterationDecision {
         Color background_color;
         if (item_data.selected) {
-            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+            background_color = selection_color;
         } else {
             if (fill_with_background_color())
                 background_color = widget_background_color;
@@ -534,7 +536,7 @@ void IconView::paint_event(PaintEvent& event)
                 destination.center_within(item_data.icon_rect);
 
                 if (item_data.selected) {
-                    auto tint = palette().selection().with_alpha(100);
+                    auto tint = selection_color.with_alpha(100);
                     painter.blit_filtered(destination.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
                 } else if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
                     painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
