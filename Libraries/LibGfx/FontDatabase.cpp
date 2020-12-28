@@ -106,4 +106,14 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
     return it->value;
 }
 
+RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
+{
+    for (auto& it : m_private->full_name_to_font_map) {
+        auto& font = *it.value;
+        if (font.family() == family && font.presentation_size() == size && font.weight() == weight)
+            return font;
+    }
+    return nullptr;
+}
+
 }
