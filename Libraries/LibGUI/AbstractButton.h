@@ -31,13 +31,14 @@
 namespace GUI {
 
 class AbstractButton : public Widget {
-    C_OBJECT_ABSTRACT(AbstractButton)
+    C_OBJECT_ABSTRACT(AbstractButton);
+
 public:
     virtual ~AbstractButton() override;
 
     Function<void(bool)> on_checked;
 
-    void set_text(const StringView&);
+    void set_text(String);
     const String& text() const { return m_text; }
 
     bool is_exclusive() const { return m_exclusive; }
@@ -59,7 +60,7 @@ public:
     void set_auto_repeat_interval(int interval) { m_auto_repeat_interval = interval; }
 
 protected:
-    explicit AbstractButton(const StringView& = {});
+    explicit AbstractButton(String = {});
 
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;

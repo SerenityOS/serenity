@@ -31,14 +31,15 @@
 namespace GUI {
 
 class RadioButton : public AbstractButton {
-    C_OBJECT(RadioButton)
+    C_OBJECT(RadioButton);
+
 public:
     virtual ~RadioButton() override;
 
     virtual void click(unsigned modifiers = 0) override;
 
 protected:
-    explicit RadioButton(const StringView& text = {});
+    explicit RadioButton(String text = {});
     virtual void paint_event(PaintEvent&) override;
 
 private:

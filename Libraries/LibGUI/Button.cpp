@@ -35,8 +35,8 @@
 
 namespace GUI {
 
-Button::Button(const StringView& text)
-    : AbstractButton(text)
+Button::Button(String text)
+    : AbstractButton(move(text))
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }

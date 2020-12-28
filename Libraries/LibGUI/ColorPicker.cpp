@@ -38,7 +38,7 @@
 namespace GUI {
 
 class ColorButton : public AbstractButton {
-    C_OBJECT(ColorButton)
+    C_OBJECT(ColorButton);
 
 public:
     virtual ~ColorButton() override;

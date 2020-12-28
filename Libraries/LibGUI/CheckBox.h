@@ -31,14 +31,15 @@
 namespace GUI {
 
 class CheckBox : public AbstractButton {
-    C_OBJECT(CheckBox)
+    C_OBJECT(CheckBox);
+
 public:
     virtual ~CheckBox() override;
 
     virtual void click(unsigned modifiers = 0) override;
 
 private:
-    explicit CheckBox(const StringView& = {});
+    explicit CheckBox(String = {});
 
     // These don't make sense for a check box, so hide them.
     using AbstractButton::auto_repeat_interval;

@@ -33,8 +33,8 @@
 
 namespace GUI {
 
-RadioButton::RadioButton(const StringView& text)
-    : AbstractButton(text)
+RadioButton::RadioButton(String text)
+    : AbstractButton(move(text))
 {
 }
 
