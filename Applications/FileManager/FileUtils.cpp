@@ -38,6 +38,35 @@
 
 namespace FileUtils {
 
+void delete_path(const String& path, GUI::Window* parent_window)
+{
+    struct stat st;
+    if (lstat(path.characters(), &st)) {
+        GUI::MessageBox::show(parent_window,
+            String::formatted("lstat({}) failed: {}", path, strerror(errno)),
+            "Delete failed",
+            GUI::MessageBox::Type::Error);
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        String error_path;
+        int error = FileUtils::delete_directory(path, error_path);
+
+        if (error) {
+            GUI::MessageBox::show(parent_window,
+                String::formatted("Failed to delete directory \"{}\": {}", error_path, strerror(error)),
+                "Delete failed",
+                GUI::MessageBox::Type::Error);
+        }
+    } else if (unlink(path.characters()) < 0) {
+        int saved_errno = errno;
+        GUI::MessageBox::show(parent_window,
+            String::formatted("unlink(\"{}\") failed: {}", path, strerror(saved_errno)),
+            "Delete failed",
+            GUI::MessageBox::Type::Error);
+    }
+}
+
 void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window* parent_window)
 {
     String message;
@@ -58,34 +87,7 @@ void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window*
     }
 
     for (auto& path : paths) {
-        struct stat st;
-        if (lstat(path.characters(), &st)) {
-            GUI::MessageBox::show(parent_window,
-                String::formatted("lstat({}) failed: {}", path, strerror(errno)),
-                "Delete failed",
-                GUI::MessageBox::Type::Error);
-            break;
-        }
-
-        if (S_ISDIR(st.st_mode)) {
-            String error_path;
-            int error = FileUtils::delete_directory(path, error_path);
-
-            if (error) {
-                GUI::MessageBox::show(parent_window,
-                    String::formatted("Failed to delete directory \"{}\": {}", error_path, strerror(error)),
-                    "Delete failed",
-                    GUI::MessageBox::Type::Error);
-                break;
-            }
-        } else if (unlink(path.characters()) < 0) {
-            int saved_errno = errno;
-            GUI::MessageBox::show(parent_window,
-                String::formatted("unlink(\"{}\") failed: {}", path, strerror(saved_errno)),
-                "Delete failed",
-                GUI::MessageBox::Type::Error);
-            break;
-        }
+        delete_path(path, parent_window);
     }
 }
 
