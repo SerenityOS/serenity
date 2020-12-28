@@ -24,39 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__serenity__) || defined(__linux__)
+#include <AK/SharedBuffer.h>
+#include <stdio.h>
 
-#    include <AK/SharedBuffer.h>
-#    include <AK/kmalloc.h>
+#if defined(__serenity__)
 #    include <Kernel/API/Syscall.h>
-#    include <stdio.h>
-
-#    if defined(__serenity__)
-#        include <serenity.h>
-#    elif defined(__linux__)
-#        include <AK/String.h>
-#        include <fcntl.h>
-#        include <sys/mman.h>
+#    include <serenity.h>
+#else
+#    include <AK/String.h>
+#    include <fcntl.h>
+#    include <sys/mman.h>
 
 static String shbuf_shm_name(int shbuf_id)
 {
     return String::formatted("/serenity-shm:{}", shbuf_id);
 }
 
-#    endif
+#endif
 
 namespace AK {
 
 RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     void* data;
     int shbuf_id = shbuf_create(size, &data);
     if (shbuf_id < 0) {
         perror("shbuf_create");
         return nullptr;
     }
-#    elif defined(__linux__)
+#else
     // Not atomic, so don't create shared buffers from many threads too hard under lagom.
     static unsigned g_shm_id = 0;
 
@@ -85,42 +82,42 @@ RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
         perror("close");
         return nullptr;
     }
-#    endif
+#endif
     return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
 
 bool SharedBuffer::share_with([[maybe_unused]] pid_t peer)
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     int ret = shbuf_allow_pid(shbuf_id(), peer);
     if (ret < 0) {
         perror("shbuf_allow_pid");
         return false;
     }
-#    endif
+#endif
     return true;
 }
 
 bool SharedBuffer::share_globally()
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     int ret = shbuf_allow_all(shbuf_id());
     if (ret < 0) {
         perror("shbuf_allow_all");
         return false;
     }
-#    endif
+#endif
     return true;
 }
 
 RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     size_t size = 0;
     void* data = shbuf_get(shbuf_id, &size);
     if (data == (void*)-1)
         return nullptr;
-#    elif defined(__linux__)
+#else
     int fd = shm_open(shbuf_shm_name(shbuf_id).characters(), O_RDWR, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         perror("shm_open");
@@ -151,7 +148,7 @@ RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
         perror("close");
         return nullptr;
     }
-#    endif
+#endif
 
     return adopt(*new SharedBuffer(shbuf_id, size, data));
 }
@@ -166,50 +163,48 @@ SharedBuffer::SharedBuffer(int shbuf_id, int size, void* data)
 SharedBuffer::~SharedBuffer()
 {
     if (m_shbuf_id >= 0) {
-#    if defined(__serenity__)
+#if defined(__serenity__)
         int rc = shbuf_release(m_shbuf_id);
         if (rc < 0) {
             perror("shbuf_release");
         }
-#    elif defined(__linux__)
+#else
         if (munmap(reinterpret_cast<u8*>(m_data) - sizeof(size_t), m_size + sizeof(size_t)) < 0)
             perror("munmap");
         if (shm_unlink(shbuf_shm_name(m_shbuf_id).characters()) < 0)
             perror("unlink");
-#    endif
+#endif
     }
 }
 
 void SharedBuffer::seal()
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     int rc = shbuf_seal(m_shbuf_id);
     if (rc < 0) {
         perror("shbuf_seal");
         ASSERT_NOT_REACHED();
     }
-#    endif
+#endif
 }
 
 void SharedBuffer::set_volatile()
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, true);
     ASSERT(rc == 0);
-#    endif
+#endif
 }
 
 bool SharedBuffer::set_nonvolatile()
 {
-#    if defined(__serenity__)
+#if defined(__serenity__)
     u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, false);
     if (rc == 0)
         return true;
     ASSERT(rc == 1);
-#    endif
+#endif
     return false;
 }
 
 }
-
-#endif
