@@ -65,7 +65,7 @@ Utf8CodepointIterator Utf8View::end() const
     return { end_ptr(), 0 };
 }
 
-int Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
+size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
 {
     ASSERT(it.m_ptr >= begin_ptr());
     ASSERT(it.m_ptr <= end_ptr());
