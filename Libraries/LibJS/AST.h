@@ -36,6 +36,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/SourceRange.h>
 
 namespace JS {
 
@@ -44,9 +45,9 @@ class FunctionDeclaration;
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
-create_ast_node(Args&&... args)
+create_ast_node(SourceRange range, Args&&... args)
 {
-    return adopt(*new T(forward<Args>(args)...));
+    return adopt(*new T(range, forward<Args>(args)...));
 }
 
 class ASTNode : public RefCounted<ASTNode> {
@@ -67,14 +68,26 @@ public:
     virtual bool is_expression_statement() const { return false; };
     virtual bool is_string_literal() const { return false; };
 
+    const SourceRange& source_range() const { return m_source_range; }
+    SourceRange& source_range() { return m_source_range; }
+
 protected:
-    ASTNode() { }
+    ASTNode(SourceRange source_range)
+        : m_source_range(move(source_range))
+    {
+    }
 
 private:
+    SourceRange m_source_range;
 };
 
 class Statement : public ASTNode {
 public:
+    Statement(SourceRange source_range)
+        : ASTNode(move(source_range))
+    {
+    }
+
     const FlyString& label() const { return m_label; }
     void set_label(FlyString string) { m_label = string; }
 
@@ -84,20 +97,29 @@ protected:
 
 class EmptyStatement final : public Statement {
 public:
+    EmptyStatement(SourceRange source_range)
+        : Statement(move(source_range))
+    {
+    }
     Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
     const char* class_name() const override { return "EmptyStatement"; }
 };
 
 class ErrorStatement final : public Statement {
 public:
+    ErrorStatement(SourceRange source_range)
+        : Statement(move(source_range))
+    {
+    }
     Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
     const char* class_name() const override { return "ErrorStatement"; }
 };
 
 class ExpressionStatement final : public Statement {
 public:
-    ExpressionStatement(NonnullRefPtr<Expression> expression)
-        : m_expression(move(expression))
+    ExpressionStatement(SourceRange source_range, NonnullRefPtr<Expression> expression)
+        : Statement(move(source_range))
+        , m_expression(move(expression))
     {
     }
 
@@ -116,9 +138,9 @@ private:
 class ScopeNode : public Statement {
 public:
     template<typename T, typename... Args>
-    T& append(Args&&... args)
+    T& append(SourceRange range, Args&&... args)
     {
-        auto child = create_ast_node<T>(forward<Args>(args)...);
+        auto child = create_ast_node<T>(range, forward<Args>(args)...);
         m_children.append(move(child));
         return static_cast<T&>(m_children.last());
     }
@@ -137,7 +159,10 @@ public:
     const NonnullRefPtrVector<FunctionDeclaration>& functions() const { return m_functions; }
 
 protected:
-    ScopeNode() { }
+    ScopeNode(SourceRange source_range)
+        : Statement(move(source_range))
+    {
+    }
 
 private:
     virtual bool is_scope_node() const final { return true; }
@@ -148,7 +173,10 @@ private:
 
 class Program final : public ScopeNode {
 public:
-    Program() { }
+    Program(SourceRange source_range)
+        : ScopeNode(move(source_range))
+    {
+    }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 
@@ -164,7 +192,10 @@ private:
 
 class BlockStatement final : public ScopeNode {
 public:
-    BlockStatement() { }
+    BlockStatement(SourceRange source_range)
+        : ScopeNode(move(source_range))
+    {
+    }
 
 private:
     virtual const char* class_name() const override { return "BlockStatement"; }
@@ -172,14 +203,27 @@ private:
 
 class Expression : public ASTNode {
 public:
+    Expression(SourceRange source_range)
+        : ASTNode(move(source_range))
+    {
+    }
     virtual Reference to_reference(Interpreter&, GlobalObject&) const;
 };
 
 class Declaration : public Statement {
+public:
+    Declaration(SourceRange source_range)
+        : Statement(move(source_range))
+    {
+    }
 };
 
 class ErrorDeclaration final : public Declaration {
 public:
+    ErrorDeclaration(SourceRange source_range)
+        : Declaration(move(source_range))
+    {
+    }
     Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
     const char* class_name() const override { return "ErrorDeclaration"; }
 };
@@ -228,8 +272,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode = false)
-        : FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
+    FunctionDeclaration(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode = false)
+        : Declaration(move(source_range))
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
     {
     }
 
@@ -246,8 +291,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
-        : FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
+    FunctionExpression(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
+        : Expression(move(source_range))
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
         , m_is_arrow_function(is_arrow_function)
     {
     }
@@ -263,14 +309,20 @@ private:
 
 class ErrorExpression final : public Expression {
 public:
+    explicit ErrorExpression(SourceRange source_range)
+        : Expression(move(source_range))
+    {
+    }
+
     Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
     const char* class_name() const override { return "ErrorExpression"; }
 };
 
 class ReturnStatement final : public Statement {
 public:
-    explicit ReturnStatement(RefPtr<Expression> argument)
-        : m_argument(move(argument))
+    explicit ReturnStatement(SourceRange source_range, RefPtr<Expression> argument)
+        : Statement(move(source_range))
+        , m_argument(move(argument))
     {
     }
 
@@ -287,8 +339,9 @@ private:
 
 class IfStatement final : public Statement {
 public:
-    IfStatement(NonnullRefPtr<Expression> predicate, NonnullRefPtr<Statement> consequent, RefPtr<Statement> alternate)
-        : m_predicate(move(predicate))
+    IfStatement(SourceRange source_range, NonnullRefPtr<Expression> predicate, NonnullRefPtr<Statement> consequent, RefPtr<Statement> alternate)
+        : Statement(move(source_range))
+        , m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
     {
@@ -311,8 +364,9 @@ private:
 
 class WhileStatement final : public Statement {
 public:
-    WhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
-        : m_test(move(test))
+    WhileStatement(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_test(move(test))
         , m_body(move(body))
     {
     }
@@ -332,8 +386,9 @@ private:
 
 class DoWhileStatement final : public Statement {
 public:
-    DoWhileStatement(NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
-        : m_test(move(test))
+    DoWhileStatement(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_test(move(test))
         , m_body(move(body))
     {
     }
@@ -353,8 +408,9 @@ private:
 
 class WithStatement final : public Statement {
 public:
-    WithStatement(NonnullRefPtr<Expression> object, NonnullRefPtr<Statement> body)
-        : m_object(move(object))
+    WithStatement(SourceRange source_range, NonnullRefPtr<Expression> object, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_object(move(object))
         , m_body(move(body))
     {
     }
@@ -374,8 +430,9 @@ private:
 
 class ForStatement final : public Statement {
 public:
-    ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<Statement> body)
-        : m_init(move(init))
+    ForStatement(SourceRange source_range, RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
         , m_body(move(body))
@@ -401,8 +458,9 @@ private:
 
 class ForInStatement final : public Statement {
 public:
-    ForInStatement(NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
-        : m_lhs(move(lhs))
+    ForInStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
     {
@@ -425,8 +483,9 @@ private:
 
 class ForOfStatement final : public Statement {
 public:
-    ForOfStatement(NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
-        : m_lhs(move(lhs))
+    ForOfStatement(SourceRange source_range, NonnullRefPtr<ASTNode> lhs, NonnullRefPtr<Expression> rhs, NonnullRefPtr<Statement> body)
+        : Statement(move(source_range))
+        , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
     {
@@ -474,8 +533,9 @@ enum class BinaryOp {
 
 class BinaryExpression final : public Expression {
 public:
-    BinaryExpression(BinaryOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
-        : m_op(op)
+    BinaryExpression(SourceRange source_range, BinaryOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
+        : Expression(move(source_range))
+        , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
     {
@@ -500,8 +560,9 @@ enum class LogicalOp {
 
 class LogicalExpression final : public Expression {
 public:
-    LogicalExpression(LogicalOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
-        : m_op(op)
+    LogicalExpression(SourceRange source_range, LogicalOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
+        : Expression(move(source_range))
+        , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
     {
@@ -530,8 +591,9 @@ enum class UnaryOp {
 
 class UnaryExpression final : public Expression {
 public:
-    UnaryExpression(UnaryOp op, NonnullRefPtr<Expression> lhs)
-        : m_op(op)
+    UnaryExpression(SourceRange source_range, UnaryOp op, NonnullRefPtr<Expression> lhs)
+        : Expression(move(source_range))
+        , m_op(op)
         , m_lhs(move(lhs))
     {
     }
@@ -548,8 +610,9 @@ private:
 
 class SequenceExpression final : public Expression {
 public:
-    SequenceExpression(NonnullRefPtrVector<Expression> expressions)
-        : m_expressions(move(expressions))
+    SequenceExpression(SourceRange source_range, NonnullRefPtrVector<Expression> expressions)
+        : Expression(move(source_range))
+        , m_expressions(move(expressions))
     {
     }
 
@@ -564,13 +627,17 @@ private:
 
 class Literal : public Expression {
 protected:
-    explicit Literal() { }
+    explicit Literal(SourceRange source_range)
+        : Expression(move(source_range))
+    {
+    }
 };
 
 class BooleanLiteral final : public Literal {
 public:
-    explicit BooleanLiteral(bool value)
-        : m_value(value)
+    explicit BooleanLiteral(SourceRange source_range, bool value)
+        : Literal(move(source_range))
+        , m_value(value)
     {
     }
 
@@ -585,8 +652,9 @@ private:
 
 class NumericLiteral final : public Literal {
 public:
-    explicit NumericLiteral(double value)
-        : m_value(value)
+    explicit NumericLiteral(SourceRange source_range, double value)
+        : Literal(move(source_range))
+        , m_value(value)
     {
     }
 
@@ -601,8 +669,9 @@ private:
 
 class BigIntLiteral final : public Literal {
 public:
-    explicit BigIntLiteral(String value)
-        : m_value(move(value))
+    explicit BigIntLiteral(SourceRange source_range, String value)
+        : Literal(move(source_range))
+        , m_value(move(value))
     {
     }
 
@@ -617,8 +686,9 @@ private:
 
 class StringLiteral final : public Literal {
 public:
-    explicit StringLiteral(String value, bool is_use_strict_directive = false)
-        : m_value(move(value))
+    explicit StringLiteral(SourceRange source_range, String value, bool is_use_strict_directive = false)
+        : Literal(move(source_range))
+        , m_value(move(value))
         , m_is_use_strict_directive(is_use_strict_directive)
     {
     }
@@ -639,7 +709,10 @@ private:
 
 class NullLiteral final : public Literal {
 public:
-    explicit NullLiteral() { }
+    explicit NullLiteral(SourceRange source_range)
+        : Literal(move(source_range))
+    {
+    }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
@@ -650,8 +723,9 @@ private:
 
 class RegExpLiteral final : public Literal {
 public:
-    explicit RegExpLiteral(String content, String flags)
-        : m_content(content)
+    explicit RegExpLiteral(SourceRange source_range, String content, String flags)
+        : Literal(move(source_range))
+        , m_content(content)
         , m_flags(flags)
     {
     }
@@ -671,8 +745,9 @@ private:
 
 class Identifier final : public Expression {
 public:
-    explicit Identifier(const FlyString& string)
-        : m_string(string)
+    explicit Identifier(SourceRange source_range, const FlyString& string)
+        : Expression(move(source_range))
+        , m_string(string)
     {
     }
 
@@ -697,8 +772,9 @@ public:
         Setter,
     };
 
-    ClassMethod(NonnullRefPtr<Expression> key, NonnullRefPtr<FunctionExpression> function, Kind kind, bool is_static)
-        : m_key(move(key))
+    ClassMethod(SourceRange source_range, NonnullRefPtr<Expression> key, NonnullRefPtr<FunctionExpression> function, Kind kind, bool is_static)
+        : ASTNode(move(source_range))
+        , m_key(move(key))
         , m_function(move(function))
         , m_kind(kind)
         , m_is_static(is_static)
@@ -723,6 +799,11 @@ private:
 
 class SuperExpression final : public Expression {
 public:
+    SuperExpression(SourceRange source_range)
+        : Expression(move(source_range))
+    {
+    }
+
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
@@ -733,8 +814,9 @@ private:
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods)
-        : m_name(move(name))
+    ClassExpression(SourceRange source_range, String name, RefPtr<FunctionExpression> constructor, RefPtr<Expression> super_class, NonnullRefPtrVector<ClassMethod> methods)
+        : Expression(move(source_range))
+        , m_name(move(name))
         , m_constructor(move(constructor))
         , m_super_class(move(super_class))
         , m_methods(move(methods))
@@ -757,8 +839,9 @@ private:
 
 class ClassDeclaration final : public Declaration {
 public:
-    ClassDeclaration(NonnullRefPtr<ClassExpression> class_expression)
-        : m_class_expression(move(class_expression))
+    ClassDeclaration(SourceRange source_range, NonnullRefPtr<ClassExpression> class_expression)
+        : Declaration(move(source_range))
+        , m_class_expression(move(class_expression))
     {
     }
 
@@ -772,8 +855,9 @@ private:
 
 class SpreadExpression final : public Expression {
 public:
-    explicit SpreadExpression(NonnullRefPtr<Expression> target)
-        : m_target(target)
+    explicit SpreadExpression(SourceRange source_range, NonnullRefPtr<Expression> target)
+        : Expression(move(source_range))
+        , m_target(target)
     {
     }
 
@@ -789,6 +873,10 @@ private:
 
 class ThisExpression final : public Expression {
 public:
+    ThisExpression(SourceRange source_range)
+        : Expression(move(source_range))
+    {
+    }
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
@@ -803,8 +891,9 @@ public:
         bool is_spread;
     };
 
-    CallExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
-        : m_callee(move(callee))
+    CallExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
+        : Expression(move(source_range))
+        , m_callee(move(callee))
         , m_arguments(move(arguments))
     {
     }
@@ -828,8 +917,8 @@ private:
 
 class NewExpression final : public CallExpression {
 public:
-    NewExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
-        : CallExpression(move(callee), move(arguments))
+    NewExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
+        : CallExpression(move(source_range), move(callee), move(arguments))
     {
     }
 
@@ -860,8 +949,9 @@ enum class AssignmentOp {
 
 class AssignmentExpression final : public Expression {
 public:
-    AssignmentExpression(AssignmentOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
-        : m_op(op)
+    AssignmentExpression(SourceRange source_range, AssignmentOp op, NonnullRefPtr<Expression> lhs, NonnullRefPtr<Expression> rhs)
+        : Expression(move(source_range))
+        , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
     {
@@ -885,8 +975,9 @@ enum class UpdateOp {
 
 class UpdateExpression final : public Expression {
 public:
-    UpdateExpression(UpdateOp op, NonnullRefPtr<Expression> argument, bool prefixed = false)
-        : m_op(op)
+    UpdateExpression(SourceRange source_range, UpdateOp op, NonnullRefPtr<Expression> argument, bool prefixed = false)
+        : Expression(move(source_range))
+        , m_op(op)
         , m_argument(move(argument))
         , m_prefixed(prefixed)
     {
@@ -911,13 +1002,15 @@ enum class DeclarationKind {
 
 class VariableDeclarator final : public ASTNode {
 public:
-    VariableDeclarator(NonnullRefPtr<Identifier> id)
-        : m_id(move(id))
+    VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier> id)
+        : ASTNode(move(source_range))
+        , m_id(move(id))
     {
     }
 
-    VariableDeclarator(NonnullRefPtr<Identifier> id, RefPtr<Expression> init)
-        : m_id(move(id))
+    VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier> id, RefPtr<Expression> init)
+        : ASTNode(move(source_range))
+        , m_id(move(id))
         , m_init(move(init))
     {
     }
@@ -937,8 +1030,9 @@ private:
 
 class VariableDeclaration final : public Declaration {
 public:
-    VariableDeclaration(DeclarationKind declaration_kind, NonnullRefPtrVector<VariableDeclarator> declarations)
-        : m_declaration_kind(declaration_kind)
+    VariableDeclaration(SourceRange source_range, DeclarationKind declaration_kind, NonnullRefPtrVector<VariableDeclarator> declarations)
+        : Declaration(move(source_range))
+        , m_declaration_kind(declaration_kind)
         , m_declarations(move(declarations))
     {
     }
@@ -967,8 +1061,9 @@ public:
         Spread,
     };
 
-    ObjectProperty(NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type, bool is_method)
-        : m_key(move(key))
+    ObjectProperty(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type, bool is_method)
+        : ASTNode(move(source_range))
+        , m_key(move(key))
         , m_value(move(value))
         , m_property_type(property_type)
         , m_is_method(is_method)
@@ -999,8 +1094,9 @@ private:
 
 class ObjectExpression final : public Expression {
 public:
-    ObjectExpression(NonnullRefPtrVector<ObjectProperty> properties = {})
-        : m_properties(move(properties))
+    ObjectExpression(SourceRange source_range, NonnullRefPtrVector<ObjectProperty> properties = {})
+        : Expression(move(source_range))
+        , m_properties(move(properties))
     {
     }
 
@@ -1015,8 +1111,9 @@ private:
 
 class ArrayExpression final : public Expression {
 public:
-    ArrayExpression(Vector<RefPtr<Expression>> elements)
-        : m_elements(move(elements))
+    ArrayExpression(SourceRange source_range, Vector<RefPtr<Expression>> elements)
+        : Expression(move(source_range))
+        , m_elements(move(elements))
     {
     }
 
@@ -1033,13 +1130,15 @@ private:
 
 class TemplateLiteral final : public Expression {
 public:
-    TemplateLiteral(NonnullRefPtrVector<Expression> expressions)
-        : m_expressions(move(expressions))
+    TemplateLiteral(SourceRange source_range, NonnullRefPtrVector<Expression> expressions)
+        : Expression(move(source_range))
+        , m_expressions(move(expressions))
     {
     }
 
-    TemplateLiteral(NonnullRefPtrVector<Expression> expressions, NonnullRefPtrVector<Expression> raw_strings)
-        : m_expressions(move(expressions))
+    TemplateLiteral(SourceRange source_range, NonnullRefPtrVector<Expression> expressions, NonnullRefPtrVector<Expression> raw_strings)
+        : Expression(move(source_range))
+        , m_expressions(move(expressions))
         , m_raw_strings(move(raw_strings))
     {
     }
@@ -1059,8 +1158,9 @@ private:
 
 class TaggedTemplateLiteral final : public Expression {
 public:
-    TaggedTemplateLiteral(NonnullRefPtr<Expression> tag, NonnullRefPtr<TemplateLiteral> template_literal)
-        : m_tag(move(tag))
+    TaggedTemplateLiteral(SourceRange source_range, NonnullRefPtr<Expression> tag, NonnullRefPtr<TemplateLiteral> template_literal)
+        : Expression(move(source_range))
+        , m_tag(move(tag))
         , m_template_literal(move(template_literal))
     {
     }
@@ -1077,8 +1177,9 @@ private:
 
 class MemberExpression final : public Expression {
 public:
-    MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
-        : m_object(move(object))
+    MemberExpression(SourceRange source_range, NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
+        : Expression(move(source_range))
+        , m_object(move(object))
         , m_property(move(property))
         , m_computed(computed)
     {
@@ -1112,8 +1213,9 @@ public:
         ImportMeta,
     };
 
-    MetaProperty(Type type)
-        : m_type(type)
+    MetaProperty(SourceRange source_range, Type type)
+        : Expression(move(source_range))
+        , m_type(type)
     {
     }
 
@@ -1128,8 +1230,9 @@ private:
 
 class ConditionalExpression final : public Expression {
 public:
-    ConditionalExpression(NonnullRefPtr<Expression> test, NonnullRefPtr<Expression> consequent, NonnullRefPtr<Expression> alternate)
-        : m_test(move(test))
+    ConditionalExpression(SourceRange source_range, NonnullRefPtr<Expression> test, NonnullRefPtr<Expression> consequent, NonnullRefPtr<Expression> alternate)
+        : Expression(move(source_range))
+        , m_test(move(test))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
     {
@@ -1148,8 +1251,9 @@ private:
 
 class CatchClause final : public ASTNode {
 public:
-    CatchClause(const FlyString& parameter, NonnullRefPtr<BlockStatement> body)
-        : m_parameter(parameter)
+    CatchClause(SourceRange source_range, const FlyString& parameter, NonnullRefPtr<BlockStatement> body)
+        : ASTNode(move(source_range))
+        , m_parameter(parameter)
         , m_body(move(body))
     {
     }
@@ -1169,8 +1273,9 @@ private:
 
 class TryStatement final : public Statement {
 public:
-    TryStatement(NonnullRefPtr<BlockStatement> block, RefPtr<CatchClause> handler, RefPtr<BlockStatement> finalizer)
-        : m_block(move(block))
+    TryStatement(SourceRange source_range, NonnullRefPtr<BlockStatement> block, RefPtr<CatchClause> handler, RefPtr<BlockStatement> finalizer)
+        : Statement(move(source_range))
+        , m_block(move(block))
         , m_handler(move(handler))
         , m_finalizer(move(finalizer))
     {
@@ -1193,8 +1298,9 @@ private:
 
 class ThrowStatement final : public Statement {
 public:
-    explicit ThrowStatement(NonnullRefPtr<Expression> argument)
-        : m_argument(move(argument))
+    explicit ThrowStatement(SourceRange source_range, NonnullRefPtr<Expression> argument)
+        : Statement(move(source_range))
+        , m_argument(move(argument))
     {
     }
 
@@ -1211,8 +1317,9 @@ private:
 
 class SwitchCase final : public ASTNode {
 public:
-    SwitchCase(RefPtr<Expression> test, NonnullRefPtrVector<Statement> consequent)
-        : m_test(move(test))
+    SwitchCase(SourceRange source_range, RefPtr<Expression> test, NonnullRefPtrVector<Statement> consequent)
+        : ASTNode(move(source_range))
+        , m_test(move(test))
         , m_consequent(move(consequent))
     {
     }
@@ -1232,8 +1339,9 @@ private:
 
 class SwitchStatement final : public Statement {
 public:
-    SwitchStatement(NonnullRefPtr<Expression> discriminant, NonnullRefPtrVector<SwitchCase> cases)
-        : m_discriminant(move(discriminant))
+    SwitchStatement(SourceRange source_range, NonnullRefPtr<Expression> discriminant, NonnullRefPtrVector<SwitchCase> cases)
+        : Statement(move(source_range))
+        , m_discriminant(move(discriminant))
         , m_cases(move(cases))
     {
     }
@@ -1250,8 +1358,9 @@ private:
 
 class BreakStatement final : public Statement {
 public:
-    BreakStatement(FlyString target_label)
-        : m_target_label(target_label)
+    BreakStatement(SourceRange source_range, FlyString target_label)
+        : Statement(move(source_range))
+        , m_target_label(target_label)
     {
     }
 
@@ -1267,8 +1376,9 @@ private:
 
 class ContinueStatement final : public Statement {
 public:
-    ContinueStatement(FlyString target_label)
-        : m_target_label(target_label)
+    ContinueStatement(SourceRange source_range, FlyString target_label)
+        : Statement(move(source_range))
+        , m_target_label(target_label)
     {
     }
 
@@ -1284,7 +1394,10 @@ private:
 
 class DebuggerStatement final : public Statement {
 public:
-    DebuggerStatement() { }
+    DebuggerStatement(SourceRange source_range)
+        : Statement(move(source_range))
+    {
+    }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 
