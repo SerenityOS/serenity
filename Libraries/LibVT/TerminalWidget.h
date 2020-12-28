@@ -81,7 +81,11 @@ public:
     void set_selection(const VT::Range& selection);
     VT::Position buffer_position_at(const Gfx::IntPoint&) const;
 
+    VT::Range find_next(const StringView&, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);
+    VT::Range find_previous(const StringView&, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);
+
     void scroll_to_bottom();
+    void scroll_to_row(int);
 
     bool is_scrollable() const;
     int scroll_length() const;
@@ -144,6 +148,10 @@ private:
     Gfx::IntSize compute_base_size() const;
     int first_selection_column_on_row(int row) const;
     int last_selection_column_on_row(int row) const;
+
+    u32 code_point_at(const VT::Position&) const;
+    VT::Position next_position_after(const VT::Position&, bool should_wrap) const;
+    VT::Position previous_position_before(const VT::Position&, bool should_wrap) const;
 
     VT::Terminal m_terminal;
 
