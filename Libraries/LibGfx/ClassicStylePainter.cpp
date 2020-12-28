@@ -93,7 +93,7 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect
     }
 }
 
-static void paint_button_new(Painter& painter, const IntRect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
+static void paint_button_new(Painter& painter, const IntRect& a_rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled, bool focused)
 {
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
@@ -109,11 +109,19 @@ static void paint_button_new(Painter& painter, const IntRect& rect, const Palett
         button_color = palette.hover_highlight();
 
     PainterStateSaver saver(painter);
+
+    auto rect = a_rect;
+    if (focused) {
+        painter.draw_rect(a_rect, palette.threed_shadow2());
+        rect.shrink(2, 2);
+    }
+
     painter.translate(rect.location());
 
     if (pressed || checked) {
         // Base
         Gfx::IntRect base_rect { 1, 1, rect.width() - 2, rect.height() - 2 };
+
         if (checked && !pressed)
             painter.fill_rect_with_dither_pattern(base_rect, palette.button().lightened(1.3f), palette.button());
         else
@@ -152,10 +160,10 @@ static void paint_button_new(Painter& painter, const IntRect& rect, const Palett
     }
 }
 
-void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
+void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
 {
     if (button_style == ButtonStyle::Normal)
-        return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled);
+        return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled, focused);
 
     if (button_style == ButtonStyle::CoolBar && !enabled)
         return;

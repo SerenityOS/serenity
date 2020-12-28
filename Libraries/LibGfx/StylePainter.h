@@ -54,7 +54,7 @@ class BaseStylePainter {
 public:
     virtual ~BaseStylePainter() { }
 
-    virtual void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true) = 0;
+    virtual void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false) = 0;
     virtual void paint_tab_button(Painter&, const IntRect&, const Palette&, bool active, bool hovered, bool enabled, bool top) = 0;
     virtual void paint_surface(Painter&, const IntRect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true) = 0;
     virtual void paint_frame(Painter&, const IntRect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) = 0;
@@ -73,7 +73,7 @@ public:
     static BaseStylePainter& current();
 
     // FIXME: These are here for API compatibility, we should probably remove them and move BaseStylePainter into here
-    static void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true);
+    static void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false);
     static void paint_tab_button(Painter&, const IntRect&, const Palette&, bool active, bool hovered, bool enabled, bool top);
     static void paint_surface(Painter&, const IntRect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true);
     static void paint_frame(Painter&, const IntRect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false);

@@ -68,7 +68,7 @@ void ControlBoxButton::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Gfx::StylePainter::paint_button(painter, rect(), palette(), Gfx::ButtonStyle::Normal, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), Gfx::ButtonStyle::Normal, is_being_pressed(), is_hovered(), is_checked(), is_enabled(), is_focused());
 
     auto button_location = rect().location().translated((width() - s_bitmap_width) / 2, (height() - s_bitmap_height) / 2);
 
