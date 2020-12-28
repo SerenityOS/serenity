@@ -36,6 +36,7 @@
 #include <LibCore/Timer.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/StylePainter.h>
 #include <LibThread/BackgroundAction.h>
 
 //#define COMPOSE_DEBUG
@@ -135,7 +136,7 @@ void Compositor::compose()
     }
 
     auto dirty_screen_rects = move(m_dirty_screen_rects);
-    dirty_screen_rects.add(m_last_geometry_label_rect.intersected(ws.rect()));
+    dirty_screen_rects.add(m_last_geometry_label_damage_rect.intersected(ws.rect()));
     dirty_screen_rects.add(m_last_dnd_rect.intersected(ws.rect()));
     if (m_invalidated_cursor) {
         if (wm.dnd_client())
@@ -452,9 +453,9 @@ void Compositor::compose()
         for (auto& rect : flush_transparent_rects.rects())
             back_painter.blit(rect.location(), *m_temp_bitmap, rect);
 
-        Gfx::IntRect geometry_label_rect;
-        if (draw_geometry_label(geometry_label_rect))
-            flush_special_rects.add(geometry_label_rect);
+        Gfx::IntRect geometry_label_damage_rect;
+        if (draw_geometry_label(geometry_label_damage_rect))
+            flush_special_rects.add(geometry_label_damage_rect);
     }
 
     m_invalidated_any = false;
@@ -728,12 +729,12 @@ void Compositor::invalidate_cursor(bool compose_immediately)
         start_compose_async_timer();
 }
 
-bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_rect)
+bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_damage_rect)
 {
     auto& wm = WindowManager::the();
     auto* window_being_moved_or_resized = wm.m_move_window ? wm.m_move_window.ptr() : (wm.m_resize_window ? wm.m_resize_window.ptr() : nullptr);
     if (!window_being_moved_or_resized) {
-        m_last_geometry_label_rect = {};
+        m_last_geometry_label_damage_rect = {};
         return false;
     }
     auto geometry_string = window_being_moved_or_resized->rect().to_string();
@@ -742,13 +743,15 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_rect)
         int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
         geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
     }
-    geometry_label_rect = Gfx::IntRect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
+    auto geometry_label_rect = Gfx::IntRect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
     auto& back_painter = *m_back_painter;
-    back_painter.fill_rect(geometry_label_rect, wm.palette().window());
-    back_painter.draw_rect(geometry_label_rect, wm.palette().threed_shadow2());
-    back_painter.draw_text(geometry_label_rect, geometry_string, Gfx::TextAlignment::Center, wm.palette().window_text());
-    m_last_geometry_label_rect = geometry_label_rect;
+    back_painter.fill_rect(geometry_label_rect.translated(1, 1), Color(Color::Black).with_alpha(80));
+    Gfx::StylePainter::paint_button(back_painter, geometry_label_rect.translated(-1, -1), wm.palette(), Gfx::ButtonStyle::Normal, false);
+    back_painter.draw_text(geometry_label_rect.translated(-1, -1), geometry_string, Gfx::TextAlignment::Center, wm.palette().window_text());
+
+    geometry_label_damage_rect = geometry_label_rect.inflated(2, 2);
+    m_last_geometry_label_damage_rect = geometry_label_damage_rect;
     return true;
 }
 
