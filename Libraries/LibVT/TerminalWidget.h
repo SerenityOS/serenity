@@ -34,6 +34,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
+#include <LibVT/Range.h>
 #include <LibVT/Terminal.h>
 
 class TerminalWidget final : public GUI::Frame
@@ -76,9 +77,9 @@ public:
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;
     String selected_text() const;
+    VT::Range normalized_selection() const { return m_selection.normalized(); }
+    void set_selection(const VT::Range& selection);
     VT::Position buffer_position_at(const Gfx::IntPoint&) const;
-    VT::Position normalized_selection_start() const;
-    VT::Position normalized_selection_end() const;
 
     void scroll_to_bottom();
 
@@ -146,8 +147,7 @@ private:
 
     VT::Terminal m_terminal;
 
-    VT::Position m_selection_start;
-    VT::Position m_selection_end;
+    VT::Range m_selection;
 
     String m_hovered_href;
     String m_hovered_href_id;
