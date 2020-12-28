@@ -27,12 +27,85 @@
 #include "JSIntegration.h"
 #include "Spreadsheet.h"
 #include "Workbook.h"
+#include <LibJS/Lexer.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace Spreadsheet {
+
+Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView source)
+{
+    JS::Lexer lexer { source };
+    // Track <identifier> <OpenParen>'s, and how many complete expressions are inside the parenthesised expression.
+    Vector<size_t> state;
+    StringView last_name;
+    Vector<StringView> names;
+    size_t open_parens_since_last_commit = 0;
+    size_t open_curlies_and_brackets_since_last_commit = 0;
+    bool previous_was_identifier = false;
+    auto token = lexer.next();
+    while (token.type() != JS::TokenType::Eof) {
+        switch (token.type()) {
+        case JS::TokenType::Identifier:
+            previous_was_identifier = true;
+            last_name = token.value();
+            break;
+        case JS::TokenType::ParenOpen:
+            if (!previous_was_identifier) {
+                open_parens_since_last_commit++;
+                break;
+            }
+            previous_was_identifier = false;
+            state.append(0);
+            names.append(last_name);
+            break;
+        case JS::TokenType::ParenClose:
+            previous_was_identifier = false;
+            if (open_parens_since_last_commit == 0) {
+                state.take_last();
+                names.take_last();
+                break;
+            }
+            --open_parens_since_last_commit;
+            break;
+        case JS::TokenType::Comma:
+            previous_was_identifier = false;
+            if (open_parens_since_last_commit == 0 && open_curlies_and_brackets_since_last_commit == 0) {
+                state.last()++;
+                break;
+            }
+            break;
+        case JS::TokenType::BracketOpen:
+            previous_was_identifier = false;
+            open_curlies_and_brackets_since_last_commit++;
+            break;
+        case JS::TokenType::BracketClose:
+            previous_was_identifier = false;
+            if (open_curlies_and_brackets_since_last_commit > 0)
+                open_curlies_and_brackets_since_last_commit--;
+            break;
+        case JS::TokenType::CurlyOpen:
+            previous_was_identifier = false;
+            open_curlies_and_brackets_since_last_commit++;
+            break;
+        case JS::TokenType::CurlyClose:
+            previous_was_identifier = false;
+            if (open_curlies_and_brackets_since_last_commit > 0)
+                open_curlies_and_brackets_since_last_commit--;
+            break;
+        default:
+            previous_was_identifier = false;
+            break;
+        }
+
+        token = lexer.next();
+    }
+    if (!names.is_empty() && !state.is_empty())
+        return FunctionAndArgumentIndex { names.last(), state.last() };
+    return {};
+}
 
 SheetGlobalObject::SheetGlobalObject(Sheet& sheet)
     : m_sheet(sheet)
