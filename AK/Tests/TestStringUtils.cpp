@@ -86,6 +86,14 @@ TEST_CASE(matches_with_positions)
     EXPECT_EQ(spans, Vector<AK::MaskSpan>({ { 1, 3 } }));
 }
 
+// #4607
+TEST_CASE(matches_trailing)
+{
+    EXPECT(AK::StringUtils::matches("ab", "ab*"));
+    EXPECT(AK::StringUtils::matches("ab", "ab****"));
+    EXPECT(AK::StringUtils::matches("ab", "*ab****"));
+}
+
 TEST_CASE(convert_to_int)
 {
     auto value = AK::StringUtils::convert_to_int(StringView());
