@@ -26,9 +26,14 @@
 
 #pragma once
 
-#include "SIR.h"
+#include "LibIntermediate/SIR.h"
+#include <AK/NonnullRefPtr.h>
+#include <AK/NonnullRefPtrVector.h>
 
-namespace MiddleEnd::Utils {
-NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>&, String&);
-NonnullRefPtr<SIR::BinaryExpression> create_binary_operation(NonnullRefPtr<SIR::Variable>&, NonnullRefPtr<SIR::Variable>&, SIR::BinaryExpression::Kind);
+namespace Cpp {
+class TranslationUnit;
+}
+
+namespace Cpp::IR {
+SIR::TranslationUnit to_internal_representation(Cpp::TranslationUnit& tu);
 }

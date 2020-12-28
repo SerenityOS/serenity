@@ -26,6 +26,6 @@
 
 #pragma once
 
-namespace Cpp::CppCompiler {
+namespace Cpp::Driver {
 void run(int, const char**);
 }

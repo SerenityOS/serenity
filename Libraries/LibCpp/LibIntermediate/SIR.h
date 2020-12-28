@@ -153,8 +153,8 @@ public:
     NonnullRefPtr<Expression>& left() { return m_left; }
     const NonnullRefPtr<Expression>& right() const { return m_right; }
     NonnullRefPtr<Expression>& right() { return m_right; }
-    void set_right(NonnullRefPtr<Expression> right) {m_right = right; }
-    void set_left(NonnullRefPtr<Expression> left) {m_left = left; }
+    void set_right(NonnullRefPtr<Expression> right) { m_right = right; }
+    void set_left(NonnullRefPtr<Expression> left) { m_left = left; }
     Kind binary_operation() const { return m_binary_operation; }
 
 private:

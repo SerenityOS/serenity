@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibMiddleEnd/SIR.h>
+#include "LibIntermediate/SIR.h"
 
 namespace Cpp {
 
@@ -39,7 +39,6 @@ using Statement = SIR::Statement;
 using ReturnStatement = SIR::ReturnStatement;
 using BinaryExpression = SIR::BinaryExpression;
 using IdentifierExpression = SIR::IdentifierExpression;
-
 
 class IntegerType : public SIR::IntegerType {
 public:
@@ -66,7 +65,7 @@ public:
 
 class Function : public SIR::Function {
 public:
-    Function(NonnullRefPtr<SIR::Type>& return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable>& parameters, NonnullRefPtrVector<ASTNode> &body)
+    Function(NonnullRefPtr<SIR::Type>& return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable>& parameters, NonnullRefPtrVector<ASTNode>& body)
         : SIR::Function(return_type, unmangled_name, parameters, body)
         , m_unmangled_name(unmangled_name)
     {

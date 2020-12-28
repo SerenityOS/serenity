@@ -72,13 +72,13 @@ static bool is_valid_nonfirst_character_of_identifier(char ch)
 
 #define __KNOWN_KEYWORD(keyword, string) { string, Token::KnownKeyword::keyword },
 
-const HashMap<String, Cpp::Token::KnownKeyword> s_known_keywords = {
+static const HashMap<StringView, Cpp::Token::KnownKeyword> s_known_keywords = {
     FOR_EACH_CPP_KNOWN_KEYWORD
 };
 
 #define __KNOWN_TYPE(type, string) { string, Token::KnownType::type },
 
-const HashMap<String, Cpp::Token::KnownType> s_known_types = {
+static const HashMap<StringView, Cpp::Token::KnownType> s_known_types = {
     FOR_EACH_CPP_KNOWN_TYPE
 };
 #undef __KNOWN_TYPE

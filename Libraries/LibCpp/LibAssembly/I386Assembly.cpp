@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "I386BackEnd.h"
+#include "I386Assembly.h"
+#include <LibCpp/LibIntermediate/SIR.h>
 #include <LibCpp/Option.h>
-#include <LibMiddleEnd/SIR.h>
 
 namespace BackEnd {
 
-NonnullRefPtr<Core::File> I386BackEnd::get_output_file()
+NonnullRefPtr<Core::File> I386Assembly::get_output_file()
 {
     auto output_file = Core::File::open(m_options.output_file, Core::IODevice::WriteOnly);
     assert(!output_file.is_error());
@@ -38,7 +38,7 @@ NonnullRefPtr<Core::File> I386BackEnd::get_output_file()
     return output_file.value();
 }
 
-void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
+void I386Assembly::print_assembly_for_function(const SIR::Function& function)
 {
     size_t param_stack = m_param_stack_start;
 
@@ -95,7 +95,7 @@ void I386BackEnd::print_assembly_for_function(const SIR::Function& function)
     m_output_file->printf("\t.size %s, .-%s\n", function.name().characters(), function.name().characters());
 }
 
-void I386BackEnd::print_asm()
+void I386Assembly::print_asm()
 {
     //TODO: implement String.last_index_of
     auto input_file_name = m_options.input_file;

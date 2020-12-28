@@ -28,8 +28,8 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
+#include <LibCpp/Lexer.h>
 #include <LibGUI/TextPosition.h>
 
 namespace LanguageServers::Cpp {

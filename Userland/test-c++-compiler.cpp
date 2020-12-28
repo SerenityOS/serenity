@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "LibCpp/Driver.h"
+#include "LibCpp/Lexer.h"
 #include <AK/QuickSort.h>
 #include <AK/String.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Driver.h>
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <assert.h>
@@ -119,7 +119,7 @@ static void check_expected_result(const String& test_file_name, const Vector<Exp
     char* outname = mktemp(tmpname);
     const char* args[] = { "c++", test_file_name.characters(), "-o", outname, nullptr };
 
-    Cpp::CppCompiler::run(4, args);
+    Cpp::Driver::run(4, args);
     auto f = Core::File::open(outname, Core::IODevice::ReadOnly);
     assert(!f.is_error());
     auto buffer = f.value()->read_all();
@@ -148,7 +148,7 @@ int main()
         warnln("No Tests root given, tests-c++ requires the SERENITY_ROOT environment variable to be set");
         return 1;
     }
-    test_root = String::formatted("{}/DevTools/Compiler/Tests", serenity_root);
+    test_root = String::formatted("{}/DevTools/CppCompiler/Tests", serenity_root);
 #endif
 
     if (!Core::File::is_directory(test_root)) {

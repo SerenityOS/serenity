@@ -24,33 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AST.h"
-#include <AK/StringBuilder.h>
+#include "Driver.h"
+#include "IR.h"
+#include "LibAssembly/I386Assembly.h"
+#include "LibIntermediate/SIR.h"
+#include "Option.h"
+#include "Parser.h"
 
 namespace Cpp {
-
-template<typename A, typename... Args>
-NonnullRefPtr<A> create(Args... args)
+void Driver::run(int ac, const char** av)
 {
-    return adopt(*new A(args...));
-}
+    auto options = Cpp::Option::parse_options(ac, av);
+    auto tu = Cpp::Parser::parse(options);
+    auto ir = Cpp::IR::to_internal_representation(tu);
 
-String Function::mangle()
-{
-    StringBuilder sb;
+    SIR::run_intermediate_representation_passes(ir);
+    auto assembly = BackEnd::I386Assembly(ir, options);
 
-    sb.appendf("_Z%zu%s", m_unmangled_name.length(), m_unmangled_name.characters());
-    if (parameters().is_empty()) {
-        sb.append('v');
-    } else {
-        for (auto& param : parameters()) {
-            if (param.node_type()->kind() == Type::Kind::Integer)
-                sb.append('i');
-            else
-                TODO();
-        }
-    }
-    dbgln("function mangled to {}", sb.build());
-    return sb.build();
+    assembly.print_asm();
 }
 }

@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <DevTools/Compiler/C++Compiler/LibCpp/Lexer.h>
+#include <LibCpp/Lexer.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>

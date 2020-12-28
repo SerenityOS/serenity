@@ -37,7 +37,7 @@ if [ "$#" -eq "1" ]; then
             '*.cpp' \
             '*.h' \
             ':!:Base' \
-            ':!:DevTools/Compiler/Tests' \
+            ':!:DevTools/CppCompiler/Tests' \
             ':!:Kernel/Arch/i386/CPU.cpp' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
             ':!:Libraries/LibC/getopt.cpp' \

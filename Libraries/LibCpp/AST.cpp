@@ -24,25 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SIR.h"
+#include "AST.h"
+#include <AK/StringBuilder.h>
 
-namespace SIR {
+namespace Cpp {
 
-static void add_return_to_void_functions(SIR::TranslationUnit& tu)
+template<typename A, typename... Args>
+NonnullRefPtr<A> create(Args... args)
 {
-    for (auto& function : tu.functions()) {
-        const Type& return_type = function.return_type();
+    return adopt(*new A(args...));
+}
 
-        if (return_type.kind() == Type::Kind::Void) {
-            if (function.body().is_empty() || !function.body().last().is_return_statement())
-                function.body().append(create_ast_node<ReturnStatement>());
+String Function::mangle()
+{
+    StringBuilder sb;
+
+    sb.appendf("_Z%zu%s", m_unmangled_name.length(), m_unmangled_name.characters());
+    if (parameters().is_empty()) {
+        sb.append('v');
+    } else {
+        for (auto& param : parameters()) {
+            if (param.node_type()->kind() == Type::Kind::Integer)
+                sb.append('i');
+            else
+                TODO();
         }
     }
+    dbgln("function mangled to {}", sb.build());
+    return sb.build();
 }
-
-void run_intermediate_representation_passes(SIR::TranslationUnit& tu)
-{
-    add_return_to_void_functions(tu);
-}
-
 }

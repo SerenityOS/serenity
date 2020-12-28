@@ -24,23 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Driver.h"
-#include "IR.h"
-#include "Option.h"
-#include "Parser.h"
-#include <LibBackEnd/I386BackEnd.h>
-#include <LibMiddleEnd/SIR.h>
+#include "SIR.h"
 
-namespace Cpp {
-void Cpp::CppCompiler::run(int ac, const char** av)
+namespace SIR {
+
+static void add_return_to_void_functions(SIR::TranslationUnit& tu)
 {
-    auto options = Cpp::Option::parse_options(ac, av);
-    auto tu = Cpp::Parser::parse(options);
-    auto ir = Cpp::IR::to_internal_representation(tu);
+    for (auto& function : tu.functions()) {
+        const Type& return_type = function.return_type();
 
-    SIR::run_intermediate_representation_passes(ir);
-    auto assembly = BackEnd::I386BackEnd(ir, options);
-
-    assembly.print_asm();
+        if (return_type.kind() == Type::Kind::Void) {
+            if (function.body().is_empty() || !function.body().last().is_return_statement())
+                function.body().append(create_ast_node<ReturnStatement>());
+        }
+    }
 }
+
+void run_intermediate_representation_passes(SIR::TranslationUnit& tu)
+{
+    add_return_to_void_functions(tu);
+}
+
 }

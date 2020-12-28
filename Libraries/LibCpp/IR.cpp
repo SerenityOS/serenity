@@ -26,7 +26,7 @@
 
 #include "IR.h"
 #include "AST.h"
-#include <LibMiddleEnd/Utils.h>
+#include "LibIntermediate/Utils.h"
 
 namespace Cpp {
 

@@ -27,13 +27,35 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <LibMiddleEnd/SIR.h>
+#include <LibCore/File.h>
 
 namespace Cpp {
+class Option;
+}
+namespace SIR {
 class TranslationUnit;
+class Function;
 }
 
-namespace Cpp::IR {
-SIR::TranslationUnit to_internal_representation(Cpp::TranslationUnit& tu);
+namespace BackEnd {
+class I386Assembly {
+public:
+    I386Assembly(const SIR::TranslationUnit& tu, const Cpp::Option& options)
+        : m_tu(tu)
+        , m_options(options)
+        , m_output_file(get_output_file())
+    {
+    }
+    void print_asm();
+
+private:
+    NonnullRefPtr<Core::File> get_output_file();
+    void print_assembly_for_function(const SIR::Function&);
+
+    const SIR::TranslationUnit& m_tu;
+    const Cpp::Option& m_options;
+    NonnullRefPtr<Core::File> m_output_file;
+
+    constexpr static size_t m_param_stack_start = 8;
+};
 }

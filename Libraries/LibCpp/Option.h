@@ -24,11 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LibCpp/Driver.h"
+#pragma once
 
-int main(int ac, const char** av)
-{
-    Cpp::CppCompiler::run(ac, av);
+#include <AK/String.h>
 
-    return 0;
+namespace Cpp {
+struct Option {
+    String input_file;
+    String output_file;
+
+    static Cpp::Option parse_options(int, const char**);
+};
 }

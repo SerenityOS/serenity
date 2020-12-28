@@ -29,11 +29,11 @@
 #include "Option.h"
 #include <LibCore/File.h>
 
-#define DEBUG_LOG_SPAM
+#define DEBUG_SPAM
 #include <AK/ScopeLogger.h>
 
-#if defined DEBUG_LOG_SPAM && !defined DEBUG_CXX_PARSER
-#    define DEBUG_CXX_PARSER
+#if defined DEBUG_SPAM && !defined DEBUG_CPP_PARSER
+#    define DEBUG_CPP_PARSER
 #endif
 
 namespace Cpp {
@@ -49,7 +49,7 @@ Token Parser::get_next_token_skip_comment_and_whitespaces()
 
     while (tok.m_type == Token::Type::Comment || tok.m_type == Token::Type::Whitespace)
         tok = m_lexer.lex_one_token();
-#ifdef DEBUG_CXX_PARSER
+#ifdef DEBUG_CPP_PARSER
     dbgln("got token: {}", tok.to_string());
 #endif
     return tok;
