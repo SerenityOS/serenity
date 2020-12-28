@@ -35,6 +35,8 @@ namespace GUI {
 Label::Label(String text)
     : m_text(move(text))
 {
+    REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
+
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
