@@ -89,6 +89,8 @@ private:
     RefPtr<WebContentClient> m_client;
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
+
+    bool m_has_usable_bitmap { false };
 };
 
 }
