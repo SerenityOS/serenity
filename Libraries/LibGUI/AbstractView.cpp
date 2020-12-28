@@ -433,7 +433,7 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
 
 void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update, bool scroll_cursor_into_view)
 {
-    if (!model() || !index.is_valid()) {
+    if (!model() || !index.is_valid() || selection_mode() == SelectionMode::NoSelection) {
         m_cursor_index = {};
         cancel_searching();
         return;
@@ -441,6 +441,9 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 
     if (!m_cursor_index.is_valid() || model()->parent_index(m_cursor_index) != model()->parent_index(index))
         cancel_searching();
+
+    if (selection_mode() == SelectionMode::SingleSelection && (selection_update == SelectionUpdate::Ctrl || selection_update == SelectionUpdate::Shift))
+        selection_update = SelectionUpdate::Set;
 
     if (model()->is_valid(index)) {
         if (selection_update == SelectionUpdate::Set)
