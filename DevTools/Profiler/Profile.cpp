@@ -32,7 +32,7 @@
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
-#include <LibCoreDump/CoreDumpReader.h>
+#include <LibCoreDump/Reader.h>
 #include <LibELF/Image.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -95,7 +95,7 @@ static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region
     return String::format("[%s] %s", name.characters(), lib_data->lib_elf.symbolicate(eip - region->region_start, &offset).characters());
 }
 
-static String symbolicate_from_coredump(CoreDumpReader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
+static String symbolicate_from_coredump(CoreDump::Reader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
 {
     auto* region = coredump.region_containing((FlatPtr)ptr);
     if (!region) {
@@ -277,7 +277,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     auto& object = json.value().as_object();
     auto executable_path = object.get("executable").to_string();
 
-    auto coredump = CoreDumpReader::create(String::formatted("/tmp/profiler_coredumps/{}", object.get("pid").as_u32()));
+    auto coredump = CoreDump::Reader::create(String::formatted("/tmp/profiler_coredumps/{}", object.get("pid").as_u32()));
     if (!coredump)
         return String { "Could not open coredump" };
 
