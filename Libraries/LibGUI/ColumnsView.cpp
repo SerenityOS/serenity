@@ -96,6 +96,8 @@ void ColumnsView::paint_event(PaintEvent& event)
 
     int column_x = 0;
 
+    auto selection_color = is_focused() ? palette().selection() : palette().inactive_selection();
+
     for (size_t i = 0; i < m_columns.size(); i++) {
         auto& column = m_columns[i];
         auto* next_column = i + 1 == m_columns.size() ? nullptr : &m_columns[i + 1];
@@ -118,8 +120,8 @@ void ColumnsView::paint_event(PaintEvent& event)
             }
 
             if (is_selected_row) {
-                background_color = palette().selection();
-                text_color = palette().selection_text();
+                background_color = selection_color;
+                text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
             }
 
             Gfx::IntRect row_rect { column_x, row * item_height(), column.width, item_height() };
@@ -131,7 +133,7 @@ void ColumnsView::paint_event(PaintEvent& event)
             if (icon.is_icon()) {
                 if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
                     if (is_selected_row) {
-                        auto tint = palette().selection().with_alpha(100);
+                        auto tint = selection_color.with_alpha(100);
                         painter.blit_filtered(icon_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
                     } else if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row()) {
                         painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
