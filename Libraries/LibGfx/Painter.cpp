@@ -1068,7 +1068,7 @@ void Painter::draw_text(const IntRect& rect, const Utf32View& text, TextAlignmen
 void Painter::draw_text(const IntRect& rect, const StringView& raw_text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
 {
     Utf8View text { raw_text };
-    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+    do_draw_text(rect, Utf8View(text), font, alignment, elision, [&](const IntRect& r, u32 code_point) {
         draw_glyph_or_emoji(r.location(), code_point, font, color);
     });
 }
