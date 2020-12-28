@@ -149,6 +149,7 @@ namespace JS {
     P(isFinite)                              \
     P(isInteger)                             \
     P(isNaN)                                 \
+    P(isPrototypeOf)                         \
     P(isSafeInteger)                         \
     P(isView)                                \
     P(join)                                  \

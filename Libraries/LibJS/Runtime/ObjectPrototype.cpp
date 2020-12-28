@@ -50,6 +50,7 @@ void ObjectPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
+    define_native_function(vm.names.isPrototypeOf, is_prototype_of, 1, attr);
 }
 
 ObjectPrototype::~ObjectPrototype()
@@ -136,6 +137,25 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     if (!property_descriptor.has_value())
         return Value(false);
     return Value(property_descriptor.value().attributes.is_enumerable());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
+{
+    auto object_argument = vm.argument(0);
+    if (!object_argument.is_object())
+        return Value(false);
+    auto* object = &object_argument.as_object();
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    for (;;) {
+        object = object->prototype();
+        if (!object)
+            return Value(false);
+        if (same_value(this_object, object))
+            return Value(true);
+    }
 }
 
 }

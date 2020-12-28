@@ -46,6 +46,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(property_is_enumerable);
+    JS_DECLARE_NATIVE_FUNCTION(is_prototype_of);
 };
 
 }
