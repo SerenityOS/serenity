@@ -29,7 +29,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibGUI/AppFile.h>
+#include <LibDesktop/AppFile.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
@@ -111,8 +111,8 @@ void TaskbarWindow::create_quick_launch_bar()
     // FIXME: Core::ConfigFile does not keep the order of the entries.
     for (auto& name : config->keys(quick_launch)) {
         auto af_name = config->read_entry(quick_launch, name);
-        auto af_path = String::formatted("{}/{}", GUI::AppFile::APP_FILES_DIRECTORY, af_name);
-        auto af = GUI::AppFile::open(af_path);
+        auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, af_name);
+        auto af = Desktop::AppFile::open(af_path);
         if (!af->is_valid())
             continue;
         auto app_executable = af->executable();

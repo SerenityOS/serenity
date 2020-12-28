@@ -6,4 +6,4 @@ set(SOURCES
 )
 
 serenity_bin(Taskbar)
-target_link_libraries(Taskbar LibGUI)
+target_link_libraries(Taskbar LibGUI LibDesktop)

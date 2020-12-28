@@ -30,7 +30,7 @@
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 
-namespace GUI {
+namespace Desktop {
 
 class AppFile : public RefCounted<AppFile> {
 public:
@@ -49,7 +49,7 @@ public:
     Vector<String> launcher_file_types() const;
     Vector<String> launcher_protocols() const;
 
-    Icon icon() const { return FileIconProvider::icon_for_path(executable()); };
+    GUI::Icon icon() const { return GUI::FileIconProvider::icon_for_path(executable()); };
 
 private:
     explicit AppFile(const StringView& path);

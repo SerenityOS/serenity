@@ -1,4 +1,5 @@
 set(SOURCES
+    AppFile.cpp
     Launcher.cpp
 )
 
@@ -8,4 +9,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibDesktop desktop)
-target_link_libraries(LibDesktop LibIPC)
+target_link_libraries(LibDesktop LibCore LibIPC LibGUI)
