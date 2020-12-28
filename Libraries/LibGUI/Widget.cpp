@@ -47,6 +47,7 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StatusBar.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
@@ -75,6 +76,7 @@ REGISTER_WIDGET(GUI, ScrollBar)
 REGISTER_WIDGET(GUI, Slider)
 REGISTER_WIDGET(GUI, SpinBox)
 REGISTER_WIDGET(GUI, StatusBar)
+REGISTER_WIDGET(GUI, TabWidget)
 REGISTER_WIDGET(GUI, TextBox)
 REGISTER_WIDGET(GUI, TextEditor)
 REGISTER_WIDGET(GUI, ToolBar)
