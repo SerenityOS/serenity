@@ -877,6 +877,11 @@ void ClientConnection::handle(const Messages::WindowServer::Pong&)
     set_unresponsive(false);
 }
 
+OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> ClientConnection::handle(const Messages::WindowServer::GetGlobalCursorPosition&)
+{
+    return make<Messages::WindowServer::GetGlobalCursorPositionResponse>(Screen::the().cursor_location());
+}
+
 void ClientConnection::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)
