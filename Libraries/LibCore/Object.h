@@ -305,4 +305,14 @@ const LogStream& operator<<(const LogStream&, const Object&);
         property_name, getter, setter, GUI::SizePolicy,              \
         { GUI::SizePolicy::Fill, "Fill" },                           \
         { GUI::SizePolicy::Fixed, "Fixed" })
+
+#define REGISTER_TEXT_ALIGNMENT_PROPERTY(property_name, getter, setter) \
+    REGISTER_ENUM_PROPERTY(                                             \
+        property_name, getter, setter, Gfx::TextAlignment,              \
+        { Gfx::TextAlignment::TopLeft, "TopLeft" },                     \
+        { Gfx::TextAlignment::CenterLeft, "CenterLeft" },               \
+        { Gfx::TextAlignment::Center, "Center" },                       \
+        { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
+        { Gfx::TextAlignment::TopRight, "TopRight" },                   \
+        { Gfx::TextAlignment::BottomRight, "BottomRight" })
 }
