@@ -31,6 +31,13 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 
+// NOTE: We can't include <initializer_list> during the toolchain bootstrap,
+//       since it's part of libstdc++, and libstdc++ depends on LibC.
+//       For this reason, we don't support HashMap(initializer_list) in LibC.
+#ifndef SERENITY_LIBC_BUILD
+#    include <initializer_list>
+#endif
+
 namespace AK {
 
 template<typename K, typename V, typename KeyTraits>
@@ -49,7 +56,19 @@ private:
 public:
     HashMap() { }
 
-    bool is_empty() const { return m_table.is_empty(); }
+#ifndef SERENITY_LIBC_BUILD
+    HashMap(std::initializer_list<Entry> list)
+    {
+        ensure_capacity(list.size());
+        for (auto& item : list)
+            set(item.key, item.value);
+    }
+#endif
+
+    bool is_empty() const
+    {
+        return m_table.is_empty();
+    }
     size_t size() const { return m_table.size(); }
     size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
