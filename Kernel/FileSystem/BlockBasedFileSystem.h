@@ -27,22 +27,10 @@
 #pragma once
 
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/KResult.h>
 
 namespace Kernel {
 
-class DiskCache;
 class BlockBasedFS : public FileBackedFS {
-    friend class DiskCache;
-
-private:
-    struct CacheEntry {
-        IntrusiveListNode list_node;
-        u32 block_index { 0 };
-        u8* data { nullptr };
-        bool has_data { false };
-    };
-
 public:
     virtual ~BlockBasedFS() override;
 
@@ -54,10 +42,7 @@ public:
 protected:
     explicit BlockBasedFS(FileDescription&);
 
-    int read_block(unsigned index, UserOrKernelBuffer& buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
-    bool force_cache_block(unsigned index) const;
-    KResultOr<CacheEntry> cache_block(unsigned index) const;
-
+    int read_block(unsigned index, UserOrKernelBuffer* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
     int read_blocks(unsigned index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache = true) const;
 
     bool raw_read(unsigned index, UserOrKernelBuffer& buffer);

@@ -349,7 +349,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             dind_block_dirty = true;
         } else {
             auto buffer = UserOrKernelBuffer::for_kernel_buffer(dind_block_contents.data());
-            read_block(e2inode.i_block[EXT2_DIND_BLOCK], buffer, block_size());
+            read_block(e2inode.i_block[EXT2_DIND_BLOCK], &buffer, block_size());
         }
         auto* dind_block_as_pointers = (unsigned*)dind_block_contents.data();
 
@@ -372,7 +372,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
                 ind_block_dirty = true;
             } else {
                 auto buffer = UserOrKernelBuffer::for_kernel_buffer(ind_block_contents.data());
-                read_block(indirect_block_index, buffer, block_size());
+                read_block(indirect_block_index, &buffer, block_size());
             }
             auto* ind_block_as_pointers = (unsigned*)ind_block_contents.data();
 
@@ -491,7 +491,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
         auto count = min(blocks_remaining, entries_per_block);
         u32 array[count];
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
-        read_block(array_block_index, buffer, sizeof(array), 0);
+        read_block(array_block_index, &buffer, sizeof(array), 0);
         for (BlockIndex i = 0; i < count; ++i)
             callback(array[i]);
     };
@@ -684,7 +684,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
-    read_block(block_index, buffer, sizeof(ext2_inode), offset);
+    read_block(block_index, &buffer, sizeof(ext2_inode), offset);
     m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
 }
@@ -740,7 +740,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
         auto buffer_offset = buffer.offset(nread);
-        int err = fs().read_block(block_index, buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
+        int err = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
         if (err < 0) {
             klog() << "ext2fs: read_bytes: read_block(" << block_index << ") failed (lbi: " << bi << ")";
             return err;
@@ -1352,7 +1352,7 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
 
     auto block = KBuffer::create_with_size(block_size(), Region::Access::Read | Region::Access::Write, "Ext2FS: Cached bitmap block");
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block.data());
-    int err = read_block(bitmap_block_index, buffer, block_size());
+    int err = read_block(bitmap_block_index, &buffer, block_size());
     ASSERT(err >= 0);
     m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));
     return *m_cached_bitmaps.last();
