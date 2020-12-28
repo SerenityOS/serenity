@@ -32,14 +32,16 @@
 #include <LibELF/CoreDump.h>
 #include <LibELF/Image.h>
 
-class CoreDumpReader {
-    AK_MAKE_NONCOPYABLE(CoreDumpReader);
+namespace CoreDump {
+
+class Reader {
+    AK_MAKE_NONCOPYABLE(Reader);
 
 public:
-    static OwnPtr<CoreDumpReader> create(const String&);
-    ~CoreDumpReader();
+    static OwnPtr<Reader> create(const String&);
+    ~Reader();
 
-    CoreDumpReader(OwnPtr<MappedFile>&&);
+    Reader(OwnPtr<MappedFile>&&);
 
     template<typename Func>
     void for_each_memory_region_info(Func func) const;
@@ -74,7 +76,7 @@ private:
 };
 
 template<typename Func>
-void CoreDumpReader::for_each_memory_region_info(Func func) const
+void Reader::for_each_memory_region_info(Func func) const
 {
     for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo)
@@ -87,7 +89,7 @@ void CoreDumpReader::for_each_memory_region_info(Func func) const
 }
 
 template<typename Func>
-void CoreDumpReader::for_each_thread_info(Func func) const
+void Reader::for_each_thread_info(Func func) const
 {
     for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
@@ -97,4 +99,6 @@ void CoreDumpReader::for_each_thread_info(Func func) const
         if (decision == IterationDecision::Break)
             return;
     }
+}
+
 }
