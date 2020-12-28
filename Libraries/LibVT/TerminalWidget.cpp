@@ -49,6 +49,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -540,6 +541,119 @@ VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) c
     return { row, column };
 }
 
+u32 TerminalWidget::code_point_at(const VT::Position& position) const
+{
+    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    auto& line = m_terminal.line(position.row());
+    if (position.column() == line.length())
+        return '\n';
+    return line.code_point(position.column());
+}
+
+VT::Position TerminalWidget::next_position_after(const VT::Position& position, bool should_wrap) const
+{
+    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    auto& line = m_terminal.line(position.row());
+    if (position.column() == line.length()) {
+        if (static_cast<size_t>(position.row()) == m_terminal.line_count() - 1) {
+            if (should_wrap)
+                return { 0, 0 };
+            return {};
+        }
+        return { position.row() + 1, 0 };
+    }
+    return { position.row(), position.column() + 1 };
+}
+
+VT::Position TerminalWidget::previous_position_before(const VT::Position& position, bool should_wrap) const
+{
+    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    if (position.column() == 0) {
+        if (position.row() == 0) {
+            if (should_wrap) {
+                auto& last_line = m_terminal.line(m_terminal.line_count() - 1);
+                return { static_cast<int>(m_terminal.line_count() - 1), last_line.length() };
+            }
+            return {};
+        }
+        auto& prev_line = m_terminal.line(position.row() - 1);
+        return { position.row() - 1, prev_line.length() };
+    }
+    return { position.row(), position.column() - 1 };
+}
+
+static u32 to_lowercase_code_point(u32 code_point)
+{
+    // FIXME: this only handles ascii characters, but handling unicode lowercasing seems like a mess
+    if (code_point < 128)
+        return tolower(code_point);
+    return code_point;
+}
+
+VT::Range TerminalWidget::find_next(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+{
+    if (needle.is_empty())
+        return {};
+
+    VT::Position position = start.is_valid() ? start : VT::Position(0, 0);
+    VT::Position original_position = position;
+
+    VT::Position start_of_potential_match;
+    size_t needle_index = 0;
+
+    do {
+        auto ch = code_point_at(position);
+        // FIXME: This is not the right way to use a Unicode needle!
+        auto needle_ch = (u32)needle[needle_index];
+        if (case_sensitivity ? ch == needle_ch : to_lowercase_code_point(ch) == to_lowercase_code_point(needle_ch)) {
+            if (needle_index == 0)
+                start_of_potential_match = position;
+            ++needle_index;
+            if (needle_index >= needle.length())
+                return { start_of_potential_match, position };
+        } else {
+            if (needle_index > 0)
+                position = start_of_potential_match;
+            needle_index = 0;
+        }
+        position = next_position_after(position, should_wrap);
+    } while (position.is_valid() && position != original_position);
+
+    return {};
+}
+
+VT::Range TerminalWidget::find_previous(const StringView& needle, const VT::Position& start, bool case_sensitivity, bool should_wrap)
+{
+    if (needle.is_empty())
+        return {};
+
+    VT::Position position = start.is_valid() ? start : VT::Position(m_terminal.line_count() - 1, m_terminal.line(m_terminal.line_count() - 1).length() - 1);
+    VT::Position original_position = position;
+
+    VT::Position end_of_potential_match;
+    size_t needle_index = needle.length() - 1;
+
+    do {
+        auto ch = code_point_at(position);
+        // FIXME: This is not the right way to use a Unicode needle!
+        auto needle_ch = (u32)needle[needle_index];
+        if (case_sensitivity ? ch == needle_ch : to_lowercase_code_point(ch) == to_lowercase_code_point(needle_ch)) {
+            if (needle_index == needle.length() - 1)
+                end_of_potential_match = position;
+            if (needle_index == 0)
+                return { position, end_of_potential_match };
+            --needle_index;
+        } else {
+            if (needle_index < needle.length() - 1)
+                position = end_of_potential_match;
+            needle_index = needle.length() - 1;
+        }
+        position = previous_position_before(position, should_wrap);
+    } while (position.is_valid() && position != original_position);
+
+    return {};
+}
+
 void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
@@ -934,6 +1048,11 @@ void TerminalWidget::clear_including_history()
 void TerminalWidget::scroll_to_bottom()
 {
     m_scrollbar->set_value(m_scrollbar->max());
+}
+
+void TerminalWidget::scroll_to_row(int row)
+{
+    m_scrollbar->set_value(row);
 }
 
 void TerminalWidget::update_copy_action()
