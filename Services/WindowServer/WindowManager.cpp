@@ -74,9 +74,7 @@ WindowManager::WindowManager(const Gfx::PaletteImpl& palette)
 
     reload_config(false);
 
-    Compositor::the().invalidate_screen();
-    Compositor::the().invalidate_occlusions();
-    Compositor::the().compose();
+    Compositor::the().did_construct_window_manager({});
 }
 
 WindowManager::~WindowManager()
