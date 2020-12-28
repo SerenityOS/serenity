@@ -147,6 +147,8 @@ public:
 
     bool columns_are_standard() const;
 
+    String generate_inline_documentation_for(StringView function, size_t argument_index);
+
 private:
     explicit Sheet(Workbook&);
     explicit Sheet(const StringView& name, Workbook&);
@@ -165,6 +167,7 @@ private:
     HashTable<Cell*> m_visited_cells_in_update;
     bool m_should_ignore_updates { false };
     bool m_update_requested { false };
+    mutable Optional<JsonObject> m_cached_documentation;
 };
 
 }

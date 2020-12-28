@@ -691,7 +691,44 @@ JsonObject Sheet::gather_documentation() const
     for (auto& it : global_object().shape().property_table())
         add_docs_from(it, global_object());
 
-    return object;
+    m_cached_documentation = move(object);
+    return m_cached_documentation.value();
+}
+
+String Sheet::generate_inline_documentation_for(StringView function, size_t argument_index)
+{
+    if (!m_cached_documentation.has_value())
+        gather_documentation();
+
+    auto& docs = m_cached_documentation.value();
+    auto entry = docs.get(function);
+    if (entry.is_null() || !entry.is_object())
+        return String::formatted("{}(...???{})", function, argument_index);
+
+    auto& entry_object = entry.as_object();
+    size_t argc = entry_object.get("argc").to_int(0);
+    auto argnames_value = entry_object.get("argnames");
+    if (!argnames_value.is_array())
+        return String::formatted("{}(...{}???{})", function, argc, argument_index);
+    auto& argnames = argnames_value.as_array();
+    StringBuilder builder;
+    builder.appendff("{}(", function);
+    for (size_t i = 0; i < (size_t)argnames.size(); ++i) {
+        if (i != 0 && i < (size_t)argnames.size())
+            builder.append(", ");
+        if (i == argument_index)
+            builder.append('<');
+        else if (i >= argc)
+            builder.append('[');
+        builder.append(argnames[i].to_string());
+        if (i == argument_index)
+            builder.append('>');
+        else if (i >= argc)
+            builder.append(']');
+    }
+
+    builder.append(')');
+    return builder.build();
 }
 
 }

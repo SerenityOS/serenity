@@ -80,6 +80,19 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     m_cell_value_editor = cell_value_editor;
     m_current_cell_label = current_cell_label;
+    m_inline_documentation_window = GUI::Window::construct(window());
+    m_inline_documentation_window->set_rect(m_cell_value_editor->rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
+    m_inline_documentation_window->set_window_type(GUI::WindowType::Tooltip);
+    m_inline_documentation_window->set_resizable(false);
+    auto& inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>();
+    inline_widget.set_fill_with_background_color(true);
+    inline_widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    inline_widget.set_frame_shape(Gfx::FrameShape::Box);
+    m_inline_documentation_label = inline_widget.add<GUI::Label>();
+    m_inline_documentation_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    m_inline_documentation_label->set_fill_with_background_color(true);
+    m_inline_documentation_label->set_autosize(false);
+    m_inline_documentation_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     if (!m_workbook->has_sheets() && should_add_sheet_if_empty)
         m_workbook->add_sheet("Sheet 1");
@@ -107,6 +120,13 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     }));
 
     setup_tabs(m_workbook->sheets());
+}
+
+void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
+{
+    GUI::Widget::resize_event(event);
+    if (m_inline_documentation_window && m_cell_value_editor && window())
+        m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
 }
 
 void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
@@ -137,7 +157,11 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 m_cell_value_editor->on_change = nullptr;
                 m_cell_value_editor->set_text(cell.source());
                 m_cell_value_editor->on_change = [&] {
-                    cell.set_data(m_cell_value_editor->text());
+                    auto text = m_cell_value_editor->text();
+                    // FIXME: Lines?
+                    auto offset = m_cell_value_editor->cursor().column();
+                    try_generate_tip_for_input_expression(text, offset);
+                    cell.set_data(move(text));
                     m_selected_view->sheet().update();
                     update();
                 };
@@ -163,8 +187,12 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this] {
                 if (m_should_change_selected_cells) {
+                    auto text = m_cell_value_editor->text();
+                    // FIXME: Lines?
+                    auto offset = m_cell_value_editor->cursor().column();
+                    try_generate_tip_for_input_expression(text, offset);
                     for (auto* cell : cells)
-                        cell->set_data(m_cell_value_editor->text());
+                        cell->set_data(text);
                     m_selected_view->sheet().update();
                     update();
                 }
@@ -192,6 +220,30 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         m_tab_context_menu_sheet_view = widget;
         m_tab_context_menu->popup(event.screen_position());
     };
+}
+
+void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
+{
+    m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
+    if (!m_selected_view || !source.starts_with('=')) {
+        m_inline_documentation_window->hide();
+        return;
+    }
+    auto maybe_function_and_argument = get_function_and_argument_index(source.substring_view(0, cursor_offset));
+    if (!maybe_function_and_argument.has_value()) {
+        m_inline_documentation_window->hide();
+        return;
+    }
+
+    auto& [name, index] = maybe_function_and_argument.value();
+    auto& sheet = m_selected_view->sheet();
+    auto text = sheet.generate_inline_documentation_for(name, index);
+    if (text.is_empty()) {
+        m_inline_documentation_window->hide();
+    } else {
+        m_inline_documentation_label->set_text(move(text));
+        m_inline_documentation_window->show();
+    }
 }
 
 void SpreadsheetWidget::save(const StringView& filename)
