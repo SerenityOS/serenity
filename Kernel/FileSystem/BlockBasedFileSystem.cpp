@@ -32,12 +32,19 @@
 
 namespace Kernel {
 
+struct CacheEntry {
+    IntrusiveListNode list_node;
+    u32 block_index { 0 };
+    u8* data { nullptr };
+    bool has_data { false };
+};
+
 class DiskCache {
 public:
     explicit DiskCache(BlockBasedFS& fs)
         : m_fs(fs)
         , m_cached_block_data(KBuffer::create_with_size(m_entry_count * m_fs.block_size()))
-        , m_entries(KBuffer::create_with_size(m_entry_count * sizeof(BlockBasedFS::CacheEntry&)))
+        , m_entries(KBuffer::create_with_size(m_entry_count * sizeof(CacheEntry)))
     {
         for (size_t i = 0; i < m_entry_count; ++i) {
             entries()[i].data = m_cached_block_data.data() + i * m_fs.block_size();
@@ -57,21 +64,21 @@ public:
         m_dirty = false;
     }
 
-    void mark_dirty(BlockBasedFS::CacheEntry& entry)
+    void mark_dirty(CacheEntry& entry)
     {
         m_dirty_list.prepend(entry);
         m_dirty = true;
     }
 
-    void mark_clean(BlockBasedFS::CacheEntry& entry)
+    void mark_clean(CacheEntry& entry)
     {
         m_clean_list.prepend(entry);
     }
 
-    BlockBasedFS::CacheEntry& get(u32 block_index) const
+    CacheEntry& get(u32 block_index) const
     {
         if (auto it = m_hash.find(block_index); it != m_hash.end()) {
-            auto& entry = const_cast<BlockBasedFS::CacheEntry&>(*it->value);
+            auto& entry = const_cast<CacheEntry&>(*it->value);
             ASSERT(entry.block_index == block_index);
             return entry;
         }
@@ -97,8 +104,8 @@ public:
         return new_entry;
     }
 
-    const BlockBasedFS::CacheEntry* entries() const { return (const BlockBasedFS::CacheEntry*)m_entries.data(); }
-    BlockBasedFS::CacheEntry* entries() { return (BlockBasedFS::CacheEntry*)m_entries.data(); }
+    const CacheEntry* entries() const { return (const CacheEntry*)m_entries.data(); }
+    CacheEntry* entries() { return (CacheEntry*)m_entries.data(); }
 
     template<typename Callback>
     void for_each_clean_entry(Callback callback)
@@ -117,9 +124,9 @@ public:
 private:
     BlockBasedFS& m_fs;
     size_t m_entry_count { 10000 };
-    mutable HashMap<u32, BlockBasedFS::CacheEntry*> m_hash;
-    mutable IntrusiveList<BlockBasedFS::CacheEntry, &BlockBasedFS::CacheEntry::list_node> m_clean_list;
-    mutable IntrusiveList<BlockBasedFS::CacheEntry, &BlockBasedFS::CacheEntry::list_node> m_dirty_list;
+    mutable HashMap<u32, CacheEntry*> m_hash;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_clean_list;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_dirty_list;
     KBuffer m_cached_block_data;
     KBuffer m_entries;
     bool m_dirty { false };
@@ -154,48 +161,17 @@ int BlockBasedFS::write_block(unsigned index, const UserOrKernelBuffer& data, si
         return 0;
     }
 
-    auto entry_or_error = cache_block(index);
-    if (entry_or_error.is_error())
-        return -EIO;
-    if (!entry_or_error.value().has_data)
-        return -EIO;
-
+    auto& entry = cache().get(index);
     if (count < block_size()) {
         // Fill the cache first.
-        if (!force_cache_block(index))
-            return -EIO;
+        read_block(index, nullptr, block_size());
     }
-    if (!data.read(entry_or_error.value().data + offset, count))
+    if (!data.read(entry.data + offset, count))
         return -EFAULT;
 
-    cache().mark_dirty(entry_or_error.value());
-    // Update the actual entry and not the copy of it!
-    cache().get(index).has_data = true;
-    return 0;
-}
-
-bool BlockBasedFS::force_cache_block(unsigned index) const
-{
-    auto& entry = cache().get(index);
-    u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
-    file_description().seek(base_offset, SEEK_SET);
-    auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
-    auto nread = file_description().read(entry_data_buffer, block_size());
-    if (nread.is_error())
-        return false;
-    ASSERT(nread.value() == block_size());
+    cache().mark_dirty(entry);
     entry.has_data = true;
-    return true;
-}
-
-KResultOr<BlockBasedFS::CacheEntry> BlockBasedFS::cache_block(unsigned index) const
-{
-    auto& entry = cache().get(index);
-    if (!entry.has_data) {
-        if (!force_cache_block(index))
-            return KResult(-EIO);
-    }
-    return entry;
+    return 0;
 }
 
 bool BlockBasedFS::raw_read(unsigned index, UserOrKernelBuffer& buffer)
@@ -249,7 +225,7 @@ int BlockBasedFS::write_blocks(unsigned index, unsigned count, const UserOrKerne
     return 0;
 }
 
-int BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer& buffer, size_t count, size_t offset, bool allow_cache) const
+int BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
@@ -261,19 +237,25 @@ int BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer& buffer, size_t 
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + static_cast<u32>(offset);
         file_description().seek(base_offset, SEEK_SET);
-        auto nread = file_description().read(buffer, count);
+        auto nread = file_description().read(*buffer, count);
         if (nread.is_error())
             return -EIO;
         ASSERT(nread.value() == count);
         return 0;
     }
 
-    auto entry_or_error = cache_block(index);
-    if (entry_or_error.is_error())
-        return -EIO;
-    if (!entry_or_error.value().has_data)
-        return -EIO;
-    if (!buffer.write(entry_or_error.value().data + offset, count))
+    auto& entry = cache().get(index);
+    if (!entry.has_data) {
+        u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
+        file_description().seek(base_offset, SEEK_SET);
+        auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
+        auto nread = file_description().read(entry_data_buffer, block_size());
+        if (nread.is_error())
+            return -EIO;
+        ASSERT(nread.value() == block_size());
+        entry.has_data = true;
+    }
+    if (buffer && !buffer->write(entry.data + offset, count))
         return -EFAULT;
     return 0;
 }
@@ -284,10 +266,10 @@ int BlockBasedFS::read_blocks(unsigned index, unsigned count, UserOrKernelBuffer
     if (!count)
         return false;
     if (count == 1)
-        return read_block(index, buffer, block_size(), 0, allow_cache);
+        return read_block(index, &buffer, block_size(), 0, allow_cache);
     auto out = buffer;
     for (unsigned i = 0; i < count; ++i) {
-        auto err = read_block(index + i, out, block_size(), 0, allow_cache);
+        auto err = read_block(index + i, &out, block_size(), 0, allow_cache);
         if (err < 0)
             return err;
         out = out.offset(block_size());
@@ -302,7 +284,7 @@ void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
     if (!cache().is_dirty())
         return;
     Vector<CacheEntry*, 32> cleaned_entries;
-    cache().for_each_dirty_entry([&](BlockBasedFS::CacheEntry& entry) {
+    cache().for_each_dirty_entry([&](CacheEntry& entry) {
         if (entry.block_index != index) {
             u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
             file_description().seek(base_offset, SEEK_SET);
@@ -324,7 +306,7 @@ void BlockBasedFS::flush_writes_impl()
     if (!cache().is_dirty())
         return;
     u32 count = 0;
-    cache().for_each_dirty_entry([&](BlockBasedFS::CacheEntry& entry) {
+    cache().for_each_dirty_entry([&](CacheEntry& entry) {
         u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
         // FIXME: Should this error path be surfaced somehow?
