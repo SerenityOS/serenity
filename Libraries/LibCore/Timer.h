@@ -39,6 +39,7 @@ public:
     {
         auto timer = adopt(*new Timer(interval, move(timeout_handler), parent));
         timer->set_single_shot(true);
+        timer->stop();
         return timer;
     }
 
