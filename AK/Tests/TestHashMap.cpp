@@ -36,6 +36,17 @@ TEST_CASE(construct)
     EXPECT_EQ(IntIntMap().size(), 0u);
 }
 
+TEST_CASE(construct_from_initializer_list)
+{
+    HashMap<int, String> number_to_string {
+        { 1, "One" },
+        { 2, "Two" },
+        { 3, "Three" },
+    };
+    EXPECT_EQ(number_to_string.is_empty(), false);
+    EXPECT_EQ(number_to_string.size(), 3u);
+}
+
 TEST_CASE(populate)
 {
     HashMap<int, String> number_to_string;
