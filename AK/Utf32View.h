@@ -105,6 +105,13 @@ public:
     bool is_empty() const { return m_length == 0; }
     size_t length() const { return m_length; }
 
+    size_t iterator_offset(const Utf32CodepointIterator& it) const
+    {
+        ASSERT(it.m_ptr >= m_code_points);
+        ASSERT(it.m_ptr < m_code_points + m_length);
+        return ((ptrdiff_t)it.m_ptr - (ptrdiff_t)m_code_points) / sizeof(u32);
+    }
+
     Utf32View substring_view(size_t offset, size_t length) const
     {
         if (length == 0)

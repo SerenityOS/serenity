@@ -76,9 +76,14 @@ public:
 
     const unsigned char* bytes() const { return begin_ptr(); }
     int byte_length() const { return m_string.length(); }
-    int byte_offset_of(const Utf8CodepointIterator&) const;
+    size_t byte_offset_of(const Utf8CodepointIterator&) const;
     Utf8View substring_view(int byte_offset, int byte_length) const;
     bool is_empty() const { return m_string.is_empty(); }
+
+    size_t iterator_offset(const Utf8CodepointIterator& it) const
+    {
+        return byte_offset_of(it);
+    }
 
     bool validate(size_t& valid_bytes) const;
     bool validate() const
