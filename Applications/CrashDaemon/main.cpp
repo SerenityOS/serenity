@@ -134,11 +134,11 @@ static void backtrace(const String& coredump_path)
 {
     size_t thread_index = 0;
     auto coredump = CoreDump::Reader::create(coredump_path);
-    coredump->for_each_thread_info([&thread_index, &coredump](const ELF::Core::ThreadInfo* thread_info) {
-        dbgln("Backtrace for thread #{}, tid={}", thread_index++, thread_info->tid);
+    coredump->for_each_thread_info([&thread_index, &coredump](const ELF::Core::ThreadInfo& thread_info) {
+        dbgln("Backtrace for thread #{}, tid={}", thread_index++, thread_info.tid);
 
-        uint32_t* ebp = (uint32_t*)thread_info->regs.ebp;
-        uint32_t* eip = (uint32_t*)thread_info->regs.eip;
+        uint32_t* ebp = (uint32_t*)thread_info.regs.ebp;
+        uint32_t* eip = (uint32_t*)thread_info.regs.eip;
         while (ebp && eip) {
 
             auto line = backtrace_line(*coredump, (FlatPtr)eip);
