@@ -43,9 +43,9 @@ void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const
     current().paint_tab_button(painter, rect, palette, active, hovered, enabled, top);
 }
 
-void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
+void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)
 {
-    current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled);
+    current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused);
 }
 
 void StylePainter::paint_surface(Painter& painter, const IntRect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)

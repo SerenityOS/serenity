@@ -52,7 +52,7 @@ void Button::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled(), is_focused());
 
     if (text().is_empty() && !m_icon)
         return;
