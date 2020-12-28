@@ -119,8 +119,10 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
                 value = parsed_value.release_value();
             }
             object.set(property_name.m_view, move(value));
+        } else if (peek() == GMLToken::Type::Comment) {
+            tokens.dequeue();
         } else {
-            dbgln("Expected child, property, or }}");
+            dbgln("Expected child, property, comment, or }}");
             return {};
         }
     }
