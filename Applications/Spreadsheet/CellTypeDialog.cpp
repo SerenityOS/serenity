@@ -160,7 +160,6 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
         auto& type_list = left_side.add<GUI::ListView>();
         type_list.set_model(*GUI::ItemListModel<String>::create(g_types));
-        type_list.set_multi_select(false);
         type_list.set_should_hide_unnecessary_scrollbars(true);
         type_list.on_selection = [&](auto& index) {
             if (!index.is_valid()) {

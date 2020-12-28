@@ -123,7 +123,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     m_location_textbox->set_text(path);
 
     m_view = vertical_container.add<MultiView>();
-    m_view->set_multi_select(m_mode == Mode::OpenMultiple);
+    m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);

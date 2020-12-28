@@ -97,14 +97,13 @@ public:
     Action& view_as_icons_action() { return *m_view_as_icons_action; }
     Action& view_as_columns_action() { return *m_view_as_columns_action; }
 
-    bool is_multi_select() const { return m_multi_select; }
-    void set_multi_select(bool);
+    AbstractView::SelectionMode selection_mode() const;
+    void set_selection_mode(AbstractView::SelectionMode);
 
 private:
     MultiView();
 
     void build_actions();
-    void apply_multi_select();
 
     ViewMode m_view_mode { Invalid };
     int m_model_column { 0 };
@@ -120,8 +119,6 @@ private:
     RefPtr<Action> m_view_as_columns_action;
 
     OwnPtr<ActionGroup> m_view_type_action_group;
-
-    bool m_multi_select { true };
 };
 
 }
