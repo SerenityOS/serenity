@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
@@ -36,7 +35,8 @@
 namespace GUI {
 
 class Button : public AbstractButton {
-    C_OBJECT(Button)
+    C_OBJECT(Button);
+
 public:
     virtual ~Button() override;
 
@@ -61,7 +61,7 @@ public:
     virtual bool is_uncheckable() const override;
 
 protected:
-    explicit Button(const StringView& text = {});
+    explicit Button(String text = {});
     virtual void paint_event(PaintEvent&) override;
 
 private:

@@ -32,9 +32,10 @@
 
 namespace GUI {
 
-AbstractButton::AbstractButton(const StringView& text)
-    : m_text(text)
+AbstractButton::AbstractButton(String text)
 {
+    set_text(move(text));
+
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_background_role(Gfx::ColorRole::Button);
     set_foreground_role(Gfx::ColorRole::ButtonText);
@@ -54,11 +55,11 @@ AbstractButton::~AbstractButton()
 {
 }
 
-void AbstractButton::set_text(const StringView& text)
+void AbstractButton::set_text(String text)
 {
     if (m_text == text)
         return;
-    m_text = text;
+    m_text = move(text);
     update();
 }
 
