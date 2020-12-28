@@ -37,7 +37,7 @@ public:
     Function<void()> on_click;
 
 private:
-    explicit LinkLabel(String);
+    explicit LinkLabel(String text = {});
 
     virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
