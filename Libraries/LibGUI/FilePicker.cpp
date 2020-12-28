@@ -93,7 +93,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"));
         break;
     }
-    set_rect(200, 200, 700, 400);
+    resize(560, 320);
     auto& horizontal_container = set_main_widget<Widget>();
     horizontal_container.set_layout<HorizontalBoxLayout>();
     horizontal_container.layout()->set_margins({ 4, 4, 4, 4 });
