@@ -105,5 +105,7 @@ endpoint WindowServer = 2
     EnableDisplayLink() =|
     DisableDisplayLink() =|
 
+    GetGlobalCursorPosition() => (Gfx::IntPoint position)
+
     Pong() =|
 }
