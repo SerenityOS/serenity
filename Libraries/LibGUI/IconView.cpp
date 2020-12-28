@@ -247,7 +247,7 @@ void IconView::mousedown_event(MouseEvent& event)
     auto adjusted_position = to_content_position(event.position());
 
     m_might_drag = false;
-    if (is_multi_select()) {
+    if (selection_mode() == SelectionMode::MultiSelection) {
         m_rubber_banding = true;
         m_rubber_band_origin = adjusted_position;
         m_rubber_band_current = adjusted_position;

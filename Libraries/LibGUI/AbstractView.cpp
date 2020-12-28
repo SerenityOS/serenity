@@ -403,16 +403,21 @@ void AbstractView::drop_event(DropEvent& event)
         on_drop(index, event);
 }
 
-void AbstractView::set_multi_select(bool multi_select)
+void AbstractView::set_selection_mode(SelectionMode selection_mode)
 {
-    if (m_multi_select == multi_select)
+    if (m_selection_mode == selection_mode)
         return;
-    m_multi_select = multi_select;
-    if (!multi_select && m_selection.size() > 1) {
+    m_selection_mode = selection_mode;
+
+    if (m_selection_mode == SelectionMode::NoSelection)
+        m_selection.clear();
+    else if (m_selection_mode != SelectionMode::SingleSelection && m_selection.size() > 1) {
         auto first_selected = m_selection.first();
         m_selection.clear();
         m_selection.set(first_selected);
     }
+
+    update();
 }
 
 void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_order)

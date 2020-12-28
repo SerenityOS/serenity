@@ -65,6 +65,12 @@ public:
         SelectRows,
     };
 
+    enum class SelectionMode {
+        SingleSelection,
+        MultiSelection,
+        NoSelection,
+    };
+
     virtual void move_cursor(CursorMovement, SelectionUpdate) { }
 
     void set_model(RefPtr<Model>);
@@ -96,8 +102,8 @@ public:
     SelectionBehavior selection_behavior() const { return m_selection_behavior; }
     void set_selection_behavior(SelectionBehavior behavior) { m_selection_behavior = behavior; }
 
-    bool is_multi_select() const { return m_multi_select; }
-    void set_multi_select(bool);
+    SelectionMode selection_mode() const { return m_selection_mode; }
+    void set_selection_mode(SelectionMode);
 
     virtual void model_did_update(unsigned flags) override;
     virtual void did_update_selection();
@@ -197,9 +203,9 @@ private:
     RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
+    SelectionMode m_selection_mode { SelectionMode::SingleSelection };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
     bool m_activates_on_selection { false };
-    bool m_multi_select { true };
     bool m_tab_key_navigation_enabled { false };
     bool m_is_dragging { false };
     bool m_draw_item_text_with_shadow { false };
