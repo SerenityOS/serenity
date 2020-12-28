@@ -19,7 +19,8 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 
 disk_usage() {
-    du -sm "$1" | cut -f1
+    # shellcheck disable=SC2003
+    expr "$(du -sk "$1" | cut -f1)" / 1024
 }
 
 DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 100))
@@ -33,7 +34,7 @@ printf "creating new filesystem... "
 if [ "$(uname -s)" = "OpenBSD" ]; then
     VND=$(vnconfig _disk_image)
     (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
-    mkfs.ext2 -I 128 -F "/dev/${VND}i" || die "could not create filesystem"
+    newfs_ext2fs -D 128 "/dev/r${VND}i" || die "could not create filesystem"
 elif [ "$(uname -s)" = "FreeBSD" ]; then
     MD=$(mdconfig _disk_image)
     mke2fs -q -I 128 _disk_image || die "could not create filesystem"

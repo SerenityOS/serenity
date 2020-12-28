@@ -22,7 +22,7 @@ trap cleanup 0 1 2 3 6
 "$@" > "${DST_FILE}.tmp"
 # If we get here, the command was successful, and we can overwrite the destination.
 
-if ! cmp --quiet -- "${DST_FILE}.tmp" "${DST_FILE}"; then
+if ! cmp -s -- "${DST_FILE}.tmp" "${DST_FILE}"; then
     # File changed, need to overwrite:
     mv -f -- "${DST_FILE}.tmp" "${DST_FILE}"
 fi
