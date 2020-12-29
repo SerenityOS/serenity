@@ -25,6 +25,7 @@
  */
 
 #include "I386Assembly.h"
+#include <AK/SourceGenerator.h>
 #include <LibCpp/LibIntermediate/SIR.h>
 #include <LibCpp/Option.h>
 
@@ -41,14 +42,15 @@ NonnullRefPtr<Core::File> I386Assembly::get_output_file()
 void I386Assembly::print_assembly_for_function(const SIR::Function& function)
 {
     size_t param_stack = m_param_stack_start;
+    StringBuilder builder;
+    auto generator = SourceGenerator(builder, '{', '}');
+    generator.set("function.name", function.name());
 
-    m_output_file->printf("\t.globl %s\n", function.name().characters());
-    m_output_file->printf("\t.type %s, @function\n", function.name().characters());
-    m_output_file->printf("%s:\n", function.name().characters());
-
-    // frame pointer
-    m_output_file->printf("\tpushl\t%%ebp\n");
-    m_output_file->printf("\tmovl\t%%esp, %%ebp\n");
+    generator.append("\t.globl {function.name}\n");
+    generator.append("\t.type {function.name}, @function\n");
+    generator.append("{function.name}:\n");
+    generator.append("\tpushl\t%ebp\n");
+    generator.append("\tmovl\t%esp, %ebp\n");
 
     auto variables_already_seen = HashMap<String, String>();
     Optional<const SIR::Variable*> var_in_eax;
@@ -61,29 +63,32 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
 
             assert(right_index.has_value() && left_index.has_value());
             assert(var_in_eax.has_value());
+            generator.set("right_operand.index", right_index.value());
+            generator.set("left_operand.index", left_index.value());
+
             if (var_in_eax.value() != binop.left()->result().ptr())
-                m_output_file->printf("\tmovl\t%s, %%eax\n", left_index.value().characters());
+                generator.append("\tmovl\t{left_operand.index}, %eax\n");
 
             switch (binop.binary_operation()) {
             case SIR::BinaryExpression::Kind::Addition:
-                m_output_file->printf("\taddl\t%s, %%eax\n", right_index.value().characters());
+                generator.append("\taddl\t{right_operand.index}, %eax\n");
                 break;
             case SIR::BinaryExpression::Kind::Multiplication:
-                m_output_file->printf("\timull\t%s, %%eax\n", right_index.value().characters());
+                generator.append("\timull\t{right_operand.index}, %eax\n");
                 break;
             case SIR::BinaryExpression::Kind::Subtraction:
-                m_output_file->printf("\tsubl\t%s, %%eax\n", right_index.value().characters());
+                generator.append("\tsubl\t{right_operand.index}, %eax\n");
                 break;
             }
             //TODO: clear other var in eax
             variables_already_seen.set(binop.result()->name(), "%eax");
             var_in_eax = binop.result();
         } else if (operation.is_return_statement()) {
-            m_output_file->printf("\tpopl\t%%ebp\n");
-            m_output_file->printf("\tret\n");
+            generator.append("\tpopl\t%ebp\n\tret\n");
         } else if (operation.is_variable()) {
             auto& var = reinterpret_cast<const SIR::Variable&>(operation);
-            m_output_file->printf("\tmovl\t%zu(%%ebp), %%eax\n", param_stack);
+            generator.set("operand.stack_position", String::format("%zu", param_stack));
+            generator.append("\tmovl\t{operand.stack_position}(%ebp), %eax\n");
             variables_already_seen.set(var.name(), String::format("%zu(%%ebp)", param_stack));
             param_stack += var.node_type()->size_in_bytes();
             var_in_eax = &var;
@@ -92,7 +97,8 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
         }
     }
 
-    m_output_file->printf("\t.size %s, .-%s\n", function.name().characters(), function.name().characters());
+    generator.append("\t.size {function.name}, .-{function.name}\n");
+    m_output_file->write(generator.as_string());
 }
 
 void I386Assembly::print_asm()
@@ -105,9 +111,15 @@ void I386Assembly::print_asm()
         assert(new_path.has_value());
         input_file_name = input_file_name.substring(new_path.value() + 1);
     }
-    m_output_file->printf("\t.file \"%s\"\n", input_file_name.characters());
-    m_output_file->printf("\t.ident \"Serenity-c++ compiler V0.0.0\"\n");
-    m_output_file->printf("\t.section \".note.GNU-stack\",\"\",@progbits\n");
+
+    StringBuilder builder;
+    auto generator = SourceGenerator(builder, '{', '}');
+    generator.set("input.filename", input_file_name);
+    generator.append("\t.file \"{input.filename}\"\n");
+    generator.append("\t.ident \"Serenity-c++ compiler V0.0.0\"\n");
+    generator.append("\t.section \".note.GNU-stack\",\"\",@progbits\n");
+
+    m_output_file->write(generator.as_string());
 
     for (auto& function : m_tu.functions()) {
         print_assembly_for_function(function);
