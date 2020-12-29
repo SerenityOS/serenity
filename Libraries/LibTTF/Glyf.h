@@ -137,7 +137,7 @@ public:
                     break;
                 }
                 auto item = opt_item.value();
-                auto affine_here = affine * item.affine;
+                auto affine_here = affine.multiply(item.affine);
                 auto glyph = glyph_callback(item.glyph_id);
                 glyph.raster_inner(rasterizer, affine_here);
             }
