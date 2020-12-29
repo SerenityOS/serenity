@@ -257,7 +257,7 @@ u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool quer
         delta_ticks += m_main_counter_last_read - current_value; // the counter wrapped around
     u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
     auto ticks_per_second = frequency();
-    if (ticks_since_last_second > ticks_per_second) {
+    if (ticks_since_last_second >= ticks_per_second) {
         seconds_since_boot += ticks_since_last_second / ticks_per_second;
         ticks_this_second = ticks_since_last_second % ticks_per_second;
     } else {
