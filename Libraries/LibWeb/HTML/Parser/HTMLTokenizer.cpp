@@ -71,11 +71,13 @@ namespace Web::HTML {
         goto _StartOfFunction;          \
     } while (0)
 
-#define RECONSUME_IN_RETURN_STATE          \
-    do {                                   \
-        will_reconsume_in(m_return_state); \
-        m_state = m_return_state;          \
-        goto _StartOfFunction;             \
+#define RECONSUME_IN_RETURN_STATE                   \
+    do {                                            \
+        will_reconsume_in(m_return_state);          \
+        m_state = m_return_state;                   \
+        if (current_input_character.has_value())    \
+            m_utf8_iterator = m_prev_utf8_iterator; \
+        goto _StartOfFunction;                      \
     } while (0)
 
 #define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
@@ -1525,6 +1527,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
+                    FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
                     RECONSUME_IN_RETURN_STATE;
                 }
             }
@@ -1544,17 +1547,9 @@ _StartOfFunction:
                     for (auto ch : match.value().entity)
                         m_temporary_buffer.append(ch);
 
-                    if (consumed_as_part_of_an_attribute() && match.value().code_points.last() != ';') {
-                        auto next = peek_code_point(0);
-                        if (next.has_value() && (next.value() == '=' || isalnum(next.value()))) {
-                            FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
-                            SWITCH_TO_RETURN_STATE;
-                        }
-                    }
-
-                    if (consumed_as_part_of_an_attribute() && match.value().entity.ends_with(';')) {
+                    if (consumed_as_part_of_an_attribute() && !match.value().entity.ends_with(';')) {
                         auto next_code_point = peek_code_point(0);
-                        if (next_code_point.has_value() && next_code_point.value() == '=') {
+                        if (next_code_point.has_value() && (next_code_point.value() == '=' || isalnum(next_code_point.value()))) {
                             FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
                             SWITCH_TO_RETURN_STATE;
                         }
@@ -1571,7 +1566,9 @@ _StartOfFunction:
                     SWITCH_TO_RETURN_STATE;
                 } else {
                     FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
-                    SWITCH_TO(AmbiguousAmpersand);
+                    // FIXME: This should be SWITCH_TO, but we always lose the first character on this path, so just reconsume it.
+                    //        I can't wrap my head around how to do it as the spec says.
+                    RECONSUME_IN(AmbiguousAmpersand);
                 }
             }
             END_STATE
