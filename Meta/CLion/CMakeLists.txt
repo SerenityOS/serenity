@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 project(serenity)
 set(CMAKE_CXX_STANDARD 20)
 
+set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
+
 file(GLOB_RECURSE AK_SOURCES "serenity/AK/*.cpp")
 file(GLOB_RECURSE APPLICATIONS_SOURCES "serenity/Applications/*.cpp")
 file(GLOB_RECURSE BASE_SOURCES "serenity/Base/*.cpp")
@@ -26,7 +28,7 @@ set(INCLUDE_DIRS
     "serenity/Libraries/LibPthread"
     "serenity/Libraries/LibM"
     "serenity/Services"
-    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.2.0"
+    "serenity/Toolchain/Local/${SERENITY_ARCH}/${SERENITY_ARCH}-pc-serenity/include/c++/10.2.0"
     "serenity/Build/Services"
     "serenity/Build/Libraries")
 

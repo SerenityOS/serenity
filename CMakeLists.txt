@@ -14,6 +14,8 @@ enable_testing()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
+
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
     USES_TERMINAL
@@ -23,12 +25,12 @@ add_custom_target(image
     DEPENDS qemu-image
 )
 add_custom_target(qemu-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
     BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
     USES_TERMINAL
 )
 add_custom_target(grub-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
     BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
     USES_TERMINAL
 )
@@ -79,8 +81,8 @@ set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/Root)
 set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
 
-set(TOOLCHAIN_PATH ${CMAKE_SOURCE_DIR}/Toolchain/Local/bin)
-set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/i686-pc-serenity-)
+set(TOOLCHAIN_PATH ${CMAKE_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin)
+set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/${SERENITY_ARCH}-pc-serenity-)
 
 set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc)
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++)

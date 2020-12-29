@@ -11,7 +11,7 @@ echo "$DIR"
 
 ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
-PREFIX="$DIR/Local"
+PREFIX="$DIR/Local/$ARCH"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
@@ -179,14 +179,14 @@ popd
 # === COMPILE AND INSTALL ===
 
 mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/binutils"
-mkdir -p "$DIR/Build/gcc"
+mkdir -p "$DIR/Build/$ARCH/binutils"
+mkdir -p "$DIR/Build/$ARCH/gcc"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$($NPROC)
 fi
 
-pushd "$DIR/Build/"
+pushd "$DIR/Build/$ARCH"
     unset PKG_CONFIG_LIBDIR # Just in case
 
     pushd binutils
@@ -251,7 +251,7 @@ pushd "$DIR/Build/"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
         if [ "$(uname -s)" = "OpenBSD" ]; then
-            cd "$DIR/Local/libexec/gcc/i686-pc-serenity/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+            cd "$DIR/Local/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
 
     popd
