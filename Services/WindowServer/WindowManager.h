@@ -145,6 +145,9 @@ public:
     bool set_resolution(int width, int height);
     Gfx::IntSize resolution() const;
 
+    void set_acceleration_factor(double);
+    void set_scroll_step_size(unsigned);
+
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);
     void set_active_window(Window*, bool make_input = true);

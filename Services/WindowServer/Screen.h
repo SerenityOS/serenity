@@ -35,6 +35,10 @@ struct MousePacket;
 
 namespace WindowServer {
 
+const double mouse_accel_max = 3.5;
+const double mouse_accel_min = 0.5;
+const unsigned scroll_step_size_min = 1;
+
 class Screen {
 public:
     Screen(unsigned width, unsigned height);
@@ -57,6 +61,12 @@ public:
     Gfx::IntPoint cursor_location() const { return m_cursor_location; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
+    double acceleration_factor() const { return m_acceleration_factor; }
+    void set_acceleration_factor(double);
+
+    unsigned scroll_step_size() const { return m_scroll_step_size; }
+    void set_scroll_step_size(unsigned);
+
     void on_receive_mouse_data(const MousePacket&);
     void on_receive_keyboard_data(::KeyEvent);
 
@@ -76,6 +86,8 @@ private:
     Gfx::IntPoint m_cursor_location;
     unsigned m_mouse_button_state { 0 };
     unsigned m_modifiers { 0 };
+    double m_acceleration_factor { 1.0 };
+    unsigned m_scroll_step_size { 1 };
 };
 
 inline Gfx::RGBA32* Screen::scanline(int y)
