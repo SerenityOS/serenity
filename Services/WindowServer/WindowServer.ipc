@@ -107,5 +107,11 @@ endpoint WindowServer = 2
 
     GetGlobalCursorPosition() => (Gfx::IntPoint position)
 
+    SetMouseAcceleration(float factor) => ()
+    GetMouseAcceleration() => (float factor)
+
+    SetScrollStepSize(u32 step_size) => ()
+    GetScrollStepSize() => (u32 step_size)
+
     Pong() =|
 }

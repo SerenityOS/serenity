@@ -882,6 +882,35 @@ OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> ClientConnection
     return make<Messages::WindowServer::GetGlobalCursorPositionResponse>(Screen::the().cursor_location());
 }
 
+OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> ClientConnection::handle(const Messages::WindowServer::SetMouseAcceleration& message)
+{
+    if (message.factor() < mouse_accel_min || message.factor() > mouse_accel_max) {
+        did_misbehave("SetMouseAcceleration with bad acceleration factor");
+        return nullptr;
+    }
+    WindowManager::the().set_acceleration_factor(message.factor());
+    return make<Messages::WindowServer::SetMouseAccelerationResponse>();
+}
+
+OwnPtr<Messages::WindowServer::GetMouseAccelerationResponse> ClientConnection::handle(const Messages::WindowServer::GetMouseAcceleration&)
+{
+    return make<Messages::WindowServer::GetMouseAccelerationResponse>(Screen::the().acceleration_factor());
+}
+
+OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> ClientConnection::handle(const Messages::WindowServer::SetScrollStepSize& message)
+{
+    if (message.step_size() < scroll_step_size_min) {
+        did_misbehave("SetScrollStepSize with bad scroll step size");
+        return nullptr;
+    }
+    WindowManager::the().set_scroll_step_size(message.step_size());
+    return make<Messages::WindowServer::SetScrollStepSizeResponse>();
+}
+OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> ClientConnection::handle(const Messages::WindowServer::GetScrollStepSize&)
+{
+    return make<Messages::WindowServer::GetScrollStepSizeResponse>(Screen::the().scroll_step_size());
+}
+
 void ClientConnection::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)
