@@ -102,8 +102,12 @@ float sinf(float angle) NOEXCEPT
 double pow(double x, double y) NOEXCEPT
 {
     // FIXME: Please fix me. I am naive.
+    if (isnan(y))
+        return y;
     if (y == 0)
         return 1;
+    if (x == 0)
+        return 0;
     if (y == 1)
         return x;
     int y_as_int = (int)y;
@@ -115,40 +119,22 @@ double pow(double x, double y) NOEXCEPT
             result = 1.0 / result;
         return result;
     }
-    return exp(y * log(x));
+    return exp2(y * log2(x));
 }
 
 float powf(float x, float y) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    if (y == 0)
-        return 1;
-    if (y == 1)
-        return x;
-    int y_as_int = (int)y;
-    if (y == (float)y_as_int) {
-        float result = x;
-        for (int i = 0; i < fabs(y) - 1; ++i)
-            result *= x;
-        if (y < 0)
-            result = 1.0 / result;
-        return result;
-    }
-    return (float)exp((double)y * log((double)x));
+    return (float)pow(x, y);
 }
 
 double ldexp(double x, int exp) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    double val = pow(2, exp);
-    return x * val;
+    return x * exp2(exp);
 }
 
 float ldexpf(float x, int exp) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    float val = powf(2, exp);
-    return x * val;
+    return x * exp2f(exp);
 }
 
 double tanh(double x) NOEXCEPT
@@ -212,22 +198,28 @@ double sinh(double x) NOEXCEPT
 
 double log10(double x) NOEXCEPT
 {
-    return log(x) / M_LN10;
+    double ret = 0.0;
+    __asm__(
+        "fldlg2\n"
+        "fld %%st(1)\n"
+        "fyl2x\n"
+        "fstp %%st(1)"
+        : "=t"(ret)
+        : "0"(x));
+    return ret;
 }
 
 double log(double x) NOEXCEPT
 {
-    if (x < 0)
-        return NAN;
-    if (x == 0)
-        return -INFINITY;
-    double y = 1 + 2 * (x - 1) / (x + 1);
-    double exponentiated = exp(y);
-    y = y + 2 * (x - exponentiated) / (x + exponentiated);
-    exponentiated = exp(y);
-    y = y + 2 * (x - exponentiated) / (x + exponentiated);
-    exponentiated = exp(y);
-    return y + 2 * (x - exponentiated) / (x + exponentiated);
+    double ret = 0.0;
+    __asm__(
+        "fldln2\n"
+        "fld %%st(1)\n"
+        "fyl2x\n"
+        "fstp %%st(1)"
+        : "=t"(ret)
+        : "0"(x));
+    return ret;
 }
 
 float logf(float x) NOEXCEPT
@@ -247,38 +239,19 @@ float fmodf(float index, float period) NOEXCEPT
 
 double exp(double exponent) NOEXCEPT
 {
-    double result = 1;
-    if (exponent >= 1) {
-        size_t integer_part = (size_t)exponent;
-        if (integer_part & 1)
-            result *= e_to_power<1>();
-        if (integer_part & 2)
-            result *= e_to_power<2>();
-        if (integer_part > 3) {
-            if (integer_part & 4)
-                result *= e_to_power<4>();
-            if (integer_part & 8)
-                result *= e_to_power<8>();
-            if (integer_part & 16)
-                result *= e_to_power<16>();
-            if (integer_part & 32)
-                result *= e_to_power<32>();
-            if (integer_part >= 64)
-                return INFINITY;
-        }
-        exponent -= integer_part;
-    } else if (exponent < 0)
-        return 1 / exp(-exponent);
-    double taylor_series_result = 1 + exponent;
-    double taylor_series_numerator = exponent * exponent;
-    taylor_series_result += taylor_series_numerator / factorial<2>();
-    taylor_series_numerator *= exponent;
-    taylor_series_result += taylor_series_numerator / factorial<3>();
-    taylor_series_numerator *= exponent;
-    taylor_series_result += taylor_series_numerator / factorial<4>();
-    taylor_series_numerator *= exponent;
-    taylor_series_result += taylor_series_numerator / factorial<5>();
-    return result * taylor_series_result;
+    double res = 0;
+    __asm__("fldl2e\n"
+            "fmulp\n"
+            "fld1\n"
+            "fld %%st(1)\n"
+            "fprem\n"
+            "f2xm1\n"
+            "faddp\n"
+            "fscale\n"
+            "fstp %%st(1)"
+            : "=t"(res)
+            : "0"(exponent));
+    return res;
 }
 
 float expf(float exponent) NOEXCEPT
@@ -288,12 +261,22 @@ float expf(float exponent) NOEXCEPT
 
 double exp2(double exponent) NOEXCEPT
 {
-    return pow(2.0, exponent);
+    double res = 0;
+    __asm__("fld1\n"
+            "fld %%st(1)\n"
+            "fprem\n"
+            "f2xm1\n"
+            "faddp\n"
+            "fscale\n"
+            "fstp %%st(1)"
+            : "=t"(res)
+            : "0"(exponent));
+    return res;
 }
 
 float exp2f(float exponent) NOEXCEPT
 {
-    return pow(2.0f, exponent);
+    return (float)exp2(exponent);
 }
 
 double cosh(double x) NOEXCEPT
@@ -380,7 +363,15 @@ double fabs(double value) NOEXCEPT
 
 double log2(double x) NOEXCEPT
 {
-    return log(x) / M_LN2;
+    double ret = 0.0;
+    __asm__(
+        "fld1\n"
+        "fld %%st(1)\n"
+        "fyl2x\n"
+        "fstp %%st(1)"
+        : "=t"(ret)
+        : "0"(x));
+    return ret;
 }
 
 float log2f(float x) NOEXCEPT
@@ -490,16 +481,45 @@ double gamma(double x) NOEXCEPT
 
 double expm1(double x) NOEXCEPT
 {
-    return pow(M_E, x) - 1;
+    return exp(x) - 1;
 }
 
 double cbrt(double x) NOEXCEPT
 {
-    if (x > 0) {
-        return pow(x, 1.0 / 3.0);
+    if (isinf(x) || x == 0)
+        return x;
+    if (x < 0)
+        return -cbrt(-x);
+
+    double r = x;
+    double ex = 0;
+
+    while (r < 0.125) {
+        r *= 8;
+        ex--;
+    }
+    while (r > 1.0) {
+        r *= 0.125;
+        ex++;
     }
 
-    return -pow(-x, 1.0 / 3.0);
+    r = (-0.46946116 * r + 1.072302) * r + 0.3812513;
+
+    while (ex < 0) {
+        r *= 0.5;
+        ex++;
+    }
+    while (ex > 0) {
+        r *= 2;
+        ex--;
+    }
+
+    r = (2.0 / 3.0) * r + (1.0 / 3.0) * x / (r * r);
+    r = (2.0 / 3.0) * r + (1.0 / 3.0) * x / (r * r);
+    r = (2.0 / 3.0) * r + (1.0 / 3.0) * x / (r * r);
+    r = (2.0 / 3.0) * r + (1.0 / 3.0) * x / (r * r);
+
+    return r;
 }
 
 double log1p(double x) NOEXCEPT
