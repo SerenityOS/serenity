@@ -361,12 +361,13 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
 {
-    auto rule_start = push_start();
     save_state();
     m_parser_state.m_var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
+    auto rule_start = push_start();
 
     ArmedScopeGuard state_rollback_guard = [&] {
         m_parser_state.m_var_scopes.take_last();
+        rule_start.disable();
         load_state();
     };
 
@@ -442,9 +443,10 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
 RefPtr<Statement> Parser::try_parse_labelled_statement()
 {
-    auto rule_start = push_start();
     save_state();
+    auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
+        rule_start.disable();
         load_state();
     };
 
@@ -466,9 +468,10 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
 
 RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
 {
-    auto rule_start = push_start();
     save_state();
+    auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
+        rule_start.disable();
         load_state();
     };
 
