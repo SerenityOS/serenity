@@ -184,6 +184,13 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
     if (m_dynamic_object->has_text_relocations()) {
         // dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
         ASSERT(m_text_segment_load_address.get() != 0);
+
+        // Remap this text region as private.
+        if (mremap(m_text_segment_load_address.as_ptr(), m_text_segment_size, m_text_segment_size, MAP_PRIVATE) == MAP_FAILED) {
+            perror("mremap .text: MAP_PRIVATE");
+            return false;
+        }
+
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_WRITE)) {
             perror("mprotect .text: PROT_READ | PROT_WRITE"); // FIXME: dlerror?
             return false;
@@ -242,11 +249,14 @@ void DynamicLoader::load_program_headers()
     // Process regions in order: .text, .data, .tls
     auto* region = text_region_ptr;
     void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : region->desired_load_address().as_ptr();
+
+    ASSERT(!region->is_writable());
+
     void* text_segment_begin = mmap_with_name(
         requested_load_address,
         region->required_load_size(),
         region->mmap_prot(),
-        MAP_PRIVATE,
+        MAP_SHARED,
         m_image_fd,
         region->offset(),
         String::format("%s: .text", m_filename.characters()).characters());
