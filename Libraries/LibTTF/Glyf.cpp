@@ -502,8 +502,7 @@ Glyf::Glyph Glyf::glyph(u32 offset) const
     i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));
     i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMax));
     i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMax));
-    // HACK: added const_cast because of new wrap behavior
-    auto slice = ByteBuffer::wrap(const_cast<u8*>(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader)), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
+    auto slice = ByteBuffer::copy(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
     return Glyph(slice, xmin, ymin, xmax, ymax, num_contours);
 }
 
