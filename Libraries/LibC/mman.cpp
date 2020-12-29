@@ -53,6 +53,17 @@ void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t
     return serenity_mmap(addr, size, prot, flags, fd, offset, PAGE_SIZE, name);
 }
 
+void* mremap(void* old_address, size_t old_size, size_t new_size, int flags)
+{
+    Syscall::SC_mremap_params params { (uintptr_t)old_address, old_size, new_size, flags };
+    ssize_t rc = syscall(SC_mremap, &params);
+    if (rc < 0 && -rc < EMAXERRNO) {
+        errno = -rc;
+        return MAP_FAILED;
+    }
+    return (void*)rc;
+}
+
 int munmap(void* addr, size_t size)
 {
     int rc = syscall(SC_munmap, addr, size);
