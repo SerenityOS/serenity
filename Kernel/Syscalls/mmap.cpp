@@ -28,6 +28,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
@@ -420,6 +421,42 @@ int Process::sys$munmap(void* addr, size_t size)
     // FIXME: We should also support munmap() across multiple regions. (#175)
 
     return -EINVAL;
+}
+
+void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
+{
+    REQUIRE_PROMISE(stdio);
+
+    Syscall::SC_mremap_params params;
+    if (!copy_from_user(&params, user_params))
+        return (void*)-EFAULT;
+
+    auto* old_region = find_region_from_range(Range { VirtualAddress(params.old_address), params.old_size });
+    if (!old_region)
+        return (void*)-EINVAL;
+
+    if (!old_region->is_mmap())
+        return (void*)-EPERM;
+
+    if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & MAP_ANONYMOUS) && !(params.flags & MAP_PURGEABLE)) {
+        auto range = old_region->range();
+        auto old_name = old_region->name();
+        auto old_prot = region_access_flags_to_prot(old_region->access());
+        NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
+        deallocate_region(*old_region);
+
+        auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
+        auto* new_region = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot);
+        new_region->set_mmap(true);
+
+        if (!new_region)
+            return (void*)-ENOMEM;
+
+        return new_region->vaddr().as_ptr();
+    }
+
+    dbgln("sys$mremap: Unimplemented remap request (flags={})", params.flags);
+    return (void*)-ENOTIMPL;
 }
 
 void* Process::sys$allocate_tls(size_t size)
