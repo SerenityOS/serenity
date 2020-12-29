@@ -90,8 +90,7 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_EncodingID));
     u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_Offset));
     ASSERT(subtable_offset < m_slice.size());
-    // HACK: added const_cast because of new ByteBuffer::wrap behavior, should probably find another workaround
-    auto subtable_slice = ByteBuffer::wrap(const_cast<u8*>(m_slice.offset_pointer(subtable_offset)), m_slice.size() - subtable_offset);
+    auto subtable_slice = ByteBuffer::copy(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
 

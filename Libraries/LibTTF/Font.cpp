@@ -271,7 +271,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
             dbg() << "Font file too small";
             return nullptr;
         }
-        auto buffer_here = ByteBuffer::wrap(buffer.offset_pointer(table_offset), table_length);
+        auto buffer_here = ByteBuffer::copy(buffer.offset_pointer(table_offset), table_length);
 
         // Get the table offsets we need.
         if (tag == tag_from_str("head")) {
