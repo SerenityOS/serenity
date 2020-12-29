@@ -269,11 +269,6 @@ KResult Inode::prepare_to_write_data()
     return KSuccess;
 }
 
-RefPtr<SharedInodeVMObject> Inode::shared_vmobject()
-{
-    return m_shared_vmobject.strong_ref();
-}
-
 RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
 {
     return m_shared_vmobject.strong_ref();
