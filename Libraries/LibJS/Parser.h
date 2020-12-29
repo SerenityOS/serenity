@@ -169,6 +169,7 @@ private:
     void consume_or_insert_semicolon();
     void save_state();
     void load_state();
+    void discard_saved_state();
     Position position() const;
 
     struct RulePosition {
@@ -180,25 +181,21 @@ private:
             : m_parser(parser)
             , m_position(position)
         {
-            m_parser.m_parser_state.m_rule_starts.append(position);
+            m_parser.m_rule_starts.append(position);
         }
 
         ~RulePosition()
         {
-            if (!m_enabled)
-                return;
-            auto last = m_parser.m_parser_state.m_rule_starts.take_last();
+            auto last = m_parser.m_rule_starts.take_last();
             ASSERT(last.line == m_position.line);
             ASSERT(last.column == m_position.column);
         }
 
         const Position& position() const { return m_position; }
-        void disable() { m_enabled = false; }
 
     private:
         Parser& m_parser;
         Position m_position;
-        bool m_enabled { true };
     };
 
     [[nodiscard]] RulePosition push_start() { return { *this, position() }; }
@@ -210,7 +207,6 @@ private:
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
-        Vector<Position> m_rule_starts;
         HashTable<StringView> m_labels_in_scope;
         bool m_strict_mode { false };
         bool m_allow_super_property_lookup { false };
@@ -224,6 +220,7 @@ private:
         explicit ParserState(Lexer);
     };
 
+    Vector<Position> m_rule_starts;
     ParserState m_parser_state;
     Vector<ParserState> m_saved_state;
 };
