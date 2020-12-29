@@ -120,6 +120,24 @@ public:
     void set_horizontal_size_policy(SizePolicy policy) { set_size_policy(policy, vertical_size_policy()); }
     void set_vertical_size_policy(SizePolicy policy) { set_size_policy(horizontal_size_policy(), policy); }
 
+    Gfx::IntSize min_size() const { return m_min_size; }
+    void set_min_size(const Gfx::IntSize&);
+    void set_min_size(int width, int height) { set_min_size({ width, height }); }
+
+    int min_width() const { return m_min_size.width(); }
+    int min_height() const { return m_min_size.height(); }
+    void set_min_width(int width) { set_min_size(width, min_height()); }
+    void set_min_height(int height) { set_min_size(min_width(), height); }
+
+    Gfx::IntSize max_size() const { return m_max_size; }
+    void set_max_size(const Gfx::IntSize&);
+    void set_max_size(int width, int height) { set_max_size({ width, height }); }
+
+    int max_width() const { return m_max_size.width(); }
+    int max_height() const { return m_max_size.height(); }
+    void set_max_width(int width) { set_max_size(width, max_height()); }
+    void set_max_height(int height) { set_max_size(max_width(), height); }
+
     Gfx::IntSize preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Gfx::IntSize&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
@@ -365,6 +383,8 @@ private:
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
     Gfx::IntSize m_preferred_size;
+    Gfx::IntSize m_min_size { -1, -1 };
+    Gfx::IntSize m_max_size { -1, -1 };
     Margins m_content_margins;
 
     bool m_fill_with_background_color { false };

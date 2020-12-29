@@ -138,6 +138,13 @@ Widget::Widget()
     REGISTER_SIZE_POLICY_PROPERTY("horizontal_size_policy", horizontal_size_policy, set_horizontal_size_policy);
     REGISTER_SIZE_POLICY_PROPERTY("vertical_size_policy", vertical_size_policy, set_vertical_size_policy);
 
+    REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
+    REGISTER_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_INT_PROPERTY("min_width", min_width, set_min_width);
+    REGISTER_INT_PROPERTY("max_width", max_width, set_max_width);
+    REGISTER_INT_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_INT_PROPERTY("max_height", max_height, set_max_height);
+
     register_property(
         "focus_policy", [this]() -> JsonValue {
         auto policy = focus_policy();
@@ -657,6 +664,22 @@ bool Widget::global_cursor_tracking() const
     if (!win)
         return false;
     return win->global_cursor_tracking_widget() == this;
+}
+
+void Widget::set_min_size(const Gfx::IntSize& size)
+{
+    if (m_min_size == size)
+        return;
+    m_min_size = size;
+    invalidate_layout();
+}
+
+void Widget::set_max_size(const Gfx::IntSize& size)
+{
+    if (m_max_size == size)
+        return;
+    m_max_size = size;
+    invalidate_layout();
 }
 
 void Widget::set_preferred_size(const Gfx::IntSize& size)
