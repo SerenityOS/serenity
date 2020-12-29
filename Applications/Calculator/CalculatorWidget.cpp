@@ -30,6 +30,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 CalculatorWidget::CalculatorWidget()
@@ -39,7 +40,7 @@ CalculatorWidget::CalculatorWidget()
     m_entry = add<GUI::TextBox>();
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    m_entry->set_font(Gfx::Font::default_fixed_width_font());
+    m_entry->set_font(Gfx::FontDatabase::default_fixed_width_font());
 
     m_label = add<GUI::Label>();
     m_label->set_relative_rect(12, 42, 27, 27);

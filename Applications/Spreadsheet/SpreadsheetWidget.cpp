@@ -38,6 +38,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGfx/FontDatabase.h>
 #include <string.h>
 
 namespace Spreadsheet {
@@ -65,7 +66,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     };
 
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
-    cell_value_editor.set_font(Gfx::Font::default_fixed_width_font());
+    cell_value_editor.set_font(Gfx::FontDatabase::default_fixed_width_font());
     cell_value_editor.set_scrollbars_enabled(false);
 
     cell_value_editor.set_syntax_highlighter(make<CellSyntaxHighlighter>());

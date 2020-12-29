@@ -31,6 +31,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -42,7 +43,7 @@ HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientati
     : m_table_view(table_view)
     , m_orientation(orientation)
 {
-    set_font(Gfx::Font::default_bold_font());
+    set_font(Gfx::FontDatabase::default_bold_font());
 
     if (m_orientation == Gfx::Orientation::Horizontal) {
         set_fixed_height(16);

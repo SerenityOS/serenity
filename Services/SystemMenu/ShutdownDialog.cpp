@@ -33,6 +33,7 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 
 struct Option {
     String title;
@@ -76,7 +77,7 @@ ShutdownDialog::ShutdownDialog()
     auto& header = main.add<GUI::Label>();
     header.set_text("What would you like to do?");
     header.set_fixed_height(16);
-    header.set_font(Gfx::Font::default_bold_font());
+    header.set_font(Gfx::FontDatabase::default_bold_font());
 
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];

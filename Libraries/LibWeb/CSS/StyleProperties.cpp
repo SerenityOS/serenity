@@ -202,7 +202,7 @@ void StyleProperties::load_font() const
 
     if (!found_font) {
         dbgln("Font not found: '{}' {} {}", family, size, weight);
-        found_font = Gfx::Font::default_font();
+        found_font = Gfx::FontDatabase::default_font();
     }
 
     m_font = found_font;

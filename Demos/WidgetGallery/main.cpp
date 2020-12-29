@@ -55,6 +55,7 @@
 #include <LibGUI/Variant.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 
 template<typename T>
 class ListViewModel final : public GUI::Model {
@@ -442,7 +443,7 @@ int main(int argc, char** argv)
     input_group_box.layout()->add_spacer();
 
     auto& input_label = input_group_box.add<GUI::Label>("Valued user input goes here.");
-    input_label.set_font(Gfx::Font::default_bold_font());
+    input_label.set_font(Gfx::FontDatabase::default_bold_font());
 
     input_group_box.layout()->add_spacer();
 

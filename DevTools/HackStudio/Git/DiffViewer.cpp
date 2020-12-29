@@ -31,6 +31,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 // #define DEBUG_DIFF
@@ -180,7 +181,7 @@ DiffViewer::DiffViewer(const String& original, const String& diff)
 
 void DiffViewer::setup_properties()
 {
-    set_font(Gfx::Font::default_fixed_width_font());
+    set_font(Gfx::FontDatabase::default_fixed_width_font());
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
 }

@@ -121,12 +121,12 @@ void WindowManager::reload_config(bool set_screen)
 
 const Gfx::Font& WindowManager::font() const
 {
-    return Gfx::Font::default_font();
+    return Gfx::FontDatabase::default_font();
 }
 
 const Gfx::Font& WindowManager::window_title_font() const
 {
-    return Gfx::Font::default_bold_font();
+    return Gfx::FontDatabase::default_bold_font();
 }
 
 bool WindowManager::set_resolution(int width, int height)

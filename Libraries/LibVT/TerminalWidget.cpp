@@ -133,7 +133,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     auto font_entry = m_config->read_entry("Text", "Font", "default");
     if (font_entry == "default")
-        set_font(Gfx::Font::default_fixed_width_font());
+        set_font(Gfx::FontDatabase::default_fixed_width_font());
     else
         set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
 
@@ -1022,7 +1022,7 @@ void TerminalWidget::did_change_font()
     m_line_height = font().glyph_height() + m_line_spacing;
 
     // TODO: try to find a bold version of the new font (e.g. CsillaThin7x10 -> CsillaBold7x10)
-    const Gfx::Font& bold_font = Gfx::Font::default_bold_fixed_width_font();
+    const Gfx::Font& bold_font = Gfx::FontDatabase::default_bold_fixed_width_font();
 
     if (bold_font.glyph_height() == font().glyph_height() && bold_font.glyph_width(' ') == font().glyph_width(' '))
         m_bold_font = &bold_font;
