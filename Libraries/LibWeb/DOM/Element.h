@@ -60,6 +60,7 @@ public:
     const FlyString& namespace_uri() const { return namespace_(); }
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
+    bool has_attributes() const { return !m_attributes.is_empty(); }
     String attribute(const FlyString& name) const;
     String get_attribute(const FlyString& name) const { return attribute(name); }
     void set_attribute(const FlyString& name, const String& value);

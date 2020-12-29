@@ -4,6 +4,9 @@ interface Element : Node {
 
     DOMString? getAttribute(DOMString qualifiedName);
     undefined setAttribute(DOMString qualifiedName, DOMString value);
+    undefined removeAttribute(DOMString qualifiedName);
+    boolean hasAttribute(DOMString qualifiedName);
+    boolean hasAttributes();
 
     readonly attribute Element? firstElementChild;
     readonly attribute Element? lastElementChild;
