@@ -28,6 +28,8 @@
 #include <LibCore/DirectoryWatcher.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
+#include <serenity.h>
+#include <spawn.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -58,6 +60,18 @@ static void print_backtrace(const String& coredump_path)
         dbgln("{}", entry.to_string(true));
 }
 
+static void launch_crash_reporter(const String& coredump_path)
+{
+    pid_t child;
+    const char* argv[] = { "CrashReporter", coredump_path.characters(), nullptr, nullptr };
+    if ((errno = posix_spawn(&child, "/bin/CrashReporter", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        perror("posix_spawn");
+    } else {
+        if (disown(child) < 0)
+            perror("disown");
+    }
+}
+
 int main()
 {
     static constexpr const char* coredumps_dir = "/tmp/coredump";
@@ -72,5 +86,6 @@ int main()
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
         print_backtrace(coredump_path);
+        launch_crash_reporter(coredump_path);
     }
 }
