@@ -238,4 +238,16 @@ inline unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
+inline int region_access_flags_to_prot(unsigned access)
+{
+    int prot = 0;
+    if (access & Region::Access::Read)
+        prot |= PROT_READ;
+    if (access & Region::Access::Write)
+        prot |= PROT_WRITE;
+    if (access & Region::Access::Execute)
+        prot |= PROT_EXEC;
+    return prot;
+}
+
 }

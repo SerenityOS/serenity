@@ -195,7 +195,8 @@ namespace Kernel {
     S(disown)                 \
     S(adjtime)                \
     S(allocate_tls)           \
-    S(prctl)
+    S(prctl)                  \
+    S(mremap)
 
 namespace Syscall {
 
@@ -254,6 +255,13 @@ struct SC_mmap_params {
     int32_t fd;
     ssize_t offset;
     StringArgument name;
+};
+
+struct SC_mremap_params {
+    uintptr_t old_address;
+    size_t old_size;
+    size_t new_size;
+    int32_t flags;
 };
 
 struct SC_open_params {
