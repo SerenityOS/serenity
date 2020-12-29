@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Span.h>
 
 namespace TTF {
 
@@ -56,7 +56,7 @@ public:
             UnicodeFullRepertoire = 10,
         };
 
-        Subtable(const ByteBuffer& slice, u16 platform_id, u16 encoding_id)
+        Subtable(const ReadonlyBytes& slice, u16 platform_id, u16 encoding_id)
             : m_slice(slice)
             , m_raw_platform_id(platform_id)
             , m_encoding_id(encoding_id)
@@ -95,12 +95,12 @@ public:
         u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
         u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
 
-        ByteBuffer m_slice;
+        ReadonlyBytes m_slice;
         u16 m_raw_platform_id { 0 };
         u16 m_encoding_id { 0 };
     };
 
-    static Optional<Cmap> from_slice(const ByteBuffer&);
+    static Optional<Cmap> from_slice(const ReadonlyBytes&);
     u32 num_subtables() const;
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }
@@ -118,12 +118,12 @@ private:
         EncodingRecord = 8,
     };
 
-    Cmap(const ByteBuffer& slice)
+    Cmap(const ReadonlyBytes& slice)
         : m_slice(slice)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
     u32 m_active_index { UINT32_MAX };
 };
 

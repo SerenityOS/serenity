@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
@@ -50,18 +50,18 @@ private:
 
 class Loca {
 public:
-    static Optional<Loca> from_slice(const ByteBuffer&, u32 num_glyphs, IndexToLocFormat);
+    static Optional<Loca> from_slice(const ReadonlyBytes&, u32 num_glyphs, IndexToLocFormat);
     u32 get_glyph_offset(u32 glyph_id) const;
 
 private:
-    Loca(const ByteBuffer& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+    Loca(const ReadonlyBytes& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_index_to_loc_format(index_to_loc_format)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
     u32 m_num_glyphs { 0 };
     IndexToLocFormat m_index_to_loc_format;
 };
@@ -70,7 +70,7 @@ class Glyf {
 public:
     class Glyph {
     public:
-        Glyph(const ByteBuffer& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
+        Glyph(const ReadonlyBytes& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
             : m_xmin(xmin)
             , m_ymin(ymin)
             , m_xmax(xmax)
@@ -109,14 +109,14 @@ public:
                 Gfx::AffineTransform affine;
             };
 
-            ComponentIterator(const ByteBuffer& slice)
+            ComponentIterator(const ReadonlyBytes& slice)
                 : m_slice(slice)
             {
             }
             Optional<Item> next();
 
         private:
-            ByteBuffer m_slice;
+            ReadonlyBytes m_slice;
             bool m_has_more { true };
             u32 m_offset { 0 };
         };
@@ -150,10 +150,10 @@ public:
         i16 m_xmax { 0 };
         i16 m_ymax { 0 };
         i16 m_num_contours { -1 };
-        ByteBuffer m_slice;
+        ReadonlyBytes m_slice;
     };
 
-    Glyf(const ByteBuffer& slice)
+    Glyf(const ReadonlyBytes& slice)
         : m_slice(slice)
     {
     }
@@ -170,7 +170,7 @@ private:
         GlyphHeader = 10,
     };
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
 };
 
 }
