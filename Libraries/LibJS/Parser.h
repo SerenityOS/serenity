@@ -172,6 +172,10 @@ private:
     Position position() const;
 
     struct RulePosition {
+        AK_MAKE_NONCOPYABLE(RulePosition);
+        AK_MAKE_NONMOVABLE(RulePosition);
+
+    public:
         RulePosition(Parser& parser, Position position)
             : m_parser(parser)
             , m_position(position)
@@ -181,16 +185,20 @@ private:
 
         ~RulePosition()
         {
+            if (!m_enabled)
+                return;
             auto last = m_parser.m_parser_state.m_rule_starts.take_last();
             ASSERT(last.line == m_position.line);
             ASSERT(last.column == m_position.column);
         }
 
         const Position& position() const { return m_position; }
+        void disable() { m_enabled = false; }
 
     private:
         Parser& m_parser;
         Position m_position;
+        bool m_enabled { true };
     };
 
     [[nodiscard]] RulePosition push_start() { return { *this, position() }; }
