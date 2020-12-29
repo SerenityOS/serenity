@@ -70,17 +70,14 @@ static bool is_valid_nonfirst_character_of_identifier(char ch)
     return is_valid_first_character_of_identifier(ch) || isdigit(ch);
 }
 
+//TODO: When not using pointer, the destructor is called twice (or something like that) and an error happen in free()
 #define __KNOWN_KEYWORD(keyword, string) { string, Token::KnownKeyword::keyword },
 
-static const HashMap<StringView, Cpp::Token::KnownKeyword> s_known_keywords = {
-    FOR_EACH_CPP_KNOWN_KEYWORD
-};
+static const auto* s_known_keywords = new HashMap<StringView, Cpp::Token::KnownKeyword>({ FOR_EACH_CPP_KNOWN_KEYWORD });
 
 #define __KNOWN_TYPE(type, string) { string, Token::KnownType::type },
 
-static const HashMap<StringView, Cpp::Token::KnownType> s_known_types = {
-    FOR_EACH_CPP_KNOWN_TYPE
-};
+static const auto* s_known_types = new HashMap<StringView, Cpp::Token::KnownType>({ FOR_EACH_CPP_KNOWN_TYPE });
 #undef __KNOWN_TYPE
 
 Token Lexer::lex_one_token()
@@ -577,12 +574,12 @@ Token Lexer::lex_one_token()
         while (peek() && is_valid_nonfirst_character_of_identifier(peek()))
             consume();
         auto token_view = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
-        if (auto known_keyword = s_known_keywords.get(token_view); known_keyword.has_value()) {
+        if (auto known_keyword = s_known_keywords->get(token_view); known_keyword.has_value()) {
             auto token = commit_token(Token::Type::Keyword);
 
             token.m_known_keyword = known_keyword.value();
             return token;
-        } else if (auto known_type = s_known_types.get(token_view); known_type.has_value()) {
+        } else if (auto known_type = s_known_types->get(token_view); known_type.has_value()) {
             auto token = commit_token(Token::Type::KnownType);
             token.m_known_type = known_type.value();
             return token;
