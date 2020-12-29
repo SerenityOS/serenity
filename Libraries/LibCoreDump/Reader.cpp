@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Reader.h"
+#include <LibCoreDump/Backtrace.h>
+#include <LibCoreDump/Reader.h>
 #include <string.h>
 
 namespace CoreDump {
@@ -118,6 +119,11 @@ const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) co
         return IterationDecision::Continue;
     });
     return ret;
+}
+
+Backtrace Reader::backtrace() const
+{
+    return Backtrace(*this);
 }
 
 }

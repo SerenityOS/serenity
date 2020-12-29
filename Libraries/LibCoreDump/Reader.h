@@ -29,6 +29,7 @@
 #include <AK/MappedFile.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
+#include <LibCoreDump/Forward.h>
 #include <LibELF/CoreDump.h>
 #include <LibELF/Image.h>
 
@@ -53,6 +54,8 @@ public:
 
     Optional<uint32_t> peek_memory(FlatPtr address) const;
     const ELF::Core::MemoryRegionInfo* region_containing(FlatPtr address) const;
+
+    Backtrace backtrace() const;
 
 private:
     class NotesEntryIterator {

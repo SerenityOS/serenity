@@ -24,18 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Assertions.h>
-#include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
-#include <AK/ScopeGuard.h>
 #include <LibCore/DirectoryWatcher.h>
-#include <LibCore/File.h>
+#include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
-#include <LibDebug/DebugInfo.h>
-#include <LibELF/Image.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -55,107 +47,15 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
     }
 }
 
-static String object_name(StringView memory_region_name)
+static void print_backtrace(const String& coredump_path)
 {
-    if (memory_region_name.contains("Loader.so"))
-        return "Loader.so";
-    if (!memory_region_name.contains(":"))
-        return {};
-    return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
-}
-
-struct ElfObjectInfo {
-    ElfObjectInfo(MappedFile&& file, Debug::DebugInfo&& debug_info)
-        : file(move(file))
-        , debug_info(move(debug_info))
-    {
-    }
-
-    MappedFile file;
-    Debug::DebugInfo debug_info;
-};
-
-// FIXME: This cache has to be invalidated when libraries/programs are re-compiled.
-// We can store the last-modified timestamp of the elf files in ElfObjectInfo to invalidate cache entries.
-static HashMap<String, NonnullOwnPtr<ElfObjectInfo>> s_debug_info_cache;
-
-static const ElfObjectInfo* object_info_for_region(const ELF::Core::MemoryRegionInfo* region)
-{
-    auto name = object_name(region->region_name);
-
-    String path;
-    if (name.contains(".so"))
-        path = String::formatted("/usr/lib/{}", name);
-    else {
-        path = name;
-    }
-
-    if (auto it = s_debug_info_cache.find(path); it != s_debug_info_cache.end())
-        return it->value.ptr();
-
-    if (!Core::File::exists(path.characters()))
-        return nullptr;
-
-    MappedFile object_file(path);
-    if (!object_file.is_valid())
-        return nullptr;
-
-    auto info = make<ElfObjectInfo>(move(object_file), Debug::DebugInfo { make<ELF::Image>((const u8*)object_file.data(), object_file.size()) });
-    auto* info_ptr = info.ptr();
-    s_debug_info_cache.set(path, move(info));
-    return info_ptr;
-}
-
-static String backtrace_line(const CoreDump::Reader& coredump, FlatPtr eip)
-{
-    auto* region = coredump.region_containing((FlatPtr)eip);
-    if (!region)
-        return String::format("%p: ???", eip);
-
-    if (StringView { region->region_name }.contains("Loader.so"))
-        return {};
-
-    auto* object_info = object_info_for_region(region);
-    if (!object_info)
-        return {};
-
-    auto func_name = object_info->debug_info.elf().symbolicate(eip - region->region_start);
-
-    auto source_position = object_info->debug_info.get_source_position(eip - region->region_start);
-
-    auto source_position_string = String::empty();
-    if (source_position.has_value())
-        source_position_string = String::format(" (\033[34;1m%s\033[0m:%u)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
-
-    return String::format("%p: [%s] %s%s", eip, object_name(region->region_name).characters(), func_name.is_null() ? "???" : func_name.characters(), source_position_string.characters());
-}
-
-static void backtrace(const String& coredump_path)
-{
-    size_t thread_index = 0;
     auto coredump = CoreDump::Reader::create(coredump_path);
-    coredump->for_each_thread_info([&thread_index, &coredump](const ELF::Core::ThreadInfo& thread_info) {
-        dbgln("Backtrace for thread #{}, tid={}", thread_index++, thread_info.tid);
-
-        uint32_t* ebp = (uint32_t*)thread_info.regs.ebp;
-        uint32_t* eip = (uint32_t*)thread_info.regs.eip;
-        while (ebp && eip) {
-
-            auto line = backtrace_line(*coredump, (FlatPtr)eip);
-            if (!line.is_null())
-                dbgprintf("%s\n", line.characters());
-            auto next_eip = coredump->peek_memory((FlatPtr)(ebp + 1));
-            auto next_ebp = coredump->peek_memory((FlatPtr)(ebp));
-            if (!next_ebp.has_value() || !next_eip.has_value()) {
-                break;
-            }
-
-            eip = (uint32_t*)next_eip.value();
-            ebp = (uint32_t*)next_ebp.value();
-        }
-
-        return IterationDecision::Continue;
-    });
+    if (!coredump) {
+        dbgln("Could not open coredump '{}'", coredump_path);
+        return;
+    }
+    for (auto& entry : coredump->backtrace().entries())
+        dbgln("{}", entry.to_string(true));
 }
 
 int main()
@@ -170,9 +70,7 @@ int main()
             continue;
         auto coredump_path = event.value().child_path;
         dbgln("New coredump file: {}", coredump_path);
-
         wait_until_coredump_is_ready(coredump_path);
-
-        backtrace(coredump_path);
+        print_backtrace(coredump_path);
     }
 }
