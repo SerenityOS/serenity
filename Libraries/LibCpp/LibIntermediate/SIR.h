@@ -119,8 +119,8 @@ public:
 
 class Expression : public ASTNode {
 public:
-    explicit Expression(NonnullRefPtr<Variable>& result)
-        : m_result(result)
+    explicit Expression(NonnullRefPtr<Variable> result)
+        : m_result(move(result))
     {
     }
     bool is_expression() const override { return true; }
@@ -140,7 +140,7 @@ public:
         Subtraction
     };
     BinaryExpression(Kind kind, NonnullRefPtr<ASTNode> left, NonnullRefPtr<ASTNode> right, NonnullRefPtr<Variable> result)
-        : Expression(result)
+        : Expression(move(result))
         , m_binary_operation(kind)
         , m_left(move(left))
         , m_right(move(right))
@@ -153,8 +153,8 @@ public:
     NonnullRefPtr<Expression>& left() { return m_left; }
     const NonnullRefPtr<Expression>& right() const { return m_right; }
     NonnullRefPtr<Expression>& right() { return m_right; }
-    void set_right(NonnullRefPtr<Expression> right) { m_right = right; }
-    void set_left(NonnullRefPtr<Expression> left) { m_left = left; }
+    void set_right(NonnullRefPtr<Expression> right) { m_right = move(right); }
+    void set_left(NonnullRefPtr<Expression> left) { m_left = move(left); }
     Kind binary_operation() const { return m_binary_operation; }
 
 private:
@@ -166,7 +166,7 @@ private:
 class PrimaryExpression : public Expression {
 public:
     explicit PrimaryExpression(NonnullRefPtr<Variable> result)
-        : Expression(result)
+        : Expression(move(result))
     {
     }
     bool is_primary_expression() const override { return false; }
@@ -175,7 +175,7 @@ public:
 class IdentifierExpression : public PrimaryExpression {
 public:
     explicit IdentifierExpression(NonnullRefPtr<Variable> result)
-        : PrimaryExpression(result)
+        : PrimaryExpression(move(result))
 
     {
     }
@@ -185,8 +185,8 @@ public:
 class ReturnStatement : public Statement {
 public:
     ReturnStatement() = default;
-    explicit ReturnStatement(RefPtr<Expression>& expression)
-        : m_expression(expression)
+    explicit ReturnStatement(RefPtr<Expression> expression)
+        : m_expression(move(expression))
     {
     }
     bool is_return_statement() const override { return true; }
@@ -201,11 +201,11 @@ private:
 
 class Function : public RefCounted<Function> {
 public:
-    Function(NonnullRefPtr<Type>& return_type, String& name, NonnullRefPtrVector<Variable>& parameters, NonnullRefPtrVector<ASTNode>& body)
-        : m_return_type(return_type)
+    Function(NonnullRefPtr<Type> return_type, String& name, NonnullRefPtrVector<Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+        : m_return_type(move(return_type))
         , m_name(name)
-        , m_parameters(parameters)
-        , m_body(body)
+        , m_parameters(move(parameters))
+        , m_body(move(body))
     {
     }
 

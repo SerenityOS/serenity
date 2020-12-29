@@ -65,8 +65,8 @@ public:
 
 class Function : public SIR::Function {
 public:
-    Function(NonnullRefPtr<SIR::Type>& return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable>& parameters, NonnullRefPtrVector<ASTNode>& body)
-        : SIR::Function(return_type, unmangled_name, parameters, body)
+    Function(NonnullRefPtr<SIR::Type> return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+        : SIR::Function(move(return_type), unmangled_name, move(parameters), move(body))
         , m_unmangled_name(unmangled_name)
     {
         set_name(mangle());

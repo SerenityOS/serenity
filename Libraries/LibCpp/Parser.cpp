@@ -300,7 +300,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     if (id.has_value()) {
         //TODO: should disapear when result will be bound to a variable
         auto return_type = create_ast_node<Variable>(create_ast_node<SignedIntType>(), id.value());
-        return create_ast_node<IdentifierExpression>(return_type);
+        return create_ast_node<IdentifierExpression>(move(return_type));
     } else {
         parse_error("expected identifier");
     }
@@ -348,9 +348,10 @@ NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
     if (peek().m_type == Token::Type::Asterisk) {
         consume();
         auto right = parse_multiplicative_expression();
+        auto result_var = create_unnamed_var(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, left, right, create_unnamed_var(left->result()->node_type()));
+        auto result = create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, move(left), move(right), move(result_var));
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Multiplication);
     }
     return left;
@@ -368,9 +369,10 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
         auto operation = peek().m_type == Token::Type::Plus ? BinaryExpression::Kind::Addition : BinaryExpression::Kind::Subtraction;
         consume();
         auto right = parse_additive_expression();
+        auto result_var = create_unnamed_var(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(operation, left, right, create_unnamed_var(left->result()->node_type()));
+        auto result = create_ast_node<BinaryExpression>(operation, move(left), move(right), move(result_var));
 
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Subtraction, BinaryExpression::Kind::Addition);
     }
@@ -484,7 +486,7 @@ NonnullRefPtr<Statement> Parser::parse_jump_statement()
     RefPtr expression = parse_expr_or_braced_init_list();
 
     expect(Token::Type::Semicolon);
-    return create_ast_node<ReturnStatement>(expression);
+    return create_ast_node<ReturnStatement>(move(expression));
 }
 
 // statement:
@@ -534,7 +536,7 @@ NonnullRefPtr<Function> Parser::parse_function_definition()
 
     if (declarator.has_value()) {
         auto body = parse_function_body();
-        return create_ast_node<Function>(return_type, declarator.value().name, declarator.value().parameters, body);
+        return create_ast_node<Function>(move(return_type), declarator.value().name, declarator.value().parameters, move(body));
     }
     parse_error("expected identifier");
 }
@@ -557,7 +559,7 @@ NonnullRefPtrVector<Function> Parser::parse_declaration_sequence()
         const auto tok = peek();
         if (tok.m_type != Token::Type::EndOfFile) {
             auto function = parse_declaration();
-            functions.append(function);
+            functions.append(move(function));
         } else {
             return functions;
         }
@@ -573,7 +575,7 @@ Cpp::TranslationUnit Parser::parse_translation_unit()
     const auto tok = peek();
     if (tok.m_type != Token::Type::EndOfFile) {
         auto functions = parse_declaration_sequence();
-        m_tu.functions().append(functions);
+        m_tu.functions().append(move(functions));
     }
 
     return m_tu;
