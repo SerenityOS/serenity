@@ -138,6 +138,26 @@ public:
     void set_max_width(int width) { set_max_size(width, max_height()); }
     void set_max_height(int height) { set_max_size(max_width(), height); }
 
+    void set_fixed_size(const Gfx::IntSize& size)
+    {
+        set_min_size(size);
+        set_max_size(size);
+    }
+
+    void set_fixed_size(int width, int height) { set_fixed_size({ width, height }); }
+
+    void set_fixed_width(int width)
+    {
+        set_min_width(width);
+        set_max_width(width);
+    }
+
+    void set_fixed_height(int height)
+    {
+        set_min_height(height);
+        set_max_height(height);
+    }
+
     Gfx::IntSize preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Gfx::IntSize&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
@@ -368,6 +388,11 @@ private:
     void show_tooltip();
 
     bool load_from_json(const JsonObject&);
+
+    // HACK: These are used as property getters for the fixed_* size property aliases.
+    int dummy_fixed_width() { return 0; }
+    int dummy_fixed_height() { return 0; }
+    Gfx::IntSize dummy_fixed_size() { return {}; }
 
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;

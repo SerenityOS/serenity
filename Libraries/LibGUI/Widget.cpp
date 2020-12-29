@@ -145,6 +145,10 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("min_height", min_height, set_min_height);
     REGISTER_INT_PROPERTY("max_height", max_height, set_max_height);
 
+    REGISTER_INT_PROPERTY("fixed_width", dummy_fixed_width, set_fixed_width);
+    REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
+    REGISTER_SIZE_PROPERTY("fixed_size", dummy_fixed_size, set_fixed_size);
+
     register_property(
         "focus_policy", [this]() -> JsonValue {
         auto policy = focus_policy();
