@@ -543,9 +543,11 @@ bool Shell::is_runnable(const StringView& name)
     if (access(name.to_string().characters(), X_OK) == 0)
         return true;
 
-    return !!binary_search(cached_path.span(), name.to_string(), [](const String& name, const String& program) -> int {
-        return strcmp(name.characters(), program.characters());
-    });
+    return binary_search(
+        cached_path.span(),
+        name.to_string(),
+        nullptr,
+        [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
 
 int Shell::run_command(const StringView& cmd)
@@ -1143,10 +1145,10 @@ void Shell::add_entry_to_cache(const String& entry)
 {
     size_t index = 0;
     auto match = binary_search(
-        cached_path.span(), entry, [](const String& name, const String& program) -> int {
-            return strcmp(name.characters(), program.characters());
-        },
-        &index);
+        cached_path.span(),
+        entry,
+        &index,
+        [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 
     if (match)
         return;
@@ -1252,9 +1254,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
 
 Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& name, size_t offset)
 {
-    auto match = binary_search(cached_path.span(), name, [](const String& name, const String& program) -> int {
-        return strncmp(name.characters(), program.characters(), name.length());
-    });
+    auto match = binary_search(
+        cached_path.span(),
+        name,
+        nullptr,
+        [](auto& name, auto& program) { return strncmp(name.characters(), program.characters(), name.length()); });
 
     if (!match)
         return complete_path("", name, offset);
