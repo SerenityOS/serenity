@@ -158,8 +158,9 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = main_widget()->add<TaskbarButton>(identifier);
-    button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    button.set_preferred_size(140, 22);
+    button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    button.set_min_size({ 20, 22 });
+    button.set_max_size({ 140, 22 });
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
