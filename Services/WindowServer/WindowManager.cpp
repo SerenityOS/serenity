@@ -163,6 +163,22 @@ Gfx::IntSize WindowManager::resolution() const
     return Screen::the().size();
 }
 
+void WindowManager::set_acceleration_factor(double factor)
+{
+    Screen::the().set_acceleration_factor(factor);
+    dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->file_name());
+    m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
+    m_config->sync();
+}
+
+void WindowManager::set_scroll_step_size(unsigned step_size)
+{
+    Screen::the().set_scroll_step_size(step_size);
+    dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->file_name());
+    m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
+    m_config->sync();
+}
+
 void WindowManager::add_window(Window& window)
 {
     bool is_first_window = m_windows_in_order.is_empty();
