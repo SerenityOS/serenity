@@ -68,10 +68,10 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
         if ((prot & PROT_WRITE) && !metadata.may_write(process))
             return false;
         InterruptDisabler disabler;
-        if (inode.shared_vmobject()) {
-            if ((prot & PROT_EXEC) && inode.shared_vmobject()->writable_mappings())
+        if (auto shared_vmobject = inode.shared_vmobject()) {
+            if ((prot & PROT_EXEC) && shared_vmobject->writable_mappings())
                 return false;
-            if ((prot & PROT_WRITE) && inode.shared_vmobject()->executable_mappings())
+            if ((prot & PROT_WRITE) && shared_vmobject->executable_mappings())
                 return false;
         }
     }
