@@ -1978,7 +1978,7 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                     if (start_int.has_value() && end_int.has_value()) {
                         auto start = start_int.value();
                         auto end = end_int.value();
-                        auto step = start > end ? 1 : -1;
+                        auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
                             values.append(create<StringValue>(String::number(value)));
                         // Append the range end too, most shells treat this as inclusive.
