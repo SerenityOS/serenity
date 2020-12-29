@@ -33,6 +33,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +62,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
         container.set_layout<GUI::HorizontalBoxLayout>();
         container.set_fixed_size(275, 12);
         auto& description_label = container.add<GUI::Label>(description);
-        description_label.set_font(Gfx::Font::default_bold_font());
+        description_label.set_font(Gfx::FontDatabase::default_bold_font());
         description_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         auto& label = container.add<GUI::Label>();
         label.set_text_alignment(Gfx::TextAlignment::CenterRight);

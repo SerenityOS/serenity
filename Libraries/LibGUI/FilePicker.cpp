@@ -40,6 +40,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGfx/FontDatabase.h>
 #include <string.h>
 
 namespace GUI {
@@ -253,7 +254,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         m_preview_image->set_fixed_size(160, 160);
 
         m_preview_name_label = m_preview_container->add<Label>();
-        m_preview_name_label->set_font(Gfx::Font::default_bold_font());
+        m_preview_name_label->set_font(Gfx::FontDatabase::default_bold_font());
         m_preview_name_label->set_fixed_height(m_preview_name_label->font().glyph_height());
 
         m_preview_geometry_label = m_preview_container->add<Label>();

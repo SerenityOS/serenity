@@ -43,6 +43,7 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/FontDatabase.h>
 
 REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
@@ -437,7 +438,7 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
 
     formula_editor.set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
     formula_editor.set_should_hide_unnecessary_scrollbars(true);
-    formula_editor.set_font(&Gfx::Font::default_fixed_width_font());
+    formula_editor.set_font(&Gfx::FontDatabase::default_fixed_width_font());
     formula_editor.on_change = [&] {
         m_format.condition = formula_editor.text();
     };

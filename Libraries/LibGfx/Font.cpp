@@ -60,46 +60,6 @@ struct [[gnu::packed]] FontFileHeader
     char family[32];
 };
 
-Font& Font::default_font()
-{
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Katica 10 400");
-        ASSERT(font);
-    }
-    return *font;
-}
-
-Font& Font::default_fixed_width_font()
-{
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Csilla 10 400");
-        ASSERT(font);
-    }
-    return *font;
-}
-
-Font& Font::default_bold_fixed_width_font()
-{
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Csilla 10 700");
-        ASSERT(font);
-    }
-    return *font;
-}
-
-Font& Font::default_bold_font()
-{
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Katica 10 700");
-        ASSERT(font);
-    }
-    return *font;
-}
-
 NonnullRefPtr<Font> Font::clone() const
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();

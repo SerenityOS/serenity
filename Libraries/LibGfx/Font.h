@@ -75,12 +75,6 @@ private:
 
 class Font : public RefCounted<Font> {
 public:
-    static Font& default_font();
-    static Font& default_bold_font();
-
-    static Font& default_fixed_width_font();
-    static Font& default_bold_fixed_width_font();
-
     NonnullRefPtr<Font> clone() const;
     static NonnullRefPtr<Font> create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type);
 

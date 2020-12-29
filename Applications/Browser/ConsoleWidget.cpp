@@ -30,6 +30,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
@@ -67,7 +68,7 @@ ConsoleWidget::ConsoleWidget()
     m_input = bottom_container.add<GUI::TextBox>();
     m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
-    m_input->set_font(Gfx::Font::default_fixed_width_font());
+    m_input->set_font(Gfx::FontDatabase::default_fixed_width_font());
     m_input->set_history_enabled(true);
 
     m_input->on_return_pressed = [this] {

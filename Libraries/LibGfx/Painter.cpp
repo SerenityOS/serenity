@@ -28,6 +28,7 @@
 #include "Bitmap.h"
 #include "Emoji.h"
 #include "Font.h"
+#include "FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
 #include <AK/Function.h>
@@ -72,7 +73,7 @@ Painter::Painter(Gfx::Bitmap& bitmap)
 {
     ASSERT(bitmap.format() == Gfx::BitmapFormat::RGB32 || bitmap.format() == Gfx::BitmapFormat::RGBA32);
     m_state_stack.append(State());
-    state().font = &Font::default_font();
+    state().font = &FontDatabase::default_font();
     state().clip_rect = { { 0, 0 }, bitmap.size() };
     m_clip_origin = state().clip_rect;
 }

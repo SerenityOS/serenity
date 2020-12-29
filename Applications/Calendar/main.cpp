@@ -40,6 +40,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
     selected_calendar_button = toolbar.add<GUI::Button>(calendar_widget.selected_calendar_text());
     selected_calendar_button->set_fixed_width(70);
     selected_calendar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-    selected_calendar_button->set_font(Gfx::Font::default_bold_fixed_width_font());
+    selected_calendar_button->set_font(Gfx::FontDatabase::default_bold_fixed_width_font());
     selected_calendar_button->on_click = [&](auto) {
         calendar_widget.toggle_mode();
         selected_calendar_button->set_text(calendar_widget.selected_calendar_text());

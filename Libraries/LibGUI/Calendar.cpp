@@ -32,6 +32,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
@@ -72,7 +73,7 @@ Calendar::Calendar(Core::DateTime date_time)
     m_day_name_container->set_background_role(Gfx::ColorRole::HoverHighlight);
     for (auto& day : m_day_names) {
         day = m_day_name_container->add<GUI::Label>();
-        day->set_font(Gfx::Font::default_bold_font());
+        day->set_font(Gfx::FontDatabase::default_bold_font());
     }
 
     m_calendar_tile_container = add<GUI::Widget>();
@@ -357,13 +358,13 @@ void Calendar::CalendarTile::paint_event(GUI::PaintEvent& event)
         } else if (is_selected()) {
             painter.draw_rect(frame_inner_rect(), palette().base_text());
         }
-        painter.draw_text(day_rect, display_date, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(day_rect, display_date, Gfx::FontDatabase::default_bold_font(), Gfx::TextAlignment::Center, palette().base_text());
     } else if (is_outside_selection()) {
-        painter.draw_text(day_rect, display_date, Gfx::Font::default_font(), Gfx::TextAlignment::Center, Color::LightGray);
+        painter.draw_text(day_rect, display_date, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, Color::LightGray);
     } else {
         if (!has_grid() && is_selected())
             painter.draw_rect(frame_inner_rect(), palette().base_text());
-        painter.draw_text(day_rect, display_date, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().base_text());
+        painter.draw_text(day_rect, display_date, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().base_text());
     }
 }
 

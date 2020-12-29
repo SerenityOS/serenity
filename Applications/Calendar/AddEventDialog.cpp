@@ -38,6 +38,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 
 static const char* short_month_names[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -65,7 +66,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     auto& add_label = top_container.add<GUI::Label>("Add title & date:");
     add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     add_label.set_fixed_height(14);
-    add_label.set_font(Gfx::Font::default_bold_font());
+    add_label.set_font(Gfx::FontDatabase::default_bold_font());
 
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
     event_title_textbox.set_fixed_height(20);

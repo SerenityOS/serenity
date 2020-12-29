@@ -67,7 +67,7 @@ const Gfx::Font& Menu::title_font() const
 
 const Gfx::Font& Menu::font() const
 {
-    return Gfx::Font::default_font();
+    return Gfx::FontDatabase::default_font();
 }
 
 static const char* s_checked_bitmap_data = {
@@ -109,7 +109,7 @@ int Menu::content_width() const
     for (auto& item : m_items) {
         if (item.type() != MenuItem::Text)
             continue;
-        auto& use_font = item.is_default() ? Gfx::Font::default_bold_font() : font();
+        auto& use_font = item.is_default() ? Gfx::FontDatabase::default_bold_font() : font();
         int text_width = use_font.width(item.text());
         if (!item.shortcut_text().is_empty()) {
             int shortcut_width = use_font.width(item.shortcut_text());
@@ -261,7 +261,7 @@ void Menu::draw()
             }
             auto& previous_font = painter.font();
             if (item.is_default())
-                painter.set_font(Gfx::Font::default_bold_font());
+                painter.set_font(Gfx::FontDatabase::default_bold_font());
             painter.draw_text(text_rect, item.text(), Gfx::TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);

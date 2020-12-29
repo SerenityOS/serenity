@@ -37,6 +37,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Point.h>
 #include <stdio.h>
 
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
     RefPtr<Gfx::Font> edited_font;
     if (path == nullptr) {
         path = "/tmp/saved.font";
-        edited_font = Gfx::Font::default_font().clone();
+        edited_font = Gfx::FontDatabase::default_font().clone();
     } else {
         edited_font = Gfx::Font::load_from_file(path)->clone();
         if (!edited_font) {

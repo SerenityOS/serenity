@@ -30,6 +30,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -89,7 +90,7 @@ void Button::paint_event(PaintEvent& event)
             painter.blit_disabled(icon_location, *m_icon, m_icon->rect(), palette());
         }
     }
-    auto& font = is_checked() ? Gfx::Font::default_bold_font() : this->font();
+    auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
     if (m_icon && !text().is_empty()) {
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);

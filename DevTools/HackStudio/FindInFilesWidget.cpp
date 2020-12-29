@@ -32,6 +32,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/FontDatabase.h>
 
 namespace HackStudio {
 
@@ -78,7 +79,7 @@ public:
             return Gfx::TextAlignment::CenterLeft;
         if (role == GUI::ModelRole::Font) {
             if (index.column() == Column::MatchedText)
-                return Gfx::Font::default_fixed_width_font();
+                return Gfx::FontDatabase::default_fixed_width_font();
             return {};
         }
         if (role == GUI::ModelRole::Display) {

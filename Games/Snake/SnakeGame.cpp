@@ -29,12 +29,13 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <stdlib.h>
 #include <time.h>
 
 SnakeGame::SnakeGame()
 {
-    set_font(Gfx::Font::default_bold_fixed_width_font());
+    set_font(Gfx::FontDatabase::default_bold_fixed_width_font());
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/paprika.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/eggplant.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/cauliflower.png"));

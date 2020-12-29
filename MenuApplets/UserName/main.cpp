@@ -29,6 +29,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <stdio.h>
 
@@ -38,7 +39,7 @@ public:
     UserNameWidget()
     {
         m_username = getlogin();
-        m_username_width = Gfx::Font::default_bold_font().width(m_username);
+        m_username_width = Gfx::FontDatabase::default_bold_font().width(m_username);
     }
 
     virtual ~UserNameWidget() override { }
@@ -55,7 +56,7 @@ private:
     {
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
-        painter.draw_text(event.rect(), m_username, Gfx::Font::default_bold_font(), Gfx::TextAlignment::Center, palette().window_text());
+        painter.draw_text(event.rect(), m_username, Gfx::FontDatabase::default_bold_font(), Gfx::TextAlignment::Center, palette().window_text());
     }
 
     String m_username;

@@ -26,6 +26,7 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -86,12 +87,12 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(const CSS::StyleProper
         auto& widget = downcast<Layout::WidgetBox>(layout_node())->widget();
         const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
     };
-    int text_width = Gfx::Font::default_font().width(value());
+    int text_width = Gfx::FontDatabase::default_font().width(value());
     auto size_value = attribute(HTML::AttributeNames::size);
     if (!size_value.is_null()) {
         auto size = size_value.to_uint();
         if (size.has_value())
-            text_width = Gfx::Font::default_font().glyph_width('x') * size.value();
+            text_width = Gfx::FontDatabase::default_font().glyph_width('x') * size.value();
     }
     text_box.set_relative_rect(0, 0, text_width + 20, 20);
     return adopt(*new Layout::WidgetBox(document(), *this, text_box));

@@ -75,6 +75,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 #include <LibVT/TerminalWidget.h>
@@ -718,7 +719,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
         auto& label = wrapper.add<GUI::Label>(text);
         label.set_fill_with_background_color(true);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        label.set_font(Gfx::Font::default_bold_font());
+        label.set_font(Gfx::FontDatabase::default_bold_font());
         label.set_fixed_height(16);
         wrapper.add_child(pane_widget);
     };

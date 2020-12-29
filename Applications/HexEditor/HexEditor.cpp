@@ -33,6 +33,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -43,7 +44,7 @@ HexEditor::HexEditor()
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_scrollbars_enabled(true);
-    set_font(Gfx::Font::default_fixed_width_font());
+    set_font(Gfx::FontDatabase::default_fixed_width_font());
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     vertical_scrollbar().set_step(line_height());
@@ -520,7 +521,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         painter.draw_text(
             side_offset_rect,
             line,
-            is_current_line ? Gfx::Font::default_bold_font() : font(),
+            is_current_line ? Gfx::FontDatabase::default_bold_font() : font(),
             Gfx::TextAlignment::TopLeft,
             is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
     }

@@ -35,6 +35,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 class AudioWidget final : public GUI::Widget {
@@ -161,7 +162,7 @@ private:
 
         if (m_show_percent) {
             auto volume_text = m_audio_muted ? "mute" : String::format("%d%%", m_audio_volume);
-            painter.draw_text({ 16, 3, 24, 16 }, volume_text, Gfx::Font::default_fixed_width_font(), Gfx::TextAlignment::TopLeft, palette().window_text());
+            painter.draw_text({ 16, 3, 24, 16 }, volume_text, Gfx::FontDatabase::default_fixed_width_font(), Gfx::TextAlignment::TopLeft, palette().window_text());
         }
     }
 
