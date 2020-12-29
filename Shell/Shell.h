@@ -45,6 +45,7 @@
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
+    __ENUMERATE_SHELL_BUILTIN(exec)    \
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \
     __ENUMERATE_SHELL_BUILTIN(glob)    \
@@ -252,6 +253,8 @@ private:
 
     void run_tail(RefPtr<Job>);
     void run_tail(const AST::Command&, const AST::NodeWithAction&, int head_exit_code);
+
+    [[noreturn]] void execute_process(Vector<const char*>&& argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
