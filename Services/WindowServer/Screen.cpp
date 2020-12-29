@@ -116,11 +116,23 @@ void Screen::set_buffer(int index)
     ASSERT(rc == 0);
 }
 
+void Screen::set_acceleration_factor(double factor)
+{
+    ASSERT(factor >= mouse_accel_min && factor <= mouse_accel_max);
+    m_acceleration_factor = factor;
+}
+
+void Screen::set_scroll_step_size(unsigned step_size)
+{
+    ASSERT(step_size >= scroll_step_size_min);
+    m_scroll_step_size = step_size;
+}
+
 void Screen::on_receive_mouse_data(const MousePacket& packet)
 {
     auto prev_location = m_cursor_location;
     if (packet.is_relative) {
-        m_cursor_location.move_by(packet.x, packet.y);
+        m_cursor_location.move_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
 #ifdef WSSCREEN_DEBUG
         dbgprintf("Screen: New Relative mouse point @ X %d, Y %d\n", m_cursor_location.x(), m_cursor_location.y());
 #endif
@@ -154,7 +166,7 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
     }
 
     if (packet.z) {
-        auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.z);
+        auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.z * m_scroll_step_size);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     }
 
