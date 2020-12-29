@@ -444,4 +444,15 @@ int ScaledFont::width(const Utf32View& utf32) const
     return width;
 }
 
+RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
+{
+    auto glyph_iterator = m_cached_glyph_bitmaps.find(glyph_id);
+    if (glyph_iterator != m_cached_glyph_bitmaps.end())
+        return glyph_iterator->value;
+
+    auto glyph_bitmap = m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale);
+    m_cached_glyph_bitmaps.set(glyph_id, glyph_bitmap);
+    return glyph_bitmap;
+}
+
 }

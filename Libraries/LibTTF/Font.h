@@ -37,11 +37,9 @@
 #include <LibTTF/Tables.h>
 
 #define POINTS_PER_INCH 72.0f
-#define DEFAULT_DPI     96
+#define DEFAULT_DPI 96
 
 namespace TTF {
-
-class ScaledFont;
 
 struct ScaledFontMetrics {
     int ascender;
@@ -124,7 +122,7 @@ public:
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_font->glyph_id_for_codepoint(codepoint); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
-    RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const { return m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale); }
+    RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const;
     u32 glyph_count() const { return m_font->glyph_count(); }
     int width(const StringView&) const;
     int width(const Utf8View&) const;
@@ -134,6 +132,7 @@ private:
     RefPtr<Font> m_font;
     float m_x_scale { 0.0 };
     float m_y_scale { 0.0 };
+    mutable AK::HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
 };
 
 }
