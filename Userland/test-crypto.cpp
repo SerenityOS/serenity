@@ -2489,6 +2489,22 @@ static void bigint_bitwise()
             FAIL(Invalid value);
         }
     }
+    {
+        I_TEST((BigInteger | Bit shift right));
+        if ("273811808808105304499849984103569"_bigint.shift_right(42) == "62257597348458444798"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
+    {
+        I_TEST((BigInteger | Bit shift right to zero));
+        if ("273811808808105304499849984103569"_bigint.shift_right(108) == "0"_bigint) {
+            PASS;
+        } else {
+            FAIL(Invalid value);
+        }
+    }
 }
 
 static void bigint_test_signed_fibo500()

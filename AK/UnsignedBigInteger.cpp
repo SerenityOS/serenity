@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/UnsignedBigInteger.h>
 #include <AK/StringBuilder.h>
+#include <AK/UnsignedBigInteger.h>
 
 namespace AK {
 
@@ -219,6 +219,28 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::shift_left(size_t num_bits) const
     shift_left_without_allocation(*this, num_bits, temp_result, temp_plus, output);
 
     return output;
+}
+
+FLATTEN UnsignedBigInteger UnsignedBigInteger::shift_right(size_t num_bits) const
+{
+    // FIXME: This could be more optimised for performance using a similar technique
+    // that's used in shift_left
+
+    UnsignedBigInteger result;
+
+    for (size_t word_index = 0; word_index < trimmed_length(); ++word_index) {
+        for (size_t bit_index = 0; bit_index < BITS_IN_WORD; ++bit_index) {
+            auto bit_value = m_words[word_index] & (1 << bit_index);
+            if (bit_value) {
+                auto new_bit_index = word_index * BITS_IN_WORD + bit_index;
+                if (new_bit_index >= num_bits) {
+                    result.set_bit_inplace(new_bit_index - num_bits);
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigInteger& other) const
