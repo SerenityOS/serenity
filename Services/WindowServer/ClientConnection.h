@@ -145,6 +145,10 @@ private:
     virtual void handle(const Messages::WindowServer::SetWindowProgress&) override;
     virtual void handle(const Messages::WindowServer::Pong&) override;
     virtual OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> handle(const Messages::WindowServer::GetGlobalCursorPosition&) override;
+    virtual OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> handle(const Messages::WindowServer::SetMouseAcceleration&) override;
+    virtual OwnPtr<Messages::WindowServer::GetMouseAccelerationResponse> handle(const Messages::WindowServer::GetMouseAcceleration&) override;
+    virtual OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> handle(const Messages::WindowServer::SetScrollStepSize&) override;
+    virtual OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> handle(const Messages::WindowServer::GetScrollStepSize&) override;
 
     Window* window_from_id(i32 window_id);
 
