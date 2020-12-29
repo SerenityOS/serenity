@@ -7,9 +7,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-TARGET=i686-pc-serenity
-PREFIX="$DIR/Local"
-SYSROOT="$DIR/../Root"
+ARCH=${ARCH:-"i686"}
+TARGET="$ARCH-pc-serenity"
+PREFIX="$DIR/Local/$ARCH"
+BUILD=$(realpath "$DIR/../Build")
+SYSROOT="$BUILD/Root"
 
 source "$DIR/../Ports/python-3.6/version.sh"
 
@@ -45,13 +47,13 @@ pushd "$DIR/Tarballs"
 popd
 
 mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/python"
+mkdir -p "$DIR/Build/$ARCH/python"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
 fi
 
-pushd "$DIR/Build/"
+pushd "$DIR/Build/$ARCH"
     pushd python
         "$DIR"/Tarballs/Python-$PYTHON_VERSION/configure --prefix="$PREFIX" || exit 1
         make -j "$MAKEJOBS" || exit 1

@@ -274,10 +274,10 @@ file(GENERATE OUTPUT linker.ld INPUT linker.ld)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     include_directories(/usr/local/include/c++/10.2.0/)
-    include_directories(/usr/local/include/c++/10.2.0/i686-pc-serenity/)
+    include_directories(/usr/local/include/c++/10.2.0/${SERENITY_ARCH}-pc-serenity/)
 else()
-    include_directories(../Toolchain/Local/i686-pc-serenity/include/c++/10.2.0/)
-    include_directories(../Toolchain/Local/i686-pc-serenity/include/c++/10.2.0/i686-pc-serenity/)
+    include_directories(../Toolchain/Local/${SERENITY_ARCH}/${SERENITY_ARCH}-pc-serenity/include/c++/10.2.0/)
+    include_directories(../Toolchain/Local/${SERENITY_ARCH}/${SERENITY_ARCH}-pc-serenity/include/c++/10.2.0/${SERENITY_ARCH}-pc-serenity/)
 endif()
 
 add_executable(Kernel ${SOURCES})

@@ -48,7 +48,7 @@ jobs:
         # This assumes that *ALL* LibC headers have an impact on the Toolchain.
         # This is wrong, and causes more Toolchain rebuilds than necessary.
         # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch') }}
+        key: ${{ runner.os }}-toolchain-i686-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}
     - name: Restore or regenerate Toolchain
       run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
 
@@ -155,7 +155,7 @@ jobs:
         # This assumes that *ALL* LibC headers have an impact on the Toolchain.
         # This is wrong, and causes more Toolchain rebuilds than necessary.
         # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch') }}
+        key: ${{ runner.os }}-toolchain-i686-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}
     - name: Restore or regenerate Toolchain
       run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
 
