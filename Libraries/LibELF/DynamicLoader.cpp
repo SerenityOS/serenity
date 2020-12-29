@@ -185,11 +185,13 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
         // dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
         ASSERT(m_text_segment_load_address.get() != 0);
 
+#ifndef AK_OS_MACOS
         // Remap this text region as private.
         if (mremap(m_text_segment_load_address.as_ptr(), m_text_segment_size, m_text_segment_size, MAP_PRIVATE) == MAP_FAILED) {
             perror("mremap .text: MAP_PRIVATE");
             return false;
         }
+#endif
 
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_WRITE)) {
             perror("mprotect .text: PROT_READ | PROT_WRITE"); // FIXME: dlerror?
