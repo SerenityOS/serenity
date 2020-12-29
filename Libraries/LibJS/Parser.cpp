@@ -367,7 +367,6 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     ArmedScopeGuard state_rollback_guard = [&] {
         m_parser_state.m_var_scopes.take_last();
-        rule_start.disable();
         load_state();
     };
 
@@ -434,6 +433,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     if (!function_body_result.is_null()) {
         state_rollback_guard.disarm();
+        discard_saved_state();
         auto body = function_body_result.release_nonnull();
         return create_ast_node<FunctionExpression>({ rule_start.position(), position() }, "", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), is_strict, true);
     }
@@ -446,7 +446,6 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
     save_state();
     auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
-        rule_start.disable();
         load_state();
     };
 
@@ -463,6 +462,7 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
 
     statement->set_label(identifier);
     state_rollback_guard.disarm();
+    discard_saved_state();
     return statement;
 }
 
@@ -471,7 +471,6 @@ RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
     save_state();
     auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
-        rule_start.disable();
         load_state();
     };
 
@@ -485,6 +484,7 @@ RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
         return {};
 
     state_rollback_guard.disarm();
+    discard_saved_state();
     return create_ast_node<MetaProperty>({ rule_start.position(), position() }, MetaProperty::Type::NewTarget);
 }
 
@@ -2039,6 +2039,11 @@ void Parser::load_state()
 {
     ASSERT(!m_saved_state.is_empty());
     m_parser_state = m_saved_state.take_last();
+}
+
+void Parser::discard_saved_state()
+{
+    m_saved_state.take_last();
 }
 
 }
