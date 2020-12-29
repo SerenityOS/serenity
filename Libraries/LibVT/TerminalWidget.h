@@ -89,7 +89,6 @@ public:
 
     bool is_scrollable() const;
     int scroll_length() const;
-    void set_scroll_length(int);
 
     size_t max_history_size() const { return m_terminal.max_history_size(); }
     void set_max_history_size(size_t value) { m_terminal.set_max_history_size(value); }

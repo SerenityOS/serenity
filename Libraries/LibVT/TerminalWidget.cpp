@@ -112,7 +112,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_scrollbar->on_change = [this](int) {
         force_repaint();
     };
-    set_scroll_length(m_config->read_num_entry("Window", "ScrollLength", 4));
 
     dbgln("Load config file from {}", m_config->file_name());
     m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
@@ -841,11 +840,6 @@ bool TerminalWidget::is_scrollable() const
 int TerminalWidget::scroll_length() const
 {
     return m_scrollbar->step();
-}
-
-void TerminalWidget::set_scroll_length(int length)
-{
-    m_scrollbar->set_step(length);
 }
 
 String TerminalWidget::selected_text() const
