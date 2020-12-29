@@ -96,11 +96,12 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
         // Check if we can draw one from the return queue
         if (m_recently_returned.size() > 0) {
             u8 index = get_fast_random<u8>() % m_recently_returned.size();
-            ptrdiff_t local_offset = m_recently_returned[index].get() - m_lower.get();
+            Checked<FlatPtr> local_offset = m_recently_returned[index].get();
+            local_offset -= m_lower.get();
             m_recently_returned.remove(index);
-            ASSERT(local_offset >= 0);
-            ASSERT((FlatPtr)local_offset < (FlatPtr)(m_pages * PAGE_SIZE));
-            return local_offset / PAGE_SIZE;
+            ASSERT(!local_offset.has_overflow());
+            ASSERT(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
+            return local_offset.value() / PAGE_SIZE;
         }
         return {};
     }
