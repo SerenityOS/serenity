@@ -233,18 +233,6 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     slider.set_range(0, 255);
     slider.set_value(terminal.opacity());
 
-    auto& spinbox_container = settings.add<GUI::GroupBox>("Scroll length");
-    spinbox_container.set_layout<GUI::VerticalBoxLayout>();
-    spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
-    spinbox_container.set_fixed_height(46);
-
-    auto& spinbox = spinbox_container.add<GUI::SpinBox>();
-    spinbox.set_min(1);
-    spinbox.set_value(terminal.scroll_length());
-    spinbox.on_change = [&terminal](int value) {
-        terminal.set_scroll_length(value);
-    };
-
     auto& history_size_spinbox_container = settings.add<GUI::GroupBox>("Maximum scrollback history lines");
     history_size_spinbox_container.set_layout<GUI::VerticalBoxLayout>();
     history_size_spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
