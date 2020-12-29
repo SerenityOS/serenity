@@ -27,6 +27,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ClassicWindowTheme.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
@@ -73,13 +74,13 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
-    auto& title_font = Font::default_bold_font();
+    auto& title_font = FontDatabase::default_bold_font();
 
     auto titlebar_rect = title_bar_rect(WindowType::Normal, window_rect, palette);
     auto titlebar_icon_rect = title_bar_icon_rect(WindowType::Normal, window_rect, palette);
     auto titlebar_inner_rect = title_bar_text_rect(WindowType::Normal, window_rect, palette);
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Font::default_bold_font().width(title_text));
+    titlebar_title_rect.set_width(FontDatabase::default_bold_font().width(title_text));
 
     auto [title_color, border_color, border_color2, stripes_color, shadow_color] = compute_frame_colors(window_state, palette);
 
@@ -109,7 +110,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
 IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
 {
-    auto& title_font = Font::default_bold_font();
+    auto& title_font = FontDatabase::default_bold_font();
     auto window_titlebar_height = title_bar_height(palette);
     // FIXME: The top of the titlebar doesn't get redrawn properly if this padding is different
     int total_vertical_padding = title_font.glyph_height() - 1;
@@ -207,7 +208,7 @@ Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const
 
 int ClassicWindowTheme::title_bar_height(const Palette& palette) const
 {
-    auto& title_font = Font::default_bold_font();
+    auto& title_font = FontDatabase::default_bold_font();
     return max(palette.window_title_height(), title_font.glyph_height() + 8);
 }
 

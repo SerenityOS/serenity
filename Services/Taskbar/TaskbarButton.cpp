@@ -30,6 +30,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -106,7 +107,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
 {
     ASSERT(icon());
     auto& icon = *this->icon();
-    auto& font = is_checked() ? Gfx::Font::default_bold_font() : this->font();
+    auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
     auto& window = WindowList::the().ensure_window(m_identifier);
 
     GUI::Painter painter(*this);

@@ -32,6 +32,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 
 namespace HackStudio {
 
@@ -77,7 +78,7 @@ EditorWrapper::~EditorWrapper()
 
 void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
 {
-    m_filename_label->set_font(focus ? Gfx::Font::default_bold_font() : Gfx::Font::default_font());
+    m_filename_label->set_font(focus ? Gfx::FontDatabase::default_bold_font() : Gfx::FontDatabase::default_font());
 }
 
 }

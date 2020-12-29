@@ -50,22 +50,22 @@ static void test_fontdatabase_for_each_font()
 
 static void test_default_font()
 {
-    assert(!Gfx::Font::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_font().name().is_null());
 }
 
 static void test_default_fixed_width_font()
 {
-    assert(!Gfx::Font::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_font().name().is_null());
 }
 
 static void test_default_bold_fixed_width_font()
 {
-    assert(!Gfx::Font::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_font().name().is_null());
 }
 
 static void test_default_bold_font()
 {
-    assert(!Gfx::Font::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_font().name().is_null());
 }
 
 static void test_clone()

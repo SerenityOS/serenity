@@ -31,6 +31,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
@@ -135,7 +136,7 @@ public:
 private:
     virtual void event(Core::Event&) override;
 
-    RefPtr<Gfx::Font> m_title_font { &Gfx::Font::default_font() };
+    RefPtr<Gfx::Font> m_title_font { &Gfx::FontDatabase::default_font() };
 
     void handle_mouse_move_event(const MouseEvent&);
     int visible_item_count() const;

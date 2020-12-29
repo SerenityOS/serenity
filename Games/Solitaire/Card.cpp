@@ -27,6 +27,7 @@
 #include "Card.h"
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 
 static const NonnullRefPtr<Gfx::CharacterBitmap> s_diamond = Gfx::CharacterBitmap::create_from_ascii(
     "    #    "
@@ -105,7 +106,7 @@ Card::Card(Type type, uint8_t value)
     }
 
     Gfx::Painter painter(m_front);
-    auto& font = Gfx::Font::default_bold_font();
+    auto& font = Gfx::FontDatabase::default_bold_font();
     static const String labels[] = { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
 
     auto label = labels[value];

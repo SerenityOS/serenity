@@ -34,6 +34,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/ShareableBitmap.h>
 
 namespace NotificationServer {
@@ -99,7 +100,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     left_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto& title_label = left_container.add<GUI::Label>(title);
-    title_label.set_font(Gfx::Font::default_bold_font());
+    title_label.set_font(Gfx::FontDatabase::default_bold_font());
     title_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     auto& text_label = left_container.add<GUI::Label>(text);
     text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);

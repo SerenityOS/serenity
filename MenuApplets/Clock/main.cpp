@@ -36,6 +36,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
 #include <spawn.h>
@@ -47,7 +48,7 @@ class ClockWidget final : public GUI::Widget {
 public:
     ClockWidget()
     {
-        m_time_width = Gfx::Font::default_bold_font().width("2222-22-22 22:22:22");
+        m_time_width = Gfx::FontDatabase::default_bold_font().width("2222-22-22 22:22:22");
 
         m_timer = add<Core::Timer>(1000, [this] {
             static time_t last_update_time;
@@ -217,7 +218,7 @@ private:
         auto time_text = Core::DateTime::now().to_string();
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
-        painter.draw_text(event.rect(), time_text, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().window_text());
+        painter.draw_text(event.rect(), time_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().window_text());
     }
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
