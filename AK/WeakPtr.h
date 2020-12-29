@@ -201,16 +201,40 @@ template<typename T>
 template<typename U>
 inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
 {
-#ifdef DEBUG
-    ASSERT(!m_being_destroyed);
-#endif
+    if constexpr (IsBaseOf<RefCountedBase, T>::value) {
+        // Checking m_being_destroyed isn't sufficient when dealing with
+        // a RefCounted type.The reference count will drop to 0 before the
+        // destructor is invoked and revoke_weak_ptrs is called. So, try
+        // to add a ref (which should fail if the ref count is at 0) so
+        // that we prevent the destructor and revoke_weak_ptrs from being
+        // triggered until we're done.
+        if (!static_cast<const T*>(this)->try_ref())
+            return {};
+    } else {
+        // For non-RefCounted types this means a weak reference can be
+        // obtained until the ~Weakable destructor is invoked!
+        if (m_being_destroyed.load(AK::MemoryOrder::memory_order_acquire))
+            return {};
+    }
     if (!m_link) {
         // There is a small chance that we create a new WeakLink and throw
         // it away because another thread beat us to it. But the window is
         // pretty small and the overhead isn't terrible.
         m_link.assign_if_null(adopt(*new WeakLink(const_cast<T&>(static_cast<const T&>(*this)))));
     }
-    return WeakPtr<U>(m_link);
+
+    WeakPtr<U> weak_ptr(m_link);
+
+    if constexpr (IsBaseOf<RefCountedBase, T>::value) {
+        // Now drop the reference we temporarily added
+        if (static_cast<const T*>(this)->unref()) {
+            // We just dropped the last reference, which should have called
+            // revoke_weak_ptrs, which should have invalidated our weak_ptr
+            ASSERT(!weak_ptr.strong_ref());
+            return {};
+        }
+    }
+    return weak_ptr;
 }
 
 template<typename T>

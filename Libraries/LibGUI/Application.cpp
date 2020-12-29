@@ -72,6 +72,11 @@ static NeverDestroyed<WeakPtr<Application>> s_the;
 
 Application* Application::the()
 {
+    // NOTE: If we don't explicitly call revoke_weak_ptrs() in the
+    // ~Application destructor, we would have to change this to
+    // return s_the->strong_ref().ptr();
+    // This is because this is using the unsafe operator*/operator->
+    // that do not have the ability to check the ref count!
     return *s_the;
 }
 

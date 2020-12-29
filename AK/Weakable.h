@@ -30,6 +30,9 @@
 #include "Atomic.h"
 #include "RefCounted.h"
 #include "RefPtr.h"
+#ifdef KERNEL
+#    include <Kernel/Arch/i386/CPU.h>
+#endif
 
 #ifndef WEAKABLE_DEBUG
 #    define WEAKABLE_DEBUG
@@ -56,14 +59,16 @@ public:
 
         {
 #ifdef KERNEL
-            // We don't want to be pre-empted while we have the lock bit set
+            // We don't want to be pre-empted while we are trying to obtain
+            // a strong reference
             Kernel::ScopedCritical critical;
 #endif
-            FlatPtr bits = RefPtrTraits<void>::lock(m_bits);
-            T* ptr = static_cast<T*>(RefPtrTraits<void>::as_ptr(bits));
-            if (ptr)
-                ref = *ptr;
-            RefPtrTraits<void>::unlock(m_bits, bits);
+            if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
+                T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
+                if (ptr && ptr->try_ref())
+                    ref = adopt(*ptr);
+            }
+            m_consumers.fetch_sub(1u << 1, AK::MemoryOrder::memory_order_release);
         }
 
         return ref;
@@ -72,26 +77,46 @@ public:
     template<typename T>
     T* unsafe_ptr() const
     {
-        return static_cast<T*>(RefPtrTraits<void>::as_ptr(m_bits.load(AK::MemoryOrder::memory_order_acquire)));
+        if (m_consumers.load(AK::MemoryOrder::memory_order_relaxed) & 1u)
+            return nullptr;
+        // NOTE: This may return a non-null pointer even if revocation
+        // has been triggered as there is a possible race! But it's "unsafe"
+        // anyway because we return a raw pointer without ensuring a
+        // reference...
+        return (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
     }
 
     bool is_null() const
     {
-        return RefPtrTraits<void>::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed));
+        return !unsafe_ptr<void>();
     }
 
     void revoke()
     {
-        RefPtrTraits<void>::exchange(m_bits, RefPtrTraits<void>::default_null_value);
+        auto current_consumers = m_consumers.fetch_or(1u, AK::MemoryOrder::memory_order_relaxed);
+        ASSERT(!(current_consumers & 1u));
+        // We flagged revokation, now wait until everyone trying to obtain
+        // a strong reference is done
+        while (current_consumers > 0) {
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#else
+            // TODO: yield?
+#endif
+            current_consumers = m_consumers.load(AK::MemoryOrder::memory_order_acquire) & ~1u;
+        }
+        // No one is trying to use it (anymore)
+        m_ptr.store(nullptr, AK::MemoryOrder::memory_order_release);
     }
 
 private:
     template<typename T>
     explicit WeakLink(T& weakable)
-        : m_bits(RefPtrTraits<void>::as_bits(&weakable))
+        : m_ptr(&weakable)
     {
     }
-    mutable Atomic<FlatPtr> m_bits;
+    mutable Atomic<void*> m_ptr;
+    mutable Atomic<unsigned> m_consumers; // LSB indicates revokation in progress
 };
 
 template<typename T>
@@ -108,23 +133,19 @@ protected:
 
     ~Weakable()
     {
-#ifdef WEAKABLE_DEBUG
-        m_being_destroyed = true;
-#endif
+        m_being_destroyed.store(true, AK::MemoryOrder::memory_order_release);
         revoke_weak_ptrs();
     }
 
     void revoke_weak_ptrs()
     {
-        if (m_link)
-            m_link->revoke();
+        if (auto link = move(m_link))
+            link->revoke();
     }
 
 private:
     mutable RefPtr<WeakLink> m_link;
-#ifdef WEAKABLE_DEBUG
-    bool m_being_destroyed { false };
-#endif
+    Atomic<bool> m_being_destroyed { false };
 };
 
 }
