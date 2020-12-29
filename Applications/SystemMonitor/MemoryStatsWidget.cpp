@@ -50,8 +50,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     ASSERT(!s_the);
     s_the = this;
 
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 110);
+    set_fixed_height(110);
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 0, 8, 0, 0 });
@@ -60,8 +59,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     auto build_widgets_for_label = [this](const String& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();
         container.set_layout<GUI::HorizontalBoxLayout>();
-        container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        container.set_preferred_size(275, 12);
+        container.set_fixed_size(275, 12);
         auto& description_label = container.add<GUI::Label>(description);
         description_label.set_font(Gfx::Font::default_bold_font());
         description_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
