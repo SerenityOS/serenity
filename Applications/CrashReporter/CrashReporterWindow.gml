@@ -92,7 +92,7 @@
         @GUI::Widget {
             horizontal_size_policy: "Fixed"
             vertical_size_policy: "Fill"
-            preferred_width: 378
+            preferred_width: 377
             preferred_height: 0
         }
 
