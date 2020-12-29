@@ -90,7 +90,7 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_EncodingID));
     u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_Offset));
     ASSERT(subtable_offset < m_slice.size());
-    auto subtable_slice = ByteBuffer::copy(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
+    auto subtable_slice = ReadonlyBytes(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
 
@@ -163,7 +163,7 @@ u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
     return subtable.glyph_id_for_codepoint(codepoint);
 }
 
-Optional<Cmap> Cmap::from_slice(const ByteBuffer& slice)
+Optional<Cmap> Cmap::from_slice(const ReadonlyBytes& slice)
 {
     if (slice.size() < (size_t)Sizes::TableHeader) {
         return {};
