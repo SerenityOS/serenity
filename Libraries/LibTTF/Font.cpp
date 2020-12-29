@@ -69,7 +69,7 @@ u32 tag_from_str(const char* str)
     return be_u32((const u8*)str);
 }
 
-Optional<Head> Head::from_slice(const ByteBuffer& slice)
+Optional<Head> Head::from_slice(const ReadonlyBytes& slice)
 {
     if (slice.size() < (size_t)Sizes::Table) {
         return {};
@@ -120,7 +120,7 @@ IndexToLocFormat Head::index_to_loc_format() const
     }
 }
 
-Optional<Hhea> Hhea::from_slice(const ByteBuffer& slice)
+Optional<Hhea> Hhea::from_slice(const ReadonlyBytes& slice)
 {
     if (slice.size() < (size_t)Sizes::Table) {
         return {};
@@ -153,7 +153,7 @@ u16 Hhea::number_of_h_metrics() const
     return be_u16(m_slice.offset_pointer((u32)Offsets::NumberOfHMetrics));
 }
 
-Optional<Maxp> Maxp::from_slice(const ByteBuffer& slice)
+Optional<Maxp> Maxp::from_slice(const ReadonlyBytes& slice)
 {
     if (slice.size() < (size_t)Sizes::TableV0p5) {
         return {};
@@ -166,7 +166,7 @@ u16 Maxp::num_glyphs() const
     return be_u16(m_slice.offset_pointer((u32)Offsets::NumGlyphs));
 }
 
-Optional<Hmtx> Hmtx::from_slice(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
+Optional<Hmtx> Hmtx::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
     if (slice.size() < number_of_h_metrics * (u32)Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32)Sizes::LeftSideBearing) {
         return {};
@@ -241,13 +241,13 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         return nullptr;
     }
 
-    Optional<ByteBuffer> opt_head_slice = {};
-    Optional<ByteBuffer> opt_hhea_slice = {};
-    Optional<ByteBuffer> opt_maxp_slice = {};
-    Optional<ByteBuffer> opt_hmtx_slice = {};
-    Optional<ByteBuffer> opt_cmap_slice = {};
-    Optional<ByteBuffer> opt_loca_slice = {};
-    Optional<ByteBuffer> opt_glyf_slice = {};
+    Optional<ReadonlyBytes> opt_head_slice = {};
+    Optional<ReadonlyBytes> opt_hhea_slice = {};
+    Optional<ReadonlyBytes> opt_maxp_slice = {};
+    Optional<ReadonlyBytes> opt_hmtx_slice = {};
+    Optional<ReadonlyBytes> opt_cmap_slice = {};
+    Optional<ReadonlyBytes> opt_loca_slice = {};
+    Optional<ReadonlyBytes> opt_glyf_slice = {};
 
     Optional<Head> opt_head = {};
     Optional<Hhea> opt_hhea = {};
@@ -271,7 +271,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
             dbg() << "Font file too small";
             return nullptr;
         }
-        auto buffer_here = ByteBuffer::copy(buffer.offset_pointer(table_offset), table_length);
+        auto buffer_here = ReadonlyBytes(buffer.offset_pointer(table_offset), table_length);
 
         // Get the table offsets we need.
         if (tag == tag_from_str("head")) {

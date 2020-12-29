@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
+#include <AK/Span.h>
 
 namespace TTF {
 
@@ -37,7 +37,7 @@ enum class IndexToLocFormat {
 
 class Head {
 public:
-    static Optional<Head> from_slice(const ByteBuffer&);
+    static Optional<Head> from_slice(const ReadonlyBytes&);
     u16 units_per_em() const;
     i16 xmin() const;
     i16 ymin() const;
@@ -60,17 +60,17 @@ private:
         Table = 54,
     };
 
-    Head(const ByteBuffer& slice)
+    Head(const ReadonlyBytes& slice)
         : m_slice(slice)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
 };
 
 class Hhea {
 public:
-    static Optional<Hhea> from_slice(const ByteBuffer&);
+    static Optional<Hhea> from_slice(const ReadonlyBytes&);
     i16 ascender() const;
     i16 descender() const;
     i16 line_gap() const;
@@ -89,17 +89,17 @@ private:
         Table = 36,
     };
 
-    Hhea(const ByteBuffer& slice)
+    Hhea(const ReadonlyBytes& slice)
         : m_slice(slice)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
 };
 
 class Maxp {
 public:
-    static Optional<Maxp> from_slice(const ByteBuffer&);
+    static Optional<Maxp> from_slice(const ReadonlyBytes&);
     u16 num_glyphs() const;
 
 private:
@@ -110,12 +110,12 @@ private:
         TableV0p5 = 6,
     };
 
-    Maxp(const ByteBuffer& slice)
+    Maxp(const ReadonlyBytes& slice)
         : m_slice(slice)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
 };
 
 struct GlyphHorizontalMetrics {
@@ -125,7 +125,7 @@ struct GlyphHorizontalMetrics {
 
 class Hmtx {
 public:
-    static Optional<Hmtx> from_slice(const ByteBuffer&, u32 num_glyphs, u32 number_of_h_metrics);
+    static Optional<Hmtx> from_slice(const ReadonlyBytes&, u32 num_glyphs, u32 number_of_h_metrics);
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
@@ -134,14 +134,14 @@ private:
         LeftSideBearing = 2
     };
 
-    Hmtx(const ByteBuffer& slice, u32 num_glyphs, u32 number_of_h_metrics)
+    Hmtx(const ReadonlyBytes& slice, u32 num_glyphs, u32 number_of_h_metrics)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_number_of_h_metrics(number_of_h_metrics)
     {
     }
 
-    ByteBuffer m_slice;
+    ReadonlyBytes m_slice;
     u32 m_num_glyphs { 0 };
     u32 m_number_of_h_metrics { 0 };
 };
