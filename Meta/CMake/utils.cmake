@@ -118,9 +118,10 @@ function(embed_resource target section file)
     get_filename_component(asm_file "${file}" NAME)
     set(asm_file "${CMAKE_CURRENT_BINARY_DIR}/${target}-${section}.s")
     get_filename_component(input_file "${file}" ABSOLUTE)
+    file(SIZE "${input_file}" file_size)
     add_custom_command(
         OUTPUT "${asm_file}"
-        COMMAND "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh" "${asm_file}" "${section}" "${input_file}"
+        COMMAND "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh" "${asm_file}" "${section}" "${input_file}" "${file_size}"
         DEPENDS "${input_file}" "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh"
         COMMENT "Generating ${asm_file}"
     )
