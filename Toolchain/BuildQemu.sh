@@ -7,9 +7,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-TARGET=i686-pc-serenity
-PREFIX="$DIR/Local"
-SYSROOT="$DIR/../Root"
+ARCH=${ARCH:-"i686"}
+TARGET="$ARCH-pc-serenity"
+PREFIX="$DIR/Local/$ARCH"
+BUILD=$(realpath "$DIR/../Build")
+SYSROOT="$BUILD/Root"
 
 QEMU300_MD5SUM="6a5c8df583406ea24ef25b239c3243e0"
 QEMU410_MD5SUM="cdf2b5ca52b9abac9bacb5842fa420f8"
@@ -46,7 +48,7 @@ pushd "$DIR/Tarballs"
 popd
 
 mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/qemu"
+mkdir -p "$DIR/Build/$ARCH/qemu"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
@@ -61,7 +63,7 @@ fi
 
 echo Using $UI_LIB based UI
 
-pushd "$DIR/Build/"
+pushd "$DIR/Build/$ARCH"
     pushd qemu
         "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
                                                 --target-list=i386-softmmu \
