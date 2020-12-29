@@ -60,6 +60,7 @@
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <unistd.h>
 
@@ -125,7 +126,7 @@ Widget::Widget()
     : Core::Object(nullptr, true)
     , m_background_role(Gfx::ColorRole::Window)
     , m_foreground_role(Gfx::ColorRole::WindowText)
-    , m_font(Gfx::Font::default_font())
+    , m_font(Gfx::FontDatabase::default_font())
     , m_palette(Application::the()->palette().impl())
 {
     REGISTER_RECT_PROPERTY("relative_rect", relative_rect, set_relative_rect);
@@ -643,7 +644,7 @@ void Widget::set_font(const Gfx::Font* font)
         return;
 
     if (!font)
-        m_font = Gfx::Font::default_font();
+        m_font = Gfx::FontDatabase::default_font();
     else
         m_font = *font;
 

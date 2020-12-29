@@ -43,6 +43,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -195,14 +196,14 @@ int main(int argc, char** argv)
         }
 
         auto& content_title = title_box.add<GUI::Label>();
-        content_title.set_font(Gfx::Font::default_bold_font());
+        content_title.set_font(Gfx::FontDatabase::default_bold_font());
         content_title.set_text(page.title);
         content_title.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         content_title.set_fixed_height(10);
 
         for (auto& paragraph : page.content) {
             auto& content_text = content.add<TextWidget>();
-            content_text.set_font(Gfx::Font::default_font());
+            content_text.set_font(Gfx::FontDatabase::default_font());
             content_text.set_text(paragraph);
             content_text.set_text_alignment(Gfx::TextAlignment::TopLeft);
             content_text.set_line_height(12);
@@ -210,7 +211,7 @@ int main(int argc, char** argv)
         }
 
         auto& menu_option = menu.add<UnuncheckableButton>();
-        menu_option.set_font(Gfx::Font::default_font());
+        menu_option.set_font(Gfx::FontDatabase::default_font());
         menu_option.set_text(page.menu_name);
         menu_option.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         menu_option.set_fixed_height(20);

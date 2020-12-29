@@ -37,6 +37,12 @@ class FontDatabase {
 public:
     static FontDatabase& the();
 
+    static Font& default_font();
+    static Font& default_bold_font();
+
+    static Font& default_fixed_width_font();
+    static Font& default_bold_fixed_width_font();
+
     RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
     RefPtr<Gfx::Font> get_by_name(const StringView&);
     void for_each_font(Function<void(const Gfx::Font&)>);
