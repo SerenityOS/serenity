@@ -47,15 +47,6 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-static String object_name(StringView memory_region_name)
-{
-    if (memory_region_name.contains("Loader.so"))
-        return "Loader.so";
-    if (!memory_region_name.contains(":"))
-        return {};
-    return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
-}
-
 struct CachedLibData {
     OwnPtr<MappedFile> file;
     ELF::Image lib_elf;
@@ -66,9 +57,7 @@ static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region
 
     static HashMap<String, OwnPtr<CachedLibData>> cached_libs;
 
-    StringView region_name { region->region_name };
-
-    auto name = object_name(region_name);
+    auto name = region->object_name();
 
     String path;
     if (name.contains(".so"))
