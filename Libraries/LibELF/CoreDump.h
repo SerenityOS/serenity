@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
 
@@ -61,6 +62,16 @@ struct [[gnu::packed]] MemoryRegionInfo
     uint32_t region_end;
     uint16_t program_header_index;
     char region_name[]; // Null terminated
+
+    String object_name() const
+    {
+        StringView memory_region_name { region_name };
+        if (memory_region_name.contains("Loader.so"))
+            return "Loader.so";
+        if (!memory_region_name.contains(":"))
+            return {};
+        return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
+    }
 };
 
 }
