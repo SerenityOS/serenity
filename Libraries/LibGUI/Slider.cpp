@@ -96,13 +96,13 @@ Gfx::IntRect Slider::knob_rect() const
     if (knob_size_mode() == KnobSizeMode::Fixed) {
         if (m_max - m_min) {
             float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min);
-            rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)(m_value * scale)) - (knob_fixed_primary_size() / 2));
+            rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((m_value - m_min) * scale)) - (knob_fixed_primary_size() / 2));
         } else
             rect.set_primary_size_for_orientation(orientation(), 0);
         rect.set_primary_size_for_orientation(orientation(), knob_fixed_primary_size());
     } else {
         float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min + 1);
-        rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)(m_value * scale)));
+        rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((m_value - m_min) * scale)));
         if (m_max - m_min)
             rect.set_primary_size_for_orientation(orientation(), ::max((int)(scale), knob_fixed_primary_size()));
         else
