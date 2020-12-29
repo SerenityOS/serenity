@@ -41,8 +41,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         auto& adapters_group_box = add<GUI::GroupBox>("Adapters");
         adapters_group_box.set_layout<GUI::VerticalBoxLayout>();
         adapters_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        adapters_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        adapters_group_box.set_preferred_size(0, 120);
+        adapters_group_box.set_fixed_height(120);
 
         m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
 
@@ -61,8 +60,6 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         auto& sockets_group_box = add<GUI::GroupBox>("Sockets");
         sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
         sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        sockets_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-        sockets_group_box.set_preferred_size(0, 0);
 
         m_socket_table_view = sockets_group_box.add<GUI::TableView>();
 

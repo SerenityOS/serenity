@@ -547,8 +547,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         auto& cpu_graph_group_box = self.add<GUI::GroupBox>("CPU usage");
         cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
         cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        cpu_graph_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        cpu_graph_group_box.set_preferred_size(0, 120);
+        cpu_graph_group_box.set_fixed_height(120);
         Vector<GraphWidget*> cpu_graphs;
         for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
             auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
@@ -568,8 +567,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         auto& memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
         memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
         memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        memory_graph_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        memory_graph_group_box.set_preferred_size(0, 120);
+        memory_graph_group_box.set_fixed_height(120);
         auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
         memory_graph.set_text_color(Color::Cyan);
         memory_graph.set_graph_color(Color::from_rgb(0x00bbbb));
