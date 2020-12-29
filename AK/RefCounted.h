@@ -74,6 +74,18 @@ public:
         ASSERT(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
+    ALWAYS_INLINE bool try_ref() const
+    {
+        RefCountType expected = m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
+        for (;;) {
+            if (expected == 0)
+                return false;
+            ASSERT(!Checked<RefCountType>::addition_would_overflow(expected, 1));
+            if (m_ref_count.compare_exchange_strong(expected, expected + 1, AK::MemoryOrder::memory_order_acquire))
+                return true;
+        }
+    }
+
     ALWAYS_INLINE RefCountType ref_count() const
     {
         return m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
@@ -99,15 +111,17 @@ protected:
 template<typename T>
 class RefCounted : public RefCountedBase {
 public:
-    void unref() const
+    bool unref() const
     {
         auto new_ref_count = deref_base();
         if (new_ref_count == 0) {
             call_will_be_destroyed_if_present(static_cast<const T*>(this));
             delete static_cast<const T*>(this);
+            return true;
         } else if (new_ref_count == 1) {
             call_one_ref_left_if_present(static_cast<const T*>(this));
         }
+        return false;
     }
 };
 
