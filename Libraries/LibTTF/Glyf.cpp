@@ -263,6 +263,16 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         p1.set_y(roundf(p1.y()));
     }
 
+    if (!(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
+        dbgln("!P0({},{})", p0.x(), p0.y());
+        return;
+    }
+
+    if (!(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height())) {
+        dbgln("!P1({},{})", p1.x(), p1.y());
+        return;
+    }
+
     ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
     ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
 
