@@ -447,8 +447,11 @@ void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
     ASSERT(m_position >= 0);
     ASSERT(m_position < static_cast<int>(m_buffer.size()));
 
+    if (event.code_point() == 0) // This is a control key
+        return;
+
     m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
-    m_buffer.data()[m_position] = (u8)event.text().characters()[0]; // save the first 4 bits, OR the new value in the last 4
+    m_buffer.data()[m_position] = event.code_point();
     if (m_position + 1 < static_cast<int>(m_buffer.size()))
         m_position++;
     m_byte_position = 0;
