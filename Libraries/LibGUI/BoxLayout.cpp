@@ -61,8 +61,6 @@ void BoxLayout::run(Widget& widget)
     if (should_log)
         dbgprintf("BoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
 
-    Optional<size_t> last_entry_with_automatic_size;
-
     for (size_t i = 0; i < m_entries.size(); ++i) {
         auto& entry = m_entries[i];
         if (entry.type == Entry::Type::Spacer) {
@@ -83,8 +81,6 @@ void BoxLayout::run(Widget& widget)
             if (should_log)
                 dbgprintf("BoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
             ++number_of_entries_with_fixed_size;
-        } else {
-            last_entry_with_automatic_size = i;
         }
         available_size -= { spacing(), spacing() };
     }
@@ -102,21 +98,21 @@ void BoxLayout::run(Widget& widget)
         dbgprintf("BoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 
     Gfx::IntSize automatic_size;
-    Gfx::IntSize automatic_size_for_last_entry;
+
+    int remaining_size = 0;
+    int number_of_entries_with_automatic_size_remaining = number_of_entries_with_automatic_size;
 
     if (number_of_entries_with_automatic_size) {
         if (m_orientation == Orientation::Horizontal) {
             automatic_size.set_width(available_size.width() / number_of_entries_with_automatic_size);
             automatic_size.set_height(widget.height());
 
-            automatic_size_for_last_entry.set_width(available_size.width() - (number_of_entries_with_automatic_size - 1) * automatic_size.width());
-            automatic_size_for_last_entry.set_height(widget.height());
+            remaining_size = available_size.width();
         } else {
             automatic_size.set_width(widget.width());
             automatic_size.set_height(available_size.height() / number_of_entries_with_automatic_size);
 
-            automatic_size_for_last_entry.set_width(widget.width());
-            automatic_size_for_last_entry.set_height(available_size.height() - (number_of_entries_with_automatic_size - 1) * automatic_size.height());
+            remaining_size = available_size.height();
         }
     }
 
@@ -131,6 +127,7 @@ void BoxLayout::run(Widget& widget)
         if (entry.type == Entry::Type::Spacer) {
             current_x += automatic_size.width();
             current_y += automatic_size.height();
+            continue;
         }
 
         if (!entry.widget)
@@ -144,36 +141,71 @@ void BoxLayout::run(Widget& widget)
         }
         ASSERT(entry.widget);
 
-        if (last_entry_with_automatic_size.has_value() && i == last_entry_with_automatic_size.value()) {
-            rect.set_size(automatic_size_for_last_entry);
+        if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed) {
+            rect.set_width(widget.width());
+            rect.set_height(entry.widget->preferred_size().height());
         } else {
-            rect.set_size(automatic_size);
+            if (orientation() == Orientation::Horizontal)
+                rect.set_height(widget.height());
+            else
+                rect.set_height(remaining_size / number_of_entries_with_automatic_size_remaining);
         }
 
-        if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
-            rect.set_height(entry.widget->preferred_size().height());
-
-        if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed)
+        if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed) {
             rect.set_width(entry.widget->preferred_size().width());
+            rect.set_height(widget.height());
+        } else {
+            if (orientation() == Orientation::Horizontal)
+                rect.set_width(remaining_size / number_of_entries_with_automatic_size_remaining);
+            else
+                rect.set_width(widget.width());
+        }
 
         if (orientation() == Orientation::Horizontal) {
             if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fill)
                 rect.set_height(widget.height() - margins().top() - margins().bottom());
-            rect.center_vertically_within(widget.rect());
         } else {
             if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fill)
                 rect.set_width(widget.width() - margins().left() - margins().right());
-            rect.center_horizontally_within(widget.rect());
         }
+
+        // Apply min/max constraints to filled widgets.
+        if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fill) {
+            if (entry.widget->min_size().width() >= 0)
+                rect.set_width(max(entry.widget->min_size().width(), rect.width()));
+            if (entry.widget->max_size().width() >= 0)
+                rect.set_width(min(entry.widget->max_size().width(), rect.width()));
+        }
+        if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fill) {
+            if (entry.widget->min_size().height() >= 0)
+                rect.set_height(max(entry.widget->min_size().height(), rect.height()));
+            if (entry.widget->max_size().height() >= 0)
+                rect.set_height(min(entry.widget->max_size().height(), rect.height()));
+        }
+
+        if (orientation() == Orientation::Horizontal)
+            rect.center_vertically_within(widget.rect());
+        else
+            rect.center_horizontally_within(widget.rect());
 
         if (should_log)
             dbgprintf("BoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
+
         entry.widget->set_relative_rect(rect);
 
-        if (orientation() == Orientation::Horizontal)
+        if (orientation() == Orientation::Horizontal) {
+            if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fill) {
+                remaining_size -= rect.width();
+                --number_of_entries_with_automatic_size_remaining;
+            }
             current_x += rect.width() + spacing();
-        else
+        } else {
+            if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fill) {
+                remaining_size -= rect.height();
+                --number_of_entries_with_automatic_size_remaining;
+            }
             current_y += rect.height() + spacing();
+        }
     }
 }
 }
