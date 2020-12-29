@@ -156,11 +156,12 @@ void PhysicalRegion::free_page_at(PhysicalAddress addr)
         ASSERT_NOT_REACHED();
     }
 
-    ptrdiff_t local_offset = addr.get() - m_lower.get();
-    ASSERT(local_offset >= 0);
-    ASSERT((FlatPtr)local_offset < (FlatPtr)(m_pages * PAGE_SIZE));
+    Checked<FlatPtr> local_offset = addr.get();
+    local_offset -= m_lower.get();
+    ASSERT(!local_offset.has_overflow());
+    ASSERT(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
 
-    auto page = (FlatPtr)local_offset / PAGE_SIZE;
+    auto page = local_offset.value() / PAGE_SIZE;
     m_bitmap.set(page, false);
     m_free_hint = page; // We know we can find one here for sure
     m_used--;
