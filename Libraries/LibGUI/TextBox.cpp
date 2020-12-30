@@ -31,6 +31,7 @@ namespace GUI {
 TextBox::TextBox()
     : TextEditor(TextEditor::SingleLine)
 {
+    set_min_width(32);
     set_fixed_height(22);
 }
 
