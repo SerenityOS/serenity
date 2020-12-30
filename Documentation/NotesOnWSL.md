@@ -64,6 +64,26 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 
 - `make run` as usual.
 
+#### Known issues with WHPX
+
+##### Freeze on boot in Scheduler
+
+If Serenity freezes on boot with the log message: `Scheduler[0]: idle loop running` then you are likely missing some emulated CPU features.
+Please ensure you have installed the most recent version of [QEMU for Windows](https://qemu.weilnetz.de/) and that you have followed the step above to enable the maximum feature set available:
+`export SERENITY_QEMU_CPU="max,vmx=off"`.
+
+##### Illegal instruction on boot
+
+Using `SERENITY_QEMU_CPU="max"` can trigger a QEMU bug where the OSXSAVE CPUID flag is erroneously set, playing havoc with feature detection logic in libgcc and resulting in this error.
+
+To workaround this, first adjust the `SERENITY_QEMU_CPU` setting to emulate a more restricted feature set. `SERENITY_QEMU_CPU="qemu32"` appears to work in some cases, however in others causes the boot freeze issue above.
+It's worth playing around with various different values here to see if you can find one that works for you. Running `qemu-system-i386.exe -cpu ?` will list the supported CPU configurations.
+
+If you cannot find a working CPU feature set, the next workaround is to patch libgcc in the Serenity toolchain build to remove the offending instruction.
+Comment out the `if ((ecx & bit_OSXSAVE))` block in `Toolchain/Tarballs/gcc-<version>/libgcc/config/i386/cpuinfo.c`. In GCC 10.2.0 this is lines 282-297.
+
+Rebuild the toolchain using `Toolchain/BuildIt.sh` as normal, then rebuild Serenity.
+
 ### Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
