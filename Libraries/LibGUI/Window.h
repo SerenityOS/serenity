@@ -108,6 +108,7 @@ public:
     void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }
 
     void center_on_screen();
+    void center_within(const Window&);
 
     virtual void event(Core::Event&) override;
 

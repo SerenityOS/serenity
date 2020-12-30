@@ -239,6 +239,15 @@ void Window::center_on_screen()
     set_rect(window_rect);
 }
 
+void Window::center_within(const Window& other)
+{
+    if (this == &other)
+        return;
+    auto window_rect = rect();
+    window_rect.center_within(other.rect());
+    set_rect(window_rect);
+}
+
 void Window::set_window_type(WindowType window_type)
 {
     m_window_type = window_type;
