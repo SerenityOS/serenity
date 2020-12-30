@@ -32,7 +32,7 @@ apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch 
 
 Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
 
-On Ubuntu it's in the repositories of 20.04 (Focal) - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
+On Ubuntu it's in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```

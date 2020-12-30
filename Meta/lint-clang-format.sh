@@ -6,17 +6,17 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "${script_path}/.." || exit 1
 
 CLANG_FORMAT=false
-if command -v clang-format-10 >/dev/null 2>&1 ; then
-    CLANG_FORMAT=clang-format-10
+if command -v clang-format-11 >/dev/null 2>&1 ; then
+    CLANG_FORMAT=clang-format-11
 elif command -v clang-format >/dev/null 2>&1 ; then
     CLANG_FORMAT=clang-format
-    if ! "${CLANG_FORMAT}" --version | grep -qF ' 10.' ; then
-        echo "You are using '$("${CLANG_FORMAT}" --version)', which appears to not be clang-format 10."
+    if ! "${CLANG_FORMAT}" --version | grep -qF ' 11.' ; then
+        echo "You are using '$("${CLANG_FORMAT}" --version)', which appears to not be clang-format 11."
         echo "It is very likely that the resulting changes are not what you wanted."
     fi
 else
-    echo "clang-format-10 is not available. Either skip this script, or install clang-format-10."
-    echo "(If you install a package 'clang-format', please make sure it's version 10.)"
+    echo "clang-format-10 is not available. Either skip this script, or install clang-format-11."
+    echo "(If you install a package 'clang-format', please make sure it's version 11.)"
     exit 1
 fi
 
