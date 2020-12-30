@@ -89,6 +89,9 @@
     }
 
     @GUI::Widget {
+    }
+
+    @GUI::Widget {
         fixed_height: 22
         layout: @GUI::HorizontalBoxLayout {
         }
