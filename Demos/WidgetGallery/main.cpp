@@ -282,8 +282,10 @@ int main(int argc, char** argv)
     vert_slider_group_box.set_title("Vertical sliders");
 
     auto& vslider1 = vert_slider_group_box.add<GUI::VerticalSlider>();
+    vslider1.set_max(100);
     vslider1.set_tooltip("Fixed");
     auto& vslider2 = vert_slider_group_box.add<GUI::VerticalSlider>();
+    vslider1.set_max(100);
     vslider2.set_enabled(false);
     vslider2.set_tooltip("Disabled");
     auto& vslider3 = vert_slider_group_box.add<GUI::VerticalSlider>();
@@ -304,9 +306,11 @@ int main(int argc, char** argv)
     horizontal_slider_container2.set_layout<GUI::HorizontalBoxLayout>();
     horizontal_slider_container2.layout()->set_margins({ 4, 4, 4, 4 });
 
-    [[maybe_unused]] auto& slider1 = horizontal_slider_container.add<GUI::HorizontalSlider>();
+    auto& slider1 = horizontal_slider_container.add<GUI::HorizontalSlider>();
+    slider1.set_max(100);
     auto& slider2 = horizontal_slider_container.add<GUI::HorizontalSlider>();
     slider2.set_enabled(false);
+    slider2.set_max(100);
     slider2.set_value(50);
     auto& slider3 = horizontal_slider_container.add<GUI::HorizontalSlider>();
     slider3.set_max(5);

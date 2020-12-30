@@ -40,7 +40,7 @@ ScrollableWidget::ScrollableWidget()
 
     m_horizontal_scrollbar = add<ScrollBar>(Orientation::Horizontal);
     m_horizontal_scrollbar->set_step(4);
-    m_horizontal_scrollbar->set_big_step(30);
+    m_horizontal_scrollbar->set_page_step(30);
     m_horizontal_scrollbar->on_change = [this](int) {
         did_scroll();
         update();
@@ -111,18 +111,20 @@ void ScrollableWidget::update_scrollbar_ranges()
     auto available_size = this->available_size();
 
     int excess_height = max(0, m_content_size.height() - available_size.height());
-    m_vertical_scrollbar->set_range(0, excess_height, available_size.height());
+    m_vertical_scrollbar->set_range(0, excess_height);
+    m_vertical_scrollbar->set_page_step(available_size.height());
 
     if (should_hide_unnecessary_scrollbars())
         m_vertical_scrollbar->set_visible(excess_height > 0);
 
     int excess_width = max(0, m_content_size.width() - available_size.width());
-    m_horizontal_scrollbar->set_range(0, excess_width, available_size.width());
+    m_horizontal_scrollbar->set_range(0, excess_width);
+    m_horizontal_scrollbar->set_page_step(available_size.width());
 
     if (should_hide_unnecessary_scrollbars())
         m_horizontal_scrollbar->set_visible(excess_width > 0);
 
-    m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());
+    m_vertical_scrollbar->set_page_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }
 
 void ScrollableWidget::set_content_size(const Gfx::IntSize& size)
