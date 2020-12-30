@@ -1301,7 +1301,7 @@ struct Formatter<Shell::AST::Command> : StandardFormatter {
     {
     }
 
-    void format(TypeErasedFormatParams&, FormatBuilder&, const Shell::AST::Command& value);
+    void format(FormatBuilder&, const Shell::AST::Command& value);
 };
 
 }

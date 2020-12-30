@@ -345,9 +345,9 @@ namespace AK {
 
 template<>
 struct Formatter<JS::Value> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::Value& value)
+    void format(FormatBuilder& builder, const JS::Value& value)
     {
-        Formatter<StringView>::format(params, builder, value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
+        Formatter<StringView>::format(builder, value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
     }
 };
 

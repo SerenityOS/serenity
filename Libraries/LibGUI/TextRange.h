@@ -98,12 +98,12 @@ namespace AK {
 
 template<>
 struct Formatter<GUI::TextRange> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const GUI::TextRange& value)
+    void format(FormatBuilder& builder, const GUI::TextRange& value)
     {
         if (value.is_valid())
-            Formatter<StringView>::format(params, builder, String::formatted("{}-{}", value.start(), value.end()));
+            Formatter<StringView>::format(builder, String::formatted("{}-{}", value.start(), value.end()));
         else
-            Formatter<StringView>::format(params, builder, "GUI::TextRange(Invalid)");
+            Formatter<StringView>::format(builder, "GUI::TextRange(Invalid)");
     }
 };
 

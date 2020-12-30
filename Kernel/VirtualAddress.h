@@ -77,8 +77,10 @@ inline const LogStream& operator<<(const LogStream& stream, VirtualAddress value
 }
 
 namespace AK {
+
 template<>
 struct Formatter<VirtualAddress> : Formatter<StringView> {
-    void format(TypeErasedFormatParams&, FormatBuilder&, const VirtualAddress&);
+    void format(FormatBuilder&, const VirtualAddress&);
 };
+
 }

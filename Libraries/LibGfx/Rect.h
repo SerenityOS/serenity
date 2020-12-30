@@ -455,9 +455,9 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Rect<T>> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Rect<T>& value)
+    void format(FormatBuilder& builder, const Gfx::Rect<T>& value)
     {
-        Formatter<StringView>::format(params, builder, value.to_string());
+        Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

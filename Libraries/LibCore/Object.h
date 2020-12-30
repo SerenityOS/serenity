@@ -174,7 +174,7 @@ private:
 namespace AK {
 template<>
 struct Formatter<Core::Object> : Formatter<StringView> {
-    void format(TypeErasedFormatParams&, FormatBuilder&, const Core::Object&);
+    void format(FormatBuilder&, const Core::Object&);
 };
 }
 
