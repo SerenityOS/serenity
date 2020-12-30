@@ -98,44 +98,32 @@ void vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, Format
 
 } // namespace AK::{anonymous}
 
-size_t TypeErasedFormatParams::decode(size_t value, size_t default_value)
+size_t TypeErasedParameter::to_size() const
 {
-    if (value == StandardFormatter::value_not_set)
-        return default_value;
+    i64 svalue;
 
-    if (value == StandardFormatter::value_from_next_arg)
-        value = StandardFormatter::value_from_arg + take_next_index();
+    if (type == TypeErasedParameter::Type::UInt8)
+        svalue = *reinterpret_cast<const u8*>(value);
+    else if (type == TypeErasedParameter::Type::UInt16)
+        svalue = *reinterpret_cast<const u16*>(value);
+    else if (type == TypeErasedParameter::Type::UInt32)
+        svalue = *reinterpret_cast<const u32*>(value);
+    else if (type == TypeErasedParameter::Type::UInt64)
+        svalue = *reinterpret_cast<const u64*>(value);
+    else if (type == TypeErasedParameter::Type::Int8)
+        svalue = *reinterpret_cast<const i8*>(value);
+    else if (type == TypeErasedParameter::Type::Int16)
+        svalue = *reinterpret_cast<const i16*>(value);
+    else if (type == TypeErasedParameter::Type::Int32)
+        svalue = *reinterpret_cast<const i32*>(value);
+    else if (type == TypeErasedParameter::Type::Int64)
+        svalue = *reinterpret_cast<const i64*>(value);
+    else
+        ASSERT_NOT_REACHED();
 
-    if (value >= StandardFormatter::value_from_arg) {
-        const auto parameter = parameters().at(value - StandardFormatter::value_from_arg);
+    ASSERT(svalue >= 0);
 
-        Optional<i64> svalue;
-        if (parameter.type == TypeErasedParameter::Type::UInt8)
-            value = *reinterpret_cast<const u8*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::UInt16)
-            value = *reinterpret_cast<const u16*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::UInt32)
-            value = *reinterpret_cast<const u32*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::UInt64)
-            value = *reinterpret_cast<const u64*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::Int8)
-            svalue = *reinterpret_cast<const i8*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::Int16)
-            svalue = *reinterpret_cast<const i16*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::Int32)
-            svalue = *reinterpret_cast<const i32*>(parameter.value);
-        else if (parameter.type == TypeErasedParameter::Type::Int64)
-            svalue = *reinterpret_cast<const i64*>(parameter.value);
-        else
-            ASSERT_NOT_REACHED();
-
-        if (svalue.has_value()) {
-            ASSERT(svalue.value() >= 0);
-            value = static_cast<size_t>(svalue.value());
-        }
-    }
-
-    return value;
+    return static_cast<size_t>(svalue);
 }
 
 FormatParser::FormatParser(StringView input)
@@ -467,7 +455,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         if (index == use_next_index)
             index = params.take_next_index();
 
-        m_width = value_from_arg + index;
+        m_width = params.parameters().at(index).to_size();
     } else if (size_t width = 0; parser.consume_number(width)) {
         m_width = width;
     }
@@ -477,7 +465,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
             if (index == use_next_index)
                 index = params.take_next_index();
 
-            m_precision = value_from_arg + index;
+            m_precision = params.parameters().at(index).to_size();
         } else if (size_t precision = 0; parser.consume_number(precision)) {
             m_precision = precision;
         }
@@ -514,7 +502,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
     ASSERT(parser.is_eof());
 }
 
-void Formatter<StringView>::format(TypeErasedFormatParams& params, FormatBuilder& builder, StringView value)
+void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
         ASSERT_NOT_REACHED();
@@ -524,17 +512,17 @@ void Formatter<StringView>::format(TypeErasedFormatParams& params, FormatBuilder
         ASSERT_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character)
         ASSERT_NOT_REACHED();
-    if (m_width != value_not_set && m_precision != value_not_set)
+    if (m_width.has_value() && m_precision.has_value())
         ASSERT_NOT_REACHED();
 
-    const auto width = params.decode(m_width);
-    const auto precision = params.decode(m_precision, NumericLimits<size_t>::max());
+    m_width = m_width.value_or(0);
+    m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
-    builder.put_string(value, m_align, width, precision, m_fill);
+    builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
 }
 
 template<typename T>
-void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeErasedFormatParams& params, FormatBuilder& builder, T value)
+void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
         // FIXME: We just support ASCII for now, in the future maybe unicode?
@@ -543,10 +531,10 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeEra
         m_mode = Mode::String;
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(params, builder, StringView { reinterpret_cast<const char*>(&value), 1 });
+        return formatter.format(builder, StringView { reinterpret_cast<const char*>(&value), 1 });
     }
 
-    if (m_precision != NumericLimits<size_t>::max())
+    if (m_precision.has_value())
         ASSERT_NOT_REACHED();
 
     if (m_mode == Mode::Pointer) {
@@ -556,7 +544,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeEra
             ASSERT_NOT_REACHED();
         if (m_alternative_form)
             ASSERT_NOT_REACHED();
-        if (m_width != value_not_set)
+        if (m_width.has_value())
             ASSERT_NOT_REACHED();
 
         m_mode = Mode::Hexadecimal;
@@ -585,37 +573,37 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeEra
         ASSERT_NOT_REACHED();
     }
 
-    const auto width = params.decode(m_width);
+    m_width = m_width.value_or(0);
 
     if (IsSame<typename MakeUnsigned<T>::Type, T>::value)
-        builder.put_u64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, width, m_fill, m_sign_mode);
+        builder.put_u64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);
     else
-        builder.put_i64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, width, m_fill, m_sign_mode);
+        builder.put_i64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);
 }
 
-void Formatter<char>::format(TypeErasedFormatParams& params, FormatBuilder& builder, char value)
+void Formatter<char>::format(FormatBuilder& builder, char value)
 {
     if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
         // Trick: signed char != char. (Sometimes weird features are actually helpful.)
         Formatter<signed char> formatter { *this };
-        return formatter.format(params, builder, static_cast<signed char>(value));
+        return formatter.format(builder, static_cast<signed char>(value));
     } else {
         Formatter<StringView> formatter { *this };
-        return formatter.format(params, builder, { &value, 1 });
+        return formatter.format(builder, { &value, 1 });
     }
 }
-void Formatter<bool>::format(TypeErasedFormatParams& params, FormatBuilder& builder, bool value)
+void Formatter<bool>::format(FormatBuilder& builder, bool value)
 {
     if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
         Formatter<u8> formatter { *this };
-        return formatter.format(params, builder, static_cast<u8>(value));
+        return formatter.format(builder, static_cast<u8>(value));
     } else {
         Formatter<StringView> formatter { *this };
-        return formatter.format(params, builder, value ? "true" : "false");
+        return formatter.format(builder, value ? "true" : "false");
     }
 }
 #ifndef KERNEL
-void Formatter<double>::format(TypeErasedFormatParams& params, FormatBuilder& builder, double value)
+void Formatter<double>::format(FormatBuilder& builder, double value)
 {
     u8 base;
     bool upper_case;
@@ -632,15 +620,15 @@ void Formatter<double>::format(TypeErasedFormatParams& params, FormatBuilder& bu
         ASSERT_NOT_REACHED();
     }
 
-    const auto width = params.decode(m_width);
-    const auto precision = params.decode(m_precision, 6);
+    m_width = m_width.value_or(0);
+    m_precision = m_precision.value_or(6);
 
-    builder.put_f64(value, base, upper_case, m_align, width, precision, m_fill, m_sign_mode);
+    builder.put_f64(value, base, upper_case, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
 }
-void Formatter<float>::format(TypeErasedFormatParams& params, FormatBuilder& builder, float value)
+void Formatter<float>::format(FormatBuilder& builder, float value)
 {
     Formatter<double> formatter { *this };
-    formatter.format(params, builder, value);
+    formatter.format(builder, value);
 }
 #endif
 

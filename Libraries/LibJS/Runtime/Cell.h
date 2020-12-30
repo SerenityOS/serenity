@@ -78,12 +78,12 @@ namespace AK {
 
 template<>
 struct Formatter<JS::Cell> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::Cell* cell)
+    void format(FormatBuilder& builder, const JS::Cell* cell)
     {
         if (!cell)
-            Formatter<StringView>::format(params, builder, "Cell{nullptr}");
+            Formatter<StringView>::format(builder, "Cell{nullptr}");
         else
-            Formatter<StringView>::format(params, builder, String::formatted("{}{{{}}}", cell->class_name(), static_cast<const void*>(cell)));
+            Formatter<StringView>::format(builder, String::formatted("{}{{{}}}", cell->class_name(), static_cast<const void*>(cell)));
     }
 };
 

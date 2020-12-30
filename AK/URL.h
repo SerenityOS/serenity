@@ -106,9 +106,9 @@ inline const LogStream& operator<<(const LogStream& stream, const URL& value)
 
 template<>
 struct Formatter<URL> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const URL& value)
+    void format(FormatBuilder& builder, const URL& value)
     {
-        Formatter<StringView>::format(params, builder, value.to_string());
+        Formatter<StringView>::format(builder, value.to_string());
     }
 };
 

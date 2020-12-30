@@ -28,9 +28,9 @@
 #include <Kernel/VirtualAddress.h>
 
 namespace AK {
-void Formatter<VirtualAddress>::format(TypeErasedFormatParams& params, FormatBuilder& builder, const VirtualAddress& value)
+void Formatter<VirtualAddress>::format(FormatBuilder& builder, const VirtualAddress& value)
 {
-    Formatter<StringView>::format(params, builder, String::formatted("V{:p}", value.get()));
+    Formatter<StringView>::format(builder, String::formatted("V{:p}", value.get()));
 }
 
 }

@@ -66,9 +66,9 @@ private:
 
 template<>
 struct Formatter<LexicalPath> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const LexicalPath& value)
+    void format(FormatBuilder& builder, const LexicalPath& value)
     {
-        Formatter<StringView>::format(params, builder, value.string());
+        Formatter<StringView>::format(builder, value.string());
     }
 };
 

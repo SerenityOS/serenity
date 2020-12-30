@@ -348,9 +348,9 @@ inline const LogStream& operator<<(const LogStream& stream, const NonnullRefPtr<
 
 template<typename T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const NonnullRefPtr<T>& value)
+    void format(FormatBuilder& builder, const NonnullRefPtr<T>& value)
     {
-        Formatter<const T*>::format(params, builder, value.ptr());
+        Formatter<const T*>::format(builder, value.ptr());
     }
 };
 

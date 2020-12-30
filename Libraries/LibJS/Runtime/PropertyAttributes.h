@@ -95,9 +95,9 @@ namespace AK {
 
 template<>
 struct Formatter<JS::PropertyAttributes> : Formatter<u8> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::PropertyAttributes& attributes)
+    void format(FormatBuilder& builder, const JS::PropertyAttributes& attributes)
     {
-        Formatter<u8>::format(params, builder, attributes.bits());
+        Formatter<u8>::format(builder, attributes.bits());
     }
 };
 

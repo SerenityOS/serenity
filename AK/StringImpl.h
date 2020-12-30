@@ -132,9 +132,9 @@ constexpr u32 string_hash(const char* characters, size_t length)
 
 template<>
 struct Formatter<StringImpl> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const StringImpl& value)
+    void format(FormatBuilder& builder, const StringImpl& value)
     {
-        Formatter<StringView>::format(params, builder, { value.characters(), value.length() });
+        Formatter<StringView>::format(builder, { value.characters(), value.length() });
     }
 };
 
