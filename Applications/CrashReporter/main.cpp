@@ -62,6 +62,7 @@ int main(int argc, char** argv)
 
     Optional<CoreDump::Backtrace> backtrace;
     String executable_path;
+    int pid { 0 };
 
     {
         auto coredump = CoreDump::Reader::create(coredump_path);
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
         auto& process_info = coredump->process_info();
         backtrace = coredump->backtrace();
         executable_path = String(process_info.executable_path);
+        pid = process_info.pid;
     }
 
     auto app = GUI::Application::construct(argc, argv);
@@ -122,7 +124,7 @@ int main(int argc, char** argv)
         app_name = af->name();
 
     auto& description_label = static_cast<GUI::Label&>(*widget.find_descendant_by_name("description"));
-    description_label.set_text(String::formatted("\"{}\" has crashed!", app_name));
+    description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed!", app_name, pid));
 
     auto& executable_link_label = static_cast<GUI::LinkLabel&>(*widget.find_descendant_by_name("executable_link"));
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
