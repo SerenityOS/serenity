@@ -95,10 +95,36 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 
     {
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
-        table.raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
-        table.raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
-        table.raw[2] = (u64)m_directory_pages[2]->paddr().as_ptr() | 1;
-        table.raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
+        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 1;
+        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 1;
+        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 1;
+        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 1;
+
+        // 2 ** MAXPHYADDR - 1
+        // Where MAXPHYADDR = physical_address_bit_width
+        u64 max_physical_address = (1ULL << Processor::current().physical_address_bit_width()) - 1;
+
+        // bit 63 = no execute
+        // bit 7 = page size
+        // bit 5 = accessed
+        // bit 4 = cache disable
+        // bit 3 = write through
+        // bit 2 = user/supervisor
+        // bit 1 = read/write
+        // bit 0 = present
+        constexpr u64 pdpte_bit_flags = 0x80000000000000BF;
+
+        // This is to notify us of bugs where we're:
+        // 1. Going over what the processor is capable of.
+        // 2. Writing into the reserved bits (51:MAXPHYADDR), where doing so throws a GPF
+        //    when writing out the PDPT pointer to CR3.
+        // The reason we're not checking the page directory's physical address directly is because
+        // we're checking for sign extension when putting it into a PDPTE. See issue #4584.
+        ASSERT((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
+        ASSERT((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
+        ASSERT((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
+        ASSERT((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
+
         MM.unquickmap_page();
     }
 
