@@ -50,7 +50,7 @@ private:
     Vector<Gfx::IntSize> m_resolutions;
 
     RefPtr<GUI::Widget> m_root_widget;
-    RefPtr<MonitorWidget> m_monitor_widget;
+    RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::ComboBox> m_wallpaper_combo;
     RefPtr<GUI::ComboBox> m_mode_combo;
     RefPtr<GUI::ComboBox> m_resolution_combo;
