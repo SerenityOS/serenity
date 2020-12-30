@@ -540,7 +540,10 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
 void TextEditorWidget::update_title()
 {
     StringBuilder builder;
-    builder.append(m_path);
+    if (m_path.is_empty())
+        builder.append("Untitled");
+    else
+        builder.append(m_path);
     if (m_document_dirty)
         builder.append(" (*)");
     builder.append(" - Text Editor");
