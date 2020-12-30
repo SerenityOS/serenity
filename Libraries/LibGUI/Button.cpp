@@ -38,6 +38,7 @@ namespace GUI {
 Button::Button(String text)
     : AbstractButton(move(text))
 {
+    set_fixed_height(22);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 

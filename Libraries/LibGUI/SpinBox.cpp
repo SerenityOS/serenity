@@ -32,6 +32,7 @@ namespace GUI {
 
 SpinBox::SpinBox()
 {
+    set_fixed_height(22);
     m_editor = add<TextBox>();
     m_editor->set_text("0");
     m_editor->on_change = [this] {

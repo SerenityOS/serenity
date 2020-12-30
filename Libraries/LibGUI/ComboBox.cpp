@@ -58,6 +58,8 @@ private:
 
 ComboBox::ComboBox()
 {
+    set_fixed_height(22);
+
     m_editor = add<ComboBoxEditor>();
     m_editor->set_frame_thickness(0);
     m_editor->on_return_pressed = [this] {

@@ -175,9 +175,11 @@ int main(int argc, char** argv)
     auto& checkbox2 = checkbox_container.add<GUI::CheckBox>("CheckBox 2");
     checkbox2.set_enabled(false);
 
-    [[maybe_unused]] auto& label1 = label_container.add<GUI::Label>("Label 1");
+    auto& label1 = label_container.add<GUI::Label>("Label 1");
+    label1.set_fixed_height(22);
     auto& label2 = label_container.add<GUI::Label>("Label 2");
     label2.set_enabled(false);
+    label2.set_fixed_height(22);
 
     [[maybe_unused]] auto& spinbox1 = spin_container.add<GUI::SpinBox>();
     auto& spinbox2 = spin_container.add<GUI::SpinBox>();
@@ -424,7 +426,6 @@ int main(int argc, char** argv)
     content_textbox.set_text("Demo text for message box.");
 
     auto& msgbox_button = msgbox_text_container.add<GUI::Button>("Create");
-    msgbox_button.set_fixed_height(30);
     msgbox_button.on_click = [&](auto) {
         GUI::MessageBox::show(window, content_textbox.text(), title_textbox.text(), msg_box_type, msg_box_input_type);
     };
@@ -446,7 +447,6 @@ int main(int argc, char** argv)
     input_button_container.layout()->set_margins({ 4, 0, 4, 0 });
 
     auto& input_button = input_button_container.add<GUI::Button>("Input...");
-    input_button.set_fixed_height(30);
     String value;
     input_button.on_click = [&](auto) {
         if (GUI::InputBox::show(value, window, "Enter input:", "Input Box") == GUI::InputBox::ExecOK && !value.is_empty())

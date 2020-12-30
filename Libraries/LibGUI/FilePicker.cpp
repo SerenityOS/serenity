@@ -113,7 +113,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     toolbar.set_has_frame(false);
 
     m_location_textbox = upper_container.add<TextBox>();
-    m_location_textbox->set_fixed_height(22);
     m_location_textbox->set_text(path);
 
     m_view = vertical_container.add<MultiView>();

@@ -116,7 +116,6 @@ void DisplaySettingsWidget::create_frame()
     wallpaper_label.set_text("Wallpaper:");
 
     m_wallpaper_combo = wallpaper_selection_container.add<GUI::ComboBox>();
-    m_wallpaper_combo->set_fixed_height(22);
     m_wallpaper_combo->set_only_allow_values_from_model(true);
     m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
@@ -170,7 +169,6 @@ void DisplaySettingsWidget::create_frame()
     mode_label.set_text("Mode:");
 
     m_mode_combo = mode_selection_container.add<GUI::ComboBox>();
-    m_mode_combo->set_fixed_height(22);
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
@@ -190,7 +188,6 @@ void DisplaySettingsWidget::create_frame()
     m_resolution_label.set_text("Resolution:");
 
     m_resolution_combo = resolution_selection_container.add<GUI::ComboBox>();
-    m_resolution_combo->set_fixed_height(22);
     m_resolution_combo->set_only_allow_values_from_model(true);
     m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
