@@ -154,34 +154,13 @@ void FontPicker::set_font(const Gfx::Font* font)
     m_weight = font->weight();
     m_size = font->presentation_size();
 
-    size_t family_index = 0;
-    for (size_t i = 0; i < m_families.size(); ++i) {
-        if (m_families[i] == m_font->family()) {
-            family_index = i;
-            break;
-        }
-    }
-
+    size_t family_index = m_families.find_first_index(m_font->family()).value();
     m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index), GUI::AbstractView::SelectionUpdate::Set);
 
-    size_t weight_index = 0;
-    for (size_t i = 0; i < m_weights.size(); ++i) {
-        if (m_weights[i] == m_font->weight()) {
-            weight_index = i;
-            break;
-        }
-    }
-
+    size_t weight_index = m_weights.find_first_index(m_font->weight()).value();
     m_weight_list_view->set_cursor(m_weight_list_view->model()->index(weight_index), GUI::AbstractView::SelectionUpdate::Set);
 
-    size_t size_index = 0;
-    for (size_t i = 0; i < m_sizes.size(); ++i) {
-        if (m_sizes[i] == m_font->presentation_size()) {
-            size_index = i;
-            break;
-        }
-    }
-
+    size_t size_index = m_sizes.find_first_index(m_font->presentation_size()).value();
     m_size_list_view->set_cursor(m_size_list_view->model()->index(size_index), GUI::AbstractView::SelectionUpdate::Set);
 }
 
