@@ -838,22 +838,6 @@ void Widget::focus_next_widget(FocusSource source)
     }
 }
 
-void Widget::set_backcolor(const StringView& color_string)
-{
-    auto color = Color::from_string(color_string);
-    if (!color.has_value())
-        return;
-    set_background_color(color.value());
-}
-
-void Widget::set_forecolor(const StringView& color_string)
-{
-    auto color = Color::from_string(color_string);
-    if (!color.has_value())
-        return;
-    set_foreground_color(color.value());
-}
-
 Vector<Widget*> Widget::child_widgets() const
 {
     Vector<Widget*> widgets;
