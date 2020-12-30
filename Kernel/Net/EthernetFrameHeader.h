@@ -31,8 +31,7 @@
 
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
-class [[gnu::packed]] EthernetFrameHeader
-{
+class [[gnu::packed]] EthernetFrameHeader {
 public:
     EthernetFrameHeader() { }
     ~EthernetFrameHeader() { }

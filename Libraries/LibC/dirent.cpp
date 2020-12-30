@@ -64,8 +64,7 @@ int closedir(DIR* dirp)
     return rc;
 }
 
-struct [[gnu::packed]] sys_dirent
-{
+struct [[gnu::packed]] sys_dirent {
     ino_t ino;
     u8 file_type;
     size_t namelen;

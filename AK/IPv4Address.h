@@ -35,8 +35,7 @@
 
 namespace AK {
 
-class [[gnu::packed]] IPv4Address
-{
+class [[gnu::packed]] IPv4Address {
     enum class SubnetClass : int {
         A = 0,
         B,
