@@ -36,9 +36,11 @@ namespace GUI {
 AbstractSlider::AbstractSlider(Orientation orientation)
     : m_orientation(orientation)
 {
+    REGISTER_INT_PROPERTY("value", value, set_value);
     REGISTER_INT_PROPERTY("min", min, set_min);
     REGISTER_INT_PROPERTY("max", max, set_max);
     REGISTER_INT_PROPERTY("step", step, set_step);
+    REGISTER_INT_PROPERTY("page_step", page_step, set_page_step);
     REGISTER_ENUM_PROPERTY("orientation", this->orientation, set_orientation, Orientation,
         { Orientation::Horizontal, "Horizontal" },
         { Orientation::Vertical, "Vertical" });
@@ -54,6 +56,11 @@ void AbstractSlider::set_orientation(Orientation value)
         return;
     m_orientation = value;
     update();
+}
+
+void AbstractSlider::set_page_step(int page_step)
+{
+    m_page_step = AK::max(0, page_step);
 }
 
 void AbstractSlider::set_range(int min, int max)

@@ -105,9 +105,9 @@ void Slider::mousedown_event(MouseEvent& event)
             return;
         } else {
             if (event.position().primary_offset_for_orientation(orientation()) > knob_rect().last_edge_for_orientation(orientation()))
-                set_value(value() + 1);
+                set_value(value() + page_step());
             else if (event.position().primary_offset_for_orientation(orientation()) < knob_rect().first_edge_for_orientation(orientation()))
-                set_value(value() - 1);
+                set_value(value() - page_step());
         }
     }
     return Widget::mousedown_event(event);
