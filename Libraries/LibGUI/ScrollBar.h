@@ -27,37 +27,19 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/AbstractSlider.h>
 
 namespace GUI {
 
-class ScrollBar final : public Widget {
-    C_OBJECT(ScrollBar)
+class ScrollBar final : public AbstractSlider {
+    C_OBJECT(ScrollBar);
+
 public:
     virtual ~ScrollBar() override;
 
-    Gfx::Orientation orientation() const { return m_orientation; }
-
     bool is_scrollable() const { return max() != min(); }
 
-    int value() const { return m_value; }
-    int min() const { return m_min; }
-    int max() const { return m_max; }
-    int page() const { return m_page; }
-    int step() const { return m_step; }
-    int big_step() const { return m_big_step; }
-
-    void set_min(int min) { set_range(min, max(), page()); }
-    void set_max(int max) { set_range(min(), max, page()); }
-    void set_page(int page) { set_range(min(), max(), page); }
-    void set_range(int min, int max) { set_range(min, max, page()); }
-    void set_range(int min, int max, int page);
-    void set_value(int value);
-    void set_step(int step) { m_step = step; }
-    void set_big_step(int big_step) { m_big_step = big_step; }
     bool has_scrubber() const;
-
-    Function<void(int)> on_change;
 
     enum Component {
         None,
@@ -98,17 +80,9 @@ private:
 
     Component component_at_position(const Gfx::IntPoint&);
 
-    int m_min { 0 };
-    int m_max { 0 };
-    int m_page { 0 };
-    int m_value { 0 };
-    int m_step { 1 };
-    int m_big_step { 5 };
-
     int m_scrub_start_value { 0 };
     Gfx::IntPoint m_scrub_origin;
 
-    Gfx::Orientation m_orientation { Gfx::Orientation::Vertical };
     Component m_hovered_component { Component::None };
     Component m_pressed_component { Component::None };
     Gfx::IntPoint m_last_mouse_position;

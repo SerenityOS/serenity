@@ -459,7 +459,7 @@ void TerminalWidget::relayout(const Gfx::IntSize& size)
         size.height() - frame_thickness() * 2,
     };
     m_scrollbar->set_relative_rect(scrollbar_rect);
-    m_scrollbar->set_page(new_rows);
+    m_scrollbar->set_page_step(new_rows);
 }
 
 Gfx::IntSize TerminalWidget::compute_base_size() const
