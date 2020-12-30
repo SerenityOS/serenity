@@ -34,6 +34,7 @@
 #include <LibCoreDump/Reader.h>
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
+#include <LibELF/CoreDump.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FileIconProvider.h>
@@ -60,6 +61,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     Optional<CoreDump::Backtrace> backtrace;
+    String executable_path;
 
     {
         auto coredump = CoreDump::Reader::create(coredump_path);
@@ -67,25 +69,15 @@ int main(int argc, char** argv)
             warnln("Could not open coredump '{}'", coredump_path);
             return 1;
         }
+        auto& process_info = coredump->process_info();
         backtrace = coredump->backtrace();
+        executable_path = String(process_info.executable_path);
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
-        return 1;
-    }
-
-    String executable_path;
-    // FIXME: Maybe we should just embed the process's executable path
-    // in the coredump by itself so we don't have to extract it from the backtrace.
-    // Such a process section could also include the PID, which currently we'd have
-    // to parse from the filename.
-    if (!backtrace.value().entries().is_empty()) {
-        executable_path = backtrace.value().entries().last().object_name;
-    } else {
-        warnln("Could not determine executable path from coredump");
         return 1;
     }
 
