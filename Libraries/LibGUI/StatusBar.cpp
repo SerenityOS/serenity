@@ -49,6 +49,8 @@ StatusBar::StatusBar(int label_count)
         m_labels.append(create_label());
 
     m_corner = add<ResizeCorner>();
+
+    REGISTER_STRING_PROPERTY("text", text, set_text);
 }
 
 StatusBar::~StatusBar()

@@ -66,11 +66,6 @@ static bool is_valid_identifier_character(char ch)
     return isalnum(ch) || ch == '_';
 }
 
-static bool is_valid_class_start(char ch)
-{
-    return isalpha(ch) || ch == '_';
-}
-
 static bool is_valid_class_character(char ch)
 {
     return isalnum(ch) || ch == '_' || ch == ':';
@@ -138,7 +133,7 @@ Vector<GMLToken> GMLLexer::lex()
             continue;
         }
 
-        if (peek(0) == '@' && is_valid_class_start(peek(1))) {
+        if (peek(0) == '@') {
             consume_class();
             continue;
         }
@@ -160,7 +155,7 @@ Vector<GMLToken> GMLLexer::lex()
             while (isspace(peek()))
                 consume();
 
-            if (peek(0) == '@' && is_valid_class_start(peek(1))) {
+            if (peek(0) == '@') {
                 consume_class();
             } else {
                 begin_token();
