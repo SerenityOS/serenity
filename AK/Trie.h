@@ -140,9 +140,9 @@ public:
         return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end);
     }
 
-    Optional<MetadataType> metadata() const requires(!IsSame<MetadataType, decltype(nullptr)>::value) { return m_metadata; }
-    void set_metadata(MetadataType metadata) requires(!IsSame<MetadataType, decltype(nullptr)>::value) { m_metadata = move(metadata); }
-    const MetadataType& metadata_value() const requires(!IsSame<MetadataType, decltype(nullptr)>::value) { return m_metadata.value(); }
+    Optional<MetadataType> metadata() const requires(!IsNullPointer<MetadataType>::value) { return m_metadata; }
+    void set_metadata(MetadataType metadata) requires(!IsNullPointer<MetadataType>::value) { m_metadata = move(metadata); }
+    const MetadataType& metadata_value() const requires(!IsNullPointer<MetadataType>::value) { return m_metadata.value(); }
 
     const ValueType& value() const { return m_value; }
     ValueType& value() { return m_value; }
@@ -165,7 +165,7 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     BaseType& insert(
-        It& it, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsSame<MetadataType, decltype(nullptr)>::value)
+        It& it, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>::value)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
         for (; it != end; ++it)
@@ -175,7 +175,7 @@ public:
     }
 
     template<typename It>
-    BaseType& insert(It& it, const It& end) requires(IsSame<MetadataType, decltype(nullptr)>::value)
+    BaseType& insert(It& it, const It& end) requires(IsNullPointer<MetadataType>::value)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
         for (; it != end; ++it)
@@ -185,14 +185,14 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     BaseType& insert(
-        const It& begin, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsSame<MetadataType, decltype(nullptr)>::value)
+        const It& begin, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>::value)
     {
         auto it = begin;
         return insert(it, end, move(metadata), move(provide_missing_metadata));
     }
 
     template<typename It>
-    BaseType& insert(const It& begin, const It& end) requires(IsSame<MetadataType, decltype(nullptr)>::value)
+    BaseType& insert(const It& begin, const It& end) requires(IsNullPointer<MetadataType>::value)
     {
         auto it = begin;
         return insert(it, end);
@@ -231,7 +231,7 @@ public:
     using DetailTrie = Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits>, ValueType, MetadataT, ValueTraits>;
     using MetadataType = typename DetailTrie::MetadataType;
 
-    Trie(ValueType value, MetadataType metadata) requires(!IsSame<MetadataType, void>::value && !IsSame<MetadataType, decltype(nullptr)>::value)
+    Trie(ValueType value, MetadataType metadata) requires(!IsVoid<MetadataType>::value && !IsNullPointer<MetadataType>::value)
         : DetailTrie(move(value), move(metadata))
     {
     }

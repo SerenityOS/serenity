@@ -54,6 +54,28 @@ TEST_CASE(read_an_integer)
     EXPECT_EQ(expected, actual);
 }
 
+TEST_CASE(read_a_bool)
+{
+    bool expected = true, actual;
+
+    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    stream >> actual;
+
+    EXPECT(!stream.has_any_error() && stream.eof());
+    EXPECT_EQ(expected, actual);
+}
+
+TEST_CASE(read_a_double)
+{
+    double expected = 3.141592653589793, actual;
+
+    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    stream >> actual;
+
+    EXPECT(!stream.has_any_error() && stream.eof());
+    EXPECT_EQ(expected, actual);
+}
+
 TEST_CASE(recoverable_error)
 {
     u32 expected = 0x01020304, actual = 0;
