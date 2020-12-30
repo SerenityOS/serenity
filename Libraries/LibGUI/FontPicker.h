@@ -41,9 +41,11 @@ public:
     void set_font(const Gfx::Font*);
 
 private:
-    FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr);
+    FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr, bool fixed_width_only = false);
 
     void update_sample_label();
+
+    const bool m_fixed_width_only;
 
     RefPtr<Gfx::Font> m_font;
 
