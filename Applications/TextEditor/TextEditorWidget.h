@@ -54,10 +54,11 @@ public:
     void set_preview_mode(PreviewMode);
     void set_auto_detect_preview_mode(bool value) { m_auto_detect_preview_mode = value; }
 
+    void update_title();
+
 private:
     TextEditorWidget();
     void set_path(const LexicalPath& file);
-    void update_title();
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();

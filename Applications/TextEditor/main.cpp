@@ -56,7 +56,6 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-text-editor");
 
     auto window = GUI::Window::construct();
-    window->set_title("Text Editor");
     window->resize(640, 400);
 
     auto& text_widget = window->set_main_widget<TextEditorWidget>();
@@ -84,6 +83,8 @@ int main(int argc, char** argv)
 
     if (file_to_edit)
         text_widget.open_sesame(file_to_edit);
+    else
+        text_widget.update_title();
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
