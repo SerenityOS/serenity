@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/FontPickerDialogGML.h>
@@ -58,36 +59,30 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
 
     m_sample_text_label = static_cast<Label&>(*widget.find_descendant_by_name("sample_text_label"));
 
-    HashTable<String> families;
+    m_families.clear();
     Gfx::FontDatabase::the().for_each_font([&](auto& font) {
         if (m_fixed_width_only && !font.is_fixed_width())
             return;
-        families.set(font.family());
+        if (!m_families.contains_slow(font.family()))
+            m_families.append(font.family());
     });
-
-    for (auto& family : families)
-        m_families.append(family);
-
+    quick_sort(m_families);
     m_family_list_view->set_model(ItemListModel<String>::create(m_families));
 
     m_family_list_view->on_selection = [this](auto& index) {
         m_family = index.data().to_string();
-        HashTable<int> weights;
+        m_weights.clear();
         Gfx::FontDatabase::the().for_each_font([&](auto& font) {
             if (m_fixed_width_only && !font.is_fixed_width())
                 return;
-            if (font.family() == m_family.value())
-                weights.set(font.weight());
+            if (font.family() == m_family.value() && !m_weights.contains_slow(font.weight())) {
+                m_weights.append(font.weight());
+            }
         });
-        m_weights.clear();
+        quick_sort(m_weights);
         Optional<size_t> index_of_old_weight_in_new_list;
-        size_t i = 0;
-        for (auto& weight : weights) {
-            m_weights.append(weight);
-            if (m_weight.has_value() && weight == m_weight.value())
-                index_of_old_weight_in_new_list = i;
-            ++i;
-        }
+        if (m_weight.has_value())
+            index_of_old_weight_in_new_list = m_weights.find_first_index(m_weight.value());
 
         m_weight_list_view->set_model(ItemListModel<int>::create(m_weights));
         m_weight_list_view->set_cursor(m_weight_list_view->model()->index(index_of_old_weight_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
@@ -97,16 +92,18 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_weight_list_view->on_selection = [this](auto& index) {
         m_weight = index.data().to_i32();
         m_sizes.clear();
-        Optional<size_t> index_of_old_size_in_new_list;
         Gfx::FontDatabase::the().for_each_font([&](auto& font) {
             if (m_fixed_width_only && !font.is_fixed_width())
                 return;
             if (font.family() == m_family.value() && font.weight() == m_weight.value()) {
-                if (m_size.has_value() && m_size.value() == font.presentation_size())
-                    index_of_old_size_in_new_list = m_sizes.size();
                 m_sizes.append(font.presentation_size());
             }
         });
+        quick_sort(m_sizes);
+        Optional<size_t> index_of_old_size_in_new_list;
+        if (m_size.has_value()) {
+            index_of_old_size_in_new_list = m_sizes.find_first_index(m_size.value());
+        }
 
         m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
         m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_old_size_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
@@ -195,5 +192,4 @@ void FontPicker::update_font()
         m_sample_text_label->set_font(m_font);
     }
 }
-
 }
