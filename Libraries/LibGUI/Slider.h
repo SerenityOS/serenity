@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include <LibGUI/Widget.h>
+#include <LibGUI/AbstractSlider.h>
 
 namespace GUI {
 
-class Slider : public Widget {
-    C_OBJECT(Slider)
+class Slider : public AbstractSlider {
+    C_OBJECT(Slider);
+
 public:
     enum class KnobSizeMode {
         Fixed,
@@ -39,21 +40,6 @@ public:
     };
 
     virtual ~Slider() override;
-
-    void set_orientation(Orientation value);
-    Orientation orientation() const { return m_orientation; }
-
-    int value() const { return m_value; }
-    int min() const { return m_min; }
-    int max() const { return m_max; }
-    int step() const { return m_step; }
-
-    void set_range(int min, int max);
-    void set_value(int);
-
-    void set_min(int min) { set_range(min, max()); }
-    void set_max(int max) { set_range(min(), max); }
-    void set_step(int step) { m_step = step; }
 
     void set_knob_size_mode(KnobSizeMode mode) { m_knob_size_mode = mode; }
     KnobSizeMode knob_size_mode() const { return m_knob_size_mode; }
@@ -72,8 +58,6 @@ public:
         return rect().shrunken(0, 20);
     }
 
-    Function<void(int)> on_value_changed;
-
 protected:
     explicit Slider(Orientation = Orientation::Vertical);
 
@@ -88,20 +72,16 @@ protected:
 private:
     void set_knob_hovered(bool);
 
-    int m_value { 0 };
-    int m_min { 0 };
-    int m_max { 100 };
-    int m_step { 1 };
     bool m_knob_hovered { false };
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
     Gfx::IntPoint m_drag_origin;
     KnobSizeMode m_knob_size_mode { KnobSizeMode::Fixed };
-    Orientation m_orientation { Orientation::Horizontal };
 };
 
 class VerticalSlider final : public Slider {
-    C_OBJECT(VerticalSlider)
+    C_OBJECT(VerticalSlider);
+
 public:
     virtual ~VerticalSlider() override { }
 
@@ -113,7 +93,8 @@ private:
 };
 
 class HorizontalSlider final : public Slider {
-    C_OBJECT(HorizontalSlider)
+    C_OBJECT(HorizontalSlider);
+
 public:
     virtual ~HorizontalSlider() override { }
 
