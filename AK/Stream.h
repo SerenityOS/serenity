@@ -147,14 +147,14 @@ InputStream& operator>>(InputStream& stream, Optional<T>& value)
     return stream;
 }
 
-template<typename Integral, typename EnableIf<IsIntegral<Integral>::value, int>::Type = 0>
-InputStream& operator>>(InputStream& stream, Integral& value)
+template<typename Integral>
+InputStream& operator>>(InputStream& stream, Integral& value) requires IsIntegral<Integral>::value
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
-template<typename Integral, typename EnableIf<IsIntegral<Integral>::value, int>::Type = 0>
-OutputStream& operator<<(OutputStream& stream, Integral value)
+template<typename Integral>
+OutputStream& operator<<(OutputStream& stream, Integral value) requires IsIntegral<Integral>::value
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;
@@ -162,30 +162,19 @@ OutputStream& operator<<(OutputStream& stream, Integral value)
 
 #ifndef KERNEL
 
-template<typename FloatingPoint, typename EnableIf<IsFloatingPoint<FloatingPoint>::value, int>::Type = 0>
-InputStream& operator>>(InputStream& stream, FloatingPoint& value)
+template<typename FloatingPoint>
+InputStream& operator>>(InputStream& stream, FloatingPoint& value) requires IsFloatingPoint<FloatingPoint>::value
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
-template<typename FloatingPoint, typename EnableIf<IsFloatingPoint<FloatingPoint>::value, int>::Type = 0>
-OutputStream& operator<<(OutputStream& stream, FloatingPoint value)
+template<typename FloatingPoint>
+OutputStream& operator<<(OutputStream& stream, FloatingPoint value) requires IsFloatingPoint<FloatingPoint>::value
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;
 }
 
 #endif
-
-inline InputStream& operator>>(InputStream& stream, bool& value)
-{
-    stream.read_or_error({ &value, sizeof(value) });
-    return stream;
-}
-inline OutputStream& operator<<(OutputStream& stream, bool value)
-{
-    stream.write_or_error({ &value, sizeof(value) });
-    return stream;
-}
 
 }
