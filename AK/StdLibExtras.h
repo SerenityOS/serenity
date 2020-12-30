@@ -372,6 +372,22 @@ template<>
 struct MakeUnsigned<char> {
     using Type = unsigned char;
 };
+template<>
+struct MakeUnsigned<char8_t> {
+    using Type = char8_t;
+};
+template<>
+struct MakeUnsigned<char16_t> {
+    using Type = char16_t;
+};
+template<>
+struct MakeUnsigned<char32_t> {
+    using Type = char32_t;
+};
+template<>
+struct MakeUnsigned<bool> {
+    using Type = bool;
+};
 
 template<typename T>
 struct MakeSigned {
@@ -469,7 +485,19 @@ template<typename T>
 struct __IsIntegral : FalseType {
 };
 template<>
+struct __IsIntegral<bool> : TrueType {
+};
+template<>
 struct __IsIntegral<unsigned char> : TrueType {
+};
+template<>
+struct __IsIntegral<char8_t> : TrueType {
+};
+template<>
+struct __IsIntegral<char16_t> : TrueType {
+};
+template<>
+struct __IsIntegral<char32_t> : TrueType {
 };
 template<>
 struct __IsIntegral<unsigned short> : TrueType {
@@ -494,6 +522,9 @@ struct __IsFloatingPoint<float> : TrueType {
 };
 template<>
 struct __IsFloatingPoint<double> : TrueType {
+};
+template<>
+struct __IsFloatingPoint<long double> : TrueType {
 };
 template<typename T>
 using IsFloatingPoint = __IsFloatingPoint<typename RemoveCV<T>::Type>;
