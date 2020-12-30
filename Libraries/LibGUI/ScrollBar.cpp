@@ -220,12 +220,16 @@ void ScrollBar::paint_event(PaintEvent& event)
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
         if (decrement_pressed)
             decrement_location.move_by(1, 1);
-        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
+        if (!has_scrubber() || !is_enabled())
+            painter.draw_bitmap(decrement_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, palette().threed_highlight());
+        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
         if (increment_pressed)
             increment_location.move_by(1, 1);
-        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? palette().button_text() : palette().threed_shadow1());
+        if (!has_scrubber() || !is_enabled())
+            painter.draw_bitmap(increment_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, palette().threed_highlight());
+        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
     }
 
     if (has_scrubber())
