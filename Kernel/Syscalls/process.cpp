@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Types.h>
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
 
@@ -61,6 +62,27 @@ int Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_
     if (name.is_null())
         return -EFAULT;
     m_name = move(name);
+    return 0;
+}
+
+int Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
+{
+    Syscall::SC_set_coredump_metadata_params params;
+    if (!copy_from_user(&params, user_params))
+        return -EFAULT;
+    if (params.key.length == 0 || params.key.length > 16 * KiB)
+        return -EINVAL;
+    if (params.value.length > 16 * KiB)
+        return -EINVAL;
+    auto copied_key = copy_string_from_user(params.key.characters, params.key.length);
+    if (copied_key.is_null())
+        return -EFAULT;
+    auto copied_value = copy_string_from_user(params.value.characters, params.value.length);
+    if (copied_value.is_null())
+        return -EFAULT;
+    if (!m_coredump_metadata.contains(copied_key) && m_coredump_metadata.size() >= 16)
+        return -EFAULT;
+    m_coredump_metadata.set(move(copied_key), move(copied_value));
     return 0;
 }
 
