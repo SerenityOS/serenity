@@ -26,6 +26,8 @@
 
 #include <AK/HashMap.h>
 #include <ProtocolServer/Protocol.h>
+#include <fcntl.h>
+#include <string.h>
 
 namespace ProtocolServer {
 
@@ -48,6 +50,18 @@ Protocol::Protocol(const String& name)
 Protocol::~Protocol()
 {
     ASSERT_NOT_REACHED();
+}
+
+Result<Protocol::Pipe, String> Protocol::get_pipe_for_download()
+{
+    int fd_pair[2] { 0 };
+    if (pipe(fd_pair) != 0) {
+        auto saved_errno = errno;
+        dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
+        return String { strerror(saved_errno) };
+    }
+    fcntl(fd_pair[1], F_SETFL, fcntl(fd_pair[1], F_GETFL) | O_NONBLOCK);
+    return Pipe { fd_pair[0], fd_pair[1] };
 }
 
 }
