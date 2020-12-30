@@ -93,7 +93,6 @@ void DisplaySettingsWidget::create_frame()
 
     auto& settings_content = m_root_widget->add<GUI::Widget>();
     settings_content.set_layout<GUI::VerticalBoxLayout>();
-    settings_content.set_backcolor("red");
     settings_content.set_background_color(Color::Blue);
     settings_content.set_background_role(Gfx::ColorRole::Window);
     settings_content.layout()->set_margins({ 4, 4, 4, 4 });
