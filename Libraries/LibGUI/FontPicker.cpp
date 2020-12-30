@@ -50,11 +50,15 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         ASSERT_NOT_REACHED();
 
     m_family_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("family_list_view"));
-    m_weight_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("weight_list_view"));
-    m_size_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("size_list_view"));
-
+    m_family_list_view->set_model(ItemListModel<String>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
+
+    m_weight_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("weight_list_view"));
+    m_weight_list_view->set_model(ItemListModel<int>::create(m_weights));
     m_weight_list_view->horizontal_scrollbar().set_visible(false);
+
+    m_size_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("size_list_view"));
+    m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
     m_size_list_view->horizontal_scrollbar().set_visible(false);
 
     m_sample_text_label = static_cast<Label&>(*widget.find_descendant_by_name("sample_text_label"));
@@ -67,7 +71,6 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
             m_families.append(font.family());
     });
     quick_sort(m_families);
-    m_family_list_view->set_model(ItemListModel<String>::create(m_families));
 
     m_family_list_view->on_selection = [this](auto& index) {
         m_family = index.data().to_string();
@@ -84,7 +87,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         if (m_weight.has_value())
             index_of_old_weight_in_new_list = m_weights.find_first_index(m_weight.value());
 
-        m_weight_list_view->set_model(ItemListModel<int>::create(m_weights));
+        m_weight_list_view->model()->update();
         m_weight_list_view->set_cursor(m_weight_list_view->model()->index(index_of_old_weight_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
         update_font();
     };
@@ -105,7 +108,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
             index_of_old_size_in_new_list = m_sizes.find_first_index(m_size.value());
         }
 
-        m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
+        m_size_list_view->model()->update();
         m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_old_size_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
         update_font();
     };
@@ -145,8 +148,8 @@ void FontPicker::set_font(const Gfx::Font* font)
         m_size = {};
         m_weights.clear();
         m_sizes.clear();
-        m_weight_list_view->set_model(nullptr);
-        m_size_list_view->set_model(nullptr);
+        m_weight_list_view->model()->update();
+        m_size_list_view->model()->update();
         return;
     }
 
