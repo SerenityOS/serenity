@@ -34,53 +34,15 @@
 namespace GUI {
 
 Slider::Slider(Orientation orientation)
-    : m_orientation(orientation)
+    : AbstractSlider(orientation)
 {
-
-    REGISTER_INT_PROPERTY("min", min, set_min);
-    REGISTER_INT_PROPERTY("max", max, set_max);
-    REGISTER_INT_PROPERTY("step", step, set_step);
     REGISTER_ENUM_PROPERTY("knob_size_mode", knob_size_mode, set_knob_size_mode, KnobSizeMode,
         { KnobSizeMode::Fixed, "Fixed" },
         { KnobSizeMode::Proportional, "Proportional" });
-    REGISTER_ENUM_PROPERTY("orientation", this->orientation, set_orientation, Orientation,
-        { Orientation::Horizontal, "Horizontal" },
-        { Orientation::Vertical, "Vertical" });
 }
 
 Slider::~Slider()
 {
-}
-
-void Slider::set_orientation(Orientation value)
-{
-    if (m_orientation == value)
-        return;
-    m_orientation = value;
-    update();
-}
-
-void Slider::set_range(int min, int max)
-{
-    ASSERT(min <= max);
-    if (m_min == min && m_max == max)
-        return;
-    m_min = min;
-    m_max = max;
-    m_value = clamp(m_value, m_min, m_max);
-    update();
-}
-
-void Slider::set_value(int value)
-{
-    value = clamp(value, m_min, m_max);
-    if (m_value == value)
-        return;
-    m_value = value;
-    update();
-
-    if (on_value_changed)
-        on_value_changed(m_value);
 }
 
 void Slider::paint_event(PaintEvent& event)
@@ -112,16 +74,16 @@ Gfx::IntRect Slider::knob_rect() const
     rect.set_secondary_size_for_orientation(orientation(), knob_secondary_size());
 
     if (knob_size_mode() == KnobSizeMode::Fixed) {
-        if (m_max - m_min) {
-            float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min);
-            rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((m_value - m_min) * scale)) - (knob_fixed_primary_size() / 2));
+        if (max() - min()) {
+            float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(max() - min());
+            rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((value() - min()) * scale)) - (knob_fixed_primary_size() / 2));
         } else
             rect.set_primary_size_for_orientation(orientation(), 0);
         rect.set_primary_size_for_orientation(orientation(), knob_fixed_primary_size());
     } else {
-        float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min + 1);
-        rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((m_value - m_min) * scale)));
-        if (m_max - m_min)
+        float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(max() - min() + 1);
+        rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)((value() - min()) * scale)));
+        if (max() - min())
             rect.set_primary_size_for_orientation(orientation(), ::max((int)(scale), knob_fixed_primary_size()));
         else
             rect.set_primary_size_for_orientation(orientation(), inner_rect.primary_size_for_orientation(orientation()));
@@ -139,13 +101,13 @@ void Slider::mousedown_event(MouseEvent& event)
         if (knob_rect().contains(event.position())) {
             m_dragging = true;
             m_drag_origin = event.position();
-            m_drag_origin_value = m_value;
+            m_drag_origin_value = value();
             return;
         } else {
             if (event.position().primary_offset_for_orientation(orientation()) > knob_rect().last_edge_for_orientation(orientation()))
-                set_value(m_value + 1);
+                set_value(value() + 1);
             else if (event.position().primary_offset_for_orientation(orientation()) < knob_rect().first_edge_for_orientation(orientation()))
-                set_value(m_value - 1);
+                set_value(value() - 1);
         }
     }
     return Widget::mousedown_event(event);
@@ -157,7 +119,7 @@ void Slider::mousemove_event(MouseEvent& event)
     if (m_dragging) {
         float delta = event.position().primary_offset_for_orientation(orientation()) - m_drag_origin.primary_offset_for_orientation(orientation());
         float scrubbable_range = inner_rect().primary_size_for_orientation(orientation());
-        float value_steps_per_scrubbed_pixel = (m_max - m_min) / scrubbable_range;
+        float value_steps_per_scrubbed_pixel = (max() - min()) / scrubbable_range;
         float new_value = m_drag_origin_value + (value_steps_per_scrubbed_pixel * delta);
         set_value((int)new_value);
         return;
@@ -177,7 +139,7 @@ void Slider::mouseup_event(MouseEvent& event)
 
 void Slider::mousewheel_event(MouseEvent& event)
 {
-    auto acceleration_modifier = m_step;
+    auto acceleration_modifier = step();
 
     if (event.modifiers() == KeyModifier::Mod_Ctrl && knob_size_mode() == KnobSizeMode::Fixed)
         acceleration_modifier *= 6;
