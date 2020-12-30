@@ -59,10 +59,15 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
     args_parser.parse(argc, argv);
 
-    auto coredump = CoreDump::Reader::create(coredump_path);
-    if (!coredump) {
-        warnln("Could not open coredump '{}'", coredump_path);
-        return 1;
+    Optional<CoreDump::Backtrace> backtrace;
+
+    {
+        auto coredump = CoreDump::Reader::create(coredump_path);
+        if (!coredump) {
+            warnln("Could not open coredump '{}'", coredump_path);
+            return 1;
+        }
+        backtrace = coredump->backtrace();
     }
 
     auto app = GUI::Application::construct(argc, argv);
@@ -72,15 +77,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto backtrace = coredump->backtrace();
-
     String executable_path;
     // FIXME: Maybe we should just embed the process's executable path
     // in the coredump by itself so we don't have to extract it from the backtrace.
     // Such a process section could also include the PID, which currently we'd have
     // to parse from the filename.
-    if (!backtrace.entries().is_empty()) {
-        executable_path = backtrace.entries().last().object_name;
+    if (!backtrace.value().entries().is_empty()) {
+        executable_path = backtrace.value().entries().last().object_name;
     } else {
         warnln("Could not determine executable path from coredump");
         return 1;
@@ -143,7 +146,7 @@ int main(int argc, char** argv)
 
     StringBuilder backtrace_builder;
     auto first = true;
-    for (auto& entry : backtrace.entries()) {
+    for (auto& entry : backtrace.value().entries()) {
         if (first)
             first = false;
         else
