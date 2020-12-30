@@ -252,8 +252,8 @@ public:
         return vformatted(fmtstr, VariadicFormatParams { parameters... });
     }
 
-    template<typename T>
-    static String number(T);
+    template<typename T, typename EnableIf<IsArithmetic<T>::value>::Type* = nullptr>
+    static String number(T value) { return formatted("{}", value); }
 
     StringView view() const;
 

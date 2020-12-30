@@ -239,21 +239,6 @@ template Optional<u16> String::to_uint() const;
 template Optional<u32> String::to_uint() const;
 template Optional<u64> String::to_uint() const;
 
-template<typename T>
-String String::number(T value) { return formatted("{}", value); }
-
-template String String::number(unsigned char);
-template String String::number(unsigned short);
-template String String::number(unsigned int);
-template String String::number(unsigned long);
-template String String::number(unsigned long long);
-template String String::number(char);
-template String String::number(short);
-template String String::number(int);
-template String String::number(long);
-template String String::number(long long);
-template String String::number(signed char);
-
 String String::format(const char* fmt, ...)
 {
     StringBuilder builder;
