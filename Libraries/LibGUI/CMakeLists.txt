@@ -6,9 +6,10 @@ set(SOURCES
     Action.cpp
     ActionGroup.cpp
     Application.cpp
+    AutocompleteProvider.cpp
     BoxLayout.cpp
-    Button.cpp
     BreadcrumbBar.cpp
+    Button.cpp
     Calendar.cpp
     CheckBox.cpp
     Clipboard.cpp

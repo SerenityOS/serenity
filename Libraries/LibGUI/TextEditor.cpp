@@ -25,10 +25,12 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
@@ -711,6 +713,27 @@ void TextEditor::sort_selected_lines()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
+        m_autocomplete_box->apply_suggestion();
+        m_autocomplete_box->close();
+        return;
+    }
+
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Escape) {
+        m_autocomplete_box->close();
+        return;
+    }
+
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Up) {
+        m_autocomplete_box->previous_suggestion();
+        return;
+    }
+
+    if (m_autocomplete_box && m_autocomplete_box->is_visible() && event.key() == KeyCode::Key_Down) {
+        m_autocomplete_box->next_suggestion();
+        return;
+    }
+
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
         return ScrollableWidget::keydown_event(event);
 
@@ -719,6 +742,14 @@ void TextEditor::keydown_event(KeyEvent& event)
             on_return_pressed();
         return;
     }
+
+    ArmedScopeGuard update_autocomplete { [&] {
+        if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
+            m_autocomplete_provider->provide_completions([&](auto completions) {
+                m_autocomplete_box->update_suggestions(move(completions));
+            });
+        }
+    } };
 
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
@@ -995,6 +1026,18 @@ void TextEditor::keydown_event(KeyEvent& event)
             return;
         do_delete();
         return;
+    }
+
+    if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
+        if (m_autocomplete_provider) {
+            m_autocomplete_provider->provide_completions([&](auto completions) {
+                m_autocomplete_box->update_suggestions(move(completions));
+                auto position = content_rect_for_position(cursor()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
+                m_autocomplete_box->show(position);
+            });
+            update_autocomplete.disarm();
+            return;
+        }
     }
 
     if (is_editable() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
@@ -1757,6 +1800,25 @@ void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
         m_highlighter->rehighlight(palette());
     } else
         document().set_spans({});
+}
+
+const AutocompleteProvider* TextEditor::autocomplete_provider() const
+{
+    return m_autocomplete_provider.ptr();
+}
+
+void TextEditor::set_autocomplete_provider(OwnPtr<AutocompleteProvider>&& provider)
+{
+    if (m_autocomplete_provider)
+        m_autocomplete_provider->detach();
+    m_autocomplete_provider = move(provider);
+    if (m_autocomplete_provider) {
+        m_autocomplete_provider->attach(*this);
+        if (!m_autocomplete_box)
+            m_autocomplete_box = make<AutocompleteBox>(*this);
+    }
+    if (m_autocomplete_box)
+        m_autocomplete_box->close();
 }
 
 int TextEditor::line_height() const
