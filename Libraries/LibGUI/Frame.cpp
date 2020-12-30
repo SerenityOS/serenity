@@ -36,6 +36,19 @@ Frame::Frame()
     set_frame_thickness(2);
     set_frame_shape(Gfx::FrameShape::Container);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
+
+    REGISTER_INT_PROPERTY("thickness", frame_thickness, set_frame_thickness);
+    REGISTER_ENUM_PROPERTY("shadow", frame_shadow, set_frame_shadow, Gfx::FrameShadow,
+        { Gfx::FrameShadow::Plain, "Plain" },
+        { Gfx::FrameShadow::Raised, "Raised" },
+        { Gfx::FrameShadow::Sunken, "Sunken" });
+    REGISTER_ENUM_PROPERTY("shape", frame_shape, set_frame_shape, Gfx::FrameShape,
+        { Gfx::FrameShape::NoFrame, "NoFrame" },
+        { Gfx::FrameShape::Box, "Box" },
+        { Gfx::FrameShape::Container, "Container" },
+        { Gfx::FrameShape::Panel, "Panel" },
+        { Gfx::FrameShape::VerticalLine, "VerticalLine" },
+        { Gfx::FrameShape::HorizontalLine, "HorizontalLine" });
 }
 
 Frame::~Frame()
