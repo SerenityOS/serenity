@@ -197,9 +197,9 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
 
 template<typename T>
 struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const NonnullOwnPtr<T>& value)
+    void format(FormatBuilder& builder, const NonnullOwnPtr<T>& value)
     {
-        Formatter<const T*>::format(params, builder, value.ptr());
+        Formatter<const T*>::format(builder, value.ptr());
     }
 };
 

@@ -83,7 +83,7 @@ namespace AK {
 
 template<>
 struct Formatter<GUI::ModelIndex> : Formatter<StringView> {
-    void format(TypeErasedFormatParams&, FormatBuilder&, const GUI::ModelIndex&);
+    void format(FormatBuilder&, const GUI::ModelIndex&);
 };
 
 template<>

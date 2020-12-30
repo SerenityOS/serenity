@@ -213,9 +213,9 @@ struct B {
 };
 template<>
 struct AK::Formatter<B> : Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, B)
+    void format(FormatBuilder& builder, B)
     {
-        Formatter<StringView>::format(params, builder, "B");
+        Formatter<StringView>::format(builder, "B");
     }
 };
 
