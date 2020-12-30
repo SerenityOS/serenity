@@ -82,8 +82,8 @@ void AbstractSlider::set_value(int value)
     m_value = value;
     update();
 
-    if (on_value_changed)
-        on_value_changed(m_value);
+    if (on_change)
+        on_change(m_value);
 }
 
 }
