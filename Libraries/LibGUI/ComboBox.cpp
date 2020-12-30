@@ -58,6 +58,7 @@ private:
 
 ComboBox::ComboBox()
 {
+    set_min_width(32);
     set_fixed_height(22);
 
     m_editor = add<ComboBoxEditor>();
