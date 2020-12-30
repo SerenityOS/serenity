@@ -35,18 +35,17 @@
 namespace LanguageServers::Cpp {
 
 using namespace ::Cpp;
-using ::HackStudio::AutoCompleteResponse;
 
 class AutoComplete {
 public:
     AutoComplete() = delete;
 
-    static Vector<AutoCompleteResponse> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
+    static Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
 
 private:
     static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
     static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
+    static Vector<GUI::AutocompleteProvider::Entry> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
 };
 
 }

@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "AutoCompleteBox.h"
 #include "CodeDocument.h"
 #include "Debugger/BreakpointCallback.h"
 #include "LanguageClient.h"
@@ -72,7 +71,6 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -87,18 +85,26 @@ private:
         GUI::TextPosition position;
     };
 
-    Optional<AutoCompleteRequestData> get_autocomplete_request_data();
+    class LanguageServerAidedAutocompleteProvider final : virtual public GUI::AutocompleteProvider {
+    public:
+        LanguageServerAidedAutocompleteProvider(LanguageClient& client)
+            : m_language_client(client)
+        {
+        }
+        virtual ~LanguageServerAidedAutocompleteProvider() override { }
 
-    void update_autocomplete(const AutoCompleteRequestData&);
-    void show_autocomplete(const AutoCompleteRequestData&);
-    void close_autocomplete();
+    private:
+        virtual void provide_completions(Function<void(Vector<Entry>)> callback) override;
+        LanguageClient& m_language_client;
+    };
+
+    Optional<AutoCompleteRequestData> get_autocomplete_request_data();
 
     void flush_file_content_to_langauge_server();
 
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
-    OwnPtr<AutoCompleteBox> m_autocomplete_box;
     RefPtr<Web::OutOfProcessWebView> m_documentation_page_view;
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };

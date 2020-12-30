@@ -2,7 +2,6 @@ add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
 set(SOURCES
-    AutoCompleteBox.cpp
     CodeDocument.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp

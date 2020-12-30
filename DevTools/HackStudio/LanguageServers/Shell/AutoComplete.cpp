@@ -35,7 +35,7 @@
 
 namespace LanguageServers::Shell {
 
-Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, size_t offset)
+Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, size_t offset)
 {
     // FIXME: No need to reparse this every time!
     auto ast = ::Shell::Parser { code }.parse();
@@ -49,7 +49,7 @@ Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, s
 #endif
 
     auto result = ast->complete_for_editor(m_shell, offset);
-    Vector<AutoCompleteResponse> completions;
+    Vector<GUI::AutocompleteProvider::Entry> completions;
     for (auto& entry : result) {
 #ifdef DEBUG_AUTOCOMPLETE
         dbgln("Suggestion: '{}' starting at {}", entry.text_string, entry.input_offset);

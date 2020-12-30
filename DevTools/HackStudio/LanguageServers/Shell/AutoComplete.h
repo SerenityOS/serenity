@@ -34,8 +34,6 @@
 
 namespace LanguageServers::Shell {
 
-using namespace ::HackStudio;
-
 class AutoComplete {
 public:
     AutoComplete()
@@ -43,7 +41,7 @@ public:
     {
     }
 
-    Vector<AutoCompleteResponse> get_suggestions(const String& code, size_t autocomplete_position);
+    Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& code, size_t autocomplete_position);
 
 private:
     NonnullRefPtr<::Shell::Shell> m_shell;
