@@ -109,6 +109,11 @@ ScrollBar::ScrollBar(Orientation orientation)
     m_automatic_scrolling_timer->on_timeout = [this] {
         on_automatic_scrolling_timer_fired();
     };
+
+    REGISTER_INT_PROPERTY("min", min, set_min);
+    REGISTER_INT_PROPERTY("max", max, set_max);
+    REGISTER_INT_PROPERTY("step", step, set_step);
+    REGISTER_INT_PROPERTY("big_step", big_step, set_big_step);
 }
 
 ScrollBar::~ScrollBar()

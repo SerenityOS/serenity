@@ -40,6 +40,9 @@ ImageWidget::ImageWidget(const StringView&)
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
     set_auto_resize(true);
+
+    REGISTER_BOOL_PROPERTY("auto_resize", auto_resize, set_auto_resize);
+    REGISTER_BOOL_PROPERTY("should_stretch", should_stretch, set_should_stretch);
 }
 
 ImageWidget::~ImageWidget()

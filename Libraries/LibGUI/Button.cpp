@@ -41,6 +41,11 @@ Button::Button(String text)
     set_min_width(32);
     set_fixed_height(22);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
+
+    REGISTER_ENUM_PROPERTY(
+        "button_style", button_style, set_button_style, Gfx::ButtonStyle,
+        { Gfx::ButtonStyle::Normal, "Normal" },
+        { Gfx::ButtonStyle::CoolBar, "CoolBar" });
 }
 
 Button::~Button()

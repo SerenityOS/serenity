@@ -35,6 +35,7 @@ namespace GUI {
 GroupBox::GroupBox(const StringView& title)
     : m_title(title)
 {
+    REGISTER_STRING_PROPERTY("title", title, set_title);
 }
 
 GroupBox::~GroupBox()

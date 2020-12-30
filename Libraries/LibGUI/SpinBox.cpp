@@ -58,6 +58,9 @@ SpinBox::SpinBox()
     m_decrement_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_decrement_button->on_click = [this](auto) { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);
+
+    REGISTER_INT_PROPERTY("min", min, set_min);
+    REGISTER_INT_PROPERTY("max", max, set_max);
 }
 
 SpinBox::~SpinBox()

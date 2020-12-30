@@ -42,6 +42,9 @@ ColorInput::ColorInput()
         if (parsed_color.has_value())
             set_color_without_changing_text(parsed_color.value());
     };
+
+    REGISTER_STRING_PROPERTY("color_picker_title", color_picker_title, set_color_picker_title);
+    REGISTER_BOOL_PROPERTY("has_alpha_channel", has_alpha_channel, set_color_has_alpha_channel);
 }
 
 ColorInput::~ColorInput()
