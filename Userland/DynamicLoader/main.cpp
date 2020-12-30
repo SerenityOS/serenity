@@ -250,6 +250,20 @@ static void clear_temporary_objects_mappings()
     g_loaders.clear();
 }
 
+static void display_help()
+{
+    const char message[] =
+        R"(You have invoked `Loader.so'. This is the helper program for programs that
+use shared libraries. Special directives embedded in executables tell the
+kernel to load this program.
+
+This helper program loads the shared libraries needed by the program,
+prepares the program to run, and runs it. You do not need to invoke
+this helper program directly.
+)";
+    write(1, message, sizeof(message));
+}
+
 static FlatPtr loader_main(auxv_t* auxvp)
 {
     int main_program_fd = -1;
@@ -264,6 +278,15 @@ static FlatPtr loader_main(auxv_t* auxvp)
     }
     ASSERT(main_program_fd >= 0);
     ASSERT(!main_program_name.is_null());
+
+    if (main_program_name == "/usr/lib/Loader.so") {
+        // We've been invoked directly as an executable rather than as the
+        // ELF interpreter for some other binary. In the future we may want
+        // to support launching a program directly from the dynamic loader
+        // like ld.so on Linux.
+        display_help();
+        _exit(1);
+    }
 
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
