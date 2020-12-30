@@ -21,7 +21,7 @@ Qt Creator should be set up correctly now, go ahead and explore the project and 
 
 ## Auto-Formatting
 
-You can use `clang-format` to help you with the [style guide](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Before you proceed, check that you're actually using clang-format version 10, as some OSes still ship clang-format version 9 by default.
+You can use `clang-format` to help you with the [style guide](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Before you proceed, check that you're actually using clang-format version 11, as some OSes still ship clang-format version 9 or 10 by default.
 
 - In QtCreator, go to "Help > About Plugins…"
 - Find the `Beautifier (experimental)` row (for example, by typing `beau` into the search)
