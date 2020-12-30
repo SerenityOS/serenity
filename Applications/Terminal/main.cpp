@@ -200,10 +200,10 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 
     switch (terminal.bell_mode()) {
     case TerminalWidget::BellMode::Visible:
-        sysbell_radio.set_checked(true);
+        visbell_radio.set_checked(true);
         break;
     case TerminalWidget::BellMode::AudibleBeep:
-        visbell_radio.set_checked(true);
+        sysbell_radio.set_checked(true);
         break;
     case TerminalWidget::BellMode::Disabled:
         nobell_radio.set_checked(true);
