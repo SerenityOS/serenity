@@ -46,36 +46,30 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     layout.set_margins({ 10, 20, 10, 10 });
 
     auto& name_container = group_box.add<GUI::Widget>();
-    name_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    name_container.set_preferred_size(0, 20);
+    name_container.set_fixed_height(20);
     name_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& name_label = name_container.add<GUI::Label>("Name:");
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    name_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    name_label.set_preferred_size(80, 20);
+    name_label.set_fixed_size(80, 20);
 
     m_name_textbox = name_container.add<GUI::TextBox>();
-    m_name_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_name_textbox->set_preferred_size(0, 20);
+    m_name_textbox->set_fixed_height(20);
     m_name_textbox->on_change = [this] {
         if (m_layer)
             m_layer->set_name(m_name_textbox->text());
     };
 
     auto& opacity_container = group_box.add<GUI::Widget>();
-    opacity_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    opacity_container.set_preferred_size(0, 20);
+    opacity_container.set_fixed_height(20);
     opacity_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:");
     opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    opacity_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    opacity_label.set_preferred_size(80, 20);
+    opacity_label.set_fixed_size(80, 20);
 
     m_opacity_slider = opacity_container.add<GUI::HorizontalSlider>();
-    m_opacity_slider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_opacity_slider->set_preferred_size(0, 20);
+    m_opacity_slider->set_fixed_height(20);
     m_opacity_slider->set_range(0, 100);
     m_opacity_slider->on_value_changed = [this](int value) {
         if (m_layer)
@@ -83,8 +77,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     };
 
     m_visibility_checkbox = group_box.add<GUI::CheckBox>("Visible");
-    m_visibility_checkbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_visibility_checkbox->set_preferred_size(0, 20);
+    m_visibility_checkbox->set_fixed_height(20);
     m_visibility_checkbox->on_checked = [this](bool checked) {
         if (m_layer)
             m_layer->set_visible(checked);

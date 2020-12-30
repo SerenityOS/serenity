@@ -39,7 +39,6 @@ ImageWidget::ImageWidget(const StringView&)
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
-    set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     set_auto_resize(true);
 }
 
@@ -54,7 +53,7 @@ void ImageWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 
     m_bitmap = bitmap;
     if (m_bitmap && m_auto_resize)
-        set_preferred_size(m_bitmap->width(), m_bitmap->height());
+        set_fixed_size(m_bitmap->size());
 
     update();
 }
@@ -64,7 +63,7 @@ void ImageWidget::set_auto_resize(bool value)
     m_auto_resize = value;
 
     if (m_bitmap)
-        set_preferred_size(m_bitmap->width(), m_bitmap->height());
+        set_fixed_size(m_bitmap->size());
 }
 
 void ImageWidget::animate()

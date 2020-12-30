@@ -63,25 +63,20 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     general_tab.layout()->set_margins({ 12, 8, 12, 8 });
     general_tab.layout()->set_spacing(10);
 
-    general_tab.layout()->add_spacer();
-
     auto& file_container = general_tab.add<GUI::Widget>();
     file_container.set_layout<GUI::HorizontalBoxLayout>();
-    file_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     file_container.layout()->set_spacing(20);
-    file_container.set_preferred_size(0, 34);
+    file_container.set_fixed_height(34);
 
     m_icon = file_container.add<GUI::ImageWidget>();
-    m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_icon->set_preferred_size(32, 32);
+    m_icon->set_fixed_size(32, 32);
 
     m_name = lexical_path.basename();
     m_path = lexical_path.string();
     m_parent_path = lexical_path.dirname();
 
     m_name_box = file_container.add<GUI::TextBox>();
-    m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_name_box->set_preferred_size({ 0, 22 });
+    m_name_box->set_fixed_height(22);
     m_name_box->set_text(m_name);
     m_name_box->set_mode(disable_rename ? GUI::TextBox::Mode::DisplayOnly : GUI::TextBox::Mode::Editable);
     m_name_box->on_change = [&]() {
@@ -151,8 +146,7 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
 
     auto& button_widget = main_widget.add<GUI::Widget>();
     button_widget.set_layout<GUI::HorizontalBoxLayout>();
-    button_widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    button_widget.set_preferred_size(0, 24);
+    button_widget.set_fixed_height(24);
     button_widget.layout()->set_spacing(5);
 
     button_widget.layout()->add_spacer();
@@ -237,8 +231,7 @@ void PropertiesDialog::make_permission_checkboxes(GUI::Widget& parent, Permissio
 {
     auto& widget = parent.add<GUI::Widget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();
-    widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    widget.set_preferred_size(0, 16);
+    widget.set_fixed_height(16);
     widget.layout()->set_spacing(10);
 
     auto& label = widget.add<GUI::Label>(label_string);
@@ -277,13 +270,11 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
     for (auto pair : pairs) {
         auto& label_container = parent.add<GUI::Widget>();
         label_container.set_layout<GUI::HorizontalBoxLayout>();
-        label_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        label_container.set_preferred_size(0, 14);
+        label_container.set_fixed_height(14);
         label_container.layout()->set_spacing(12);
 
         auto& label_property = label_container.add<GUI::Label>(pair.property);
         label_property.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        label_property.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
 
         if (!pair.link.has_value()) {
             label_container.add<GUI::Label>(pair.value).set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -300,24 +291,18 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
     }
 
     for (auto label : property_labels)
-        label->set_preferred_size({ max_width, 0 });
+        label->set_fixed_width(max_width);
 }
 
 GUI::Button& PropertiesDialog::make_button(String text, GUI::Widget& parent)
 {
     auto& button = parent.add<GUI::Button>(text);
-    button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    button.set_preferred_size(70, 22);
+    button.set_fixed_size(70, 22);
     return button;
 }
 
 void PropertiesDialog::make_divider(GUI::Widget& parent)
 {
-    parent.layout()->add_spacer();
-
     auto& divider = parent.add<GUI::Frame>();
-    divider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    divider.set_preferred_size({ 0, 2 });
-
-    parent.layout()->add_spacer();
+    divider.set_fixed_height(2);
 }

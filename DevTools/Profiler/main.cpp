@@ -176,8 +176,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     });
 
     auto& stop_button = widget.add<GUI::Button>("Stop");
-    stop_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    stop_button.set_preferred_size(140, 22);
+    stop_button.set_fixed_size(140, 22);
     stop_button.on_click = [&](auto) {
         GUI::Application::the()->quit();
     };

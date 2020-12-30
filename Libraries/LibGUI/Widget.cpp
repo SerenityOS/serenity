@@ -132,11 +132,6 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
     REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
-    REGISTER_SIZE_PROPERTY("preferred_size", preferred_size, set_preferred_size);
-    REGISTER_INT_PROPERTY("preferred_width", preferred_width, set_preferred_width);
-    REGISTER_INT_PROPERTY("preferred_height", preferred_height, set_preferred_height);
-    REGISTER_SIZE_POLICY_PROPERTY("horizontal_size_policy", horizontal_size_policy, set_horizontal_size_policy);
-    REGISTER_SIZE_POLICY_PROPERTY("vertical_size_policy", vertical_size_policy, set_vertical_size_policy);
 
     REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_SIZE_PROPERTY("max_size", max_size, set_max_size);
@@ -683,31 +678,6 @@ void Widget::set_max_size(const Gfx::IntSize& size)
     if (m_max_size == size)
         return;
     m_max_size = size;
-    invalidate_layout();
-}
-
-void Widget::set_preferred_size(const Gfx::IntSize& size)
-{
-    if (m_preferred_size == size)
-        return;
-    m_preferred_size = size;
-    invalidate_layout();
-}
-
-void Widget::set_size_policy(Orientation orientation, SizePolicy policy)
-{
-    if (orientation == Orientation::Horizontal)
-        set_size_policy(policy, m_vertical_size_policy);
-    else
-        set_size_policy(m_horizontal_size_policy, policy);
-}
-
-void Widget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy)
-{
-    if (m_horizontal_size_policy == horizontal_policy && m_vertical_size_policy == vertical_policy)
-        return;
-    m_horizontal_size_policy = horizontal_policy;
-    m_vertical_size_policy = vertical_policy;
     invalidate_layout();
 }
 

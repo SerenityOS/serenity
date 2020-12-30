@@ -105,8 +105,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& right_container = widget.add<GUI::Widget>();
-    right_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    right_container.set_preferred_size(36, 0);
+    right_container.set_fixed_width(36);
     right_container.set_layout<GUI::HorizontalBoxLayout>();
 
     on_close_request = [this] {

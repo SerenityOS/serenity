@@ -8,22 +8,17 @@
             spacing: 10
         }
 
-        vertical_size_policy: "Fixed"
-        preferred_height: 25
+        fixed_height: 25
 
         @GUI::Label {
             text: "if..."
-            horizontal_size_policy: "Fixed"
-            vertical_size_policy: "Fixed"
-            preferred_width: 40
-            preferred_height: 25
+            fixed_width: 40
+            fixed_height: 25
         }
 
         @GUI::TextEditor {
             name: "formula_editor"
-            horizontal_size_policy: "Fill"
-            vertical_size_policy: "Fixed"
-            preferred_height: 25
+            fixed_height: 25
             tooltip: "Use 'value' to refer to the current cell's value"
         }
     }
@@ -33,21 +28,17 @@
             spacing: 10
         }
 
-        vertical_size_policy: "Fixed"
-        preferred_height: 25
+        fixed_height: 25
 
         @GUI::Label {
             text: "Foreground..."
-            horizontal_size_policy: "Fixed"
-            vertical_size_policy: "Fixed"
-            preferred_width: 150
-            preferred_height: 25
+            fixed_width: 150
+            fixed_height: 25
         }
 
         @GUI::ColorInput {
             name: "foreground_input"
-            vertical_size_policy: "Fixed"
-            preferred_height: 25
+            fixed_height: 25
         }
     }
 
@@ -56,21 +47,17 @@
             spacing: 10
         }
 
-        vertical_size_policy: "Fixed"
-        preferred_height: 25
+        fixed_height: 25
 
         @GUI::Label {
             text: "Background..."
-            horizontal_size_policy: "Fixed"
-            vertical_size_policy: "Fixed"
-            preferred_width: 150
-            preferred_height: 25
+            fixed_width: 150
+            fixed_height: 25
         }
 
         @GUI::ColorInput {
             name: "background_input"
-            vertical_size_policy: "Fixed"
-            preferred_height: 25
+            fixed_height: 25
         }
     }
 }

@@ -106,17 +106,14 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     auto& upper_container = vertical_container.add<Widget>();
     upper_container.set_layout<HorizontalBoxLayout>();
     upper_container.layout()->set_spacing(2);
-    upper_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    upper_container.set_preferred_size(0, 26);
+    upper_container.set_fixed_height(26);
 
     auto& toolbar = upper_container.add<ToolBar>();
-    toolbar.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    toolbar.set_preferred_size(165, 0);
+    toolbar.set_fixed_width(165);
     toolbar.set_has_frame(false);
 
     m_location_textbox = upper_container.add<TextBox>();
-    m_location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_location_textbox->set_preferred_size(0, 22);
+    m_location_textbox->set_fixed_height(22);
     m_location_textbox->set_text(path);
 
     m_view = vertical_container.add<MultiView>();
@@ -176,17 +173,14 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     auto& lower_container = vertical_container.add<Widget>();
     lower_container.set_layout<VerticalBoxLayout>();
     lower_container.layout()->set_spacing(4);
-    lower_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    lower_container.set_preferred_size(0, 48);
+    lower_container.set_fixed_height(48);
 
     auto& filename_container = lower_container.add<Widget>();
-    filename_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    filename_container.set_preferred_size(0, 22);
+    filename_container.set_fixed_height(22);
     filename_container.set_layout<HorizontalBoxLayout>();
     auto& filename_label = filename_container.add<Label>("File name:");
     filename_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    filename_label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    filename_label.set_preferred_size(60, 0);
+    filename_label.set_fixed_width(60);
     m_filename_textbox = filename_container.add<TextBox>();
     m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
@@ -214,23 +208,20 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     };
 
     auto& button_container = lower_container.add<Widget>();
-    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 22);
+    button_container.set_fixed_height(22);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
 
     auto& cancel_button = button_container.add<Button>();
-    cancel_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    cancel_button.set_preferred_size(80, 0);
+    cancel_button.set_fixed_width(80);
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };
 
     auto& ok_button = button_container.add<Button>();
-    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    ok_button.set_preferred_size(80, 0);
+    ok_button.set_fixed_width(80);
     ok_button.set_text(ok_button_name(m_mode));
     ok_button.on_click = [this](auto) {
         on_file_return();
@@ -253,24 +244,21 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     if (!((unsigned)options & (unsigned)Options::DisablePreview)) {
         m_preview_container = horizontal_container.add<Frame>();
         m_preview_container->set_visible(false);
-        m_preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        m_preview_container->set_preferred_size(180, 0);
+        m_preview_container->set_fixed_width(180);
         m_preview_container->set_layout<VerticalBoxLayout>();
         m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
         m_preview_image = m_preview_container->add<ImageWidget>();
         m_preview_image->set_should_stretch(true);
         m_preview_image->set_auto_resize(false);
-        m_preview_image->set_preferred_size(160, 160);
+        m_preview_image->set_fixed_size(160, 160);
 
         m_preview_name_label = m_preview_container->add<Label>();
         m_preview_name_label->set_font(Gfx::Font::default_bold_font());
-        m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
+        m_preview_name_label->set_fixed_height(m_preview_name_label->font().glyph_height());
 
         m_preview_geometry_label = m_preview_container->add<Label>();
-        m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
+        m_preview_geometry_label->set_fixed_height(m_preview_name_label->font().glyph_height());
     }
 }
 

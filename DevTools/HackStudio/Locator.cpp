@@ -69,8 +69,7 @@ private:
 Locator::Locator()
 {
     set_layout<GUI::VerticalBoxLayout>();
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 20);
+    set_fixed_height(20);
     m_textbox = add<GUI::TextBox>();
     m_textbox->on_change = [this] {
         update_suggestions();

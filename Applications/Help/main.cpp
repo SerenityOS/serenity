@@ -124,8 +124,7 @@ int main(int argc, char* argv[])
     search_view.layout()->set_margins({ 4, 4, 4, 4 });
     auto& search_box = search_view.add<GUI::TextBox>();
     auto& search_list_view = search_view.add<GUI::ListView>();
-    search_box.set_preferred_size(0, 20);
-    search_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    search_box.set_fixed_height(20);
     search_box.set_placeholder("Search...");
     search_box.on_change = [&] {
         if (auto model = search_list_view.model()) {
@@ -138,8 +137,7 @@ int main(int argc, char* argv[])
     search_list_view.model()->update();
 
     tree_view.set_model(model);
-    left_tab_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    left_tab_bar.set_preferred_size(200, 500);
+    left_tab_bar.set_fixed_width(200);
 
     auto& page_view = splitter.add<Web::OutOfProcessWebView>();
 

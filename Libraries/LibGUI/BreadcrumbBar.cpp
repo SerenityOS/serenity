@@ -74,12 +74,10 @@ void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, 
             on_segment_click(index);
     };
 
-    button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-
     auto button_text_width = button.font().width(text);
     auto icon_width = icon ? icon->width() : 0;
     auto icon_padding = icon ? 4 : 0;
-    button.set_preferred_size(button_text_width + icon_width + icon_padding + 16, 16 + 8);
+    button.set_fixed_size(button_text_width + icon_width + icon_padding + 16, 16 + 8);
 
     Segment segment { icon, text, data, button.make_weak_ptr<GUI::Button>() };
 

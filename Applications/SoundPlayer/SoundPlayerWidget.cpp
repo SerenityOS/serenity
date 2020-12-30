@@ -50,12 +50,10 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_elapsed->set_frame_shape(Gfx::FrameShape::Container);
     m_elapsed->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_elapsed->set_frame_thickness(2);
-    m_elapsed->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_elapsed->set_preferred_size(80, 0);
+    m_elapsed->set_fixed_width(80);
 
     auto& sample_widget_container = status_widget.add<GUI::Widget>();
     sample_widget_container.set_layout<GUI::HorizontalBoxLayout>();
-    sample_widget_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     m_sample_widget = sample_widget_container.add<SampleWidget>();
 
@@ -63,8 +61,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_remaining->set_frame_shape(Gfx::FrameShape::Container);
     m_remaining->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_remaining->set_frame_thickness(2);
-    m_remaining->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_remaining->set_preferred_size(80, 0);
+    m_remaining->set_fixed_width(80);
 
     m_slider = add<Slider>(Orientation::Horizontal);
     m_slider->set_min(0);
@@ -74,8 +71,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     auto& control_widget = add<GUI::Widget>();
     control_widget.set_fill_with_background_color(true);
     control_widget.set_layout<GUI::HorizontalBoxLayout>();
-    control_widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    control_widget.set_preferred_size(0, 30);
+    control_widget.set_fixed_height(30);
     control_widget.layout()->set_margins({ 10, 2, 10, 2 });
     control_widget.layout()->set_spacing(10);
 
@@ -96,8 +92,7 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::C
     m_status->set_frame_shadow(Gfx::FrameShadow::Raised);
     m_status->set_frame_thickness(4);
     m_status->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_status->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_status->set_preferred_size(0, 18);
+    m_status->set_fixed_height(18);
     m_status->set_text("No file open!");
 
     update_position(0);

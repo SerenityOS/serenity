@@ -183,11 +183,14 @@ void Splitter::mousemove_event(MouseEvent& event)
         new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) + correction);
         new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) - correction);
     }
-    m_first_resizee->set_preferred_size(new_first_resizee_size);
-    m_second_resizee->set_preferred_size(new_second_resizee_size);
 
-    m_first_resizee->set_size_policy(m_orientation, SizePolicy::Fixed);
-    m_second_resizee->set_size_policy(m_orientation, SizePolicy::Fill);
+    if (m_orientation == Orientation::Horizontal) {
+        m_first_resizee->set_fixed_width(new_first_resizee_size.width());
+        m_second_resizee->set_fixed_width(-1);
+    } else {
+        m_first_resizee->set_fixed_height(new_first_resizee_size.height());
+        m_second_resizee->set_fixed_height(-1);
+    }
 
     invalidate_layout();
 }

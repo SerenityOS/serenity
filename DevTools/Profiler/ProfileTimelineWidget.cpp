@@ -33,8 +33,7 @@ ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
 {
     set_background_color(Color::White);
     set_fill_with_background_color(true);
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 80);
+    set_fixed_height(80);
 }
 
 ProfileTimelineWidget::~ProfileTimelineWidget()

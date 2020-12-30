@@ -119,8 +119,7 @@ void Label::paint_event(PaintEvent& event)
 
 void Label::size_to_fit()
 {
-    set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    set_preferred_size(font().width(m_text), 0);
+    set_fixed_width(font().width(m_text));
 }
 
 }

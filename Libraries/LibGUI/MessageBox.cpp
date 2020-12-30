@@ -123,21 +123,18 @@ void MessageBox::build()
     }
 
     auto& label = message_container.add<Label>(m_text);
-    label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    label.set_preferred_size(text_width, 16);
+    label.set_fixed_height(16);
     if (m_type != Type::None)
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& button_container = widget.add<Widget>();
     button_container.set_layout<HorizontalBoxLayout>();
-    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 24);
+    button_container.set_fixed_height(24);
     button_container.layout()->set_spacing(8);
 
     auto add_button = [&](String label, Dialog::ExecResult result) {
         auto& button = button_container.add<Button>();
-        button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        button.set_preferred_size(96, 0);
+        button.set_fixed_width(96);
         button.set_text(label);
         button.on_click = [this, label, result](auto) {
             done(result);

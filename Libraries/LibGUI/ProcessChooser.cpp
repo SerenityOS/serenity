@@ -64,15 +64,13 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     m_table_view->on_activation = [this](const ModelIndex& index) { set_pid_from_index_and_close(index); };
 
     auto& button_container = widget.add<GUI::Widget>();
-    button_container.set_preferred_size(0, 30);
-    button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    button_container.set_fixed_height(30);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->set_margins({ 0, 0, 4, 0 });
     button_container.layout()->add_spacer();
 
     auto& select_button = button_container.add<GUI::Button>(m_button_label);
-    select_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    select_button.set_preferred_size(80, 24);
+    select_button.set_fixed_size(80, 24);
     select_button.on_click = [this](auto) {
         if (m_table_view->selection().is_empty()) {
             GUI::MessageBox::show(this, "No process selected!", m_window_title, GUI::MessageBox::Type::Error);
@@ -82,8 +80,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         set_pid_from_index_and_close(index);
     };
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
-    cancel_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    cancel_button.set_preferred_size(80, 24);
+    cancel_button.set_fixed_size(80, 24);
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };

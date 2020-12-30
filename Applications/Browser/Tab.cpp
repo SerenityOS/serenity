@@ -112,8 +112,7 @@ Tab::Tab(Type type)
     toolbar.add_action(*m_reload_action);
 
     m_location_box = toolbar.add<GUI::TextBox>();
-    m_location_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_location_box->set_preferred_size(0, 22);
+    m_location_box->set_fixed_height(22);
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
@@ -130,8 +129,7 @@ Tab::Tab(Type type)
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
-    m_bookmark_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_bookmark_button->set_preferred_size(22, 22);
+    m_bookmark_button->set_fixed_size(22, 22);
 
     m_bookmark_button->on_click = [this](auto) {
         auto url = this->url().to_string();

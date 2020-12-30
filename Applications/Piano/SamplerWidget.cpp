@@ -99,12 +99,10 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_open_button_and_recorded_sample_name_container = add<GUI::Widget>();
     m_open_button_and_recorded_sample_name_container->set_layout<GUI::HorizontalBoxLayout>();
     m_open_button_and_recorded_sample_name_container->layout()->set_spacing(10);
-    m_open_button_and_recorded_sample_name_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_open_button_and_recorded_sample_name_container->set_preferred_size(0, 24);
+    m_open_button_and_recorded_sample_name_container->set_fixed_height(24);
 
     m_open_button = m_open_button_and_recorded_sample_name_container->add<GUI::Button>();
-    m_open_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_open_button->set_preferred_size(24, 24);
+    m_open_button->set_fixed_size(24, 24);
     m_open_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     m_open_button->on_click = [this](auto) {
@@ -124,8 +122,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_recorded_sample_name->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_wave_editor = add<WaveEditor>(m_track_manager);
-    m_wave_editor->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_wave_editor->set_preferred_size(0, 100);
+    m_wave_editor->set_fixed_height(100);
 }
 
 SamplerWidget::~SamplerWidget()

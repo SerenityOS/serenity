@@ -111,18 +111,15 @@ GUI::Widget* BucketTool::get_properties_widget()
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto& threshold_container = m_properties_widget->add<GUI::Widget>();
-        threshold_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        threshold_container.set_preferred_size(0, 20);
+        threshold_container.set_fixed_height(20);
         threshold_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& threshold_label = threshold_container.add<GUI::Label>("Threshold:");
         threshold_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        threshold_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        threshold_label.set_preferred_size(80, 20);
+        threshold_label.set_fixed_size(80, 20);
 
         auto& threshold_slider = threshold_container.add<GUI::HorizontalSlider>();
-        threshold_slider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        threshold_slider.set_preferred_size(0, 20);
+        threshold_slider.set_fixed_height(20);
         threshold_slider.set_range(0, 100);
         threshold_slider.set_value(m_threshold);
         threshold_slider.on_value_changed = [this](int value) {

@@ -57,8 +57,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     if (m_type == Channel) {
         auto& member_view = container.add<GUI::TableView>();
         member_view.set_column_headers_visible(false);
-        member_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-        member_view.set_preferred_size(100, 0);
+        member_view.set_fixed_width(100);
         member_view.set_alternating_row_colors(false);
         member_view.set_model(channel().member_model());
         member_view.set_activates_on_selection(true);
@@ -189,8 +188,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     }
 
     m_text_box = add<GUI::TextBox>();
-    m_text_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_text_box->set_preferred_size(0, 19);
+    m_text_box->set_fixed_height(19);
     m_text_box->on_return_pressed = [this] {
         if (m_type == Channel)
             m_client->handle_user_input_in_channel(m_name, m_text_box->text());

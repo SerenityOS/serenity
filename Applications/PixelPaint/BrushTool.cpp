@@ -131,18 +131,15 @@ GUI::Widget* BrushTool::get_properties_widget()
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto& size_container = m_properties_widget->add<GUI::Widget>();
-        size_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        size_container.set_preferred_size(0, 20);
+        size_container.set_fixed_height(20);
         size_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& size_label = size_container.add<GUI::Label>("Size:");
         size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        size_label.set_preferred_size(80, 20);
+        size_label.set_fixed_size(80, 20);
 
         auto& size_slider = size_container.add<GUI::HorizontalSlider>();
-        size_slider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        size_slider.set_preferred_size(0, 20);
+        size_slider.set_fixed_height(20);
         size_slider.set_range(1, 100);
         size_slider.set_value(m_size);
         size_slider.on_value_changed = [this](int value) {
@@ -150,18 +147,15 @@ GUI::Widget* BrushTool::get_properties_widget()
         };
 
         auto& hardness_container = m_properties_widget->add<GUI::Widget>();
-        hardness_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        hardness_container.set_preferred_size(0, 20);
+        hardness_container.set_fixed_height(20);
         hardness_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:");
         hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        hardness_label.set_preferred_size(80, 20);
+        hardness_label.set_fixed_size(80, 20);
 
         auto& hardness_slider = hardness_container.add<GUI::HorizontalSlider>();
-        hardness_slider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        hardness_slider.set_preferred_size(0, 20);
+        hardness_slider.set_fixed_height(20);
         hardness_slider.set_range(1, 99);
         hardness_slider.set_value(m_hardness);
         hardness_slider.on_value_changed = [this](int value) {

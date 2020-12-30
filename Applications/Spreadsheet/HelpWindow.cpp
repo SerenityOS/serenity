@@ -93,8 +93,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& left_frame = splitter.add<GUI::Frame>();
     left_frame.set_layout<GUI::VerticalBoxLayout>().set_margins({ 0, 0, 0, 0 });
-    left_frame.set_preferred_size(100, 0);
-    left_frame.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    left_frame.set_fixed_width(100);
     m_listview = left_frame.add<GUI::ListView>();
     m_listview->set_activates_on_selection(true);
     m_listview->set_model(HelpListModel::create());

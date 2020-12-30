@@ -75,7 +75,6 @@ public:
 
         m_root_container = m_slider_window->set_main_widget<GUI::Label>();
         m_root_container->set_fill_with_background_color(true);
-        m_root_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
         m_root_container->layout()->set_margins({ 0, 4, 0, 4 });
         m_root_container->layout()->set_spacing(0);
@@ -84,8 +83,7 @@ public:
         m_root_container->set_frame_shadow(Gfx::FrameShadow::Raised);
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
-        m_percent_box->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_percent_box->set_preferred_size(27, 16);
+        m_percent_box->set_fixed_size(27, 16);
         m_percent_box->set_checked(false);
         m_percent_box->set_tooltip("Show percent");
         m_percent_box->on_checked = [&](bool show_percent) {
@@ -105,7 +103,6 @@ public:
         m_slider->set_max(20);
         m_slider->set_value(0);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
-        m_slider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         m_slider->on_value_changed = [&](int value) {
             int volume = clamp((20 - value) * 5, 0, 100);
             float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
@@ -114,8 +111,7 @@ public:
         };
 
         m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
-        m_mute_box->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_mute_box->set_preferred_size(27, 16);
+        m_mute_box->set_fixed_size(27, 16);
         m_mute_box->set_checked(false);
         m_mute_box->set_tooltip("Mute");
         m_mute_box->on_checked = [&](bool is_muted) {

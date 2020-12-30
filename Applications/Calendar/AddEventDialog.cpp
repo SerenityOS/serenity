@@ -59,55 +59,46 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
 
     auto& top_container = widget.add<GUI::Widget>();
     top_container.set_layout<GUI::VerticalBoxLayout>();
-    top_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    top_container.set_preferred_size(0, 45);
+    top_container.set_fixed_height(45);
     top_container.layout()->set_margins({ 4, 4, 4, 4 });
 
     auto& add_label = top_container.add<GUI::Label>("Add title & date:");
     add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    add_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    add_label.set_preferred_size(0, 14);
+    add_label.set_fixed_height(14);
     add_label.set_font(Gfx::Font::default_bold_font());
 
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
-    event_title_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    event_title_textbox.set_preferred_size(0, 20);
+    event_title_textbox.set_fixed_height(20);
 
     auto& middle_container = widget.add<GUI::Widget>();
     middle_container.set_layout<GUI::HorizontalBoxLayout>();
-    middle_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    middle_container.set_preferred_size(0, 25);
+    middle_container.set_fixed_height(25);
     middle_container.layout()->set_margins({ 4, 4, 4, 4 });
 
     auto& starting_month_combo = middle_container.add<GUI::ComboBox>();
     starting_month_combo.set_only_allow_values_from_model(true);
-    starting_month_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    starting_month_combo.set_preferred_size(50, 20);
+    starting_month_combo.set_fixed_size(50, 20);
     starting_month_combo.set_model(MonthListModel::create());
     starting_month_combo.set_selected_index(m_date_time.month() - 1);
 
     auto& starting_day_combo = middle_container.add<GUI::SpinBox>();
-    starting_day_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    starting_day_combo.set_preferred_size(40, 20);
+    starting_day_combo.set_fixed_size(40, 20);
     starting_day_combo.set_value(m_date_time.day());
     starting_day_combo.set_min(1);
 
     auto& starting_year_combo = middle_container.add<GUI::SpinBox>();
-    starting_year_combo.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    starting_year_combo.set_preferred_size(55, 20);
+    starting_year_combo.set_fixed_size(55, 20);
     starting_year_combo.set_range(0, 9999);
     starting_year_combo.set_value(m_date_time.year());
 
     widget.layout()->add_spacer();
 
     auto& button_container = widget.add<GUI::Widget>();
-    button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 20);
+    button_container.set_fixed_height(20);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
     auto& ok_button = button_container.add<GUI::Button>("OK");
-    ok_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    ok_button.set_preferred_size(80, 20);
+    ok_button.set_fixed_size(80, 20);
     ok_button.on_click = [this](auto) {
         dbgln("TODO: Add event icon on specific tile");
         done(Dialog::ExecOK);

@@ -62,8 +62,7 @@ ConsoleWidget::ConsoleWidget()
 
     auto& bottom_container = add<GUI::Widget>();
     bottom_container.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    bottom_container.set_preferred_size(0, 22);
+    bottom_container.set_fixed_height(22);
 
     m_input = bottom_container.add<GUI::TextBox>();
     m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
@@ -112,8 +111,7 @@ ConsoleWidget::ConsoleWidget()
     set_focus_proxy(m_input);
 
     auto& clear_button = bottom_container.add<GUI::Button>();
-    clear_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    clear_button.set_preferred_size(22, 22);
+    clear_button.set_fixed_size(22, 22);
     clear_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"));
     clear_button.set_tooltip("Clear the console output");
     clear_button.on_click = [this](auto) {

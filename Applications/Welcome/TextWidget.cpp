@@ -136,6 +136,5 @@ void TextWidget::wrap_and_set_height()
 
     m_lines = lines;
 
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, m_lines.size() * m_line_height + frame_thickness() * 2);
+    set_fixed_height(m_lines.size() * m_line_height + frame_thickness() * 2);
 }

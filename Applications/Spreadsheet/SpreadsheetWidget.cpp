@@ -51,15 +51,12 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     auto& top_bar = container.add<GUI::Frame>();
     top_bar.set_layout<GUI::HorizontalBoxLayout>().set_spacing(1);
-    top_bar.set_preferred_size(0, 26);
-    top_bar.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    top_bar.set_fixed_height(26);
     auto& current_cell_label = top_bar.add<GUI::Label>("");
-    current_cell_label.set_preferred_size(50, 0);
-    current_cell_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    current_cell_label.set_fixed_width(50);
 
     auto& help_button = top_bar.add<GUI::Button>("🛈");
-    help_button.set_preferred_size(20, 20);
-    help_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
         auto docs = m_selected_view->sheet().gather_documentation();
         auto help_window = HelpWindow::the();
@@ -89,7 +86,6 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     inline_widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
     inline_widget.set_frame_shape(Gfx::FrameShape::Box);
     m_inline_documentation_label = inline_widget.add<GUI::Label>();
-    m_inline_documentation_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_inline_documentation_label->set_fill_with_background_color(true);
     m_inline_documentation_label->set_autosize(false);
     m_inline_documentation_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
