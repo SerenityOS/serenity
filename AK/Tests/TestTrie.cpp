@@ -87,4 +87,4 @@ TEST_CASE(iterate)
     }
 }
 
-TEST_MAIN(AllOf)
+TEST_MAIN(Trie)
