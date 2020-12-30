@@ -517,6 +517,30 @@ using IsArithmetic = IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPo
 template<typename T>
 using IsFundamental = IntegralConstant<bool, IsArithmetic<T>::value || IsVoid<T>::value || IsNullPointer<T>::value>;
 
+template<typename T, T... Ts>
+struct IntegerSequence {
+    using Type = T;
+    static constexpr unsigned size() noexcept { return sizeof...(Ts); };
+};
+
+template<unsigned... Indices>
+using IndexSequence = IntegerSequence<unsigned, Indices...>;
+
+template<typename T, T N, T... Ts>
+auto make_integer_sequence_impl()
+{
+    if constexpr (N == 0)
+        return IntegerSequence<T, Ts...> {};
+    else
+        return make_integer_sequence_impl<T, N - 1, N - 1, Ts...>();
+}
+
+template<typename T, T N>
+using MakeIntegerSequence = decltype(make_integer_sequence_impl<T, N>());
+
+template<unsigned N>
+using MakeIndexSequence = MakeIntegerSequence<unsigned, N>;
+
 }
 
 using AK::AddConst;
@@ -528,6 +552,8 @@ using AK::declval;
 using AK::DependentFalse;
 using AK::exchange;
 using AK::forward;
+using AK::IndexSequence;
+using AK::IntegerSequence;
 using AK::is_trivial;
 using AK::is_trivially_copyable;
 using AK::IsArithmetic;
@@ -539,6 +565,8 @@ using AK::IsNullPointer;
 using AK::IsSame;
 using AK::IsUnion;
 using AK::IsVoid;
+using AK::MakeIndexSequence;
+using AK::MakeIntegerSequence;
 using AK::MakeSigned;
 using AK::MakeUnsigned;
 using AK::max;
