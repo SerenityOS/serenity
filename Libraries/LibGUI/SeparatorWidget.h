@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,41 +26,21 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
 
-class ToolBar : public Widget {
-    C_OBJECT(ToolBar)
+class SeparatorWidget final : public Widget {
+    C_OBJECT(SeparatorWidget);
+
 public:
-    virtual ~ToolBar() override;
+    virtual ~SeparatorWidget() override;
 
-    void add_action(Action&);
-    void add_separator();
-
-    bool has_frame() const { return m_has_frame; }
-    void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
-
-protected:
-    explicit ToolBar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 16);
+private:
+    explicit SeparatorWidget(Gfx::Orientation);
 
     virtual void paint_event(PaintEvent&) override;
 
-private:
-    struct Item {
-        enum class Type {
-            Invalid,
-            Separator,
-            Action
-        };
-        Type type { Type::Invalid };
-        RefPtr<Action> action;
-    };
-    NonnullOwnPtrVector<Item> m_items;
     const Gfx::Orientation m_orientation;
-    int m_button_size { 16 };
-    bool m_has_frame { true };
 };
-
 }

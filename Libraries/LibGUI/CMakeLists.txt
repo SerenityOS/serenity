@@ -65,6 +65,7 @@ set(SOURCES
     RunningProcessesModel.cpp
     ScrollBar.cpp
     ScrollableWidget.cpp
+    SeparatorWidget.cpp
     ShellSyntaxHighlighter.cpp
     Shortcut.cpp
     Slider.cpp
