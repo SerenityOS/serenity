@@ -26,6 +26,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/JsonObject.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -273,6 +274,23 @@ ByteBuffer CoreDump::create_notes_regions_data() const
     return regions_data;
 }
 
+ByteBuffer CoreDump::create_notes_metadata_data() const
+{
+    ByteBuffer metadata_data;
+
+    ELF::Core::Metadata metadata {};
+    metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
+    metadata_data.append((void*)&metadata, sizeof(metadata));
+
+    JsonObject metadata_obj;
+    for (auto& it : m_process->coredump_metadata())
+        metadata_obj.set(it.key, it.value);
+    auto json_data = metadata_obj.to_string();
+    metadata_data.append(json_data.characters(), json_data.length() + 1);
+
+    return metadata_data;
+}
+
 ByteBuffer CoreDump::create_notes_segment_data() const
 {
     ByteBuffer notes_buffer;
@@ -280,6 +298,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
     notes_buffer += create_notes_process_data();
     notes_buffer += create_notes_threads_data();
     notes_buffer += create_notes_regions_data();
+    notes_buffer += create_notes_metadata_data();
 
     ELF::Core::NotesEntryHeader null_entry {};
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
