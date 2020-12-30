@@ -24,9 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/internals.h>
 #include <unistd.h>
 
@@ -39,6 +41,13 @@ void __assertion_failed(const char* msg)
     dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
     if (__stdio_is_initialized)
         fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
+
+    Syscall::SC_set_coredump_metadata_params params {
+        { "assertion", strlen("assertion") },
+        { msg, strlen(msg) },
+    };
+    syscall(SC_set_coredump_metadata, &params);
+
     abort();
 }
 #endif
