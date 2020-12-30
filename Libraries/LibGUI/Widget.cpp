@@ -41,6 +41,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/LinkLabel.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
@@ -76,6 +77,7 @@ REGISTER_WIDGET(GUI, HorizontalSplitter)
 REGISTER_WIDGET(GUI, ImageWidget)
 REGISTER_WIDGET(GUI, Label)
 REGISTER_WIDGET(GUI, LinkLabel)
+REGISTER_WIDGET(GUI, ListView)
 REGISTER_WIDGET(GUI, ProgressBar)
 REGISTER_WIDGET(GUI, RadioButton)
 REGISTER_WIDGET(GUI, ScrollBar)
