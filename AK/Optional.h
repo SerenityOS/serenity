@@ -155,6 +155,12 @@ public:
         return fallback;
     }
 
+    const T& operator*() const { return value(); }
+    T& operator*() { return value(); }
+
+    const T* operator->() const { return &value(); }
+    T* operator->() { return &value(); }
+
 private:
     // Call when we don't want to alter the consume state
     ALWAYS_INLINE const T& value_without_consume_state() const

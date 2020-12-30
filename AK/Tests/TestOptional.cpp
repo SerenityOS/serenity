@@ -66,4 +66,12 @@ TEST_CASE(optional_leak_1)
     EXPECT_EQ(vec[0].str.value(), "foo");
 }
 
+TEST_CASE(short_notation)
+{
+    Optional<StringView> value = "foo";
+
+    EXPECT_EQ(value->length(), 3u);
+    EXPECT_EQ(*value, "foo");
+}
+
 TEST_MAIN(Optional)
