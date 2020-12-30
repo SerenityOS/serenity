@@ -32,8 +32,7 @@
 
 static String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
-class [[gnu::packed]] DNSRecordWithoutName
-{
+class [[gnu::packed]] DNSRecordWithoutName {
 public:
     DNSRecordWithoutName() { }
 

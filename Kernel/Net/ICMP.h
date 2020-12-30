@@ -36,8 +36,7 @@ struct ICMPType {
     };
 };
 
-class [[gnu::packed]] ICMPHeader
-{
+class [[gnu::packed]] ICMPHeader {
 public:
     ICMPHeader() { }
     ~ICMPHeader() { }
@@ -63,8 +62,7 @@ private:
 
 static_assert(sizeof(ICMPHeader) == 4);
 
-struct [[gnu::packed]] ICMPEchoPacket
-{
+struct [[gnu::packed]] ICMPEchoPacket {
     ICMPHeader header;
     NetworkOrdered<u16> identifier;
     NetworkOrdered<u16> sequence_number;

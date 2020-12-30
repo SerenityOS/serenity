@@ -314,10 +314,12 @@ static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, cons
     bool wrong_cns = !error_cns && (actual_consume != expect_consume);
 
     printf(" %s%s%s(%s%2u%s)",
-        ofby1_hex ? TEXT_OFBY1 : wrong_hex ? TEXT_WRONG : "",
+        ofby1_hex ? TEXT_OFBY1 : wrong_hex ? TEXT_WRONG
+                                           : "",
         actual_hex,
         (ofby1_hex || wrong_hex) ? TEXT_RESET : "",
-        error_cns ? TEXT_ERROR : wrong_cns ? TEXT_WRONG : "",
+        error_cns ? TEXT_ERROR : wrong_cns ? TEXT_WRONG
+                                           : "",
         actual_consume,
         (error_cns || wrong_cns) ? TEXT_RESET : "");
 

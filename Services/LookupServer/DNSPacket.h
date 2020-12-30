@@ -29,8 +29,7 @@
 #include <AK/Endian.h>
 #include <AK/Types.h>
 
-class [[gnu::packed]] DNSPacket
-{
+class [[gnu::packed]] DNSPacket {
 public:
     DNSPacket()
         : m_recursion_desired(false)

@@ -34,8 +34,7 @@
 namespace Kernel {
 namespace MultiProcessor {
 
-struct [[gnu::packed]] FloatingPointer
-{
+struct [[gnu::packed]] FloatingPointer {
     char sig[4];
     u32 physical_address_ptr;
     u8 length;
@@ -44,13 +43,11 @@ struct [[gnu::packed]] FloatingPointer
     u8 feature_info[5];
 };
 
-struct [[gnu::packed]] EntryHeader
-{
+struct [[gnu::packed]] EntryHeader {
     u8 entry_type;
 };
 
-struct [[gnu::packed]] ConfigurationTableHeader
-{
+struct [[gnu::packed]] ConfigurationTableHeader {
     char sig[4];
     u16 length;
     u8 specification_revision;
@@ -78,14 +75,12 @@ enum class ConfigurationTableEntryType {
     CompatibilityBusAddressSpaceModifier = 130
 };
 
-struct [[gnu::packed]] ExtEntryHeader
-{
+struct [[gnu::packed]] ExtEntryHeader {
     u8 entry_type;
     u8 entry_length;
 };
 
-struct [[gnu::packed]] ProcessorEntry
-{
+struct [[gnu::packed]] ProcessorEntry {
     EntryHeader h;
     u8 local_apic_id;
     u8 local_apic_version;
@@ -95,15 +90,13 @@ struct [[gnu::packed]] ProcessorEntry
     u8 reserved[8];
 };
 
-struct [[gnu::packed]] BusEntry
-{
+struct [[gnu::packed]] BusEntry {
     EntryHeader h;
     u8 bus_id;
     char bus_type[6];
 };
 
-struct [[gnu::packed]] IOAPICEntry
-{
+struct [[gnu::packed]] IOAPICEntry {
     EntryHeader h;
     u8 ioapic_id;
     u8 ioapic_version;
@@ -118,8 +111,7 @@ enum class InterruptType {
     ExtINT = 3,
 };
 
-struct [[gnu::packed]] IOInterruptAssignmentEntry
-{
+struct [[gnu::packed]] IOInterruptAssignmentEntry {
     EntryHeader h;
     u8 interrupt_type;
     u8 polarity;
@@ -130,8 +122,7 @@ struct [[gnu::packed]] IOInterruptAssignmentEntry
     u8 destination_ioapic_intin_pin;
 };
 
-struct [[gnu::packed]] LocalInterruptAssignmentEntry
-{
+struct [[gnu::packed]] LocalInterruptAssignmentEntry {
     EntryHeader h;
     u8 interrupt_type;
     u8 polarity;
@@ -148,8 +139,7 @@ enum class SystemAddressType {
     Prefetch = 2,
 };
 
-struct [[gnu::packed]] SystemAddressSpaceMappingEntry
-{
+struct [[gnu::packed]] SystemAddressSpaceMappingEntry {
     ExtEntryHeader h;
     u8 bus_id;
     u8 address_type;
@@ -157,8 +147,7 @@ struct [[gnu::packed]] SystemAddressSpaceMappingEntry
     u64 length;
 };
 
-struct [[gnu::packed]] BusHierarchyDescriptorEntry
-{
+struct [[gnu::packed]] BusHierarchyDescriptorEntry {
     ExtEntryHeader h;
     u8 bus_id;
     u8 bus_info;
@@ -166,8 +155,7 @@ struct [[gnu::packed]] BusHierarchyDescriptorEntry
     u8 reserved[3];
 };
 
-struct [[gnu::packed]] CompatibilityBusAddressSpaceModifierEntry
-{
+struct [[gnu::packed]] CompatibilityBusAddressSpaceModifierEntry {
     ExtEntryHeader h;
     u8 bus_id;
     u8 address_modifier;

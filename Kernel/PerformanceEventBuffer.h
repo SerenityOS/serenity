@@ -31,20 +31,17 @@
 
 namespace Kernel {
 
-struct [[gnu::packed]] MallocPerformanceEvent
-{
+struct [[gnu::packed]] MallocPerformanceEvent {
     size_t size;
     FlatPtr ptr;
 };
 
-struct [[gnu::packed]] FreePerformanceEvent
-{
+struct [[gnu::packed]] FreePerformanceEvent {
     size_t size;
     FlatPtr ptr;
 };
 
-struct [[gnu::packed]] PerformanceEvent
-{
+struct [[gnu::packed]] PerformanceEvent {
     u8 type { 0 };
     u8 stack_size { 0 };
     u64 timestamp;

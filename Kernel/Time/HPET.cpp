@@ -65,14 +65,12 @@ enum class TimerConfiguration : u32 {
 };
 };
 
-struct [[gnu::packed]] HPETRegister
-{
+struct [[gnu::packed]] HPETRegister {
     volatile u32 low;
     volatile u32 high;
 };
 
-struct [[gnu::packed]] TimerStructure
-{
+struct [[gnu::packed]] TimerStructure {
     volatile u32 capabilities;
     volatile u32 interrupt_routing;
     HPETRegister comparator_value;
@@ -80,16 +78,14 @@ struct [[gnu::packed]] TimerStructure
     u64 reserved;
 };
 
-struct [[gnu::packed]] HPETCapabilityRegister
-{
+struct [[gnu::packed]] HPETCapabilityRegister {
     // Note: We must do a 32 bit access to offsets 0x0, or 0x4 only, according to HPET spec.
     volatile u32 attributes;
     volatile u32 main_counter_tick_period;
     u64 reserved;
 };
 
-struct [[gnu::packed]] HPETRegistersBlock
-{
+struct [[gnu::packed]] HPETRegistersBlock {
     HPETCapabilityRegister capabilities;
     HPETRegister configuration;
     u64 reserved1;

@@ -78,8 +78,8 @@ typedef int __s16;
 #            if (2 == 2)
 typedef short __s16;
 #            else
-        ? == error
-        : undefined 16 bit type
+    ? == error
+    : undefined 16 bit type
 #            endif /* SIZEOF_SHORT == 2 */
 #        endif     /* SIZEOF_INT == 2 */
 #    endif         /* __S16_TYPEDEF */
@@ -94,10 +94,10 @@ typedef unsigned int __u32;
 typedef unsigned long __u32;
 #            else
 #                if (2 == 4)
-        typedef unsigned short __u32;
+    typedef unsigned short __u32;
 #                else
-            ? == error
-            : undefined 32 bit type
+        ? == error
+        : undefined 32 bit type
 #                endif /* SIZEOF_SHORT == 4 */
 #            endif     /* SIZEOF_LONG == 4 */
 #        endif         /* SIZEOF_INT == 4 */
@@ -115,8 +115,8 @@ typedef long __s32;
 #                if (2 == 4)
 typedef short __s32;
 #                else
-                ? == error
-                : undefined 32 bit type
+            ? == error
+            : undefined 32 bit type
 #                endif /* SIZEOF_SHORT == 4 */
 #            endif     /* SIZEOF_LONG == 4 */
 #        endif         /* SIZEOF_INT == 4 */

@@ -35,8 +35,7 @@ enum KSuccessTag {
     KSuccess
 };
 
-class [[nodiscard]] KResult
-{
+class [[nodiscard]] KResult {
 public:
     ALWAYS_INLINE explicit KResult(int negative_e)
         : m_error(negative_e)
@@ -62,8 +61,7 @@ private:
 };
 
 template<typename T>
-class alignas(T) [[nodiscard]] KResultOr
-{
+class alignas(T) [[nodiscard]] KResultOr {
 public:
     KResultOr(KResult error)
         : m_error(error)
@@ -71,20 +69,14 @@ public:
     {
     }
 
-    // FIXME: clang-format gets confused about T. Why?
-    // clang-format off
     ALWAYS_INLINE KResultOr(T&& value)
-    // clang-format on
     {
         new (&m_storage) T(move(value));
         m_have_storage = true;
     }
 
     template<typename U>
-    // FIXME: clang-format gets confused about U. Why?
-    // clang-format off
     ALWAYS_INLINE KResultOr(U&& value)
-    // clang-format on
     {
         new (&m_storage) T(move(value));
         m_have_storage = true;

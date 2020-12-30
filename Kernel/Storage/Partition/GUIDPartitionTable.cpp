@@ -37,8 +37,7 @@ namespace Kernel {
 #define GPT_SIGNATURE 0x20494645
 #define BytesPerSector 512
 
-struct [[gnu::packed]] GPTPartitionEntry
-{
+struct [[gnu::packed]] GPTPartitionEntry {
     u8 partition_guid[16];
     u8 unique_guid[16];
 
@@ -49,8 +48,7 @@ struct [[gnu::packed]] GPTPartitionEntry
     char partition_name[72];
 };
 
-struct [[gnu::packed]] GUIDPartitionHeader
-{
+struct [[gnu::packed]] GUIDPartitionHeader {
     u32 sig[2];
     u32 revision;
     u32 header_size;

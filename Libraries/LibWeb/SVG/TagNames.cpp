@@ -32,10 +32,7 @@ namespace Web::SVG::TagNames {
 ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
-    // clang-format off
-// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
-// clang-format on
 {
     static bool s_initialized = false;
     if (s_initialized)

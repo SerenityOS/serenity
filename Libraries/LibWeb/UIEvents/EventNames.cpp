@@ -32,10 +32,7 @@ namespace Web::UIEvents::EventNames {
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
-    // clang-format off
-// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
-// clang-format on
 {
     static bool s_initialized = false;
     if (s_initialized)

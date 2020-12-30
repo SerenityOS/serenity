@@ -60,8 +60,7 @@ struct ICONDIRENTRY {
 };
 static_assert(sizeof(ICONDIRENTRY) == 16);
 
-struct [[gnu::packed]] BMPFILEHEADER
-{
+struct [[gnu::packed]] BMPFILEHEADER {
     u8 signature[2];
     u32 size;
     u16 reserved1;
@@ -85,8 +84,7 @@ struct BITMAPINFOHEADER {
 };
 static_assert(sizeof(BITMAPINFOHEADER) == 40);
 
-struct [[gnu::packed]] BMP_ARGB
-{
+struct [[gnu::packed]] BMP_ARGB {
     u8 b;
     u8 g;
     u8 r;

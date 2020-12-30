@@ -46,8 +46,7 @@ struct ARPHardwareType {
     };
 };
 
-class [[gnu::packed]] ARPPacket
-{
+class [[gnu::packed]] ARPPacket {
 public:
     u16 hardware_type() const { return m_hardware_type; }
     void set_hardware_type(u16 w) { m_hardware_type = w; }

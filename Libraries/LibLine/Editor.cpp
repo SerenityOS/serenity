@@ -856,7 +856,8 @@ void Editor::handle_read_event()
             }
             reverse_tab = false;
 
-            auto completion_mode = m_times_tab_pressed == 1 ? SuggestionManager::CompletePrefix : m_times_tab_pressed == 2 ? SuggestionManager::ShowSuggestions : SuggestionManager::CycleSuggestions;
+            auto completion_mode = m_times_tab_pressed == 1 ? SuggestionManager::CompletePrefix : m_times_tab_pressed == 2 ? SuggestionManager::ShowSuggestions
+                                                                                                                           : SuggestionManager::CycleSuggestions;
 
             auto completion_result = m_suggestion_manager.attempt_completion(completion_mode, token_start);
 
