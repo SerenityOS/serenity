@@ -71,7 +71,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     m_opacity_slider = opacity_container.add<GUI::HorizontalSlider>();
     m_opacity_slider->set_fixed_height(20);
     m_opacity_slider->set_range(0, 100);
-    m_opacity_slider->on_value_changed = [this](int value) {
+    m_opacity_slider->on_change = [this](int value) {
         if (m_layer)
             m_layer->set_opacity_percent(value);
     };

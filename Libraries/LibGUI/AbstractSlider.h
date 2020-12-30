@@ -53,7 +53,7 @@ public:
     void set_step(int step) { m_step = step; }
     void set_page_step(int page_step);
 
-    Function<void(int)> on_value_changed;
+    Function<void(int)> on_change;
 
 protected:
     explicit AbstractSlider(Orientation = Orientation::Vertical);

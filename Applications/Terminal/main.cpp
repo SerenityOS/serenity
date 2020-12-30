@@ -226,7 +226,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     slider_container.set_fixed_height(50);
     auto& slider = slider_container.add<GUI::HorizontalSlider>();
 
-    slider.on_value_changed = [&terminal](int value) {
+    slider.on_change = [&terminal](int value) {
         terminal.set_opacity(value);
     };
 
