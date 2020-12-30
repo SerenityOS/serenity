@@ -33,6 +33,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/FontPicker.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -44,7 +45,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
@@ -430,6 +430,19 @@ int main(int argc, char** argv)
         });
 
     terminal.context_menu().add_separator();
+    auto pick_font_action = GUI::Action::create("Terminal font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
+        [&](auto&) {
+            auto picker = GUI::FontPicker::construct(window, &terminal.font(), true);
+            if (picker->exec() == GUI::Dialog::ExecOK) {
+                terminal.set_font(picker->font());
+                config->write_entry("Text", "Font", picker->font()->qualified_name());
+                config->sync();
+            }
+        });
+
+    terminal.context_menu().add_action(pick_font_action);
+
+    terminal.context_menu().add_separator();
     terminal.context_menu().add_action(open_settings_action);
 
     auto menubar = GUI::MenuBar::construct();
@@ -472,22 +485,8 @@ int main(int argc, char** argv)
 
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(terminal.clear_including_history_action());
-
-    GUI::ActionGroup font_action_group;
-    font_action_group.set_exclusive(true);
-    auto& font_menu = menubar->add_menu("Font");
-    Gfx::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
-        auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
-            terminal.set_font(font);
-            config->write_entry("Text", "Font", font.qualified_name());
-            config->sync();
-            terminal.force_repaint();
-        });
-        font_action_group.add_action(*action);
-        if (terminal.font().qualified_name() == font.qualified_name())
-            action->set_checked(true);
-        font_menu.add_action(*action);
-    });
+    view_menu.add_separator();
+    view_menu.add_action(pick_font_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
