@@ -126,18 +126,15 @@ int main(int argc, char** argv)
 
     auto& character_map_file_selection_container = root_widget.add<GUI::Widget>();
     character_map_file_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-    character_map_file_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    character_map_file_selection_container.set_preferred_size(0, 22);
+    character_map_file_selection_container.set_fixed_height(22);
 
     auto& character_map_file_label = character_map_file_selection_container.add<GUI::Label>();
     character_map_file_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    character_map_file_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    character_map_file_label.set_preferred_size({ 130, 0 });
+    character_map_file_label.set_fixed_width(130);
     character_map_file_label.set_text("Character Mapping File:");
 
     auto& character_map_file_combo = character_map_file_selection_container.add<GUI::ComboBox>();
-    character_map_file_combo.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    character_map_file_combo.set_preferred_size(0, 22);
+    character_map_file_combo.set_fixed_height(22);
     character_map_file_combo.set_only_allow_values_from_model(true);
     character_map_file_combo.set_model(*CharacterMapFileListModel::create(character_map_files));
     character_map_file_combo.set_selected_index(initial_keymap_index);
@@ -163,29 +160,25 @@ int main(int argc, char** argv)
     auto& bottom_widget = root_widget.add<GUI::Widget>();
     bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
     bottom_widget.layout()->add_spacer();
-    bottom_widget.set_size_policy(Orientation::Vertical, GUI::SizePolicy::Fixed);
-    bottom_widget.set_preferred_size(1, 22);
+    bottom_widget.set_fixed_height(22);
 
     auto& apply_button = bottom_widget.add<GUI::Button>();
     apply_button.set_text("Apply");
-    apply_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    apply_button.set_preferred_size(60, 22);
+    apply_button.set_fixed_width(60);
     apply_button.on_click = [&](auto) {
         apply_settings(false);
     };
 
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");
-    ok_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    ok_button.set_preferred_size(60, 22);
+    ok_button.set_fixed_width(60);
     ok_button.on_click = [&](auto) {
         apply_settings(true);
     };
 
     auto& cancel_button = bottom_widget.add<GUI::Button>();
     cancel_button.set_text("Cancel");
-    cancel_button.set_size_policy(Orientation::Horizontal, GUI::SizePolicy::Fixed);
-    cancel_button.set_preferred_size(60, 22);
+    cancel_button.set_fixed_width(60);
     cancel_button.on_click = [&](auto) {
         app->quit();
     };

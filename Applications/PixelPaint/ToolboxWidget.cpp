@@ -96,8 +96,7 @@ ToolboxWidget::ToolboxWidget()
     set_frame_shape(Gfx::FrameShape::Panel);
     set_frame_shadow(Gfx::FrameShadow::Raised);
 
-    set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    set_preferred_size(48, 0);
+    set_fixed_width(48);
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 4, 4, 4, 4 });
@@ -119,8 +118,7 @@ void ToolboxWidget::setup_tools()
     auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) -> ToolButton& {
         m_tools.append(tool.ptr());
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
-        button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        button.set_preferred_size(0, 32);
+        button.set_fixed_height(32);
         button.set_checkable(true);
         button.set_icon(Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)));
         return button;

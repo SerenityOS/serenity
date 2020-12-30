@@ -96,7 +96,6 @@ TaskbarWindow::~TaskbarWindow()
 void TaskbarWindow::create_quick_launch_bar()
 {
     auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
-    quick_launch_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
     quick_launch_bar.layout()->set_spacing(0);
     quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
@@ -116,9 +115,9 @@ void TaskbarWindow::create_quick_launch_bar()
         if (!af->is_valid())
             continue;
         auto app_executable = af->executable();
+        const int button_size = 24;
         auto& button = quick_launch_bar.add<GUI::Button>();
-        button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        button.set_preferred_size(24, 24);
+        button.set_fixed_size(button_size, button_size);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
         button.set_icon(af->icon().bitmap_for_size(16));
         button.set_tooltip(af->name());
@@ -143,10 +142,10 @@ void TaskbarWindow::create_quick_launch_bar()
         if (!first)
             total_width += quick_launch_bar.layout()->spacing();
         first = false;
-        total_width += button.preferred_width();
+        total_width += button_size;
     }
 
-    quick_launch_bar.set_preferred_size(total_width, 24);
+    quick_launch_bar.set_fixed_size(total_width, 24);
 }
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
@@ -158,9 +157,8 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = main_widget()->add<TaskbarButton>(identifier);
-    button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-    button.set_min_size({ 20, 22 });
-    button.set_max_size({ 140, 22 });
+    button.set_min_size(20, 23);
+    button.set_max_size(140, 23);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;

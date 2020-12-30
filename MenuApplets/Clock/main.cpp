@@ -69,7 +69,6 @@ public:
 
         auto& root_container = m_calendar_window->set_main_widget<GUI::Label>();
         root_container.set_fill_with_background_color(true);
-        root_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         root_container.set_layout<GUI::VerticalBoxLayout>();
         root_container.layout()->set_margins({ 0, 2, 0, 2 });
         root_container.layout()->set_spacing(0);
@@ -78,15 +77,13 @@ public:
         root_container.set_frame_shadow(Gfx::FrameShadow::Raised);
 
         auto& navigation_container = root_container.add<GUI::Widget>();
-        navigation_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        navigation_container.set_preferred_size(0, 24);
+        navigation_container.set_fixed_height(24);
         navigation_container.set_layout<GUI::HorizontalBoxLayout>();
         navigation_container.layout()->set_margins({ 2, 2, 3, 2 });
 
         m_prev_date = navigation_container.add<GUI::Button>();
         m_prev_date->set_button_style(Gfx::ButtonStyle::CoolBar);
-        m_prev_date->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_prev_date->set_preferred_size(24, 24);
+        m_prev_date->set_fixed_size(24, 24);
         m_prev_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"));
         m_prev_date->on_click = [&](auto) {
             unsigned int target_month = m_calendar->selected_month();
@@ -108,8 +105,7 @@ public:
 
         m_selected_calendar_button = navigation_container.add<GUI::Button>();
         m_selected_calendar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-        m_selected_calendar_button->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        m_selected_calendar_button->set_preferred_size(0, 24);
+        m_selected_calendar_button->set_fixed_height(24);
         m_selected_calendar_button->on_click = [&](auto) {
             m_calendar->toggle_mode();
             m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
@@ -117,8 +113,7 @@ public:
 
         m_next_date = navigation_container.add<GUI::Button>();
         m_next_date->set_button_style(Gfx::ButtonStyle::CoolBar);
-        m_next_date->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_next_date->set_preferred_size(24, 24);
+        m_next_date->set_fixed_size(24, 24);
         m_next_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"));
         m_next_date->on_click = [&](auto) {
             unsigned int target_month = m_calendar->selected_month();
@@ -139,19 +134,16 @@ public:
         };
 
         auto& divider1_container = root_container.add<GUI::Widget>();
-        divider1_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        divider1_container.set_preferred_size(0, 2);
+        divider1_container.set_fixed_height(2);
         divider1_container.set_layout<GUI::HorizontalBoxLayout>();
         divider1_container.layout()->set_margins({ 2, 0, 3, 0 });
 
         auto& divider1 = divider1_container.add<GUI::Frame>();
-        divider1.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        divider1.set_preferred_size(0, 2);
+        divider1.set_fixed_height(2);
         divider1.set_frame_shape(Gfx::FrameShape::Panel);
 
         auto& calendar_frame_container = root_container.add<GUI::Widget>();
         calendar_frame_container.set_layout<GUI::HorizontalBoxLayout>();
-        calendar_frame_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         calendar_frame_container.layout()->set_margins({ 4, 4, 5, 4 });
 
         auto& calendar_frame = calendar_frame_container.add<GUI::Frame>();
@@ -170,27 +162,23 @@ public:
         };
 
         auto& divider2_container = root_container.add<GUI::Widget>();
-        divider2_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        divider2_container.set_preferred_size(0, 2);
+        divider2_container.set_fixed_height(2);
         divider2_container.set_layout<GUI::HorizontalBoxLayout>();
         divider2_container.layout()->set_margins({ 2, 0, 3, 0 });
 
         auto& divider2 = divider2_container.add<GUI::Frame>();
-        divider2.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        divider2.set_preferred_size(0, 2);
+        divider2.set_fixed_height(2);
         divider2.set_frame_shape(Gfx::FrameShape::Panel);
 
         auto& settings_container = root_container.add<GUI::Widget>();
-        settings_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        settings_container.set_preferred_size(0, 24);
+        settings_container.set_fixed_height(24);
         settings_container.set_layout<GUI::HorizontalBoxLayout>();
         settings_container.layout()->set_margins({ 2, 2, 3, 2 });
         settings_container.layout()->add_spacer();
 
         m_jump_to_button = settings_container.add<GUI::Button>();
         m_jump_to_button->set_button_style(Gfx::ButtonStyle::CoolBar);
-        m_jump_to_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_jump_to_button->set_preferred_size(24, 24);
+        m_jump_to_button->set_fixed_size(24, 24);
         m_jump_to_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"));
         m_jump_to_button->set_tooltip("Jump to today");
         m_jump_to_button->on_click = [this](auto) {
@@ -199,11 +187,10 @@ public:
 
         m_calendar_launcher = settings_container.add<GUI::Button>();
         m_calendar_launcher->set_button_style(Gfx::ButtonStyle::CoolBar);
-        m_calendar_launcher->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        m_calendar_launcher->set_preferred_size(24, 24);
+        m_calendar_launcher->set_fixed_size(24, 24);
         m_calendar_launcher->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
         m_calendar_launcher->set_tooltip("Calendar");
-        m_calendar_launcher->on_click = [this](auto) {
+        m_calendar_launcher->on_click = [](auto) {
             pid_t pid;
             const char* argv[] = { "Calendar", nullptr };
             if ((errno = posix_spawn(&pid, "/bin/Calendar", nullptr, nullptr, const_cast<char**>(argv), environ))) {

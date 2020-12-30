@@ -6,8 +6,7 @@
     }
 
     @GUI::Widget {
-        vertical_size_policy: "Fixed"
-        preferred_height: 44
+        fixed_height: 44
 
         layout: @GUI::HorizontalBoxLayout {
             spacing: 10
@@ -24,8 +23,7 @@
     }
 
     @GUI::Widget {
-        vertical_size_policy: "Fixed"
-        preferred_height: 18
+        fixed_height: 18
 
         layout: @GUI::HorizontalBoxLayout {
         }
@@ -33,8 +31,7 @@
         @GUI::Label {
             text: "Executable path:"
             text_alignment: "CenterLeft"
-            horizontal_size_policy: "Fixed"
-            preferred_width: 90
+            fixed_width: 90
         }
 
         @GUI::LinkLabel {
@@ -44,8 +41,7 @@
     }
 
     @GUI::Widget {
-        vertical_size_policy: "Fixed"
-        preferred_height: 18
+        fixed_height: 18
 
         layout: @GUI::HorizontalBoxLayout {
         }
@@ -53,8 +49,7 @@
         @GUI::Label {
             text: "Coredump path:"
             text_alignment: "CenterLeft"
-            horizontal_size_policy: "Fixed"
-            preferred_width: 90
+            fixed_width: 90
         }
 
         @GUI::LinkLabel {
@@ -64,8 +59,7 @@
     }
 
     @GUI::Widget {
-        vertical_size_policy: "Fixed"
-        preferred_height: 18
+        fixed_height: 18
 
         layout: @GUI::HorizontalBoxLayout {
         }
@@ -82,27 +76,20 @@
     }
 
     @GUI::Widget {
-        vertical_size_policy: "Fixed"
-        preferred_height: 32
+        fixed_height: 32
 
         layout: @GUI::HorizontalBoxLayout {
         }
 
         // HACK: We need something like Layout::add_spacer() in GML! :^)
         @GUI::Widget {
-            horizontal_size_policy: "Fixed"
-            vertical_size_policy: "Fill"
-            preferred_width: 377
-            preferred_height: 0
         }
 
         @GUI::Button {
             name: "close_button"
             text: "Close"
-            horizontal_size_policy: "Fixed"
-            vertical_size_policy: "Fixed"
-            preferred_width: 70
-            preferred_height: 22
+            fixed_width: 70
+            fixed_height: 22
         }
     }
 }

@@ -48,11 +48,9 @@ DisassemblyWidget::DisassemblyWidget()
 
     m_top_container = add<GUI::Widget>();
     m_top_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_top_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_top_container->set_preferred_size(0, 20);
+    m_top_container->set_fixed_height(20);
 
     m_function_name_label = m_top_container->add<GUI::Label>("");
-    m_function_name_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     m_disassembly_view = add<GUI::TableView>();
 

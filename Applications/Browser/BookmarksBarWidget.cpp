@@ -51,8 +51,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     set_layout<GUI::HorizontalBoxLayout>();
     layout()->set_spacing(0);
 
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 20);
+    set_fixed_height(20);
 
     if (!enabled)
         set_visible(false);
@@ -60,8 +59,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_additional = GUI::Button::construct();
     m_additional->set_button_style(Gfx::ButtonStyle::CoolBar);
     m_additional->set_text(">");
-    m_additional->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_additional->set_preferred_size(14, 20);
+    m_additional->set_fixed_size(14, 20);
     m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_additional->on_click = [this](auto) {
         if (m_additional_menu) {
@@ -134,9 +132,8 @@ void BookmarksBarWidget::model_did_update(unsigned)
 
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
         button.set_text(title);
-        button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
-        button.set_preferred_size(font().width(title) + 32, 20);
+        button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
         button.set_tooltip(url);

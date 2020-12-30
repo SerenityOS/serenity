@@ -138,15 +138,12 @@ FindInFilesWidget::FindInFilesWidget()
 
     auto& top_container = add<Widget>();
     top_container.set_layout<GUI::HorizontalBoxLayout>();
-    top_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    top_container.set_preferred_size(0, 20);
+    top_container.set_fixed_height(20);
 
     m_textbox = top_container.add<GUI::TextBox>();
-    m_textbox->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
 
     m_button = top_container.add<GUI::Button>("Find in files");
-    m_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_button->set_preferred_size(100, 0);
+    m_button->set_fixed_width(100);
 
     m_result_view = add<GUI::TableView>();
 

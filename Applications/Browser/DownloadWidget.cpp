@@ -70,8 +70,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     layout.set_margins({ 4, 4, 4, 4 });
 
     auto& animation_container = add<GUI::Widget>();
-    animation_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    animation_container.set_preferred_size(0, 32);
+    animation_container.set_fixed_height(32);
     auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& browser_image = animation_container.add<GUI::ImageWidget>();
@@ -80,29 +79,24 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     auto& source_label = add<GUI::Label>(String::formatted("From: {}", url));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    source_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    source_label.set_preferred_size(0, 16);
+    source_label.set_fixed_height(16);
 
     m_progress_bar = add<GUI::ProgressBar>();
-    m_progress_bar->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_progress_bar->set_preferred_size(0, 20);
+    m_progress_bar->set_fixed_height(20);
 
     m_progress_label = add<GUI::Label>();
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_progress_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_progress_label->set_preferred_size(0, 16);
+    m_progress_label->set_fixed_height(16);
 
     auto& destination_label = add<GUI::Label>(String::formatted("To: {}", m_destination_path));
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    destination_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    destination_label.set_preferred_size(0, 16);
+    destination_label.set_fixed_height(16);
 
     auto& button_container = add<GUI::Widget>();
     auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container_layout.add_spacer();
     m_cancel_button = button_container.add<GUI::Button>("Cancel");
-    m_cancel_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_cancel_button->set_preferred_size(100, 22);
+    m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
         ASSERT(success);
@@ -111,8 +105,7 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     m_close_button = button_container.add<GUI::Button>("OK");
     m_close_button->set_enabled(false);
-    m_close_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    m_close_button->set_preferred_size(100, 22);
+    m_close_button->set_fixed_size(100, 22);
     m_close_button->on_click = [this](auto) {
         window()->close();
     };

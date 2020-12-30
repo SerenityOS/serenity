@@ -79,8 +79,7 @@ PaletteWidget::PaletteWidget(ImageEditor& editor)
     set_frame_thickness(0);
     set_fill_with_background_color(true);
 
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 34);
+    set_fixed_height(34);
 
     m_secondary_color_widget = add<GUI::Frame>();
     m_secondary_color_widget->set_relative_rect({ 2, 2, 60, 31 });

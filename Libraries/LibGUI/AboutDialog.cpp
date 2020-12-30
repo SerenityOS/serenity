@@ -57,19 +57,16 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     banner_image.load_from_file("/res/graphics/brand-banner.png");
 
     auto& content_container = widget.add<Widget>();
-    content_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     content_container.set_layout<HorizontalBoxLayout>();
 
     auto& left_container = content_container.add<Widget>();
-    left_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    left_container.set_preferred_size(60, 0);
+    left_container.set_fixed_width(60);
     left_container.set_layout<VerticalBoxLayout>();
     left_container.layout()->set_margins({ 0, 12, 0, 0 });
 
     if (icon) {
         auto& icon_wrapper = left_container.add<Widget>();
-        icon_wrapper.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_wrapper.set_preferred_size(32, 48);
+        icon_wrapper.set_fixed_size(32, 48);
         icon_wrapper.set_layout<VerticalBoxLayout>();
 
         auto& icon_image = icon_wrapper.add<ImageWidget>();
@@ -83,8 +80,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     auto make_label = [&](const StringView& text, bool bold = false) {
         auto& label = right_container.add<Label>(text);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        label.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        label.set_preferred_size(0, 14);
+        label.set_fixed_height(14);
         if (bold)
             label.set_font(Gfx::Font::default_bold_font());
     };
@@ -98,13 +94,11 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     right_container.layout()->add_spacer();
 
     auto& button_container = right_container.add<Widget>();
-    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 23);
+    button_container.set_fixed_height(23);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
     auto& ok_button = button_container.add<Button>("OK");
-    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    ok_button.set_preferred_size(80, 23);
+    ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {
         done(Dialog::ExecOK);
     };

@@ -128,8 +128,7 @@ int main(int argc, char** argv)
     auto& tree_view = splitter.add<GUI::TreeView>();
     tree_view.set_model(remote_process.object_graph_model());
     tree_view.set_activates_on_selection(true);
-    tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    tree_view.set_preferred_size(286, 0);
+    tree_view.set_fixed_width(286);
 
     auto& properties_tree_view = splitter.add<GUI::TreeView>();
     properties_tree_view.set_editable(true);

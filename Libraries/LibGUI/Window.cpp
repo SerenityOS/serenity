@@ -542,10 +542,10 @@ void Window::set_main_widget(Widget* widget)
     if (m_main_widget) {
         add_child(*widget);
         auto new_window_rect = rect();
-        if (m_main_widget->horizontal_size_policy() == SizePolicy::Fixed)
-            new_window_rect.set_width(m_main_widget->preferred_size().width());
-        if (m_main_widget->vertical_size_policy() == SizePolicy::Fixed)
-            new_window_rect.set_height(m_main_widget->preferred_size().height());
+        if (m_main_widget->min_width() >= 0)
+            new_window_rect.set_width(max(new_window_rect.width(), m_main_widget->min_width()));
+        if (m_main_widget->min_height() >= 0)
+            new_window_rect.set_height(max(new_window_rect.height(), m_main_widget->min_height()));
         set_rect(new_window_rect);
         m_main_widget->set_relative_rect({ {}, new_window_rect.size() });
         m_main_widget->set_window(this);

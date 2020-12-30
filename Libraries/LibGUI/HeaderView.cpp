@@ -45,11 +45,9 @@ HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientati
     set_font(Gfx::Font::default_bold_font());
 
     if (m_orientation == Gfx::Orientation::Horizontal) {
-        set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        set_preferred_size(0, 16);
+        set_fixed_height(16);
     } else {
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        set_preferred_size(40, 0);
+        set_fixed_width(40);
     }
 }
 

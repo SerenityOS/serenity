@@ -66,8 +66,7 @@ Calendar::Calendar(Core::DateTime date_time)
 
     m_day_name_container = add<GUI::Widget>();
     m_day_name_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_day_name_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_day_name_container->set_preferred_size(0, 16);
+    m_day_name_container->set_fixed_height(16);
     m_day_name_container->layout()->set_spacing(0);
     m_day_name_container->set_fill_with_background_color(true);
     m_day_name_container->set_background_role(Gfx::ColorRole::HoverHighlight);

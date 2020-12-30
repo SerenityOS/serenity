@@ -138,18 +138,15 @@ GUI::Widget* SprayTool::get_properties_widget()
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto& thickness_container = m_properties_widget->add<GUI::Widget>();
-        thickness_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        thickness_container.set_preferred_size(0, 20);
+        thickness_container.set_fixed_height(20);
         thickness_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
         thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        thickness_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        thickness_label.set_preferred_size(80, 20);
+        thickness_label.set_fixed_size(80, 20);
 
         auto& thickness_slider = thickness_container.add<GUI::HorizontalSlider>();
-        thickness_slider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        thickness_slider.set_preferred_size(0, 20);
+        thickness_slider.set_fixed_height(20);
         thickness_slider.set_range(1, 20);
         thickness_slider.set_value(m_thickness);
         thickness_slider.on_value_changed = [this](int value) {
@@ -157,18 +154,15 @@ GUI::Widget* SprayTool::get_properties_widget()
         };
 
         auto& density_container = m_properties_widget->add<GUI::Widget>();
-        density_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        density_container.set_preferred_size(0, 20);
+        density_container.set_fixed_height(20);
         density_container.set_layout<GUI::HorizontalBoxLayout>();
 
         auto& density_label = density_container.add<GUI::Label>("Density:");
         density_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        density_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        density_label.set_preferred_size(80, 20);
+        density_label.set_fixed_size(80, 20);
 
         auto& density_slider = density_container.add<GUI::HorizontalSlider>();
-        density_slider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        density_slider.set_preferred_size(0, 30);
+        density_slider.set_fixed_height(30);
         density_slider.set_range(1, 100);
         density_slider.set_value(m_density);
         density_slider.on_value_changed = [this](int value) {

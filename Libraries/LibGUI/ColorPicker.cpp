@@ -180,7 +180,6 @@ void ColorPicker::build_ui()
     auto& tab_widget = root_container.add<GUI::TabWidget>();
 
     auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
-    tab_palette.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     tab_palette.set_layout<VerticalBoxLayout>();
     tab_palette.layout()->set_margins({ 4, 4, 4, 4 });
     tab_palette.layout()->set_spacing(4);
@@ -188,7 +187,6 @@ void ColorPicker::build_ui()
     build_ui_palette(tab_palette);
 
     auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
-    tab_custom_color.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     tab_custom_color.set_layout<VerticalBoxLayout>();
     tab_custom_color.layout()->set_margins({ 4, 4, 4, 4 });
     tab_custom_color.layout()->set_spacing(4);
@@ -196,23 +194,20 @@ void ColorPicker::build_ui()
     build_ui_custom(tab_custom_color);
 
     auto& button_container = root_container.add<Widget>();
-    button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 22);
+    button_container.set_fixed_height(22);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
 
     auto& ok_button = button_container.add<Button>();
-    ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    ok_button.set_preferred_size(80, 0);
+    ok_button.set_fixed_width(80);
     ok_button.set_text("OK");
     ok_button.on_click = [this](auto) {
         done(ExecOK);
     };
 
     auto& cancel_button = button_container.add<Button>();
-    cancel_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    cancel_button.set_preferred_size(80, 0);
+    cancel_button.set_fixed_width(80);
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
@@ -231,7 +226,6 @@ void ColorPicker::build_ui_palette(Widget& root_container)
     for (int r = 0; r < 4; r++) {
         auto& colors_row = root_container.add<Widget>();
         colors_row.set_layout<HorizontalBoxLayout>();
-        colors_row.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
         for (int i = 0; i < 8; i++) {
             create_color_button(colors_row, colors[r][i]);
@@ -254,8 +248,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
     // Left Side
     m_custom_color = horizontal_container.add<CustomColorWidget>(m_color);
-    m_custom_color->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    m_custom_color->set_preferred_size(299, 260);
+    m_custom_color->set_fixed_size(299, 260);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
             return;
@@ -266,17 +259,15 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
     // Right Side
     auto& vertical_container = horizontal_container.add<Widget>();
-    vertical_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     vertical_container.set_layout<VerticalBoxLayout>();
     vertical_container.layout()->set_margins({ 8, 0, 0, 0 });
-    vertical_container.set_preferred_size(128, 0);
+    vertical_container.set_fixed_width(128);
 
     auto& preview_container = vertical_container.add<Frame>();
-    preview_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     preview_container.set_layout<VerticalBoxLayout>();
     preview_container.layout()->set_margins({ 2, 2, 2, 2 });
     preview_container.layout()->set_spacing(0);
-    preview_container.set_preferred_size(0, 128);
+    preview_container.set_fixed_height(128);
 
     // Current color
     preview_container.add<ColorPreview>(m_color);
@@ -289,17 +280,14 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // HTML
     auto& html_container = vertical_container.add<GUI::Widget>();
     html_container.set_layout<GUI::HorizontalBoxLayout>();
-    html_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    html_container.set_preferred_size(0, 22);
+    html_container.set_fixed_height(22);
 
     auto& html_label = html_container.add<GUI::Label>();
     html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    html_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    html_label.set_preferred_size({ 48, 0 });
+    html_label.set_fixed_width(48);
     html_label.set_text("HTML:");
 
     m_html_text = html_container.add<GUI::TextBox>();
-    m_html_text->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_string() : m_color.to_string_without_alpha());
     m_html_text->on_change = [this]() {
         auto color_name = m_html_text->text();
@@ -321,17 +309,14 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
         auto& rgb_container = vertical_container.add<GUI::Widget>();
         rgb_container.set_layout<GUI::HorizontalBoxLayout>();
-        rgb_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        rgb_container.set_preferred_size(0, 22);
+        rgb_container.set_fixed_height(22);
 
         auto& rgb_label = rgb_container.add<GUI::Label>();
         rgb_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        rgb_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-        rgb_label.set_preferred_size({ 48, 0 });
+        rgb_label.set_fixed_width(48);
 
         auto& spinbox = rgb_container.add<SpinBox>();
-        spinbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        spinbox.set_preferred_size(0, 20);
+        spinbox.set_fixed_height(20);
         spinbox.set_min(0);
         spinbox.set_max(255);
         spinbox.set_value(initial_value);
@@ -395,7 +380,6 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
     Color color = Color::from_rgb(rgb);
 
     auto& widget = container.add<ColorButton>(*this, color);
-    widget.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     widget.on_click = [this](Color color) {
         for (auto& value : m_color_widgets) {
             value->set_selected(false);
@@ -465,18 +449,16 @@ CustomColorWidget::CustomColorWidget(Color color)
     set_layout<HorizontalBoxLayout>();
 
     m_color_field = add<ColorField>(color);
-    m_color_field->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     auto size = 256 + (m_color_field->frame_thickness() * 2);
-    m_color_field->set_preferred_size(size, size);
+    m_color_field->set_fixed_size(size, size);
     m_color_field->on_pick = [this](Color color) {
         if (on_pick)
             on_pick(color);
     };
 
     m_color_slider = add<ColorSlider>(color.to_hsv().hue);
-    m_color_slider->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     auto slider_width = 24 + (m_color_slider->frame_thickness() * 2);
-    m_color_slider->set_preferred_size(slider_width, size);
+    m_color_slider->set_fixed_size(slider_width, size);
     m_color_slider->on_pick = [this](double value) {
         m_color_field->set_hue_from_pick(value);
     };

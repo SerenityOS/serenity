@@ -192,8 +192,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& radio_container = settings.add<GUI::GroupBox>("Bell Mode");
     radio_container.set_layout<GUI::VerticalBoxLayout>();
     radio_container.layout()->set_margins({ 6, 16, 6, 6 });
-    radio_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    radio_container.set_preferred_size(100, 80);
+    radio_container.set_fixed_height(80);
 
     auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (Audible) System Bell");
     auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (Visual) Terminal Bell");
@@ -224,8 +223,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& slider_container = settings.add<GUI::GroupBox>("Background Opacity");
     slider_container.set_layout<GUI::VerticalBoxLayout>();
     slider_container.layout()->set_margins({ 6, 16, 6, 6 });
-    slider_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    slider_container.set_preferred_size(100, 50);
+    slider_container.set_fixed_height(50);
     auto& slider = slider_container.add<GUI::HorizontalSlider>();
 
     slider.on_value_changed = [&terminal](int value) {
@@ -238,8 +236,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& spinbox_container = settings.add<GUI::GroupBox>("Scroll Length");
     spinbox_container.set_layout<GUI::VerticalBoxLayout>();
     spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
-    spinbox_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    spinbox_container.set_preferred_size(100, 46);
+    spinbox_container.set_fixed_height(46);
 
     auto& spinbox = spinbox_container.add<GUI::SpinBox>();
     spinbox.set_min(1);
@@ -251,8 +248,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& history_size_spinbox_container = settings.add<GUI::GroupBox>("Maximum scrollback history lines");
     history_size_spinbox_container.set_layout<GUI::VerticalBoxLayout>();
     history_size_spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
-    history_size_spinbox_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    history_size_spinbox_container.set_preferred_size(100, 46);
+    history_size_spinbox_container.set_fixed_height(46);
 
     auto& history_size_spinbox = history_size_spinbox_container.add<GUI::SpinBox>();
     history_size_spinbox.set_range(0, 40960);
@@ -281,12 +277,10 @@ static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
     auto& find = search.add<GUI::Widget>();
     find.set_layout<GUI::HorizontalBoxLayout>();
     find.layout()->set_margins({ 4, 4, 4, 4 });
-    find.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    find.set_preferred_height(30);
+    find.set_fixed_height(30);
 
     auto& find_textbox = find.add<GUI::TextBox>();
-    find_textbox.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
-    find_textbox.set_preferred_width(230);
+    find_textbox.set_fixed_width(230);
     find_textbox.set_focus(true);
     if (terminal.has_selection()) {
         String selected_text = terminal.selected_text();
@@ -294,12 +288,10 @@ static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
         find_textbox.set_text(selected_text);
     }
     auto& find_backwards = find.add<GUI::Button>();
-    find_backwards.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
-    find_backwards.set_preferred_width(25);
+    find_backwards.set_fixed_width(25);
     find_backwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"));
     auto& find_forwards = find.add<GUI::Button>();
-    find_forwards.set_horizontal_size_policy(GUI::SizePolicy::Fixed);
-    find_forwards.set_preferred_width(25);
+    find_forwards.set_fixed_width(25);
     find_forwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"));
 
     find_textbox.on_return_pressed = [&]() {
@@ -307,11 +299,9 @@ static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
     };
 
     auto& match_case = search.add<GUI::CheckBox>("Case sensitive");
-    match_case.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    match_case.set_preferred_size(0, 22);
+    match_case.set_fixed_height(22);
     auto& wrap_around = search.add<GUI::CheckBox>("Wrap around");
-    wrap_around.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    wrap_around.set_preferred_size(0, 22);
+    wrap_around.set_fixed_height(22);
 
     find_backwards.on_click = [&](auto) {
         auto needle = find_textbox.text();

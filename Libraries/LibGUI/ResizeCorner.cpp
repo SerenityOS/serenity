@@ -79,8 +79,7 @@ ResizeCorner::ResizeCorner()
 {
     set_override_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
     set_background_role(ColorRole::Button);
-    set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size(16, 18);
+    set_fixed_size(16, 18);
 }
 
 ResizeCorner::~ResizeCorner()

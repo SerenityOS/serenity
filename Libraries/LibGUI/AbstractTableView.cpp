@@ -350,7 +350,7 @@ void AbstractTableView::layout_headers()
         int y = frame_thickness();
         int width = AK::max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
 
-        column_header().set_relative_rect(x, y, width, column_header().preferred_size().height());
+        column_header().set_relative_rect(x, y, width, column_header().min_size().height());
     }
 
     if (row_header().is_visible()) {
@@ -361,7 +361,7 @@ void AbstractTableView::layout_headers()
         int y = frame_thickness() + column_header_height - vertical_scrollbar().value();
         int height = AK::max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
 
-        row_header().set_relative_rect(x, y, row_header().preferred_size().width(), height);
+        row_header().set_relative_rect(x, y, row_header().min_size().width(), height);
     }
 
     if (row_header().is_visible() && column_header().is_visible()) {
