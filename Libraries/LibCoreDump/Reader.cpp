@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <string.h>
@@ -69,6 +71,7 @@ ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
     ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
+        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Metadata
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Null);
     return m_current->header.type;
 }
@@ -95,6 +98,11 @@ void Reader::NotesEntryIterator::next()
     case ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
+        break;
+    }
+    case ELF::Core::NotesEntryHeader::Type::Metadata: {
+        const auto* current = reinterpret_cast<const ELF::Core::Metadata*>(m_current);
+        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
     default:
@@ -141,9 +149,32 @@ const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) co
     return ret;
 }
 
-Backtrace Reader::backtrace() const
+const Backtrace Reader::backtrace() const
 {
     return Backtrace(*this);
+}
+
+const HashMap<String, String> Reader::metadata() const
+{
+    const ELF::Core::Metadata* metadata_notes_entry = nullptr;
+    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+        if (it.type() != ELF::Core::NotesEntryHeader::Type::Metadata)
+            continue;
+        metadata_notes_entry = reinterpret_cast<const ELF::Core::Metadata*>(it.current());
+        break;
+    }
+    if (!metadata_notes_entry)
+        return {};
+    auto metadata_json_value = JsonValue::from_string(metadata_notes_entry->json_data);
+    if (!metadata_json_value.has_value())
+        return {};
+    if (!metadata_json_value.value().is_object())
+        return {};
+    HashMap<String, String> metadata;
+    metadata_json_value.value().as_object().for_each_member([&](auto& key, auto& value) {
+        metadata.set(key, value.as_string_or({}));
+    });
+    return metadata;
 }
 
 }
