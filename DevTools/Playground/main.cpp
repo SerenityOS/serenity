@@ -24,14 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <string.h>
 
 class GMLAutocompleteProvider final : public virtual GUI::AutocompleteProvider {
 public:
@@ -187,6 +193,44 @@ int main(int argc, char** argv)
         preview.remove_all_children();
         preview.load_from_gml(editor.text());
     };
+
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("GML Playground");
+
+    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
+
+        if (!open_path.has_value())
+            return;
+
+        auto file = Core::File::construct(open_path.value());
+        if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        editor.set_text(file->read_all());
+        editor.set_focus(true);
+    }));
+
+    app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
+        if (!save_path.has_value())
+            return;
+
+        if (!editor.write_to_file(save_path.value())) {
+            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+    }));
+
+    app_menu.add_separator();
+
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app->quit();
+    }));
+
+    app->set_menubar(move(menubar));
 
     window->show();
     return app->exec();
