@@ -184,6 +184,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
                     error_callback("HTTP load failed");
                 return;
             }
+            deferred_invoke([&](auto&) { const_cast<RefPtr<Protocol::Download>&>(download) = nullptr; });
             success_callback(payload, response_headers);
         };
         download->set_should_buffer_all_input(true);
