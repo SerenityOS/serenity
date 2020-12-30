@@ -91,7 +91,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template make_weak_ptr<U>().take_link();
         });
     }
 
@@ -100,7 +100,7 @@ public:
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
-                obj->template make_weak_ptr<U>().take_link();
+                m_link = obj->template make_weak_ptr<U>().take_link();
         });
     }
 
