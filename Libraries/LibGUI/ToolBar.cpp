@@ -31,15 +31,17 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
 
 ToolBar::ToolBar(Orientation orientation, int button_size)
-    : m_button_size(button_size)
+    : m_orientation(orientation)
+    , m_button_size(button_size)
 {
-    if (orientation == Orientation::Horizontal) {
+    if (m_orientation == Orientation::Horizontal) {
         set_fixed_height(button_size + 8);
     } else {
         set_fixed_width(button_size + 8);
@@ -98,30 +100,11 @@ void ToolBar::add_action(Action& action)
     m_items.append(move(item));
 }
 
-class SeparatorWidget final : public Widget {
-    C_OBJECT(SeparatorWidget)
-public:
-    SeparatorWidget()
-    {
-        set_fixed_size(8, 18);
-    }
-    virtual ~SeparatorWidget() override { }
-
-    virtual void paint_event(PaintEvent& event) override
-    {
-        Painter painter(*this);
-        painter.add_clip_rect(event.rect());
-        painter.translate(rect().center().x() - 1, 0);
-        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, palette().threed_shadow1());
-        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, palette().threed_highlight());
-    }
-};
-
 void ToolBar::add_separator()
 {
     auto item = make<Item>();
     item->type = Item::Type::Separator;
-    add<SeparatorWidget>();
+    add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal);
     m_items.append(move(item));
 }
 
