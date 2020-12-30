@@ -208,6 +208,24 @@ KResult CoreDump::write_notes_segment(ByteBuffer& notes_segment)
     return KSuccess;
 }
 
+ByteBuffer CoreDump::create_notes_process_data() const
+{
+    ByteBuffer process_data;
+
+    ELF::Core::ProcessInfo info {};
+    info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
+    info.pid = m_process->pid().value();
+
+    process_data.append((void*)&info, sizeof(info));
+
+    auto executable_path = String::empty();
+    if (auto executable = m_process->executable())
+        executable_path = executable->absolute_path();
+    process_data.append(executable_path.characters(), executable_path.length() + 1);
+
+    return process_data;
+}
+
 ByteBuffer CoreDump::create_notes_threads_data() const
 {
     ByteBuffer threads_data;
@@ -259,6 +277,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
 {
     ByteBuffer notes_buffer;
 
+    notes_buffer += create_notes_process_data();
     notes_buffer += create_notes_threads_data();
     notes_buffer += create_notes_regions_data();
 
