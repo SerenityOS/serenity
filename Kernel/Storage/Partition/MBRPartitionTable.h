@@ -36,8 +36,7 @@ namespace Kernel {
 
 class MBRPartitionTable : public PartitionTable {
 public:
-    struct [[gnu::packed]] Entry
-    {
+    struct [[gnu::packed]] Entry {
         u8 status;
         u8 chs1[3];
         u8 type;
@@ -45,8 +44,7 @@ public:
         u32 offset;
         u32 length;
     };
-    struct [[gnu::packed]] Header
-    {
+    struct [[gnu::packed]] Header {
         u8 code1[218];
         u16 ts_zero;
         u8 ts_drive;

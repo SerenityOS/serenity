@@ -28,8 +28,7 @@
 
 #include <AK/Types.h>
 
-struct [[gnu::packed]] PtraceRegisters
-{
+struct [[gnu::packed]] PtraceRegisters {
     u32 eax;
     u32 ecx;
     u32 edx;

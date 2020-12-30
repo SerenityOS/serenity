@@ -30,8 +30,7 @@
 
 namespace Kernel {
 
-class [[gnu::packed]] UDPPacket
-{
+class [[gnu::packed]] UDPPacket {
 public:
     UDPPacket() { }
     ~UDPPacket() { }

@@ -44,8 +44,7 @@
 
 namespace Gfx {
 
-struct [[gnu::packed]] FontFileHeader
-{
+struct [[gnu::packed]] FontFileHeader {
     char magic[4];
     u8 glyph_width;
     u8 glyph_height;

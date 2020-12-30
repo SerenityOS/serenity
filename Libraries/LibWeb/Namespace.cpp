@@ -32,10 +32,7 @@ namespace Web::Namespace {
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 
-    // clang-format off
-// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
-// clang-format on
 {
     static bool s_initialized = false;
     if (s_initialized)

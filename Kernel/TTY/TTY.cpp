@@ -171,8 +171,9 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
-            if (auto original_process_parent = m_original_process_parent.strong_ref())
+            if (auto original_process_parent = m_original_process_parent.strong_ref()) {
                 [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
+            }
             // TODO: Else send it to the session leader maybe?
             return;
         }

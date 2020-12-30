@@ -64,8 +64,7 @@ struct Scanline {
     ReadonlyBytes data {};
 };
 
-struct [[gnu::packed]] PaletteEntry
-{
+struct [[gnu::packed]] PaletteEntry {
     u8 r;
     u8 g;
     u8 b;
@@ -73,23 +72,20 @@ struct [[gnu::packed]] PaletteEntry
 };
 
 template<typename T>
-struct [[gnu::packed]] Tuple
-{
+struct [[gnu::packed]] Tuple {
     T gray;
     T a;
 };
 
 template<typename T>
-struct [[gnu::packed]] Triplet
-{
+struct [[gnu::packed]] Triplet {
     T r;
     T g;
     T b;
 };
 
 template<typename T>
-struct [[gnu::packed]] Quad
-{
+struct [[gnu::packed]] Quad {
     T r;
     T g;
     T b;
@@ -227,8 +223,7 @@ ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
     return c;
 }
 
-union [[gnu::packed]] Pixel
-{
+union [[gnu::packed]] Pixel {
     RGBA32 rgba { 0 };
     u8 v[4];
     struct {

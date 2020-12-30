@@ -28,8 +28,7 @@
 
 #include <AK/Types.h>
 
-struct [[gnu::packed]] InodeWatcherEvent
-{
+struct [[gnu::packed]] InodeWatcherEvent {
     enum class Type {
         Invalid = 0,
         Modified,

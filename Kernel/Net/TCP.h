@@ -41,8 +41,7 @@ struct TCPFlags {
     };
 };
 
-class [[gnu::packed]] TCPPacket
-{
+class [[gnu::packed]] TCPPacket {
 public:
     TCPPacket() = default;
     ~TCPPacket() = default;

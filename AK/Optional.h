@@ -35,8 +35,7 @@
 namespace AK {
 
 template<typename T>
-class alignas(T) [[nodiscard]] Optional
-{
+class alignas(T) [[nodiscard]] Optional {
 public:
     Optional() { }
 
@@ -53,13 +52,13 @@ public:
         new (&m_storage) T(value);
     }
 
-    Optional(T && value)
+    Optional(T&& value)
         : m_has_value(true)
     {
         new (&m_storage) T(move(value));
     }
 
-    Optional(Optional && other)
+    Optional(Optional&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value()) {
@@ -119,7 +118,7 @@ public:
     }
 
     template<typename... Parameters>
-    ALWAYS_INLINE void emplace(Parameters && ... parameters)
+    ALWAYS_INLINE void emplace(Parameters&&... parameters)
     {
         clear();
         m_has_value = true;

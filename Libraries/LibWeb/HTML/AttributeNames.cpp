@@ -34,10 +34,7 @@ namespace AttributeNames {
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-    // clang-format off
-// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
-// clang-format off
 {
     static bool s_initialized = false;
     if (s_initialized)

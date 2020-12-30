@@ -47,8 +47,7 @@ enum class IPv4PacketFlags : u16 {
 
 NetworkOrdered<u16> internet_checksum(const void*, size_t);
 
-class [[gnu::packed]] IPv4Packet
-{
+class [[gnu::packed]] IPv4Packet {
 public:
     u8 version() const { return (m_version_and_ihl >> 4) & 0xf; }
     void set_version(u8 version) { m_version_and_ihl = (m_version_and_ihl & 0x0f) | (version << 4); }

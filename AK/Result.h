@@ -32,14 +32,13 @@
 namespace AK {
 
 template<typename ValueType, typename ErrorType>
-class [[nodiscard]] Result
-{
+class [[nodiscard]] Result {
 public:
     Result(const ValueType& res)
         : m_result(res)
     {
     }
-    Result(ValueType && res)
+    Result(ValueType&& res)
         : m_result(move(res))
     {
     }
@@ -47,7 +46,7 @@ public:
         : m_error(error)
     {
     }
-    Result(ErrorType && error)
+    Result(ErrorType&& error)
         : m_error(move(error))
     {
     }
@@ -58,19 +57,13 @@ public:
     {
     }
 
-    // FIXME: clang-format gets confused about Result. Why?
-    // clang-format off
     Result(Result&& other)
-        // clang-format on
         : m_result(move(other.m_result))
         , m_error(move(other.m_error))
     {
     }
 
-    // FIXME: clang-format gets confused about Result. Why?
-    // clang-format off
     Result(Result& other)
-        // clang-format on
         : m_result(other.m_result)
         , m_error(other.m_error)
     {

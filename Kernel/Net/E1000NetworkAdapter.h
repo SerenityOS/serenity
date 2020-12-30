@@ -54,8 +54,7 @@ private:
     virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
-    struct [[gnu::packed]] e1000_rx_desc
-    {
+    struct [[gnu::packed]] e1000_rx_desc {
         volatile uint64_t addr { 0 };
         volatile uint16_t length { 0 };
         volatile uint16_t checksum { 0 };
@@ -64,8 +63,7 @@ private:
         volatile uint16_t special { 0 };
     };
 
-    struct [[gnu::packed]] e1000_tx_desc
-    {
+    struct [[gnu::packed]] e1000_tx_desc {
         volatile uint64_t addr { 0 };
         volatile uint16_t length { 0 };
         volatile uint8_t cso { 0 };

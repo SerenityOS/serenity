@@ -46,8 +46,7 @@
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
 typedef uint64_t NtpTimestamp;
 
-struct [[gnu::packed]] NtpPacket
-{
+struct [[gnu::packed]] NtpPacket {
     uint8_t li_vn_mode;
     uint8_t stratum;
     int8_t poll;
