@@ -21,13 +21,17 @@ jobs:
     # sudo apt-get update -qq
 
     - name: Purge interfering packages
-      # Remove GCC 9 (installed by default)
-      run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev
+      # Remove GCC 9 and clang-format 10 (installed by default)
+      run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev clang-format-10
     - name: Install dependencies
       # These packages are already part of the ubuntu-20.04 image:
-      # clang-format-10 cmake gcc-10 g++-10 shellcheck libgmp-dev
+      # cmake gcc-10 g++-10 shellcheck libgmp-dev
       # These aren't:
-      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
+        sudo apt-get update
+        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm
       # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
       # e2fsprogs qemu-system-i386 qemu-utils
     - name: Install prettier
@@ -35,7 +39,7 @@ jobs:
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; prettier --version; python --version; python3 --version; ninja --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version
 
     # === PREPARE FOR BUILDING ===
 
