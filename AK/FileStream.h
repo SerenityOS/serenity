@@ -54,8 +54,9 @@ public:
     ~InputFileStream()
     {
         if (m_file) {
+            fflush(m_file);
             if (m_owned)
-                fflush(m_file);
+                fclose(m_file);
         }
     }
 
