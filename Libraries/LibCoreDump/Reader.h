@@ -44,6 +44,8 @@ public:
 
     Reader(OwnPtr<MappedFile>&&);
 
+    const ELF::Core::ProcessInfo& process_info() const;
+
     template<typename Func>
     void for_each_memory_region_info(Func func) const;
 
