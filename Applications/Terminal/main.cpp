@@ -448,7 +448,7 @@ int main(int argc, char** argv)
     edit_menu.add_action(terminal.copy_action());
     edit_menu.add_action(terminal.paste_action());
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"),
+    edit_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"),
         [&](auto&) {
             if (!find_window) {
                 find_window = create_find_window(terminal);
