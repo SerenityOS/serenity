@@ -41,6 +41,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
@@ -55,7 +56,6 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <string.h>
@@ -412,26 +412,22 @@ TextEditorWidget::TextEditorWidget()
     m_preview_actions.set_exclusive(true);
 
     auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(GUI::Action::create("Editor font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
+        [&](auto&) {
+            auto picker = GUI::FontPicker::construct(window(), &m_editor->font(), true);
+            if (picker->exec() == GUI::Dialog::ExecOK) {
+                dbgln("setting font {}", picker->font()->qualified_name());
+                m_editor->set_font(picker->font());
+            }
+        }));
+
+    view_menu.add_separator();
     view_menu.add_action(*m_line_wrapping_setting_action);
     view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_action(*m_html_preview_action);
     view_menu.add_separator();
-
-    font_actions.set_exclusive(true);
-
-    auto& font_menu = view_menu.add_submenu("Font");
-    Gfx::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
-        auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
-            m_editor->set_font(font);
-            m_editor->update();
-        });
-        if (m_editor->font().qualified_name() == font.qualified_name())
-            action->set_checked(true);
-        font_actions.add_action(*action);
-        font_menu.add_action(*action);
-    });
 
     syntax_actions.set_exclusive(true);
 
