@@ -1,6 +1,7 @@
 set(SOURCES
     AboutDialog.cpp
     AbstractButton.cpp
+    AbstractSlider.cpp
     AbstractTableView.cpp
     AbstractView.cpp
     Action.cpp
