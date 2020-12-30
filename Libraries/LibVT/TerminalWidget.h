@@ -104,6 +104,8 @@ public:
     Function<void(const StringView&)> on_title_change;
     Function<void()> on_command_exit;
 
+    GUI::Menu& context_menu() { return *m_context_menu; }
+
 private:
     // ^GUI::Widget
     virtual void event(Core::Event&) override;
