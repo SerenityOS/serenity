@@ -55,13 +55,22 @@ StackInfo::StackInfo()
     }
     pthread_attr_destroy(&attr);
 #elif __APPLE__
-    m_base = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
-    pthread_attr_t attr = {};
-    if (int rc = pthread_attr_getstacksize(&attr, &m_size) != 0) {
-        fprintf(stderr, "pthread_attr_getstacksize: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
+    // NOTE: !! On MacOS, pthread_get_stackaddr_np gives the TOP of the stack, not the bottom!
+    FlatPtr top_of_stack = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
+    m_size = (size_t)pthread_get_stacksize_np(pthread_self());
+    // https://github.com/rust-lang/rust/issues/43347#issuecomment-316783599
+    // https://developer.apple.com/library/archive/qa/qa1419/_index.html
+    //
+    // MacOS seems inconsistent on what stack size is given for the main thread.
+    // According to the Apple docs, default for main thread is 8MB, and default for
+    // other threads is 512KB
+    constexpr size_t eight_megabytes = 0x800000;
+    if (pthread_main_np() == 1 && m_size < eight_megabytes) {
+        // Assume no one messed with stack size linker options for the main thread,
+        // and just set it to 8MB.
+        m_size = eight_megabytes;
     }
-    pthread_attr_destroy(&attr);
+    m_base = top_of_stack - m_size;
 #else
     ASSERT_NOT_REACHED();
 #endif
