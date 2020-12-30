@@ -15,6 +15,7 @@ set(AK_TEST_SOURCES
     TestFormat.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp
+    TestIndexSequence.cpp
     TestIPv4Address.cpp
     TestJSON.cpp
     TestLexicalPath.cpp
@@ -35,6 +36,7 @@ set(AK_TEST_SOURCES
     TestStringView.cpp
     TestTrie.cpp
     TestTypedTransfer.cpp
+    TestTypeTraits.cpp
     TestURL.cpp
     TestUtf8.cpp
     TestVector.cpp
