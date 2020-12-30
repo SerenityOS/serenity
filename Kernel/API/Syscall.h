@@ -196,7 +196,8 @@ namespace Kernel {
     S(adjtime)                \
     S(allocate_tls)           \
     S(prctl)                  \
-    S(mremap)
+    S(mremap)                 \
+    S(set_coredump_metadata)
 
 namespace Syscall {
 
@@ -440,6 +441,11 @@ struct SC_ptrace_params {
 struct SC_ptrace_peek_params {
     const u32* address;
     u32* out_data;
+};
+
+struct SC_set_coredump_metadata_params {
+    StringArgument key;
+    StringArgument value;
 };
 
 void initialize();

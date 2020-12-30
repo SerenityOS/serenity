@@ -363,6 +363,7 @@ public:
     int sys$disown(ProcessID);
     void* sys$allocate_tls(size_t);
     int sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
+    int sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -499,6 +500,8 @@ public:
     void disowned_by_waiter(Process& process);
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
+
+    const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
 
 private:
     friend class MemoryManager;
@@ -644,6 +647,8 @@ private:
     bool m_wait_for_tracer_at_next_execve { false };
 
     Thread::WaitBlockCondition m_wait_block_condition;
+
+    HashMap<String, String> m_coredump_metadata;
 };
 
 extern InlineLinkedList<Process>* g_processes;
