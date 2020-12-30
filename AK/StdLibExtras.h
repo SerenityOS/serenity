@@ -511,6 +511,12 @@ constexpr auto DependentFalse = false;
 template<typename T>
 using IsUnsigned = IsSame<T, MakeUnsigned<T>>;
 
+template<typename T>
+using IsArithmetic = IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPoint<T>::value>;
+
+template<typename T>
+using IsFundamental = IntegralConstant<bool, IsArithmetic<T>::value || IsVoid<T>::value || IsNullPointer<T>::value>;
+
 }
 
 using AK::AddConst;
@@ -524,9 +530,12 @@ using AK::exchange;
 using AK::forward;
 using AK::is_trivial;
 using AK::is_trivially_copyable;
+using AK::IsArithmetic;
 using AK::IsBaseOf;
 using AK::IsClass;
 using AK::IsConst;
+using AK::IsFundamental;
+using AK::IsNullPointer;
 using AK::IsSame;
 using AK::IsUnion;
 using AK::IsVoid;
