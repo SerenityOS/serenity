@@ -57,6 +57,7 @@ private:
     ByteBuffer create_notes_process_data() const;
     ByteBuffer create_notes_threads_data() const;
     ByteBuffer create_notes_regions_data() const;
+    ByteBuffer create_notes_metadata_data() const;
 
     NonnullRefPtr<Process> m_process;
     NonnullRefPtr<FileDescription> m_fd;
