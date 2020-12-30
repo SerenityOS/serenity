@@ -72,7 +72,9 @@ OwnPtr<Messages::ProtocolServer::StartDownloadResponse> ClientConnection::handle
     auto id = download->id();
     auto fd = download->download_fd();
     m_downloads.set(id, move(download));
-    return make<Messages::ProtocolServer::StartDownloadResponse>(id, fd);
+    auto response = make<Messages::ProtocolServer::StartDownloadResponse>(id, fd);
+    response->on_destruction = [fd] { close(fd); };
+    return response;
 }
 
 OwnPtr<Messages::ProtocolServer::StopDownloadResponse> ClientConnection::handle(const Messages::ProtocolServer::StopDownload& message)
