@@ -32,10 +32,10 @@
 
 namespace LanguageServers::Cpp {
 
-Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
+Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
 {
     auto lines = code.split('\n', true);
-    Lexer lexer(code);
+    Cpp::Lexer lexer(code);
     auto tokens = lexer.lex();
 
     auto index_of_target_token = token_in_position(tokens, autocomplete_position);
@@ -75,10 +75,10 @@ Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& token
     return {};
 }
 
-Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
+Vector<GUI::AutocompleteProvider::Entry> AutoComplete::identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
 {
     auto partial_input = text_of_token(lines, tokens[target_token_index]);
-    Vector<AutoCompleteResponse> suggestions;
+    Vector<GUI::AutocompleteProvider::Entry> suggestions;
 
     HashTable<String> suggestions_lookup; // To avoid duplicate results
 
@@ -88,7 +88,7 @@ Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<Stri
             continue;
         auto text = text_of_token(lines, token);
         if (text.starts_with(partial_input) && suggestions_lookup.set(text) == AK::HashSetResult::InsertedNewEntry) {
-            suggestions.append({ text, partial_input.length(), HackStudio::CompletionKind::Identifier });
+            suggestions.append({ text, partial_input.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
         }
     }
     return suggestions;
