@@ -171,7 +171,6 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
         return true;
 
     if (url.protocol() == "http" || url.protocol() == "https") {
-#if 0
         URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
@@ -192,7 +191,6 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
                 if (auto* page = frame().page())
                     page->client().page_did_change_favicon(*bitmap);
             });
-#endif
     }
 
     return true;
