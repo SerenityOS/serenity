@@ -32,19 +32,6 @@
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
 
-static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
-{
-    if (lhs.size() != rhs.size())
-        return false;
-
-    for (size_t idx = 0; idx < lhs.size(); ++idx) {
-        if (lhs[idx] != rhs[idx])
-            return false;
-    }
-
-    return true;
-}
-
 TEST_CASE(canonical_code_simple)
 {
     const Array<u8, 32> code {
@@ -98,7 +85,7 @@ TEST_CASE(deflate_decompress_compressed_block)
     const u8 uncompressed[] = "This is a simple text file :)";
 
     const auto decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == ReadonlyBytes({ uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(deflate_decompress_uncompressed_block)
@@ -111,7 +98,7 @@ TEST_CASE(deflate_decompress_uncompressed_block)
     const u8 uncompressed[] = "Hello, World!";
 
     const auto decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(deflate_decompress_multiple_blocks)
@@ -128,7 +115,7 @@ TEST_CASE(deflate_decompress_multiple_blocks)
     const u8 uncompressed[] = "The first block is uncompressed and the second block is compressed.";
 
     const auto decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(deflate_decompress_zeroes)
@@ -141,7 +128,7 @@ TEST_CASE(deflate_decompress_zeroes)
     const Array<u8, 4096> uncompressed { 0 };
 
     const auto decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
-    EXPECT(compare(uncompressed, decompressed.value().bytes()));
+    EXPECT(uncompressed == decompressed.value().bytes());
 }
 
 TEST_CASE(zlib_decompress_simple)
@@ -156,7 +143,7 @@ TEST_CASE(zlib_decompress_simple)
     const u8 uncompressed[] = "This is a simple text file :)";
 
     const auto decompressed = Compress::Zlib::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(gzip_decompress_simple)
@@ -170,7 +157,7 @@ TEST_CASE(gzip_decompress_simple)
     const u8 uncompressed[] = "word1 abc word2";
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(gzip_decompress_multiple_members)
@@ -186,7 +173,7 @@ TEST_CASE(gzip_decompress_multiple_members)
     const u8 uncompressed[] = "abcabcabcabc";
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all(compressed);
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.value().bytes()));
+    EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
 
 TEST_CASE(gzip_decompress_zeroes)
@@ -211,7 +198,7 @@ TEST_CASE(gzip_decompress_zeroes)
     const Array<u8, 128 * 1024> uncompressed = { 0 };
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all(compressed);
-    EXPECT(compare(uncompressed, decompressed.value().bytes()));
+    EXPECT(uncompressed == decompressed.value().bytes());
 }
 
 TEST_CASE(gzip_decompress_repeat_around_buffer)
@@ -231,7 +218,7 @@ TEST_CASE(gzip_decompress_repeat_around_buffer)
     uncompressed.span().slice(0x7f00, 0x0100).fill(1);
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all(compressed);
-    EXPECT(compare(uncompressed, decompressed.value().bytes()));
+    EXPECT(uncompressed == decompressed.value().bytes());
 }
 
 TEST_MAIN(Compress)
