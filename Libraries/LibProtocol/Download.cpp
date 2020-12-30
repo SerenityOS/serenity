@@ -66,7 +66,7 @@ void Download::stream_into(OutputStream& stream)
             TODO();
         }
 
-        if (m_internal_stream_data->read_stream.eof() || (m_internal_stream_data->download_done && !m_internal_stream_data->success)) {
+        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->download_done) {
             m_internal_stream_data->read_notifier->close();
             user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
         } else {
