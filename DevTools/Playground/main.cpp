@@ -25,11 +25,137 @@
  */
 
 #include <LibGUI/Application.h>
+#include <LibGUI/AutocompleteProvider.h>
+#include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+
+class GMLAutocompleteProvider final : public virtual GUI::AutocompleteProvider {
+public:
+    GMLAutocompleteProvider() { }
+    virtual ~GMLAutocompleteProvider() override { }
+
+private:
+    virtual void provide_completions(Function<void(Vector<Entry>)> callback) override
+    {
+        auto cursor = m_editor->cursor();
+        auto text = m_editor->text();
+        GUI::GMLLexer lexer(text);
+        // FIXME: Provide a begin() and end() for lexers PLEASE!
+        auto all_tokens = lexer.lex();
+        enum State {
+            Free,
+            InClassName,
+            AfterClassName,
+            InIdentifier,
+            AfterIdentifier, // Can we introspect this?
+        } state { Free };
+        String identifier_string;
+        Vector<String> class_names;
+        Vector<State> previous_states;
+        bool should_push_state { true };
+
+        for (auto& token : all_tokens) {
+            if (token.m_start.line > cursor.line() || (token.m_start.line == cursor.line() && token.m_start.column > cursor.column()))
+                break;
+
+            switch (state) {
+            case Free:
+                if (token.m_type == GUI::GMLToken::Type::ClassName) {
+                    if (should_push_state)
+                        previous_states.append(state);
+                    else
+                        should_push_state = true;
+                    state = InClassName;
+                    class_names.append(token.m_view);
+                    break;
+                }
+                break;
+            case InClassName:
+                state = AfterClassName;
+                break;
+            case AfterClassName:
+                if (token.m_type == GUI::GMLToken::Type::Identifier) {
+                    state = InIdentifier;
+                    identifier_string = token.m_view;
+                    break;
+                }
+                if (token.m_type == GUI::GMLToken::Type::RightCurly) {
+                    class_names.take_last();
+                    state = previous_states.take_last();
+                    break;
+                }
+                if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
+                    previous_states.append(AfterClassName);
+                    state = Free;
+                    should_push_state = false;
+                }
+                break;
+            case InIdentifier:
+                state = AfterIdentifier;
+                break;
+            case AfterIdentifier:
+                if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
+                    previous_states.append(AfterClassName);
+                    state = Free;
+                    should_push_state = false;
+                } else {
+                    state = AfterClassName;
+                }
+                break;
+            }
+        }
+
+        Vector<GUI::AutocompleteProvider::Entry> entries;
+        switch (state) {
+        case Free:
+            GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+                entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+            });
+            break;
+        case InClassName:
+            if (class_names.is_empty())
+                break;
+            GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+                if (registration.class_name().starts_with(class_names.last()))
+                    entries.empend(registration.class_name(), class_names.last().length());
+            });
+            break;
+        case InIdentifier:
+            if (class_names.is_empty())
+                break;
+            if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
+                auto instance = registration->construct();
+                for (auto& it : instance->properties()) {
+                    if (it.key.starts_with(identifier_string))
+                        entries.empend(it.key, identifier_string.length());
+                }
+            }
+            break;
+        case AfterClassName:
+            if (!class_names.is_empty()) {
+                if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
+                    auto instance = registration->construct();
+                    for (auto& it : instance->properties()) {
+                        entries.empend(it.key, 0u);
+                    }
+                }
+            }
+            GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+                entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+            });
+            break;
+        case AfterIdentifier:
+        default:
+            break;
+        }
+
+        callback(move(entries));
+    }
+};
 
 int main(int argc, char** argv)
 {
@@ -46,6 +172,7 @@ int main(int argc, char** argv)
     auto& preview = splitter.add<GUI::Widget>();
 
     editor.set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
+    editor.set_autocomplete_provider(make<GMLAutocompleteProvider>());
     editor.set_automatic_indentation_enabled(true);
     editor.set_text(R"~~~(@GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
