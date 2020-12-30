@@ -78,10 +78,14 @@ void ControlBoxButton::paint_event(PaintEvent& event)
     if (type() == UpArrow) {
         if (!s_up_arrow_bitmap)
             s_up_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, s_bitmap_width, s_bitmap_height).leak_ref();
+        if (!is_enabled())
+            painter.draw_bitmap(button_location.translated(1, 1), *s_up_arrow_bitmap, palette().threed_highlight());
         painter.draw_bitmap(button_location, *s_up_arrow_bitmap, is_enabled() ? palette().button_text() : palette().threed_shadow1());
     } else {
         if (!s_down_arrow_bitmap)
             s_down_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, s_bitmap_width, s_bitmap_height).leak_ref();
+        if (!is_enabled())
+            painter.draw_bitmap(button_location.translated(1, 1), *s_down_arrow_bitmap, palette().threed_highlight());
         painter.draw_bitmap(button_location, *s_down_arrow_bitmap, is_enabled() ? palette().button_text() : palette().threed_shadow1());
     }
 }
