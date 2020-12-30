@@ -50,14 +50,14 @@ const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
 
 namespace AK {
 
-void Formatter<GUI::ModelIndex>::format(TypeErasedFormatParams& params, FormatBuilder& builder, const GUI::ModelIndex& value)
+void Formatter<GUI::ModelIndex>::format(FormatBuilder& builder, const GUI::ModelIndex& value)
 {
     Formatter<StringView> formatter { *this };
 
     if (value.internal_data())
-        formatter.format(params, builder, String::formatted("ModelIndex({},{},{:p})", value.row(), value.column(), value.internal_data()));
+        formatter.format(builder, String::formatted("ModelIndex({},{},{:p})", value.row(), value.column(), value.internal_data()));
     else
-        formatter.format(params, builder, String::formatted("ModelIndex({},{})", value.row(), value.column()));
+        formatter.format(builder, String::formatted("ModelIndex({},{})", value.row(), value.column()));
 }
 
 }

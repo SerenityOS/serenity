@@ -226,13 +226,13 @@ inline const LogStream& operator<<(const LogStream& stream, const WeakPtr<T>& va
 
 template<typename T>
 struct Formatter<WeakPtr<T>> : Formatter<const T*> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const WeakPtr<T>& value)
+    void format(FormatBuilder& builder, const WeakPtr<T>& value)
     {
 #ifdef KERNEL
         auto ref = value.strong_ref();
-        Formatter<const T*>::format(params, builder, ref.ptr());
+        Formatter<const T*>::format(builder, ref.ptr());
 #else
-        Formatter<const T*>::format(params, builder, value.ptr());
+        Formatter<const T*>::format(builder, value.ptr());
 #endif
     }
 };

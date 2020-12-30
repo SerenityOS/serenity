@@ -434,7 +434,7 @@ bool IPC::decode(IPC::Decoder& decoder, Color& color)
     return true;
 }
 
-void AK::Formatter<Gfx::Color>::format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Color& value)
+void AK::Formatter<Gfx::Color>::format(FormatBuilder& builder, const Gfx::Color& value)
 {
-    Formatter<StringView>::format(params, builder, value.to_string());
+    Formatter<StringView>::format(builder, value.to_string());
 }

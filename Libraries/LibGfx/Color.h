@@ -317,13 +317,17 @@ const LogStream& operator<<(const LogStream&, Color);
 using Gfx::Color;
 
 namespace AK {
+
 template<>
 struct Formatter<Gfx::Color> : public Formatter<StringView> {
-    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Color& value);
+    void format(FormatBuilder& builder, const Gfx::Color& value);
 };
+
 }
 
 namespace IPC {
+
 bool encode(Encoder&, const Gfx::Color&);
 bool decode(Decoder&, Gfx::Color&);
+
 }
