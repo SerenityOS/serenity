@@ -66,7 +66,8 @@ Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
 
 ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
 {
-    ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
+    ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
+        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Null);
     return m_current->header.type;
@@ -80,15 +81,24 @@ const ELF::Core::NotesEntry* Reader::NotesEntryIterator::current() const
 void Reader::NotesEntryIterator::next()
 {
     ASSERT(!at_end());
-    if (type() == ELF::Core::NotesEntryHeader::Type::ThreadInfo) {
-        const ELF::Core::ThreadInfo* current = (const ELF::Core::ThreadInfo*)m_current;
-        m_current = (const ELF::Core::NotesEntry*)(current + 1);
-        return;
+    switch (type()) {
+    case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
+        const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
+        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->executable_path + strlen(current->executable_path) + 1);
+        break;
     }
-    if (type() == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo) {
-        const ELF::Core::MemoryRegionInfo* current = (const ELF::Core::MemoryRegionInfo*)m_current;
-        m_current = (const ELF::Core::NotesEntry*)(current->region_name + strlen(current->region_name) + 1);
-        return;
+    case ELF::Core::NotesEntryHeader::Type::ThreadInfo: {
+        const auto* current = reinterpret_cast<const ELF::Core::ThreadInfo*>(m_current);
+        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current + 1);
+        break;
+    }
+    case ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo: {
+        const auto* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
+        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
+        break;
+    }
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
@@ -106,6 +116,16 @@ Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
     FlatPtr offset_in_region = address - region->region_start;
     const char* region_data = image().program_header(region->program_header_index).raw_data();
     return *(const uint32_t*)(&region_data[offset_in_region]);
+}
+
+const ELF::Core::ProcessInfo& Reader::process_info() const
+{
+    for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
+        if (it.type() != ELF::Core::NotesEntryHeader::Type::ProcessInfo)
+            continue;
+        return reinterpret_cast<const ELF::Core::ProcessInfo&>(*it.current());
+    }
+    ASSERT_NOT_REACHED();
 }
 
 const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const

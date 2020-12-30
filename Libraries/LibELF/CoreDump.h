@@ -36,6 +36,7 @@ struct [[gnu::packed]] NotesEntryHeader
 {
     enum Type : u8 {
         Null = 0, // Terminates segment
+        ProcessInfo,
         ThreadInfo,
         MemoryRegionInfo,
     };
@@ -46,6 +47,13 @@ struct [[gnu::packed]] NotesEntry
 {
     NotesEntryHeader header;
     char data[];
+};
+
+struct [[gnu::packed]] ProcessInfo
+{
+    NotesEntryHeader header;
+    int pid;
+    char executable_path[]; // Null terminated
 };
 
 struct [[gnu::packed]] ThreadInfo
