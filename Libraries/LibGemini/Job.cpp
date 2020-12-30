@@ -165,10 +165,12 @@ void Job::finish_up()
     m_state = State::Finished;
     flush_received_buffers();
     if (m_received_size != 0) {
-        // FIXME: What do we do? ignore it?
-        //        "Transmission failed" is not strictly correct, but let's roll with it for now.
+        // We have to wait for the client to consume all the downloaded data
+        // before we can actually call `did_finish`. in a normal flow, this should
+        // never be hit since the client is reading as we are writing, unless there
+        // are too many concurrent downloads going on.
         deferred_invoke([this](auto&) {
-            did_fail(Error::TransmissionFailed);
+            finish_up();
         });
         return;
     }

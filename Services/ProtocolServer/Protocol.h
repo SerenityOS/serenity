@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <AK/Result.h>
 #include <AK/URL.h>
 #include <ProtocolServer/Forward.h>
 
@@ -43,6 +44,11 @@ public:
 
 protected:
     explicit Protocol(const String& name);
+    struct Pipe {
+        int read_fd { -1 };
+        int write_fd { -1 };
+    };
+    static Result<Pipe, String> get_pipe_for_download();
 
 private:
     String m_name;
