@@ -34,6 +34,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <grp.h>
 #include <limits.h>
@@ -84,7 +85,7 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     };
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
-    make_divider(general_tab);
+    general_tab.add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
 
     struct stat st;
     if (lstat(path.characters(), &st)) {
@@ -135,7 +136,7 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
 
     make_property_value_pairs(properties, general_tab);
 
-    make_divider(general_tab);
+    general_tab.add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
 
     make_permission_checkboxes(general_tab, { S_IRUSR, S_IWUSR, S_IXUSR }, "Owner:", m_mode);
     make_permission_checkboxes(general_tab, { S_IRGRP, S_IWGRP, S_IXGRP }, "Group:", m_mode);
@@ -298,10 +299,4 @@ GUI::Button& PropertiesDialog::make_button(String text, GUI::Widget& parent)
     auto& button = parent.add<GUI::Button>(text);
     button.set_fixed_size(70, 22);
     return button;
-}
-
-void PropertiesDialog::make_divider(GUI::Widget& parent)
-{
-    auto& divider = parent.add<GUI::Frame>();
-    divider.set_fixed_height(2);
 }
