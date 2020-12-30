@@ -300,12 +300,6 @@ const LogStream& operator<<(const LogStream&, const Object&);
             return false;                                                    \
         })
 
-#define REGISTER_SIZE_POLICY_PROPERTY(property_name, getter, setter) \
-    REGISTER_ENUM_PROPERTY(                                          \
-        property_name, getter, setter, GUI::SizePolicy,              \
-        { GUI::SizePolicy::Fill, "Fill" },                           \
-        { GUI::SizePolicy::Fixed, "Fixed" })
-
 #define REGISTER_TEXT_ALIGNMENT_PROPERTY(property_name, getter, setter) \
     REGISTER_ENUM_PROPERTY(                                             \
         property_name, getter, setter, Gfx::TextAlignment,              \

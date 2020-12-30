@@ -45,21 +45,6 @@
 
 namespace GUI {
 
-enum class SizePolicy {
-    Fixed,
-    Fill
-};
-inline const char* to_string(SizePolicy policy)
-{
-    switch (policy) {
-    case SizePolicy::Fixed:
-        return "SizePolicy::Fixed";
-    case SizePolicy::Fill:
-        return "SizePolicy::Fill";
-    }
-    return "SizePolicy::(Invalid)";
-}
-
 enum class HorizontalDirection {
     Left,
     Right
