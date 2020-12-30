@@ -48,9 +48,7 @@ int Dialog::exec()
     if (parent() && parent()->is_window()) {
         auto& parent_window = *static_cast<Window*>(parent());
         if (parent_window.is_visible()) {
-            auto new_rect = rect();
-            new_rect.center_within(parent_window.rect());
-            set_rect(new_rect);
+            center_within(parent_window);
         } else {
             center_on_screen();
         }
