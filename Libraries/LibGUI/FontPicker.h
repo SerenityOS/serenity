@@ -43,7 +43,7 @@ public:
 private:
     FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr, bool fixed_width_only = false);
 
-    void update_sample_label();
+    void update_font();
 
     const bool m_fixed_width_only;
 
