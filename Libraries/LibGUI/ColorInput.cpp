@@ -35,6 +35,7 @@ namespace GUI {
 ColorInput::ColorInput()
     : TextEditor(TextEditor::SingleLine)
 {
+    set_fixed_height(22);
     TextEditor::on_change = [this] {
         auto parsed_color = Color::from_string(text());
         if (parsed_color.has_value())

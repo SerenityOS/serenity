@@ -68,7 +68,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv, [[maybe_unused
 
     auto& button = main_widget.add<GUI::Button>();
     button.set_text("Good-bye");
-    button.set_fixed_height(20);
     button.on_click = [&](auto) {
         app->quit();
     };

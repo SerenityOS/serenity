@@ -299,9 +299,7 @@ static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
     };
 
     auto& match_case = search.add<GUI::CheckBox>("Case sensitive");
-    match_case.set_fixed_height(22);
     auto& wrap_around = search.add<GUI::CheckBox>("Wrap around");
-    wrap_around.set_fixed_height(22);
 
     find_backwards.on_click = [&](auto) {
         auto needle = find_textbox.text();

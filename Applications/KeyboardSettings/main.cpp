@@ -134,7 +134,6 @@ int main(int argc, char** argv)
     character_map_file_label.set_text("Character Mapping File:");
 
     auto& character_map_file_combo = character_map_file_selection_container.add<GUI::ComboBox>();
-    character_map_file_combo.set_fixed_height(22);
     character_map_file_combo.set_only_allow_values_from_model(true);
     character_map_file_combo.set_model(*CharacterMapFileListModel::create(character_map_files));
     character_map_file_combo.set_selected_index(initial_keymap_index);

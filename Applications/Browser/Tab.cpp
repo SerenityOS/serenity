@@ -112,7 +112,6 @@ Tab::Tab(Type type)
     toolbar.add_action(*m_reload_action);
 
     m_location_box = toolbar.add<GUI::TextBox>();
-    m_location_box->set_fixed_height(22);
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {

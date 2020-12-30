@@ -39,6 +39,7 @@ static const int s_box_height = 13;
 CheckBox::CheckBox(String text)
     : AbstractButton(move(text))
 {
+    set_fixed_height(22);
 }
 
 CheckBox::~CheckBox()
