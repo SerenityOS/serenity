@@ -71,6 +71,9 @@ public:
     Bytes bytes() { return { data(), size() }; }
     ReadonlyBytes bytes() const { return { data(), size() }; }
 
+    Span<u8> span() { return { data(), size() }; }
+    Span<const u8> span() const { return { data(), size() }; }
+
     u8* offset_pointer(int offset) { return m_data + offset; }
     const u8* offset_pointer(int offset) const { return m_data + offset; }
 
@@ -158,6 +161,9 @@ public:
 
     Bytes bytes() { return m_impl ? m_impl->bytes() : nullptr; }
     ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
+
+    Span<u8> span() { return m_impl ? m_impl->span() : nullptr; }
+    Span<const u8> span() const { return m_impl ? m_impl->span() : nullptr; }
 
     u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
