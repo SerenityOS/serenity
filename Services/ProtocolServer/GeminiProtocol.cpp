@@ -28,6 +28,7 @@
 #include <LibGemini/GeminiRequest.h>
 #include <ProtocolServer/GeminiDownload.h>
 #include <ProtocolServer/GeminiProtocol.h>
+#include <fcntl.h>
 
 namespace ProtocolServer {
 
@@ -45,17 +46,15 @@ OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const 
     Gemini::GeminiRequest request;
     request.set_url(url);
 
-    int fd_pair[2] { 0 };
-    if (pipe(fd_pair) != 0) {
-        auto saved_errno = errno;
-        dbgln("Protocol: pipe() failed: {}", strerror(saved_errno));
+    auto pipe_result = get_pipe_for_download();
+    if (pipe_result.is_error())
         return nullptr;
-    }
-    auto output_stream = make<OutputFileStream>(fd_pair[1]);
+
+    auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();
     auto job = Gemini::GeminiJob::construct(request, *output_stream);
     auto download = GeminiDownload::create_with_job({}, client, (Gemini::GeminiJob&)*job, move(output_stream));
-    download->set_download_fd(fd_pair[0]);
+    download->set_download_fd(pipe_result.value().read_fd);
     job->start();
     return download;
 }
