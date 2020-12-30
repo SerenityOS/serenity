@@ -315,13 +315,13 @@ int main(int argc, char** argv)
     auto& progress1 = horizontal_slider_container2.add<GUI::ProgressBar>();
     progress1.set_fixed_height(28);
 
-    slider1.on_value_changed = [&](int value) {
+    slider1.on_change = [&](int value) {
         progress1.set_value(value);
         if (!(value % (100 / slider3.max())))
             slider3.set_value(value / (100 / slider3.max()));
     };
 
-    slider3.on_value_changed = [&](int value) {
+    slider3.on_change = [&](int value) {
         progress1.set_value((value * 100) / slider3.max());
         slider1.set_value((value * 100) / slider3.max());
     };

@@ -103,7 +103,7 @@ public:
         m_slider->set_max(20);
         m_slider->set_value(0);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
-        m_slider->on_value_changed = [&](int value) {
+        m_slider->on_change = [&](int value) {
             int volume = clamp((20 - value) * 5, 0, 100);
             float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
             m_audio_client->set_main_mix_volume(volume_log);

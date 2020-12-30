@@ -149,7 +149,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         thickness_slider.set_fixed_height(20);
         thickness_slider.set_range(1, 20);
         thickness_slider.set_value(m_thickness);
-        thickness_slider.on_value_changed = [this](int value) {
+        thickness_slider.on_change = [this](int value) {
             m_thickness = value;
         };
 
@@ -165,7 +165,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         density_slider.set_fixed_height(30);
         density_slider.set_range(1, 100);
         density_slider.set_value(m_density);
-        density_slider.on_value_changed = [this](int value) {
+        density_slider.on_change = [this](int value) {
             m_density = value;
         };
     }
