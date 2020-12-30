@@ -46,6 +46,30 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
+static String build_backtrace(const CoreDump::Reader& coredump)
+{
+    StringBuilder builder;
+
+    auto assertion = coredump.metadata().get("assertion");
+    if (assertion.has_value() && !assertion.value().is_empty()) {
+        builder.append("ASSERTION FAILED: ");
+        builder.append(assertion.value().characters());
+        builder.append('\n');
+        builder.append('\n');
+    }
+
+    auto first = true;
+    for (auto& entry : coredump.backtrace().entries()) {
+        if (first)
+            first = false;
+        else
+            builder.append('\n');
+        builder.append(entry.to_string());
+    }
+
+    return builder.build();
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio shared_buffer accept cpath rpath unix fattr", nullptr) < 0) {
@@ -60,7 +84,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
     args_parser.parse(argc, argv);
 
-    Optional<CoreDump::Backtrace> backtrace;
+    String backtrace;
     String executable_path;
     int pid { 0 };
 
@@ -71,7 +95,7 @@ int main(int argc, char** argv)
             return 1;
         }
         auto& process_info = coredump->process_info();
-        backtrace = coredump->backtrace();
+        backtrace = build_backtrace(*coredump);
         executable_path = String(process_info.executable_path);
         pid = process_info.pid;
     }
@@ -138,18 +162,8 @@ int main(int argc, char** argv)
         Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
     };
 
-    StringBuilder backtrace_builder;
-    auto first = true;
-    for (auto& entry : backtrace.value().entries()) {
-        if (first)
-            first = false;
-        else
-            backtrace_builder.append('\n');
-        backtrace_builder.append(entry.to_string());
-    }
-
     auto& backtrace_text_editor = static_cast<GUI::TextEditor&>(*widget.find_descendant_by_name("backtrace_text_editor"));
-    backtrace_text_editor.set_text(backtrace_builder.build());
+    backtrace_text_editor.set_text(backtrace);
 
     auto& close_button = static_cast<GUI::Button&>(*widget.find_descendant_by_name("close_button"));
     close_button.on_click = [&](auto) {
