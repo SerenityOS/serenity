@@ -43,6 +43,7 @@ public:
     int min() const { return m_min; }
     int max() const { return m_max; }
     int step() const { return m_step; }
+    int page_step() const { return m_page_step; }
 
     void set_range(int min, int max);
     void set_value(int);
@@ -50,6 +51,7 @@ public:
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
     void set_step(int step) { m_step = step; }
+    void set_page_step(int page_step);
 
     Function<void(int)> on_value_changed;
 
@@ -63,6 +65,7 @@ private:
     int m_min { 0 };
     int m_max { 100 };
     int m_step { 1 };
+    int m_page_step { 10 };
     Orientation m_orientation { Orientation::Horizontal };
 };
 
