@@ -437,7 +437,7 @@ int main(int argc, char** argv)
     auto& input_group_box = tab_modals.add<GUI::GroupBox>("Input boxes");
     input_group_box.set_layout<GUI::VerticalBoxLayout>();
     input_group_box.layout()->set_margins({ 4, 12, 4, 4 });
-    input_group_box.set_fixed_height(160);
+    input_group_box.set_fixed_height(140);
 
     input_group_box.layout()->add_spacer();
 
