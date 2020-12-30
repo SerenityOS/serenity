@@ -35,8 +35,9 @@
 
 namespace GUI {
 
-FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font)
+FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only)
     : Dialog(parent_window)
+    , m_fixed_width_only(fixed_width_only)
 {
     set_title("Font picker");
     resize(540, 300);
@@ -53,6 +54,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font)
 
     HashTable<String> families;
     Gfx::FontDatabase::the().for_each_font([&](auto& font) {
+        if (m_fixed_width_only && !font.is_fixed_width())
+            return;
         families.set(font.family());
     });
 
@@ -65,6 +68,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font)
         m_family = index.data().to_string();
         HashTable<int> weights;
         Gfx::FontDatabase::the().for_each_font([&](auto& font) {
+            if (m_fixed_width_only && !font.is_fixed_width())
+                return;
             if (font.family() == m_family.value())
                 weights.set(font.weight());
         });
@@ -88,6 +93,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font)
         m_sizes.clear();
         Optional<size_t> index_of_old_size_in_new_list;
         Gfx::FontDatabase::the().for_each_font([&](auto& font) {
+            if (m_fixed_width_only && !font.is_fixed_width())
+                return;
             if (font.family() == m_family.value() && font.weight() == m_weight.value()) {
                 if (m_size.has_value() && m_size.value() == font.presentation_size())
                     index_of_old_size_in_new_list = m_sizes.size();
