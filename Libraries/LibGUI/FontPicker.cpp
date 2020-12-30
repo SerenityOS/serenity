@@ -85,7 +85,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
 
         m_weight_list_view->set_model(ItemListModel<int>::create(m_weights));
         m_weight_list_view->set_cursor(m_weight_list_view->model()->index(index_of_old_weight_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
-        update_sample_label();
+        update_font();
     };
 
     m_weight_list_view->on_selection = [this](auto& index) {
@@ -104,12 +104,12 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
 
         m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
         m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_old_size_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
-        update_sample_label();
+        update_font();
     };
 
     m_size_list_view->on_selection = [this](auto& index) {
         m_size = index.data().to_i32();
-        update_sample_label();
+        update_font();
     };
 
     auto& ok_button = static_cast<Button&>(*widget.find_descendant_by_name("ok_button"));
@@ -137,12 +137,19 @@ void FontPicker::set_font(const Gfx::Font* font)
     m_sample_text_label->set_font(m_font);
 
     if (!m_font) {
+        m_family = {};
+        m_weight = {};
+        m_size = {};
         m_weights.clear();
         m_sizes.clear();
         m_weight_list_view->set_model(nullptr);
         m_size_list_view->set_model(nullptr);
         return;
     }
+
+    m_family = font->family();
+    m_weight = font->weight();
+    m_size = font->presentation_size();
 
     size_t family_index = 0;
     for (size_t i = 0; i < m_families.size(); ++i) {
@@ -175,10 +182,12 @@ void FontPicker::set_font(const Gfx::Font* font)
     m_size_list_view->set_cursor(m_size_list_view->model()->index(size_index), GUI::AbstractView::SelectionUpdate::Set);
 }
 
-void FontPicker::update_sample_label()
+void FontPicker::update_font()
 {
-    if (m_family.has_value() && m_size.has_value() && m_weight.has_value())
-        set_font(Gfx::FontDatabase::the().get(m_family.value(), m_size.value(), m_weight.value()));
+    if (m_family.has_value() && m_size.has_value() && m_weight.has_value()) {
+        m_font = Gfx::FontDatabase::the().get(m_family.value(), m_size.value(), m_weight.value());
+        m_sample_text_label->set_font(m_font);
+    }
 }
 
 }
