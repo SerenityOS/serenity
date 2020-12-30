@@ -180,7 +180,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_resizable(false);
-    window->resize(200, 240);
+    window->resize(200, 254);
     window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
@@ -189,14 +189,14 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     settings.set_layout<GUI::VerticalBoxLayout>();
     settings.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& radio_container = settings.add<GUI::GroupBox>("Bell Mode");
+    auto& radio_container = settings.add<GUI::GroupBox>("Bell mode");
     radio_container.set_layout<GUI::VerticalBoxLayout>();
     radio_container.layout()->set_margins({ 6, 16, 6, 6 });
-    radio_container.set_fixed_height(80);
+    radio_container.set_fixed_height(94);
 
-    auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (Audible) System Bell");
-    auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (Visual) Terminal Bell");
-    auto& nobell_radio = radio_container.add<GUI::RadioButton>("Disable Terminal Bell");
+    auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (audible) system Bell");
+    auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (visual) bell");
+    auto& nobell_radio = radio_container.add<GUI::RadioButton>("Disable bell");
 
     switch (terminal.bell_mode()) {
     case TerminalWidget::BellMode::Visible:
@@ -220,7 +220,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
         terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
     };
 
-    auto& slider_container = settings.add<GUI::GroupBox>("Background Opacity");
+    auto& slider_container = settings.add<GUI::GroupBox>("Background opacity");
     slider_container.set_layout<GUI::VerticalBoxLayout>();
     slider_container.layout()->set_margins({ 6, 16, 6, 6 });
     slider_container.set_fixed_height(50);
@@ -233,7 +233,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     slider.set_range(0, 255);
     slider.set_value(terminal.opacity());
 
-    auto& spinbox_container = settings.add<GUI::GroupBox>("Scroll Length");
+    auto& spinbox_container = settings.add<GUI::GroupBox>("Scroll length");
     spinbox_container.set_layout<GUI::VerticalBoxLayout>();
     spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
     spinbox_container.set_fixed_height(46);
