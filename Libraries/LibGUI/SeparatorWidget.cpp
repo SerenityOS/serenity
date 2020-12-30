@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,43 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/SeparatorWidget.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
-class ToolBar : public Widget {
-    C_OBJECT(ToolBar)
-public:
-    virtual ~ToolBar() override;
+SeparatorWidget::SeparatorWidget(Gfx::Orientation orientation)
+    : m_orientation(orientation)
+{
+    if (m_orientation == Gfx::Orientation::Vertical)
+        set_fixed_width(8);
+    else
+        set_fixed_height(8);
+}
 
-    void add_action(Action&);
-    void add_separator();
+SeparatorWidget::~SeparatorWidget()
+{
+}
 
-    bool has_frame() const { return m_has_frame; }
-    void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
+void SeparatorWidget::paint_event(PaintEvent& event)
+{
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
 
-protected:
-    explicit ToolBar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 16);
-
-    virtual void paint_event(PaintEvent&) override;
-
-private:
-    struct Item {
-        enum class Type {
-            Invalid,
-            Separator,
-            Action
-        };
-        Type type { Type::Invalid };
-        RefPtr<Action> action;
-    };
-    NonnullOwnPtrVector<Item> m_items;
-    const Gfx::Orientation m_orientation;
-    int m_button_size { 16 };
-    bool m_has_frame { true };
-};
+    if (m_orientation == Gfx::Orientation::Vertical) {
+        painter.translate(rect().center().x() - 1, 0);
+        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, palette().threed_shadow1());
+        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, palette().threed_highlight());
+    } else {
+        painter.translate(0, rect().center().y() - 1);
+        painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_shadow1());
+        painter.draw_line({ 0, 1 }, { rect().right(), 1 }, palette().threed_highlight());
+    }
+}
 
 }
