@@ -178,7 +178,7 @@ static pid_t run_command(int ptm_fd, String command)
 static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
-    window->set_title("Terminal Settings");
+    window->set_title("Terminal settings");
     window->set_resizable(false);
     window->resize(200, 210);
     window->set_modal(true);
@@ -413,6 +413,25 @@ int main(int argc, char** argv)
     auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
+    auto open_settings_action = GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
+        [&](const GUI::Action&) {
+            if (!settings_window) {
+                settings_window = create_settings_window(terminal);
+                settings_window->on_close_request = [&] {
+                    settings_window = nullptr;
+                    return GUI::Window::CloseRequestDecision::Close;
+                };
+            }
+            if (!settings_window->is_visible()) {
+                settings_window->center_within(*window);
+                settings_window->show();
+            }
+            settings_window->move_to_front();
+        });
+
+    terminal.context_menu().add_separator();
+    terminal.context_menu().add_action(open_settings_action);
+
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Terminal");
@@ -426,18 +445,8 @@ int main(int argc, char** argv)
                 perror("disown");
         }
     }));
-    app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
-        [&](const GUI::Action&) {
-            if (!settings_window) {
-                settings_window = create_settings_window(terminal);
-                settings_window->on_close_request = [&] {
-                    settings_window = nullptr;
-                    return GUI::Window::CloseRequestDecision::Close;
-                };
-            }
-            settings_window->show();
-            settings_window->move_to_front();
-        }));
+
+    app_menu.add_action(open_settings_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
