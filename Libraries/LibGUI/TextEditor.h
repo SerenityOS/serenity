@@ -30,6 +30,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
@@ -158,6 +159,9 @@ public:
 
     const SyntaxHighlighter* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
+
+    const AutocompleteProvider* autocomplete_provider() const;
+    void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
 
     bool is_in_drag_select() const { return m_in_drag_select; }
 
@@ -317,6 +321,8 @@ private:
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 
     OwnPtr<SyntaxHighlighter> m_highlighter;
+    OwnPtr<AutocompleteProvider> m_autocomplete_provider;
+    OwnPtr<AutocompleteBox> m_autocomplete_box;
 
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     Gfx::IntPoint m_last_mousemove_position;

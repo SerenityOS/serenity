@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,20 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AutoCompleteBox.h"
-#include "Editor.h"
+#include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-namespace HackStudio {
+static RefPtr<Gfx::Bitmap> s_cpp_identifier_icon;
+static RefPtr<Gfx::Bitmap> s_unspecified_identifier_icon;
 
-static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
+namespace GUI {
 
-class AutoCompleteSuggestionModel final : public GUI::Model {
+class AutocompleteSuggestionModel final : public GUI::Model {
 public:
-    explicit AutoCompleteSuggestionModel(Vector<AutoCompleteResponse>&& suggestions)
+    explicit AutocompleteSuggestionModel(Vector<AutocompleteProvider::Entry>&& suggestions)
         : m_suggestions(move(suggestions))
     {
     }
@@ -64,11 +65,20 @@ public:
                 return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
-                // TODO: Have separate icons for fields, functions, methods etc
-                // FIXME: Probably should have different icons for the different kinds, rather than for "c++".
-                if (suggestion.kind == CompletionKind::Identifier)
-                    return *s_cplusplus_icon;
-                return *s_cplusplus_icon;
+                // TODO
+                if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
+                    if (!s_cpp_identifier_icon) {
+                        s_cpp_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/cpp-identifier.png");
+                    }
+                    return *s_cpp_identifier_icon;
+                }
+                if (suggestion.language == GUI::AutocompleteProvider::Language::Unspecified) {
+                    if (!s_unspecified_identifier_icon) {
+                        s_unspecified_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/unspecified-identifier.png");
+                    }
+                    return *s_unspecified_identifier_icon;
+                }
+                return {};
             }
         }
 
@@ -83,18 +93,14 @@ public:
     virtual void update() override {};
 
 private:
-    Vector<AutoCompleteResponse> m_suggestions;
+    Vector<AutocompleteProvider::Entry> m_suggestions;
 };
 
-AutoCompleteBox::~AutoCompleteBox() { }
+AutocompleteBox::~AutocompleteBox() { }
 
-AutoCompleteBox::AutoCompleteBox(WeakPtr<Editor> editor)
-    : m_editor(move(editor))
+AutocompleteBox::AutocompleteBox(TextEditor& editor)
+    : m_editor(editor)
 {
-    if (!s_cplusplus_icon) {
-        s_cplusplus_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png");
-    }
-
     m_popup_window = GUI::Window::construct();
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
     m_popup_window->set_rect(0, 0, 200, 100);
@@ -103,13 +109,13 @@ AutoCompleteBox::AutoCompleteBox(WeakPtr<Editor> editor)
     m_suggestion_view->set_column_headers_visible(false);
 }
 
-void AutoCompleteBox::update_suggestions(Vector<AutoCompleteResponse>&& suggestions)
+void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
 {
     if (suggestions.is_empty())
         return;
 
     bool has_suggestions = !suggestions.is_empty();
-    m_suggestion_view->set_model(adopt(*new AutoCompleteSuggestionModel(move(suggestions))));
+    m_suggestion_view->set_model(adopt(*new AutocompleteSuggestionModel(move(suggestions))));
 
     if (!has_suggestions)
         m_suggestion_view->selection().clear();
@@ -117,18 +123,23 @@ void AutoCompleteBox::update_suggestions(Vector<AutoCompleteResponse>&& suggesti
         m_suggestion_view->selection().set(m_suggestion_view->model()->index(0));
 }
 
-void AutoCompleteBox::show(Gfx::IntPoint suggstion_box_location)
+bool AutocompleteBox::is_visible() const
+{
+    return m_popup_window->is_visible();
+}
+
+void AutocompleteBox::show(Gfx::IntPoint suggstion_box_location)
 {
     m_popup_window->move_to(suggstion_box_location);
     m_popup_window->show();
 }
 
-void AutoCompleteBox::close()
+void AutocompleteBox::close()
 {
     m_popup_window->hide();
 }
 
-void AutoCompleteBox::next_suggestion()
+void AutocompleteBox::next_suggestion()
 {
     GUI::ModelIndex new_index = m_suggestion_view->selection().first();
     if (new_index.is_valid())
@@ -142,7 +153,7 @@ void AutoCompleteBox::next_suggestion()
     }
 }
 
-void AutoCompleteBox::previous_suggestion()
+void AutocompleteBox::previous_suggestion()
 {
     GUI::ModelIndex new_index = m_suggestion_view->selection().first();
     if (new_index.is_valid())
@@ -156,22 +167,25 @@ void AutoCompleteBox::previous_suggestion()
     }
 }
 
-void AutoCompleteBox::apply_suggestion()
+void AutocompleteBox::apply_suggestion()
 {
     if (m_editor.is_null())
+        return;
+
+    if (!m_editor->is_editable())
         return;
 
     auto selected_index = m_suggestion_view->selection().first();
     if (!selected_index.is_valid())
         return;
 
-    auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutoCompleteSuggestionModel::Column::Name);
+    auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutocompleteSuggestionModel::Column::Name);
     auto suggestion = suggestion_index.data().to_string();
-    size_t partial_length = suggestion_index.data((GUI::ModelRole)AutoCompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
+    size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
     ASSERT(suggestion.length() >= partial_length);
     auto completion = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }
 
-};
+}

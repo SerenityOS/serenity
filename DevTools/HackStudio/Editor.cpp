@@ -62,8 +62,6 @@ Editor::Editor()
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
-
-    m_autocomplete_box = make<AutoCompleteBox>(*this);
 }
 
 Editor::~Editor()
@@ -315,50 +313,6 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     GUI::TextEditor::mousedown_event(event);
 }
 
-void Editor::keydown_event(GUI::KeyEvent& event)
-{
-    if (m_autocomplete_in_focus) {
-        if (event.key() == Key_Escape) {
-            m_autocomplete_in_focus = false;
-            m_autocomplete_box->close();
-            return;
-        }
-        if (event.key() == Key_Down) {
-            m_autocomplete_box->next_suggestion();
-            return;
-        }
-        if (event.key() == Key_Up) {
-            m_autocomplete_box->previous_suggestion();
-            return;
-        }
-        if (event.key() == Key_Return || event.key() == Key_Tab) {
-            m_autocomplete_box->apply_suggestion();
-            close_autocomplete();
-            return;
-        }
-    }
-
-    auto autocomplete_action = [this]() {
-        auto data = get_autocomplete_request_data();
-        if (data.has_value()) {
-            update_autocomplete(data.value());
-            if (m_autocomplete_in_focus)
-                show_autocomplete(data.value());
-        } else {
-            close_autocomplete();
-        }
-    };
-
-    if (event.ctrl() && event.key() == Key_Space) {
-        autocomplete_action();
-    }
-    GUI::TextEditor::keydown_event(event);
-
-    if (m_autocomplete_in_focus) {
-        autocomplete_action();
-    }
-}
-
 void Editor::enter_event(Core::Event& event)
 {
     m_hovering_editor = true;
@@ -486,6 +440,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     }
 
     if (m_language_client) {
+        set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
         dbgln("Opening {}", code_document.file_path());
         int fd = open(code_document.file_path().characters(), O_RDONLY | O_NOCTTY);
         if (fd < 0) {
@@ -505,39 +460,21 @@ Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data(
     return Editor::AutoCompleteRequestData { cursor() };
 }
 
-void Editor::update_autocomplete(const AutoCompleteRequestData& data)
+void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
 {
-    if (!m_language_client)
-        return;
+    auto& editor = static_cast<Editor&>(*m_editor).wrapper().editor();
+    auto data = editor.get_autocomplete_request_data();
+    if (!data.has_value())
+        callback({});
 
-    m_language_client->on_autocomplete_suggestions = [=, this](auto suggestions) {
-        if (suggestions.is_empty()) {
-            close_autocomplete();
-            return;
-        }
-
-        show_autocomplete(data);
-
-        m_autocomplete_box->update_suggestions(move(suggestions));
-        m_autocomplete_in_focus = true;
+    m_language_client.on_autocomplete_suggestions = [callback = move(callback)](auto suggestions) {
+        callback(suggestions);
     };
 
-    m_language_client->request_autocomplete(
-        code_document().file_path(),
-        data.position.line(),
-        data.position.column());
-}
-
-void Editor::show_autocomplete(const AutoCompleteRequestData& data)
-{
-    auto suggestion_box_location = content_rect_for_position(data.position).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
-    m_autocomplete_box->show(suggestion_box_location);
-}
-
-void Editor::close_autocomplete()
-{
-    m_autocomplete_box->close();
-    m_autocomplete_in_focus = false;
+    m_language_client.request_autocomplete(
+        editor.code_document().file_path(),
+        data.value().position.line(),
+        data.value().position.column());
 }
 
 void Editor::on_edit_action(const GUI::Command& command)

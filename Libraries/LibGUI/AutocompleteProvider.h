@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,57 @@
 
 #pragma once
 
-#include "AutoCompleteResponse.h"
-#include <AK/WeakPtr.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/Forward.h>
+#include <LibGUI/TextEditor.h>
+#include <LibGUI/Window.h>
 
-namespace HackStudio {
+namespace GUI {
 
-class Editor;
+class AutocompleteProvider {
+    AK_MAKE_NONCOPYABLE(AutocompleteProvider);
+    AK_MAKE_NONMOVABLE(AutocompleteProvider);
 
-class AutoCompleteBox final {
 public:
-    explicit AutoCompleteBox(WeakPtr<Editor>);
-    ~AutoCompleteBox();
+    virtual ~AutocompleteProvider() { }
 
-    void update_suggestions(Vector<AutoCompleteResponse>&& suggestions);
+    enum class CompletionKind {
+        Identifier,
+    };
+
+    enum class Language {
+        Unspecified,
+        Cpp,
+    };
+
+    struct Entry {
+        String completion;
+        size_t partial_input_length { 0 };
+        CompletionKind kind { CompletionKind::Identifier };
+        Language language { Language::Unspecified };
+    };
+
+    virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
+
+    void attach(TextEditor& editor)
+    {
+        ASSERT(!m_editor);
+        m_editor = editor;
+    }
+    void detach() { m_editor.clear(); }
+
+protected:
+    AutocompleteProvider() { }
+
+    WeakPtr<TextEditor> m_editor;
+};
+
+class AutocompleteBox final {
+public:
+    explicit AutocompleteBox(TextEditor&);
+    ~AutocompleteBox();
+
+    void update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions);
+    bool is_visible() const;
     void show(Gfx::IntPoint suggstion_box_location);
     void close();
 
@@ -48,10 +85,9 @@ public:
     void apply_suggestion();
 
 private:
-    void complete_suggestion(const GUI::ModelIndex&);
-
-    WeakPtr<Editor> m_editor;
+    WeakPtr<TextEditor> m_editor;
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
 };
+
 }

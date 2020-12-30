@@ -28,45 +28,36 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <LibGUI/AutocompleteProvider.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
-
-namespace HackStudio {
-
-enum class CompletionKind {
-    Identifier,
-};
-
-struct AutoCompleteResponse {
-    String completion;
-    size_t partial_input_length { 0 };
-    CompletionKind kind { CompletionKind::Identifier };
-};
-
-}
 
 namespace IPC {
 
 template<>
-inline bool encode(IPC::Encoder& encoder, const HackStudio::AutoCompleteResponse& response)
+inline bool encode(IPC::Encoder& encoder, const GUI::AutocompleteProvider::Entry& response)
 {
     encoder << response.completion;
     encoder << (u64)response.partial_input_length;
     encoder << (u32)response.kind;
+    encoder << (u32)response.language;
     return true;
 }
 
 template<>
-inline bool decode(IPC::Decoder& decoder, HackStudio::AutoCompleteResponse& response)
+inline bool decode(IPC::Decoder& decoder, GUI::AutocompleteProvider::Entry& response)
 {
     u32 kind = 0;
+    u32 language = 0;
     u64 partial_input_length = 0;
     bool ok = decoder.decode(response.completion)
         && decoder.decode(partial_input_length)
-        && decoder.decode(kind);
+        && decoder.decode(kind)
+        && decoder.decode(language);
 
     if (ok) {
-        response.kind = static_cast<HackStudio::CompletionKind>(kind);
+        response.kind = static_cast<GUI::AutocompleteProvider::CompletionKind>(kind);
+        response.language = static_cast<GUI::AutocompleteProvider::Language>(language);
         response.partial_input_length = partial_input_length;
     }
 
