@@ -721,6 +721,7 @@ class Processor {
     static FPUState s_clean_fpu_state;
     CPUFeature m_features;
     static volatile u32 g_total_processors; // atomic
+    u8 m_physical_address_bit_width;
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
@@ -811,6 +812,8 @@ public:
         }
         return IterationDecision::Continue;
     }
+
+    ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
 
     ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
 

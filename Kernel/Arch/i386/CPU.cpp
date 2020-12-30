@@ -916,6 +916,7 @@ u32 read_cr3()
 
 void write_cr3(u32 cr3)
 {
+    // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
     asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
 }
@@ -1031,6 +1032,15 @@ void Processor::cpu_detect()
             set_feature(CPUFeature::CONSTANT_TSC);
             set_feature(CPUFeature::NONSTOP_TSC);
         }
+    }
+
+    if (max_extended_leaf >= 0x80000008) {
+        // CPUID.80000008H:EAX[7:0] reports the physical-address width supported by the processor.
+        CPUID cpuid(0x80000008);
+        m_physical_address_bit_width = cpuid.eax() & 0xff;
+    } else {
+        // For processors that do not support CPUID function 80000008H, the width is generally 36 if CPUID.01H:EDX.PAE [bit 6] = 1 and 32 otherwise.
+        m_physical_address_bit_width = has_feature(CPUFeature::PAE) ? 36 : 32;
     }
 
     CPUID extended_features(0x7);
@@ -1218,6 +1228,7 @@ void Processor::initialize(u32 cpu)
     klog() << "CPU[" << id() << "]: Supported features: " << features_string();
     if (!has_feature(CPUFeature::RDRAND))
         klog() << "CPU[" << id() << "]: No RDRAND support detected, randomness will be poor";
+    klog() << "CPU[" << id() << "]: Physical address bit width: " << m_physical_address_bit_width;
 
     if (cpu == 0)
         idt_init();
