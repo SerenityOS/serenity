@@ -39,6 +39,7 @@ struct [[gnu::packed]] NotesEntryHeader
         ProcessInfo,
         ThreadInfo,
         MemoryRegionInfo,
+        Metadata,
     };
     Type type;
 };
@@ -80,6 +81,12 @@ struct [[gnu::packed]] MemoryRegionInfo
             return {};
         return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
     }
+};
+
+struct [[gnu::packed]] Metadata
+{
+    NotesEntryHeader header;
+    char json_data[]; // Null terminated
 };
 
 }
