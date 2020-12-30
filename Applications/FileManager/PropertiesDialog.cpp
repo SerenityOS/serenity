@@ -76,7 +76,6 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     m_parent_path = lexical_path.dirname();
 
     m_name_box = file_container.add<GUI::TextBox>();
-    m_name_box->set_fixed_height(22);
     m_name_box->set_text(m_name);
     m_name_box->set_mode(disable_rename ? GUI::TextBox::Mode::DisplayOnly : GUI::TextBox::Mode::Editable);
     m_name_box->on_change = [&]() {

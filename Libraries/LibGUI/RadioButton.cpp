@@ -36,6 +36,7 @@ namespace GUI {
 RadioButton::RadioButton(String text)
     : AbstractButton(move(text))
 {
+    set_fixed_height(22);
 }
 
 RadioButton::~RadioButton()

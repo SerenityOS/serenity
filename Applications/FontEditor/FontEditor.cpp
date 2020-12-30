@@ -72,7 +72,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     glyph_width_label.set_text("Glyph width:");
 
     auto& glyph_width_spinbox = editor_container.add<GUI::SpinBox>();
-    glyph_width_spinbox.set_fixed_height(22);
     glyph_width_spinbox.set_min(0);
     glyph_width_spinbox.set_max(32);
     glyph_width_spinbox.set_value(0);
@@ -253,7 +252,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
 
     //// Fixed checkbox Row
     auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
-    fixed_width_checkbox.set_fixed_height(22);
     fixed_width_checkbox.set_text("Fixed width");
     fixed_width_checkbox.set_checked(m_edited_font->is_fixed_width());
 
