@@ -220,9 +220,6 @@ public:
     void set_background_color(Color color) { m_background_color = color; }
     void set_foreground_color(Color color) { m_foreground_color = color; }
 
-    void set_backcolor(const StringView&);
-    void set_forecolor(const StringView&);
-
     void set_autofill(bool b) { set_fill_with_background_color(b); }
 
     Window* window()
