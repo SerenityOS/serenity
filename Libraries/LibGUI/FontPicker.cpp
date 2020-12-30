@@ -30,6 +30,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/ScrollBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>
 
@@ -40,7 +41,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     , m_fixed_width_only(fixed_width_only)
 {
     set_title("Font picker");
-    resize(540, 300);
+    resize(430, 280);
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"));
 
     auto& widget = set_main_widget<GUI::Widget>();
@@ -50,6 +51,11 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_family_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("family_list_view"));
     m_weight_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("weight_list_view"));
     m_size_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("size_list_view"));
+
+    m_family_list_view->horizontal_scrollbar().set_visible(false);
+    m_weight_list_view->horizontal_scrollbar().set_visible(false);
+    m_size_list_view->horizontal_scrollbar().set_visible(false);
+
     m_sample_text_label = static_cast<Label&>(*widget.find_descendant_by_name("sample_text_label"));
 
     HashTable<String> families;

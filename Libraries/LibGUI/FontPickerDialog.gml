@@ -25,6 +25,8 @@
         }
 
         @GUI::Widget {
+            fixed_width: 100
+
             layout: @GUI::VerticalBoxLayout {
             }
 
@@ -40,6 +42,8 @@
         }
 
         @GUI::Widget {
+            fixed_width: 80
+
             layout: @GUI::VerticalBoxLayout {
             }
 
@@ -60,7 +64,7 @@
         }
 
         title: "Sample text"
-        fixed_height: 100
+        fixed_height: 80
 
         @GUI::Label {
             name: "sample_text_label"
