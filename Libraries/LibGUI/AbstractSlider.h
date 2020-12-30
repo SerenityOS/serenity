@@ -63,7 +63,7 @@ private:
 
     int m_value { 0 };
     int m_min { 0 };
-    int m_max { 100 };
+    int m_max { 0 };
     int m_step { 1 };
     int m_page_step { 10 };
     Orientation m_orientation { Orientation::Horizontal };
