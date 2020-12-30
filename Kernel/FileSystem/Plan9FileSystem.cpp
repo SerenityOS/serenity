@@ -570,8 +570,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
 
 KResult Plan9FS::read_and_dispatch_one_message()
 {
-    struct [[gnu::packed]] Header
-    {
+    struct [[gnu::packed]] Header {
         u32 size;
         u8 type;
         u16 tag;

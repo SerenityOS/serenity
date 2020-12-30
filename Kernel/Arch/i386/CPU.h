@@ -51,14 +51,12 @@ inline u32 get_iopl_from_eflags(u32 eflags)
     return (eflags & iopl_mask) >> 12;
 }
 
-struct [[gnu::packed]] DescriptorTablePointer
-{
+struct [[gnu::packed]] DescriptorTablePointer {
     u16 limit;
     void* address;
 };
 
-struct [[gnu::packed]] TSS32
-{
+struct [[gnu::packed]] TSS32 {
     u16 backlink, __blh;
     u32 esp0;
     u16 ss0, __ss0h;
@@ -78,8 +76,7 @@ struct [[gnu::packed]] TSS32
     u16 trace, iomapbase;
 };
 
-union [[gnu::packed]] Descriptor
-{
+union [[gnu::packed]] Descriptor {
     struct {
         u16 limit_lo;
         u16 base_lo;
@@ -347,15 +344,15 @@ inline u32 read_fs_u32(u32 offset)
     u32 val;
     asm volatile(
         "movl %%fs:%a[off], %k[val]"
-        : [ val ] "=r"(val)
-        : [ off ] "ir"(offset));
+        : [val] "=r"(val)
+        : [off] "ir"(offset));
     return val;
 }
 
 inline void write_fs_u32(u32 offset, u32 val)
 {
     asm volatile(
-        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [ val ] "ir"(val)
+        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
         : "memory");
 }
 
@@ -475,8 +472,7 @@ private:
     VirtualAddress m_vaddr;
 };
 
-struct [[gnu::packed]] RegisterState
-{
+struct [[gnu::packed]] RegisterState {
     u32 ss;
     u32 gs;
     u32 fs;
@@ -539,7 +535,7 @@ static inline bool is_kernel_mode()
     u32 cs;
     asm volatile(
         "movl %%cs, %[cs] \n"
-        : [ cs ] "=g"(cs));
+        : [cs] "=g"(cs));
     return (cs & 3) == 0;
 }
 

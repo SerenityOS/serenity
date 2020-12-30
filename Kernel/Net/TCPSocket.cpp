@@ -310,8 +310,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
 
 NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
 {
-    struct [[gnu::packed]] PseudoHeader
-    {
+    struct [[gnu::packed]] PseudoHeader {
         IPv4Address source;
         IPv4Address destination;
         u8 zero;

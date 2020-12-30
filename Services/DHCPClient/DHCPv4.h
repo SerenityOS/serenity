@@ -194,8 +194,7 @@ struct ParsedDHCPv4Options {
 
 constexpr auto DHCPV4_OPTION_FIELD_MAX_LENGTH = 312;
 
-class [[gnu::packed]] DHCPv4Packet
-{
+class [[gnu::packed]] DHCPv4Packet {
 public:
     u8 op() const { return m_op; }
     void set_op(DHCPv4Op op) { m_op = (u8)op; }

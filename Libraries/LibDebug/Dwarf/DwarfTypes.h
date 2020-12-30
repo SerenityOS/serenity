@@ -30,8 +30,7 @@
 
 namespace Debug::Dwarf {
 
-struct [[gnu::packed]] CompilationUnitHeader
-{
+struct [[gnu::packed]] CompilationUnitHeader {
     u32 length;
     u16 version;
     u32 abbrev_offset;
@@ -287,8 +286,7 @@ enum class AttributeDataForm : u8 {
     AddrX4 = 0x2c
 };
 
-struct [[gnu::packed]] AttributeSpecification
-{
+struct [[gnu::packed]] AttributeSpecification {
     Attribute attribute;
     AttributeDataForm form;
 };

@@ -45,8 +45,7 @@ public:
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    struct [[gnu::packed]] BlockHeader
-    {
+    struct [[gnu::packed]] BlockHeader {
         u8 identification_1;
         u8 identification_2;
         u8 compression_method;

@@ -30,8 +30,7 @@
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
-struct [[gnu::packed]] ioapic_mmio_regs
-{
+struct [[gnu::packed]] ioapic_mmio_regs {
     volatile u32 select;
     u32 reserved[3];
     volatile u32 window;

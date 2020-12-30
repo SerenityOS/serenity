@@ -32,8 +32,7 @@
 
 namespace ELF::Core {
 
-struct [[gnu::packed]] NotesEntryHeader
-{
+struct [[gnu::packed]] NotesEntryHeader {
     enum Type : u8 {
         Null = 0, // Terminates segment
         ProcessInfo,
@@ -44,28 +43,24 @@ struct [[gnu::packed]] NotesEntryHeader
     Type type;
 };
 
-struct [[gnu::packed]] NotesEntry
-{
+struct [[gnu::packed]] NotesEntry {
     NotesEntryHeader header;
     char data[];
 };
 
-struct [[gnu::packed]] ProcessInfo
-{
+struct [[gnu::packed]] ProcessInfo {
     NotesEntryHeader header;
     int pid;
     char executable_path[]; // Null terminated
 };
 
-struct [[gnu::packed]] ThreadInfo
-{
+struct [[gnu::packed]] ThreadInfo {
     NotesEntryHeader header;
     int tid;
     PtraceRegisters regs;
 };
 
-struct [[gnu::packed]] MemoryRegionInfo
-{
+struct [[gnu::packed]] MemoryRegionInfo {
     NotesEntryHeader header;
     uint32_t region_start;
     uint32_t region_end;
@@ -83,8 +78,7 @@ struct [[gnu::packed]] MemoryRegionInfo
     }
 };
 
-struct [[gnu::packed]] Metadata
-{
+struct [[gnu::packed]] Metadata {
     NotesEntryHeader header;
     char json_data[]; // Null terminated
 };
