@@ -74,20 +74,16 @@ void InputBox::build()
     widget.layout()->set_spacing(6);
 
     auto& label_editor_container = widget.add<Widget>();
-    label_editor_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     label_editor_container.set_layout<HorizontalBoxLayout>();
 
     auto& label = label_editor_container.add<Label>(m_prompt);
-    label.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    label.set_preferred_size(text_width, 16);
+    label.set_fixed_size(text_width, 16);
 
     m_text_editor = label_editor_container.add<TextBox>();
-    m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_text_editor->set_preferred_size(0, 19);
+    m_text_editor->set_fixed_height(19);
 
     auto& button_container_outer = widget.add<Widget>();
-    button_container_outer.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container_outer.set_preferred_size(0, 20);
+    button_container_outer.set_fixed_height(20);
     button_container_outer.set_layout<VerticalBoxLayout>();
 
     auto& button_container_inner = button_container_outer.add<Widget>();
@@ -97,8 +93,7 @@ void InputBox::build()
     button_container_inner.layout()->add_spacer();
 
     m_ok_button = button_container_inner.add<Button>();
-    m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_ok_button->set_preferred_size(0, 20);
+    m_ok_button->set_fixed_height(20);
     m_ok_button->set_text("OK");
     m_ok_button->on_click = [this](auto) {
         dbgprintf("GUI::InputBox: OK button clicked\n");
@@ -107,8 +102,7 @@ void InputBox::build()
     };
 
     m_cancel_button = button_container_inner.add<Button>();
-    m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_cancel_button->set_preferred_size(0, 20);
+    m_cancel_button->set_fixed_height(20);
     m_cancel_button->set_text("Cancel");
     m_cancel_button->on_click = [this](auto) {
         dbgprintf("GUI::InputBox: Cancel button clicked\n");

@@ -72,18 +72,15 @@ void ToolBarContainer::recompute_preferred_size()
         if (!toolbar.is_visible())
             continue;
         ++visible_toolbar_count;
-        if (m_orientation == Gfx::Orientation::Horizontal)
-            preferred_size += toolbar.preferred_size().height();
-        else
-            preferred_size += toolbar.preferred_size().width();
+        preferred_size += toolbar.min_size().secondary_size_for_orientation(m_orientation);
     }
 
     preferred_size += (visible_toolbar_count - 1) * 2;
 
     if (m_orientation == Gfx::Orientation::Horizontal)
-        set_preferred_size(0, preferred_size);
+        set_fixed_height(preferred_size);
     else
-        set_preferred_size(preferred_size, 0);
+        set_fixed_width(preferred_size);
 }
 
 ToolBarContainer::ToolBarContainer(Gfx::Orientation orientation)
@@ -94,11 +91,6 @@ ToolBarContainer::ToolBarContainer(Gfx::Orientation orientation)
     set_frame_thickness(2);
     set_frame_shape(Gfx::FrameShape::Box);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
-
-    if (m_orientation == Gfx::Orientation::Horizontal)
-        set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    else
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
 
     auto& layout = set_layout<VerticalBoxLayout>();
     layout.set_spacing(2);

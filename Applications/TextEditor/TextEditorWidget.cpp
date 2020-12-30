@@ -246,8 +246,7 @@ TextEditorWidget::TextEditorWidget()
     };
 
     m_find_regex_button = m_find_widget->add<GUI::Button>(".*");
-    m_find_regex_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_find_regex_button->set_preferred_size(20, 0);
+    m_find_regex_button->set_fixed_width(20);
     m_find_regex_button->set_action(*m_find_regex_action);
 
     m_find_textbox->on_escape_pressed = [this] {

@@ -54,16 +54,14 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
     auto& refresh_button = unstaged_header.add<GUI::Button>();
     refresh_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"));
-    refresh_button.set_preferred_size({ 16, 16 });
-    refresh_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    refresh_button.set_fixed_size(16, 16);
     refresh_button.set_tooltip("refresh");
     refresh_button.on_click = [this](int) { refresh(); };
 
     auto& unstaged_label = unstaged_header.add<GUI::Label>();
     unstaged_label.set_text("Unstaged");
 
-    unstaged_header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    unstaged_header.set_preferred_size(0, 20);
+    unstaged_header.set_fixed_height(20);
     m_unstaged_files = unstaged.add<GitFilesView>(
         [this](const auto& file) { stage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png").release_nonnull());
@@ -80,16 +78,14 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
     auto& commit_button = staged_header.add<GUI::Button>();
     commit_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/commit.png"));
-    commit_button.set_preferred_size({ 16, 16 });
-    commit_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    commit_button.set_fixed_size(16, 16);
     commit_button.set_tooltip("commit");
     commit_button.on_click = [this](int) { commit(); };
 
     auto& staged_label = staged_header.add<GUI::Label>();
     staged_label.set_text("Staged");
 
-    staged_header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    staged_header.set_preferred_size(0, 20);
+    staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(
         [this](const auto& file) { unstage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png").release_nonnull());

@@ -19,8 +19,7 @@
 
             @GUI::TextBox {
                 name: "location_textbox"
-                vertical_size_policy: "Fixed"
-                preferred_height: 22
+                fixed_height: 22
             }
         }
         @GUI::ToolBar {
@@ -37,8 +36,7 @@
 
         @GUI::TreeView {
             name: "tree_view"
-            horizontal_size_policy: "Fixed"
-            preferred_width: 175
+            fixed_width: 175
         }
 
     }

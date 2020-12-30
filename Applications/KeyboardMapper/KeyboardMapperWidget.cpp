@@ -49,7 +49,6 @@ void KeyboardMapperWidget::create_frame()
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
-    set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     layout()->set_margins({ 4, 4, 4, 4 });
 
     auto& main_widget = add<GUI::Widget>();
@@ -105,14 +104,12 @@ void KeyboardMapperWidget::create_frame()
     // Action Buttons
     auto& bottom_widget = add<GUI::Widget>();
     bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_widget.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    bottom_widget.set_preferred_size(0, 40);
+    bottom_widget.set_fixed_height(40);
 
     // Map Selection
     m_map_group = bottom_widget.add<GUI::Widget>();
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
-    m_map_group->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_map_group->set_preferred_size(250, 0);
+    m_map_group->set_fixed_width(250);
 
     auto& radio_map = m_map_group->add<GUI::RadioButton>("Default");
     radio_map.set_name("map");
@@ -139,8 +136,7 @@ void KeyboardMapperWidget::create_frame()
 
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("Save");
-    ok_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    ok_button.set_preferred_size(80, 0);
+    ok_button.set_fixed_width(80);
     ok_button.on_click = [this](auto) {
         save();
     };

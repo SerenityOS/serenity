@@ -75,8 +75,7 @@ ShutdownDialog::ShutdownDialog()
 
     auto& header = main.add<GUI::Label>();
     header.set_text("What would you like to do?");
-    header.set_preferred_size(0, 16);
-    header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    header.set_fixed_height(16);
     header.set_font(Gfx::Font::default_bold_font());
 
     for (size_t i = 0; i < options.size(); i++) {

@@ -46,29 +46,25 @@ MainWidget::MainWidget(TrackManager& track_manager)
     set_fill_with_background_color(true);
 
     m_wave_widget = add<WaveWidget>(track_manager);
-    m_wave_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_wave_widget->set_preferred_size(0, 100);
+    m_wave_widget->set_fixed_height(100);
 
     m_tab_widget = add<GUI::TabWidget>();
     m_roll_widget = m_tab_widget->add_tab<RollWidget>("Piano Roll", track_manager);
 
-    m_roll_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
-    m_roll_widget->set_preferred_size(0, 300);
+    m_roll_widget->set_fixed_height(300);
 
     m_tab_widget->add_tab<SamplerWidget>("Sampler", track_manager);
 
     m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
     m_keys_and_knobs_container->layout()->set_spacing(2);
-    m_keys_and_knobs_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_keys_and_knobs_container->set_preferred_size(0, 100);
+    m_keys_and_knobs_container->set_fixed_height(100);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
     m_keys_widget = m_keys_and_knobs_container->add<KeysWidget>(track_manager);
 
     m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(track_manager, *this);
-    m_knobs_widget->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_knobs_widget->set_preferred_size(350, 0);
+    m_knobs_widget->set_fixed_width(350);
 
     m_roll_widget->set_keys_widget(m_keys_widget);
 }

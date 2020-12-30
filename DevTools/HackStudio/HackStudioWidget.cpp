@@ -100,8 +100,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     auto& outer_splitter = add<GUI::HorizontalSplitter>();
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
-    left_hand_splitter.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    left_hand_splitter.set_preferred_size(150, 0);
+    left_hand_splitter.set_fixed_width(150);
     create_project_tree_view(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
 
@@ -494,8 +493,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
 
 void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 {
-    if (m_action_tab_widget->preferred_size().height() < 200)
-        m_action_tab_widget->set_preferred_size(0, 200);
+    if (m_action_tab_widget->min_height() < 200)
+        m_action_tab_widget->set_fixed_height(200);
     m_action_tab_widget->set_active_widget(&widget);
 }
 
@@ -617,7 +616,7 @@ void HackStudioWidget::run(TerminalWrapper& wrapper)
 
 void HackStudioWidget::hide_action_tabs()
 {
-    m_action_tab_widget->set_preferred_size(0, 24);
+    m_action_tab_widget->set_fixed_height(24);
 };
 
 Project& HackStudioWidget::project()
@@ -673,7 +672,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
     m_form_inner_container = parent.add<GUI::Widget>();
     m_form_inner_container->set_layout<GUI::HorizontalBoxLayout>();
     auto& form_widgets_toolbar = m_form_inner_container->add<GUI::ToolBar>(Orientation::Vertical, 26);
-    form_widgets_toolbar.set_preferred_size(38, 0);
+    form_widgets_toolbar.set_fixed_width(38);
 
     GUI::ActionGroup tool_actions;
     tool_actions.set_exclusive(true);
@@ -710,8 +709,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
     m_form_editor_widget = form_editor_inner_splitter.add<FormEditorWidget>();
 
     auto& form_editing_pane_container = form_editor_inner_splitter.add<GUI::VerticalSplitter>();
-    form_editing_pane_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    form_editing_pane_container.set_preferred_size(190, 0);
+    form_editing_pane_container.set_fixed_width(190);
     form_editing_pane_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto add_properties_pane = [&](auto& text, auto& pane_widget) {
@@ -721,8 +719,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
         label.set_fill_with_background_color(true);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_font(Gfx::Font::default_bold_font());
-        label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        label.set_preferred_size(0, 16);
+        label.set_fixed_height(16);
         wrapper.add_child(pane_widget);
     };
 
@@ -803,14 +800,13 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
 {
     m_action_tab_widget = parent.add<GUI::TabWidget>();
 
-    m_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_action_tab_widget->set_preferred_size(0, 24);
+    m_action_tab_widget->set_fixed_height(24);
     m_action_tab_widget->on_change = [this](auto&) {
         on_action_tab_change();
 
         static bool first_time = true;
         if (!first_time)
-            m_action_tab_widget->set_preferred_size(0, 200);
+            m_action_tab_widget->set_fixed_height(200);
         first_time = false;
     };
 

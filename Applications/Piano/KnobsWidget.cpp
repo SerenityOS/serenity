@@ -47,8 +47,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     m_labels_container = add<GUI::Widget>();
     m_labels_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_labels_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_labels_container->set_preferred_size(0, 20);
+    m_labels_container->set_fixed_height(20);
 
     m_octave_label = m_labels_container->add<GUI::Label>("Octave");
     m_wave_label = m_labels_container->add<GUI::Label>("Wave");
@@ -60,8 +59,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
 
     m_values_container = add<GUI::Widget>();
     m_values_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_values_container->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_values_container->set_preferred_size(0, 10);
+    m_values_container->set_fixed_height(10);
 
     m_octave_value = m_values_container->add<GUI::Label>(String::number(m_track_manager.octave()));
     m_wave_value = m_values_container->add<GUI::Label>(wave_strings[m_track_manager.current_track().wave()]);

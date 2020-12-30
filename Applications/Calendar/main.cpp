@@ -134,8 +134,7 @@ int main(int argc, char** argv)
 
     toolbar.add_action(prev_date_action);
     selected_calendar_button = toolbar.add<GUI::Button>(calendar_widget.selected_calendar_text());
-    selected_calendar_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    selected_calendar_button->set_preferred_size(70, 0);
+    selected_calendar_button->set_fixed_width(70);
     selected_calendar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
     selected_calendar_button->set_font(Gfx::Font::default_bold_fixed_width_font());
     selected_calendar_button->on_click = [&](auto) {

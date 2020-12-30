@@ -100,9 +100,9 @@ ScrollBar::ScrollBar(Orientation orientation)
         s_right_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
 
     if (m_orientation == Orientation::Vertical) {
-        set_preferred_size(16, 0);
+        set_fixed_height(16);
     } else {
-        set_preferred_size(0, 16);
+        set_fixed_width(16);
     }
 
     m_automatic_scrolling_timer->set_interval(100);

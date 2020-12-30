@@ -908,8 +908,7 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing));
 
     if (m_automatic_size_policy) {
-        set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        set_preferred_size(m_pixel_width, m_pixel_height);
+        set_fixed_size(m_pixel_width, m_pixel_height);
     }
 
     m_needs_background_fill = true;

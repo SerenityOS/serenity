@@ -82,7 +82,6 @@ private:
             for (size_t column = 0; column < columns; ++column) {
                 if (index < columns * rows) {
                     auto& textbox = horizontal_container.template add<GUI::TextBox>();
-                    textbox.set_preferred_size({ 30, 50 });
                     textbox.on_change = [&, row = row, column = column] {
                         auto& element = m_matrix.elements()[row][column];
                         char* endptr = nullptr;

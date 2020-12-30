@@ -90,8 +90,7 @@ int main(int argc, char** argv)
 
     auto& right_panel = horizontal_container.add<GUI::Widget>();
     right_panel.set_fill_with_background_color(true);
-    right_panel.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    right_panel.set_preferred_size(230, 0);
+    right_panel.set_fixed_width(230);
     right_panel.set_layout<GUI::VerticalBoxLayout>();
 
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();

@@ -40,11 +40,9 @@ ToolBar::ToolBar(Orientation orientation, int button_size)
     : m_button_size(button_size)
 {
     if (orientation == Orientation::Horizontal) {
-        set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        set_preferred_size(0, button_size + 8);
+        set_fixed_height(button_size + 8);
     } else {
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        set_preferred_size(button_size + 8, 0);
+        set_fixed_width(button_size + 8);
     }
     set_layout<BoxLayout>(orientation);
     layout()->set_spacing(0);
@@ -74,7 +72,6 @@ private:
         else
             set_text(action.text());
         set_button_style(Gfx::ButtonStyle::CoolBar);
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     }
     String tooltip(const Action& action) const
     {
@@ -96,7 +93,7 @@ void ToolBar::add_action(Action& action)
     item->action = action;
 
     auto& button = add<ToolBarButton>(action);
-    button.set_preferred_size(m_button_size + 8, m_button_size + 8);
+    button.set_fixed_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
 }
@@ -106,8 +103,7 @@ class SeparatorWidget final : public Widget {
 public:
     SeparatorWidget()
     {
-        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        set_preferred_size(8, 18);
+        set_fixed_size(8, 18);
     }
     virtual ~SeparatorWidget() override { }
 

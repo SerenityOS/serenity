@@ -112,14 +112,6 @@ public:
         return layout;
     }
 
-    SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
-    SizePolicy vertical_size_policy() const { return m_vertical_size_policy; }
-    SizePolicy size_policy(Orientation orientation) { return orientation == Orientation::Horizontal ? m_horizontal_size_policy : m_vertical_size_policy; }
-    void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
-    void set_size_policy(Orientation, SizePolicy);
-    void set_horizontal_size_policy(SizePolicy policy) { set_size_policy(policy, vertical_size_policy()); }
-    void set_vertical_size_policy(SizePolicy policy) { set_size_policy(horizontal_size_policy(), policy); }
-
     Gfx::IntSize min_size() const { return m_min_size; }
     void set_min_size(const Gfx::IntSize&);
     void set_min_size(int width, int height) { set_min_size({ width, height }); }
@@ -157,15 +149,6 @@ public:
         set_min_height(height);
         set_max_height(height);
     }
-
-    Gfx::IntSize preferred_size() const { return m_preferred_size; }
-    void set_preferred_size(const Gfx::IntSize&);
-    void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
-
-    int preferred_width() const { return preferred_size().width(); }
-    int preferred_height() const { return preferred_size().height(); }
-    void set_preferred_width(int w) { set_preferred_size(w, preferred_height()); }
-    void set_preferred_height(int h) { set_preferred_size(preferred_width(), h); }
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
@@ -405,9 +388,6 @@ private:
     NonnullRefPtr<Gfx::Font> m_font;
     String m_tooltip;
 
-    SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
-    SizePolicy m_vertical_size_policy { SizePolicy::Fill };
-    Gfx::IntSize m_preferred_size;
     Gfx::IntSize m_min_size { -1, -1 };
     Gfx::IntSize m_max_size { -1, -1 };
     Margins m_content_margins;

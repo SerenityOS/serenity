@@ -68,8 +68,7 @@ int main(int argc, char** argv)
 
     auto& button = main_widget.add<GUI::Button>();
     button.set_text("Good-bye");
-    button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    button.set_preferred_size(0, 20);
+    button.set_fixed_height(20);
     button.on_click = [&](auto) {
         app->quit();
     };

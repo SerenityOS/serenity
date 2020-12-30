@@ -99,13 +99,11 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
     auto& preview_widget = main_widget.add<ThemeEditor::PreviewWidget>(app->palette());
-    preview_widget.set_preferred_size(480, 360);
-    preview_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    preview_widget.set_fixed_size(480, 360);
 
     auto& horizontal_container = main_widget.add<GUI::Widget>();
     horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container.set_preferred_size(480, 20);
-    horizontal_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    horizontal_container.set_fixed_size(480, 20);
 
     auto& combo_box = horizontal_container.add<GUI::ComboBox>();
     auto& color_input = horizontal_container.add<GUI::ColorInput>();
