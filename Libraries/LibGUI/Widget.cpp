@@ -33,6 +33,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/GMLParser.h>
 #include <LibGUI/GroupBox.h>
@@ -68,6 +69,7 @@ REGISTER_WIDGET(GUI, BreadcrumbBar)
 REGISTER_WIDGET(GUI, Button)
 REGISTER_WIDGET(GUI, CheckBox)
 REGISTER_WIDGET(GUI, ColorInput)
+REGISTER_WIDGET(GUI, ComboBox)
 REGISTER_WIDGET(GUI, Frame)
 REGISTER_WIDGET(GUI, GroupBox)
 REGISTER_WIDGET(GUI, HorizontalSplitter)
