@@ -34,6 +34,8 @@ class AbstractView;
 class Action;
 class ActionGroup;
 class Application;
+class AutocompleteBox;
+class AutocompleteProvider;
 class BoxLayout;
 class Button;
 class CheckBox;

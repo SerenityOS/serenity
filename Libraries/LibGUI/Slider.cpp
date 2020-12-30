@@ -36,10 +36,28 @@ namespace GUI {
 Slider::Slider(Orientation orientation)
     : m_orientation(orientation)
 {
+
+    REGISTER_INT_PROPERTY("min", min, set_min);
+    REGISTER_INT_PROPERTY("max", max, set_max);
+    REGISTER_INT_PROPERTY("step", step, set_step);
+    REGISTER_ENUM_PROPERTY("knob_size_mode", knob_size_mode, set_knob_size_mode, KnobSizeMode,
+        { KnobSizeMode::Fixed, "Fixed" },
+        { KnobSizeMode::Proportional, "Proportional" });
+    REGISTER_ENUM_PROPERTY("orientation", this->orientation, set_orientation, Orientation,
+        { Orientation::Horizontal, "Horizontal" },
+        { Orientation::Vertical, "Vertical" });
 }
 
 Slider::~Slider()
 {
+}
+
+void Slider::set_orientation(Orientation value)
+{
+    if (m_orientation == value)
+        return;
+    m_orientation = value;
+    update();
 }
 
 void Slider::set_range(int min, int max)

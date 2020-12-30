@@ -119,6 +119,7 @@ public:
 
     bool set_property(const StringView& name, const JsonValue& value);
     JsonValue property(const StringView& name);
+    const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
     static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
 

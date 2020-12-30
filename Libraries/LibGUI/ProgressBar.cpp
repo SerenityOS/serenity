@@ -35,6 +35,12 @@ namespace GUI {
 ProgressBar::ProgressBar()
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_ENUM_PROPERTY("format", format, set_format, Format,
+        { Format::NoText, "NoText" },
+        { Format::Percentage, "Percentage" },
+        { Format::ValueSlashMax, "ValueSlashMax" });
+    REGISTER_INT_PROPERTY("min", min, set_min);
+    REGISTER_INT_PROPERTY("max", max, set_max);
 }
 
 ProgressBar::~ProgressBar()

@@ -40,6 +40,7 @@ public:
 
     virtual ~Slider() override;
 
+    void set_orientation(Orientation value);
     Orientation orientation() const { return m_orientation; }
 
     int value() const { return m_value; }
