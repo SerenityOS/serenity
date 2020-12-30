@@ -26,6 +26,9 @@
 
 #include "MonitorWidget.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/Bitmap.h>
+
+namespace DisplaySettings {
 
 MonitorWidget::MonitorWidget()
 {
@@ -110,4 +113,6 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_text(m_monitor_rect.translated(1, 1), m_desktop_resolution.to_string(), Gfx::TextAlignment::Center, Color::Black);
         painter.draw_text(m_monitor_rect, m_desktop_resolution.to_string(), Gfx::TextAlignment::Center, Color::White);
     }
+}
+
 }

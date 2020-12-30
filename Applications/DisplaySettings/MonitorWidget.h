@@ -26,15 +26,14 @@
 
 #pragma once
 
-#include "LibGfx/Bitmap.h"
 #include <LibGUI/Widget.h>
+
+namespace DisplaySettings {
 
 class MonitorWidget final : public GUI::Widget {
     C_OBJECT(MonitorWidget);
 
 public:
-    MonitorWidget();
-
     bool set_wallpaper(String path);
     String wallpaper();
 
@@ -48,6 +47,8 @@ public:
     Gfx::Color background_color();
 
 private:
+    MonitorWidget();
+
     virtual void paint_event(GUI::PaintEvent& event) override;
 
     Gfx::IntRect m_monitor_rect;
@@ -59,3 +60,5 @@ private:
     Gfx::IntSize m_desktop_resolution;
     Gfx::Color m_desktop_color;
 };
+
+}
