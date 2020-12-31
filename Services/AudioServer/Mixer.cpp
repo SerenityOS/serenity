@@ -35,12 +35,12 @@ namespace AudioServer {
 
 Mixer::Mixer()
     : m_device(Core::File::construct("/dev/audio", this))
-    , m_sound_thread(
+    , m_sound_thread(LibThread::Thread::construct(
           [this] {
               mix();
               return 0;
           },
-          "AudioServer[mixer]")
+          "AudioServer[mixer]"))
 {
     if (!m_device->open(Core::IODevice::WriteOnly)) {
         dbgprintf("Can't open audio device: %s\n", m_device->error_string());
@@ -52,7 +52,7 @@ Mixer::Mixer()
 
     m_zero_filled_buffer = (u8*)malloc(4096);
     bzero(m_zero_filled_buffer, 4096);
-    m_sound_thread.start();
+    m_sound_thread->start();
 }
 
 Mixer::~Mixer()
