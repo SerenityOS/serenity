@@ -48,7 +48,7 @@ AsyncDeviceRequest::~AsyncDeviceRequest()
     // At that point no sub-request should be adding more requests and all
     // sub-requests should be completed (either succeeded, failed, or cancelled).
     // Which means there should be no more pending sub-requests and the
-    // entire AsyncDeviceRequest hirarchy should be immutable.
+    // entire AsyncDeviceRequest hierarchy should be immutable.
     for (auto& sub_request : m_sub_requests_complete) {
         ASSERT(is_completed_result(sub_request.m_result)); // Shouldn't need any locking anymore
         ASSERT(sub_request.m_parent_request == this);
