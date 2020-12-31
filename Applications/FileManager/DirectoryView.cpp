@@ -136,7 +136,7 @@ DirectoryView::DirectoryView(Mode mode)
     setup_actions();
 
     m_error_label = add<GUI::Label>();
-    m_error_label->set_font(m_error_label->font().bold_family_font());
+    m_error_label->set_font(m_error_label->font().bold_variant());
 
     setup_model();
 
