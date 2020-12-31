@@ -190,7 +190,7 @@ describe("Array.prototype.sort", () => {
         expect(() => arr.sort()).toThrow(TestError);
     });
 
-    test("that it does not use deleteProperty unnecesarily", () => {
+    test("that it does not use deleteProperty unnecessarily", () => {
         var obj = new Proxy(
             { 0: 5, 1: 4, 2: 3, length: 3 },
             {

@@ -449,7 +449,7 @@ DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const ELF::Dynami
 {
     VERBOSE("looking up symbol: %s\n", symbol.name());
     if (!symbol.is_undefined()) {
-        VERBOSE("symbol is defiend in its object\n");
+        VERBOSE("symbol is defined in its object\n");
         return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), &symbol.object() };
     }
     ASSERT(m_global_symbol_lookup_func);

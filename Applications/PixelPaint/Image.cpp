@@ -95,7 +95,7 @@ RefPtr<Image> Image::create_from_file(const String& file_path)
         auto layer = Layer::create_with_size(*image, { width, height }, name);
         layer->set_location({ json_layer_object.get("locationx").to_i32(), json_layer_object.get("locationy").to_i32() });
         layer->set_opacity_percent(json_layer_object.get("opacity_percent").to_i32());
-        layer->set_visible(json_layer_object.get("visable").as_bool());
+        layer->set_visible(json_layer_object.get("visible").as_bool());
         layer->set_selected(json_layer_object.get("selected").as_bool());
 
         auto bitmap_base64_encoded = json_layer_object.get("bitmap").as_string();
@@ -126,7 +126,7 @@ void Image::save(const String& file_path) const
             json_layer.add("locationx", layer.location().x());
             json_layer.add("locationy", layer.location().y());
             json_layer.add("opacity_percent", layer.opacity_percent());
-            json_layer.add("visable", layer.is_visible());
+            json_layer.add("visible", layer.is_visible());
             json_layer.add("selected", layer.is_selected());
             json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap())));
         }

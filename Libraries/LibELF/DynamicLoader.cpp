@@ -315,7 +315,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         case R_386_NONE:
             // Apparently most loaders will just skip these?
             // Seems if the 'link editor' generates one something is funky with your code
-            VERBOSE("None relocation. No symbol, no nothin.\n");
+            VERBOSE("None relocation. No symbol, no nothing.\n");
             break;
         case R_386_32: {
             auto symbol = relocation.symbol();
@@ -356,7 +356,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
                 // The "__do_global_dtors_aux" function in libgcc_s.so needs this symbol,
                 // but we do not use that function so we don't actually need to resolve this symbol.
                 // The reason we can't resolve it here is that the symbol is defined in libc.so,
-                // but there's a circular dependecy between libgcc_s.so and libc.so,
+                // but there's a circular dependency between libgcc_s.so and libc.so,
                 // we deal with it by first loading libgcc_s and then libc.
                 // So we cannot find this symbol at this time (libc is not yet loaded).
                 if (m_filename == "libgcc_s.so" && !strcmp(symbol.name(), "__cxa_finalize")) {
@@ -396,7 +396,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         case R_386_TLS_TPOFF: {
             VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
             auto symbol = relocation.symbol();
-            // For some reason, LibC has a R_386_TLS_TPOFF that referes to the undefined symbol.. huh
+            // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
             if (relocation.symbol_index() == 0)
                 break;
             VERBOSE("Symbol index: %d\n", symbol.index());
