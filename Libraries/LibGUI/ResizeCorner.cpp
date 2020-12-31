@@ -105,7 +105,7 @@ void ResizeCorner::paint_event(PaintEvent& event)
 
 void ResizeCorner::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left)
+    if (event.button() == MouseButton::Primary)
         window()->start_wm_resize();
     Widget::mousedown_event(event);
 }

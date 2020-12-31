@@ -70,8 +70,8 @@ public:
 
 enum class MouseButton : u8 {
     None = 0,
-    Left = 1,
-    Right = 2,
+    Primary = 1,
+    Secondary = 2,
     Middle = 4,
     Back = 8,
     Forward = 16,

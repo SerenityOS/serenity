@@ -558,7 +558,7 @@ void ColorField::pick_color_at_position(GUI::MouseEvent& event)
 
 void ColorField::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_being_pressed = true;
         pick_color_at_position(event);
     }
@@ -566,7 +566,7 @@ void ColorField::mousedown_event(GUI::MouseEvent& event)
 
 void ColorField::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_being_pressed = false;
         pick_color_at_position(event);
     }
@@ -574,7 +574,7 @@ void ColorField::mouseup_event(GUI::MouseEvent& event)
 
 void ColorField::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & GUI::MouseButton::Left)
+    if (event.buttons() & GUI::MouseButton::Primary)
         pick_color_at_position(event);
 }
 
@@ -652,7 +652,7 @@ void ColorSlider::pick_value_at_position(GUI::MouseEvent& event)
 
 void ColorSlider::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_being_pressed = true;
         pick_value_at_position(event);
     }
@@ -660,7 +660,7 @@ void ColorSlider::mousedown_event(GUI::MouseEvent& event)
 
 void ColorSlider::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_being_pressed = false;
         pick_value_at_position(event);
     }
@@ -668,7 +668,7 @@ void ColorSlider::mouseup_event(GUI::MouseEvent& event)
 
 void ColorSlider::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & GUI::MouseButton::Left)
+    if (event.buttons() & GUI::MouseButton::Primary)
         pick_value_at_position(event);
 }
 

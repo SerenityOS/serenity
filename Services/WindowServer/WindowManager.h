@@ -41,6 +41,7 @@
 #include <WindowServer/Event.h>
 #include <WindowServer/MenuBar.h>
 #include <WindowServer/MenuManager.h>
+#include <WindowServer/Screen.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
@@ -147,6 +148,7 @@ public:
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
+    void set_primary_mouse_button(RawMouseButton);
 
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);

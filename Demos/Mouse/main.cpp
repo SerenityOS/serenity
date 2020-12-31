@@ -91,12 +91,12 @@ public:
 
         painter.stroke_path(path, Color::Black, 1);
 
-        if (m_buttons & GUI::MouseButton::Left) {
+        if (m_buttons & GUI::MouseButton::Primary) {
             painter.fill_rect({ 31, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, Color::Blue);
         }
 
-        if (m_buttons & GUI::MouseButton::Right) {
+        if (m_buttons & GUI::MouseButton::Secondary) {
             painter.fill_rect({ 96, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, Color::Blue);
         }

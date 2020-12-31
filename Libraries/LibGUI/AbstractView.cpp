@@ -227,7 +227,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
     if (!model())
         return;
 
-    if (event.button() == MouseButton::Left)
+    if (event.button() == MouseButton::Primary)
         m_left_mousedown_position = event.position();
 
     auto index = index_at_event_position(event.position());
@@ -239,10 +239,10 @@ void AbstractView::mousedown_event(MouseEvent& event)
         set_cursor(index, SelectionUpdate::Ctrl);
     } else if (event.modifiers() & Mod_Shift) {
         set_cursor(index, SelectionUpdate::Shift);
-    } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
+    } else if (event.button() == MouseButton::Primary && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
-    } else if (event.button() == MouseButton::Right) {
+    } else if (event.button() == MouseButton::Secondary) {
         set_cursor(index, SelectionUpdate::ClearIfNotSelected);
     } else {
         set_cursor(index, SelectionUpdate::Set);
@@ -283,7 +283,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     if (!m_might_drag)
         return ScrollableWidget::mousemove_event(event);
 
-    if (!(event.buttons() & MouseButton::Left) || m_selection.is_empty()) {
+    if (!(event.buttons() & MouseButton::Primary) || m_selection.is_empty()) {
         m_might_drag = false;
         return ScrollableWidget::mousemove_event(event);
     }
@@ -354,7 +354,7 @@ void AbstractView::doubleclick_event(MouseEvent& event)
     if (!model())
         return;
 
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
 
     m_might_drag = false;

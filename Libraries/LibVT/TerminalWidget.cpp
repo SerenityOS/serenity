@@ -655,7 +655,7 @@ VT::Range TerminalWidget::find_previous(const StringView& needle, const VT::Posi
 
 void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_triple_click_timer.start();
 
         auto position = buffer_position_at(event.position());
@@ -704,7 +704,7 @@ void TerminalWidget::copy()
 
 void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
         if (!m_active_href_id.is_null() && attribute.href_id == m_active_href_id) {
             dbgln("Open hyperlinked URL: '{}'", attribute.href);
@@ -721,7 +721,7 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 
 void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         m_left_mousedown_position = event.position();
 
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
@@ -774,7 +774,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
         update();
     }
 
-    if (!(event.buttons() & GUI::MouseButton::Left))
+    if (!(event.buttons() & GUI::MouseButton::Primary))
         return;
 
     if (!m_active_href_id.is_null()) {

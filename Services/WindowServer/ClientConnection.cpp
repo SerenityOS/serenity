@@ -701,7 +701,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_StartWindowResize
     auto& window = *(*it).value;
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
-    WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
+    WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Primary);
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimized& message)

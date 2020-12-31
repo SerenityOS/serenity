@@ -56,7 +56,7 @@ void EllipseTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& ellipse_
 
 void EllipseTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
+    if (event.button() != GUI::MouseButton::Primary && event.button() != GUI::MouseButton::Secondary)
         return;
 
     if (m_drawing_button != GUI::MouseButton::None)

@@ -115,7 +115,7 @@ bool Splitter::get_resize_candidates_at(const Gfx::IntPoint& position, Widget*& 
 
 void Splitter::mousedown_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
     m_resizing = true;
 
@@ -203,7 +203,7 @@ void Splitter::did_layout()
 
 void Splitter::mouseup_event(MouseEvent& event)
 {
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return;
     m_resizing = false;
     m_first_resizee = nullptr;

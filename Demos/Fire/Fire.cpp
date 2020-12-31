@@ -181,7 +181,7 @@ void Fire::timer_event(Core::TimerEvent&)
 
 void Fire::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left)
+    if (event.button() == GUI::MouseButton::Primary)
         dragging = true;
 
     return GUI::Widget::mousedown_event(event);
@@ -206,7 +206,7 @@ void Fire::mousemove_event(GUI::MouseEvent& event)
 
 void Fire::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() == GUI::MouseButton::Left)
+    if (event.button() == GUI::MouseButton::Primary)
         dragging = false;
 
     return GUI::Widget::mouseup_event(event);

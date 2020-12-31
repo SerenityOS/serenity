@@ -387,7 +387,7 @@ void Widget::handle_mousedown_event(MouseEvent& event)
     if (((unsigned)focus_policy() & (unsigned)FocusPolicy::ClickFocus))
         set_focus(true, FocusSource::Mouse);
     mousedown_event(event);
-    if (event.button() == MouseButton::Right) {
+    if (event.button() == MouseButton::Secondary) {
         ContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
         context_menu_event(c_event);
     }

@@ -228,7 +228,7 @@ void IconView::mousedown_event(MouseEvent& event)
     if (!model())
         return AbstractView::mousedown_event(event);
 
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return AbstractView::mousedown_event(event);
 
     auto index = index_at_event_position(event.position());
@@ -256,7 +256,7 @@ void IconView::mousedown_event(MouseEvent& event)
 
 void IconView::mouseup_event(MouseEvent& event)
 {
-    if (m_rubber_banding && event.button() == MouseButton::Left) {
+    if (m_rubber_banding && event.button() == MouseButton::Primary) {
         m_rubber_banding = false;
         if (m_out_of_view_timer)
             m_out_of_view_timer->stop();

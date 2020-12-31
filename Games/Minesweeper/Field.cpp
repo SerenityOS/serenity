@@ -44,7 +44,7 @@ public:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Right) {
+        if (event.button() == GUI::MouseButton::Secondary) {
             if (on_right_click)
                 on_right_click();
         }
@@ -67,8 +67,8 @@ public:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Right || event.button() == GUI::MouseButton::Left) {
-            if (event.buttons() == (GUI::MouseButton::Right | GUI::MouseButton::Left) || m_square.field->is_single_chording()) {
+        if (event.button() == GUI::MouseButton::Secondary || event.button() == GUI::MouseButton::Primary) {
+            if (event.buttons() == (GUI::MouseButton::Secondary | GUI::MouseButton::Primary) || m_square.field->is_single_chording()) {
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
@@ -99,7 +99,7 @@ public:
     virtual void mouseup_event(GUI::MouseEvent& event) override
     {
         if (m_chord) {
-            if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
+            if (event.button() == GUI::MouseButton::Primary || event.button() == GUI::MouseButton::Secondary) {
                 if (rect().contains(event.position())) {
                     if (on_chord_click)
                         on_chord_click();

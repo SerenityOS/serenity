@@ -134,7 +134,7 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (!m_image)
         return;
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     auto gadget_index = gadget_at(event.position());
     if (!gadget_index.has_value()) {
@@ -170,7 +170,7 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
 {
     if (!m_image)
         return;
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     if (!m_moving_gadget_index.has_value())
         return;

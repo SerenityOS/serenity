@@ -179,6 +179,15 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     m_config->sync();
 }
 
+void WindowManager::set_primary_mouse_button(RawMouseButton mouse_button)
+{
+    Screen::the().set_primary_mouse_button(mouse_button);
+    auto serializable_value = static_cast<int>(mouse_button);
+    dbgln("Saving primary mouse button {} to config file at {}", serializable_value, m_config->file_name());
+    m_config->write_entry("Mouse", "PrimaryButton", String::number(serializable_value));
+    m_config->sync();
+}
+
 void WindowManager::add_window(Window& window)
 {
     bool is_first_window = m_windows_in_order.is_empty();
@@ -501,7 +510,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 {
     if (!m_move_window)
         return false;
-    if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
 #ifdef MOVE_DEBUG
         dbg() << "[WM] Finish moving Window{" << m_move_window << "}";
 #endif
@@ -724,7 +733,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
         });
     }
 
-    if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
+    if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Primary))
         return true;
 
     hovered_window = nullptr;
@@ -758,9 +767,9 @@ void WindowManager::set_cursor_tracking_button(Button* button)
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> const ClickMetadata&
 {
     switch (button) {
-    case MouseButton::Left:
+    case MouseButton::Primary:
         return m_left;
-    case MouseButton::Right:
+    case MouseButton::Secondary:
         return m_right;
     case MouseButton::Middle:
         return m_middle;
@@ -776,9 +785,9 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) con
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> ClickMetadata&
 {
     switch (button) {
-    case MouseButton::Left:
+    case MouseButton::Primary:
         return m_left;
-    case MouseButton::Right:
+    case MouseButton::Secondary:
         return m_right;
     case MouseButton::Middle:
         return m_middle;
@@ -970,12 +979,12 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             // First check if we should initiate a move or resize (Logo+LMB or Logo+RMB).
             // In those cases, the event is swallowed by the window manager.
             if (window.is_movable()) {
-                if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+                if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Primary) {
                     hovered_window = &window;
                     start_window_move(window, event);
                     return;
                 }
-                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Secondary && !window.is_blocked_by_modal_window()) {
                     hovered_window = &window;
                     start_window_resize(window, event);
                     return;

@@ -57,7 +57,7 @@ LineTool::~LineTool()
 
 void LineTool::on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent&)
 {
-    if (layer_event.button() != GUI::MouseButton::Left && layer_event.button() != GUI::MouseButton::Right)
+    if (layer_event.button() != GUI::MouseButton::Primary && layer_event.button() != GUI::MouseButton::Secondary)
         return;
 
     if (m_drawing_button != GUI::MouseButton::None)

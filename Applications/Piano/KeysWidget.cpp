@@ -288,7 +288,7 @@ int KeysWidget::note_for_event_position(const Gfx::IntPoint& a_point) const
 
 void KeysWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     m_mouse_down = true;
@@ -301,7 +301,7 @@ void KeysWidget::mousedown_event(GUI::MouseEvent& event)
 
 void KeysWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     m_mouse_down = false;

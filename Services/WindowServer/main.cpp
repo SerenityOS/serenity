@@ -93,6 +93,7 @@ int main(int, char**)
         wm_config->read_num_entry("Screen", "Height", 768));
     screen.set_acceleration_factor(atof(wm_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters()));
     screen.set_scroll_step_size(wm_config->read_num_entry("Mouse", "ScrollStepSize", 4));
+    screen.set_primary_mouse_button(static_cast<WindowServer::RawMouseButton>(wm_config->read_num_entry("Mouse", "PrimaryButton", static_cast<int>(WindowServer::RawMouseButton::Left))));
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
     auto am = WindowServer::AppletManager::construct();

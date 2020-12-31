@@ -128,6 +128,12 @@ void Screen::set_scroll_step_size(unsigned step_size)
     m_scroll_step_size = step_size;
 }
 
+void Screen::set_primary_mouse_button(RawMouseButton mouse_button)
+{
+    ASSERT(mouse_button == RawMouseButton::Left || mouse_button == RawMouseButton::Right);
+    m_primary_mouse_button = mouse_button;
+}
+
 void Screen::on_receive_mouse_data(const MousePacket& packet)
 {
     auto prev_location = m_cursor_location;
@@ -146,6 +152,13 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
     m_cursor_location.constrain(rect());
 
     unsigned buttons = packet.buttons;
+    // This is kinda ugly, in the future it might be a better idea to store a "primary" and a "secondary" mouse button, instead of just assuming its always left or right.
+    if (m_primary_mouse_button != RawMouseButton::Left) {
+        buttons &= ~0x3u;                                                   // mask off left/right
+        buttons |= (packet.buttons & (unsigned)RawMouseButton::Left) << 1u; // swap left/right in bitmap if necessary
+        buttons |= (packet.buttons & (unsigned)RawMouseButton::Right) >> 1u;
+    }
+
     unsigned prev_buttons = m_mouse_button_state;
     m_mouse_button_state = buttons;
     unsigned changed_buttons = prev_buttons ^ buttons;
@@ -155,8 +168,8 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
         auto message = make<MouseEvent>(buttons & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, buttons, button, m_modifiers);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     };
-    post_mousedown_or_mouseup_if_needed(MouseButton::Left);
-    post_mousedown_or_mouseup_if_needed(MouseButton::Right);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Primary);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Secondary);
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     post_mousedown_or_mouseup_if_needed(MouseButton::Back);
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);

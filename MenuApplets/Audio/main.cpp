@@ -127,14 +127,14 @@ public:
 private:
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() == GUI::MouseButton::Left) {
+        if (event.button() == GUI::MouseButton::Primary) {
             if (!m_slider_window->is_visible())
                 open();
             else
                 close();
             return;
         }
-        if (event.button() == GUI::MouseButton::Right) {
+        if (event.button() == GUI::MouseButton::Secondary) {
             m_audio_client->set_muted(!m_audio_muted);
             update();
         }

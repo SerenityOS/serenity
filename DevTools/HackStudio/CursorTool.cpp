@@ -43,7 +43,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
     auto& form_widget = m_editor.form_widget();
     auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
 
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         if (result.widget && result.widget != &form_widget) {
             if (event.modifiers() & Mod_Ctrl) {
                 m_editor.selection().toggle(*result.widget);
@@ -79,7 +79,7 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
 #ifdef DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mouseup");
 #endif
-    if (event.button() == GUI::MouseButton::Left) {
+    if (event.button() == GUI::MouseButton::Primary) {
         auto& form_widget = m_editor.form_widget();
         auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
         if (!m_dragging && !(event.modifiers() & Mod_Ctrl)) {
@@ -107,7 +107,7 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
         return;
     }
 
-    if (!m_dragging && event.buttons() & GUI::MouseButton::Left && event.position() != m_drag_origin) {
+    if (!m_dragging && event.buttons() & GUI::MouseButton::Primary && event.position() != m_drag_origin) {
         auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
         if (result.widget && result.widget != &form_widget) {
             if (!m_editor.selection().contains(*result.widget)) {

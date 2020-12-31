@@ -90,7 +90,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
         sheet.disable_updates();
         ScopeGuard sheet_update_enabler { [&] { sheet.enable_updates(); } };
 
-        auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Left);
+        auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Primary);
         auto rect = content_rect(index);
         auto distance = rect.center().absolute_relative_distance_to(event.position());
         if (distance.x() >= rect.width() / 2 - 5 && distance.y() >= rect.height() / 2 - 5) {

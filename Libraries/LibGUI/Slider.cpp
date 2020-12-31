@@ -97,7 +97,7 @@ Gfx::IntRect Slider::knob_rect() const
 
 void Slider::mousedown_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         if (knob_rect().contains(event.position())) {
             m_dragging = true;
             m_drag_origin = event.position();
@@ -129,7 +129,7 @@ void Slider::mousemove_event(MouseEvent& event)
 
 void Slider::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Left) {
+    if (event.button() == MouseButton::Primary) {
         m_dragging = false;
         return;
     }

@@ -48,7 +48,7 @@ BrushTool::~BrushTool()
 
 void BrushTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
+    if (event.button() != GUI::MouseButton::Primary && event.button() != GUI::MouseButton::Secondary)
         return;
 
     m_last_position = event.position();
@@ -56,7 +56,7 @@ void BrushTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 
 void BrushTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (!(event.buttons() & GUI::MouseButton::Left || event.buttons() & GUI::MouseButton::Right))
+    if (!(event.buttons() & GUI::MouseButton::Primary || event.buttons() & GUI::MouseButton::Secondary))
         return;
 
     draw_line(layer.bitmap(), m_editor->color_for(event), m_last_position, event.position());

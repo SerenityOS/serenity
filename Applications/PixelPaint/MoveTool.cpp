@@ -45,7 +45,7 @@ MoveTool::~MoveTool()
 
 void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent& image_event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     if (!layer.rect().contains(event.position()))
         return;
@@ -66,7 +66,7 @@ void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_eve
 
 void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     m_layer_being_moved = nullptr;
     m_editor->window()->set_cursor(Gfx::StandardCursor::None);

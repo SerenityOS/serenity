@@ -62,14 +62,14 @@ void Button::on_mouse_event(const MouseEvent& event)
 {
     auto& wm = WindowManager::the();
 
-    if (event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseDown && event.button() == MouseButton::Primary) {
         m_pressed = true;
         wm.set_cursor_tracking_button(this);
         m_frame.invalidate(m_relative_rect);
         return;
     }
 
-    if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
         if (wm.cursor_tracking_button() != this)
             return;
         wm.set_cursor_tracking_button(nullptr);
@@ -98,7 +98,7 @@ void Button::on_mouse_event(const MouseEvent& event)
             m_frame.invalidate(m_relative_rect);
     }
 
-    if (event.type() == Event::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
+    if (event.type() == Event::MouseMove && event.buttons() & (unsigned)MouseButton::Primary) {
         if (wm.cursor_tracking_button() != this)
             return;
         bool old_pressed = m_pressed;

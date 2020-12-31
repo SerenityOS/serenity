@@ -194,7 +194,7 @@ void QSWidget::paint_event(GUI::PaintEvent& event)
 
 void QSWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
     m_click_position = event.position();
     m_saved_pan_origin = m_pan_origin;
@@ -204,7 +204,7 @@ void QSWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event) { }
 
 void QSWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!(event.buttons() & GUI::MouseButton::Left))
+    if (!(event.buttons() & GUI::MouseButton::Primary))
         return;
 
     auto delta = event.position() - m_click_position;

@@ -113,7 +113,7 @@ private:
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() != GUI::MouseButton::Left)
+        if (event.button() != GUI::MouseButton::Primary)
             return;
         pid_t child_pid;
         const char* argv[] = { "SystemMonitor", nullptr };

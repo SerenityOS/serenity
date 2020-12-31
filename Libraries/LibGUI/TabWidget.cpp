@@ -305,7 +305,7 @@ void TabWidget::mousedown_event(MouseEvent& event)
         auto button_rect = this->button_rect(i);
         if (!button_rect.contains(event.position()))
             continue;
-        if (event.button() == MouseButton::Left) {
+        if (event.button() == MouseButton::Primary) {
             set_active_widget(m_tabs[i].widget);
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;

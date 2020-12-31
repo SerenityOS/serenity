@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Event.h"
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
@@ -38,6 +39,15 @@ namespace WindowServer {
 const double mouse_accel_max = 3.5;
 const double mouse_accel_min = 0.5;
 const unsigned scroll_step_size_min = 1;
+
+enum class RawMouseButton : u8 {
+    None = 0,
+    Left = 1,
+    Right = 2,
+    Middle = 4,
+    Back = 8,
+    Forward = 16,
+};
 
 class Screen {
 public:
@@ -67,6 +77,9 @@ public:
     unsigned scroll_step_size() const { return m_scroll_step_size; }
     void set_scroll_step_size(unsigned);
 
+    RawMouseButton primary_mouse_button() const { return m_primary_mouse_button; }
+    void set_primary_mouse_button(RawMouseButton);
+
     void on_receive_mouse_data(const MousePacket&);
     void on_receive_keyboard_data(::KeyEvent);
 
@@ -88,6 +101,7 @@ private:
     unsigned m_modifiers { 0 };
     double m_acceleration_factor { 1.0 };
     unsigned m_scroll_step_size { 1 };
+    RawMouseButton m_primary_mouse_button { RawMouseButton::Left };
 };
 
 inline Gfx::RGBA32* Screen::scanline(int y)

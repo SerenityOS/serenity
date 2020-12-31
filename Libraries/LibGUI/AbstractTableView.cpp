@@ -176,7 +176,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     if (!model())
         return AbstractView::mousedown_event(event);
 
-    if (event.button() != MouseButton::Left)
+    if (event.button() != MouseButton::Primary)
         return AbstractView::mousedown_event(event);
 
     bool is_toggle;

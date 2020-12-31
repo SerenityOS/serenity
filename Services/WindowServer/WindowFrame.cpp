@@ -282,7 +282,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
             return;
 
         if (title_bar_icon_rect().contains(event.position())) {
-            if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
+            if (event.type() == Event::MouseDown && (event.button() == MouseButton::Primary || event.button() == MouseButton::Secondary)) {
                 // Manually start a potential double click. Since we're opening
                 // a menu, we will only receive the MouseDown event, so we
                 // need to record that fact. If the user subsequently clicks
@@ -297,7 +297,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
 
                 m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
                 return;
-            } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+            } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
                 // Since the MouseDown event opened a menu, another MouseUp
                 // from the second click outside the menu wouldn't be considered
                 // a double click, so let's manually check if it would otherwise
@@ -329,12 +329,12 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
         if (event.type() == Event::MouseDown) {
-            if (m_window.type() == WindowType::Normal && event.button() == MouseButton::Right) {
+            if (m_window.type() == WindowType::Normal && event.button() == MouseButton::Secondary) {
                 auto default_action = m_window.is_maximized() ? WindowMenuDefaultAction::Restore : WindowMenuDefaultAction::Maximize;
                 m_window.popup_window_menu(event.position().translated(rect().location()), default_action);
                 return;
             }
-            if (m_window.is_movable() && event.button() == MouseButton::Left)
+            if (m_window.is_movable() && event.button() == MouseButton::Primary)
                 wm.start_window_move(m_window, event.translated(rect().location()));
         }
         return;
@@ -357,7 +357,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         return;
     }
 
-    if (m_window.is_resizable() && event.type() == Event::MouseDown && event.button() == MouseButton::Left)
+    if (m_window.is_resizable() && event.type() == Event::MouseDown && event.button() == MouseButton::Primary)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
 }

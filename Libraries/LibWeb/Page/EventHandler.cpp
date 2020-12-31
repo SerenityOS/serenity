@@ -110,7 +110,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         handled_event = true;
     }
 
-    if (button == GUI::MouseButton::Left) {
+    if (button == GUI::MouseButton::Primary) {
         dump_selection("MouseUp");
         m_in_mouse_selection = false;
     }
@@ -163,7 +163,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!layout_root() || layout_root() != node->document().layout_node())
         return true;
 
-    if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
+    if (button == GUI::MouseButton::Secondary && is<HTML::HTMLImageElement>(*node)) {
         auto& image_element = downcast<HTML::HTMLImageElement>(*node);
         auto image_url = image_element.document().complete_url(image_element.src());
         if (auto* page = m_frame.page())
@@ -175,7 +175,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         auto href = link->href();
         auto url = document->complete_url(href);
         dbg() << "Web::EventHandler: Clicking on a link to " << url;
-        if (button == GUI::MouseButton::Left) {
+        if (button == GUI::MouseButton::Primary) {
             auto href = link->href();
             auto url = document->complete_url(href);
             if (href.starts_with("javascript:")) {
@@ -192,7 +192,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                     m_frame.loader().load(url, FrameLoader::Type::Navigation);
                 }
             }
-        } else if (button == GUI::MouseButton::Right) {
+        } else if (button == GUI::MouseButton::Secondary) {
             if (auto* page = m_frame.page())
                 page->client().page_did_request_link_context_menu(m_frame.to_main_frame_position(position), url, link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
@@ -200,7 +200,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 page->client().page_did_middle_click_link(url, link->target(), modifiers);
         }
     } else {
-        if (button == GUI::MouseButton::Left) {
+        if (button == GUI::MouseButton::Primary) {
             auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (result.layout_node && result.layout_node->dom_node()) {
                 m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
@@ -208,7 +208,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 dump_selection("MouseDown");
                 m_in_mouse_selection = true;
             }
-        } else if (button == GUI::MouseButton::Right) {
+        } else if (button == GUI::MouseButton::Secondary) {
             if (auto* page = m_frame.page())
                 page->client().page_did_request_context_menu(m_frame.to_main_frame_position(position));
         }

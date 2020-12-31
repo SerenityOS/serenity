@@ -273,7 +273,7 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 
     auto text_position = text_position_at(event.position());
     auto ruler_line_rect = ruler_content_rect(text_position.line());
-    if (event.button() == GUI::MouseButton::Left && event.position().x() < ruler_line_rect.width()) {
+    if (event.button() == GUI::MouseButton::Primary && event.position().x() < ruler_line_rect.width()) {
         if (!breakpoint_lines().contains_slow(text_position.line())) {
             breakpoint_lines().append(text_position.line());
             Debugger::on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);

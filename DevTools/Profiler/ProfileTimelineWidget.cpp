@@ -80,7 +80,7 @@ u64 ProfileTimelineWidget::timestamp_at_x(int x) const
 
 void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     m_selecting = true;
@@ -102,7 +102,7 @@ void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
 
 void ProfileTimelineWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (event.button() != GUI::MouseButton::Left)
+    if (event.button() != GUI::MouseButton::Primary)
         return;
 
     m_selecting = false;

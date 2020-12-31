@@ -89,14 +89,14 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 
 void GlyphEditorWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right))
+    if (event.buttons() & (GUI::MouseButton::Primary | GUI::MouseButton::Secondary))
         draw_at_mouse(event);
 }
 
 void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
 {
-    bool set = event.buttons() & GUI::MouseButton::Left;
-    bool unset = event.buttons() & GUI::MouseButton::Right;
+    bool set = event.buttons() & GUI::MouseButton::Primary;
+    bool unset = event.buttons() & GUI::MouseButton::Secondary;
     if (!(set ^ unset))
         return;
     int x = (event.x() - 1) / m_scale;
