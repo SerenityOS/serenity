@@ -178,10 +178,12 @@ static pid_t run_command(int ptm_fd, String command)
 
 static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
-    auto window = GUI::Window::construct();
+    auto window = GUI::Window::construct(terminal.window());
     window->set_title("Terminal settings");
+    window->set_minimizable(false);
     window->set_resizable(false);
     window->resize(200, 210);
+    window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
     settings.load_from_gml(terminal_settings_window_gml);
@@ -397,6 +399,7 @@ int main(int argc, char** argv)
             if (!settings_window) {
                 settings_window = create_settings_window(terminal);
                 settings_window->on_close_request = [&] {
+                    settings_window->remove_from_parent();
                     settings_window = nullptr;
                     return GUI::Window::CloseRequestDecision::Close;
                 };
