@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include <LibGUI/AbstractView.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Model.h>
 
 namespace GUI {
 
@@ -67,11 +69,17 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
 
 private:
+    void selection_updated(const ModelIndex&);
+    void navigate(AbstractView::CursorMovement);
+    void navigate_relative(int);
+
     RefPtr<ComboBoxEditor> m_editor;
     RefPtr<ControlBoxButton> m_open_button;
     RefPtr<Window> m_list_window;
     RefPtr<ListView> m_list_view;
+    Optional<ModelIndex> m_selected_index;
     bool m_only_allow_values_from_model { false };
+    bool m_updating_model { false };
 };
 
 }
