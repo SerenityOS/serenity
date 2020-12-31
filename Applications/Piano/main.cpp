@@ -82,7 +82,7 @@ int main(int argc, char** argv)
         }
 
         Array<Sample, sample_count> buffer;
-        for (;;) {
+        while (!Core::EventLoop::current().was_exit_requested()) {
             track_manager.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
             Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
@@ -101,6 +101,7 @@ int main(int argc, char** argv)
                 wav_writer.finalize();
             }
         }
+        return 0;
     });
     audio_thread->start();
 
