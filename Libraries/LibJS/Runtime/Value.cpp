@@ -26,10 +26,10 @@
  */
 
 #include <AK/FlyString.h>
+#include <AK/SignedBigInteger.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -56,7 +56,7 @@ namespace JS {
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
 static const double INVALID { 0 };
 
-static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
+static const SignedBigInteger BIGINT_ZERO { 0 };
 
 static bool is_valid_bigint_value(String string)
 {
@@ -441,7 +441,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
         return nullptr;
     case Type::Boolean: {
         auto value = primitive.as_bool() ? 1 : 0;
-        return js_bigint(vm.heap(), Crypto::SignedBigInteger { value });
+        return js_bigint(vm.heap(), SignedBigInteger { value });
     }
     case Type::BigInt:
         return &primitive.as_bigint();
@@ -454,7 +454,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
             vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
             return {};
         }
-        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
+        return js_bigint(vm.heap(), SignedBigInteger::from_base10(string.trim_whitespace()));
     }
     case Type::Symbol:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
@@ -670,7 +670,7 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
     if (lhs_numeric.is_number())
         return Value(~(i32)lhs_numeric.as_double());
     auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
-    big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
+    big_integer_bitwise_not = big_integer_bitwise_not.plus(SignedBigInteger { 1 });
     big_integer_bitwise_not.negate();
     return js_bigint(global_object.heap(), big_integer_bitwise_not);
 }
@@ -1056,7 +1056,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         auto& rhs_string = rhs.as_string().string();
         if (!is_valid_bigint_value(rhs_string))
             return false;
-        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base10(rhs_string)));
+        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), SignedBigInteger::from_base10(rhs_string)));
     }
 
     if (lhs.is_string() && rhs.is_bigint())
@@ -1080,9 +1080,9 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
             return false;
         if (lhs.is_number())
-            return Crypto::SignedBigInteger { lhs.as_i32() } == rhs.as_bigint().big_integer();
+            return SignedBigInteger { lhs.as_i32() } == rhs.as_bigint().big_integer();
         else
-            return Crypto::SignedBigInteger { rhs.as_i32() } == lhs.as_bigint().big_integer();
+            return SignedBigInteger { rhs.as_i32() } == lhs.as_bigint().big_integer();
     }
 
     return false;
@@ -1138,7 +1138,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& y_string = y_primitive.as_string().string();
         if (!is_valid_bigint_value(y_string))
             return TriState::Unknown;
-        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base10(y_string))
+        if (x_primitive.as_bigint().big_integer() < SignedBigInteger::from_base10(y_string))
             return TriState::True;
         else
             return TriState::False;
@@ -1148,7 +1148,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& x_string = x_primitive.as_string().string();
         if (!is_valid_bigint_value(x_string))
             return TriState::Unknown;
-        if (Crypto::SignedBigInteger::from_base10(x_string) < y_primitive.as_bigint().big_integer())
+        if (SignedBigInteger::from_base10(x_string) < y_primitive.as_bigint().big_integer())
             return TriState::True;
         else
             return TriState::False;
@@ -1189,12 +1189,12 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
         x_lower_than_y = x_numeric.is_integer()
-            ? Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.as_i32() + 1 } < y_numeric.as_bigint().big_integer());
+            ? SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer()
+            : (SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer() || SignedBigInteger { x_numeric.as_i32() + 1 } < y_numeric.as_bigint().big_integer());
     } else {
         x_lower_than_y = y_numeric.is_integer()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() + 1 });
+            ? x_numeric.as_bigint().big_integer() < SignedBigInteger { y_numeric.as_i32() }
+            : (x_numeric.as_bigint().big_integer() < SignedBigInteger { y_numeric.as_i32() } || x_numeric.as_bigint().big_integer() < SignedBigInteger { y_numeric.as_i32() + 1 });
     }
     if (x_lower_than_y)
         return TriState::True;

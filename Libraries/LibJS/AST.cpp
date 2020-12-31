@@ -28,9 +28,9 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
+#include <AK/SignedBigInteger.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -1470,13 +1470,13 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         if (old_value.is_number())
             new_value = Value(old_value.as_double() + 1);
         else
-            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().plus(SignedBigInteger { 1 }));
         break;
     case UpdateOp::Decrement:
         if (old_value.is_number())
             new_value = Value(old_value.as_double() - 1);
         else
-            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().minus(SignedBigInteger { 1 }));
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -1828,7 +1828,7 @@ Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
+    return js_bigint(interpreter.heap(), SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
 Value BooleanLiteral::execute(Interpreter& interpreter, GlobalObject&) const

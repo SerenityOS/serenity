@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/SignedBigInteger.h>
 #include <AK/String.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/Error.h>
@@ -65,7 +65,7 @@ Value BigIntConstructor::call()
             vm().throw_exception<RangeError>(global_object(), ErrorType::BigIntIntArgument);
             return {};
         }
-        return js_bigint(heap(), Crypto::SignedBigInteger { primitive.as_i32() });
+        return js_bigint(heap(), SignedBigInteger { primitive.as_i32() });
     }
     auto* bigint = vm().argument(0).to_bigint(global_object());
     if (vm().exception())

@@ -25,14 +25,14 @@
  */
 
 #include <AK/Random.h>
+#include <AK/SignedBigInteger.h>
+#include <AK/UnsignedBigInteger.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
-#include <LibCrypto/BigInt/SignedBigInteger.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibCrypto/Cipher/AES.h>
@@ -1851,10 +1851,10 @@ static void bigint_test_number_theory()
     }
     {
         struct {
-            Crypto::UnsignedBigInteger base;
-            Crypto::UnsignedBigInteger exp;
-            Crypto::UnsignedBigInteger mod;
-            Crypto::UnsignedBigInteger expected;
+            UnsignedBigInteger base;
+            UnsignedBigInteger exp;
+            UnsignedBigInteger mod;
+            UnsignedBigInteger expected;
         } mod_pow_tests[] = {
             { "2988348162058574136915891421498819466320163312926952423791023078876139"_bigint, "2351399303373464486466122544523690094744975233415544072992656881240319"_bigint, "10000"_bigint, "3059"_bigint },
             { "24231"_bigint, "12448"_bigint, "14679"_bigint, "4428"_bigint },
@@ -1882,7 +1882,7 @@ static void bigint_test_number_theory()
     }
     {
         struct {
-            Crypto::UnsignedBigInteger candidate;
+            UnsignedBigInteger candidate;
             bool expected_result;
         } primality_tests[] = {
             { "1180591620717411303424"_bigint, false },                  // 2**70
@@ -1917,8 +1917,8 @@ static void bigint_test_number_theory()
     }
     {
         struct {
-            Crypto::UnsignedBigInteger min;
-            Crypto::UnsignedBigInteger max;
+            UnsignedBigInteger min;
+            UnsignedBigInteger max;
         } primality_tests[] = {
             { "1"_bigint, "1000000"_bigint },
             { "10000000000"_bigint, "20000000000"_bigint },
@@ -2145,24 +2145,24 @@ static int bigint_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-static Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
+static UnsignedBigInteger bigint_fibonacci(size_t n)
 {
-    Crypto::UnsignedBigInteger num1(0);
-    Crypto::UnsignedBigInteger num2(1);
+    UnsignedBigInteger num1(0);
+    UnsignedBigInteger num2(1);
     for (size_t i = 0; i < n; ++i) {
-        Crypto::UnsignedBigInteger t = num1.plus(num2);
+        UnsignedBigInteger t = num1.plus(num2);
         num2 = num1;
         num1 = t;
     }
     return num1;
 }
 
-static Crypto::SignedBigInteger bigint_signed_fibonacci(size_t n)
+static SignedBigInteger bigint_signed_fibonacci(size_t n)
 {
-    Crypto::SignedBigInteger num1(0);
-    Crypto::SignedBigInteger num2(1);
+    SignedBigInteger num1(0);
+    SignedBigInteger num2(1);
     for (size_t i = 0; i < n; ++i) {
-        Crypto::SignedBigInteger t = num1.plus(num2);
+        SignedBigInteger t = num1.plus(num2);
         num2 = num1;
         num1 = t;
     }
@@ -2186,11 +2186,11 @@ static void bigint_addition_edgecases()
 {
     {
         I_TEST((BigInteger | Edge Cases));
-        Crypto::UnsignedBigInteger num1;
-        Crypto::UnsignedBigInteger num2(70);
-        Crypto::UnsignedBigInteger num3 = num1.plus(num2);
+        UnsignedBigInteger num1;
+        UnsignedBigInteger num2(70);
+        UnsignedBigInteger num3 = num1.plus(num2);
         bool pass = (num3 == num2);
-        pass &= (num1 == Crypto::UnsignedBigInteger(0));
+        pass &= (num1 == UnsignedBigInteger(0));
 
         if (pass) {
             PASS;
@@ -2200,8 +2200,8 @@ static void bigint_addition_edgecases()
     }
     {
         I_TEST((BigInteger | Borrow with zero));
-        Crypto::UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
-        Crypto::UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
+        UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
+        UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
         if (num1.plus(num2).words() == Vector<u32> { 4294967289, 0, 1 }) {
             PASS;
         } else {
@@ -2214,10 +2214,10 @@ static void bigint_subtraction()
 {
     {
         I_TEST((BigInteger | Simple Subtraction 1));
-        Crypto::UnsignedBigInteger num1(80);
-        Crypto::UnsignedBigInteger num2(70);
+        UnsignedBigInteger num1(80);
+        UnsignedBigInteger num2(70);
 
-        if (num1.minus(num2) == Crypto::UnsignedBigInteger(10)) {
+        if (num1.minus(num2) == UnsignedBigInteger(10)) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -2225,8 +2225,8 @@ static void bigint_subtraction()
     }
     {
         I_TEST((BigInteger | Simple Subtraction 2));
-        Crypto::UnsignedBigInteger num1(50);
-        Crypto::UnsignedBigInteger num2(70);
+        UnsignedBigInteger num1(50);
+        UnsignedBigInteger num2(70);
 
         if (num1.minus(num2).is_invalid()) {
             PASS;
@@ -2236,10 +2236,10 @@ static void bigint_subtraction()
     }
     {
         I_TEST((BigInteger | Subtraction with borrow));
-        Crypto::UnsignedBigInteger num1(UINT32_MAX);
-        Crypto::UnsignedBigInteger num2(1);
-        Crypto::UnsignedBigInteger num3 = num1.plus(num2);
-        Crypto::UnsignedBigInteger result = num3.minus(num2);
+        UnsignedBigInteger num1(UINT32_MAX);
+        UnsignedBigInteger num2(1);
+        UnsignedBigInteger num3 = num1.plus(num2);
+        UnsignedBigInteger result = num3.minus(num2);
         if (result == num1) {
             PASS;
         } else {
@@ -2248,9 +2248,9 @@ static void bigint_subtraction()
     }
     {
         I_TEST((BigInteger | Subtraction with large numbers));
-        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(343);
-        Crypto::UnsignedBigInteger num2 = bigint_fibonacci(218);
-        Crypto::UnsignedBigInteger result = num1.minus(num2);
+        UnsignedBigInteger num1 = bigint_fibonacci(343);
+        UnsignedBigInteger num2 = bigint_fibonacci(218);
+        UnsignedBigInteger result = num1.minus(num2);
         if ((result.plus(num2) == num1)
             && (result.words() == Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 })) {
             PASS;
@@ -2260,15 +2260,15 @@ static void bigint_subtraction()
     }
     {
         I_TEST((BigInteger | Subtraction with large numbers 2));
-        Crypto::UnsignedBigInteger num1(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 });
-        Crypto::UnsignedBigInteger num2(Vector<u32> { 4196414175, 1117247942, 1123294122, 191895498, 3347106536, 16 });
-        Crypto::UnsignedBigInteger result = num1.minus(num2);
+        UnsignedBigInteger num1(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 });
+        UnsignedBigInteger num2(Vector<u32> { 4196414175, 1117247942, 1123294122, 191895498, 3347106536, 16 });
+        UnsignedBigInteger result = num1.minus(num2);
         // this test only verifies that we don't crash on an assertion
         PASS;
     }
     {
         I_TEST((BigInteger | Subtraction Regression 1));
-        auto num = Crypto::UnsignedBigInteger { 1 }.shift_left(256);
+        auto num = UnsignedBigInteger { 1 }.shift_left(256);
         if (num.minus(1).words() == Vector<u32> { 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 0 }) {
             PASS;
         } else {
@@ -2281,9 +2281,9 @@ static void bigint_multiplication()
 {
     {
         I_TEST((BigInteger | Simple Multiplication));
-        Crypto::UnsignedBigInteger num1(8);
-        Crypto::UnsignedBigInteger num2(251);
-        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
+        UnsignedBigInteger num1(8);
+        UnsignedBigInteger num2(251);
+        UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 2008 }) {
             PASS;
         } else {
@@ -2292,9 +2292,9 @@ static void bigint_multiplication()
     }
     {
         I_TEST((BigInteger | Multiplications with big numbers 1));
-        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
-        Crypto::UnsignedBigInteger num2(12345678);
-        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
+        UnsignedBigInteger num1 = bigint_fibonacci(200);
+        UnsignedBigInteger num2(12345678);
+        UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 669961318, 143970113, 4028714974, 3164551305, 1589380278, 2 }) {
             PASS;
         } else {
@@ -2303,9 +2303,9 @@ static void bigint_multiplication()
     }
     {
         I_TEST((BigInteger | Multiplications with big numbers 2));
-        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(200);
-        Crypto::UnsignedBigInteger num2 = bigint_fibonacci(341);
-        Crypto::UnsignedBigInteger result = num1.multiplied_by(num2);
+        UnsignedBigInteger num1 = bigint_fibonacci(200);
+        UnsignedBigInteger num2 = bigint_fibonacci(341);
+        UnsignedBigInteger result = num1.multiplied_by(num2);
         if (result.words() == Vector<u32> { 3017415433, 2741793511, 1957755698, 3731653885, 3154681877, 785762127, 3200178098, 4260616581, 529754471, 3632684436, 1073347813, 2516430 }) {
             PASS;
         } else {
@@ -2317,10 +2317,10 @@ static void bigint_division()
 {
     {
         I_TEST((BigInteger | Simple Division));
-        Crypto::UnsignedBigInteger num1(27194);
-        Crypto::UnsignedBigInteger num2(251);
+        UnsignedBigInteger num1(27194);
+        UnsignedBigInteger num2(251);
         auto result = num1.divided_by(num2);
-        Crypto::UnsignedDivisionResult expected = { Crypto::UnsignedBigInteger(108), Crypto::UnsignedBigInteger(86) };
+        AK::UnsignedDivisionResult expected = { UnsignedBigInteger(108), UnsignedBigInteger(86) };
         if (result.quotient == expected.quotient && result.remainder == expected.remainder) {
             PASS;
         } else {
@@ -2329,12 +2329,12 @@ static void bigint_division()
     }
     {
         I_TEST((BigInteger | Division with big numbers));
-        Crypto::UnsignedBigInteger num1 = bigint_fibonacci(386);
-        Crypto::UnsignedBigInteger num2 = bigint_fibonacci(238);
+        UnsignedBigInteger num1 = bigint_fibonacci(386);
+        UnsignedBigInteger num2 = bigint_fibonacci(238);
         auto result = num1.divided_by(num2);
-        Crypto::UnsignedDivisionResult expected = {
-            Crypto::UnsignedBigInteger(Vector<u32> { 2300984486, 2637503534, 2022805584, 107 }),
-            Crypto::UnsignedBigInteger(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 })
+        AK::UnsignedDivisionResult expected = {
+            UnsignedBigInteger(Vector<u32> { 2300984486, 2637503534, 2022805584, 107 }),
+            UnsignedBigInteger(Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 })
         };
         if (result.quotient == expected.quotient && result.remainder == expected.remainder) {
             PASS;
@@ -2359,7 +2359,7 @@ static void bigint_base10()
 {
     {
         I_TEST((BigInteger | From String));
-        auto result = Crypto::UnsignedBigInteger::from_base10("57195071295721390579057195715793");
+        auto result = UnsignedBigInteger::from_base10("57195071295721390579057195715793");
         if (result.words() == Vector<u32> { 3806301393, 954919431, 3879607298, 721 }) {
             PASS;
         } else {
@@ -2368,7 +2368,7 @@ static void bigint_base10()
     }
     {
         I_TEST((BigInteger | To String));
-        auto result = Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }.to_base10();
+        auto result = UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }.to_base10();
         if (result == "57195071295721390579057195715793") {
             PASS;
         } else {
@@ -2384,7 +2384,7 @@ static void bigint_import_export()
         u8 random_bytes[128];
         u8 target_buffer[128];
         AK::fill_with_random(random_bytes, 128);
-        auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
+        auto encoded = UnsignedBigInteger::import_data(random_bytes, 128);
         encoded.export_data({ target_buffer, 128 });
         if (memcmp(target_buffer, random_bytes, 128) != 0)
             FAIL(Could not roundtrip);
@@ -2396,7 +2396,7 @@ static void bigint_import_export()
         u8 target_buffer[128];
         auto encoded = "12345678901234567890"_bigint;
         auto size = encoded.export_data({ target_buffer, 128 });
-        auto decoded = Crypto::UnsignedBigInteger::import_data(target_buffer, size);
+        auto decoded = UnsignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);
         else
@@ -2404,7 +2404,7 @@ static void bigint_import_export()
     }
     {
         I_TEST((BigInteger | BigEndian Import));
-        auto number = Crypto::UnsignedBigInteger::import_data("hello");
+        auto number = UnsignedBigInteger::import_data("hello");
         if (number == "448378203247"_bigint) {
             PASS;
         } else {
@@ -2509,8 +2509,8 @@ static void bigint_signed_addition_edgecases()
 {
     {
         I_TEST((Signed BigInteger | Borrow with zero));
-        Crypto::SignedBigInteger num1 { Crypto::UnsignedBigInteger { { UINT32_MAX - 3, UINT32_MAX } }, false };
-        Crypto::SignedBigInteger num2 { Crypto::UnsignedBigInteger { UINT32_MAX - 2 }, false };
+        SignedBigInteger num1 { UnsignedBigInteger { { UINT32_MAX - 3, UINT32_MAX } }, false };
+        SignedBigInteger num2 { UnsignedBigInteger { UINT32_MAX - 2 }, false };
         if (num1.plus(num2).unsigned_value().words() == Vector<u32> { 4294967289, 0, 1 }) {
             PASS;
         } else {
@@ -2519,10 +2519,10 @@ static void bigint_signed_addition_edgecases()
     }
     {
         I_TEST((Signed BigInteger | Addition to other sign));
-        Crypto::SignedBigInteger num1 = INT32_MAX;
-        Crypto::SignedBigInteger num2 = num1;
+        SignedBigInteger num1 = INT32_MAX;
+        SignedBigInteger num2 = num1;
         num2.negate();
-        if (num1.plus(num2) == Crypto::SignedBigInteger { 0 }) {
+        if (num1.plus(num2) == SignedBigInteger { 0 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -2534,10 +2534,10 @@ static void bigint_signed_subtraction()
 {
     {
         I_TEST((Signed BigInteger | Simple Subtraction 1));
-        Crypto::SignedBigInteger num1(80);
-        Crypto::SignedBigInteger num2(70);
+        SignedBigInteger num1(80);
+        SignedBigInteger num2(70);
 
-        if (num1.minus(num2) == Crypto::SignedBigInteger(10)) {
+        if (num1.minus(num2) == SignedBigInteger(10)) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -2545,10 +2545,10 @@ static void bigint_signed_subtraction()
     }
     {
         I_TEST((Signed BigInteger | Simple Subtraction 2));
-        Crypto::SignedBigInteger num1(50);
-        Crypto::SignedBigInteger num2(70);
+        SignedBigInteger num1(50);
+        SignedBigInteger num2(70);
 
-        if (num1.minus(num2) == Crypto::SignedBigInteger { -20 }) {
+        if (num1.minus(num2) == SignedBigInteger { -20 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -2556,10 +2556,10 @@ static void bigint_signed_subtraction()
     }
     {
         I_TEST((Signed BigInteger | Subtraction with borrow));
-        Crypto::SignedBigInteger num1(Crypto::UnsignedBigInteger { UINT32_MAX });
-        Crypto::SignedBigInteger num2(1);
-        Crypto::SignedBigInteger num3 = num1.plus(num2);
-        Crypto::SignedBigInteger result = num2.minus(num3);
+        SignedBigInteger num1(UnsignedBigInteger { UINT32_MAX });
+        SignedBigInteger num2(1);
+        SignedBigInteger num3 = num1.plus(num2);
+        SignedBigInteger result = num2.minus(num3);
         num1.negate();
         if (result == num1) {
             PASS;
@@ -2569,10 +2569,10 @@ static void bigint_signed_subtraction()
     }
     {
         I_TEST((Signed BigInteger | Subtraction with large numbers));
-        Crypto::SignedBigInteger num1 = bigint_signed_fibonacci(343);
-        Crypto::SignedBigInteger num2 = bigint_signed_fibonacci(218);
-        Crypto::SignedBigInteger result = num2.minus(num1);
-        auto expected = Crypto::UnsignedBigInteger { Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 } };
+        SignedBigInteger num1 = bigint_signed_fibonacci(343);
+        SignedBigInteger num2 = bigint_signed_fibonacci(218);
+        SignedBigInteger result = num2.minus(num1);
+        auto expected = UnsignedBigInteger { Vector<u32> { 811430588, 2958904896, 1130908877, 2830569969, 3243275482, 3047460725, 774025231, 7990 } };
         if ((result.plus(num1) == num2)
             && (result.unsigned_value() == expected)) {
             PASS;
@@ -2582,9 +2582,9 @@ static void bigint_signed_subtraction()
     }
     {
         I_TEST((Signed BigInteger | Subtraction with large numbers 2));
-        Crypto::SignedBigInteger num1(Crypto::UnsignedBigInteger { Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 } });
-        Crypto::SignedBigInteger num2(Crypto::UnsignedBigInteger { Vector<u32> { 4196414175, 1117247942, 1123294122, 191895498, 3347106536, 16 } });
-        Crypto::SignedBigInteger result = num1.minus(num2);
+        SignedBigInteger num1(UnsignedBigInteger { Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 } });
+        SignedBigInteger num2(UnsignedBigInteger { Vector<u32> { 4196414175, 1117247942, 1123294122, 191895498, 3347106536, 16 } });
+        SignedBigInteger result = num1.minus(num2);
         // this test only verifies that we don't crash on an assertion
         PASS;
     }
@@ -2594,10 +2594,10 @@ static void bigint_signed_multiplication()
 {
     {
         I_TEST((Signed BigInteger | Simple Multiplication));
-        Crypto::SignedBigInteger num1(8);
-        Crypto::SignedBigInteger num2(-251);
-        Crypto::SignedBigInteger result = num1.multiplied_by(num2);
-        if (result == Crypto::SignedBigInteger { -2008 }) {
+        SignedBigInteger num1(8);
+        SignedBigInteger num2(-251);
+        SignedBigInteger result = num1.multiplied_by(num2);
+        if (result == SignedBigInteger { -2008 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
@@ -2605,9 +2605,9 @@ static void bigint_signed_multiplication()
     }
     {
         I_TEST((Signed BigInteger | Multiplications with big numbers 1));
-        Crypto::SignedBigInteger num1 = bigint_signed_fibonacci(200);
-        Crypto::SignedBigInteger num2(-12345678);
-        Crypto::SignedBigInteger result = num1.multiplied_by(num2);
+        SignedBigInteger num1 = bigint_signed_fibonacci(200);
+        SignedBigInteger num2(-12345678);
+        SignedBigInteger result = num1.multiplied_by(num2);
         if (result.unsigned_value().words() == Vector<u32> { 669961318, 143970113, 4028714974, 3164551305, 1589380278, 2 } && result.is_negative()) {
             PASS;
         } else {
@@ -2616,10 +2616,10 @@ static void bigint_signed_multiplication()
     }
     {
         I_TEST((Signed BigInteger | Multiplications with big numbers 2));
-        Crypto::SignedBigInteger num1 = bigint_signed_fibonacci(200);
-        Crypto::SignedBigInteger num2 = bigint_signed_fibonacci(341);
+        SignedBigInteger num1 = bigint_signed_fibonacci(200);
+        SignedBigInteger num2 = bigint_signed_fibonacci(341);
         num1.negate();
-        Crypto::SignedBigInteger result = num1.multiplied_by(num2);
+        SignedBigInteger result = num1.multiplied_by(num2);
         if (result.unsigned_value().words() == Vector<u32> { 3017415433, 2741793511, 1957755698, 3731653885, 3154681877, 785762127, 3200178098, 4260616581, 529754471, 3632684436, 1073347813, 2516430 } && result.is_negative()) {
             PASS;
         } else {
@@ -2631,10 +2631,10 @@ static void bigint_signed_division()
 {
     {
         I_TEST((Signed BigInteger | Simple Division));
-        Crypto::SignedBigInteger num1(27194);
-        Crypto::SignedBigInteger num2(-251);
+        SignedBigInteger num1(27194);
+        SignedBigInteger num2(-251);
         auto result = num1.divided_by(num2);
-        Crypto::SignedDivisionResult expected = { Crypto::SignedBigInteger(-108), Crypto::SignedBigInteger(86) };
+        AK::SignedDivisionResult expected = { SignedBigInteger(-108), SignedBigInteger(86) };
         if (result.quotient == expected.quotient && result.remainder == expected.remainder) {
             PASS;
         } else {
@@ -2643,13 +2643,13 @@ static void bigint_signed_division()
     }
     {
         I_TEST((Signed BigInteger | Division with big numbers));
-        Crypto::SignedBigInteger num1 = bigint_signed_fibonacci(386);
-        Crypto::SignedBigInteger num2 = bigint_signed_fibonacci(238);
+        SignedBigInteger num1 = bigint_signed_fibonacci(386);
+        SignedBigInteger num2 = bigint_signed_fibonacci(238);
         num1.negate();
         auto result = num1.divided_by(num2);
-        Crypto::SignedDivisionResult expected = {
-            Crypto::SignedBigInteger(Crypto::UnsignedBigInteger { Vector<u32> { 2300984486, 2637503534, 2022805584, 107 } }, true),
-            Crypto::SignedBigInteger(Crypto::UnsignedBigInteger { Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 } }, true)
+        AK::SignedDivisionResult expected = {
+            SignedBigInteger(UnsignedBigInteger { Vector<u32> { 2300984486, 2637503534, 2022805584, 107 } }, true),
+            SignedBigInteger(UnsignedBigInteger { Vector<u32> { 1483061863, 446680044, 1123294122, 191895498, 3347106536, 16, 0, 0, 0 } }, true)
         };
         if (result.quotient == expected.quotient && result.remainder == expected.remainder) {
             PASS;
@@ -2675,7 +2675,7 @@ static void bigint_signed_base10()
 {
     {
         I_TEST((Signed BigInteger | From String));
-        auto result = Crypto::SignedBigInteger::from_base10("-57195071295721390579057195715793");
+        auto result = SignedBigInteger::from_base10("-57195071295721390579057195715793");
         if (result.unsigned_value().words() == Vector<u32> { 3806301393, 954919431, 3879607298, 721 } && result.is_negative()) {
             PASS;
         } else {
@@ -2684,7 +2684,7 @@ static void bigint_signed_base10()
     }
     {
         I_TEST((Signed BigInteger | To String));
-        auto result = Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }, true }.to_base10();
+        auto result = SignedBigInteger { UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }, true }.to_base10();
         if (result == "-57195071295721390579057195715793") {
             PASS;
         } else {
@@ -2701,7 +2701,7 @@ static void bigint_signed_import_export()
         u8 target_buffer[129];
         random_bytes[0] = 1;
         AK::fill_with_random(random_bytes + 1, 128);
-        auto encoded = Crypto::SignedBigInteger::import_data(random_bytes, 129);
+        auto encoded = SignedBigInteger::import_data(random_bytes, 129);
         encoded.export_data({ target_buffer, 129 });
         if (memcmp(target_buffer, random_bytes, 129) != 0)
             FAIL(Could not roundtrip);
@@ -2713,7 +2713,7 @@ static void bigint_signed_import_export()
         u8 target_buffer[128];
         auto encoded = "-12345678901234567890"_sbigint;
         auto size = encoded.export_data({ target_buffer, 128 });
-        auto decoded = Crypto::SignedBigInteger::import_data(target_buffer, size);
+        auto decoded = SignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);
         else

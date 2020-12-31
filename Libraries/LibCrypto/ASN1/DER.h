@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/UnsignedBigInteger.h>
 #include <LibCrypto/ASN1/ASN1.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto {
 

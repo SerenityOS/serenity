@@ -30,7 +30,7 @@
 #include <AK/Forward.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <AK/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
 
 namespace TLS {
@@ -50,8 +50,8 @@ struct Certificate {
     CertificateKeyAlgorithm key_algorithm;
     CertificateKeyAlgorithm ec_algorithm;
     ByteBuffer exponent;
-    Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key;
-    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key;
+    Crypto::PK::RSAPublicKey<UnsignedBigInteger> public_key;
+    Crypto::PK::RSAPrivateKey<UnsignedBigInteger> private_key;
     String issuer_country;
     String issuer_state;
     String issuer_location;
@@ -68,7 +68,7 @@ struct Certificate {
     String unit;
     Vector<String> SAN;
     u8* ocsp;
-    Crypto::UnsignedBigInteger serial_number;
+    UnsignedBigInteger serial_number;
     ByteBuffer sign_key;
     ByteBuffer fingerprint;
     ByteBuffer der;

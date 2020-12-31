@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <AK/SignedBigInteger.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/BigInt.h>
 
 namespace JS {
 
-BigInt::BigInt(Crypto::SignedBigInteger big_integer)
+BigInt::BigInt(SignedBigInteger big_integer)
     : m_big_integer(move(big_integer))
 {
     ASSERT(!m_big_integer.is_invalid());
@@ -40,7 +40,7 @@ BigInt::~BigInt()
 {
 }
 
-BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
+BigInt* js_bigint(Heap& heap, SignedBigInteger big_integer)
 {
     return heap.allocate_without_global_object<BigInt>(move(big_integer));
 }

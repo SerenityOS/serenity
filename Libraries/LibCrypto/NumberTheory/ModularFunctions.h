@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Random.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <AK/UnsignedBigInteger.h>
 
 //#define NT_DEBUG
 

@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SignedBigInteger.h"
+#include <AK/SignedBigInteger.h>
 #include <AK/StringBuilder.h>
 
-namespace Crypto {
+namespace AK {
 
 SignedBigInteger SignedBigInteger::import_data(const u8* ptr, size_t length)
 {

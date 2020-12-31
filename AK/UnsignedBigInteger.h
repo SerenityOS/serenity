@@ -33,7 +33,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
-namespace Crypto {
+namespace AK {
 
 struct UnsignedDivisionResult;
 constexpr size_t STARTING_WORD_SIZE = 512;
@@ -125,14 +125,17 @@ private:
 };
 
 struct UnsignedDivisionResult {
-    Crypto::UnsignedBigInteger quotient;
-    Crypto::UnsignedBigInteger remainder;
+    UnsignedBigInteger quotient;
+    UnsignedBigInteger remainder;
 };
 
 }
 
+using AK::UnsignedBigInteger;
+using AK::UnsignedDivisionResult;
+
 inline const LogStream&
-operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger& value)
+operator<<(const LogStream& stream, const UnsignedBigInteger& value)
 {
     if (value.is_invalid()) {
         stream << "Invalid BigInt";
@@ -144,8 +147,8 @@ operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger& value)
     return stream;
 }
 
-inline Crypto::UnsignedBigInteger
+inline UnsignedBigInteger
 operator""_bigint(const char* string, size_t length)
 {
-    return Crypto::UnsignedBigInteger::from_base10({ string, length });
+    return UnsignedBigInteger::from_base10({ string, length });
 }

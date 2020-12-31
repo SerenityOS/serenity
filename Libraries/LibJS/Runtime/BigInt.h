@@ -26,25 +26,25 @@
 
 #pragma once
 
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <AK/SignedBigInteger.h>
 #include <LibJS/Runtime/Cell.h>
 
 namespace JS {
 
 class BigInt final : public Cell {
 public:
-    BigInt(Crypto::SignedBigInteger);
+    BigInt(SignedBigInteger);
     virtual ~BigInt();
 
-    const Crypto::SignedBigInteger& big_integer() const { return m_big_integer; }
+    const SignedBigInteger& big_integer() const { return m_big_integer; }
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base10()); }
 
 private:
     virtual const char* class_name() const override { return "BigInt"; }
 
-    Crypto::SignedBigInteger m_big_integer;
+    SignedBigInteger m_big_integer;
 };
 
-BigInt* js_bigint(Heap&, Crypto::SignedBigInteger);
+BigInt* js_bigint(Heap&, SignedBigInteger);
 
 }

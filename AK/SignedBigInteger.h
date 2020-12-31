@@ -27,9 +27,9 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <AK/UnsignedBigInteger.h>
 
-namespace Crypto {
+namespace AK {
 
 struct SignedDivisionResult;
 
@@ -135,14 +135,17 @@ private:
 };
 
 struct SignedDivisionResult {
-    Crypto::SignedBigInteger quotient;
-    Crypto::SignedBigInteger remainder;
+    SignedBigInteger quotient;
+    SignedBigInteger remainder;
 };
 
 }
 
+using AK::SignedBigInteger;
+using AK::SignedDivisionResult;
+
 inline const LogStream&
-operator<<(const LogStream& stream, const Crypto::SignedBigInteger value)
+operator<<(const LogStream& stream, const SignedBigInteger value)
 {
     if (value.is_invalid()) {
         stream << "Invalid BigInt";
@@ -155,8 +158,8 @@ operator<<(const LogStream& stream, const Crypto::SignedBigInteger value)
     return stream;
 }
 
-inline Crypto::SignedBigInteger
+inline SignedBigInteger
 operator""_sbigint(const char* string, size_t length)
 {
-    return Crypto::SignedBigInteger::from_base10({ string, length });
+    return SignedBigInteger::from_base10({ string, length });
 }

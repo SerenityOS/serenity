@@ -273,14 +273,14 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
 
                     if (index == 1)
                         cert.public_key.set(
-                            Crypto::UnsignedBigInteger::import_data(buffer + position, length),
+                            UnsignedBigInteger::import_data(buffer + position, length),
                             cert.public_key.public_exponent());
                     else if (index == 2)
                         cert.public_key.set(
                             cert.public_key.modulus(),
-                            Crypto::UnsignedBigInteger::import_data(buffer + position, length));
+                            UnsignedBigInteger::import_data(buffer + position, length));
                 } else if (_asn1_is_field_present(fields, Constants::serial_id)) {
-                    cert.serial_number = Crypto::UnsignedBigInteger::import_data(buffer + position, length);
+                    cert.serial_number = UnsignedBigInteger::import_data(buffer + position, length);
                 }
                 if (_asn1_is_field_present(fields, Constants::version_id)) {
                     if (length == 1)

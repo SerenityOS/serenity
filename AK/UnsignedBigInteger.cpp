@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "UnsignedBigInteger.h"
+#include <AK/UnsignedBigInteger.h>
 #include <AK/StringBuilder.h>
 
-namespace Crypto {
+namespace AK {
 
 UnsignedBigInteger::UnsignedBigInteger(const u8* ptr, size_t length)
 {
