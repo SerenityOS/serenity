@@ -56,9 +56,4 @@ SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
 {
 }
 
-SharedInodeVMObject::~SharedInodeVMObject()
-{
-    ASSERT(inode().is_shared_vmobject(*this));
-}
-
 }
