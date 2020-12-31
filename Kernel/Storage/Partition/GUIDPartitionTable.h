@@ -46,7 +46,7 @@ public:
     virtual bool is_valid() const override { return m_valid; };
 
 private:
-    bool is_unused_entry(ByteBuffer) const;
+    bool is_unused_entry(Array<u8, 16>) const;
     const GUIDPartitionHeader& header() const;
     bool initialize();
 

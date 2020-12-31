@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/UUID.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/PCI/Access.h>
@@ -37,13 +38,22 @@ namespace Kernel {
 
 static StorageManagement* s_the;
 
-StorageManagement::StorageManagement(String root_device, bool force_pio)
-    : m_controllers(enumerate_controllers(force_pio))
+StorageManagement::StorageManagement(String boot_argument, bool force_pio)
+    : m_boot_argument(boot_argument)
+    , m_controllers(enumerate_controllers(force_pio))
     , m_storage_devices(enumerate_storage_devices())
     , m_disk_partitions(enumerate_disk_partitions())
-    , m_boot_device(determine_boot_device(root_device))
-    , m_boot_block_device(determine_boot_block_device(root_device))
 {
+    if (!boot_argument_contains_partition_uuid()) {
+        determine_boot_device();
+        return;
+    }
+    determine_boot_device_with_partition_uuid();
+}
+
+bool StorageManagement::boot_argument_contains_partition_uuid()
+{
+    return m_boot_argument.starts_with("PARTUUID=");
 }
 
 NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
@@ -115,14 +125,15 @@ NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions(
     return partitions;
 }
 
-NonnullRefPtr<StorageDevice> StorageManagement::determine_boot_device(String root_device) const
+void StorageManagement::determine_boot_device()
 {
     ASSERT(!m_controllers.is_empty());
-    if (!root_device.starts_with("/dev/hd")) {
+    if (!m_boot_argument.starts_with("/dev/hd")) {
         klog() << "init_stage2: root filesystem must be on an hard drive";
         Processor::halt();
     }
-    auto drive_letter = root_device.substring(strlen("/dev/hd"), root_device.length() - strlen("/dev/hd"))[0];
+
+    auto drive_letter = m_boot_argument.substring(strlen("/dev/hd"), m_boot_argument.length() - strlen("/dev/hd"))[0];
 
     if (drive_letter < 'a' || drive_letter > 'z') {
         klog() << "init_stage2: root filesystem must be on an hard drive name";
@@ -134,39 +145,62 @@ NonnullRefPtr<StorageDevice> StorageManagement::determine_boot_device(String roo
         klog() << "init_stage2: invalid selection of hard drive.";
         Processor::halt();
     }
-    return m_storage_devices[drive_index];
-}
 
-NonnullRefPtr<BlockDevice> StorageManagement::determine_boot_block_device(String root_device) const
-{
-    auto determined_boot_device = m_boot_device;
-    root_device = root_device.substring(strlen("/dev/hda"), root_device.length() - strlen("/dev/hda"));
-    if (!root_device.length())
-        return determined_boot_device;
+    auto& determined_boot_device = m_storage_devices[drive_index];
+    auto root_device = m_boot_argument.substring(strlen("/dev/hda"), m_boot_argument.length() - strlen("/dev/hda"));
+    if (!root_device.length()) {
+        m_boot_block_device = determined_boot_device;
+        return;
+    }
 
     auto partition_number = root_device.to_uint();
-
     if (!partition_number.has_value()) {
         klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
         Processor::halt();
     }
 
-    if (partition_number.value() > m_boot_device->m_partitions.size()) {
+    if (partition_number.value() > determined_boot_device.m_partitions.size()) {
         klog() << "init_stage2: invalid partition number!";
         Processor::halt();
     }
 
-    return m_boot_device->m_partitions[partition_number.value() - 1];
+    m_boot_block_device = determined_boot_device.m_partitions[partition_number.value() - 1];
 }
 
-NonnullRefPtr<BlockDevice> StorageManagement::boot_block_device() const
+void StorageManagement::determine_boot_device_with_partition_uuid()
+{
+    ASSERT(!m_disk_partitions.is_empty());
+    ASSERT(m_boot_argument.starts_with("PARTUUID="));
+
+    auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
+
+    if (partition_uuid.to_string().length() != 36) {
+        klog() << "init_stage2: specified partition UUID is not valid";
+        Processor::halt();
+    }
+
+    for (auto& partition : m_disk_partitions) {
+        if (partition.metadata().unique_guid().is_zero())
+            continue;
+        if (partition.metadata().unique_guid() == partition_uuid) {
+            m_boot_block_device = partition;
+            break;
+        }
+    }
+}
+
+RefPtr<BlockDevice> StorageManagement::boot_block_device() const
 {
     return m_boot_block_device;
 }
 
 NonnullRefPtr<FS> StorageManagement::root_filesystem() const
 {
-    auto e2fs = Ext2FS::create(*FileDescription::create(boot_block_device()));
+    if (!boot_block_device()) {
+        klog() << "init_stage2: couldn't find a suitable device to boot from";
+        Processor::halt();
+    }
+    auto e2fs = Ext2FS::create(*FileDescription::create(boot_block_device().release_nonnull()));
     if (!e2fs->initialize()) {
         klog() << "init_stage2: couldn't open root filesystem";
         Processor::halt();

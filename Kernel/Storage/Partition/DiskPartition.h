@@ -48,6 +48,8 @@ public:
     // ^Device
     virtual mode_t required_mode() const override { return 0600; }
 
+    const DiskPartitionMetadata& metadata() const;
+
 private:
     virtual const char* class_name() const override;
 
