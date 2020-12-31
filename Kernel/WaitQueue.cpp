@@ -74,7 +74,7 @@ void WaitQueue::wake_one()
 void WaitQueue::wake_n(u32 wake_count)
 {
     if (wake_count == 0)
-        return; // should we assert instaed?
+        return; // should we assert instead?
     ScopedSpinLock lock(m_lock);
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue @ " << this << ": wake_n(" << wake_count << ")";

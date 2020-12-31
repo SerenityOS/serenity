@@ -239,7 +239,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         if (nongreedy)
             consume();
 
-        // Note: dont touch match_length_minimum, it's already correct
+        // Note: don't touch match_length_minimum, it's already correct
         bytecode_to_repeat.insert_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
 
