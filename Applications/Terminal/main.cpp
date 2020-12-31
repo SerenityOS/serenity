@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -181,65 +182,43 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     window->set_title("Terminal settings");
     window->set_resizable(false);
     window->resize(200, 210);
-    window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
-    settings.set_fill_with_background_color(true);
-    settings.set_background_role(ColorRole::Button);
-    settings.set_layout<GUI::VerticalBoxLayout>();
-    settings.layout()->set_margins({ 4, 4, 4, 4 });
+    settings.load_from_gml(terminal_settings_window_gml);
 
-    auto& radio_container = settings.add<GUI::GroupBox>("Bell mode");
-    radio_container.set_layout<GUI::VerticalBoxLayout>();
-    radio_container.layout()->set_margins({ 6, 16, 6, 6 });
-    radio_container.set_fixed_height(94);
-
-    auto& sysbell_radio = radio_container.add<GUI::RadioButton>("Use (audible) system Bell");
-    auto& visbell_radio = radio_container.add<GUI::RadioButton>("Use (visual) bell");
-    auto& nobell_radio = radio_container.add<GUI::RadioButton>("Disable bell");
+    auto& beep_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("beep_bell_radio"));
+    auto& visual_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("visual_bell_radio"));
+    auto& no_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("no_bell_radio"));
 
     switch (terminal.bell_mode()) {
     case TerminalWidget::BellMode::Visible:
-        visbell_radio.set_checked(true);
+        visual_bell_radio.set_checked(true);
         break;
     case TerminalWidget::BellMode::AudibleBeep:
-        sysbell_radio.set_checked(true);
+        beep_bell_radio.set_checked(true);
         break;
     case TerminalWidget::BellMode::Disabled:
-        nobell_radio.set_checked(true);
+        no_bell_radio.set_checked(true);
         break;
     }
 
-    sysbell_radio.on_checked = [&terminal](const bool) {
+    beep_bell_radio.on_checked = [&terminal](bool) {
         terminal.set_bell_mode(TerminalWidget::BellMode::AudibleBeep);
     };
-    visbell_radio.on_checked = [&terminal](const bool) {
+    visual_bell_radio.on_checked = [&terminal](bool) {
         terminal.set_bell_mode(TerminalWidget::BellMode::Visible);
     };
-    nobell_radio.on_checked = [&terminal](const bool) {
+    no_bell_radio.on_checked = [&terminal](bool) {
         terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
     };
 
-    auto& slider_container = settings.add<GUI::GroupBox>("Background opacity");
-    slider_container.set_layout<GUI::VerticalBoxLayout>();
-    slider_container.layout()->set_margins({ 6, 16, 6, 6 });
-    slider_container.set_fixed_height(50);
-    auto& slider = slider_container.add<GUI::OpacitySlider>();
-
+    auto& slider = static_cast<GUI::OpacitySlider&>(*settings.find_descendant_by_name("background_opacity_slider"));
     slider.on_change = [&terminal](int value) {
         terminal.set_opacity(value);
     };
-
-    slider.set_range(0, 255);
     slider.set_value(terminal.opacity());
 
-    auto& history_size_spinbox_container = settings.add<GUI::GroupBox>("Maximum scrollback history lines");
-    history_size_spinbox_container.set_layout<GUI::VerticalBoxLayout>();
-    history_size_spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
-    history_size_spinbox_container.set_fixed_height(46);
-
-    auto& history_size_spinbox = history_size_spinbox_container.add<GUI::SpinBox>();
-    history_size_spinbox.set_range(0, 40960);
+    auto& history_size_spinbox = static_cast<GUI::SpinBox&>(*settings.find_descendant_by_name("history_size_spinbox"));
     history_size_spinbox.set_value(terminal.max_history_size());
     history_size_spinbox.on_change = [&terminal](int value) {
         terminal.set_max_history_size(value);
