@@ -212,8 +212,10 @@ set(KERNEL_SOURCES
 )
 
 set(AK_SOURCES
+    ../AK/ByteBuffer.cpp
     ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
+    ../AK/Hex.cpp
     ../AK/JsonParser.cpp
     ../AK/JsonValue.cpp
     ../AK/LexicalPath.cpp
@@ -225,6 +227,7 @@ set(AK_SOURCES
     ../AK/StringView.cpp
     ../AK/Time.cpp
     ../AK/Format.cpp
+    ../AK/UUID.cpp
 )
 
 set(ELF_SOURCES
