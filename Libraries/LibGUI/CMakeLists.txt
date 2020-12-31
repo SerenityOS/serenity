@@ -63,6 +63,7 @@ set(SOURCES
     ModelSelection.cpp
     MultiView.cpp
     Notification.cpp
+    OpacitySlider.cpp
     Painter.cpp
     ProcessChooser.cpp
     ProgressBar.cpp

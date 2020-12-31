@@ -26,78 +26,31 @@
 
 #pragma once
 
+#include <LibGUI/AbstractSlider.h>
+
 namespace GUI {
 
-class AbstractButton;
-class AbstractTableView;
-class AbstractView;
-class Action;
-class ActionGroup;
-class Application;
-class AutocompleteBox;
-class AutocompleteProvider;
-class BoxLayout;
-class Button;
-class CheckBox;
-class Command;
-class DragEvent;
-class DropEvent;
-class FileSystemModel;
-class Frame;
-class GroupBox;
-class HeaderView;
-class HorizontalBoxLayout;
-class HorizontalSlider;
-class Icon;
-class IconView;
-class JsonArrayModel;
-class KeyEvent;
-class Label;
-class Layout;
-class ListView;
-class Menu;
-class MenuBar;
-class MenuItem;
-class Model;
-class ModelEditingDelegate;
-class ModelIndex;
-class MouseEvent;
-class MultiPaintEvent;
-class MultiView;
-class OpacitySlider;
-class PaintEvent;
-class Painter;
-class ResizeCorner;
-class ResizeEvent;
-class ScrollBar;
-class Slider;
-class SortingProxyModel;
-class SpinBox;
-class Splitter;
-class StackWidget;
-class StatusBar;
-class SyntaxHighlighter;
-class TabWidget;
-class TableView;
-class TextBox;
-class TextDocument;
-class TextDocumentLine;
-class TextDocumentUndoCommand;
-class TextEditor;
-class ThemeChangeEvent;
-class ToolBar;
-class ToolBarContainer;
-class TreeView;
-class Variant;
-class VerticalBoxLayout;
-class VerticalSlider;
-class WMEvent;
-class Widget;
-class WidgetClassRegistration;
-class Window;
-class WindowServerConnection;
+class OpacitySlider : public AbstractSlider {
+    C_OBJECT(OpacitySlider);
 
-enum class ModelRole;
-enum class SortOrder;
+public:
+    virtual ~OpacitySlider() override;
+
+protected:
+    virtual void paint_event(PaintEvent&) override;
+    virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
+
+private:
+    explicit OpacitySlider(Gfx::Orientation = Gfx::Orientation::Horizontal);
+
+    Gfx::IntRect frame_inner_rect() const;
+
+    int value_at(const Gfx::IntPoint&) const;
+
+    bool m_dragging { false };
+};
 
 }
