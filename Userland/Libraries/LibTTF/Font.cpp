@@ -174,6 +174,29 @@ Optional<Hmtx> Hmtx::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, u32 
     return Hmtx(slice, num_glyphs, number_of_h_metrics);
 }
 
+Optional<Name> Name::from_slice(const ReadonlyBytes& slice)
+{
+    return Name(slice);
+}
+
+String Name::string_for_id(NameId id) const
+{
+    auto num_entries = be_u16(m_slice.offset_pointer(2));
+    auto string_offset = be_u16(m_slice.offset_pointer(4));
+
+    for (int i = 0; i < num_entries; ++i) {
+        auto this_id = be_u16(m_slice.offset_pointer(6 + i * 12 + 6));
+        if (this_id != (u16)id)
+            continue;
+
+        auto length = be_u16(m_slice.offset_pointer(6 + i * 12 + 8));
+        auto offset = be_u16(m_slice.offset_pointer(6 + i * 12 + 10));
+        return String((const char*)m_slice.offset_pointer(string_offset + offset), length);
+    }
+
+    return String::empty();
+}
+
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
     ASSERT(glyph_id < m_num_glyphs);
@@ -252,6 +275,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     }
 
     Optional<ReadonlyBytes> opt_head_slice = {};
+    Optional<ReadonlyBytes> opt_name_slice = {};
     Optional<ReadonlyBytes> opt_hhea_slice = {};
     Optional<ReadonlyBytes> opt_maxp_slice = {};
     Optional<ReadonlyBytes> opt_hmtx_slice = {};
@@ -260,6 +284,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     Optional<ReadonlyBytes> opt_glyf_slice = {};
 
     Optional<Head> opt_head = {};
+    Optional<Name> opt_name = {};
     Optional<Hhea> opt_hhea = {};
     Optional<Maxp> opt_maxp = {};
     Optional<Hmtx> opt_hmtx = {};
@@ -292,6 +317,8 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         // Get the table offsets we need.
         if (tag == tag_from_str("head")) {
             opt_head_slice = buffer_here;
+        } else if (tag == tag_from_str("name")) {
+            opt_name_slice = buffer_here;
         } else if (tag == tag_from_str("hhea")) {
             opt_hhea_slice = buffer_here;
         } else if (tag == tag_from_str("maxp")) {
@@ -312,6 +339,12 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         return nullptr;
     }
     auto head = opt_head.value();
+
+    if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value()) {
+        dbg() << "Could not load Name";
+        return nullptr;
+    }
+    auto name = opt_name.value();
 
     if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value()) {
         dbgln("Could not load Hhea");
@@ -369,7 +402,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         }
     }
 
-    return adopt(*new Font(move(buffer), move(head), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf)));
+    return adopt(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf)));
 }
 
 ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
@@ -430,6 +463,22 @@ u32 Font::glyph_count() const
 u16 Font::units_per_em() const
 {
     return m_head.units_per_em();
+}
+
+String Font::family() const
+{
+    auto string = m_name.typographic_family_name();
+    if (!string.is_empty())
+        return string;
+    return m_name.family_name();
+}
+
+String Font::subfamily() const
+{
+    auto string = m_name.typographic_subfamily_name();
+    if (!string.is_empty())
+        return string;
+    return m_name.subfamily_name();
 }
 
 int ScaledFont::width(const StringView& string) const
