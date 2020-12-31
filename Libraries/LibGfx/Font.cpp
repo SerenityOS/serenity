@@ -116,8 +116,6 @@ Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed
         m_min_glyph_width = minimum;
         m_max_glyph_width = maximum;
     }
-
-    set_family_fonts();
 }
 
 Font::~Font()
@@ -310,22 +308,19 @@ void Font::set_type(FontTypes type)
     m_glyph_widths = new_widths;
 }
 
-void Font::set_family_fonts()
-{
-    StringBuilder path;
-
-    if (weight() != 700) {
-        path.appendff("/res/fonts/{}Bold{}.font", family(), presentation_size());
-        auto spath = path.to_string();
-        m_bold_family_font = Font::load_from_file(path.to_string());
-        if (m_bold_family_font)
-            set_boldface(true);
-    }
-}
-
 String Font::qualified_name() const
 {
     return String::formatted("{} {} {}", family(), presentation_size(), weight());
+}
+
+const Font& Font::bold_variant() const
+{
+    if (m_bold_variant)
+        return *m_bold_variant;
+    m_bold_variant = Gfx::FontDatabase::the().get(m_family, m_presentation_size, 700);
+    if (!m_bold_variant)
+        m_bold_variant = this;
+    return *m_bold_variant;
 }
 
 }

@@ -124,10 +124,6 @@ public:
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
 
-    const Font& bold_family_font() const { return *m_bold_family_font; }
-    bool has_boldface() const { return m_boldface; }
-    void set_boldface(bool b) { m_boldface = b; }
-
     u8 glyph_spacing() const { return m_glyph_spacing; }
     void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
 
@@ -147,6 +143,8 @@ public:
 
     String qualified_name() const;
 
+    const Font& bold_variant() const;
+
 private:
     Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
 
@@ -154,9 +152,6 @@ private:
     static size_t glyph_count_by_type(FontTypes type);
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
-
-    void set_family_fonts();
-    RefPtr<Font> m_bold_family_font;
 
     String m_name;
     String m_family;
@@ -179,8 +174,9 @@ private:
     u16 m_weight { 0 };
 
     bool m_fixed_width { false };
-    bool m_boldface { false };
     bool m_owns_arrays { false };
+
+    mutable RefPtr<Gfx::Font> m_bold_variant;
 };
 
 }
