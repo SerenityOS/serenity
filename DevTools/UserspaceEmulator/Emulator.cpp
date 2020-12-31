@@ -410,6 +410,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$mount(arg1);
     case SC_munmap:
         return virt$munmap(arg1, arg2);
+    case SC_mremap:
+        return virt$mremap(arg1);
     case SC_gettid:
         return virt$gettid();
     case SC_getpid:
@@ -1035,6 +1037,24 @@ u32 Emulator::virt$mmap(u32 params_addr)
     }
 
     return final_address;
+}
+
+FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
+{
+    Syscall::SC_mremap_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    if (auto* region = mmu().find_region({ m_cpu.ds(), params.old_address })) {
+        if (!region->is_mmap())
+            return -EINVAL;
+        ASSERT(region->size() == params.old_size);
+        auto& mmap_region = *(MmapRegion*)region;
+        auto* ptr = mremap(mmap_region.data(), mmap_region.size(), mmap_region.size(), params.flags);
+        if (ptr == MAP_FAILED)
+            return -errno;
+        return (FlatPtr)ptr;
+    }
+    return -EINVAL;
 }
 
 u32 Emulator::virt$mount(u32 params_addr)
