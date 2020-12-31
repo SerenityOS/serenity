@@ -37,6 +37,55 @@
 
 namespace GUI {
 
+struct FontWeightNameMapping {
+    constexpr FontWeightNameMapping(int w, const char* n)
+        : weight(w)
+        , name(n)
+    {
+    }
+    int weight { 0 };
+    StringView name;
+};
+
+static constexpr FontWeightNameMapping font_weight_names[] = {
+    { 100, "Thin" },
+    { 200, "Extra Light" },
+    { 300, "Light" },
+    { 400, "Regular" },
+    { 500, "Medium" },
+    { 600, "Semi Bold" },
+    { 700, "Bold" },
+    { 800, "Extra Bold" },
+    { 900, "Black" },
+    { 950, "Extra Black" },
+};
+
+static constexpr StringView weight_to_name(int weight)
+{
+    for (auto& it : font_weight_names) {
+        if (it.weight == weight)
+            return it.name;
+    }
+    return {};
+}
+
+class FontWeightListModel : public ItemListModel<int> {
+public:
+    FontWeightListModel(const Vector<int>& weights)
+        : ItemListModel(weights)
+    {
+    }
+
+    virtual Variant data(const ModelIndex& index, ModelRole role) const override
+    {
+        if (role == ModelRole::Custom)
+            return m_data.at(index.row());
+        if (role == ModelRole::Display)
+            return String(weight_to_name(m_data.at(index.row())));
+        return ItemListModel::data(index, role);
+    }
+};
+
 FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only)
     : Dialog(parent_window)
     , m_fixed_width_only(fixed_width_only)
@@ -54,7 +103,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
     m_weight_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("weight_list_view"));
-    m_weight_list_view->set_model(ItemListModel<int>::create(m_weights));
+    m_weight_list_view->set_model(adopt(*new FontWeightListModel(m_weights)));
     m_weight_list_view->horizontal_scrollbar().set_visible(false);
 
     m_size_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("size_list_view"));
@@ -93,7 +142,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     };
 
     m_weight_list_view->on_selection = [this](auto& index) {
-        m_weight = index.data().to_i32();
+        m_weight = index.data(ModelRole::Custom).to_i32();
         m_sizes.clear();
         Gfx::FontDatabase::the().for_each_font([&](auto& font) {
             if (m_fixed_width_only && !font.is_fixed_width())
