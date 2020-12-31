@@ -118,6 +118,7 @@ void ToolboxWidget::setup_tools()
     auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) -> ToolButton& {
         m_tools.append(tool.ptr());
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
+        button.set_focus_policy(GUI::FocusPolicy::TabFocus);
         button.set_fixed_height(32);
         button.set_checkable(true);
         button.set_icon(Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)));
