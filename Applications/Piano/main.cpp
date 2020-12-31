@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     Optional<String> save_path;
     bool need_to_write_wav = false;
 
-    LibThread::Thread audio_thread([&] {
+    auto audio_thread = LibThread::Thread::construct([&] {
         auto audio = Core::File::construct("/dev/audio");
         if (!audio->open(Core::IODevice::WriteOnly)) {
             dbgln("Can't open audio device: {}", audio->error_string());
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
             }
         }
     });
-    audio_thread.start();
+    audio_thread->start();
 
     auto menubar = GUI::MenuBar::construct();
 
