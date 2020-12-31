@@ -113,5 +113,8 @@ endpoint WindowServer = 2
     SetScrollStepSize(u32 step_size) => ()
     GetScrollStepSize() => (u32 step_size)
 
+    SetPrimaryMouseButton(u32 button) => ()
+    GetPrimaryMouseButton() => (u32 button)
+
     Pong() =|
 }

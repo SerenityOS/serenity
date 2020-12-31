@@ -911,6 +911,20 @@ OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> ClientConnection::hand
     return make<Messages::WindowServer::GetScrollStepSizeResponse>(Screen::the().scroll_step_size());
 }
 
+OwnPtr<Messages::WindowServer::SetPrimaryMouseButtonResponse> ClientConnection::handle(const Messages::WindowServer::SetPrimaryMouseButton& message)
+{
+    if (message.button() != static_cast<u32>(RawMouseButton::Left) && message.button() != static_cast<u32>(RawMouseButton::Right)) {
+        did_misbehave("SetPrimaryMouseButton with invalid button");
+        return nullptr;
+    }
+    WindowManager::the().set_primary_mouse_button(static_cast<RawMouseButton>(message.button()));
+    return make<Messages::WindowServer::SetPrimaryMouseButtonResponse>();
+}
+OwnPtr<Messages::WindowServer::GetPrimaryMouseButtonResponse> ClientConnection::handle(const Messages::WindowServer::GetPrimaryMouseButton&)
+{
+    return make<Messages::WindowServer::GetPrimaryMouseButtonResponse>(static_cast<u32>(Screen::the().primary_mouse_button()));
+}
+
 void ClientConnection::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)
