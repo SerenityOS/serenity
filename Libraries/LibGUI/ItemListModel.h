@@ -33,7 +33,7 @@
 namespace GUI {
 
 template<typename T>
-class ItemListModel final : public Model {
+class ItemListModel : public Model {
 public:
     static NonnullRefPtr<ItemListModel> create(const Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
 
@@ -69,7 +69,7 @@ public:
         did_update();
     }
 
-private:
+protected:
     explicit ItemListModel(const Vector<T>& data)
         : m_data(data)
     {
