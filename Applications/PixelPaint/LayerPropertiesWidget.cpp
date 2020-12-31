@@ -30,7 +30,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
 
@@ -68,8 +68,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     opacity_label.set_fixed_size(80, 20);
 
-    m_opacity_slider = opacity_container.add<GUI::HorizontalSlider>();
-    m_opacity_slider->set_fixed_height(20);
+    m_opacity_slider = opacity_container.add<GUI::OpacitySlider>();
     m_opacity_slider->set_range(0, 100);
     m_opacity_slider->on_change = [this](int value) {
         if (m_layer)
