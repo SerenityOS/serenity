@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/BitmapFont.h>
 
 class GlyphEditorWidget;
 class GlyphMapWidget;
@@ -45,8 +46,8 @@ public:
     const String& path() { return m_path; }
 
 private:
-    FontEditorWidget(const String& path, RefPtr<Gfx::Font>&&);
-    RefPtr<Gfx::Font> m_edited_font;
+    FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;

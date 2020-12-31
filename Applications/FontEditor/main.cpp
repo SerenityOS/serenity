@@ -36,7 +36,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Point.h>
 #include <stdio.h>
@@ -60,12 +60,12 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    RefPtr<Gfx::Font> edited_font;
+    RefPtr<Gfx::BitmapFont> edited_font;
     if (path == nullptr) {
         path = "/tmp/saved.font";
-        edited_font = Gfx::FontDatabase::default_font().clone();
+        edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
     } else {
-        edited_font = Gfx::Font::load_from_file(path)->clone();
+        edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::Font::load_from_file(path)->clone());
         if (!edited_font) {
             String message = String::formatted("Couldn't load font: {}\n", path);
             GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto set_edited_font = [&](const String& path, RefPtr<Gfx::Font>&& font, Gfx::IntPoint point) {
+    auto set_edited_font = [&](const String& path, RefPtr<Gfx::BitmapFont>&& font, Gfx::IntPoint point) {
         // Convert 256 char font to 384 char font.
         if (font->type() == Gfx::FontTypes::Default)
             font->set_type(Gfx::FontTypes::LatinExtendedA);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
         if (!open_path.has_value())
             return;
 
-        RefPtr<Gfx::Font> new_font = Gfx::Font::load_from_file(open_path.value())->clone();
+        RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::Font::load_from_file(open_path.value())->clone());
         if (!new_font) {
             String message = String::formatted("Couldn't load font: {}\n", open_path.value());
             GUI::MessageBox::show(window, message, "Font Editor", GUI::MessageBox::Type::Error);

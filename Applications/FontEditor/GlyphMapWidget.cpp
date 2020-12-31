@@ -26,10 +26,10 @@
 
 #include "GlyphMapWidget.h"
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
-GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font)
+GlyphMapWidget::GlyphMapWidget(Gfx::BitmapFont& mutable_font)
     : m_font(mutable_font)
 {
     m_glyph_count = mutable_font.glyph_count();
