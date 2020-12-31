@@ -38,8 +38,8 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/RadioButton.h>
-#include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
@@ -224,7 +224,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     slider_container.set_layout<GUI::VerticalBoxLayout>();
     slider_container.layout()->set_margins({ 6, 16, 6, 6 });
     slider_container.set_fixed_height(50);
-    auto& slider = slider_container.add<GUI::HorizontalSlider>();
+    auto& slider = slider_container.add<GUI::OpacitySlider>();
 
     slider.on_change = [&terminal](int value) {
         terminal.set_opacity(value);
