@@ -45,6 +45,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/ScrollBar.h>
@@ -330,6 +331,16 @@ int main(int argc, char** argv)
         progress1.set_value((value * 100) / slider3.max());
         slider1.set_value((value * 100) / slider3.max());
     };
+
+    auto& opacity_slider_group_box = tab_others.add<GUI::GroupBox>();
+    opacity_slider_group_box.set_fixed_height(48);
+    opacity_slider_group_box.set_layout<GUI::VerticalBoxLayout>();
+    opacity_slider_group_box.layout()->set_margins({ 8, 16, 8, 8 });
+    opacity_slider_group_box.set_title("Opacity sliders");
+
+    auto& opacity_slider = opacity_slider_group_box.add<GUI::OpacitySlider>();
+    opacity_slider.set_range(0, 100);
+    opacity_slider.set_value(75);
 
     auto& scroll_group_box = tab_others.add<GUI::GroupBox>();
     scroll_group_box.set_layout<GUI::VerticalBoxLayout>();
