@@ -1013,7 +1013,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
         // The loader needs this functionality to load .data just after .text.
         // Luckily, since the loader calls mmap for .data right after it calls mmap for .text,
         // the emulator will allocate a chunk of memory that is just after what we allocated for .text
-        // becuase of the way we currently allocate VM.
+        // because of the way we currently allocate VM.
         ASSERT(params.addr == final_address);
     }
 
