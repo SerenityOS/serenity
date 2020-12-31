@@ -1157,7 +1157,6 @@ ALWAYS_INLINE void Painter::fill_scanline_with_draw_op(int y, int x, int width, 
 
 void Painter::draw_pixel(const IntPoint& position, Color color, int thickness)
 {
-    ASSERT(draw_op() == DrawOp::Copy);
     if (thickness == 1)
         return set_pixel_with_draw_op(m_target->scanline(position.y())[position.x()], color);
     IntRect rect { position.translated(-(thickness / 2), -(thickness / 2)), { thickness, thickness } };
