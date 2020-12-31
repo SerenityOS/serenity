@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Font.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/FontDatabase.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +72,7 @@ static void test_clone()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
     auto new_font = font->clone();
     assert(!new_font->name().is_null());
@@ -85,7 +85,7 @@ static void test_set_name()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
     const char* name = "my newly created font";
     font->set_name(name);
@@ -98,7 +98,7 @@ static void test_set_type()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
     auto type = Gfx::FontTypes::Default;
     font->set_type(type);
@@ -110,7 +110,7 @@ static void test_width()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
     assert(font->width("A") == glyph_width);
 }
@@ -119,7 +119,7 @@ static void test_glyph_or_emoji_width()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
     font->set_type(Gfx::FontTypes::Default);
 
     assert(font->glyph_or_emoji_width(0));
@@ -127,7 +127,7 @@ static void test_glyph_or_emoji_width()
 
 static void test_load_from_file()
 {
-    auto font = Gfx::Font::load_from_file("/res/fonts/PebbletonBold14.font");
+    auto font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonBold14.font");
     assert(!font->name().is_null());
 }
 
@@ -135,7 +135,7 @@ static void test_write_to_file()
 {
     u8 glyph_height = 1;
     u8 glyph_width = 1;
-    auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
     char path[] = "/tmp/new.font.XXXXXX";
     assert(mkstemp(path) != -1);
