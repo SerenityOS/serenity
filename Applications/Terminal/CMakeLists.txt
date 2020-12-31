@@ -1,4 +1,7 @@
+compile_gml(TerminalSettingsWindow.gml TerminalSettingsWindowGML.h terminal_settings_window_gml)
+
 set(SOURCES
+    TerminalSettingsWindowGML.h
     main.cpp
 )
 
