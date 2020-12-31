@@ -26,6 +26,7 @@
 
 #include <LibThread/Thread.h>
 #include <pthread.h>
+#include <string.h>
 #include <unistd.h>
 
 LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
@@ -39,7 +40,7 @@ LibThread::Thread::~Thread()
 {
     if (m_tid) {
         dbg() << "trying to destroy a running thread!";
-        ASSERT_NOT_REACHED();
+        join();
     }
 }
 
@@ -66,7 +67,11 @@ void LibThread::Thread::start()
 
 void LibThread::Thread::join()
 {
-    pthread_join(m_tid, nullptr);
+    int rc = pthread_join(m_tid, nullptr);
+    if (rc == 0)
+        m_tid = 0;
+    else
+        warnln("pthread_join: {}", strerror(rc));
 }
 
 void LibThread::Thread::quit(void* code)
