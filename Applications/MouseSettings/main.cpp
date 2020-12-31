@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-mouse");
     auto window = GUI::Window::construct();
     window->set_title("Mouse settings");
-    window->resize(200, 130);
+    window->resize(200, 185);
     window->set_resizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -67,6 +67,49 @@ int main(int argc, char** argv)
     settings.set_background_role(ColorRole::Button);
     settings.set_layout<GUI::VerticalBoxLayout>();
     settings.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& primary_container = settings.add<GUI::GroupBox>("Primary button");
+    primary_container.set_layout<GUI::VerticalBoxLayout>();
+    primary_container.layout()->set_margins({ 0, 6, 0, 0 });
+    primary_container.set_fixed_height(50);
+
+    auto& primary_buttons = primary_container.add<GUI::Widget>();
+    primary_buttons.set_layout<GUI::HorizontalBoxLayout>();
+    primary_buttons.layout()->set_margins({ 6, 0, 6, 0 });
+    primary_buttons.layout()->set_spacing(0);
+
+    auto& left_button = primary_buttons.add<GUI::Button>("Left");
+    left_button.set_fixed_height(25);
+    left_button.set_focus_policy(GUI::FocusPolicy::NoFocus);
+    left_button.set_checkable(true);
+    auto& right_button = primary_buttons.add<GUI::Button>("Right");
+    right_button.set_fixed_height(25);
+    right_button.set_focus_policy(GUI::FocusPolicy::NoFocus);
+    right_button.set_checkable(true);
+
+    auto current_primary_button = static_cast<WindowServer::RawMouseButton>(GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetPrimaryMouseButton>()->button());
+    if (current_primary_button == WindowServer::RawMouseButton::Left) {
+        left_button.set_checked(true);
+        left_button.set_enabled(false);
+    } else {
+        right_button.set_checked(true);
+        right_button.set_enabled(false);
+    }
+
+    left_button.on_checked = [&](bool checked) {
+        if (!checked)
+            return;
+        left_button.set_enabled(false);
+        right_button.set_enabled(true);
+        right_button.set_checked(false);
+    };
+    right_button.on_checked = [&](bool checked) {
+        if (!checked)
+            return;
+        right_button.set_enabled(false);
+        left_button.set_enabled(true);
+        left_button.set_checked(false);
+    };
 
     auto& speed_container = settings.add<GUI::GroupBox>("Mouse speed");
     speed_container.set_layout<GUI::VerticalBoxLayout>();
@@ -89,6 +132,7 @@ int main(int argc, char** argv)
     scroll_spinbox.set_value(GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScrollStepSize>()->step_size());
 
     auto update_window_server = [&]() {
+        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetPrimaryMouseButton>(static_cast<u32>(left_button.is_checked() ? WindowServer::RawMouseButton::Left : WindowServer::RawMouseButton::Right));
         float factor = speed_slider.value() / scalar;
         GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetMouseAcceleration>(factor);
         GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetScrollStepSize>(scroll_spinbox.value());
@@ -98,23 +142,25 @@ int main(int argc, char** argv)
     prompt_buttons.set_layout<GUI::HorizontalBoxLayout>();
     prompt_buttons.set_fixed_height(22);
 
-    auto& ok_button = prompt_buttons.add<GUI::Button>();
-    ok_button.set_text("OK");
+    auto& ok_button = prompt_buttons.add<GUI::Button>("OK");
     prompt_buttons.set_fixed_height(22);
     ok_button.on_click = [&](auto) {
         update_window_server();
         app->quit();
     };
-    auto& apply_button = prompt_buttons.add<GUI::Button>();
-    apply_button.set_text("Apply");
+    auto& apply_button = prompt_buttons.add<GUI::Button>("Apply");
     prompt_buttons.set_fixed_height(22);
     apply_button.on_click = [&](auto) {
         update_window_server();
     };
-    auto& reset_button = prompt_buttons.add<GUI::Button>();
-    reset_button.set_text("Reset");
+    auto& reset_button = prompt_buttons.add<GUI::Button>("Reset");
     prompt_buttons.set_fixed_height(22);
     reset_button.on_click = [&](auto) {
+        left_button.set_enabled(false);
+        left_button.set_checked(true);
+        right_button.set_enabled(true);
+        right_button.set_checked(false);
+
         speed_slider.set_value(scalar);
         scroll_spinbox.set_value(4);
         update_window_server();
