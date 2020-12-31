@@ -409,16 +409,18 @@ public:
         {
             ASSERT(m_lock.is_locked());
             bool stop_iterating = false;
+            bool did_unblock = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
                 auto& info = m_blockers[i];
                 if (unblock_one(*info.blocker, info.data, stop_iterating)) {
                     m_blockers.remove(i);
+                    did_unblock = true;
                     continue;
                 }
 
                 i++;
             }
-            return !stop_iterating;
+            return did_unblock;
         }
 
         virtual bool should_add_blocker(Blocker&, void*) { return true; }
