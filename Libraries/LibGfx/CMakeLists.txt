@@ -1,6 +1,7 @@
 set(SOURCES
     AffineTransform.cpp
     Bitmap.cpp
+    BitmapFont.cpp
     BMPLoader.cpp
     BMPWriter.cpp
     CharacterBitmap.cpp

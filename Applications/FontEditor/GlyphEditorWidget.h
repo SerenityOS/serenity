@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/BitmapFont.h>
 
 class GlyphEditorWidget final : public GUI::Frame {
     C_OBJECT(GlyphEditorWidget)
@@ -40,20 +41,20 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    Gfx::Font& font() { return *m_font; }
-    const Gfx::Font& font() const { return *m_font; }
+    Gfx::BitmapFont& font() { return *m_font; }
+    const Gfx::BitmapFont& font() const { return *m_font; }
 
     Function<void(u8)> on_glyph_altered;
 
 private:
-    GlyphEditorWidget(Gfx::Font&);
+    GlyphEditorWidget(Gfx::BitmapFont&);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
     void draw_at_mouse(const GUI::MouseEvent&);
 
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph { 0 };
     int m_scale { 10 };
 };

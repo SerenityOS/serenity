@@ -26,10 +26,10 @@
 
 #include "GlyphEditorWidget.h"
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
-GlyphEditorWidget::GlyphEditorWidget(Gfx::Font& mutable_font)
+GlyphEditorWidget::GlyphEditorWidget(Gfx::BitmapFont& mutable_font)
     : m_font(mutable_font)
 {
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });

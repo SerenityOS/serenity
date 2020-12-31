@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/BitmapFont.h>
 
 class GlyphMapWidget final : public GUI::Frame {
     C_OBJECT(GlyphMapWidget)
@@ -44,22 +45,22 @@ public:
     int preferred_width() const;
     int preferred_height() const;
 
-    Gfx::Font& font() { return *m_font; }
-    const Gfx::Font& font() const { return *m_font; }
+    Gfx::BitmapFont& font() { return *m_font; }
+    const Gfx::BitmapFont& font() const { return *m_font; }
 
     void update_glyph(int);
 
     Function<void(int)> on_glyph_selected;
 
 private:
-    explicit GlyphMapWidget(Gfx::Font&);
+    explicit GlyphMapWidget(Gfx::BitmapFont&);
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
 
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph_count;
     int m_columns { 32 };
     int m_horizontal_spacing { 2 };
