@@ -12,6 +12,7 @@ set(AK_TEST_SOURCES
     TestCircularQueue.cpp
     TestDistinctNumeric.cpp
     TestEndian.cpp
+    TestFloatToDigits.cpp
     TestFormat.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp
