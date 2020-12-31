@@ -37,7 +37,6 @@ class Thread final : public Core::Object {
     C_OBJECT(Thread);
 
 public:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
     virtual ~Thread();
 
     void start();
@@ -46,6 +45,7 @@ public:
     pthread_t tid() const { return m_tid; }
 
 private:
+    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
     Function<int()> m_action;
     pthread_t m_tid { 0 };
     String m_thread_name;
