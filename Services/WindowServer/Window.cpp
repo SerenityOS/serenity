@@ -330,8 +330,12 @@ void Window::event(Core::Event& event)
         return;
     }
 
-    if (is_blocked_by_modal_window())
-        return;
+    if (is_blocked_by_modal_window()) {
+        // We still want to handle the WindowDeactivated event below when a new modal is
+        // created to notify its parent window, despite it being "blocked by modal window".
+        if (event.type() != Event::WindowDeactivated)
+            return;
+    }
 
     if (static_cast<Event&>(event).is_mouse_event())
         return handle_mouse_event(static_cast<const MouseEvent&>(event));
