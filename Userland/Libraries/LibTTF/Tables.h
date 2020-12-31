@@ -146,4 +146,40 @@ private:
     u32 m_number_of_h_metrics { 0 };
 };
 
+class Name {
+public:
+    static Optional<Name> from_slice(const ReadonlyBytes&);
+
+    String family_name() const { return string_for_id(NameId::FamilyName); }
+    String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
+    String typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
+    String typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
+
+private:
+    enum class NameId {
+        Copyright = 0,
+        FamilyName = 1,
+        SubfamilyName = 2,
+        UniqueIdentifier = 3,
+        FullName = 4,
+        VersionString = 5,
+        PostscriptName = 6,
+        Trademark = 7,
+        Manufacturer = 8,
+        Designer = 9,
+        Description = 10,
+        TypographicFamilyName = 16,
+        TypographicSubfamilyName = 17,
+    };
+
+    Name(const ReadonlyBytes& slice)
+        : m_slice(slice)
+    {
+    }
+
+    String string_for_id(NameId id) const;
+
+    ReadonlyBytes m_slice;
+};
+
 }
