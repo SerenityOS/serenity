@@ -36,6 +36,7 @@ namespace GUI {
 RadioButton::RadioButton(String text)
     : AbstractButton(move(text))
 {
+    set_exclusive(true);
     set_min_width(32);
     set_fixed_height(22);
 }
@@ -73,25 +74,10 @@ void RadioButton::paint_event(PaintEvent& event)
         painter.draw_focus_rect(text_rect.inflated(6, 6), palette().focus_outline());
 }
 
-template<typename Callback>
-void RadioButton::for_each_in_group(Callback callback)
-{
-    if (!parent())
-        return;
-    parent()->for_each_child_of_type<RadioButton>([&](auto& child) {
-        return callback(downcast<RadioButton>(child));
-    });
-}
-
 void RadioButton::click(unsigned)
 {
     if (!is_enabled())
         return;
-    for_each_in_group([this](auto& button) {
-        if (&button != this)
-            button.set_checked(false);
-        return IterationDecision::Continue;
-    });
     set_checked(true);
 }
 

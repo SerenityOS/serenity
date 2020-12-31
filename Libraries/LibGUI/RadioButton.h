@@ -49,8 +49,6 @@ private:
 
     virtual bool is_radio_button() const final { return true; }
 
-    template<typename Callback>
-    void for_each_in_group(Callback);
     static Gfx::IntSize circle_size();
 };
 
