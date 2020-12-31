@@ -28,6 +28,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractButton.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
@@ -70,8 +71,13 @@ void AbstractButton::set_checked(bool checked)
     m_checked = checked;
 
     if (is_exclusive() && checked && parent_widget()) {
+        bool sibling_had_focus = false;
         parent_widget()->for_each_child_of_type<AbstractButton>([&](auto& sibling) {
-            if (!sibling.is_exclusive() || !sibling.is_checked())
+            if (!sibling.is_exclusive())
+                return IterationDecision::Continue;
+            if (window() && window()->focused_widget() == &sibling)
+                sibling_had_focus = true;
+            if (!sibling.is_checked())
                 return IterationDecision::Continue;
             sibling.m_checked = false;
             sibling.update();
@@ -80,6 +86,8 @@ void AbstractButton::set_checked(bool checked)
             return IterationDecision::Continue;
         });
         m_checked = true;
+        if (sibling_had_focus)
+            set_focus(true);
     }
 
     update();
