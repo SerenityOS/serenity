@@ -233,10 +233,15 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-shared \
                                             --enable-languages=c,c++ \
                                             --enable-default-pie \
+                                            --enable-lto \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
-        "$MAKE" -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
+        "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
+        if [ "$(uname -s)" = "OpenBSD" ]; then
+            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
+        fi
+        "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
         echo "XXX install gcc and libgcc"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
@@ -259,7 +264,7 @@ pushd "$DIR/Build/$ARCH"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
         if [ "$(uname -s)" = "OpenBSD" ]; then
-            cd "$DIR/Local/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+            cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
         fi
 
     popd
