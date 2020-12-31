@@ -113,7 +113,7 @@ public:
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
-    FIFO& fifo();
+    NonnullRefPtr<FIFO> fifo();
 
     // For InlineLinkedListNode.
     Inode* m_next { nullptr };
