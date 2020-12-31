@@ -103,6 +103,7 @@ private:
     int virt$disown(pid_t);
     int virt$purge(int mode);
     u32 virt$mmap(u32);
+    FlatPtr virt$mremap(FlatPtr);
     u32 virt$mount(u32);
     u32 virt$munmap(FlatPtr address, u32 size);
     u32 virt$gettid();
