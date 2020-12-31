@@ -47,6 +47,11 @@ DiskPartition::~DiskPartition()
 {
 }
 
+const DiskPartitionMetadata& DiskPartition::metadata() const
+{
+    return m_metadata;
+}
+
 void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
 {
     request.add_sub_request(m_device->make_request<AsyncBlockDeviceRequest>(request.request_type(),
