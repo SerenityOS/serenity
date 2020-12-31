@@ -52,6 +52,8 @@
 
 static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtrace()
 
+static void kmalloc_allocate_backup_memory();
+
 struct KmallocGlobalHeap {
     struct ExpandGlobalHeap {
         KmallocGlobalHeap& m_global_heap;
@@ -94,7 +96,11 @@ struct KmallocGlobalHeap {
             // backup heap before returning. Otherwise we potentially lose
             // the ability to expand the heap next time we get called.
             ScopeGuard guard([&]() {
-                m_global_heap.allocate_backup_memory();
+                // We may need to defer allocating backup memory because the
+                // heap expansion may have been triggered while holding some
+                // other spinlock. If the expansion happens to need the same
+                // spinlock we would deadlock. So, if we're in any lock, defer
+                Processor::current().deferred_call_queue(kmalloc_allocate_backup_memory);
             });
 
             // Now that we added our backup memory, check if the backup heap
@@ -196,6 +202,11 @@ bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
 static u8* s_end_of_eternal_range;
+
+static void kmalloc_allocate_backup_memory()
+{
+    g_kmalloc_global->allocate_backup_memory();
+}
 
 void kmalloc_enable_expand()
 {
