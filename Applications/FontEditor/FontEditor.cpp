@@ -38,11 +38,11 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edited_font)
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
     : m_edited_font(move(edited_font))
     , m_path(path)
 {
