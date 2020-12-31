@@ -68,19 +68,21 @@ ComboBox::ComboBox()
             on_return_pressed();
     };
     m_editor->on_up_pressed = [this] {
-        m_list_view->move_cursor(AbstractView::CursorMovement::Up, AbstractView::SelectionUpdate::Set);
+        navigate(AbstractView::CursorMovement::Up);
     };
     m_editor->on_down_pressed = [this] {
-        m_list_view->move_cursor(AbstractView::CursorMovement::Down, AbstractView::SelectionUpdate::Set);
+        navigate(AbstractView::CursorMovement::Down);
     };
     m_editor->on_pageup_pressed = [this] {
-        m_list_view->move_cursor(AbstractView::CursorMovement::PageUp, AbstractView::SelectionUpdate::Set);
+        navigate(AbstractView::CursorMovement::PageUp);
     };
     m_editor->on_pagedown_pressed = [this] {
-        m_list_view->move_cursor(AbstractView::CursorMovement::PageDown, AbstractView::SelectionUpdate::Set);
+        navigate(AbstractView::CursorMovement::PageDown);
     };
     m_editor->on_mousewheel = [this](int delta) {
-        m_list_view->move_cursor_relative(delta, AbstractView::SelectionUpdate::Set);
+        // Since we can only show one item at a time we don't want to
+        // skip any. So just move one item at a time.
+        navigate_relative(delta > 0 ? 1 : -1);
     };
     m_editor->on_mousedown = [this] {
         if (only_allow_values_from_model())
@@ -116,14 +118,13 @@ ComboBox::ComboBox()
     m_list_view->on_selection = [this](auto& index) {
         ASSERT(model());
         m_list_view->set_activates_on_selection(true);
-        auto new_value = index.data().to_string();
-        m_editor->set_text(new_value);
-        if (!m_only_allow_values_from_model)
-            m_editor->select_all();
+        if (m_updating_model)
+            selection_updated(index);
     };
 
     m_list_view->on_activation = [this](auto& index) {
         deferred_invoke([this, index](auto&) {
+            selection_updated(index);
             if (on_change)
                 on_change(m_editor->text(), index);
         });
@@ -140,6 +141,38 @@ ComboBox::~ComboBox()
 {
 }
 
+void ComboBox::navigate(AbstractView::CursorMovement cursor_movement)
+{
+    auto previous_selected = m_list_view->cursor_index();
+    m_list_view->move_cursor(cursor_movement, AbstractView::SelectionUpdate::Set);
+    auto current_selected = m_list_view->cursor_index();
+    selection_updated(current_selected);
+    if (previous_selected.row() != current_selected.row() && on_change)
+        on_change(m_editor->text(), current_selected);
+}
+
+void ComboBox::navigate_relative(int delta)
+{
+    auto previous_selected = m_list_view->cursor_index();
+    m_list_view->move_cursor_relative(delta, AbstractView::SelectionUpdate::Set);
+    auto current_selected = m_list_view->cursor_index();
+    selection_updated(current_selected);
+    if (previous_selected.row() != current_selected.row() && on_change)
+        on_change(m_editor->text(), current_selected);
+}
+
+void ComboBox::selection_updated(const ModelIndex& index)
+{
+    if (index.is_valid())
+        m_selected_index = index;
+    else
+        m_selected_index.clear();
+    auto new_value = index.data().to_string();
+    m_editor->set_text(new_value);
+    if (!m_only_allow_values_from_model)
+        m_editor->select_all();
+}
+
 void ComboBox::resize_event(ResizeEvent& event)
 {
     Widget::resize_event(event);
@@ -153,6 +186,8 @@ void ComboBox::resize_event(ResizeEvent& event)
 
 void ComboBox::set_model(NonnullRefPtr<Model> model)
 {
+    TemporaryChange change(m_updating_model, true);
+    m_selected_index.clear();
     m_list_view->set_model(move(model));
 }
 
@@ -160,12 +195,13 @@ void ComboBox::set_selected_index(size_t index)
 {
     if (!m_list_view->model())
         return;
+    TemporaryChange change(m_updating_model, true);
     m_list_view->set_cursor(m_list_view->model()->index(index, 0), AbstractView::SelectionUpdate::Set);
 }
 
 size_t ComboBox::selected_index() const
 {
-    return m_list_view->cursor_index().row();
+    return m_selected_index.has_value() ? m_selected_index.value().row() : 0;
 }
 
 void ComboBox::select_all()
@@ -201,6 +237,11 @@ void ComboBox::open()
 
     m_editor->set_has_visible_list(true);
     m_editor->set_focus(true);
+    if (m_selected_index.has_value()) {
+        // Don't set m_updating_model to true here because we only want to
+        // change the list view's selected item without triggering a change to it.
+        m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
+    }
     m_list_window->set_rect(list_window_rect);
     m_list_window->show();
 }
