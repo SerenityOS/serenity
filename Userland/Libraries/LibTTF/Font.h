@@ -74,6 +74,8 @@ public:
     u32 glyph_count() const;
     u16 units_per_em() const;
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_cmap.glyph_id_for_codepoint(codepoint); }
+    String family() const;
+    String subfamily() const;
 
 private:
     enum class Offsets {
@@ -88,9 +90,10 @@ private:
     };
 
     static RefPtr<Font> load_from_offset(ByteBuffer&&, unsigned index = 0);
-    Font(ByteBuffer&& buffer, Head&& head, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
+    Font(ByteBuffer&& buffer, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
         : m_buffer(move(buffer))
         , m_head(move(head))
+        , m_name(move(name))
         , m_hhea(move(hhea))
         , m_maxp(move(maxp))
         , m_hmtx(move(hmtx))
@@ -104,6 +107,7 @@ private:
     ByteBuffer m_buffer;
     // These are stateful wrappers around non-owning slices
     Head m_head;
+    Name m_name;
     Hhea m_hhea;
     Maxp m_maxp;
     Hmtx m_hmtx;
