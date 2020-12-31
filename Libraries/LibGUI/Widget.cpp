@@ -43,6 +43,7 @@
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ProgressBar.h>
 #include <LibGUI/RadioButton.h>
@@ -74,11 +75,13 @@ REGISTER_WIDGET(GUI, ColorInput)
 REGISTER_WIDGET(GUI, ComboBox)
 REGISTER_WIDGET(GUI, Frame)
 REGISTER_WIDGET(GUI, GroupBox)
+REGISTER_WIDGET(GUI, HorizontalSlider)
 REGISTER_WIDGET(GUI, HorizontalSplitter)
 REGISTER_WIDGET(GUI, ImageWidget)
 REGISTER_WIDGET(GUI, Label)
 REGISTER_WIDGET(GUI, LinkLabel)
 REGISTER_WIDGET(GUI, ListView)
+REGISTER_WIDGET(GUI, OpacitySlider)
 REGISTER_WIDGET(GUI, ProgressBar)
 REGISTER_WIDGET(GUI, RadioButton)
 REGISTER_WIDGET(GUI, ScrollBar)
@@ -91,6 +94,8 @@ REGISTER_WIDGET(GUI, TextEditor)
 REGISTER_WIDGET(GUI, ToolBar)
 REGISTER_WIDGET(GUI, ToolBarContainer)
 REGISTER_WIDGET(GUI, TreeView)
+REGISTER_WIDGET(GUI, VerticalSlider)
+REGISTER_WIDGET(GUI, VerticalSplitter)
 REGISTER_WIDGET(GUI, Widget)
 
 static HashMap<String, WidgetClassRegistration*>& widget_classes()
