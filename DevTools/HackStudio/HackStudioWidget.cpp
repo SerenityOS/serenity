@@ -512,7 +512,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         }
 
         Debugger::the().set_executable_path(get_project_executable_path());
-        m_debugger_thread = adopt(*new LibThread::Thread(Debugger::start_static));
+        m_debugger_thread = LibThread::Thread::construct(Debugger::start_static);
         m_debugger_thread->start();
     });
 }

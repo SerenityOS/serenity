@@ -132,7 +132,7 @@ private:
 
     RefPtr<Core::File> m_device;
 
-    LibThread::Thread m_sound_thread;
+    NonnullRefPtr<LibThread::Thread> m_sound_thread;
 
     bool m_muted { false };
     int m_main_volume { 100 };
