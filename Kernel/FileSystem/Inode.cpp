@@ -132,18 +132,21 @@ Inode::~Inode()
 
 void Inode::will_be_destroyed()
 {
+    LOCKER(m_lock);
     if (m_metadata_dirty)
         flush_metadata();
 }
 
 void Inode::inode_contents_changed(off_t offset, ssize_t size, const UserOrKernelBuffer& data)
 {
+    LOCKER(m_lock);
     if (auto shared_vmobject = this->shared_vmobject())
         shared_vmobject->inode_contents_changed({}, offset, size, data);
 }
 
 void Inode::inode_size_changed(size_t old_size, size_t new_size)
 {
+    LOCKER(m_lock);
     if (auto shared_vmobject = this->shared_vmobject())
         shared_vmobject->inode_size_changed({}, old_size, new_size);
 }
@@ -175,6 +178,7 @@ KResult Inode::decrement_link_count()
 
 void Inode::set_shared_vmobject(SharedInodeVMObject& vmobject)
 {
+    LOCKER(m_lock);
     m_shared_vmobject = vmobject;
 }
 
@@ -210,8 +214,9 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     m_watchers.remove(&watcher);
 }
 
-FIFO& Inode::fifo()
+NonnullRefPtr<FIFO> Inode::fifo()
 {
+    LOCKER(m_lock);
     ASSERT(metadata().is_fifo());
 
     // FIXME: Release m_fifo when it is closed by all readers and writers
@@ -224,6 +229,7 @@ FIFO& Inode::fifo()
 
 void Inode::set_metadata_dirty(bool metadata_dirty)
 {
+    LOCKER(m_lock);
     if (m_metadata_dirty == metadata_dirty)
         return;
 
@@ -231,7 +237,6 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     if (m_metadata_dirty) {
         // FIXME: Maybe we should hook into modification events somewhere else, I'm not sure where.
         //        We don't always end up on this particular code path, for instance when writing to an ext2fs file.
-        LOCKER(m_lock);
         for (auto& watcher : m_watchers) {
             watcher->notify_inode_event({}, InodeWatcherEvent::Type::Modified);
         }
@@ -271,11 +276,13 @@ KResult Inode::prepare_to_write_data()
 
 RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
 {
+    LOCKER(m_lock);
     return m_shared_vmobject.strong_ref();
 }
 
 bool Inode::is_shared_vmobject(const SharedInodeVMObject& other) const
 {
+    LOCKER(m_lock);
     return m_shared_vmobject.unsafe_ptr() == &other;
 }
 

@@ -297,14 +297,15 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         return *preopen_fd;
 
     if (metadata.is_fifo()) {
+        auto fifo = inode.fifo();
         if (options & O_WRONLY) {
-            auto description = inode.fifo().open_direction_blocking(FIFO::Direction::Writer);
+            auto description = fifo->open_direction_blocking(FIFO::Direction::Writer);
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
             return description;
         } else if (options & O_RDONLY) {
-            auto description = inode.fifo().open_direction_blocking(FIFO::Direction::Reader);
+            auto description = fifo->open_direction_blocking(FIFO::Direction::Reader);
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
