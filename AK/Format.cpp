@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/FloatToDigits.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
@@ -607,9 +608,11 @@ void Formatter<double>::format(FormatBuilder& builder, double value)
 {
     u8 base;
     bool upper_case;
+    auto float_to_string_mode = FloatToStringMode::Fixed;
     if (m_mode == Mode::Default || m_mode == Mode::Float) {
         base = 10;
         upper_case = false;
+        float_to_string_mode = FloatToStringMode::Shortest;
     } else if (m_mode == Mode::Hexfloat) {
         base = 16;
         upper_case = false;
@@ -623,7 +626,9 @@ void Formatter<double>::format(FormatBuilder& builder, double value)
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(6);
 
-    builder.put_f64(value, base, upper_case, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+    auto result = double_to_string(value, base, upper_case, float_to_string_mode, FloatToDigitPrecisionMode::Absolute, m_precision.value(), m_sign_mode);
+
+    builder.put_string(result, m_align, m_width.value(), NumericLimits<size_t>::max(), m_fill);
 }
 void Formatter<float>::format(FormatBuilder& builder, float value)
 {
