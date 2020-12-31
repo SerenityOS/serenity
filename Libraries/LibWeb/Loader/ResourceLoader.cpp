@@ -184,7 +184,10 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
                     error_callback("HTTP load failed");
                 return;
             }
-            deferred_invoke([&](auto&) { const_cast<RefPtr<Protocol::Download>&>(download) = nullptr; });
+            deferred_invoke([download](auto&) {
+                // Clear circular reference of `download` captured by copy
+                const_cast<Protocol::Download&>(*download).on_buffered_download_finish = nullptr;
+            });
             success_callback(payload, response_headers);
         };
         download->set_should_buffer_all_input(true);
