@@ -213,7 +213,19 @@ void ListView::move_cursor_relative(int steps, SelectionUpdate selection_update)
     auto& model = *this->model();
     ModelIndex new_index;
     if (cursor_index().is_valid()) {
-        new_index = model.index(cursor_index().row() + steps, cursor_index().column());
+        auto row = cursor_index().row();
+        if (steps > 0) {
+            if (row + steps >= model.row_count())
+                row = model.row_count() - 1;
+            else
+                row += steps;
+        } else if (steps < 0) {
+            if (row < -steps)
+                row = 0;
+            else
+                row += steps;
+        }
+        new_index = model.index(row, cursor_index().column());
     } else {
         new_index = model.index(0, 0);
     }
