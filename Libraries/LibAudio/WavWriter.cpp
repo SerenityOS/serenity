@@ -70,9 +70,11 @@ void WavWriter::finalize()
 {
     ASSERT(!m_finalized);
     m_finalized = true;
-    m_file->seek(0);
-    write_header();
-    m_file->close();
+    if (m_file) {
+        m_file->seek(0);
+        write_header();
+        m_file->close();
+    }
     m_data_sz = 0;
 }
 
