@@ -65,7 +65,6 @@ public:
 
 private:
     MmapRegion(u32 base, u32 size, int prot);
-    virtual bool is_mmap() const override { return true; }
 
     u8* m_data { nullptr };
     u8* m_shadow_data { nullptr };
