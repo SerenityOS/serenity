@@ -208,6 +208,11 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
         return nullptr;
     }
     auto buffer = file->read_all();
+    return load_from_memory(buffer, index);
+}
+
+RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
+{
     if (buffer.size() < 4) {
         dbg() << "Font file too small";
         return nullptr;
@@ -227,7 +232,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
         return nullptr;
     }
     if (tag != 0x00010000) {
-        dbg() << "Not a valid  font";
+        dbg() << "Not a valid font";
         return nullptr;
     }
     return load_from_offset(move(buffer), 0);
