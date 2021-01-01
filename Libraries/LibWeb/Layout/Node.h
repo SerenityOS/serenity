@@ -271,7 +271,3 @@ inline NodeWithStyle* Node::parent()
 }
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::NodeWithStyle)
-static bool is_type(const Web::Layout::Node& node) { return node.has_style(); }
-AK_END_TYPE_TRAITS()

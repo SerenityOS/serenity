@@ -47,7 +47,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::TableCellBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_table_cell(); }
-AK_END_TYPE_TRAITS()

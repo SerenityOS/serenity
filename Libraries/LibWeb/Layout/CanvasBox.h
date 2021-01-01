@@ -47,7 +47,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::CanvasBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_canvas(); }
-AK_END_TYPE_TRAITS()

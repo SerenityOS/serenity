@@ -43,7 +43,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::TableRowGroupBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_table_row_group(); }
-AK_END_TYPE_TRAITS()

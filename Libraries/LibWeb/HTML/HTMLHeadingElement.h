@@ -39,7 +39,3 @@ public:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLHeadingElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name().is_one_of(Web::HTML::TagNames::h1, Web::HTML::TagNames::h2, Web::HTML::TagNames::h3, Web::HTML::TagNames::h4, Web::HTML::TagNames::h5, Web::HTML::TagNames::h6); }
-AK_END_TYPE_TRAITS()

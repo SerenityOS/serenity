@@ -399,7 +399,3 @@ inline const Widget* Widget::parent_widget() const
     return nullptr;
 }
 }
-
-AK_BEGIN_TYPE_TRAITS(GUI::Widget)
-static bool is_type(const Core::Object& object) { return object.is_widget(); }
-AK_END_TYPE_TRAITS()

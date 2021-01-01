@@ -39,7 +39,3 @@ public:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLParamElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::param; }
-AK_END_TYPE_TRAITS()

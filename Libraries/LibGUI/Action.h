@@ -172,7 +172,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(GUI::Action)
-static bool is_type(const Core::Object& object) { return object.is_action(); }
-AK_END_TYPE_TRAITS()

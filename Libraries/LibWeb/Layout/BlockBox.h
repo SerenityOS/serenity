@@ -81,7 +81,3 @@ void BlockBox::for_each_fragment(Callback callback) const
 }
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::BlockBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_block(); }
-AK_END_TYPE_TRAITS()
