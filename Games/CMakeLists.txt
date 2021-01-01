@@ -1,6 +1,7 @@
 add_subdirectory(2048)
 add_subdirectory(Breakout)
 add_subdirectory(Chess)
+add_subdirectory(Conway)
 add_subdirectory(Minesweeper)
 add_subdirectory(Pong)
 add_subdirectory(Snake)
