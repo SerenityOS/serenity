@@ -713,6 +713,7 @@ void TextEditor::sort_selected_lines()
 
 void TextEditor::keydown_event(KeyEvent& event)
 {
+    TemporaryChange change { m_should_keep_autocomplete_box, true };
     if (m_autocomplete_box && m_autocomplete_box->is_visible() && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Tab)) {
         m_autocomplete_box->apply_suggestion();
         m_autocomplete_box->close();
@@ -979,6 +980,8 @@ void TextEditor::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Backspace) {
         if (!is_editable())
             return;
+        if (m_autocomplete_box)
+            m_autocomplete_box->close();
         if (has_selection()) {
             delete_selection();
             did_update_selection();
@@ -1017,6 +1020,8 @@ void TextEditor::keydown_event(KeyEvent& event)
     if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
         if (!is_editable())
             return;
+        if (m_autocomplete_box)
+            m_autocomplete_box->close();
         delete_current_line();
         return;
     }
@@ -1024,17 +1029,15 @@ void TextEditor::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Delete) {
         if (!is_editable())
             return;
+        if (m_autocomplete_box)
+            m_autocomplete_box->close();
         do_delete();
         return;
     }
 
     if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
         if (m_autocomplete_provider) {
-            m_autocomplete_provider->provide_completions([&](auto completions) {
-                m_autocomplete_box->update_suggestions(move(completions));
-                auto position = content_rect_for_position(cursor()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
-                m_autocomplete_box->show(position);
-            });
+            try_show_autocomplete();
             update_autocomplete.disarm();
             return;
         }
@@ -1044,6 +1047,8 @@ void TextEditor::keydown_event(KeyEvent& event)
         StringBuilder sb;
         sb.append_code_point(event.code_point());
 
+        if (should_autocomplete_automatically())
+            m_autocomplete_timer->start();
         insert_at_cursor_or_replace_selection(sb.to_string());
         return;
     }
@@ -1428,6 +1433,19 @@ void TextEditor::undefer_reflow()
     }
 }
 
+void TextEditor::try_show_autocomplete()
+{
+    if (m_autocomplete_provider) {
+        m_autocomplete_provider->provide_completions([&](auto completions) {
+            auto has_completions = !completions.is_empty();
+            m_autocomplete_box->update_suggestions(move(completions));
+            auto position = content_rect_for_position(cursor()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
+            if (has_completions)
+                m_autocomplete_box->show(position);
+        });
+    }
+}
+
 void TextEditor::enter_event(Core::Event&)
 {
     m_automatic_selection_scroll_timer->stop();
@@ -1437,6 +1455,10 @@ void TextEditor::leave_event(Core::Event&)
 {
     if (m_in_drag_select)
         m_automatic_selection_scroll_timer->start();
+    if (m_autocomplete_timer)
+        m_autocomplete_timer->stop();
+    if (m_autocomplete_box)
+        m_autocomplete_box->close();
 }
 
 void TextEditor::did_change()
@@ -1445,6 +1467,10 @@ void TextEditor::did_change()
     recompute_all_visual_lines();
     m_undo_action->set_enabled(can_undo());
     m_redo_action->set_enabled(can_redo());
+    if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
+        m_autocomplete_timer->stop();
+        m_autocomplete_box->close();
+    }
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
         deferred_invoke([this](auto&) {
@@ -1846,6 +1872,21 @@ void TextEditor::set_visualize_trailing_whitespace(bool enabled)
         return;
     m_visualize_trailing_whitespace = enabled;
     update();
+}
+
+void TextEditor::set_should_autocomplete_automatically(bool value)
+{
+    if (value == should_autocomplete_automatically())
+        return;
+
+    if (value) {
+        ASSERT(m_autocomplete_provider);
+        m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] { try_show_autocomplete(); });
+        return;
+    }
+
+    remove_child(*m_autocomplete_timer);
+    m_autocomplete_timer = nullptr;
 }
 
 }

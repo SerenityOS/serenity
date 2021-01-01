@@ -92,6 +92,8 @@ public:
     }
     virtual void update() override {};
 
+    void set_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions) { m_suggestions = move(suggestions); }
+
 private:
     Vector<AutocompleteProvider::Entry> m_suggestions;
 };
@@ -111,16 +113,21 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 
 void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
 {
-    if (suggestions.is_empty())
-        return;
-
     bool has_suggestions = !suggestions.is_empty();
-    m_suggestion_view->set_model(adopt(*new AutocompleteSuggestionModel(move(suggestions))));
+    if (m_suggestion_view->model()) {
+        auto& model = *static_cast<AutocompleteSuggestionModel*>(m_suggestion_view->model());
+        model.set_suggestions(move(suggestions));
+    } else {
+        m_suggestion_view->set_model(adopt(*new AutocompleteSuggestionModel(move(suggestions))));
+        m_suggestion_view->update();
+        if (has_suggestions)
+            m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
+    }
 
+    m_suggestion_view->model()->update();
+    m_suggestion_view->update();
     if (!has_suggestions)
-        m_suggestion_view->selection().clear();
-    else
-        m_suggestion_view->selection().set(m_suggestion_view->model()->index(0));
+        close();
 }
 
 bool AutocompleteBox::is_visible() const
@@ -130,7 +137,12 @@ bool AutocompleteBox::is_visible() const
 
 void AutocompleteBox::show(Gfx::IntPoint suggstion_box_location)
 {
+    if (!m_suggestion_view->model() || m_suggestion_view->model()->row_count() == 0)
+        return;
+
     m_popup_window->move_to(suggstion_box_location);
+    if (!is_visible())
+        m_suggestion_view->move_cursor(GUI::AbstractView::CursorMovement::Home, GUI::AbstractTableView::SelectionUpdate::Set);
     m_popup_window->show();
 }
 
