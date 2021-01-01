@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Brian Gianforcaro <b.gianfo@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/internals.h>
+#include <unistd.h>
 
-#include <sys/cdefs.h>
+#if defined __SSP__ || defined __SSP_ALL__
+#    error "file must not be compiled with stack protection enabled on it. Use -fno-stack-protector"
+#endif
 
-__BEGIN_DECLS
+extern "C" {
 
-typedef void (*AtExitFunction)(void*);
+extern u32 __stack_chk_guard;
+u32 __stack_chk_guard = (u32)0xc6c7c8c9;
 
-extern void __libc_init();
-extern void __malloc_init();
-extern void __stdio_init();
-extern void _init();
-extern bool __environ_is_malloced;
-extern bool __stdio_is_initialized;
+[[noreturn]] void __stack_chk_fail()
+{
+    dbgprintf("Error: USERSPACE(%d) Stack protector failure, stack smashing detected!\n", getpid());
+    if (__stdio_is_initialized)
+        fprintf(stderr, "Error: Stack protector failure, stack smashing detected!\n");
+    abort();
+}
 
-int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
-void __cxa_finalize(void* dso_handle);
-[[noreturn]] void __cxa_pure_virtual() __attribute__((weak));
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail_local();
+[[noreturn]] void __stack_chk_fail_local()
+{
+    __stack_chk_fail();
+}
 
-__END_DECLS
+} // extern "C"

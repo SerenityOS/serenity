@@ -70,13 +70,21 @@ add_custom_command(
     COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
 )
 
+set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
+    "-fno-stack-protector")
+add_library(ssp STATIC ssp.cpp)
+add_custom_command(
+    TARGET ssp
+    COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
+)
+
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
 
 serenity_libc_static(LibCStatic c)
-target_link_libraries(LibCStatic crt0)
+target_link_libraries(LibCStatic crt0 ssp)
 add_dependencies(LibCStatic LibM)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 serenity_libc(LibC c)
-target_link_libraries(LibC crt0)
+target_link_libraries(LibC crt0 ssp)
 add_dependencies(LibC LibM)
