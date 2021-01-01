@@ -132,7 +132,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 /* FIXME: Initialize from TypedArray */                                                                                \
                 TODO();                                                                                                                \
-            } else if (first_argument.as_object().is_array_buffer()) {                                                                 \
+            } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
                 initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, vm.argument(1), vm.argument(2)); \
                 if (vm.exception())                                                                                                    \

@@ -77,9 +77,9 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
         auto& object = value.as_object();
         if (object.is_function())
             return function_to_html(object, output_html, seen_objects);
-        if (object.is_date())
+        if (is<Date>(object))
             return date_to_html(object, output_html, seen_objects);
-        if (object.is_error())
+        if (is<Error>(object))
             return error_to_html(object, output_html, seen_objects);
         return object_to_html(object, output_html, seen_objects);
     }

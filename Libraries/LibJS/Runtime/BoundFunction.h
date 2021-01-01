@@ -59,8 +59,6 @@ public:
     virtual bool is_strict_mode() const override { return m_target_function->is_strict_mode(); }
 
 private:
-    virtual bool is_bound_function() const override { return true; }
-
     Function* m_target_function = nullptr;
     Object* m_constructor_prototype = nullptr;
     FlyString m_name;

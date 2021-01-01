@@ -30,10 +30,14 @@
 #include <AK/JsonParser.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BigIntObject.h>
+#include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
+#include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/StringObject.h>
 
 namespace JS {
 
@@ -81,7 +85,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
                         return {};
                 } else if (replacer_value.is_object()) {
                     auto& value_object = replacer_value.as_object();
-                    if (value_object.is_string_object() || value_object.is_number_object()) {
+                    if (is<StringObject>(value_object) || is<NumberObject>(value_object)) {
                         item = value_object.value_of().to_string(global_object);
                         if (vm.exception())
                             return {};
@@ -97,7 +101,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
 
     if (space.is_object()) {
         auto& space_obj = space.as_object();
-        if (space_obj.is_string_object() || space_obj.is_number_object())
+        if (is<StringObject>(space_obj) || is<NumberObject>(space_obj))
             space = space_obj.value_of();
     }
 
@@ -172,7 +176,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
 
     if (value.is_object()) {
         auto& value_object = value.as_object();
-        if (value_object.is_number_object() || value_object.is_boolean_object() || value_object.is_string_object() || value_object.is_bigint_object())
+        if (is<NumberObject>(value_object) || is<BooleanObject>(value_object) || is<StringObject>(value_object) || is<BigIntObject>(value_object))
             value = value_object.value_of();
     }
 

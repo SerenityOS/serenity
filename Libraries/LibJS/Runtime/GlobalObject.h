@@ -76,8 +76,6 @@ protected:
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
 
 private:
-    virtual bool is_global_object() const final { return true; }
-
     JS_DECLARE_NATIVE_FUNCTION(gc);
     JS_DECLARE_NATIVE_FUNCTION(is_nan);
     JS_DECLARE_NATIVE_FUNCTION(is_finite);

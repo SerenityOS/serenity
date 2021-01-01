@@ -44,6 +44,7 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/SymbolObject.h>
@@ -243,7 +244,7 @@ bool Value::is_regexp(GlobalObject& global_object) const
     if (!matcher.is_empty() && !matcher.is_undefined())
         return matcher.to_boolean();
 
-    return as_object().is_regexp_object();
+    return is<RegExpObject>(as_object());
 }
 
 String Value::to_string_without_side_effects() const
@@ -926,8 +927,8 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(false);
     auto& rhs_function = rhs.as_function();
 
-    if (rhs_function.is_bound_function()) {
-        auto& bound_target = static_cast<BoundFunction&>(rhs_function);
+    if (is<BoundFunction>(rhs_function)) {
+        auto& bound_target = static_cast<const BoundFunction&>(rhs_function);
         return instance_of(global_object, lhs, Value(&bound_target.target_function()));
     }
 

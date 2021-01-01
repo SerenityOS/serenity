@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
     if (vm.argument_count() > 2) {
         auto new_target_value = vm.argument(2);
         if (!new_target_value.is_function()
-            || (new_target_value.as_object().is_native_function() && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
+            || (is<NativeFunction>(new_target_value.as_object()) && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
             vm.throw_exception<TypeError>(global_object, ErrorType::ReflectBadNewTarget);
             return {};
         }

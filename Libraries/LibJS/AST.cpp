@@ -61,7 +61,7 @@ static void update_function_name(Value value, const FlyString& name, HashTable<J
     auto& object = value.as_object();
     if (object.is_function()) {
         auto& function = static_cast<Function&>(object);
-        if (function.is_script_function() && function.name().is_empty())
+        if (is<ScriptFunction>(function) && function.name().is_empty())
             static_cast<ScriptFunction&>(function).set_name(name);
     } else if (object.is_array()) {
         auto& array = static_cast<Array&>(object);
@@ -178,7 +178,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     ASSERT(!callee.is_empty());
 
     if (!callee.is_function()
-        || (is_new_expression() && (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
+        || (is_new_expression() && (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
         String error_message;
         auto call_type = is_new_expression() ? "constructor" : "function";
         if (m_callee->is_identifier() || m_callee->is_member_expression()) {
@@ -793,7 +793,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     update_function_name(class_constructor_value, m_name);
 
-    ASSERT(class_constructor_value.is_function() && class_constructor_value.as_function().is_script_function());
+    ASSERT(class_constructor_value.is_function() && is<ScriptFunction>(class_constructor_value.as_function()));
     ScriptFunction* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
     class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();

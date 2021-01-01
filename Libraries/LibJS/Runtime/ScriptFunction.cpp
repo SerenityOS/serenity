@@ -106,7 +106,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
     environment->set_home_object(home_object());
     environment->set_current_function(*this);
     if (m_is_arrow_function) {
-        if (m_parent_scope->is_lexical_environment())
+        if (is<LexicalEnvironment>(m_parent_scope))
             environment->set_new_target(static_cast<LexicalEnvironment*>(m_parent_scope)->new_target());
     }
     return environment;

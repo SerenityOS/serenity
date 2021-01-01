@@ -135,7 +135,7 @@ static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
-    if (!this_object->is_regexp_object()) {
+    if (!is<RegExpObject>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
         return nullptr;
     }

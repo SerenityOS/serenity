@@ -56,7 +56,6 @@ protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
 
 private:
-    virtual bool is_script_function() const override { return true; }
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_edges(Visitor&) override;
 
