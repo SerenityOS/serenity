@@ -112,7 +112,6 @@ public:
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_typed_array() const { return false; }
-    virtual bool is_node_wrapper() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
