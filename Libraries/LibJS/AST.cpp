@@ -130,21 +130,21 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 {
     auto& vm = interpreter.vm();
 
-    if (is_new_expression()) {
+    if (is<NewExpression>(*this)) {
         // Computing |this| is irrelevant for "new" expression.
         return { js_undefined(), m_callee->execute(interpreter, global_object) };
     }
 
-    if (m_callee->is_super_expression()) {
+    if (is<SuperExpression>(*m_callee)) {
         // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
         auto new_target = vm.get_new_target();
         ASSERT(new_target.is_function());
         return { js_undefined(), new_target };
     }
 
-    if (m_callee->is_member_expression()) {
+    if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
-        bool is_super_property_lookup = member_expression.object().is_super_expression();
+        bool is_super_property_lookup = is<SuperExpression>(member_expression.object());
         auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
         if (vm.exception())
             return {};
@@ -178,12 +178,12 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     ASSERT(!callee.is_empty());
 
     if (!callee.is_function()
-        || (is_new_expression() && (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
+        || (is<NewExpression>(*this) && (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
         String error_message;
-        auto call_type = is_new_expression() ? "constructor" : "function";
-        if (m_callee->is_identifier() || m_callee->is_member_expression()) {
+        auto call_type = is<NewExpression>(*this) ? "constructor" : "function";
+        if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
             String expression_string;
-            if (m_callee->is_identifier()) {
+            if (is<Identifier>(*m_callee)) {
                 expression_string = static_cast<const Identifier&>(*m_callee).string();
             } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
@@ -220,11 +220,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     Object* new_object = nullptr;
     Value result;
-    if (is_new_expression()) {
+    if (is<NewExpression>(*this)) {
         result = vm.construct(function, function, move(arguments), global_object);
         if (result.is_object())
             new_object = &result.as_object();
-    } else if (m_callee->is_super_expression()) {
+    } else if (is<SuperExpression>(*m_callee)) {
         auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
@@ -243,7 +243,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (vm.exception())
         return {};
 
-    if (is_new_expression()) {
+    if (is<NewExpression>(*this)) {
         if (result.is_object())
             return result;
         return new_object;
@@ -371,7 +371,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
     RefPtr<BlockStatement> wrapper;
 
-    if (m_init && m_init->is_variable_declaration() && static_cast<const VariableDeclaration*>(m_init.ptr())->declaration_kind() != DeclarationKind::Var) {
+    if (m_init && is<VariableDeclaration>(*m_init) && static_cast<const VariableDeclaration&>(*m_init).declaration_kind() != DeclarationKind::Var) {
         wrapper = create_ast_node<BlockStatement>(source_range());
         NonnullRefPtrVector<VariableDeclaration> decls;
         decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
@@ -444,20 +444,20 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     return last_value;
 }
 
-static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, NonnullRefPtr<ASTNode> node, RefPtr<BlockStatement> wrapper)
+static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, const ASTNode& node, RefPtr<BlockStatement> wrapper)
 {
     FlyString variable_name;
-    if (node->is_variable_declaration()) {
-        auto* variable_declaration = static_cast<const VariableDeclaration*>(node.ptr());
-        ASSERT(!variable_declaration->declarations().is_empty());
-        if (variable_declaration->declaration_kind() != DeclarationKind::Var) {
-            wrapper = create_ast_node<BlockStatement>(node->source_range());
+    if (is<VariableDeclaration>(node)) {
+        auto& variable_declaration = static_cast<const VariableDeclaration&>(node);
+        ASSERT(!variable_declaration.declarations().is_empty());
+        if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
+            wrapper = create_ast_node<BlockStatement>(node.source_range());
             interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
         }
-        variable_declaration->execute(interpreter, global_object);
-        variable_name = variable_declaration->declarations().first().id().string();
-    } else if (node->is_identifier()) {
-        variable_name = static_cast<const Identifier&>(*node).string();
+        variable_declaration.execute(interpreter, global_object);
+        variable_name = variable_declaration.declarations().first().id().string();
+    } else if (is<Identifier>(node)) {
+        variable_name = static_cast<const Identifier&>(node).string();
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -469,7 +469,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    if (!m_lhs->is_variable_declaration() && !m_lhs->is_identifier()) {
+    if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar in baz)", "for (foo[0] in bar)"
         ASSERT_NOT_REACHED();
     }
@@ -516,7 +516,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    if (!m_lhs->is_variable_declaration() && !m_lhs->is_identifier()) {
+    if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar of baz)", "for (foo[0] of bar)"
         ASSERT_NOT_REACHED();
     }
@@ -700,7 +700,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     }
 
     Value lhs_result;
-    if (m_op == UnaryOp::Typeof && m_lhs->is_identifier()) {
+    if (m_op == UnaryOp::Typeof && is<Identifier>(*m_lhs)) {
         auto reference = m_lhs->to_reference(interpreter, global_object);
         if (interpreter.exception()) {
             return {};
@@ -1052,7 +1052,7 @@ void UnaryExpression::dump(int indent) const
 void CallExpression::dump(int indent) const
 {
     print_indent(indent);
-    if (is_new_expression())
+    if (is<NewExpression>(*this))
         outln("CallExpression [new]");
     else
         outln("CallExpression");
@@ -1744,7 +1744,7 @@ void MemberExpression::dump(int indent) const
 PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
 {
     if (!is_computed()) {
-        ASSERT(m_property->is_identifier());
+        ASSERT(is<Identifier>(*m_property));
         return static_cast<const Identifier&>(*m_property).string();
     }
     auto value = m_property->execute(interpreter, global_object);
@@ -1757,11 +1757,11 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
 String MemberExpression::to_string_approximation() const
 {
     String object_string = "<object>";
-    if (m_object->is_identifier())
+    if (is<Identifier>(*m_object))
         object_string = static_cast<const Identifier&>(*m_object).string();
     if (is_computed())
         return String::formatted("{}[<computed>]", object_string);
-    ASSERT(m_property->is_identifier());
+    ASSERT(is<Identifier>(*m_property));
     return String::formatted("{}.{}", object_string, static_cast<const Identifier&>(*m_property).string());
 }
 
@@ -1887,7 +1887,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             if (interpreter.exception())
                 return {};
 
-            if (element->is_spread_expression()) {
+            if (is<SpreadExpression>(*element)) {
                 get_iterator_values(global_object, value, [&](Value iterator_value) {
                     array->indexed_properties().append(iterator_value);
                     return IterationDecision::Continue;
