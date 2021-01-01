@@ -32,6 +32,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -53,15 +54,17 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
-    // FIXME: Clean up this bizarre object graph
-    auto instance = DisplaySettingsWidget::construct();
+    // Let's create the tab pane that we'll hook our widgets up to :^)
+    auto tab_widget = GUI::TabWidget::construct();
+    tab_widget->add_tab<DisplaySettingsWidget>("Display Settings");
+    tab_widget->set_fill_with_background_color(true); // No black backgrounds!
 
     auto window = GUI::Window::construct();
     dbgln("main window: {}", window);
     window->set_title("Display settings");
-    window->resize(360, 390);
+    window->resize(360, 410);
     window->set_resizable(false);
-    window->set_main_widget(instance->root_widget());
+    window->set_main_widget(tab_widget.ptr());
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();

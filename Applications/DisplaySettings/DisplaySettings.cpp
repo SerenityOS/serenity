@@ -90,12 +90,11 @@ void DisplaySettingsWidget::create_wallpaper_list()
 
 void DisplaySettingsWidget::create_frame()
 {
-    m_root_widget = GUI::Widget::construct();
-    m_root_widget->load_from_gml(display_settings_window_gml);
+    load_from_gml(display_settings_window_gml);
 
-    m_monitor_widget = *m_root_widget->find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
+    m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
-    m_wallpaper_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("wallpaper_combo");
+    m_wallpaper_combo = *find_descendant_of_type_named<GUI::ComboBox>("wallpaper_combo");
     m_wallpaper_combo->set_only_allow_values_from_model(true);
     m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
@@ -120,11 +119,11 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    auto& button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
+    auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.on_click = [this](auto) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(root_widget()->window(), "Select wallpaper from file system.");
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(nullptr, "Select wallpaper from file system.");
 
         if (!open_path.has_value())
             return;
@@ -134,7 +133,7 @@ void DisplaySettingsWidget::create_frame()
         m_wallpaper_combo->set_only_allow_values_from_model(true);
     };
 
-    m_mode_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
+    m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
@@ -142,7 +141,7 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    m_resolution_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
+    m_resolution_combo = *find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
     m_resolution_combo->set_only_allow_values_from_model(true);
     m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
@@ -150,7 +149,7 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    m_color_input = *m_root_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
+    m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_color_picker_title("Select color for desktop");
     m_color_input->on_change = [this] {
@@ -158,18 +157,18 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    auto& ok_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
+    auto& ok_button = *find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [this](auto) {
         send_settings_to_window_server();
         GUI::Application::the()->quit();
     };
 
-    auto& cancel_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
+    auto& cancel_button = *find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [](auto) {
         GUI::Application::the()->quit();
     };
 
-    auto& apply_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("apply_button");
+    auto& apply_button = *find_descendant_of_type_named<GUI::Button>("apply_button");
     apply_button.on_click = [this](auto) {
         send_settings_to_window_server();
     };
@@ -250,7 +249,7 @@ void DisplaySettingsWidget::send_settings_to_window_server()
 {
     auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution());
     if (!result->success()) {
-        GUI::MessageBox::show(root_widget()->window(), String::formatted("Reverting to resolution {}x{}", result->resolution().width(), result->resolution().height()),
+        GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{}", result->resolution().width(), result->resolution().height()),
             "Unable to set resolution", GUI::MessageBox::Type::Error);
     }
 

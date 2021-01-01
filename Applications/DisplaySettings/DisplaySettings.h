@@ -36,8 +36,6 @@ class DisplaySettingsWidget : public GUI::Widget {
 public:
     DisplaySettingsWidget();
 
-    GUI::Widget* root_widget() { return m_root_widget; }
-
 private:
     void create_frame();
     void create_wallpaper_list();
@@ -49,7 +47,6 @@ private:
     Vector<String> m_modes;
     Vector<Gfx::IntSize> m_resolutions;
 
-    RefPtr<GUI::Widget> m_root_widget;
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::ComboBox> m_wallpaper_combo;
     RefPtr<GUI::ComboBox> m_mode_combo;
