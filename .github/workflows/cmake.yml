@@ -66,7 +66,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
+        cmake .. -GNinja -DBUILD_LAGOM=1 -DENABLE_ALL_THE_DEBUG_MACROS=ON
 
     # === ACTUALLY BUILD AND TEST ===
 
@@ -173,7 +173,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1 -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        cmake .. -GNinja -DBUILD_LAGOM=1 -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
 
     # === ACTUALLY BUILD AND TEST ===
 
