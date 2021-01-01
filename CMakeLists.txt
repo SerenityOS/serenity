@@ -119,7 +119,7 @@ endif()
 
 #FIXME: -fstack-protector
 
-add_compile_options(-Os -g1 -fno-exceptions -fno-rtti -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined)
+add_compile_options(-Os -g1 -fno-exceptions -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined)
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 add_compile_definitions(DEBUG SANITIZE_PTRS)
