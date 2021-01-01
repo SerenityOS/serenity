@@ -280,7 +280,7 @@ const MmapRegion* Emulator::find_text_region(FlatPtr address)
 {
     const MmapRegion* matching_region = nullptr;
     mmu().for_each_region([&](auto& region) {
-        if (!region.is_mmap())
+        if (!is<MmapRegion>(region))
             return IterationDecision::Continue;
         const auto& mmap_region = static_cast<const MmapRegion&>(region);
         if (!(mmap_region.is_executable() && address >= mmap_region.base() && address < mmap_region.base() + mmap_region.size()))
@@ -1045,7 +1045,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     if (auto* region = mmu().find_region({ m_cpu.ds(), params.old_address })) {
-        if (!region->is_mmap())
+        if (!is<MmapRegion>(*region))
             return -EINVAL;
         ASSERT(region->size() == params.old_size);
         auto& mmap_region = *(MmapRegion*)region;
@@ -1094,7 +1094,7 @@ u32 Emulator::virt$unveil(u32)
 u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
 {
     if (auto* region = mmu().find_region({ m_cpu.ds(), base })) {
-        if (!region->is_mmap())
+        if (!is<MmapRegion>(*region))
             return -EINVAL;
         ASSERT(region->size() == size);
         auto& mmap_region = *(MmapRegion*)region;

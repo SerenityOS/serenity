@@ -49,8 +49,6 @@ public:
     virtual u8* data() override { return m_data; }
     virtual u8* shadow_data() override { return m_shadow_data; }
 
-    bool is_shared_buffer() const override { return true; }
-
     int shbuf_id() const { return m_shbuf_id; }
 
     int allow_all();
