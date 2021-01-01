@@ -920,11 +920,10 @@ HackStudioWidget::~HackStudioWidget()
 {
     if (!m_debugger_thread.is_null()) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Exit);
-        void* retval;
         dbgln("Waiting for debugger thread to terminate");
-        int rc = pthread_join(m_debugger_thread->tid(), &retval);
-        if (rc < 0) {
-            perror("pthread_join");
+        auto rc = m_debugger_thread->join();
+        if (rc.is_error()) {
+            warnln("pthread_join: {}", strerror(rc.error().value()));
             dbgln("error joining debugger thread");
         }
     }
