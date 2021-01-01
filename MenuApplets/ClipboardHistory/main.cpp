@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
     auto entry_context_menu = GUI::Menu::construct();
     entry_context_menu->add_action(delete_action);
     table_view.on_context_menu_request = [&](const GUI::ModelIndex&, const GUI::ContextMenuEvent& event) {
+        delete_action->set_enabled(!table_view.selection().is_empty());
         entry_context_menu->popup(event.screen_position());
     };
 
