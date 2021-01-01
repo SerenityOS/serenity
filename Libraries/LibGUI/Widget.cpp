@@ -1001,33 +1001,6 @@ bool Widget::load_from_json(const JsonObject& json)
     return true;
 }
 
-Widget* Widget::find_child_by_name(const String& name)
-{
-    Widget* found_widget = nullptr;
-    for_each_child_widget([&](auto& child) {
-        if (child.name() == name) {
-            found_widget = &child;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_widget;
-}
-
-Widget* Widget::find_descendant_by_name(const String& name)
-{
-    Widget* found_widget = nullptr;
-    if (this->name() == name)
-        return this;
-    for_each_child_widget([&](auto& child) {
-        found_widget = child.find_descendant_by_name(name);
-        if (found_widget)
-            return IterationDecision::Break;
-        return IterationDecision::Continue;
-    });
-    return found_widget;
-}
-
 bool Widget::has_focus_within() const
 {
     auto* window = this->window();

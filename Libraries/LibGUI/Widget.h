@@ -305,9 +305,6 @@ public:
 
     bool load_from_gml(const StringView&);
 
-    Widget* find_child_by_name(const String&);
-    Widget* find_descendant_by_name(const String&);
-
 protected:
     Widget();
 

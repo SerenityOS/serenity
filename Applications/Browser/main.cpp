@@ -140,7 +140,7 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(browser_window_gml);
 
-    auto& tab_widget = static_cast<GUI::TabWidget&>(*widget.find_descendant_by_name("tab_widget"));
+    auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
     ASSERT(default_favicon);

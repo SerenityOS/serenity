@@ -90,10 +90,10 @@ Tab::Tab(Type type)
 {
     load_from_gml(tab_gml);
 
-    m_toolbar_container = static_cast<GUI::ToolBarContainer&>(*find_descendant_by_name("toolbar_container"));
-    auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
+    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
+    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
 
-    auto& webview_container = *find_descendant_by_name("webview_container");
+    auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
     if (m_type == Type::InProcessWebView)
         m_page_view = webview_container.add<Web::InProcessWebView>();
@@ -248,7 +248,7 @@ Tab::Tab(Type type)
         },
         this);
 
-    m_statusbar = static_cast<GUI::StatusBar&>(*find_descendant_by_name("statusbar"));
+    m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
 
     hooks().on_link_hover = [this](auto& url) {
         if (url.is_valid())
