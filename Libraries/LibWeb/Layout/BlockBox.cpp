@@ -94,7 +94,7 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
             if (is<Box>(fragment.layout_node()) && downcast<Box>(fragment.layout_node()).stacking_context())
                 continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
-                if (fragment.layout_node().is_block())
+                if (is<BlockBox>(fragment.layout_node()))
                     return downcast<BlockBox>(fragment.layout_node()).hit_test(position, type);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }

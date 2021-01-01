@@ -35,6 +35,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
 #include <typeinfo>
 
@@ -56,7 +57,7 @@ Node::~Node()
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    return style().position() != CSS::Position::Static || is_initial_containing_block();
+    return style().position() != CSS::Position::Static || is<InitialContainingBlockBox>(*this);
 }
 
 const BlockBox* Node::containing_block() const
@@ -68,7 +69,7 @@ const BlockBox* Node::containing_block() const
         return downcast<BlockBox>(ancestor);
     };
 
-    if (is_text())
+    if (is<TextNode>(*this))
         return nearest_block_ancestor();
 
     auto position = style().position();
@@ -165,7 +166,7 @@ float Node::font_size() const
 
 Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
-    if (is_box())
+    if (is<Box>(*this))
         return downcast<Box>(*this).absolute_position();
     ASSERT(is_inline());
     Gfx::FloatPoint position;
@@ -301,6 +302,11 @@ bool Node::is_root_element() const
 String Node::class_name() const
 {
     return demangle(typeid(*this).name());
+}
+
+bool Node::is_inline_block() const
+{
+    return is_inline() && is<BlockBox>(*this);
 }
 
 }

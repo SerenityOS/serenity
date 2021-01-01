@@ -39,7 +39,6 @@ public:
     const HTML::HTMLBRElement& dom_node() const { return downcast<HTML::HTMLBRElement>(*Node::dom_node()); }
 
 private:
-    virtual bool is_break() const override { return true; }
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 };
 

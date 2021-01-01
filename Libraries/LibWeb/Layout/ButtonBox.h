@@ -43,7 +43,6 @@ public:
     HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(ReplacedBox::dom_node()); }
 
 private:
-    virtual bool is_button() const override { return true; }
     virtual bool wants_mouse_events() const override { return true; }
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;

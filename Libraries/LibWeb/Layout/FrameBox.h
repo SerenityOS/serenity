@@ -43,7 +43,6 @@ public:
     HTML::HTMLIFrameElement& dom_node() { return downcast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
 
 private:
-    virtual bool is_frame() const final { return true; }
     virtual void did_set_rect() override;
 };
 

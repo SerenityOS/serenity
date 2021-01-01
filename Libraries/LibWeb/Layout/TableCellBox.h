@@ -41,7 +41,6 @@ public:
     size_t colspan() const;
 
 private:
-    virtual bool is_table_cell() const override { return true; }
     virtual float width_of_logical_containing_block() const override;
 };
 

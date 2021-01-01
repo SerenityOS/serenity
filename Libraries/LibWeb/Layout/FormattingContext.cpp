@@ -31,7 +31,10 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
+#include <LibWeb/Layout/TableRowBox.h>
 
 namespace Web::Layout {
 
@@ -55,7 +58,7 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
         return true;
     if (box.is_inline_block())
         return true;
-    if (box.is_table_cell())
+    if (is<TableCellBox>(box))
         return true;
     // FIXME: table-caption
     // FIXME: anonymous table cells
@@ -76,7 +79,7 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
         context.run(box, layout_mode);
         return;
     }
-    if (box.is_table()) {
+    if (is<TableBox>(box)) {
         TableFormattingContext context(box, this);
         context.run(box, layout_mode);
     } else if (box.children_are_inline()) {

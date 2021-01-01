@@ -44,6 +44,7 @@
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
+#include <LibWeb/Layout/WidgetBox.h>
 
 namespace Web::DOM {
 
@@ -213,7 +214,7 @@ void Element::recompute_style()
     }
 
     // Don't bother with style on widgets. NATIVE LOOK & FEEL BABY!
-    if (layout_node()->is_widget())
+    if (is<Layout::WidgetBox>(layout_node()))
         return;
 
     auto diff = compute_style_difference(layout_node()->specified_style(), *style, document());

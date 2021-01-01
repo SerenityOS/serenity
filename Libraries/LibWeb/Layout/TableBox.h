@@ -34,9 +34,6 @@ class TableBox final : public Layout::BlockBox {
 public:
     TableBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~TableBox() override;
-
-private:
-    virtual bool is_table() const override { return true; }
 };
 
 }

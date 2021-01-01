@@ -40,9 +40,6 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
 
     const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(ReplacedBox::dom_node()); }
-
-private:
-    virtual bool is_canvas() const override { return true; }
 };
 
 }

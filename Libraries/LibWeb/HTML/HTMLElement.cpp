@@ -28,6 +28,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::HTML {
@@ -119,9 +120,9 @@ String HTMLElement::inner_text()
 
     Function<void(const Layout::Node&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-            if (child->is_text())
+            if (is<Layout::TextNode>(child))
                 builder.append(downcast<Layout::TextNode>(*child).text_for_rendering());
-            if (child->is_break())
+            if (is<Layout::BreakNode>(child))
                 builder.append('\n');
             recurse(*child);
         }
