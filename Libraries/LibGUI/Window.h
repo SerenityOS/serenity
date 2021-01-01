@@ -204,8 +204,6 @@ protected:
     virtual void wm_event(WMEvent&);
 
 private:
-    virtual bool is_window() const override final { return true; }
-
     void update_cursor();
     void focus_a_widget_if_possible(FocusSource);
 
