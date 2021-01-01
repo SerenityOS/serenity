@@ -62,7 +62,7 @@ static XMLHttpRequest* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
-    if (StringView("XMLHttpRequestWrapper") != this_object->class_name()) {
+    if (!is<XMLHttpRequestWrapper>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "XMLHttpRequest");
         return nullptr;
     }
