@@ -330,23 +330,23 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     widget.load_from_gml(file_manager_window_gml);
 
-    auto& main_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("main_toolbar");
-    auto& location_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("location_toolbar");
+    auto& main_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("main_toolbar");
+    auto& location_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("location_toolbar");
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
 
-    auto& location_textbox = (GUI::TextBox&)*widget.find_descendant_by_name("location_textbox");
+    auto& location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
 
-    auto& breadcrumb_toolbar = (GUI::ToolBar&)*widget.find_descendant_by_name("breadcrumb_toolbar");
+    auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("breadcrumb_toolbar");
     breadcrumb_toolbar.layout()->set_margins({});
-    auto& breadcrumb_bar = (GUI::BreadcrumbBar&)*widget.find_descendant_by_name("breadcrumb_bar");
+    auto& breadcrumb_bar = *widget.find_descendant_of_type_named<GUI::BreadcrumbBar>("breadcrumb_bar");
 
     location_textbox.on_focusout = [&] {
         location_toolbar.set_visible(false);
         breadcrumb_toolbar.set_visible(true);
     };
 
-    auto& splitter = (GUI::HorizontalSplitter&)*widget.find_descendant_by_name("splitter");
-    auto& tree_view = (GUI::TreeView&)*widget.find_descendant_by_name("tree_view");
+    auto& splitter = *widget.find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
+    auto& tree_view = *widget.find_descendant_of_type_named<GUI::TreeView>("tree_view");
 
     auto directories_model = GUI::FileSystemModel::create({}, GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view.set_model(directories_model);
@@ -369,9 +369,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     // Open the root directory. FIXME: This is awkward.
     tree_view.toggle_index(directories_model->index(0, 0, {}));
 
-    auto& statusbar = (GUI::StatusBar&)*widget.find_descendant_by_name("statusbar");
+    auto& statusbar = *widget.find_descendant_of_type_named<GUI::StatusBar>("statusbar");
 
-    auto& progressbar = (GUI::ProgressBar&)*widget.find_descendant_by_name("progressbar");
+    auto& progressbar = *widget.find_descendant_of_type_named<GUI::ProgressBar>("progressbar");
     progressbar.set_format(GUI::ProgressBar::Format::ValueSlashMax);
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
     progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
