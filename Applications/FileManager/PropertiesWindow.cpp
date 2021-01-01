@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "PropertiesDialog.h"
+#include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibDesktop/Launcher.h>
@@ -43,8 +43,8 @@
 #include <string.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Window* parent_window)
-    : Dialog(parent_window)
+PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Window* parent_window)
+    : Window(parent_window)
 {
     auto lexical_path = LexicalPath(path);
     ASSERT(lexical_path.is_valid());
@@ -166,15 +166,17 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     update();
 }
 
-PropertiesDialog::~PropertiesDialog() { }
+PropertiesWindow::~PropertiesWindow()
+{
+}
 
-void PropertiesDialog::update()
+void PropertiesWindow::update()
 {
     m_icon->set_bitmap(GUI::FileIconProvider::icon_for_path(make_full_path(m_name), m_mode).bitmap_for_size(32));
     set_title(String::formatted("{} - Properties", m_name));
 }
 
-void PropertiesDialog::permission_changed(mode_t mask, bool set)
+void PropertiesWindow::permission_changed(mode_t mask, bool set)
 {
     if (set) {
         m_mode |= mask;
@@ -186,12 +188,12 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
     m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
-String PropertiesDialog::make_full_path(const String& name)
+String PropertiesWindow::make_full_path(const String& name)
 {
     return String::formatted("{}/{}", m_parent_path, name);
 }
 
-bool PropertiesDialog::apply_changes()
+bool PropertiesWindow::apply_changes()
 {
     if (m_name_dirty) {
         String new_name = m_name_box->text();
@@ -227,7 +229,7 @@ bool PropertiesDialog::apply_changes()
     return true;
 }
 
-void PropertiesDialog::make_permission_checkboxes(GUI::Widget& parent, PermissionMasks masks, String label_string, mode_t mode)
+void PropertiesWindow::make_permission_checkboxes(GUI::Widget& parent, PermissionMasks masks, String label_string, mode_t mode)
 {
     auto& widget = parent.add<GUI::Widget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();
@@ -261,7 +263,7 @@ void PropertiesDialog::make_permission_checkboxes(GUI::Widget& parent, Permissio
     box_execute.set_enabled(can_edit_checkboxes);
 }
 
-void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>& pairs, GUI::Widget& parent)
+void PropertiesWindow::make_property_value_pairs(const Vector<PropertyValuePair>& pairs, GUI::Widget& parent)
 {
     int max_width = 0;
     Vector<NonnullRefPtr<GUI::Label>> property_labels;
@@ -294,7 +296,7 @@ void PropertiesDialog::make_property_value_pairs(const Vector<PropertyValuePair>
         label->set_fixed_width(max_width);
 }
 
-GUI::Button& PropertiesDialog::make_button(String text, GUI::Widget& parent)
+GUI::Button& PropertiesWindow::make_button(String text, GUI::Widget& parent)
 {
     auto& button = parent.add<GUI::Button>(text);
     button.set_fixed_size(70, 22);

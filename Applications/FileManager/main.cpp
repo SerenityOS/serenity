@@ -27,7 +27,7 @@
 #include "DesktopWidget.h"
 #include "DirectoryView.h"
 #include "FileUtils.h"
-#include "PropertiesDialog.h"
+#include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -195,14 +195,17 @@ void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* wind
 
 void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window)
 {
-    RefPtr<PropertiesDialog> properties;
+    RefPtr<PropertiesWindow> properties;
     if (selected.is_empty()) {
-        properties = window->add<PropertiesDialog>(path, true);
+        properties = window->add<PropertiesWindow>(path, true);
     } else {
-        properties = window->add<PropertiesDialog>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
+        properties = window->add<PropertiesWindow>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
     }
-
-    properties->exec();
+    properties->on_close = [properties = properties.ptr()] {
+        properties->remove_from_parent();
+    };
+    properties->center_on_screen();
+    properties->show();
 }
 
 int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
