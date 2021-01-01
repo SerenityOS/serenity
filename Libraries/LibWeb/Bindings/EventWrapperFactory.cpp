@@ -33,7 +33,7 @@ namespace Bindings {
 
 EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
 {
-    if (event.is_mouse_event())
+    if (is<UIEvents::MouseEvent>(event))
         return static_cast<MouseEventWrapper*>(wrap_impl(global_object, static_cast<UIEvents::MouseEvent&>(event)));
     return static_cast<EventWrapper*>(wrap_impl(global_object, event));
 }
