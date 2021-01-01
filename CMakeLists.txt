@@ -22,6 +22,7 @@ option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FA
 option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
 option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" FALSE)
 option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" FALSE)
+option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" FALSE)
 
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
