@@ -1666,7 +1666,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
         Gfx::IntRect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
-            font().width(visual_line_view),
+            font().width(visual_line_view) + font().glyph_spacing(),
             line_height()
         };
         if (is_right_text_alignment(text_alignment()))
