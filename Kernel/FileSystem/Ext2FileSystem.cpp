@@ -924,7 +924,6 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 #endif
 
     auto buffer_or = read_entire();
-    ASSERT(!buffer_or.is_error());
     if (buffer_or.is_error())
         return buffer_or.error();
 
@@ -1537,11 +1536,11 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     return inode.release_nonnull();
 }
 
-void Ext2FSInode::populate_lookup_cache() const
+bool Ext2FSInode::populate_lookup_cache() const
 {
     LOCKER(m_lock);
     if (!m_lookup_cache.is_empty())
-        return;
+        return true;
     HashMap<String, unsigned> children;
 
     KResult result = traverse_as_directory([&children](auto& entry) {
@@ -1549,17 +1548,20 @@ void Ext2FSInode::populate_lookup_cache() const
         return true;
     });
 
-    ASSERT(result.is_success());
+    if (!result.is_success())
+        return false;
 
     if (!m_lookup_cache.is_empty())
-        return;
+        return false;
     m_lookup_cache = move(children);
+    return true;
 }
 
 RefPtr<Inode> Ext2FSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
-    populate_lookup_cache();
+    if (!populate_lookup_cache())
+        return {};
     LOCKER(m_lock);
     auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
     if (it != m_lookup_cache.end())
