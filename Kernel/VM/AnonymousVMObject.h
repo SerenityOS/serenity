@@ -57,7 +57,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Kernel::AnonymousVMObject)
-static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_anonymous(); }
-AK_END_TYPE_TRAITS()
