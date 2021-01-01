@@ -26,12 +26,16 @@
 
 #pragma once
 
+#include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
 #include <pthread.h>
 
 namespace LibThread {
+
+TYPEDEF_DISTINCT_ORDERED_ID(int, ThreadError);
 
 class Thread final : public Core::Object {
     C_OBJECT(Thread);
@@ -40,8 +44,11 @@ public:
     virtual ~Thread();
 
     void start();
-    void join();
-    void quit(void* code = 0);
+
+    template<typename T = void>
+    Result<T, ThreadError> join();
+
+    String thread_name() const { return m_thread_name; }
     pthread_t tid() const { return m_tid; }
 
 private:
@@ -50,5 +57,21 @@ private:
     pthread_t m_tid { 0 };
     String m_thread_name;
 };
+
+template<typename T>
+Result<T, ThreadError> Thread::join()
+{
+    void* thread_return = nullptr;
+    int rc = pthread_join(m_tid, &thread_return);
+    if (rc != 0) {
+        return ThreadError { rc };
+    }
+
+    m_tid = 0;
+    if constexpr (IsVoid<T>::value)
+        return {};
+    else
+        return { static_cast<T>(thread_return) };
+}
 
 }
