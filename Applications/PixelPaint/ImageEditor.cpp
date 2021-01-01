@@ -27,6 +27,7 @@
 #include "ImageEditor.h"
 #include "Image.h"
 #include "Layer.h"
+#include "MoveTool.h"
 #include "Tool.h"
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
@@ -203,7 +204,7 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     if (!m_active_tool)
         return;
 
-    if (m_active_tool->is_move_tool()) {
+    if (is<MoveTool>(*m_active_tool)) {
         if (auto* other_layer = layer_at_editor_position(event.position())) {
             set_active_layer(other_layer);
         }

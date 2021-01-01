@@ -36,9 +36,6 @@ public:
     virtual ~PickerTool() override;
 
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-
-private:
-    virtual const char* class_name() const override { return "PickerTool"; }
 };
 
 }

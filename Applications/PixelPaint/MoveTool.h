@@ -42,9 +42,6 @@ public:
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
 private:
-    virtual const char* class_name() const override { return "MoveTool"; }
-    virtual bool is_move_tool() const override { return true; }
-
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;
