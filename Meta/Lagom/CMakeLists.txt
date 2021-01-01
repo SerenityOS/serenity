@@ -117,6 +117,11 @@ if (BUILD_LAGOM)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
+        add_executable(test-compress_lagom ../../Userland/test-compress.cpp)
+        set_target_properties(test-compress_lagom PROPERTIES OUTPUT_NAME test-compress)
+        target_link_libraries(test-compress_lagom Lagom)
+        target_link_libraries(test-compress_lagom stdc++)
+
         add_executable(disasm_lagom ../../Userland/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
         target_link_libraries(disasm_lagom Lagom)
