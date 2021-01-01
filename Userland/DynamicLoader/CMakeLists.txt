@@ -16,7 +16,7 @@ list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".+crt0.+.cpp")
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -pie -fpic -DNO_TLS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
 
 add_executable(Loader.so ${SOURCES})
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
