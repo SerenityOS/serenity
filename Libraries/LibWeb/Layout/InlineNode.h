@@ -38,9 +38,6 @@ public:
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const override;
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
-
-private:
-    virtual bool is_inline_node() const final { return true; }
 };
 
 }

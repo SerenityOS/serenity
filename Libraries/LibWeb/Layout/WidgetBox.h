@@ -38,8 +38,6 @@ public:
     GUI::Widget& widget() { return m_widget; }
     const GUI::Widget& widget() const { return m_widget; }
 
-    virtual bool is_widget() const final { return true; }
-
     void update_widget();
 
 private:

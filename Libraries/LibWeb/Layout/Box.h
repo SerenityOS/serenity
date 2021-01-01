@@ -112,8 +112,6 @@ protected:
     Vector<LineBox> m_line_boxes;
 
 private:
-    virtual bool is_box() const final { return true; }
-
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;
 

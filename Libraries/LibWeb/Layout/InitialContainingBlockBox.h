@@ -49,8 +49,6 @@ public:
 
     void did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect&);
 
-    virtual bool is_initial_containing_block() const override { return true; }
-
     void build_stacking_context_tree();
 
     void recompute_selection_states();

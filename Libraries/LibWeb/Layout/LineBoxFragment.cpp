@@ -75,7 +75,7 @@ const Gfx::FloatRect LineBoxFragment::absolute_rect() const
 
 int LineBoxFragment::text_index_at(float x) const
 {
-    if (!layout_node().is_text())
+    if (!is<TextNode>(layout_node()))
         return 0;
     auto& layout_text = downcast<TextNode>(layout_node());
     auto& font = layout_text.specified_style().font();
@@ -108,7 +108,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     auto selection = layout_node().root().selection().normalized();
     if (!selection.is_valid())
         return {};
-    if (!layout_node().is_text())
+    if (!is<TextNode>(layout_node()))
         return {};
 
     const auto start_index = m_start;

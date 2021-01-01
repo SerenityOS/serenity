@@ -36,9 +36,6 @@ public:
     virtual ~TableRowGroupBox() override;
 
     size_t column_count() const;
-
-private:
-    virtual bool is_table_row_group() const override { return true; }
 };
 
 }

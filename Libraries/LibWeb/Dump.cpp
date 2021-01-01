@@ -141,7 +141,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         color_off = "\033[0m";
     }
 
-    if (!layout_node.is_box()) {
+    if (!is<Layout::Box>(layout_node)) {
         builder.appendff("{}{}{} <{}{}{}>",
             nonbox_color_on,
             layout_node.class_name(),
@@ -205,7 +205,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         builder.append("\n");
     }
 
-    if (layout_node.is_block() && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
+    if (is<Layout::BlockBox>(layout_node) && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
         auto& block = static_cast<const Layout::BlockBox&>(layout_node);
         for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
@@ -231,7 +231,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
                     fragment.start(),
                     fragment.length(),
                     enclosing_int_rect(fragment.absolute_rect()).to_string());
-                if (fragment.layout_node().is_text()) {
+                if (is<Layout::TextNode>(fragment.layout_node())) {
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  ");
                     auto& layout_text = static_cast<const Layout::TextNode&>(fragment.layout_node());

@@ -48,7 +48,7 @@ BlockFormattingContext::~BlockFormattingContext()
 
 bool BlockFormattingContext::is_initial() const
 {
-    return context_box().is_initial_containing_block();
+    return is<InitialContainingBlockBox>(context_box());
 }
 
 void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
@@ -85,7 +85,7 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
 
 void BlockFormattingContext::compute_width(Box& box)
 {
-    if (box.is_replaced()) {
+    if (is<ReplacedBox>(box)) {
         // FIXME: This should not be done *by* ReplacedBox
         auto& replaced = downcast<ReplacedBox>(box);
         replaced.prepare_for_replaced_layout();
@@ -414,7 +414,7 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& 
 
 void BlockFormattingContext::compute_height(Box& box)
 {
-    if (box.is_replaced()) {
+    if (is<ReplacedBox>(box)) {
         compute_height_for_block_level_replaced_element_in_normal_flow(downcast<ReplacedBox>(box));
         return;
     }
@@ -471,9 +471,9 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
         layout_inside(child_box, layout_mode);
         compute_height(child_box);
 
-        if (child_box.is_replaced())
+        if (is<ReplacedBox>(child_box))
             place_block_level_replaced_element_in_normal_flow(child_box, box);
-        else if (child_box.is_block())
+        else if (is<BlockBox>(child_box))
             place_block_level_non_replaced_element_in_normal_flow(child_box, box);
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!

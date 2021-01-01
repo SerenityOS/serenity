@@ -165,7 +165,7 @@ void Box::set_containing_line_box_fragment(LineBoxFragment& fragment)
 StackingContext* Box::enclosing_stacking_context()
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (!ancestor->is_box())
+        if (!is<Box>(ancestor))
             continue;
         auto& ancestor_box = downcast<Box>(*ancestor);
         if (!ancestor_box.establishes_stacking_context())
