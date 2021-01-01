@@ -342,16 +342,16 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional Format");
     conditional_fmt_tab.load_from_gml(cond_fmt_gml);
     {
-        auto& view = static_cast<Spreadsheet::ConditionsView&>(*conditional_fmt_tab.find_descendant_by_name("conditions_view"));
+        auto& view = *conditional_fmt_tab.find_descendant_of_type_named<Spreadsheet::ConditionsView>("conditions_view");
         view.set_formats(&m_conditional_formats);
 
-        auto& add_button = static_cast<GUI::Button&>(*conditional_fmt_tab.find_descendant_by_name("add_button"));
+        auto& add_button = *conditional_fmt_tab.find_descendant_of_type_named<GUI::Button>("add_button");
         add_button.on_click = [&](auto) {
             view.add_format();
         };
 
         // FIXME: Disable this when empty.
-        auto& remove_button = static_cast<GUI::Button&>(*conditional_fmt_tab.find_descendant_by_name("remove_button"));
+        auto& remove_button = *conditional_fmt_tab.find_descendant_of_type_named<GUI::Button>("remove_button");
         remove_button.on_click = [&](auto) {
             view.remove_top();
         };
@@ -415,9 +415,9 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
 {
     load_from_gml(cond_fmt_view_gml);
 
-    auto& fg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("foreground_input"));
-    auto& bg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("background_input"));
-    auto& formula_editor = *static_cast<GUI::TextEditor*>(find_descendant_by_name("formula_editor"));
+    auto& fg_input = *find_descendant_of_type_named<GUI::ColorInput>("foreground_input");
+    auto& bg_input = *find_descendant_of_type_named<GUI::ColorInput>("background_input");
+    auto& formula_editor = *find_descendant_of_type_named<GUI::TextEditor>("formula_editor");
 
     if (m_format.foreground_color.has_value())
         fg_input.set_color(m_format.foreground_color.value());

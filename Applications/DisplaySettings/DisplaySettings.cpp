@@ -93,9 +93,9 @@ void DisplaySettingsWidget::create_frame()
     m_root_widget = GUI::Widget::construct();
     m_root_widget->load_from_gml(display_settings_window_gml);
 
-    m_monitor_widget = static_cast<DisplaySettings::MonitorWidget&>(*m_root_widget->find_descendant_by_name("monitor_widget"));
+    m_monitor_widget = *m_root_widget->find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
-    m_wallpaper_combo = static_cast<GUI::ComboBox&>(*m_root_widget->find_descendant_by_name("wallpaper_combo"));
+    m_wallpaper_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("wallpaper_combo");
     m_wallpaper_combo->set_only_allow_values_from_model(true);
     m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
@@ -120,7 +120,7 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    auto& button = static_cast<GUI::Button&>(*m_root_widget->find_descendant_by_name("wallpaper_open_button"));
+    auto& button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.on_click = [this](auto) {
@@ -134,7 +134,7 @@ void DisplaySettingsWidget::create_frame()
         m_wallpaper_combo->set_only_allow_values_from_model(true);
     };
 
-    m_mode_combo = static_cast<GUI::ComboBox&>(*m_root_widget->find_descendant_by_name("mode_combo"));
+    m_mode_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
@@ -142,7 +142,7 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    m_resolution_combo = static_cast<GUI::ComboBox&>(*m_root_widget->find_descendant_by_name("resolution_combo"));
+    m_resolution_combo = *m_root_widget->find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
     m_resolution_combo->set_only_allow_values_from_model(true);
     m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
@@ -150,7 +150,7 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    m_color_input = static_cast<GUI::ColorInput&>(*m_root_widget->find_descendant_by_name("color_input"));
+    m_color_input = *m_root_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_color_picker_title("Select color for desktop");
     m_color_input->on_change = [this] {
@@ -158,18 +158,18 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
-    auto& ok_button = static_cast<GUI::Button&>(*m_root_widget->find_descendant_by_name("ok_button"));
+    auto& ok_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [this](auto) {
         send_settings_to_window_server();
         GUI::Application::the()->quit();
     };
 
-    auto& cancel_button = static_cast<GUI::Button&>(*m_root_widget->find_descendant_by_name("cancel_button"));
+    auto& cancel_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [](auto) {
         GUI::Application::the()->quit();
     };
 
-    auto& apply_button = static_cast<GUI::Button&>(*m_root_widget->find_descendant_by_name("apply_button"));
+    auto& apply_button = *m_root_widget->find_descendant_of_type_named<GUI::Button>("apply_button");
     apply_button.on_click = [this](auto) {
         send_settings_to_window_server();
     };

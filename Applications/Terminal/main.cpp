@@ -188,9 +188,9 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& settings = window->set_main_widget<GUI::Widget>();
     settings.load_from_gml(terminal_settings_window_gml);
 
-    auto& beep_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("beep_bell_radio"));
-    auto& visual_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("visual_bell_radio"));
-    auto& no_bell_radio = static_cast<GUI::RadioButton&>(*settings.find_descendant_by_name("no_bell_radio"));
+    auto& beep_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("beep_bell_radio");
+    auto& visual_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("visual_bell_radio");
+    auto& no_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
 
     switch (terminal.bell_mode()) {
     case TerminalWidget::BellMode::Visible:
@@ -214,13 +214,13 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
         terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
     };
 
-    auto& slider = static_cast<GUI::OpacitySlider&>(*settings.find_descendant_by_name("background_opacity_slider"));
+    auto& slider = *settings.find_descendant_of_type_named<GUI::OpacitySlider>("background_opacity_slider");
     slider.on_change = [&terminal](int value) {
         terminal.set_opacity(value);
     };
     slider.set_value(terminal.opacity());
 
-    auto& history_size_spinbox = static_cast<GUI::SpinBox&>(*settings.find_descendant_by_name("history_size_spinbox"));
+    auto& history_size_spinbox = *settings.find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
     history_size_spinbox.set_value(terminal.max_history_size());
     history_size_spinbox.on_change = [&terminal](int value) {
         terminal.set_max_history_size(value);
