@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(RangePrototype::set_start)
     if (vm.exception())
         return {};
 
-    if (!arg0->is_node_wrapper()) {
+    if (!is<NodeWrapper>(arg0)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Node");
         return {};
     }
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(RangePrototype::set_end)
     if (vm.exception())
         return {};
 
-    if (!arg0->is_node_wrapper()) {
+    if (!is<NodeWrapper>(arg0)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Node");
         return {};
     }
