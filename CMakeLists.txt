@@ -16,10 +16,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
 
+# Central location for all custom options used in the Serenity build.
 option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" FALSE)
 option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
 option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
 option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" FALSE)
+option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" FALSE)
 
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
@@ -61,9 +63,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_compile_options(-Wno-overloaded-virtual)
 endif()
 
-if (ALL_THE_DEBUG_MACROS)
+if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
-endif(ALL_THE_DEBUG_MACROS)
+endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
 include_directories(Libraries)
 include_directories(.)
