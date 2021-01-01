@@ -32,11 +32,21 @@
 
 namespace AK {
 
-struct IntegralComparator {
-    constexpr auto operator()(auto& lhs, auto& rhs) { return lhs - rhs; }
+struct DefaultComparator {
+    template<typename T, typename S>
+    constexpr int operator()(T& lhs, S& rhs)
+    {
+        if (lhs > rhs)
+            return 1;
+
+        if (lhs < rhs)
+            return -1;
+
+        return 0;
+    }
 };
 
-template<typename Container, typename Needle, typename Comparator = IntegralComparator>
+template<typename Container, typename Needle, typename Comparator = DefaultComparator>
 constexpr auto binary_search(
     Container&& haystack,
     Needle&& needle,
@@ -52,8 +62,10 @@ constexpr auto binary_search(
     size_t low = 0;
     size_t high = haystack.size() - 1;
     while (low <= high) {
-        size_t middle = low + ((high - low) / 2);
-        auto comparison = comparator(needle, haystack[middle]);
+        size_t middle = low + (high - low) / 2;
+
+        int comparison = comparator(needle, haystack[middle]);
+
         if (comparison < 0)
             if (middle != 0)
                 high = middle - 1;
