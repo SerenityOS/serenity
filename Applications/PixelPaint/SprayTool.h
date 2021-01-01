@@ -45,7 +45,6 @@ public:
     virtual GUI::Widget* get_properties_widget() override;
 
 private:
-    virtual const char* class_name() const override { return "SprayTool"; }
     void paint_it();
 
     RefPtr<GUI::Widget> m_properties_widget;

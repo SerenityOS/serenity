@@ -45,7 +45,6 @@ public:
 
 private:
     Gfx::Color get_color() const;
-    virtual const char* class_name() const override { return "EraseTool"; }
     Gfx::IntRect build_rect(const Gfx::IntPoint& pos, const Gfx::IntRect& widget_rect);
     RefPtr<GUI::Menu> m_context_menu;
 

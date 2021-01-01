@@ -38,8 +38,6 @@ class Tool {
 public:
     virtual ~Tool();
 
-    virtual const char* class_name() const = 0;
-
     virtual void on_mousedown(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
     virtual void on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
     virtual void on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
@@ -49,8 +47,6 @@ public:
     virtual void on_keydown(GUI::KeyEvent&) { }
     virtual void on_keyup(GUI::KeyEvent&) { }
     virtual GUI::Widget* get_properties_widget() { return nullptr; }
-
-    virtual bool is_move_tool() const { return false; }
 
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);

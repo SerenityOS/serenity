@@ -47,7 +47,6 @@ private:
     bool m_was_drawing { false };
     Gfx::IntPoint m_last_position;
 
-    virtual const char* class_name() const override { return "BrushTool"; }
     void draw_line(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& start, const Gfx::IntPoint& end);
     void draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& point);
 };

@@ -44,8 +44,6 @@ public:
     virtual GUI::Widget* get_properties_widget() override;
 
 private:
-    virtual const char* class_name() const override { return "PenTool"; }
-
     Gfx::IntPoint m_last_drawing_event_position { -1, -1 };
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Widget> m_properties_widget;
