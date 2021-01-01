@@ -88,7 +88,7 @@ pid_t Process::sys$fork(RegisterState& regs)
 #ifdef FORK_DEBUG
             dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
-            auto region_clone = region.clone();
+            auto region_clone = region.clone(*child);
             if (!region_clone) {
                 dbg() << "fork: Cannot clone region, insufficient memory";
                 // TODO: tear down new process?

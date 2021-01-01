@@ -86,7 +86,7 @@ void Region::unregister_purgeable_page_ranges()
     }
 }
 
-OwnPtr<Region> Region::clone()
+OwnPtr<Region> Region::clone(Process& new_owner)
 {
     ASSERT(Process::current());
 
@@ -98,7 +98,7 @@ OwnPtr<Region> Region::clone()
         auto new_vmobject = AnonymousVMObject::create_with_size(size(), AllocationStrategy::Reserve); // TODO: inherit committed non-volatile areas?
         if (!new_vmobject)
             return {};
-        auto zeroed_region = Region::create_user_accessible(get_owner().ptr(), m_range, new_vmobject.release_nonnull(), 0, m_name, m_access);
+        auto zeroed_region = Region::create_user_accessible(&new_owner, m_range, new_vmobject.release_nonnull(), 0, m_name, m_access);
         zeroed_region->copy_purgeable_page_ranges(*this);
         zeroed_region->set_mmap(m_mmap);
         zeroed_region->set_inherit_mode(m_inherit_mode);
@@ -114,7 +114,7 @@ OwnPtr<Region> Region::clone()
             ASSERT(vmobject().is_shared_inode());
 
         // Create a new region backed by the same VMObject.
-        auto region = Region::create_user_accessible(get_owner().ptr(), m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
+        auto region = Region::create_user_accessible(&new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
         if (m_vmobject->is_anonymous())
             region->copy_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
@@ -134,7 +134,7 @@ OwnPtr<Region> Region::clone()
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
-    auto clone_region = Region::create_user_accessible(get_owner().ptr(), m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access);
+    auto clone_region = Region::create_user_accessible(&new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access);
     if (m_vmobject->is_anonymous())
         clone_region->copy_purgeable_page_ranges(*this);
     if (m_stack) {
