@@ -634,12 +634,10 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
             return KResult(-ENOEXEC);
         }
 
-        // FIXME: Uncomment this
-        //        How do we get gcc to not insert an interpreter section to /usr/lib/Loader.so itself?
-        // if (!interpreter_interpreter_path.is_empty()) {
-        //     dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
-        //     return KResult(-ELOOP);
-        // }
+        if (!interpreter_interpreter_path.is_empty()) {
+            dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
+            return KResult(-ELOOP);
+        }
 
         return interpreter_description;
     }
