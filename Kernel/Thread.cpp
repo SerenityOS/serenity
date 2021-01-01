@@ -25,6 +25,7 @@
  */
 
 #include <AK/Demangle.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -50,7 +51,11 @@ Thread::Thread(NonnullRefPtr<Process> process)
     : m_process(move(process))
     , m_name(m_process->name())
 {
-    if (m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0) {
+    bool is_first_thread = m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    ArmedScopeGuard guard([&]() {
+        drop_thread_count(is_first_thread);
+    });
+    if (is_first_thread) {
         // First thread gets TID == PID
         m_tid = m_process->pid().value();
     } else {
@@ -112,6 +117,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     // The finalizer is responsible for dropping this reference once this
     // thread is ready to be cleaned up.
     ref();
+    guard.disarm();
 
     if (m_process->pid() != 0)
         Scheduler::init_thread(*this);
@@ -374,11 +380,15 @@ void Thread::finalize()
         dbg() << backtrace_impl();
 
     kfree_aligned(m_fpu_state);
+    drop_thread_count(false);
+}
 
+void Thread::drop_thread_count(bool initializing_first_thread)
+{
     auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
 
     ASSERT(thread_cnt_before != 0);
-    if (thread_cnt_before == 1)
+    if (!initializing_first_thread && thread_cnt_before == 1)
         process().finalize();
 }
 
