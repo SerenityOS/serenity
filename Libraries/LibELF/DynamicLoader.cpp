@@ -162,8 +162,6 @@ RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t tota
     m_dynamic_object = DynamicObject::construct(m_text_segment_load_address, m_dynamic_section_address);
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size);
-    ASSERT(m_global_symbol_lookup_func);
-    m_dynamic_object->m_global_symbol_lookup_func = m_global_symbol_lookup_func;
 
     auto rc = load_stage_2(flags, total_tls_size);
     if (!rc) {

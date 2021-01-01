@@ -276,9 +276,10 @@ public:
         bool found { false };
         FlatPtr value { 0 };
         FlatPtr address { 0 };
+        unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
-    Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
+    SymbolLookupResult lookup_symbol(const char* name) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     Elf32_Addr patch_plt_entry(u32 relocation_offset);

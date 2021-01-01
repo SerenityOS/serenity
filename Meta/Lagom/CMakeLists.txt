@@ -44,6 +44,10 @@ file(GLOB LIBREGEX_LIBC_SOURCES "../../Libraries/LibRegex/C/Regex.cpp")
 file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibRegex/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibCore/*.cpp")
 file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibELF/*.cpp")
+# There's no way we can reliably make this cross platform
+list(REMOVE_ITEM LIBELF_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Libraries/LibELF/DynamicLinker.cpp")
+
+
 file(GLOB LIBGEMINI_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibGemini/*.cpp")
 file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibGfx/*.cpp")
 file(GLOB LIBHTTP_SOURCES CONFIGURE_DEPENDS "../../Libraries/LibHTTP/*.cpp")
