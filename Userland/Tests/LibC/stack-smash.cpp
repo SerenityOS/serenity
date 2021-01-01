@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Brian Gianforcaro <b.gianfo@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <cstdio>
 
-#include <sys/cdefs.h>
+// Note: Needs to be 'noline' so stack canary isn't optimized out.
+static void __attribute__((noinline)) smasher(char* string)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+    for (int i = 0; i < 256; i++) {
+        string[i] = 'A';
+    }
+#pragma GCC diagnostic pop
+}
 
-__BEGIN_DECLS
+// Note: Needs to be 'noline' so stack canary isn't optimized out.
+static void __attribute__((noinline)) stack_to_smash()
+{
+    char string[8] = {};
+    smasher(string);
+}
 
-typedef void (*AtExitFunction)(void*);
+int main()
+{
+    puts("[+] Starting the stack smash...");
+    stack_to_smash();
+    puts("[+] Stack smash wasn't detected!");
 
-extern void __libc_init();
-extern void __malloc_init();
-extern void __stdio_init();
-extern void _init();
-extern bool __environ_is_malloced;
-extern bool __stdio_is_initialized;
-
-int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
-void __cxa_finalize(void* dso_handle);
-[[noreturn]] void __cxa_pure_virtual() __attribute__((weak));
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail_local();
-
-__END_DECLS
+    return 0;
+}
