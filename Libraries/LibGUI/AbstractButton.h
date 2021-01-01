@@ -73,8 +73,6 @@ protected:
     void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment);
 
 private:
-    virtual bool is_abstract_button() const final { return true; }
-
     String m_text;
     bool m_checked { false };
     bool m_checkable { false };
