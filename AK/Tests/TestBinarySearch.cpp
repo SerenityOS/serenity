@@ -125,4 +125,16 @@ TEST_CASE(constexpr_array_search)
     static_assert(binary_search(array, 3) == nullptr);
 }
 
+TEST_CASE(unsigned_to_signed_regression)
+{
+    const Array<u32, 5> input { 0, 1, 2, 3, 4 };
+
+    // The algorithm computes 1 - input[2] = -1, and if this is (incorrectly) cast
+    // to an unsigned then it will look in the wrong direction and miss the 1.
+
+    size_t nearby_index = 1;
+    EXPECT_EQ(binary_search(input, 1u, &nearby_index), &input[1]);
+    EXPECT_EQ(nearby_index, 1u);
+}
+
 TEST_MAIN(BinarySearch)
