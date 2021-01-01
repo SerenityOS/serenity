@@ -64,11 +64,13 @@ private:
         Vector<String> class_names;
         Vector<State> previous_states;
         bool should_push_state { true };
+        GUI::GMLToken* last_seen_token { nullptr };
 
         for (auto& token : all_tokens) {
             if (token.m_start.line > cursor.line() || (token.m_start.line == cursor.line() && token.m_start.column > cursor.column()))
                 break;
 
+            last_seen_token = &token;
             switch (state) {
             case Free:
                 if (token.m_type == GUI::GMLToken::Type::ClassName) {
@@ -102,9 +104,12 @@ private:
                 }
                 break;
             case InIdentifier:
-                state = AfterIdentifier;
+                if (token.m_type == GUI::GMLToken::Type::Colon)
+                    state = AfterIdentifier;
                 break;
             case AfterIdentifier:
+                if (token.m_type == GUI::GMLToken::Type::RightCurly || token.m_type == GUI::GMLToken::Type::LeftCurly)
+                    break;
                 if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
                     previous_states.append(AfterClassName);
                     state = Free;
@@ -119,6 +124,11 @@ private:
         Vector<GUI::AutocompleteProvider::Entry> entries;
         switch (state) {
         case Free:
+            if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+                // After some token, but with extra space, not on a new line.
+                // Nothing to put here.
+                break;
+            }
             GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
                 entries.empend(String::formatted("@{}", registration.class_name()), 0u);
             });
@@ -126,6 +136,11 @@ private:
         case InClassName:
             if (class_names.is_empty())
                 break;
+            if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+                // After a class name, but haven't seen braces.
+                // TODO: Suggest braces?
+                break;
+            }
             GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
                 if (registration.class_name().starts_with(class_names.last()))
                     entries.empend(registration.class_name(), class_names.last().length());
@@ -134,6 +149,11 @@ private:
         case InIdentifier:
             if (class_names.is_empty())
                 break;
+            if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+                // After an identifier, but with extra space
+                // TODO: Maybe suggest a colon?
+                break;
+            }
             if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
                 auto instance = registration->construct();
                 for (auto& it : instance->properties()) {
@@ -143,6 +163,13 @@ private:
             }
             break;
         case AfterClassName:
+            if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
+                if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column + 1 != cursor.column()) {
+                    // Inside braces, but on the same line as some other stuff (and not the continuation of one!)
+                    // The user expects nothing here.
+                    break;
+                }
+            }
             if (!class_names.is_empty()) {
                 if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
                     auto instance = registration->construct();
@@ -191,6 +218,7 @@ int main(int argc, char** argv)
 
     editor.set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
     editor.set_autocomplete_provider(make<GMLAutocompleteProvider>());
+    editor.set_should_autocomplete_automatically(true);
     editor.set_automatic_indentation_enabled(true);
     editor.set_text(R"~~~(@GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
