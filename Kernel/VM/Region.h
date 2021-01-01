@@ -100,7 +100,7 @@ public:
 
     PageFaultResponse handle_fault(const PageFault&);
 
-    OwnPtr<Region> clone();
+    OwnPtr<Region> clone(Process&);
 
     bool contains(VirtualAddress vaddr) const
     {
