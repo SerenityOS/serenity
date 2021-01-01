@@ -44,6 +44,7 @@ MultiView::MultiView()
     m_columns_view = add<ColumnsView>();
 
     for_each_view_implementation([&](auto& view) {
+        view.set_should_hide_unnecessary_scrollbars(true);
         view.on_activation = [this](auto& index) {
             if (on_activation)
                 on_activation(index);
