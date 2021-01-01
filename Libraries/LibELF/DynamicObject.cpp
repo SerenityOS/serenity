@@ -27,6 +27,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/exec_elf.h>
 #include <stdio.h>
@@ -406,12 +407,12 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
     }
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const char* name) const
+DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const char* name) const
 {
     auto res = hash_section().lookup_symbol(name);
     if (res.is_undefined())
         return {};
-    return SymbolLookupResult { true, res.value(), (FlatPtr)res.address().as_ptr(), this };
+    return SymbolLookupResult { true, res.value(), (FlatPtr)res.address().as_ptr(), res.bind(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::construct(VirtualAddress base_address, VirtualAddress dynamic_section_address)
@@ -450,10 +451,9 @@ DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const ELF::Dynami
     VERBOSE("looking up symbol: %s\n", symbol.name());
     if (!symbol.is_undefined()) {
         VERBOSE("symbol is defined in its object\n");
-        return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), &symbol.object() };
+        return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
     }
-    ASSERT(m_global_symbol_lookup_func);
-    return m_global_symbol_lookup_func(symbol.name());
+    return DynamicLinker::lookup_global_symbol(symbol.name());
 }
 
 } // end namespace ELF
