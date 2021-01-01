@@ -30,6 +30,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
@@ -163,6 +164,9 @@ public:
     const AutocompleteProvider* autocomplete_provider() const;
     void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
 
+    bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
+    void set_should_autocomplete_automatically(bool);
+
     bool is_in_drag_select() const { return m_in_drag_select; }
 
 protected:
@@ -211,6 +215,8 @@ private:
 
     void defer_reflow();
     void undefer_reflow();
+
+    void try_show_autocomplete();
 
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
@@ -323,8 +329,12 @@ private:
     OwnPtr<SyntaxHighlighter> m_highlighter;
     OwnPtr<AutocompleteProvider> m_autocomplete_provider;
     OwnPtr<AutocompleteBox> m_autocomplete_box;
+    bool m_should_keep_autocomplete_box { false };
+    size_t m_automatic_autocomplete_delay_ms { 800 };
 
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
+    RefPtr<Core::Timer> m_autocomplete_timer;
+
     Gfx::IntPoint m_last_mousemove_position;
 
     RefPtr<Gfx::Bitmap> m_icon;
