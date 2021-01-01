@@ -60,7 +60,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element(); }
-AK_END_TYPE_TRAITS()

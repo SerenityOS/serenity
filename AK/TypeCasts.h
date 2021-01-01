@@ -30,30 +30,16 @@
 
 namespace AK {
 
-template<typename OutputType, typename InputType, bool is_base_type = IsBaseOf<OutputType, InputType>::value>
-struct TypeTraits {
-    static bool has_type(InputType&)
-    {
-        static_assert(IsVoid<OutputType>::value, "No TypeTraits for this type");
-        return false;
-    }
-};
-
 template<typename OutputType, typename InputType>
-struct TypeTraits<OutputType, InputType, true> {
-    static bool has_type(InputType&) { return true; }
-};
+inline bool is(InputType& input)
+{
+    return dynamic_cast<CopyConst<InputType, OutputType>*>(&input);
+}
 
 template<typename OutputType, typename InputType>
 inline bool is(InputType* input)
 {
-    return input && TypeTraits<const OutputType, const InputType>::has_type(*input);
-}
-
-template<typename OutputType, typename InputType>
-inline bool is(InputType& input)
-{
-    return TypeTraits<const OutputType, const InputType>::has_type(input);
+    return input && is<OutputType>(*input);
 }
 
 template<typename OutputType, typename InputType>
@@ -72,22 +58,7 @@ inline CopyConst<InputType, OutputType>& downcast(InputType& input)
     return static_cast<CopyConst<InputType, OutputType>&>(input);
 }
 
-#define AK_BEGIN_TYPE_TRAITS(ClassName)                                   \
-    namespace AK {                                                        \
-    template<typename InputType>                                          \
-    class TypeTraits<const ClassName, InputType, false> {                 \
-    public:                                                               \
-        static bool has_type(InputType& input) { return is_type(input); } \
-                                                                          \
-    private:
-
-#define AK_END_TYPE_TRAITS() \
-    }                        \
-    ;                        \
-    }
-
 }
 
 using AK::downcast;
 using AK::is;
-using AK::TypeTraits;

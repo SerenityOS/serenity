@@ -42,7 +42,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLUnknownElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_unknown_html_element(); }
-AK_END_TYPE_TRAITS()

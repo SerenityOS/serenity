@@ -53,7 +53,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(GUI::RadioButton)
-static bool is_type(const Core::Object& object) { return is<GUI::Widget>(object) && downcast<GUI::Widget>(object).is_radio_button(); }
-AK_END_TYPE_TRAITS()

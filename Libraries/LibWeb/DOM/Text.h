@@ -46,7 +46,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::Text)
-static bool is_type(const Web::DOM::Node& node) { return node.is_text(); }
-AK_END_TYPE_TRAITS()

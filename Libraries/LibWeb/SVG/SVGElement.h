@@ -44,7 +44,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_svg_element(); }
-AK_END_TYPE_TRAITS()

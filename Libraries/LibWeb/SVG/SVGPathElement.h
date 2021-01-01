@@ -122,7 +122,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGPathElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_svg_element() && downcast<Web::SVG::SVGElement>(node).local_name() == Web::SVG::TagNames::path; }
-AK_END_TYPE_TRAITS()

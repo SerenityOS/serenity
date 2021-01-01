@@ -66,7 +66,3 @@ inline void ParentNode::for_each_child(Callback callback)
 }
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::ParentNode)
-static bool is_type(const Web::DOM::Node& node) { return node.is_parent_node(); }
-AK_END_TYPE_TRAITS()

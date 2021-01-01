@@ -267,7 +267,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(GUI::Window)
-static bool is_type(const Core::Object& object) { return object.is_window(); }
-AK_END_TYPE_TRAITS()
