@@ -95,7 +95,7 @@ private:
 
 ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
 {
-    if (!region.is_mmap())
+    if (!is<MmapRegion>(region))
         return nullptr;
     if (!static_cast<const MmapRegion&>(region).is_malloc_block())
         return nullptr;

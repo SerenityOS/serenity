@@ -44,7 +44,7 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
     ASSERT(!find_region({ 0x23, region->base() }));
 
     // FIXME: More sanity checks pls
-    if (region->is_shared_buffer())
+    if (is<SharedBufferRegion>(*region))
         m_shbuf_regions.set(static_cast<SharedBufferRegion*>(region.ptr())->shbuf_id(), region.ptr());
 
     size_t first_page_in_region = region->base() / PAGE_SIZE;
@@ -63,7 +63,7 @@ void SoftMMU::remove_region(Region& region)
         m_page_to_region_map[first_page_in_region + i] = nullptr;
     }
 
-    if (region.is_shared_buffer())
+    if (is<SharedBufferRegion>(region))
         m_shbuf_regions.remove(static_cast<SharedBufferRegion&>(region).shbuf_id());
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
 }
@@ -253,7 +253,7 @@ bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueW
     if (!region->contains(address.offset() + size - 1))
         return false;
 
-    if (region->is_mmap() && static_cast<const MmapRegion&>(*region).is_malloc_block()) {
+    if (is<MmapRegion>(*region) && static_cast<const MmapRegion&>(*region).is_malloc_block()) {
         if (auto* tracer = m_emulator.malloc_tracer()) {
             // FIXME: Add a way to audit an entire range of memory instead of looping here!
             for (size_t i = 0; i < size; ++i) {
@@ -278,7 +278,7 @@ bool SoftMMU::fast_fill_memory32(X86::LogicalAddress address, size_t count, Valu
     if (!region->contains(address.offset() + (count * sizeof(u32)) - 1))
         return false;
 
-    if (region->is_mmap() && static_cast<const MmapRegion&>(*region).is_malloc_block()) {
+    if (is<MmapRegion>(*region) && static_cast<const MmapRegion&>(*region).is_malloc_block()) {
         if (auto* tracer = m_emulator.malloc_tracer()) {
             // FIXME: Add a way to audit an entire range of memory instead of looping here!
             for (size_t i = 0; i < count; ++i) {

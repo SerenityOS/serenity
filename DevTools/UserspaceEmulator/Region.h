@@ -27,6 +27,7 @@
 #pragma once
 
 #include "ValueWithShadow.h"
+#include <AK/TypeCasts.h>
 #include <AK/Types.h>
 
 namespace UserspaceEmulator {
@@ -54,8 +55,6 @@ public:
     virtual ValueWithShadow<u64> read64(u32 offset) = 0;
 
     virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
-    virtual bool is_shared_buffer() const { return false; }
-    virtual bool is_mmap() const { return false; }
 
     bool is_stack() const { return m_stack; }
     void set_stack(bool b) { m_stack = b; }
