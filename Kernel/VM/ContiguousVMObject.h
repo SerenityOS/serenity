@@ -52,7 +52,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Kernel::ContiguousVMObject)
-static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_contiguous(); }
-AK_END_TYPE_TRAITS()

@@ -29,7 +29,6 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>

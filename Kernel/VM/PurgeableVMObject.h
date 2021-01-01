@@ -65,7 +65,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Kernel::PurgeableVMObject)
-static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_purgeable(); }
-AK_END_TYPE_TRAITS()

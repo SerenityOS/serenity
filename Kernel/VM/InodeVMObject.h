@@ -67,7 +67,3 @@ protected:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Kernel::InodeVMObject)
-static bool is_type(const Kernel::VMObject& vmobject) { return vmobject.is_inode(); }
-AK_END_TYPE_TRAITS()
