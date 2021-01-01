@@ -200,6 +200,20 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
             return false;
         }
 
+        if (program_header.p_memsz <= 0 && (program_header.p_type == PT_TLS || program_header.p_type == PT_LOAD)) {
+            if (verbose)
+                dbgln("Program header ({}) has invalid size in memory ({})", header_index, program_header.p_memsz);
+            return false;
+        }
+
+        if (program_header.p_type == PT_LOAD && program_header.p_align != PAGE_SIZE) {
+            if (elf_header.e_type != ET_CORE) {
+                if (verbose)
+                    dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not equal to page size ({})", header_index, program_header.p_align, PAGE_SIZE);
+                return false;
+            }
+        }
+
         switch (program_header.p_type) {
         case PT_INTERP:
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
