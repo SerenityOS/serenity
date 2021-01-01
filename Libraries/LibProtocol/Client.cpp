@@ -57,9 +57,9 @@ RefPtr<Download> Client::start_download(const String& method, const String& url,
 
     auto response = send_sync<Messages::ProtocolServer::StartDownload>(method, url, header_dictionary, ByteBuffer::copy(request_body));
     auto download_id = response->download_id();
-    auto response_fd = response->response_fd().fd();
-    if (download_id < 0 || response_fd < 0)
+    if (download_id < 0 || !response->response_fd().has_value())
         return nullptr;
+    auto response_fd = response->response_fd().value().fd();
     auto download = Download::create_from_id({}, *this, download_id);
     download->set_download_fd({}, response_fd);
     m_downloads.set(download_id, download);
