@@ -46,8 +46,6 @@ public:
     virtual void on_keyup(GUI::KeyEvent&) override;
 
 private:
-    virtual const char* class_name() const override { return "LineTool"; }
-
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_line_start_position;
     Gfx::IntPoint m_line_end_position;

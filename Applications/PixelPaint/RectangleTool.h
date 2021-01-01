@@ -51,7 +51,6 @@ private:
         Gradient,
     };
 
-    virtual const char* class_name() const override { return "RectangleTool"; }
     void draw_using(GUI::Painter&, const Gfx::IntRect&);
 
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
