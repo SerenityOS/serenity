@@ -219,7 +219,7 @@ size_t Region::amount_resident() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto* page = physical_page(i);
-        if (page && !page->is_shared_zero_page())
+        if (page && !page->is_shared_zero_page() && !page->is_lazy_committed_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -230,7 +230,7 @@ size_t Region::amount_shared() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto* page = physical_page(i);
-        if (page && page->ref_count() > 1 && !page->is_shared_zero_page())
+        if (page && page->ref_count() > 1 && !page->is_shared_zero_page() && !page->is_lazy_committed_page())
             bytes += PAGE_SIZE;
     }
     return bytes;
