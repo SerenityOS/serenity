@@ -27,8 +27,13 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/RegExpObject.h>
+#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -90,17 +95,17 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         tag = "Array";
     } else if (this_object->is_function()) {
         tag = "Function";
-    } else if (this_object->is_error()) {
+    } else if (is<Error>(this_object)) {
         tag = "Error";
-    } else if (this_object->is_boolean_object()) {
+    } else if (is<BooleanObject>(this_object)) {
         tag = "Boolean";
-    } else if (this_object->is_number_object()) {
+    } else if (is<NumberObject>(this_object)) {
         tag = "Number";
-    } else if (this_object->is_string_object()) {
+    } else if (is<StringObject>(this_object)) {
         tag = "String";
-    } else if (this_object->is_date()) {
+    } else if (is<Date>(this_object)) {
         tag = "Date";
-    } else if (this_object->is_regexp_object()) {
+    } else if (is<RegExpObject>(this_object)) {
         tag = "RegExp";
     } else {
         tag = "Object";

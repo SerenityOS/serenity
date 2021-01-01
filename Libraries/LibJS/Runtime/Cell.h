@@ -30,6 +30,7 @@
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Forward.h>
 
 namespace JS {

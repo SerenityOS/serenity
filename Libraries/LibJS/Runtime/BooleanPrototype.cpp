@@ -50,30 +50,28 @@ BooleanPrototype::~BooleanPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
 {
-    auto this_object = vm.this_value(global_object);
-    if (this_object.is_boolean()) {
-        return js_string(vm, this_object.as_bool() ? "true" : "false");
-    }
-    if (!this_object.is_object() || !this_object.as_object().is_boolean_object()) {
+    auto this_value = vm.this_value(global_object);
+    if (this_value.is_boolean())
+        return js_string(vm, this_value.as_bool() ? "true" : "false");
+    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Boolean");
         return {};
     }
 
-    bool bool_value = static_cast<BooleanObject&>(this_object.as_object()).value_of().as_bool();
+    bool bool_value = static_cast<const BooleanObject&>(this_value.as_object()).value_of().as_bool();
     return js_string(vm, bool_value ? "true" : "false");
 }
 
 JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
 {
-    auto this_object = vm.this_value(global_object);
-    if (this_object.is_boolean()) {
-        return this_object;
-    }
-    if (!this_object.is_object() || !this_object.as_object().is_boolean_object()) {
+    auto this_value = vm.this_value(global_object);
+    if (this_value.is_boolean())
+        return this_value;
+    if (!this_value.is_object() || !is<BooleanObject>(this_value.as_object())) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Boolean");
         return {};
     }
 
-    return static_cast<BooleanObject&>(this_object.as_object()).value_of();
+    return static_cast<const BooleanObject&>(this_value.as_object()).value_of();
 }
 }

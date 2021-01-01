@@ -230,9 +230,9 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 static void print_function(const JS::Object& object, HashTable<JS::Object*>&)
 {
     print_type(object.class_name());
-    if (object.is_script_function())
+    if (is<JS::ScriptFunction>(object))
         out(" {}", static_cast<const JS::ScriptFunction&>(object).name());
-    if (object.is_native_function())
+    else if (is<JS::NativeFunction>(object))
         out(" {}", static_cast<const JS::NativeFunction&>(object).name());
 }
 
@@ -357,23 +357,23 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         auto& object = value.as_object();
         if (object.is_function())
             return print_function(object, seen_objects);
-        if (object.is_date())
+        if (is<JS::Date>(object))
             return print_date(object, seen_objects);
-        if (object.is_error())
+        if (is<JS::Error>(object))
             return print_error(object, seen_objects);
-        if (object.is_regexp_object())
+        if (is<JS::RegExpObject>(object))
             return print_regexp_object(object, seen_objects);
-        if (object.is_proxy_object())
+        if (is<JS::ProxyObject>(object))
             return print_proxy_object(object, seen_objects);
-        if (object.is_array_buffer())
+        if (is<JS::ArrayBuffer>(object))
             return print_array_buffer(object, seen_objects);
         if (object.is_typed_array())
             return print_typed_array(object, seen_objects);
-        if (object.is_string_object())
+        if (is<JS::StringObject>(object))
             return print_primitive_wrapper_object("String", object, seen_objects);
-        if (object.is_number_object())
+        if (is<JS::NumberObject>(object))
             return print_primitive_wrapper_object("Number", object, seen_objects);
-        if (object.is_boolean_object())
+        if (is<JS::BooleanObject>(object))
             return print_primitive_wrapper_object("Boolean", object, seen_objects);
         return print_object(object, seen_objects);
     }

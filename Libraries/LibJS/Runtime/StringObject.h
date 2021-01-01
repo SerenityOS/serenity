@@ -47,7 +47,6 @@ public:
 
 private:
     virtual void visit_edges(Visitor&) override;
-    virtual bool is_string_object() const override { return true; }
 
     PrimitiveString& m_string;
 };

@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (!this_object->is_error()) {
+    if (!is<Error>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return {};
     }
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return;
-    if (!this_object->is_error()) {
+    if (!is<Error>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return;
     }
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (!this_object->is_error()) {
+    if (!is<Error>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return {};
     }

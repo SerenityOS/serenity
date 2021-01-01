@@ -34,6 +34,7 @@
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
@@ -148,7 +149,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     String function_parameters = "";
     String function_body;
 
-    if (this_object->is_native_function() || this_object->is_bound_function()) {
+    if (is<NativeFunction>(this_object) || is<BoundFunction>(this_object)) {
         function_body = String::formatted("  [{}]", this_object->class_name());
     } else {
         StringBuilder parameters_builder;

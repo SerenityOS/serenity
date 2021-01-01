@@ -190,7 +190,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
 
 LexicalEnvironment* Interpreter::current_environment()
 {
-    ASSERT(vm().call_frame().scope->is_lexical_environment());
+    ASSERT(is<LexicalEnvironment>(vm().call_frame().scope));
     return static_cast<LexicalEnvironment*>(vm().call_frame().scope);
 }
 

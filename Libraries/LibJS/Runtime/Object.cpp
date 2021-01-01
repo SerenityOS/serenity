@@ -191,7 +191,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
     auto* properties_array = Array::create(global_object());
 
     // FIXME: Support generic iterables
-    if (this_object.is_string_object()) {
+    if (is<StringObject>(this_object)) {
         auto str = static_cast<const StringObject&>(this_object).primitive_string().string();
 
         for (size_t i = 0; i < str.length(); ++i) {
@@ -662,7 +662,7 @@ Value Object::get_by_index(u32 property_index) const
 {
     const Object* object = this;
     while (object) {
-        if (is_string_object()) {
+        if (is<StringObject>(*this)) {
             auto& string = static_cast<const StringObject*>(this)->primitive_string().string();
             if (property_index < string.length())
                 return js_string(heap(), string.substring(property_index, 1));
@@ -841,7 +841,7 @@ bool Object::has_own_property(const PropertyName& property_name) const
     ASSERT(property_name.is_valid());
 
     auto has_indexed_property = [&](u32 index) -> bool {
-        if (is_string_object())
+        if (is<StringObject>(*this))
             return index < static_cast<const StringObject*>(this)->primitive_string().string().length();
         return m_indexed_properties.has_index(index);
     };

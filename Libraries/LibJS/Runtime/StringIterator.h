@@ -46,8 +46,6 @@ public:
 private:
     friend class StringIteratorPrototype;
 
-    virtual bool is_string_iterator_object() const override { return true; }
-
     String m_string;
     Utf8CodepointIterator m_iterator;
     bool m_done { false };

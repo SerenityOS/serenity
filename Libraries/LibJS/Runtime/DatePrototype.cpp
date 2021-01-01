@@ -40,7 +40,7 @@ static Date* typed_this(VM& vm, GlobalObject& global_object)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
-    if (!this_object->is_date()) {
+    if (!is<Date>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Date");
         return nullptr;
     }

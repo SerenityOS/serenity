@@ -46,8 +46,6 @@ public:
     void set_name(const FlyString& name) { m_name = name; }
 
 private:
-    virtual bool is_error() const final { return true; }
-
     FlyString m_name;
     String m_message;
 };

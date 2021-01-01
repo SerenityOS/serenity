@@ -54,8 +54,6 @@ public:
     const Regex<ECMA262>& regex() const { return m_regex; }
 
 private:
-    virtual bool is_regexp_object() const override { return true; }
-
     JS_DECLARE_NATIVE_GETTER(last_index);
     JS_DECLARE_NATIVE_SETTER(set_last_index);
 

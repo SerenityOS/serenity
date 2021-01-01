@@ -63,7 +63,7 @@ static SymbolObject* typed_this(VM& vm, GlobalObject& global_object)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
-    if (!this_object->is_symbol_object()) {
+    if (!is<SymbolObject>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
         return nullptr;
     }

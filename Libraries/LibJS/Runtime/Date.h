@@ -85,7 +85,6 @@ public:
 
 private:
     tm to_utc_tm() const;
-    virtual bool is_date() const final { return true; }
 
     Core::DateTime m_datetime;
     u16 m_milliseconds;

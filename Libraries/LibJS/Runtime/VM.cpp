@@ -198,7 +198,7 @@ Reference VM::get_reference(const FlyString& name)
 {
     if (m_call_stack.size()) {
         for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-            if (scope->is_global_object())
+            if (is<GlobalObject>(scope))
                 break;
             auto possible_match = scope->get_from_scope(name);
             if (possible_match.has_value())
@@ -256,7 +256,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
-        ASSERT(current_scope()->is_lexical_environment());
+        ASSERT(is<LexicalEnvironment>(current_scope()));
         static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -280,7 +280,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
 void VM::throw_exception(Exception* exception)
 {
-    if (should_log_exceptions() && exception->value().is_object() && exception->value().as_object().is_error()) {
+    if (should_log_exceptions() && exception->value().is_object() && is<Error>(exception->value().as_object())) {
         auto& error = static_cast<Error&>(exception->value().as_object());
         dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
 
@@ -324,7 +324,7 @@ const ScopeObject* VM::find_this_scope() const
 
 Value VM::get_new_target() const
 {
-    ASSERT(find_this_scope()->is_lexical_environment());
+    ASSERT(is<LexicalEnvironment>(find_this_scope()));
     return static_cast<const LexicalEnvironment*>(find_this_scope())->new_target();
 }
 
