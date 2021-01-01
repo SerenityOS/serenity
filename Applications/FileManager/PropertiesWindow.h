@@ -34,13 +34,14 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
-class PropertiesDialog final : public GUI::Dialog {
-    C_OBJECT(PropertiesDialog)
+class PropertiesWindow final : public GUI::Window {
+    C_OBJECT(PropertiesWindow);
+
 public:
-    virtual ~PropertiesDialog() override;
+    virtual ~PropertiesWindow() override;
 
 private:
-    PropertiesDialog(const String& path, bool disable_rename, Window* parent = nullptr);
+    PropertiesWindow(const String& path, bool disable_rename, Window* parent = nullptr);
 
     struct PropertyValuePair {
         String property;
