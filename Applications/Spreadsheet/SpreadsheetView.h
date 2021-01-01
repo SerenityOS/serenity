@@ -31,7 +31,6 @@
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
-#include <string.h>
 
 namespace Spreadsheet {
 
@@ -167,6 +166,4 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Spreadsheet::SpreadsheetView)
-static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), "SpreadsheetView"); }
-AK_END_TYPE_TRAITS()
+DEFAULT_CORE_OBJECT_TRAITS(Spreadsheet::SpreadsheetView)

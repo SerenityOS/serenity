@@ -59,6 +59,4 @@ private:
 
 }
 
-AK_BEGIN_TYPE_TRAITS(HackStudio::EditorWrapper)
-static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), "EditorWrapper"); }
-AK_END_TYPE_TRAITS()
+DEFAULT_CORE_OBJECT_TRAITS(HackStudio::EditorWrapper)

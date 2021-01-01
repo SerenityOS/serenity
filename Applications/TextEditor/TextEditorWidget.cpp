@@ -64,9 +64,9 @@ TextEditorWidget::TextEditorWidget()
 {
     load_from_gml(text_editor_window_gml);
 
-    auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
+    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
 
-    m_editor = static_cast<GUI::TextEditor&>(*find_descendant_by_name("editor"));
+    m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
@@ -86,7 +86,7 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_page_view = static_cast<Web::OutOfProcessWebView&>(*find_descendant_by_name("webview"));
+    m_page_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("webview");
     m_page_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
@@ -103,11 +103,11 @@ TextEditorWidget::TextEditorWidget()
         }
     };
 
-    m_find_replace_widget = *find_descendant_by_name("find_replace_widget");
+    m_find_replace_widget = *find_descendant_of_type_named<GUI::Widget>("find_replace_widget");
 
-    m_find_widget = *find_descendant_by_name("find_widget");
+    m_find_widget = *find_descendant_of_type_named<GUI::Widget>("find_widget");
 
-    m_replace_widget = *find_descendant_by_name("replace_widget");
+    m_replace_widget = *find_descendant_of_type_named<GUI::Widget>("replace_widget");
 
     m_find_textbox = m_find_widget->add<GUI::TextBox>();
     m_replace_textbox = m_replace_widget->add<GUI::TextBox>();
@@ -235,10 +235,10 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = static_cast<GUI::Button&>(*find_descendant_by_name("find_previous_button"));
+    m_find_previous_button = *find_descendant_of_type_named<GUI::Button>("find_previous_button");
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = static_cast<GUI::Button&>(*find_descendant_by_name("find_next_button"));
+    m_find_next_button = *find_descendant_of_type_named<GUI::Button>("find_next_button");
     m_find_next_button->set_action(*m_find_next_action);
 
     m_find_textbox->on_return_pressed = [this] {
@@ -254,13 +254,13 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_previous_button"));
+    m_replace_previous_button = *find_descendant_of_type_named<GUI::Button>("replace_previous_button");
     m_replace_previous_button->set_action(*m_replace_previous_action);
 
-    m_replace_next_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_next_button"));
+    m_replace_next_button = *find_descendant_of_type_named<GUI::Button>("replace_next_button");
     m_replace_next_button->set_action(*m_replace_next_action);
 
-    m_replace_all_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_all_button"));
+    m_replace_all_button = *find_descendant_of_type_named<GUI::Button>("replace_all_button");
     m_replace_all_button->set_action(*m_replace_all_action);
 
     m_replace_textbox->on_return_pressed = [this] {
@@ -289,7 +289,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    m_statusbar = static_cast<GUI::StatusBar&>(*find_descendant_by_name("statusbar"));
+    m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
 
     m_editor->on_cursor_change = [this] { update_statusbar_cursor_position(); };
 

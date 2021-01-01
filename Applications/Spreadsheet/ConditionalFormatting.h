@@ -71,3 +71,5 @@ private:
 };
 
 }
+
+DEFAULT_CORE_OBJECT_TRAITS(Spreadsheet::ConditionsView)

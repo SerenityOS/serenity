@@ -139,7 +139,7 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(crash_reporter_window_gml);
 
-    auto& icon_image_widget = static_cast<GUI::ImageWidget&>(*widget.find_descendant_by_name("icon"));
+    auto& icon_image_widget = *widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
 
     auto app_name = LexicalPath(executable_path).basename();
@@ -147,25 +147,25 @@ int main(int argc, char** argv)
     if (af->is_valid())
         app_name = af->name();
 
-    auto& description_label = static_cast<GUI::Label&>(*widget.find_descendant_by_name("description"));
+    auto& description_label = *widget.find_descendant_of_type_named<GUI::Label>("description");
     description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed!", app_name, pid));
 
-    auto& executable_link_label = static_cast<GUI::LinkLabel&>(*widget.find_descendant_by_name("executable_link"));
+    auto& executable_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
     executable_link_label.on_click = [&] {
         Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(executable_path).dirname()));
     };
 
-    auto& coredump_link_label = static_cast<GUI::LinkLabel&>(*widget.find_descendant_by_name("coredump_link"));
+    auto& coredump_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
     coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
     coredump_link_label.on_click = [&] {
         Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
     };
 
-    auto& backtrace_text_editor = static_cast<GUI::TextEditor&>(*widget.find_descendant_by_name("backtrace_text_editor"));
+    auto& backtrace_text_editor = *widget.find_descendant_of_type_named<GUI::TextEditor>("backtrace_text_editor");
     backtrace_text_editor.set_text(backtrace);
 
-    auto& close_button = static_cast<GUI::Button&>(*widget.find_descendant_by_name("close_button"));
+    auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
         app->quit();
     };
