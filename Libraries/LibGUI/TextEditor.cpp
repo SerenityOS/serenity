@@ -1134,7 +1134,7 @@ Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position)
     int x = content_x_for_position(position);
 
     if (is_single_line()) {
-        Gfx::IntRect rect { x, 0, 1, font().glyph_height() + 2 };
+        Gfx::IntRect rect { x, 0, 1, line_height() };
         rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return rect;
     }
