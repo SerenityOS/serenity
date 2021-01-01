@@ -63,9 +63,6 @@ public:
 
     const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
 
-    virtual bool is_node() const { return false; }
-    virtual bool is_window() const { return false; }
-
     Function<void(const Event&)> activation_behaviour;
 
     // NOTE: These only exist for checkbox and radio input elements.

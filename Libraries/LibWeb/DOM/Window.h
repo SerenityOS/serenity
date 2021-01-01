@@ -79,8 +79,6 @@ public:
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
-    virtual bool is_window() const override { return true; }
-
     const Event* current_event() const { return m_current_event; }
     void set_current_event(Event* event) { m_current_event = event; }
 

@@ -41,9 +41,6 @@ protected:
         : Event(event_name)
     {
     }
-
-private:
-    virtual bool is_ui_event() const final { return true; }
 };
 
 }

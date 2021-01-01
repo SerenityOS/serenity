@@ -49,9 +49,6 @@ protected:
     Optional<Gfx::Color> m_fill_color;
     Optional<Gfx::Color> m_stroke_color;
     Optional<float> m_stroke_width;
-
-private:
-    virtual bool is_graphics_element() const final { return true; }
 };
 
 }
