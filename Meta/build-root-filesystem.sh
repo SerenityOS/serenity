@@ -109,6 +109,7 @@ printf "adding some desktop icons..."
 ln -s /bin/Browser mnt/home/anon/Desktop/
 ln -s /bin/TextEditor mnt/home/anon/Desktop/
 ln -s /bin/Help mnt/home/anon/Desktop/
+ln -s / "mnt/home/anon/Desktop/File system"
 
 printf "installing shortcuts... "
 ln -s Shell mnt/bin/sh
