@@ -103,12 +103,14 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(event.rect(), m_dead_color);
     auto game_rect = rect();
     auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);
+    auto x_margin = (game_rect.width() - (cell_size.width() * m_columns)) / 2;
+    auto y_margin = (game_rect.height() - (cell_size.height() * m_rows)) / 2;
 
     for (int y = 0; y < m_rows; y++) {
         for (int x = 0; x < m_columns; x++) {
             Gfx::IntRect rect {
-                x * cell_size.width(),
-                y * cell_size.height(),
+                x * cell_size.width() + x_margin,
+                y * cell_size.height() + y_margin,
                 cell_size.width(),
                 cell_size.height()
             };
