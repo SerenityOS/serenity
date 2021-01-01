@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Types.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,11 +86,4 @@ void __cxa_finalize(void* dso_handle)
     ASSERT_NOT_REACHED();
 }
 
-extern u32 __stack_chk_guard;
-u32 __stack_chk_guard = (u32)0xc6c7c8c9;
-
-[[noreturn]] void __stack_chk_fail()
-{
-    ASSERT_NOT_REACHED();
-}
 } // extern "C"
