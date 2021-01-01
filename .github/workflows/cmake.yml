@@ -85,6 +85,9 @@ jobs:
     - name: Run JS tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
       run: DISABLE_DBG_OUTPUT=1 ./test-js
+    - name: Run LibCompress tests
+      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      run: DISABLE_DBG_OUTPUT=1 ./test-compress
 
      # Run analysis last, so contributors get lint/test feedback ASAP.
     - name: Perform post build CodeQL Analysis
