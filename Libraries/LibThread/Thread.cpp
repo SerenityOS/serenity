@@ -34,13 +34,15 @@ LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? "" : thread_name)
 {
+    register_property("thread_name", [&] { return JsonValue { m_thread_name }; });
+    register_property("tid", [&] { return JsonValue { m_tid }; });
 }
 
 LibThread::Thread::~Thread()
 {
     if (m_tid) {
-        dbg() << "trying to destroy a running thread!";
-        join();
+        dbgln("Destroying thread \"{}\"({}) while it is still running!", m_thread_name, m_tid);
+        [[maybe_unused]] auto res = join();
     }
 }
 
@@ -51,7 +53,7 @@ void LibThread::Thread::start()
         nullptr,
         [](void* arg) -> void* {
             Thread* self = static_cast<Thread*>(arg);
-            size_t exit_code = self->m_action();
+            int exit_code = self->m_action();
             self->m_tid = 0;
             return (void*)exit_code;
         },
@@ -62,22 +64,5 @@ void LibThread::Thread::start()
         rc = pthread_setname_np(m_tid, m_thread_name.characters());
         ASSERT(rc == 0);
     }
-    dbg() << "Started a thread, tid = " << m_tid;
-}
-
-void LibThread::Thread::join()
-{
-    int rc = pthread_join(m_tid, nullptr);
-    if (rc == 0)
-        m_tid = 0;
-    else
-        warnln("pthread_join: {}", strerror(rc));
-}
-
-void LibThread::Thread::quit(void* code)
-{
-    ASSERT(m_tid == pthread_self());
-
-    m_tid = 0;
-    pthread_exit(code);
+    dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
 }
