@@ -31,6 +31,7 @@ add_simple_fuzzer(FuzzMarkdown)
 add_simple_fuzzer(FuzzRegexECMA262)
 add_simple_fuzzer(FuzzRegexPosixExtended)
 add_simple_fuzzer(FuzzShell)
+add_simple_fuzzer(FuzzTTF)
 add_simple_fuzzer(FuzzURL)
 
 if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
