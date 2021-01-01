@@ -39,11 +39,10 @@
 
 namespace JS {
 
-#define JS_OBJECT(class_, base_class)                                   \
-public:                                                                 \
-    using Base = base_class;                                            \
-    virtual const char* class_name() const override { return #class_; } \
-    virtual bool inherits(const StringView& class_name) const override { return class_name == #class_ || Base::inherits(class_name); }
+#define JS_OBJECT(class_, base_class) \
+public:                               \
+    using Base = base_class;          \
+    virtual const char* class_name() const override { return #class_; }
 
 struct PropertyDescriptor {
     PropertyAttributes attributes;
@@ -66,8 +65,6 @@ public:
     explicit Object(Shape&);
     virtual void initialize(GlobalObject&) override;
     virtual ~Object();
-
-    virtual bool inherits(const StringView& class_name) const { return class_name == this->class_name(); }
 
     enum class PropertyKind {
         Key,
