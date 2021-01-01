@@ -35,8 +35,10 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Path.h>
+#include <WindowServer/Screen.h>
 
 #include <math.h>
 
@@ -91,12 +93,14 @@ public:
 
         painter.stroke_path(path, Color::Black, 1);
 
-        if (m_buttons & GUI::MouseButton::Primary) {
+        auto primary_button = static_cast<WindowServer::RawMouseButton>(GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetPrimaryMouseButton>()->button());
+
+        if ((primary_button == WindowServer::RawMouseButton::Left && m_buttons & GUI::MouseButton::Primary) || (primary_button == WindowServer::RawMouseButton::Right && m_buttons & GUI::MouseButton::Secondary)) {
             painter.fill_rect({ 31, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, Color::Blue);
         }
 
-        if (m_buttons & GUI::MouseButton::Secondary) {
+        if ((primary_button == WindowServer::RawMouseButton::Left && m_buttons & GUI::MouseButton::Secondary) || (primary_button == WindowServer::RawMouseButton::Right && m_buttons & GUI::MouseButton::Primary)) {
             painter.fill_rect({ 96, 21, 34, 44 }, Color::Blue);
             painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, Color::Blue);
         }
