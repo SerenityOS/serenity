@@ -87,6 +87,9 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
         0, 0, CLOCK_MONOTONIC_COARSE \
     }
 
+#define PTHREAD_KEYS_MAX 64
+#define PTHREAD_DESTRUCTOR_ITERATIONS 4
+
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
 int pthread_key_delete(pthread_key_t key);
 int pthread_cond_broadcast(pthread_cond_t*);
