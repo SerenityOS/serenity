@@ -348,7 +348,7 @@ static OwnPtr<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
                 auto* page = region.physical_page(i);
                 if (!page)
                     pagemap_builder.append('N');
-                else if (page->is_shared_zero_page())
+                else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
                     pagemap_builder.append('Z');
                 else
                     pagemap_builder.append('P');
