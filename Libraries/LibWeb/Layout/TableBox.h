@@ -37,7 +37,6 @@ public:
 
 private:
     virtual bool is_table() const override { return true; }
-    virtual const char* class_name() const override { return "TableBox"; }
 };
 
 }

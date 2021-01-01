@@ -46,7 +46,6 @@ public:
     void set_visible_in_viewport(Badge<InitialContainingBlockBox>, bool);
 
 private:
-    virtual const char* class_name() const override { return "ImageBox"; }
     virtual bool is_image() const override { return true; }
 
     int preferred_width() const;

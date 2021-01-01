@@ -44,9 +44,6 @@ public:
     virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;
 
     virtual bool can_have_children() const override { return true; }
-
-private:
-    const char* class_name() const override { return "SVGSVGBox"; }
 };
 
 }

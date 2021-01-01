@@ -42,7 +42,6 @@ public:
 
 private:
     virtual bool is_table_cell() const override { return true; }
-    virtual const char* class_name() const override { return "TableCellBox"; }
     virtual float width_of_logical_containing_block() const override;
 };
 

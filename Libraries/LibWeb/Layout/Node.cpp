@@ -35,6 +35,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Page/Frame.h>
+#include <typeinfo>
 
 namespace Web::Layout {
 
@@ -294,6 +295,11 @@ bool Node::is_root_element() const
     if (is_anonymous())
         return false;
     return is<HTML::HTMLHtmlElement>(*dom_node());
+}
+
+const char* Node::class_name() const
+{
+    return typeid(*this).name();
 }
 
 }
