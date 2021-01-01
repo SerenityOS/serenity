@@ -90,7 +90,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     if (m_name != "SerenityOS")
         make_label("SerenityOS");
     make_label(version_string());
-    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2020");
+    make_label("Copyright \xC2\xA9 the SerenityOS developers, 2018-2021");
 
     right_container.layout()->add_spacer();
 
