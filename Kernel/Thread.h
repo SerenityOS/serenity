@@ -1216,6 +1216,7 @@ private:
     void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);
     void yield_while_not_holding_big_lock();
     void update_state_for_thread(Thread::State previous_state);
+    void drop_thread_count(bool);
 };
 
 template<typename Callback>
