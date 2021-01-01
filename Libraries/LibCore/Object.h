@@ -117,8 +117,6 @@ public:
 
     void deferred_invoke(Function<void(Object&)>);
 
-    bool is_widget() const { return m_widget; }
-
     void save_to(AK::JsonObject&);
 
     bool set_property(const StringView& name, const JsonValue& value);
@@ -151,7 +149,7 @@ public:
     void decrement_inspector_count(Badge<RPCClient>);
 
 protected:
-    explicit Object(Object* parent = nullptr, bool is_widget = false);
+    explicit Object(Object* parent = nullptr);
 
     void register_property(const String& name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);
 
@@ -169,7 +167,6 @@ private:
     String m_name;
     int m_timer_id { 0 };
     unsigned m_inspector_count { 0 };
-    bool m_widget { false };
     HashMap<String, NonnullOwnPtr<Property>> m_properties;
     NonnullRefPtrVector<Object> m_children;
 };

@@ -37,10 +37,10 @@ void ToolBarContainer::child_event(Core::ChildEvent& event)
     Frame::child_event(event);
 
     if (event.type() == Core::Event::ChildAdded) {
-        if (event.child() && event.child()->is_widget())
+        if (event.child() && is<Widget>(event.child()))
             did_add_toolbar((Widget&)*event.child());
     } else if (event.type() == Core::Event::ChildRemoved) {
-        if (event.child() && event.child()->is_widget()) {
+        if (event.child() && is<Widget>(event.child())) {
             did_remove_toolbar((Widget&)*event.child());
         }
     }

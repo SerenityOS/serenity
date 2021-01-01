@@ -130,7 +130,7 @@ const WidgetClassRegistration* WidgetClassRegistration::find(const String& class
 }
 
 Widget::Widget()
-    : Core::Object(nullptr, true)
+    : Core::Object(nullptr)
     , m_background_role(Gfx::ColorRole::Window)
     , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::FontDatabase::default_font())
@@ -197,7 +197,7 @@ void Widget::child_event(Core::ChildEvent& event)
 {
     if (event.type() == Event::ChildAdded) {
         if (event.child() && is<Widget>(*event.child()) && layout()) {
-            if (event.insertion_before_child() && event.insertion_before_child()->is_widget())
+            if (event.insertion_before_child() && is<Widget>(event.insertion_before_child()))
                 layout()->insert_widget_before(downcast<Widget>(*event.child()), downcast<Widget>(*event.insertion_before_child()));
             else
                 layout()->add_widget(downcast<Widget>(*event.child()));
@@ -853,7 +853,7 @@ Vector<Widget*> Widget::child_widgets() const
     Vector<Widget*> widgets;
     widgets.ensure_capacity(children().size());
     for (auto& child : const_cast<Widget*>(this)->children()) {
-        if (child.is_widget())
+        if (is<Widget>(child))
             widgets.append(static_cast<Widget*>(&child));
     }
     return widgets;

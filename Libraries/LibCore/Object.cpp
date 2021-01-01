@@ -40,9 +40,8 @@ IntrusiveList<Object, &Object::m_all_objects_list_node>& Object::all_objects()
     return objects;
 }
 
-Object::Object(Object* parent, bool is_widget)
+Object::Object(Object* parent)
     : m_parent(parent)
-    , m_widget(is_widget)
 {
     all_objects().append(*this);
     if (m_parent)
