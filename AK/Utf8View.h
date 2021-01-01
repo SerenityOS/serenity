@@ -50,13 +50,13 @@ public:
         return m_ptr - other.m_ptr;
     }
 
-    int code_point_length_in_bytes() const;
-    bool done() const { return !m_length; }
+    size_t code_point_length_in_bytes() const;
+    bool done() const { return m_length == 0; }
 
 private:
-    Utf8CodepointIterator(const unsigned char*, int);
+    Utf8CodepointIterator(const unsigned char*, size_t);
     const unsigned char* m_ptr { nullptr };
-    int m_length { -1 };
+    size_t m_length;
 };
 
 class Utf8View {
