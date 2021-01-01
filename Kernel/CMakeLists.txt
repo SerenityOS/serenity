@@ -21,7 +21,7 @@ set(KERNEL_SOURCES
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
-    Devices/Device.cpp    
+    Devices/Device.cpp
     Devices/FullDevice.cpp
     Devices/I8042Controller.cpp
     Devices/KeyboardDevice.cpp
