@@ -6,7 +6,7 @@ set(SOURCES
     FileManagerWindowGML.h
     FileUtils.cpp
     main.cpp
-    PropertiesDialog.cpp
+    PropertiesWindow.cpp
 )
 
 serenity_app(FileManager ICON filetype-folder)
