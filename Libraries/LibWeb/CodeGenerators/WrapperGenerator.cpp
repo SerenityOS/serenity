@@ -639,7 +639,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (!this_object->inherits("@wrapper_class@")) {
+    if (!is<@wrapper_class@>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@fully_qualified_name@");
         return nullptr;
     }
@@ -694,7 +694,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
     if (vm.exception())
         @return_statement@
 
-    if (!@cpp_name@_object->inherits("@parameter.type.name@Wrapper")) {
+    if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
         @return_statement@
     }

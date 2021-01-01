@@ -419,7 +419,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
     if (!this_object)
         return {};
 
-    if (!this_object->inherits("WorkbookObject")) {
+    if (!is<WorkbookObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WorkbookObject");
         return {};
     }
