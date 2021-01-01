@@ -49,8 +49,6 @@ protected:
     MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y);
 
 private:
-    virtual bool is_mouse_event() const override { return true; }
-
     void set_event_characteristics();
 
     i32 m_offset_x { 0 };

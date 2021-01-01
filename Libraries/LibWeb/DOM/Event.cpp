@@ -39,7 +39,7 @@ void Event::append_to_path(EventTarget& invocation_target, RefPtr<EventTarget> s
 
     if (is<Node>(invocation_target)) {
         auto& invocation_target_node = downcast<Node>(invocation_target);
-        if (invocation_target_node.root()->is_shadow_root())
+        if (is<ShadowRoot>(invocation_target_node.root()))
             invocation_target_in_shadow_tree = true;
         if (is<ShadowRoot>(invocation_target_node)) {
             auto& invocation_target_shadow_root = downcast<ShadowRoot>(invocation_target_node);

@@ -42,9 +42,6 @@ public:
     bool available_to_element_internals() const { return m_available_to_element_internals; }
     void set_available_to_element_internals(bool available_to_element_internals) { m_available_to_element_internals = available_to_element_internals; }
 
-    // ^Node
-    virtual bool is_shadow_root() const override { return true; }
-
     // ^EventTarget
     virtual EventTarget* get_parent(const Event&) override;
 

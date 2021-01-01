@@ -57,7 +57,7 @@ static EventTarget* retarget(EventTarget* left, [[maybe_unused]] EventTarget* ri
 
         auto* left_node = downcast<Node>(left);
         auto* left_root = left_node->root();
-        if (!left_root->is_shadow_root())
+        if (!is<ShadowRoot>(left_root))
             return left;
 
         // FIXME: If right is a node and left’s root is a shadow-including inclusive ancestor of right, return left.

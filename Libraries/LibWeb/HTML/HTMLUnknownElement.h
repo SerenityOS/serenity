@@ -36,9 +36,6 @@ public:
 
     HTMLUnknownElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLUnknownElement() override;
-
-private:
-    virtual bool is_unknown_html_element() const final { return true; }
 };
 
 }

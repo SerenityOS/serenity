@@ -77,10 +77,6 @@ public:
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text(); }
-    virtual bool is_svg_element() const { return false; }
-    virtual bool is_shadow_root() const { return false; }
-
-    virtual bool is_node() const final { return true; }
 
     virtual bool is_editable() const;
 
@@ -102,9 +98,6 @@ public:
     const HTML::HTMLElement* enclosing_html_element() const;
 
     String child_text_content() const;
-
-    virtual bool is_html_element() const { return false; }
-    virtual bool is_unknown_html_element() const { return false; }
 
     Node* root();
     const Node* root() const

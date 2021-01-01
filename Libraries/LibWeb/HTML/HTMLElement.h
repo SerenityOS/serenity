@@ -49,8 +49,6 @@ public:
     bool cannot_navigate() const;
 
 private:
-    virtual bool is_html_element() const final { return true; }
-
     enum class ContentEditableState {
         True,
         False,

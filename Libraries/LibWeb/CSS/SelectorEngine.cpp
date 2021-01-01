@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::SelectorEngine {
 
@@ -86,7 +87,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
             return false;
         break;
     case CSS::Selector::SimpleSelector::PseudoClass::Root:
-        if (!element.is_html_element())
+        if (!is<HTML::HTMLElement>(element))
             return false;
         break;
     }

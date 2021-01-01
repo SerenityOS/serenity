@@ -149,9 +149,6 @@ public:
         m_stop_immediate_propagation = true;
     }
 
-    virtual bool is_ui_event() const { return false; }
-    virtual bool is_mouse_event() const { return false; }
-
 protected:
     explicit Event(const FlyString& type)
         : m_type(type)
