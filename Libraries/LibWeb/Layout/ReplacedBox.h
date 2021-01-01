@@ -39,8 +39,6 @@ public:
     const DOM::Element& dom_node() const { return downcast<DOM::Element>(*Node::dom_node()); }
     DOM::Element& dom_node() { return downcast<DOM::Element>(*Node::dom_node()); }
 
-    virtual bool is_replaced() const final { return true; }
-
     bool has_intrinsic_width() const { return m_has_intrinsic_width; }
     bool has_intrinsic_height() const { return m_has_intrinsic_height; }
     bool has_intrinsic_ratio() const { return m_has_intrinsic_ratio; }

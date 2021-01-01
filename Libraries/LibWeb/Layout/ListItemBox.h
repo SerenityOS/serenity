@@ -41,8 +41,6 @@ public:
     void layout_marker();
 
 private:
-    virtual bool is_list_item() const override { return true; }
-
     RefPtr<ListItemMarkerBox> m_marker;
 };
 

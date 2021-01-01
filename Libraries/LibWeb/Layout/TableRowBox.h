@@ -34,9 +34,6 @@ class TableRowBox final : public Box {
 public:
     TableRowBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~TableRowBox() override;
-
-private:
-    virtual bool is_table_row() const override { return true; }
 };
 
 }

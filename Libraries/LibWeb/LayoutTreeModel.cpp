@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -119,14 +120,14 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
 {
     auto& node = *static_cast<Layout::Node*>(index.internal_data());
     if (role == GUI::ModelRole::Icon) {
-        if (node.is_initial_containing_block())
+        if (is<Layout::InitialContainingBlockBox>(node))
             return m_document_icon;
-        if (node.is_text())
+        if (is<Layout::TextNode>(node))
             return m_text_icon;
         return m_element_icon;
     }
     if (role == GUI::ModelRole::Display) {
-        if (node.is_text())
+        if (is<Layout::TextNode>(node))
             return String::format("TextNode: %s", with_whitespace_collapsed(downcast<Layout::TextNode>(node).text_for_rendering()).characters());
         StringBuilder builder;
         builder.append(node.class_name());

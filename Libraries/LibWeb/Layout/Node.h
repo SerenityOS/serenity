@@ -95,24 +95,6 @@ public:
 
     String class_name() const;
 
-    virtual bool is_initial_containing_block() const { return false; }
-    virtual bool is_text() const { return false; }
-    virtual bool is_block() const { return false; }
-    virtual bool is_replaced() const { return false; }
-    virtual bool is_widget() const { return false; }
-    virtual bool is_frame() const { return false; }
-    virtual bool is_image() const { return false; }
-    virtual bool is_canvas() const { return false; }
-    virtual bool is_box() const { return false; }
-    virtual bool is_table() const { return false; }
-    virtual bool is_table_row() const { return false; }
-    virtual bool is_table_cell() const { return false; }
-    virtual bool is_table_row_group() const { return false; }
-    virtual bool is_break() const { return false; }
-    virtual bool is_check_box() const { return false; }
-    virtual bool is_button() const { return false; }
-    virtual bool is_list_item() const { return false; }
-    virtual bool is_inline_node() const { return false; }
     bool has_style() const { return m_has_style; }
 
     virtual bool can_have_children() const { return true; }
@@ -120,7 +102,7 @@ public:
     bool is_inline() const { return m_inline; }
     void set_inline(bool b) { m_inline = b; }
 
-    bool is_inline_block() const { return is_inline() && is_block(); }
+    bool is_inline_block() const;
 
     virtual bool wants_mouse_events() const { return false; }
 

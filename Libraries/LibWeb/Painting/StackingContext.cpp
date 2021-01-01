@@ -50,7 +50,7 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
 
 void StackingContext::paint(PaintContext& context, PaintPhase phase)
 {
-    if (!m_box.is_initial_containing_block()) {
+    if (!is<InitialContainingBlockBox>(m_box)) {
         m_box.paint(context, phase);
     } else {
         // NOTE: InitialContainingBlockBox::paint() merely calls StackingContext::paint()
@@ -65,7 +65,7 @@ void StackingContext::paint(PaintContext& context, PaintPhase phase)
 HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
-    if (!m_box.is_initial_containing_block()) {
+    if (!is<InitialContainingBlockBox>(m_box)) {
         result = m_box.hit_test(position, type);
     } else {
         // NOTE: InitialContainingBlockBox::hit_test() merely calls StackingContext::hit_test()
