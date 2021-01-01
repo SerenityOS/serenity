@@ -94,6 +94,8 @@ Window::~Window()
 void Window::close()
 {
     hide();
+    if (on_close)
+        on_close();
 }
 
 void Window::move_to_front()

@@ -84,6 +84,7 @@ public:
         Close,
     };
 
+    Function<void()> on_close;
     Function<CloseRequestDecision()> on_close_request;
     Function<void(bool is_active_input)> on_active_input_change;
     Function<void(const bool is_active)> on_activity_change;
