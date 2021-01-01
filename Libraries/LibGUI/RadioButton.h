@@ -47,8 +47,6 @@ private:
     using AbstractButton::auto_repeat_interval;
     using AbstractButton::set_auto_repeat_interval;
 
-    virtual bool is_radio_button() const final { return true; }
-
     static Gfx::IntSize circle_size();
 };
 
