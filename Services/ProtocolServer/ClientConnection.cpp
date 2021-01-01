@@ -62,13 +62,13 @@ OwnPtr<Messages::ProtocolServer::StartDownloadResponse> ClientConnection::handle
 {
     URL url(message.url());
     if (!url.is_valid())
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, -1);
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     auto* protocol = Protocol::find_by_name(url.protocol());
     if (!protocol)
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, -1);
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     auto download = protocol->start_download(*this, message.method(), url, message.request_headers().entries(), message.request_body());
     if (!download)
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, -1);
+        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     auto id = download->id();
     auto fd = download->download_fd();
     m_downloads.set(id, move(download));
