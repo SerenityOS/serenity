@@ -78,7 +78,7 @@ private:
     virtual KResult truncate(u64) override;
 
     bool write_directory(const Vector<Ext2FSDirectoryEntry>&);
-    void populate_lookup_cache() const;
+    bool populate_lookup_cache() const;
     KResult resize(u64);
 
     static u8 file_type_for_directory_entry(const ext2_dir_entry_2&);
