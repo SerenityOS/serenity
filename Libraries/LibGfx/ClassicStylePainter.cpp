@@ -393,7 +393,7 @@ void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect,
     if (is_checked) {
         if (!s_checked_bitmap)
             s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(rect.shrunken(4, 4).location(), *s_checked_bitmap, palette.base_text());
+        painter.draw_bitmap(rect.shrunken(4, 4).location(), *s_checked_bitmap, is_enabled ? palette.base_text() : palette.threed_shadow1());
     }
 }
 
