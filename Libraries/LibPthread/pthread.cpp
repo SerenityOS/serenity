@@ -42,11 +42,22 @@
 
 namespace {
 using PthreadAttrImpl = Syscall::SC_create_thread_params;
+
+struct KeyDestroyer {
+    ~KeyDestroyer() { destroy_for_current_thread(); }
+    static void destroy_for_current_thread();
+};
+
 } // end anonymous namespace
 
 constexpr size_t required_stack_alignment = 4 * MiB;
 constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
 constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
+
+// Create an RAII object with a global destructor to destroy pthread keys for the main thread.
+// Impact of this: Any global object that wants to do something with pthread_getspecific
+// in its destructor from the main thread might be in for a nasty surprise.
+static KeyDestroyer s_key_destroyer;
 
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
@@ -91,6 +102,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 
 [[noreturn]] static void exit_thread(void* code)
 {
+    KeyDestroyer::destroy_for_current_thread();
     syscall(SC_exit_thread, code);
     ASSERT_NOT_REACHED();
 }
@@ -540,19 +552,18 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     return 0;
 }
 
-static const int max_keys = 64;
+static constexpr int max_keys = PTHREAD_KEYS_MAX;
 
 typedef void (*KeyDestructor)(void*);
 
 struct KeyTable {
-    // FIXME: Invoke key destructors on thread exit!
-    KeyDestructor destructors[64] { nullptr };
+    KeyDestructor destructors[max_keys] { nullptr };
     int next { 0 };
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 };
 
 struct SpecificTable {
-    void* values[64] { nullptr };
+    void* values[max_keys] { nullptr };
 };
 
 static KeyTable s_keys;
@@ -564,7 +575,7 @@ int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
     int ret = 0;
     pthread_mutex_lock(&s_keys.mutex);
     if (s_keys.next >= max_keys) {
-        ret = ENOMEM;
+        ret = EAGAIN;
     } else {
         *key = s_keys.next++;
         s_keys.destructors[*key] = destructor;
@@ -572,6 +583,16 @@ int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
     }
     pthread_mutex_unlock(&s_keys.mutex);
     return ret;
+}
+
+int pthread_key_delete(pthread_key_t key)
+{
+    if (key < 0 || key >= max_keys)
+        return EINVAL;
+    pthread_mutex_lock(&s_keys.mutex);
+    s_keys.destructors[key] = nullptr;
+    pthread_mutex_unlock(&s_keys.mutex);
+    return 0;
 }
 
 void* pthread_getspecific(pthread_key_t key)
@@ -593,6 +614,34 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     t_specifics.values[key] = const_cast<void*>(value);
     return 0;
 }
+
+void KeyDestroyer::destroy_for_current_thread()
+{
+    // This function will either be called during exit_thread, for a pthread, or
+    // during global program shutdown for the main thread.
+
+    pthread_mutex_lock(&s_keys.mutex);
+    size_t num_used_keys = s_keys.next;
+
+    // Dr. POSIX accounts for weird key destructors setting their own key again.
+    // Or even, setting other unrelated keys? Odd, but whatever the Doc says goes.
+
+    for (size_t destruct_iteration = 0; destruct_iteration < PTHREAD_DESTRUCTOR_ITERATIONS; ++destruct_iteration) {
+        bool any_nonnull_destructors = false;
+        for (size_t key_index = 0; key_index < num_used_keys; ++key_index) {
+            void* value = exchange(t_specifics.values[key_index], nullptr);
+
+            if (value && s_keys.destructors[key_index]) {
+                any_nonnull_destructors = true;
+                (*s_keys.destructors[key_index])(value);
+            }
+        }
+        if (!any_nonnull_destructors)
+            break;
+    }
+    pthread_mutex_unlock(&s_keys.mutex);
+}
+
 int pthread_setname_np(pthread_t thread, const char* name)
 {
     if (!name)
