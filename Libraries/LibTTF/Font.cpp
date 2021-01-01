@@ -33,7 +33,6 @@
 #include <LibTTF/Font.h>
 #include <LibTTF/Glyf.h>
 #include <LibTTF/Tables.h>
-#include <bits/stdint.h>
 #include <math.h>
 
 namespace TTF {
