@@ -45,7 +45,7 @@ int Dialog::exec()
 {
     ASSERT(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
-    if (parent() && parent()->is_window()) {
+    if (parent() && is<Window>(parent())) {
         auto& parent_window = *static_cast<Window*>(parent());
         if (parent_window.is_visible()) {
             center_within(parent_window);
