@@ -142,7 +142,7 @@ void Window::show()
 Window* Window::find_parent_window()
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor->is_window())
+        if (is<Window>(ancestor))
             return static_cast<Window*>(ancestor);
     }
     return nullptr;

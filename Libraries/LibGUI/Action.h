@@ -144,8 +144,6 @@ public:
     void set_group(Badge<ActionGroup>, ActionGroup*);
 
 private:
-    virtual bool is_action() const override { return true; }
-
     Action(const StringView& text, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
     Action(const StringView& text, const Shortcut&, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
     Action(const StringView& text, const Shortcut&, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
