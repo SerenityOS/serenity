@@ -98,19 +98,19 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     if (!widget.load_from_gml(font_picker_dialog_gml))
         ASSERT_NOT_REACHED();
 
-    m_family_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("family_list_view"));
+    m_family_list_view = *widget.find_descendant_of_type_named<ListView>("family_list_view");
     m_family_list_view->set_model(ItemListModel<String>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_weight_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("weight_list_view"));
+    m_weight_list_view = *widget.find_descendant_of_type_named<ListView>("weight_list_view");
     m_weight_list_view->set_model(adopt(*new FontWeightListModel(m_weights)));
     m_weight_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_size_list_view = static_cast<ListView&>(*widget.find_descendant_by_name("size_list_view"));
+    m_size_list_view = *widget.find_descendant_of_type_named<ListView>("size_list_view");
     m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
     m_size_list_view->horizontal_scrollbar().set_visible(false);
 
-    m_sample_text_label = static_cast<Label&>(*widget.find_descendant_by_name("sample_text_label"));
+    m_sample_text_label = *widget.find_descendant_of_type_named<Label>("sample_text_label");
 
     m_families.clear();
     Gfx::FontDatabase::the().for_each_font([&](auto& font) {
@@ -167,12 +167,12 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         update_font();
     };
 
-    auto& ok_button = static_cast<Button&>(*widget.find_descendant_by_name("ok_button"));
+    auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.on_click = [this](auto) {
         done(ExecOK);
     };
 
-    auto& cancel_button = static_cast<Button&>(*widget.find_descendant_by_name("cancel_button"));
+    auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };
