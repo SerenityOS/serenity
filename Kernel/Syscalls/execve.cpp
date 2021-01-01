@@ -157,7 +157,6 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
 
-    MM.enter_process_paging_scope(*this);
     String elf_name = object_description.absolute_path();
     ASSERT(!Processor::current().in_critical());
 
@@ -293,15 +292,21 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
         old_page_directory = move(m_page_directory);
         old_regions = move(m_regions);
         m_page_directory = page_directory.release_nonnull();
+        MM.enter_process_paging_scope(*this);
     }
 
     ArmedScopeGuard rollback_regions_guard([&]() {
         ASSERT(Process::current() == this);
         // Need to make sure we don't swap contexts in the middle
         ScopedCritical critical;
+        // Explicitly clear m_regions *before* restoring the page directory,
+        // otherwise we may silently corrupt memory!
+        m_regions.clear();
+        // Now that we freed the regions, revert to the original page directory
+        // and restore the original regions
         m_page_directory = move(old_page_directory);
-        m_regions = move(old_regions);
         MM.enter_process_paging_scope(*this);
+        m_regions = move(old_regions);
     });
 
     if (!interpreter_description) {
