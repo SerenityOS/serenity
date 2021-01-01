@@ -55,7 +55,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::CharacterData)
-static bool is_type(const Web::DOM::Node& node) { return node.is_character_data(); }
-AK_END_TYPE_TRAITS()

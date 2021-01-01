@@ -86,7 +86,3 @@ private:
 
 }
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Bindings::WindowObject)
-static bool is_type(const JS::GlobalObject& global) { return String(global.class_name()) == "WindowObject"; }
-AK_END_TYPE_TRAITS()

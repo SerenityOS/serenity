@@ -58,7 +58,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::UIEvents::MouseEvent)
-static bool is_type(const Web::DOM::Event& event) { return event.is_mouse_event(); }
-AK_END_TYPE_TRAITS()

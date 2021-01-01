@@ -98,7 +98,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::Window)
-static bool is_type(const Web::DOM::EventTarget& event_target) { return event_target.is_window(); }
-AK_END_TYPE_TRAITS()

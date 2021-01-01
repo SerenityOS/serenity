@@ -166,7 +166,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Spreadsheet::SpreadsheetView)
-static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), "SpreadsheetView"); }
-AK_END_TYPE_TRAITS()

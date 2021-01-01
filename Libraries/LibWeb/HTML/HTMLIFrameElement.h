@@ -58,7 +58,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLIFrameElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::iframe; }
-AK_END_TYPE_TRAITS()

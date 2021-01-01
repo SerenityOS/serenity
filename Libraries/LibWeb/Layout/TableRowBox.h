@@ -41,7 +41,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::TableRowBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_table_row(); }
-AK_END_TYPE_TRAITS()

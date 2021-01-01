@@ -56,7 +56,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::DocumentType)
-static bool is_type(const Web::DOM::Node& node) { return node.type() == Web::DOM::NodeType::DOCUMENT_TYPE_NODE; }
-AK_END_TYPE_TRAITS()

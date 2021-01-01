@@ -45,7 +45,3 @@ private:
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::Layout::InlineNode)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_inline_node(); }
-AK_END_TYPE_TRAITS()
