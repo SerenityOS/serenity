@@ -94,3 +94,5 @@ private:
 };
 
 }
+
+DEFAULT_CORE_OBJECT_TRAITS(Web::OutOfProcessWebView)

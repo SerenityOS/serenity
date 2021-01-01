@@ -36,6 +36,7 @@
 #include <AK/Weakable.h>
 #include <LibCore/Forward.h>
 #include <LibCore/Property.h>
+#include <string.h>
 
 namespace Core {
 
@@ -46,18 +47,24 @@ enum class TimerShouldFireWhenNotVisible {
     Yes
 };
 
-#define C_OBJECT(klass)                                                \
-public:                                                                \
-    virtual const char* class_name() const override { return #klass; } \
-    template<class... Args>                                            \
-    static inline NonnullRefPtr<klass> construct(Args&&... args)       \
-    {                                                                  \
-        return adopt(*new klass(forward<Args>(args)...));              \
+#define C_OBJECT(klass)                                                     \
+public:                                                                     \
+    virtual const char* class_name() const override { return class_name_; } \
+    static constexpr const char class_name_[] = #klass;                     \
+    template<class... Args>                                                 \
+    static inline NonnullRefPtr<klass> construct(Args&&... args)            \
+    {                                                                       \
+        return adopt(*new klass(forward<Args>(args)...));                   \
     }
 
 #define C_OBJECT_ABSTRACT(klass) \
 public:                          \
     virtual const char* class_name() const override { return #klass; }
+
+#define DEFAULT_CORE_OBJECT_TRAITS(klass)                                                                        \
+    AK_BEGIN_TYPE_TRAITS(klass)                                                                                  \
+    static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), klass::class_name_); } \
+    AK_END_TYPE_TRAITS()
 
 class Object
     : public RefCounted<Object>

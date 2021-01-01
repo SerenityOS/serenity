@@ -89,3 +89,7 @@ private:
 };
 
 }
+
+DEFAULT_CORE_OBJECT_TRAITS(GUI::Splitter)
+DEFAULT_CORE_OBJECT_TRAITS(GUI::HorizontalSplitter)
+DEFAULT_CORE_OBJECT_TRAITS(GUI::VerticalSplitter)

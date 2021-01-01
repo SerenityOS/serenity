@@ -64,3 +64,5 @@ private:
 };
 
 }
+
+DEFAULT_CORE_OBJECT_TRAITS(GUI::FontPicker)
