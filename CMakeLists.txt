@@ -130,7 +130,7 @@ add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 add_compile_definitions(DEBUG SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
- 
+
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Libraries/LibC)
