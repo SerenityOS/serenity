@@ -28,6 +28,8 @@
 
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/RefPtr.h>
+#include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/WindowTheme.h>
 
@@ -58,6 +60,8 @@ public:
     void layout_buttons();
     void set_button_icons();
 
+    void start_flash_animation();
+
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
@@ -69,6 +73,9 @@ private:
     Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
+
+    RefPtr<Core::Timer> m_flash_timer;
+    size_t m_flash_counter { 0 };
 };
 
 }
