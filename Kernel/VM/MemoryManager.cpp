@@ -509,8 +509,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     if (!page) {
         // We didn't have a single free physical page. Let's try to free something up!
         // First, we look for a purgeable VMObject in the volatile state.
-        for_each_vmobject_of_type<PurgeableVMObject>([&](auto& vmobject) {
-            int purged_page_count = vmobject.purge_with_interrupts_disabled({});
+        for_each_vmobject([&](auto& vmobject) {
+            if (!vmobject.is_purgeable())
+                return IterationDecision::Continue;
+            int purged_page_count = static_cast<PurgeableVMObject&>(vmobject).purge_with_interrupts_disabled({});
             if (purged_page_count) {
                 klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &vmobject << "}";
                 page = find_free_user_physical_page();
