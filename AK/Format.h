@@ -348,6 +348,17 @@ struct Formatter<double> : StandardFormatter {
 };
 #endif
 
+template<>
+struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
+    void format(FormatBuilder& builder, std::nullptr_t)
+    {
+        if (m_mode == Mode::Default)
+            m_mode = Mode::Pointer;
+
+        return Formatter<FlatPtr>::format(builder, 0);
+    }
+};
+
 void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams);
 void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
 
