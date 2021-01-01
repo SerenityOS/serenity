@@ -59,7 +59,7 @@ static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object
     if (!this_value.is_object())
         return nullptr;
     auto& this_object = this_value.as_object();
-    if (!this_object.is_array_buffer()) {
+    if (!is<ArrayBuffer>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "ArrayBuffer");
         return nullptr;
     }

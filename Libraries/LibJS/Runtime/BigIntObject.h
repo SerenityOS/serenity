@@ -48,7 +48,6 @@ public:
 
 private:
     virtual void visit_edges(Visitor&) override;
-    virtual bool is_bigint_object() const override { return true; }
 
     BigInt& m_bigint;
 };

@@ -54,7 +54,6 @@ protected:
     explicit NativeFunction(Object& prototype);
 
 private:
-    virtual bool is_native_function() const override { return true; }
     virtual LexicalEnvironment* create_environment() override final;
 
     FlyString m_name;

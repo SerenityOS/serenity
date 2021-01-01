@@ -45,8 +45,6 @@ public:
     const ByteBuffer& buffer() const { return m_buffer; }
 
 private:
-    virtual bool is_array_buffer() const override { return true; }
-
     ByteBuffer m_buffer;
 };
 

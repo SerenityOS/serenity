@@ -110,25 +110,8 @@ public:
     virtual Value delete_property(const PropertyName&);
 
     virtual bool is_array() const { return false; }
-    virtual bool is_date() const { return false; }
-    virtual bool is_error() const { return false; }
     virtual bool is_function() const { return false; }
-    virtual bool is_native_function() const { return false; }
-    virtual bool is_script_function() const { return false; }
-    virtual bool is_bound_function() const { return false; }
-    virtual bool is_proxy_object() const { return false; }
-    virtual bool is_regexp_object() const { return false; }
-    virtual bool is_boolean_object() const { return false; }
-    virtual bool is_string_object() const { return false; }
-    virtual bool is_number_object() const { return false; }
-    virtual bool is_symbol_object() const { return false; }
-    virtual bool is_bigint_object() const { return false; }
-    virtual bool is_string_iterator_object() const { return false; }
-    virtual bool is_array_iterator_object() const { return false; }
-    virtual bool is_lexical_environment() const { return false; }
-    virtual bool is_global_object() const { return false; }
     virtual bool is_typed_array() const { return false; }
-    virtual bool is_array_buffer() const { return false; }
     virtual bool is_node_wrapper() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }

@@ -44,7 +44,7 @@ static StringObject* typed_this(VM& vm, GlobalObject& global_object)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
-    if (!this_object->is_string_object()) {
+    if (!is<StringObject>(this_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
         return nullptr;
     }

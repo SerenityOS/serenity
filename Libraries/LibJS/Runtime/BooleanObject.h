@@ -44,7 +44,6 @@ public:
     }
 
 private:
-    virtual bool is_boolean_object() const override { return true; }
     bool m_value { false };
 };
 }

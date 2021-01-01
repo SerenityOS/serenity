@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
@@ -182,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
     auto& descriptor = vm.argument(2).as_object();
     if (!object.define_property(property_key, descriptor)) {
         if (!vm.exception()) {
-            if (object.is_proxy_object()) {
+            if (AK::is<ProxyObject>(object)) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
             } else {
                 vm.throw_exception<TypeError>(global_object, ErrorType::NonExtensibleDefine, property_key.to_display_string());

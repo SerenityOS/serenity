@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     auto this_value = vm.this_value(global_object);
     if (this_value.is_number()) {
         number_value = this_value;
-    } else if (this_value.is_object() && this_value.as_object().is_number_object()) {
+    } else if (this_value.is_object() && is<NumberObject>(this_value.as_object())) {
         number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
     } else {
         vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
