@@ -65,6 +65,7 @@ class Font : public RefCounted<Font> {
 
 public:
     static RefPtr<Font> load_from_file(const StringView& path, unsigned index = 0);
+    static RefPtr<Font> load_from_memory(ByteBuffer&, unsigned index = 0);
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
