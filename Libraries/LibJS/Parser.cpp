@@ -35,11 +35,11 @@ namespace JS {
 
 static bool statement_is_use_strict_directive(NonnullRefPtr<Statement> statement)
 {
-    if (!statement->is_expression_statement())
+    if (!is<ExpressionStatement>(*statement))
         return false;
     auto& expression_statement = static_cast<ExpressionStatement&>(*statement);
     auto& expression = expression_statement.expression();
-    if (!expression.is_string_literal())
+    if (!is<StringLiteral>(expression))
         return false;
     return static_cast<const StringLiteral&>(expression).is_use_strict_directive();
 }
@@ -711,7 +711,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         auto rhs = parse_expression(precedence, associativity);
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for ++foo()
-        if (!rhs->is_identifier() && !rhs->is_member_expression())
+        if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
         return create_ast_node<UpdateExpression>({ rule_start.position(), position() }, UpdateOp::Increment, move(rhs), true);
     }
@@ -721,7 +721,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         auto rhs = parse_expression(precedence, associativity);
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for --foo()
-        if (!rhs->is_identifier() && !rhs->is_member_expression())
+        if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
         return create_ast_node<UpdateExpression>({ rule_start.position(), position() }, UpdateOp::Decrement, move(rhs), true);
     }
@@ -1120,14 +1120,14 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::PlusPlus:
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for foo()++
-        if (!lhs->is_identifier() && !lhs->is_member_expression())
+        if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>({ rule_start.position(), position() }, UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for foo()--
-        if (!lhs->is_identifier() && !lhs->is_member_expression())
+        if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>({ rule_start.position(), position() }, UpdateOp::Decrement, move(lhs));
@@ -1175,13 +1175,13 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
         || match(TokenType::DoublePipeEquals)
         || match(TokenType::DoubleQuestionMarkEquals));
     consume();
-    if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
+    if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         syntax_error("Invalid left-hand side in assignment");
-    } else if (m_parser_state.m_strict_mode && lhs->is_identifier()) {
+    } else if (m_parser_state.m_strict_mode && is<Identifier>(*lhs)) {
         auto name = static_cast<const Identifier&>(*lhs).string();
         if (name == "eval" || name == "arguments")
             syntax_error(String::formatted("'{}' cannot be assigned to in strict mode code", name));
-    } else if (m_parser_state.m_strict_mode && lhs->is_call_expression()) {
+    } else if (m_parser_state.m_strict_mode && is<CallExpression>(*lhs)) {
         syntax_error("Cannot assign to function call");
     }
     return create_ast_node<AssignmentExpression>({ rule_start.position(), position() }, assignment_op, move(lhs), parse_expression(min_precedence, associativity));
@@ -1190,7 +1190,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
 NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
 {
     auto rule_start = push_start();
-    if (!m_parser_state.m_allow_super_constructor_call && lhs->is_super_expression())
+    if (!m_parser_state.m_allow_super_constructor_call && is<SuperExpression>(*lhs))
         syntax_error("'super' keyword unexpected here");
 
     consume(TokenType::ParenOpen);
@@ -1777,7 +1777,7 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs)
 {
     auto rule_start = push_start();
-    if (lhs->is_variable_declaration()) {
+    if (is<VariableDeclaration>(*lhs)) {
         auto declarations = static_cast<VariableDeclaration&>(*lhs).declarations();
         if (declarations.size() > 1)
             syntax_error("multiple declarations not allowed in for..in/of");

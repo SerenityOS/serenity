@@ -107,7 +107,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
 
     for (auto& declaration : scope_node.variables()) {
         for (auto& declarator : declaration.declarations()) {
-            if (scope_node.is_program()) {
+            if (is<Program>(scope_node)) {
                 global_object.put(declarator.id().string(), js_undefined());
                 if (exception())
                     return;
@@ -160,7 +160,7 @@ void Interpreter::push_scope(ScopeFrame frame)
 
 Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ScopeType scope_type)
 {
-    if (!statement.is_scope_node())
+    if (!is<ScopeNode>(statement))
         return statement.execute(*this, global_object);
 
     auto& block = static_cast<const ScopeNode&>(statement);

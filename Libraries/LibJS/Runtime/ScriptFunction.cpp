@@ -94,7 +94,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
         variables.set(parameter.name, { js_undefined(), DeclarationKind::Var });
     }
 
-    if (body().is_scope_node()) {
+    if (is<ScopeNode>(body())) {
         for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
             for (auto& declarator : declaration.declarations()) {
                 variables.set(declarator.id().string(), { js_undefined(), DeclarationKind::Var });

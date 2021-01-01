@@ -56,17 +56,6 @@ public:
     virtual const char* class_name() const = 0;
     virtual Value execute(Interpreter&, GlobalObject&) const = 0;
     virtual void dump(int indent) const;
-    virtual bool is_identifier() const { return false; }
-    virtual bool is_spread_expression() const { return false; }
-    virtual bool is_member_expression() const { return false; }
-    virtual bool is_scope_node() const { return false; }
-    virtual bool is_program() const { return false; }
-    virtual bool is_variable_declaration() const { return false; }
-    virtual bool is_call_expression() const { return false; }
-    virtual bool is_new_expression() const { return false; }
-    virtual bool is_super_expression() const { return false; }
-    virtual bool is_expression_statement() const { return false; };
-    virtual bool is_string_literal() const { return false; };
 
     const SourceRange& source_range() const { return m_source_range; }
     SourceRange& source_range() { return m_source_range; }
@@ -125,7 +114,6 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual bool is_expression_statement() const override { return true; }
 
     const Expression& expression() const { return m_expression; };
 
@@ -165,7 +153,6 @@ protected:
     }
 
 private:
-    virtual bool is_scope_node() const final { return true; }
     NonnullRefPtrVector<Statement> m_children;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
     NonnullRefPtrVector<FunctionDeclaration> m_functions;
@@ -186,7 +173,6 @@ public:
 private:
     bool m_is_strict_mode { false };
 
-    virtual bool is_program() const override { return true; }
     virtual const char* class_name() const override { return "Program"; }
 };
 
@@ -695,7 +681,6 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual bool is_string_literal() const override { return true; };
 
     StringView value() const { return m_value; }
     bool is_use_strict_directive() const { return m_is_use_strict_directive; };
@@ -755,7 +740,6 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual bool is_identifier() const override { return true; }
     virtual Reference to_reference(Interpreter&, GlobalObject&) const override;
 
 private:
@@ -808,7 +792,6 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    virtual bool is_super_expression() const override { return true; }
     virtual const char* class_name() const override { return "SuperExpression"; }
 };
 
@@ -863,7 +846,6 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual bool is_spread_expression() const override { return true; }
 
 private:
     virtual const char* class_name() const override { return "SpreadExpression"; }
@@ -903,7 +885,6 @@ public:
 
 private:
     virtual const char* class_name() const override { return "CallExpression"; }
-    virtual bool is_call_expression() const override { return true; }
 
     struct ThisAndCallee {
         Value this_value;
@@ -924,8 +905,6 @@ public:
 
 private:
     virtual const char* class_name() const override { return "NewExpression"; }
-    virtual bool is_call_expression() const override { return false; }
-    virtual bool is_new_expression() const override { return true; }
 };
 
 enum class AssignmentOp {
@@ -1037,7 +1016,6 @@ public:
     {
     }
 
-    virtual bool is_variable_declaration() const override { return true; }
     DeclarationKind declaration_kind() const { return m_declaration_kind; }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
@@ -1198,7 +1176,6 @@ public:
     String to_string_approximation() const;
 
 private:
-    virtual bool is_member_expression() const override { return true; }
     virtual const char* class_name() const override { return "MemberExpression"; }
 
     NonnullRefPtr<Expression> m_object;
