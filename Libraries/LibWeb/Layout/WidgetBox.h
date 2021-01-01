@@ -43,8 +43,6 @@ public:
     void update_widget();
 
 private:
-    virtual const char* class_name() const override { return "WidgetBox"; }
-
     virtual void did_set_rect() override;
 
     NonnullRefPtr<GUI::Widget> m_widget;

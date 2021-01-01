@@ -37,7 +37,6 @@ public:
     virtual ~InitialContainingBlockBox() override;
 
     const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*Node::dom_node()); }
-    virtual const char* class_name() const override { return "InitialContainingBlockBox"; }
 
     void paint_all_phases(PaintContext&);
     virtual void paint(PaintContext&, PaintPhase) override;

@@ -44,7 +44,6 @@ public:
 
 private:
     virtual bool is_frame() const final { return true; }
-    virtual const char* class_name() const override { return "FrameBox"; }
     virtual void did_set_rect() override;
 };
 
