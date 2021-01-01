@@ -48,7 +48,7 @@ static void test_once()
         threads.last().start();
     }
     for (auto& thread : threads)
-        thread.join();
+        [[maybe_unused]] auto res = thread.join();
 
     ASSERT(v.size() == 1);
 }
