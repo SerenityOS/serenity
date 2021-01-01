@@ -282,9 +282,6 @@ public:
 
     Vector<Widget*> child_widgets() const;
 
-    virtual bool is_radio_button() const { return false; }
-    virtual bool is_abstract_button() const { return false; }
-
     void do_layout();
 
     Gfx::Palette palette() const;
