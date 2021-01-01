@@ -43,57 +43,24 @@ MultiView::MultiView()
     m_table_view = add<TableView>();
     m_columns_view = add<ColumnsView>();
 
-    m_icon_view->on_activation = [&](auto& index) {
-        if (on_activation)
-            on_activation(index);
-    };
-    m_columns_view->on_activation = [&](auto& index) {
-        if (on_activation)
-            on_activation(index);
-    };
-    m_table_view->on_activation = [&](auto& index) {
-        if (on_activation)
-            on_activation(index);
-    };
-
-    m_table_view->on_selection_change = [this] {
-        if (on_selection_change)
-            on_selection_change();
-    };
-    m_icon_view->on_selection_change = [this] {
-        if (on_selection_change)
-            on_selection_change();
-    };
-    m_columns_view->on_selection_change = [this] {
-        if (on_selection_change)
-            on_selection_change();
-    };
-
-    m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
-    };
-    m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
-    };
-    m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
-    };
-
-    m_table_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
-    };
-    m_icon_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
-    };
-    m_columns_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
-    };
+    for_each_view_implementation([&](auto& view) {
+        view.on_activation = [this](auto& index) {
+            if (on_activation)
+                on_activation(index);
+        };
+        view.on_selection_change = [this] {
+            if (on_selection_change)
+                on_selection_change();
+        };
+        view.on_context_menu_request = [this](auto& index, auto& event) {
+            if (on_context_menu_request)
+                on_context_menu_request(index, event);
+        };
+        view.on_drop = [this](auto& index, auto& event) {
+            if (on_drop)
+                on_drop(index, event);
+        };
+    });
 
     build_actions();
     set_view_mode(ViewMode::Icon);
