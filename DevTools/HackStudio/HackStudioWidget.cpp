@@ -459,13 +459,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_acti
         auto widget = m_action_tab_widget->active_widget();
         if (!widget)
             return;
-        if (strcmp(widget->class_name(), "TerminalWrapper") != 0)
+        if (!is<TerminalWrapper>(widget))
             return;
-        auto terminal = reinterpret_cast<TerminalWrapper*>(widget);
-        if (!terminal->user_spawned())
+        auto& terminal = *static_cast<TerminalWrapper*>(widget);
+        if (!terminal.user_spawned())
             return;
-
-        m_action_tab_widget->remove_tab(*terminal);
+        m_action_tab_widget->remove_tab(terminal);
         update_actions();
     });
 }
