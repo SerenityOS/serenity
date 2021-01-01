@@ -91,7 +91,13 @@ public:
     }
 
     template<typename T, typename Callback>
-    void for_each_child_of_type(Callback callback);
+    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value;
+
+    template<typename T>
+    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
+
+    template<typename T>
+    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
 
     bool is_ancestor_of(const Object&) const;
 
@@ -181,13 +187,44 @@ struct Formatter<Core::Object> : Formatter<StringView> {
 
 namespace Core {
 template<typename T, typename Callback>
-inline void Object::for_each_child_of_type(Callback callback)
+inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value
 {
     for_each_child([&](auto& child) {
-        if (is<T>(child))
-            return callback(downcast<T>(child));
+        if (auto* child_as_t = dynamic_cast<T*>(&child); child_as_t)
+            return callback(*child_as_t);
         return IterationDecision::Continue;
     });
+}
+
+template<typename T>
+T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+{
+    T* found_child = nullptr;
+    for_each_child_of_type<T>([&](auto& child) {
+        if (child.name() == name) {
+            found_child = &child;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    return found_child;
+}
+
+template<typename T>
+T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+{
+    auto* this_as_t = dynamic_cast<T*>(this);
+    if (this_as_t && this->name() == name)
+        return this_as_t;
+    T* found_child = nullptr;
+    for_each_child([&](auto& child) {
+        found_child = child.template find_descendant_of_type_named<T>(name);
+        if (found_child)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+    return found_child;
 }
 
 const LogStream& operator<<(const LogStream&, const Object&);
