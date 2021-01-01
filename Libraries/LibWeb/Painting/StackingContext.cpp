@@ -25,6 +25,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
@@ -82,9 +83,11 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestTy
 
 void StackingContext::dump(int indent) const
 {
+    StringBuilder builder;
     for (int i = 0; i < indent; ++i)
-        dbgprintf(" ");
-    dbgprintf("SC for %s{%s} %s [children: %zu]\n", m_box.class_name(), m_box.dom_node() ? m_box.dom_node()->node_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
+        builder.append(' ');
+    builder.appendff("SC for {}({}) {} [children: {}]", m_box.class_name(), m_box.dom_node() ? m_box.dom_node()->node_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
+    dbgln("{}", builder.string_view());
     for (auto& child : m_children)
         child->dump(indent + 1);
 }

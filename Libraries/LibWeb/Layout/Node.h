@@ -93,7 +93,8 @@ public:
 
     bool is_root_element() const;
 
-    const char* class_name() const;
+    String class_name() const;
+
     virtual bool is_initial_containing_block() const { return false; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
