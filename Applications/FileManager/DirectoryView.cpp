@@ -127,7 +127,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 
 DirectoryView::DirectoryView(Mode mode)
     : m_mode(mode)
-    , m_model(GUI::FileSystemModel::create())
+    , m_model(GUI::FileSystemModel::create({}))
     , m_sorting_model(GUI::SortingProxyModel::create(m_model))
 {
     set_active_widget(nullptr);
