@@ -996,6 +996,11 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
             if (window.rect().contains(event.position())) {
                 if (event.type() == Event::MouseDown) {
+                    // We're clicking on something that's blocked by a modal window.
+                    // Flash the modal window to let the user know about it.
+                    if (auto* blocking_modal_window = window.is_blocked_by_modal_window())
+                        blocking_modal_window->frame().start_flash_animation();
+
                     if (window.type() == WindowType::Normal)
                         move_to_front_and_make_active(window);
                     else if (window.type() == WindowType::Desktop)
