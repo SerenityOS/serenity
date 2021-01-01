@@ -79,12 +79,15 @@ function(serenity_app target_name)
 
     if (EXISTS "${small_icon}")
         embed_resource("${target_name}" serenity_icon_s "${small_icon}")
-    endif()
-    if (EXISTS "${medium_icon}")
-        embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
+    else()
+        message(WARNING "Missing small app icon: ${small_icon}")
     endif()
 
-    # TODO: Issue warnings if the app icons don't exist
+    if (EXISTS "${medium_icon}")
+        embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
+    else()
+        message(WARNING "Missing medium app icon: ${medium_icon}")
+    endif()
 endfunction()
 
 function(compile_gml source output string_name)
