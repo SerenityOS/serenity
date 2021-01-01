@@ -480,7 +480,6 @@ public:
 
     generator.append(R"~~~(
 private:
-    virtual bool is_@wrapper_class:snakecase@() const final { return true; }
 )~~~");
 
     for (auto& function : interface.functions) {
