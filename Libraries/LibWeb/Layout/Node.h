@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -93,7 +93,7 @@ public:
 
     bool is_root_element() const;
 
-    virtual const char* class_name() const = 0;
+    const char* class_name() const;
     virtual bool is_initial_containing_block() const { return false; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }

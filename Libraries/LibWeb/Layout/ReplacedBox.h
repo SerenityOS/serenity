@@ -65,8 +65,6 @@ protected:
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
 private:
-    virtual const char* class_name() const override { return "ReplacedBox"; }
-
     bool m_has_intrinsic_width { false };
     bool m_has_intrinsic_height { false };
     bool m_has_intrinsic_ratio { false };

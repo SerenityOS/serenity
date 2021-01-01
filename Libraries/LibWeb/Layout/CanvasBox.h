@@ -42,7 +42,6 @@ public:
     const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(ReplacedBox::dom_node()); }
 
 private:
-    virtual const char* class_name() const override { return "CanvasBox"; }
     virtual bool is_canvas() const override { return true; }
 };
 

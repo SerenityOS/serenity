@@ -34,7 +34,6 @@ class InlineNode : public NodeWithStyleAndBoxModelMetrics {
 public:
     InlineNode(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;
-    virtual const char* class_name() const override { return "InlineNode"; }
 
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const override;
 

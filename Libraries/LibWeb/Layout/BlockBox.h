@@ -36,8 +36,6 @@ public:
     BlockBox(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~BlockBox() override;
 
-    virtual const char* class_name() const override { return "BlockBox"; }
-
     virtual void paint(PaintContext&, PaintPhase) override;
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;

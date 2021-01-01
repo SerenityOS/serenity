@@ -39,9 +39,6 @@ public:
 
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext& context, PaintPhase phase) override;
-
-private:
-    virtual const char* class_name() const override { return "SVGPathBox"; }
 };
 
 }

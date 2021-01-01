@@ -36,9 +36,6 @@ public:
     virtual ~ListItemMarkerBox() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;
-
-private:
-    virtual const char* class_name() const override { return "ListItemMarkerBox"; }
 };
 
 }

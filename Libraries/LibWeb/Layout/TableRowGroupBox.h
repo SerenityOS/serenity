@@ -39,7 +39,6 @@ public:
 
 private:
     virtual bool is_table_row_group() const override { return true; }
-    virtual const char* class_name() const override { return "TableRowGroupBox"; }
 };
 
 }
