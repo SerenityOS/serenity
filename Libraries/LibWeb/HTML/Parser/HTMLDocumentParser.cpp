@@ -2846,23 +2846,30 @@ void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& 
     }
 
     if (token.is_end_tag()) {
-        auto& node = current_node();
+        RefPtr<DOM::Element> node = current_node();
         // FIXME: Not sure if this is the correct to_lowercase, as the specification says "to ASCII lowercase"
-        if (node.tag_name().to_lowercase() != token.tag_name())
+        if (node->tag_name().to_lowercase() != token.tag_name())
             PARSE_ERROR();
-        while (true) {
-            if (&node == &m_stack_of_open_elements.first()) {
+        for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
+            if (node == m_stack_of_open_elements.first()) {
                 ASSERT(m_parsing_fragment);
                 return;
             }
             // FIXME: See the above FIXME
-            if (node.tag_name().to_lowercase() == token.tag_name()) {
-                while (&current_node() != &node)
+            if (node->tag_name().to_lowercase() == token.tag_name()) {
+                while (current_node() != node)
                     m_stack_of_open_elements.pop();
                 m_stack_of_open_elements.pop();
                 return;
             }
-            TODO();
+
+            node = m_stack_of_open_elements.elements().at(i - 1);
+
+            if (node->namespace_() != Namespace::HTML)
+                continue;
+
+            process_using_the_rules_for(m_insertion_mode, token);
+            return;
         }
     }
 
