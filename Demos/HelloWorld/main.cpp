@@ -59,7 +59,6 @@ int main(int argc, char** argv)
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
-    main_widget.set_background_color(Color::White);
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 4, 4, 4, 4 });
 
