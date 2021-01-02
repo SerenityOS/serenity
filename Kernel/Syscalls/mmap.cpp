@@ -141,7 +141,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (map_anonymous) {
-        auto strategy = map_shared ? AllocationStrategy::AllocateNow : (map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve);
+        auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
