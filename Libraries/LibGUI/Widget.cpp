@@ -94,14 +94,19 @@ Widget::Widget()
 
     REGISTER_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_SIZE_PROPERTY("max_size", max_size, set_max_size);
+    REGISTER_INT_PROPERTY("width", width, set_width);
     REGISTER_INT_PROPERTY("min_width", min_width, set_min_width);
     REGISTER_INT_PROPERTY("max_width", max_width, set_max_width);
     REGISTER_INT_PROPERTY("min_height", min_height, set_min_height);
+    REGISTER_INT_PROPERTY("height", height, set_height);
     REGISTER_INT_PROPERTY("max_height", max_height, set_max_height);
 
     REGISTER_INT_PROPERTY("fixed_width", dummy_fixed_width, set_fixed_width);
     REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
     REGISTER_SIZE_PROPERTY("fixed_size", dummy_fixed_size, set_fixed_size);
+
+    REGISTER_INT_PROPERTY("x", x, set_x);
+    REGISTER_INT_PROPERTY("y", y, set_y);
 
     register_property(
         "focus_policy", [this]() -> JsonValue {
@@ -132,6 +137,32 @@ Widget::Widget()
             }
             if (value.as_string() == "StrongFocus") {
                 set_focus_policy(GUI::FocusPolicy::StrongFocus);
+                return true;
+            }
+            return false;
+        });
+
+    register_property(
+        "foreground_color", [this]() -> JsonValue { return palette().color(foreground_role()).to_string(); },
+        [this](auto& value) {
+            auto c = Color::from_string(value.to_string());
+            if (c.has_value()) {
+                auto _palette = palette();
+                _palette.set_color(foreground_role(), c.value());
+                set_palette(_palette);
+                return true;
+            }
+            return false;
+        });
+
+    register_property(
+        "background_color", [this]() -> JsonValue { return palette().color(background_role()).to_string(); },
+        [this](auto& value) {
+            auto c = Color::from_string(value.to_string());
+            if (c.has_value()) {
+                auto _palette = palette();
+                _palette.set_color(background_role(), c.value());
+                set_palette(_palette);
                 return true;
             }
             return false;
