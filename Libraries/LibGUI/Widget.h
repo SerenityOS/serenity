@@ -214,12 +214,6 @@ public:
     Gfx::ColorRole foreground_role() const { return m_foreground_role; }
     void set_foreground_role(Gfx::ColorRole);
 
-    Color background_color() const { return m_background_color; }
-    Color foreground_color() const { return m_foreground_color; }
-
-    void set_background_color(Color color) { m_background_color = color; }
-    void set_foreground_color(Color color) { m_foreground_color = color; }
-
     void set_autofill(bool b) { set_fill_with_background_color(b); }
 
     Window* window()
@@ -359,8 +353,6 @@ private:
     Gfx::IntRect m_relative_rect;
     Gfx::ColorRole m_background_role;
     Gfx::ColorRole m_foreground_role;
-    Color m_background_color;
-    Color m_foreground_color;
     NonnullRefPtr<Gfx::Font> m_font;
     String m_tooltip;
 
