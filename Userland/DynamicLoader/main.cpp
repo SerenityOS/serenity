@@ -143,8 +143,6 @@ void _start(int argc, char** argv, char** envp)
             main_program_name = (const char*)auxvp->a_un.a_ptr;
         }
     }
-    ASSERT(main_program_fd >= 0);
-    ASSERT(!main_program_name.is_null());
 
     if (main_program_name == "/usr/lib/Loader.so") {
         // We've been invoked directly as an executable rather than as the
@@ -154,6 +152,9 @@ void _start(int argc, char** argv, char** envp)
         display_help();
         _exit(1);
     }
+
+    ASSERT(main_program_fd >= 0);
+    ASSERT(!main_program_name.is_empty());
 
     ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, argc, argv, envp);
     ASSERT_NOT_REACHED();
