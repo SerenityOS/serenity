@@ -77,6 +77,10 @@ int main()
     }
 
     auto process_statistics = Core::ProcessStatisticsReader::get_all();
+    if (!process_statistics.has_value()) {
+        warnln("Error: Could not get process statistics");
+        return 1;
+    }
 
     auto now = time(nullptr);
 
@@ -110,7 +114,7 @@ int main()
 
         String what = "n/a";
 
-        for (auto& it : process_statistics) {
+        for (auto& it : process_statistics.value()) {
             if (it.value.tty == tty && it.value.pid == it.value.pgid)
                 what = it.value.name;
         }
