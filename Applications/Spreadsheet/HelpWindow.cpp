@@ -124,11 +124,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
                 return;
             }
 
-            auto dialog = GUI::Window::construct(this);
-            dialog->resize(size());
-            dialog->set_icon(icon());
-            dialog->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry));
-            auto& widget = dialog->set_main_widget<SpreadsheetWidget>(NonnullRefPtrVector<Sheet> {}, false);
+            auto window = GUI::Window::construct(this);
+            window->resize(size());
+            window->set_icon(icon());
+            window->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
+
+            auto& widget = window->set_main_widget<SpreadsheetWidget>(NonnullRefPtrVector<Sheet> {}, false);
             auto sheet = Sheet::from_json(value.as_object(), widget.workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, String::formatted("Corrupted example '{}' in '{}'", name, url.path()));
@@ -136,7 +138,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             }
 
             widget.add_sheet(sheet.release_nonnull());
-            dialog->show();
+            window->show();
         } else if (url.host() == "doc") {
             auto entry = LexicalPath(url.path()).basename();
             m_webview->load(URL::create_with_data("text/html", render(entry)));
