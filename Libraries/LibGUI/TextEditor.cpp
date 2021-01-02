@@ -148,13 +148,9 @@ void TextEditor::update_content_size()
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
 }
 
-TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
+TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& content_position) const
 {
-    auto position = a_position;
-    position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
-    position.move_by(-frame_thickness(), -frame_thickness());
-
+    auto position = content_position;
     if (is_single_line() && icon())
         position.move_by(-(icon_size() + icon_padding()), 0);
 
@@ -210,6 +206,15 @@ TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
 
     column_index = max((size_t)0, min(column_index, line(line_index).length()));
     return { line_index, column_index };
+}
+
+TextPosition TextEditor::text_position_at(const Gfx::IntPoint& widget_position) const
+{
+    auto content_position = widget_position;
+    content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+    content_position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
+    content_position.move_by(-frame_thickness(), -frame_thickness());
+    return text_position_at_content_position(content_position);
 }
 
 void TextEditor::doubleclick_event(MouseEvent& event)
@@ -760,15 +765,22 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_Up) {
-        if (m_cursor.line() > 0) {
+        if (m_cursor.line() > 0 || m_line_wrapping_enabled) {
             if (event.ctrl() && event.shift()) {
                 move_selected_lines_up();
                 return;
             }
-            size_t new_line = m_cursor.line() - 1;
-            size_t new_column = min(m_cursor.column(), line(new_line).length());
+            TextPosition new_cursor;
+            if (m_line_wrapping_enabled) {
+                auto position_above = cursor_content_rect().location().translated(0, -line_height());
+                new_cursor = text_position_at_content_position(position_above);
+            } else {
+                size_t new_line = m_cursor.line() - 1;
+                size_t new_column = min(m_cursor.column(), line(new_line).length());
+                new_cursor = { new_line, new_column };
+            }
             toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
+            set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
@@ -781,15 +793,23 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_Down) {
-        if (m_cursor.line() < (line_count() - 1)) {
+        if (m_cursor.line() < (line_count() - 1) || m_line_wrapping_enabled) {
             if (event.ctrl() && event.shift()) {
                 move_selected_lines_down();
                 return;
             }
-            size_t new_line = m_cursor.line() + 1;
-            size_t new_column = min(m_cursor.column(), line(new_line).length());
+            TextPosition new_cursor;
+            if (m_line_wrapping_enabled) {
+                new_cursor = text_position_at_content_position(cursor_content_rect().location().translated(0, line_height()));
+                auto position_below = cursor_content_rect().location().translated(0, line_height());
+                new_cursor = text_position_at_content_position(position_below);
+            } else {
+                size_t new_line = m_cursor.line() + 1;
+                size_t new_column = min(m_cursor.column(), line(new_line).length());
+                new_cursor = { new_line, new_column };
+            }
             toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
+            set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
