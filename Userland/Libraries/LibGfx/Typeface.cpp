@@ -38,6 +38,16 @@ unsigned Typeface::weight() const
     return m_ttf_font->weight();
 }
 
+bool Typeface::is_fixed_width() const
+{
+    ASSERT(m_ttf_font || m_bitmap_fonts.size() > 0);
+
+    if (is_fixed_size())
+        return m_bitmap_fonts[0]->is_fixed_width();
+
+    return m_ttf_font->is_fixed_width();
+}
+
 void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
 {
     m_bitmap_fonts.append(font);
