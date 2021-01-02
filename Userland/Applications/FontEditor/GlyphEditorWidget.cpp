@@ -67,7 +67,7 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     for (int x = 1; x < font().max_glyph_width(); ++x)
         painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, palette().threed_shadow2());
 
-    auto bitmap = font().glyph_bitmap(m_glyph);
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
 
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().max_glyph_width(); ++x) {
@@ -101,7 +101,7 @@ void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
         return;
     int x = (event.x() - 1) / m_scale;
     int y = (event.y() - 1) / m_scale;
-    auto bitmap = font().glyph_bitmap(m_glyph);
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
     if (x < 0 || x >= bitmap.width())
         return;
     if (y < 0 || y >= bitmap.height())

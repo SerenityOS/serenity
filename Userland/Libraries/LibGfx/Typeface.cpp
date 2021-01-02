@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Function.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
-#include <LibGfx/Forward.h>
 #include <LibGfx/Typeface.h>
 
 namespace Gfx {
 
-class FontDatabase {
-public:
-    static FontDatabase& the();
+void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
+{
+    m_bitmap_fonts.append(font);
+}
 
-    static Font& default_font();
-    static Font& default_bold_font();
+void Typeface::set_ttf_font(RefPtr<TTF::Font> font)
+{
+    m_ttf_font = font;
+}
 
-    static Font& default_fixed_width_font();
-    static Font& default_bold_fixed_width_font();
+RefPtr<Font> Typeface::get_font(unsigned size)
+{
+    for (auto font : m_bitmap_fonts) {
+        if (font->presentation_size() == size)
+            return font;
+    }
 
-    RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
-    RefPtr<Gfx::Font> get_by_name(const StringView&);
-    void for_each_font(Function<void(const Gfx::Font&)>);
-    void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
+    if (m_ttf_font) {
+        auto font = adopt(*new TTF::ScaledFont(m_ttf_font, size, size));
+        return font;
+    }
 
-    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
-
-private:
-    FontDatabase();
-    ~FontDatabase();
-
-    struct Private;
-    OwnPtr<Private> m_private;
-};
+    return {};
+}
 
 }
