@@ -40,6 +40,8 @@ set(KERNEL_SOURCES
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
     Devices/USB/UHCIController.cpp
+    VirtIO/VirtIO.cpp
+    VirtIO/VirtIOQueue.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Devices/HID/I8042Controller.cpp

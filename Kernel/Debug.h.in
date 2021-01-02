@@ -314,6 +314,10 @@
 #cmakedefine01 VOLATILE_PAGE_RANGES_DEBUG
 #endif
 
+#ifndef VIRTIO_DEBUG
+#cmakedefine01 VIRTIO_DEBUG
+#endif
+
 #ifndef VRA_DEBUG
 #cmakedefine01 VRA_DEBUG
 #endif
