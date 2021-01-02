@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     auto model = ManualModel::create();
 
     auto& left_tab_bar = splitter.add<GUI::TabWidget>();
-    auto& tree_view_container = left_tab_bar.add_tab<GUI::Widget>("Tree");
+    auto& tree_view_container = left_tab_bar.add_tab<GUI::Widget>("Browse");
     tree_view_container.set_layout<GUI::VerticalBoxLayout>();
     tree_view_container.layout()->set_margins({ 4, 4, 4, 4 });
     auto& tree_view = tree_view_container.add<GUI::TreeView>();
