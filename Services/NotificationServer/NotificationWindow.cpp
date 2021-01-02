@@ -41,7 +41,7 @@ namespace NotificationServer {
 
 static Vector<RefPtr<NotificationWindow>> s_windows;
 
-static void update_notification_window_locations()
+void update_notification_window_locations()
 {
     Gfx::IntRect last_window_rect;
     for (auto& window : s_windows) {
