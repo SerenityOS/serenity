@@ -35,6 +35,7 @@ set(KERNEL_SOURCES
     Devices/UHCIController.cpp
     VirtIO/VirtIO.cpp
     VirtIO/VirtIOQueue.cpp
+    VirtIO/VirtIOConsole.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Storage/Partition/DiskPartition.cpp

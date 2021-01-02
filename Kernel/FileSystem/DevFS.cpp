@@ -360,6 +360,8 @@ String DevFSDeviceInode::determine_name() const
     LOCKER(m_lock);
     if (m_attached_device->is_character_device()) {
         switch (m_attached_device->major()) {
+        case 229:
+            return String::format("hvc%d", m_attached_device->minor());
         case 85:
             if (m_attached_device->minor() == 1)
                 return "keyboard";
