@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -38,13 +39,17 @@ namespace Gfx {
 class Typeface : public RefCounted<Typeface> {
 public:
     Typeface(const String& family, const String& variant)
-    : m_family(family)
-    , m_variant(variant)
-    {}
+        : m_family(family)
+        , m_variant(variant)
+    {
+    }
 
     String family() const { return m_family; }
     String variant() const { return m_variant; }
-    unsigned weight() const { return 100; /*TODO*/ }
+    unsigned weight() const;
+
+    bool is_fixed_size() const { return !m_bitmap_fonts.is_empty(); }
+    void for_each_fixed_size_font(Function<void(const Font&)>) const;
 
     void add_bitmap_font(RefPtr<BitmapFont>);
     void set_ttf_font(RefPtr<TTF::Font>);

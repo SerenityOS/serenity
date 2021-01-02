@@ -159,10 +159,19 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
 
 RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
 {
-    for (auto& it : m_private->full_name_to_font_map) {
-        auto& font = *it.value;
-        if (font.family() == family && font.presentation_size() == size && font.weight() == weight)
-            return font;
+    for (auto typeface : m_private->typefaces) {
+        if (typeface->family() == family && typeface->weight() == weight)
+            return typeface->get_font(size);
+    }
+    return nullptr;
+}
+
+RefPtr<Gfx::Font> FontDatabase::get(const String& family, const String& variant, unsigned size)
+{
+    dbgln("FontDatabase: Request font {} {} {}", family, variant, size);
+    for (auto typeface : m_private->typefaces) {
+        if (typeface->family() == family && typeface->variant() == variant)
+            return typeface->get_font(size);
     }
     return nullptr;
 }
@@ -176,6 +185,13 @@ RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, cons
     auto typeface = adopt(*new Typeface(family, variant));
     m_private->typefaces.append(typeface);
     return typeface;
+}
+
+void FontDatabase::for_each_typeface(Function<void(const Typeface&)> callback)
+{
+    for (auto typeface : m_private->typefaces) {
+        callback(*typeface);
+    }
 }
 
 }
