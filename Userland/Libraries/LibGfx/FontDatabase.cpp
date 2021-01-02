@@ -159,6 +159,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
 
 RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
 {
+    dbgln("FontDatabase: Request font {} {} {}", family, size, weight);
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight)
             return typeface->get_font(size);

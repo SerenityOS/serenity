@@ -48,6 +48,7 @@ public:
     String variant() const { return m_variant; }
     unsigned weight() const;
 
+    bool is_fixed_width() const;
     bool is_fixed_size() const { return !m_bitmap_fonts.is_empty(); }
     void for_each_fixed_size_font(Function<void(const Font&)>) const;
 

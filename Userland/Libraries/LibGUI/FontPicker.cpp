@@ -113,22 +113,22 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_sample_text_label = *widget.find_descendant_of_type_named<Label>("sample_text_label");
 
     m_families.clear();
-    Gfx::FontDatabase::the().for_each_font([&](auto& font) {
-        if (m_fixed_width_only && !font.is_fixed_width())
+    Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
+        if (m_fixed_width_only && !typeface.is_fixed_width())
             return;
-        if (!m_families.contains_slow(font.family()))
-            m_families.append(font.family());
+        if (!m_families.contains_slow(typeface.family()))
+            m_families.append(typeface.family());
     });
     quick_sort(m_families);
 
     m_family_list_view->on_selection = [this](auto& index) {
         m_family = index.data().to_string();
         m_weights.clear();
-        Gfx::FontDatabase::the().for_each_font([&](auto& font) {
-            if (m_fixed_width_only && !font.is_fixed_width())
+        Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
+            if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
-            if (font.family() == m_family.value() && !m_weights.contains_slow(font.weight())) {
-                m_weights.append(font.weight());
+            if (typeface.family() == m_family.value() && !m_weights.contains_slow(typeface.weight())) {
+                m_weights.append(typeface.weight());
             }
         });
         quick_sort(m_weights);
@@ -144,11 +144,18 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_weight_list_view->on_selection = [this](auto& index) {
         m_weight = index.data(ModelRole::Custom).to_i32();
         m_sizes.clear();
-        Gfx::FontDatabase::the().for_each_font([&](auto& font) {
-            if (m_fixed_width_only && !font.is_fixed_width())
+        dbgln("Selected weight: {}", m_weight.value());
+        Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
+            if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
-            if (font.family() == m_family.value() && font.weight() == m_weight.value()) {
-                m_sizes.append(font.presentation_size());
+            if (typeface.family() == m_family.value() && (int)typeface.weight() == m_weight.value()) {
+                if (typeface.is_fixed_size()) {
+                    typeface.for_each_fixed_size_font([&](auto& font) {
+                        m_sizes.append(font.presentation_size());
+                    });
+                } else {
+                    m_sizes.append(12);
+                }
             }
         });
         quick_sort(m_sizes);
@@ -206,14 +213,18 @@ void FontPicker::set_font(const Gfx::Font* font)
     m_weight = font->weight();
     m_size = font->presentation_size();
 
-    size_t family_index = m_families.find_first_index(m_font->family()).value();
-    m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index), GUI::AbstractView::SelectionUpdate::Set);
+    auto family_index = m_families.find_first_index(m_font->family());
+    if (family_index.has_value())
+        m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
-    size_t weight_index = m_weights.find_first_index(m_font->weight()).value();
-    m_weight_list_view->set_cursor(m_weight_list_view->model()->index(weight_index), GUI::AbstractView::SelectionUpdate::Set);
+    auto weight_index = m_weights.find_first_index(m_font->weight());
+    if (weight_index.has_value()) {
+        m_weight_list_view->set_cursor(m_weight_list_view->model()->index(weight_index.value()), GUI::AbstractView::SelectionUpdate::Set);
+    }
 
-    size_t size_index = m_sizes.find_first_index(m_font->presentation_size()).value();
-    m_size_list_view->set_cursor(m_size_list_view->model()->index(size_index), GUI::AbstractView::SelectionUpdate::Set);
+    auto size_index = m_sizes.find_first_index(m_font->presentation_size());
+    if (size_index.has_value())
+        m_size_list_view->set_cursor(m_size_list_view->model()->index(size_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 }
 
 void FontPicker::update_font()

@@ -77,6 +77,8 @@ public:
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_cmap.glyph_id_for_codepoint(codepoint); }
     String family() const;
     String variant() const;
+    u16 weight() const;
+    bool is_fixed_width() const { return false; } /* TODO */
 
 private:
     enum class Offsets {
@@ -119,7 +121,7 @@ private:
 
 class ScaledFont : public Gfx::Font {
 public:
-    ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
+    ScaledFont(RefPtr<TTF::Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
         : m_font(font)
     {
         float units_per_em = m_font->units_per_em();
@@ -149,7 +151,7 @@ public:
     virtual int width(const Utf8View&) const override;
     virtual int width(const Utf32View&) const override;
     virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
-    virtual bool is_fixed_width() const override { return false; }  /* TODO */
+    virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return m_x_scale; } /* TODO */
     virtual int glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
