@@ -100,6 +100,11 @@ NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
     return Action::create("Quit", { Mod_Alt, Key_F4 }, move(callback));
 }
 
+NonnullRefPtr<Action> make_help_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return Action::create("Contents", { Mod_None, Key_F1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"), move(callback), parent);
+}
+
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return Action::create("Go back", { Mod_Alt, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), move(callback), parent);

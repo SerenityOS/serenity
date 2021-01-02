@@ -55,6 +55,7 @@ NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::O
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>);
+NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
