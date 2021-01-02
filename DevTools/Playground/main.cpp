@@ -25,6 +25,7 @@
  */
 
 #include <LibCore/File.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/FilePicker.h>
@@ -228,6 +229,11 @@ int main(int argc, char** argv)
 
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
+    }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("GML Playground", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
