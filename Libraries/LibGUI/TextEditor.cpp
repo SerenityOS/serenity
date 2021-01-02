@@ -1049,8 +1049,12 @@ void TextEditor::keydown_event(KeyEvent& event)
         StringBuilder sb;
         sb.append_code_point(event.code_point());
 
-        if (should_autocomplete_automatically())
-            m_autocomplete_timer->start();
+        if (should_autocomplete_automatically()) {
+            if (sb.string_view().is_whitespace())
+                m_autocomplete_timer->stop();
+            else
+                m_autocomplete_timer->start();
+        }
         insert_at_cursor_or_replace_selection(sb.to_string());
         return;
     }
