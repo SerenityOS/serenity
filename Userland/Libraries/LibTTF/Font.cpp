@@ -341,7 +341,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     auto head = opt_head.value();
 
     if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value()) {
-        dbg() << "Could not load Name";
+        dbgln("Could not load Name");
         return nullptr;
     }
     auto name = opt_name.value();
