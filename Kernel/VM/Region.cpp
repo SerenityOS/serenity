@@ -51,12 +51,14 @@ Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offs
     , m_cacheable(cacheable)
     , m_kernel(kernel)
 {
+    m_vmobject->ref_region();
     register_purgeable_page_ranges();
     MM.register_region(*this);
 }
 
 Region::~Region()
 {
+    m_vmobject->unref_region();
     unregister_purgeable_page_ranges();
 
     // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
@@ -153,7 +155,9 @@ void Region::set_vmobject(NonnullRefPtr<VMObject>&& obj)
     if (m_vmobject.ptr() == obj.ptr())
         return;
     unregister_purgeable_page_ranges();
+    m_vmobject->unref_region();
     m_vmobject = move(obj);
+    m_vmobject->ref_region();
     register_purgeable_page_ranges();
 }
 
@@ -299,11 +303,13 @@ bool Region::map_individual_page_impl(size_t page_index)
     return true;
 }
 
-bool Region::remap_page_range(size_t page_index, size_t page_count)
+bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
-    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(s_mm_lock.own_lock());
     ASSERT(m_page_directory);
+    if (!translate_vmobject_page_range(page_index, page_count))
+        return success; // not an error, region doesn't map this page range
     ScopedSpinLock page_lock(m_page_directory->get_lock());
     size_t index = page_index;
     while (index < page_index + page_count) {
@@ -318,15 +324,51 @@ bool Region::remap_page_range(size_t page_index, size_t page_count)
     return success;
 }
 
-bool Region::remap_page(size_t page_index, bool with_flush)
+bool Region::remap_vmobject_page_range(size_t page_index, size_t page_count)
+{
+    bool success = true;
+    ScopedSpinLock lock(s_mm_lock);
+    auto& vmobject = this->vmobject();
+    if (vmobject.is_shared_by_multiple_regions()) {
+        vmobject.for_each_region([&](auto& region) {
+            if (!region.do_remap_vmobject_page_range(page_index, page_count))
+                success = false;
+        });
+    } else {
+        if (!do_remap_vmobject_page_range(page_index, page_count))
+            success = false;
+    }
+    return success;
+}
+
+bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 {
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(m_page_directory);
+    if (!translate_vmobject_page(page_index))
+        return true; // not an error, region doesn't map this page
     ScopedSpinLock page_lock(m_page_directory->get_lock());
     ASSERT(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
         MM.flush_tlb(vaddr_from_page_index(page_index));
+    return success;
+}
+
+bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
+{
+    bool success = true;
+    ScopedSpinLock lock(s_mm_lock);
+    auto& vmobject = this->vmobject();
+    if (vmobject.is_shared_by_multiple_regions()) {
+        vmobject.for_each_region([&](auto& region) {
+            if (!region.do_remap_vmobject_page(page_index, with_flush))
+                success = false;
+        });
+    } else {
+        if (!do_remap_vmobject_page(page_index, with_flush))
+            success = false;
+    }
     return success;
 }
 
@@ -411,14 +453,15 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 
         auto& page_slot = physical_page_slot(page_index_in_region);
         if (page_slot->is_lazy_committed_page()) {
-            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
-            remap_page(page_index_in_region);
+            auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
+            remap_vmobject_page(page_index_in_vmobject);
             return PageFaultResponse::Continue;
         }
 #ifdef MAP_SHARED_ZERO_PAGE_LAZILY
         if (fault.is_read()) {
             page_slot = MM.shared_zero_page();
-            remap_page(page_index_in_region);
+            remap_vmobject_page(translate_to_vmobject_page(page_index_in_region));
             return PageFaultResponse::Continue;
         }
         return handle_zero_fault(page_index_in_region);
@@ -453,12 +496,13 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
 
     auto& page_slot = physical_page_slot(page_index_in_region);
+    auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
-        if (!remap_page(page_index_in_region))
+        if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
@@ -468,7 +512,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
         current_thread->did_zero_fault();
 
     if (page_slot->is_lazy_committed_page()) {
-        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
+        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "      >> ALLOCATED COMMITTED " << page_slot->paddr();
 #endif
@@ -483,7 +527,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 #endif
     }
 
-    if (!remap_page(page_index_in_region)) {
+    if (!remap_vmobject_page(page_index_in_vmobject)) {
         klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
         return PageFaultResponse::OutOfMemory;
     }
@@ -500,8 +544,9 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     if (!vmobject().is_anonymous())
         return PageFaultResponse::ShouldCrash;
 
-    auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(first_page_index() + page_index_in_region, vaddr().offset(page_index_in_region * PAGE_SIZE));
-    if (!remap_page(page_index_in_region))
+    auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+    auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(page_index_in_vmobject, vaddr().offset(page_index_in_region * PAGE_SIZE));
+    if (!remap_vmobject_page(page_index_in_vmobject))
         return PageFaultResponse::OutOfMemory;
     return response;
 }
@@ -515,7 +560,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     ASSERT_INTERRUPTS_DISABLED();
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
-    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
+    auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
 #ifdef PAGE_FAULT_DEBUG
     dbg() << "Inode fault in " << name() << " page index: " << page_index_in_region;
@@ -525,7 +571,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
         dbg() << ("MM: page_in_from_inode() but page already present. Fine with me!");
 #endif
-        if (!remap_page(page_index_in_region))
+        if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
@@ -541,7 +587,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
-    auto nread = inode.read_bytes((first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
+    auto nread = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
     if (nread < 0) {
         klog() << "MM: handle_inode_fault had error (" << nread << ") while reading!";
         return PageFaultResponse::ShouldCrash;
@@ -569,7 +615,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     }
     MM.unquickmap_page();
 
-    remap_page(page_index_in_region);
+    remap_vmobject_page(page_index_in_vmobject);
     return PageFaultResponse::Continue;
 }
 
