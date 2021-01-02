@@ -48,6 +48,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StatusBar.h>
@@ -55,6 +56,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -70,6 +72,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
+    m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
 
     m_editor->on_change = [this] {
         update_preview();
@@ -272,6 +275,14 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
+    m_vim_emulation_setting_action = GUI::Action::create_checkable("Vim emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+        if (action.is_checked())
+            m_editor->set_editing_engine(make<GUI::VimEditingEngine>());
+        else
+            m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
+    });
+    m_vim_emulation_setting_action->set_checked(false);
+
     m_find_replace_action = GUI::Action::create("Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
@@ -380,6 +391,8 @@ TextEditorWidget::TextEditorWidget()
     edit_menu.add_action(m_editor->copy_action());
     edit_menu.add_action(m_editor->paste_action());
     edit_menu.add_action(m_editor->delete_action());
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_vim_emulation_setting_action);
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_replace_action);
     edit_menu.add_action(*m_find_next_action);

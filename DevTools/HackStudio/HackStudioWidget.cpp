@@ -57,6 +57,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/EditingEngine.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ItemListModel.h>
@@ -64,6 +65,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TabWidget.h>
@@ -73,6 +75,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/TreeView.h>
+#include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
@@ -235,6 +238,7 @@ void HackStudioWidget::open_file(const String& filename)
     current_editor().set_mode(GUI::TextEditor::Editable);
     current_editor().horizontal_scrollbar().set_value(new_project_file->horizontal_scroll_value());
     current_editor().vertical_scrollbar().set_value(new_project_file->vertical_scroll_value());
+    current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
@@ -855,6 +859,17 @@ void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
     });
     line_wrapping_action->set_checked(current_editor().is_line_wrapping_enabled());
     edit_menu.add_action(line_wrapping_action);
+
+    edit_menu.add_separator();
+
+    auto vim_emulation_setting_action = GUI::Action::create_checkable("Vim emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
+        if (action.is_checked())
+            current_editor().set_editing_engine(make<GUI::VimEditingEngine>());
+        else
+            current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+    });
+    vim_emulation_setting_action->set_checked(false);
+    edit_menu.add_action(vim_emulation_setting_action);
 }
 
 void HackStudioWidget::create_build_menubar(GUI::MenuBar& menubar)
