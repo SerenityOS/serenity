@@ -358,57 +358,59 @@ void ProcessModel::update()
 
     HashTable<PidAndTid> live_pids;
     u64 sum_ticks_scheduled = 0;
-    for (auto& it : all_processes) {
-        for (auto& thread : it.value.threads) {
-            ThreadState state;
-            state.pid = it.value.pid;
-            state.user = it.value.username;
-            state.pledge = it.value.pledge;
-            state.veil = it.value.veil;
-            state.syscall_count = thread.syscall_count;
-            state.inode_faults = thread.inode_faults;
-            state.zero_faults = thread.zero_faults;
-            state.cow_faults = thread.cow_faults;
-            state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
-            state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
-            state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
-            state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
-            state.file_read_bytes = thread.file_read_bytes;
-            state.file_write_bytes = thread.file_write_bytes;
-            state.amount_virtual = it.value.amount_virtual;
-            state.amount_resident = it.value.amount_resident;
-            state.amount_dirty_private = it.value.amount_dirty_private;
-            state.amount_clean_inode = it.value.amount_clean_inode;
-            state.amount_purgeable_volatile = it.value.amount_purgeable_volatile;
-            state.amount_purgeable_nonvolatile = it.value.amount_purgeable_nonvolatile;
+    if (all_processes.has_value()) {
+        for (auto& it : all_processes.value()) {
+            for (auto& thread : it.value.threads) {
+                ThreadState state;
+                state.pid = it.value.pid;
+                state.user = it.value.username;
+                state.pledge = it.value.pledge;
+                state.veil = it.value.veil;
+                state.syscall_count = thread.syscall_count;
+                state.inode_faults = thread.inode_faults;
+                state.zero_faults = thread.zero_faults;
+                state.cow_faults = thread.cow_faults;
+                state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
+                state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
+                state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
+                state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
+                state.file_read_bytes = thread.file_read_bytes;
+                state.file_write_bytes = thread.file_write_bytes;
+                state.amount_virtual = it.value.amount_virtual;
+                state.amount_resident = it.value.amount_resident;
+                state.amount_dirty_private = it.value.amount_dirty_private;
+                state.amount_clean_inode = it.value.amount_clean_inode;
+                state.amount_purgeable_volatile = it.value.amount_purgeable_volatile;
+                state.amount_purgeable_nonvolatile = it.value.amount_purgeable_nonvolatile;
 
-            state.name = thread.name;
-            state.executable = it.value.executable;
+                state.name = thread.name;
+                state.executable = it.value.executable;
 
-            state.ppid = it.value.ppid;
-            state.tid = thread.tid;
-            state.pgid = it.value.pgid;
-            state.sid = it.value.sid;
-            state.times_scheduled = thread.times_scheduled;
-            state.ticks_user = thread.ticks_user;
-            state.ticks_kernel = thread.ticks_kernel;
-            state.cpu = thread.cpu;
-            state.cpu_percent = 0;
-            state.priority = thread.priority;
-            state.effective_priority = thread.effective_priority;
-            state.state = thread.state;
-            sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
-            {
+                state.ppid = it.value.ppid;
+                state.tid = thread.tid;
+                state.pgid = it.value.pgid;
+                state.sid = it.value.sid;
+                state.times_scheduled = thread.times_scheduled;
+                state.ticks_user = thread.ticks_user;
+                state.ticks_kernel = thread.ticks_kernel;
+                state.cpu = thread.cpu;
+                state.cpu_percent = 0;
+                state.priority = thread.priority;
+                state.effective_priority = thread.effective_priority;
+                state.state = thread.state;
+                sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
+                {
+                    auto pit = m_threads.find({ it.value.pid, thread.tid });
+                    if (pit == m_threads.end())
+                        m_threads.set({ it.value.pid, thread.tid }, make<Thread>());
+                }
                 auto pit = m_threads.find({ it.value.pid, thread.tid });
-                if (pit == m_threads.end())
-                    m_threads.set({ it.value.pid, thread.tid }, make<Thread>());
-            }
-            auto pit = m_threads.find({ it.value.pid, thread.tid });
-            ASSERT(pit != m_threads.end());
-            (*pit).value->previous_state = (*pit).value->current_state;
-            (*pit).value->current_state = state;
+                ASSERT(pit != m_threads.end());
+                (*pit).value->previous_state = (*pit).value->current_state;
+                (*pit).value->current_state = state;
 
-            live_pids.set({ it.value.pid, thread.tid });
+                live_pids.set({ it.value.pid, thread.tid });
+            }
         }
     }
 

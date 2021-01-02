@@ -50,14 +50,15 @@ void RunningProcessesModel::update()
 
     Core::ProcessStatisticsReader reader;
     auto processes = reader.get_all();
-
-    for (auto& it : processes) {
-        Process process;
-        process.pid = it.value.pid;
-        process.uid = it.value.uid;
-        process.icon = FileIconProvider::icon_for_executable(it.value.executable).bitmap_for_size(16);
-        process.name = it.value.name;
-        m_processes.append(move(process));
+    if (processes.has_value()) {
+        for (auto& it : processes.value()) {
+            Process process;
+            process.pid = it.value.pid;
+            process.uid = it.value.uid;
+            process.icon = FileIconProvider::icon_for_executable(it.value.executable).bitmap_for_size(16);
+            process.name = it.value.name;
+            m_processes.append(move(process));
+        }
     }
 
     did_update();

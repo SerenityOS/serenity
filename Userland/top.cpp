@@ -92,11 +92,12 @@ struct Snapshot {
 
 static Snapshot get_snapshot()
 {
-    Snapshot snapshot;
-
     auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
+        return {};
 
-    for (auto& it : all_processes) {
+    Snapshot snapshot;
+    for (auto& it : all_processes.value()) {
         auto& stats = it.value;
         for (auto& thread : stats.threads) {
             snapshot.sum_times_scheduled += thread.times_scheduled;

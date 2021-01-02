@@ -37,7 +37,7 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
+Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
 {
     auto file = Core::File::construct("/proc/all");
     if (!file->open(Core::IODevice::ReadOnly)) {
@@ -49,7 +49,8 @@ HashMap<pid_t, Core::ProcessStatistics> ProcessStatisticsReader::get_all()
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    if (!json.has_value())
+        return {};
     json.value().as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         Core::ProcessStatistics process;

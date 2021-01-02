@@ -120,8 +120,10 @@ int main(int argc, char** argv)
     printf("\n");
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
+        return 1;
 
-    for (const auto& it : all_processes) {
+    for (const auto& it : all_processes.value()) {
         const auto& proc = it.value;
         auto tty = proc.tty;
 
