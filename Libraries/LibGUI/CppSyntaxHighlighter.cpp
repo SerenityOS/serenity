@@ -90,8 +90,8 @@ void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(palette, token.m_type);
-        span.color = style.color;
-        span.bold = style.bold;
+        span.attributes.color = style.color;
+        span.attributes.bold = style.bold;
         span.is_skippable = token.m_type == Cpp::Token::Type::Whitespace;
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);

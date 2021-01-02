@@ -226,8 +226,8 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
     for (auto& span : document().spans()) {
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
-            if (highlighter->is_navigatable(span.data) && span.is_underlined) {
-                span.is_underlined = false;
+            if (highlighter->is_navigatable(span.data) && span.attributes.underline) {
+                span.attributes.underline = false;
                 wrapper().editor().update();
             }
         }
@@ -243,9 +243,9 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
             if (highlighter->is_navigatable(span.data)) {
                 is_over_link = true;
-                bool was_underlined = span.is_underlined;
-                span.is_underlined = event.modifiers() & Mod_Ctrl;
-                if (span.is_underlined != was_underlined) {
+                bool was_underlined = span.attributes.underline;
+                span.attributes.underline = event.modifiers() & Mod_Ctrl;
+                if (span.attributes.underline != was_underlined) {
                     wrapper().editor().update();
                 }
             }

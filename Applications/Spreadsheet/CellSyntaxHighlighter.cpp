@@ -47,23 +47,29 @@ void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     // Highlight the '='
     m_editor->document().spans().empend(
         GUI::TextRange { { 0, 0 }, { 0, 1 } },
-        palette.syntax_keyword(),
-        Optional<Color> {},
-        false,
-        false,
-        false,
-        nullptr);
+        Gfx::TextAttributes {
+            palette.syntax_keyword(),
+            Optional<Color> {},
+            false,
+            false,
+        },
+        nullptr,
+        false);
 
     if (m_cell && m_cell->exception()) {
         auto range = m_cell->exception()->source_ranges().first();
         GUI::TextRange text_range { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column - 1 } };
-        m_editor->document().spans().prepend({ text_range,
-            Color::Black,
-            Color::Red,
-            false,
-            false,
-            false,
-            nullptr });
+        m_editor->document().spans().prepend(
+            GUI::TextDocumentSpan {
+                text_range,
+                Gfx::TextAttributes {
+                    Color::Black,
+                    Color::Red,
+                    false,
+                    false,
+                },
+                nullptr,
+                false });
     }
     m_editor->update();
 }

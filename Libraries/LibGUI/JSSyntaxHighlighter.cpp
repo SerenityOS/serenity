@@ -100,8 +100,8 @@ void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.range.set_end({ position.line(), position.column() });
         auto type = is_trivia ? JS::TokenType::Invalid : token.type();
         auto style = style_for_token_type(palette, type);
-        span.color = style.color;
-        span.bold = style.bold;
+        span.attributes.color = style.color;
+        span.attributes.bold = style.bold;
         span.is_skippable = is_trivia;
         span.data = reinterpret_cast<void*>(static_cast<size_t>(type));
         spans.append(span);

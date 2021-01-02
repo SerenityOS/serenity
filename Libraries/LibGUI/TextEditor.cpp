@@ -496,13 +496,13 @@ void TextEditor::paint_event(PaintEvent& event)
                     for (auto& span : document().spans()) {
                         if (!span.range.contains(physical_position))
                             continue;
-                        color = span.color;
-                        if (span.bold) {
+                        color = span.attributes.color;
+                        if (span.attributes.bold) {
                             if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700))
                                 font = bold_font;
                         }
-                        background_color = span.background_color;
-                        underline = span.is_underlined;
+                        background_color = span.attributes.background_color;
+                        underline = span.attributes.underline;
                         break;
                     }
                     character_rect.set_width(font->glyph_width(code_point) + font->glyph_spacing());
