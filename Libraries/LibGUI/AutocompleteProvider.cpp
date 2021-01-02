@@ -103,7 +103,7 @@ AutocompleteBox::~AutocompleteBox() { }
 AutocompleteBox::AutocompleteBox(TextEditor& editor)
     : m_editor(editor)
 {
-    m_popup_window = GUI::Window::construct();
+    m_popup_window = GUI::Window::construct(m_editor->window());
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
     m_popup_window->set_rect(0, 0, 200, 100);
 
