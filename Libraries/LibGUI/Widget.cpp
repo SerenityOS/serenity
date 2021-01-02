@@ -445,13 +445,25 @@ void Widget::hide_event(HideEvent&)
 
 void Widget::keydown_event(KeyEvent& event)
 {
-    if (!event.alt() && !event.ctrl() && !event.logo() && event.key() == KeyCode::Key_Tab) {
-        if (event.shift())
-            focus_previous_widget(FocusSource::Keyboard);
-        else
-            focus_next_widget(FocusSource::Keyboard);
-        event.accept();
-        return;
+    if (!event.alt() && !event.ctrl() && !event.logo()) {
+        if (event.key() == KeyCode::Key_Tab) {
+            if (event.shift())
+                focus_previous_widget(FocusSource::Keyboard, false);
+            else
+                focus_next_widget(FocusSource::Keyboard, false);
+            event.accept();
+            return;
+        }
+        if (!event.shift() && (event.key() == KeyCode::Key_Left || event.key() == KeyCode::Key_Up)) {
+            focus_previous_widget(FocusSource::Keyboard, true);
+            event.accept();
+            return;
+        }
+        if (!event.shift() && (event.key() == KeyCode::Key_Right || event.key() == KeyCode::Key_Down)) {
+            focus_next_widget(FocusSource::Keyboard, true);
+            event.accept();
+            return;
+        }
     }
     event.ignore();
 }
@@ -822,9 +834,11 @@ void Widget::set_updates_enabled(bool enabled)
         update();
 }
 
-void Widget::focus_previous_widget(FocusSource source)
+void Widget::focus_previous_widget(FocusSource source, bool siblings_only)
 {
     auto focusable_widgets = window()->focusable_widgets(source);
+    if (siblings_only)
+        focusable_widgets.remove_all_matching([this](auto& entry) { return entry->parent() != parent(); });
     for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
         if (focusable_widgets[i] != this)
             continue;
@@ -835,9 +849,11 @@ void Widget::focus_previous_widget(FocusSource source)
     }
 }
 
-void Widget::focus_next_widget(FocusSource source)
+void Widget::focus_next_widget(FocusSource source, bool siblings_only)
 {
     auto focusable_widgets = window()->focusable_widgets(source);
+    if (siblings_only)
+        focusable_widgets.remove_all_matching([this](auto& entry) { return entry->parent() != parent(); });
     for (size_t i = 0; i < focusable_widgets.size(); ++i) {
         if (focusable_widgets[i] != this)
             continue;
