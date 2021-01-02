@@ -900,7 +900,16 @@ FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, Color co
 
 FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    draw_bitmap(point, font.glyph(code_point).glyph_bitmap(), color);
+    auto glyph = font.glyph(code_point);
+    if (glyph.is_glyph_bitmap()) {
+        draw_bitmap(point, glyph.glyph_bitmap(), color);
+    } else {
+        auto top_left = point + IntPoint(glyph.left_bearing(), font.x_height() - glyph.ascent());
+
+        blit_filtered(top_left, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
+            return pixel.multiply(color);
+        });
+    }
 }
 
 void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const Font& font)
