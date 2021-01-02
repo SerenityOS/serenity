@@ -49,6 +49,9 @@ static NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block(Node& paren
     return new_style;
 }
 
+// The insertion_parent_for_*() functions maintain the invariant that block-level boxes must have either
+// only block-level children or only inline-level children.
+
 static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_parent, Layout::Node& layout_node)
 {
     if (layout_parent.is_inline())
@@ -57,7 +60,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_paren
     if (!layout_parent.has_children() || layout_parent.children_are_inline())
         return layout_parent;
 
-    // layout_parent has block children, insert into an anonymous wrapper block (and create it first if needed)
+    // Parent has block-level children, insert into an anonymous wrapper block (and create it first if needed)
     if (!layout_parent.last_child()->is_anonymous() || !layout_parent.last_child()->children_are_inline()) {
         layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
     }
@@ -66,28 +69,31 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_paren
 
 static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent, Layout::Node& layout_node)
 {
-    if (!layout_parent.has_children() || !layout_parent.children_are_inline())
+    if (!layout_parent.has_children()) {
+        // Parent block has no children, insert this block into parent.
         return layout_parent;
-
-    // layout_parent has inline children, first move them into an anonymous wrapper block
-    if (layout_parent.children_are_inline()) {
-        NonnullRefPtrVector<Layout::Node> children;
-        while (RefPtr<Layout::Node> child = layout_parent.first_child()) {
-            layout_parent.remove_child(*child);
-            children.append(child.release_nonnull());
-        }
-        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
-        layout_parent.set_children_are_inline(false);
-        for (auto& child : children) {
-            layout_parent.last_child()->append_child(child);
-        }
-        layout_parent.last_child()->set_children_are_inline(true);
     }
 
-    if (!layout_parent.last_child()->is_anonymous() || layout_parent.last_child()->children_are_inline()) {
-        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+    if (!layout_parent.children_are_inline()) {
+        // Parent block has block-level children, insert this block into parent.
+        return layout_parent;
     }
-    return *layout_parent.last_child();
+
+    // Parent block has inline-level children (our siblings).
+    // First move these siblings into an anonymous wrapper block.
+    NonnullRefPtrVector<Layout::Node> children;
+    while (RefPtr<Layout::Node> child = layout_parent.first_child()) {
+        layout_parent.remove_child(*child);
+        children.append(child.release_nonnull());
+    }
+    layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+    layout_parent.set_children_are_inline(false);
+    for (auto& child : children) {
+        layout_parent.last_child()->append_child(child);
+    }
+    layout_parent.last_child()->set_children_are_inline(true);
+    // Then it's safe to insert this block into parent.
+    return layout_parent;
 }
 
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
