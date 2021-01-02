@@ -104,18 +104,14 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
     if (available_size().is_empty())
         return;
 
-    // FIXME: Don't create a temporary bitmap just to convert it to one backed by a shared buffer.
-    if (auto helper = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())) {
-        m_front_bitmap = helper->to_bitmap_backed_by_shared_buffer();
-        ASSERT(m_front_bitmap);
-        m_front_bitmap->shared_buffer()->share_with(client().server_pid());
+    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
+        new_bitmap->shared_buffer()->share_with(client().server_pid());
+        m_front_bitmap = move(new_bitmap);
     }
 
-    // FIXME: Don't create a temporary bitmap just to convert it to one backed by a shared buffer.
-    if (auto helper = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())) {
-        m_back_bitmap = helper->to_bitmap_backed_by_shared_buffer();
-        ASSERT(m_back_bitmap);
-        m_back_bitmap->shared_buffer()->share_with(client().server_pid());
+    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
+        new_bitmap->shared_buffer()->share_with(client().server_pid());
+        m_back_bitmap = move(new_bitmap);
     }
 
     request_repaint();
