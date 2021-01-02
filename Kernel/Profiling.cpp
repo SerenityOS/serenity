@@ -25,6 +25,7 @@
  */
 
 #include <AK/Demangle.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBuffer.h>
@@ -36,8 +37,13 @@ namespace Kernel {
 
 namespace Profiling {
 
-static KBufferImpl* s_profiling_buffer;
 static size_t s_slot_count;
+static AK::Singleton<KBuffer, []() -> KBuffer* {
+    auto buffer = KBuffer::try_create_with_size(8 * MiB, Region::Access::Read | Region::Access::Write, "Profiling Buffer", AllocationStrategy::AllocateNow);
+    s_slot_count = buffer->size() / sizeof(Sample);
+    return buffer.leak_ptr();
+}>
+    s_profiling_buffer;
 static size_t s_next_slot_index;
 static ProcessID s_pid { -1 };
 
@@ -62,10 +68,7 @@ void start(Process& process)
         executable_path() = {};
     s_pid = process.pid();
 
-    if (!s_profiling_buffer) {
-        s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MiB).impl()).leak_ref();
-        s_slot_count = s_profiling_buffer->size() / sizeof(Sample);
-    }
+    s_profiling_buffer.ensure_instance();
 
     s_next_slot_index = 0;
 }
