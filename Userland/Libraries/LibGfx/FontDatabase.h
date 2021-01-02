@@ -45,15 +45,18 @@ public:
     static Font& default_bold_fixed_width_font();
 
     RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
+    RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);
     RefPtr<Gfx::Font> get_by_name(const StringView&);
     void for_each_font(Function<void(const Gfx::Font&)>);
     void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
 
-    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
+    void for_each_typeface(Function<void(const Typeface&)>);
 
 private:
     FontDatabase();
     ~FontDatabase();
+
+    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
 
     struct Private;
     OwnPtr<Private> m_private;
