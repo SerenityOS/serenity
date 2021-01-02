@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
@@ -32,9 +31,11 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/EditingEngine.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
@@ -82,6 +83,7 @@ TextEditor::TextEditor(Type type)
     });
     m_automatic_selection_scroll_timer->stop();
     create_actions();
+    set_editing_engine(make<RegularEditingEngine>());
 }
 
 TextEditor::~TextEditor()
@@ -599,22 +601,6 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
-void TextEditor::toggle_selection_if_needed_for_event(const KeyEvent& event)
-{
-    if (event.shift() && !m_selection.is_valid()) {
-        m_selection.set(m_cursor, {});
-        did_update_selection();
-        update();
-        return;
-    }
-    if (!event.shift() && m_selection.is_valid()) {
-        m_selection.clear();
-        did_update_selection();
-        update();
-        return;
-    }
-}
-
 void TextEditor::select_all()
 {
     TextPosition start_of_document { 0, 0 };
@@ -622,99 +608,6 @@ void TextEditor::select_all()
     m_selection.set(end_of_document, start_of_document);
     did_update_selection();
     set_cursor(start_of_document);
-    update();
-}
-
-void TextEditor::get_selection_line_boundaries(size_t& first_line, size_t& last_line)
-{
-    auto selection = normalized_selection();
-    if (!selection.is_valid()) {
-        first_line = m_cursor.line();
-        last_line = m_cursor.line();
-        return;
-    }
-    first_line = selection.start().line();
-    last_line = selection.end().line();
-    if (first_line != last_line && selection.end().column() == 0)
-        last_line -= 1;
-}
-
-void TextEditor::move_selected_lines_up()
-{
-    size_t first_line;
-    size_t last_line;
-    get_selection_line_boundaries(first_line, last_line);
-
-    if (first_line == 0)
-        return;
-
-    auto& lines = document().lines();
-    lines.insert((int)last_line, lines.take((int)first_line - 1));
-    m_cursor = { first_line - 1, 0 };
-
-    if (has_selection()) {
-        m_selection.set_start({ first_line - 1, 0 });
-        m_selection.set_end({ last_line - 1, line(last_line - 1).length() });
-    }
-
-    did_change();
-    update();
-}
-
-void TextEditor::move_selected_lines_down()
-{
-    size_t first_line;
-    size_t last_line;
-    get_selection_line_boundaries(first_line, last_line);
-
-    auto& lines = document().lines();
-    ASSERT(lines.size() != 0);
-    if (last_line >= lines.size() - 1)
-        return;
-
-    lines.insert((int)first_line, lines.take((int)last_line + 1));
-    m_cursor = { first_line + 1, 0 };
-
-    if (has_selection()) {
-        m_selection.set_start({ first_line + 1, 0 });
-        m_selection.set_end({ last_line + 1, line(last_line + 1).length() });
-    }
-
-    did_change();
-    update();
-}
-
-static int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
-{
-    while (n-- > 0) {
-        if (*s1++ != *s2++)
-            return s1[-1] < s2[-1] ? -1 : 1;
-    }
-    return 0;
-}
-
-void TextEditor::sort_selected_lines()
-{
-    if (!is_editable())
-        return;
-
-    if (!has_selection())
-        return;
-
-    size_t first_line;
-    size_t last_line;
-    get_selection_line_boundaries(first_line, last_line);
-
-    auto& lines = document().lines();
-
-    auto start = lines.begin() + (int)first_line;
-    auto end = lines.begin() + (int)last_line + 1;
-
-    quick_sort(start, end, [](auto& a, auto& b) {
-        return strcmp_utf32(a.code_points(), b.code_points(), min(a.length(), b.length())) < 0;
-    });
-
-    did_change();
     update();
 }
 
@@ -742,293 +635,81 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (is_single_line() && event.key() == KeyCode::Key_Tab)
-        return ScrollableWidget::keydown_event(event);
+    if (is_single_line()) {
+        if (event.key() == KeyCode::Key_Tab)
+            return ScrollableWidget::keydown_event(event);
 
-    if (is_single_line() && event.key() == KeyCode::Key_Return) {
-        if (on_return_pressed)
-            on_return_pressed();
-        return;
+        if (event.key() == KeyCode::Key_Return) {
+            if (on_return_pressed)
+                on_return_pressed();
+            return;
+        }
+
+        if (event.key() == KeyCode::Key_Up) {
+            if (on_up_pressed)
+                on_up_pressed();
+            return;
+        }
+
+        if (event.key() == KeyCode::Key_Down) {
+            if (on_down_pressed)
+                on_down_pressed();
+            return;
+        }
+
+        if (event.key() == KeyCode::Key_PageUp) {
+            if (on_pageup_pressed)
+                on_pageup_pressed();
+            return;
+        }
+
+        if (event.key() == KeyCode::Key_PageDown) {
+            if (on_pagedown_pressed)
+                on_pagedown_pressed();
+            return;
+        }
+
+    } else if (is_multi_line()) {
+        ArmedScopeGuard update_autocomplete { [&] {
+            if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
+                m_autocomplete_provider->provide_completions([&](auto completions) {
+                    m_autocomplete_box->update_suggestions(move(completions));
+                });
+            }
+        } };
+
+        if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
+            if (m_autocomplete_provider) {
+                try_show_autocomplete();
+                update_autocomplete.disarm();
+                return;
+            }
+        }
+    } else {
+        ASSERT_NOT_REACHED();
     }
 
-    ArmedScopeGuard update_autocomplete { [&] {
-        if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
-            m_autocomplete_provider->provide_completions([&](auto completions) {
-                m_autocomplete_box->update_suggestions(move(completions));
-            });
-        }
-    } };
+    if (m_editing_engine->on_key(event))
+        return;
 
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
         return;
     }
-    if (is_multi_line() && event.key() == KeyCode::Key_Up) {
-        if (m_cursor.line() > 0 || m_line_wrapping_enabled) {
-            if (event.ctrl() && event.shift()) {
-                move_selected_lines_up();
-                return;
-            }
-            TextPosition new_cursor;
-            if (m_line_wrapping_enabled) {
-                auto position_above = cursor_content_rect().location().translated(0, -line_height());
-                new_cursor = text_position_at_content_position(position_above);
-            } else {
-                size_t new_line = m_cursor.line() - 1;
-                size_t new_column = min(m_cursor.column(), line(new_line).length());
-                new_cursor = { new_line, new_column };
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
-        return;
-    } else if (event.key() == KeyCode::Key_Up) {
-        if (on_up_pressed)
-            on_up_pressed();
+
+    if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
+        if (m_autocomplete_box)
+            m_autocomplete_box->close();
         return;
     }
-    if (is_multi_line() && event.key() == KeyCode::Key_Down) {
-        if (m_cursor.line() < (line_count() - 1) || m_line_wrapping_enabled) {
-            if (event.ctrl() && event.shift()) {
-                move_selected_lines_down();
-                return;
-            }
-            TextPosition new_cursor;
-            if (m_line_wrapping_enabled) {
-                new_cursor = text_position_at_content_position(cursor_content_rect().location().translated(0, line_height()));
-                auto position_below = cursor_content_rect().location().translated(0, line_height());
-                new_cursor = text_position_at_content_position(position_below);
-            } else {
-                size_t new_line = m_cursor.line() + 1;
-                size_t new_column = min(m_cursor.column(), line(new_line).length());
-                new_cursor = { new_line, new_column };
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
-        return;
-    } else if (event.key() == KeyCode::Key_Down) {
-        if (on_down_pressed)
-            on_down_pressed();
+
+    if (event.key() == KeyCode::Key_Delete) {
+        if (m_autocomplete_box)
+            m_autocomplete_box->close();
         return;
     }
-    if (is_multi_line() && event.key() == KeyCode::Key_PageUp) {
-        if (m_cursor.line() > 0 || m_line_wrapping_enabled) {
-            TextPosition new_cursor;
-            if (m_line_wrapping_enabled) {
-                auto position_above = cursor_content_rect().location().translated(0, -visible_content_rect().height());
-                new_cursor = text_position_at_content_position(position_above);
-            } else {
-                size_t page_step = (size_t)visible_content_rect().height() / (size_t)line_height();
-                size_t new_line = m_cursor.line() < page_step ? 0 : m_cursor.line() - page_step;
-                size_t new_column = min(m_cursor.column(), line(new_line).length());
-                new_cursor = { new_line, new_column };
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
-        return;
-    } else if (event.key() == KeyCode::Key_PageUp) {
-        if (on_pageup_pressed)
-            on_pageup_pressed();
-        return;
-    }
-    if (is_multi_line() && event.key() == KeyCode::Key_PageDown) {
-        if (m_cursor.line() < (line_count() - 1) || m_line_wrapping_enabled) {
-            TextPosition new_cursor;
-            if (m_line_wrapping_enabled) {
-                auto position_below = cursor_content_rect().location().translated(0, visible_content_rect().height());
-                new_cursor = text_position_at_content_position(position_below);
-            } else {
-                size_t new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
-                size_t new_column = min(m_cursor.column(), lines()[new_line].length());
-                new_cursor = { new_line, new_column };
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
-        return;
-    } else if (event.key() == KeyCode::Key_PageDown) {
-        if (on_pagedown_pressed)
-            on_pagedown_pressed();
-        return;
-    }
-    if (event.key() == KeyCode::Key_Left) {
-        if (!event.shift() && m_selection.is_valid()) {
-            set_cursor(m_selection.normalized().start());
-            m_selection.clear();
-            did_update_selection();
-            if (!event.ctrl()) {
-                update();
-                return;
-            }
-        }
-        if (event.ctrl()) {
-            TextPosition new_cursor;
-            if (document().has_spans()) {
-                auto span = document().first_non_skippable_span_before(m_cursor);
-                if (span.has_value()) {
-                    new_cursor = span.value().range.start();
-                } else {
-                    // No remaining spans, just use word break calculation
-                    new_cursor = document().first_word_break_before(m_cursor, true);
-                }
-            } else {
-                new_cursor = document().first_word_break_before(m_cursor, true);
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-            return;
-        }
-        if (m_cursor.column() > 0) {
-            int new_column = m_cursor.column() - 1;
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(m_cursor.line(), new_column);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        } else if (m_cursor.line() > 0) {
-            int new_line = m_cursor.line() - 1;
-            int new_column = lines()[new_line].length();
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
-        return;
-    }
-    if (event.key() == KeyCode::Key_Right) {
-        if (!event.shift() && m_selection.is_valid()) {
-            set_cursor(m_selection.normalized().end());
-            m_selection.clear();
-            did_update_selection();
-            if (!event.ctrl()) {
-                update();
-                return;
-            }
-        }
-        if (event.ctrl()) {
-            TextPosition new_cursor;
-            if (document().has_spans()) {
-                auto span = document().first_non_skippable_span_after(m_cursor);
-                if (span.has_value()) {
-                    new_cursor = span.value().range.start();
-                } else {
-                    // No remaining spans, just use word break calculation
-                    new_cursor = document().first_word_break_after(m_cursor);
-                }
-            } else {
-                new_cursor = document().first_word_break_after(m_cursor);
-            }
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_cursor);
-            if (event.shift() && m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-            return;
-        }
-        int new_line = m_cursor.line();
-        int new_column = m_cursor.column();
-        if (m_cursor.column() < current_line().length()) {
-            new_line = m_cursor.line();
-            new_column = m_cursor.column() + 1;
-        } else if (m_cursor.line() != line_count() - 1) {
-            new_line = m_cursor.line() + 1;
-            new_column = 0;
-        }
-        toggle_selection_if_needed_for_event(event);
-        set_cursor(new_line, new_column);
-        if (event.shift() && m_selection.start().is_valid()) {
-            m_selection.set_end(m_cursor);
-            did_update_selection();
-        }
-        return;
-    }
-    if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
-        TextPosition new_cursor;
-        toggle_selection_if_needed_for_event(event);
-        if (m_line_wrapping_enabled) {
-            // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
-            auto home_position = cursor_content_rect().location().translated(-width(), 0);
-            new_cursor = text_position_at_content_position(home_position);
-        } else {
-            size_t first_nonspace_column = current_line().first_non_whitespace_column();
-            if (m_cursor.column() == first_nonspace_column) {
-                new_cursor = { m_cursor.line(), 0 };
-            } else {
-                new_cursor = { m_cursor.line(), first_nonspace_column };
-            }
-        }
-        set_cursor(new_cursor);
-        if (event.shift() && m_selection.start().is_valid()) {
-            m_selection.set_end(m_cursor);
-            did_update_selection();
-        }
-        return;
-    }
-    if (!event.ctrl() && event.key() == KeyCode::Key_End) {
-        TextPosition new_cursor;
-        if (m_line_wrapping_enabled) {
-            auto end_position = cursor_content_rect().location().translated(width(), 0);
-            new_cursor = text_position_at_content_position(end_position);
-        } else {
-            new_cursor = { m_cursor.line(), current_line().length() };
-        }
-        toggle_selection_if_needed_for_event(event);
-        set_cursor(new_cursor);
-        if (event.shift() && m_selection.start().is_valid()) {
-            m_selection.set_end(m_cursor);
-            did_update_selection();
-        }
-        return;
-    }
-    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
-        toggle_selection_if_needed_for_event(event);
-        set_cursor(0, 0);
-        if (event.shift() && m_selection.start().is_valid()) {
-            m_selection.set_end(m_cursor);
-            did_update_selection();
-        }
-        return;
-    }
-    if (event.ctrl() && event.key() == KeyCode::Key_End) {
-        toggle_selection_if_needed_for_event(event);
-        set_cursor(line_count() - 1, lines()[line_count() - 1].length());
-        if (event.shift() && m_selection.start().is_valid()) {
-            m_selection.set_end(m_cursor);
-            did_update_selection();
-        }
-        return;
-    }
-    if (event.alt() && event.shift() && event.key() == KeyCode::Key_S) {
-        sort_selected_lines();
-        return;
-    }
+
     if (event.key() == KeyCode::Key_Backspace) {
         if (!is_editable())
             return;
@@ -1069,43 +750,8 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
-        if (!is_editable())
-            return;
-        if (m_autocomplete_box)
-            m_autocomplete_box->close();
-        delete_current_line();
-        return;
-    }
-
-    if (event.key() == KeyCode::Key_Delete) {
-        if (!is_editable())
-            return;
-        if (m_autocomplete_box)
-            m_autocomplete_box->close();
-        do_delete();
-        return;
-    }
-
-    if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
-        if (m_autocomplete_provider) {
-            try_show_autocomplete();
-            update_autocomplete.disarm();
-            return;
-        }
-    }
-
-    if (is_editable() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
-        StringBuilder sb;
-        sb.append_code_point(event.code_point());
-
-        if (should_autocomplete_automatically()) {
-            if (sb.string_view().is_whitespace())
-                m_autocomplete_timer->stop();
-            else
-                m_autocomplete_timer->start();
-        }
-        insert_at_cursor_or_replace_selection(sb.to_string());
+    if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+        add_code_point(event.code_point());
         return;
     }
 
@@ -1152,6 +798,53 @@ void TextEditor::do_delete()
         // Delete at end of line; merge with next line
         TextRange erased_range(m_cursor, { m_cursor.line() + 1, 0 });
         execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        return;
+    }
+}
+
+void TextEditor::add_code_point(u32 code_point)
+{
+    if (!is_editable())
+        return;
+
+    StringBuilder sb;
+    sb.append_code_point(code_point);
+
+    if (should_autocomplete_automatically()) {
+        if (sb.string_view().is_whitespace())
+            m_autocomplete_timer->stop();
+        else
+            m_autocomplete_timer->start();
+    }
+    insert_at_cursor_or_replace_selection(sb.to_string());
+};
+
+void TextEditor::reset_cursor_blink()
+{
+    m_cursor_state = true;
+    update_cursor();
+    stop_timer();
+    start_timer(500);
+}
+
+void TextEditor::toggle_selection_if_needed_for_event(bool is_selecting)
+{
+    if (is_selecting && !selection()->is_valid()) {
+        selection()->set(cursor(), {});
+        did_update_selection();
+        update();
+        return;
+    }
+    if (!is_selecting && selection()->is_valid()) {
+        selection()->clear();
+        did_update_selection();
+        update();
+        return;
+    }
+    if (is_selecting && selection()->start().is_valid()) {
+        selection()->set_end(cursor());
+        did_update_selection();
+        update();
         return;
     }
 }
@@ -1208,7 +901,7 @@ Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position)
             rect = {
                 visual_line_rect.x() + x - (m_horizontal_content_padding),
                 visual_line_rect.y(),
-                1,
+                m_editing_engine->cursor_width() == CursorWidth::WIDE ? 7 : 1,
                 line_height()
             };
             return IterationDecision::Break;
@@ -1335,6 +1028,7 @@ void TextEditor::focusin_event(FocusEvent& event)
         select_all();
     m_cursor_state = true;
     update_cursor();
+    stop_timer();
     start_timer(500);
     if (on_focusin)
         on_focusin();
@@ -1903,6 +1597,26 @@ void TextEditor::set_autocomplete_provider(OwnPtr<AutocompleteProvider>&& provid
         m_autocomplete_box->close();
 }
 
+const EditingEngine* TextEditor::editing_engine() const
+{
+    return m_editing_engine.ptr();
+}
+
+void TextEditor::set_editing_engine(OwnPtr<EditingEngine> editing_engine)
+{
+    if (m_editing_engine)
+        m_editing_engine->detach();
+    m_editing_engine = move(editing_engine);
+
+    ASSERT(m_editing_engine);
+    m_editing_engine->attach(*this);
+
+    m_cursor_state = true;
+    update_cursor();
+    stop_timer();
+    start_timer(500);
+}
+
 int TextEditor::line_height() const
 {
     return font().glyph_height() + m_line_spacing;
@@ -1943,6 +1657,10 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
 
     remove_child(*m_autocomplete_timer);
     m_autocomplete_timer = nullptr;
+}
+int TextEditor::number_of_visible_lines() const
+{
+    return visible_content_rect().height() / line_height();
 }
 
 }
