@@ -43,7 +43,8 @@ int Process::sys$purge(int mode)
         {
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
-                vmobjects.append(vmobject);
+                if (vmobject.is_anonymous())
+                    vmobjects.append(vmobject);
                 return IterationDecision::Continue;
             });
         }
