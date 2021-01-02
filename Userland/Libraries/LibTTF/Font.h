@@ -123,6 +123,8 @@ class ScaledFont : public Gfx::Font {
 public:
     ScaledFont(RefPtr<TTF::Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
         : m_font(font)
+        , m_point_width(point_width)
+        , m_point_height(point_height)
     {
         float units_per_em = m_font->units_per_em();
         m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
@@ -135,18 +137,18 @@ public:
 
     // Gfx::Font implementation
     virtual NonnullRefPtr<Font> clone() const override { return *this; } /* TODO */
-    virtual u8 presentation_size() const override { return (u8)m_y_scale; }
-    virtual u16 weight() const override { return 400; } /* TODO */
+    virtual u8 presentation_size() const override { return m_point_height; }
+    virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual u8 glyph_width(size_t ch) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
-    virtual u8 glyph_height() const override { return m_y_scale; }    /* TODO */
-    virtual int x_height() const override { return m_y_scale; }       /* TODO */
-    virtual u8 min_glyph_width() const override { return 1; }         /* TODO */
-    virtual u8 max_glyph_width() const override { return m_x_scale; } /* TODO */
+    virtual u8 glyph_height() const override { return m_point_height; }    /* TODO */
+    virtual int x_height() const override { return m_point_height; }       /* TODO */
+    virtual u8 min_glyph_width() const override { return 1; }              /* TODO */
+    virtual u8 max_glyph_width() const override { return m_point_height; } /* TODO */
     virtual u8 glyph_fixed_width() const override;
-    virtual u8 baseline() const override { return m_y_scale; }  /* TODO */
-    virtual u8 mean_line() const override { return m_y_scale; } /* TODO */
+    virtual u8 baseline() const override { return m_point_height; }  /* TODO */
+    virtual u8 mean_line() const override { return m_point_height; } /* TODO */
     virtual int width(const StringView&) const override;
     virtual int width(const Utf8View&) const override;
     virtual int width(const Utf32View&) const override;
@@ -161,8 +163,10 @@ public:
 
 private:
     RefPtr<TTF::Font> m_font;
-    float m_x_scale { 0.0 };
-    float m_y_scale { 0.0 };
+    float m_x_scale { 0.0f };
+    float m_y_scale { 0.0f };
+    float m_point_width { 0.0f };
+    float m_point_height { 0.0f };
     mutable AK::HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
 };
 
