@@ -184,7 +184,7 @@ private:
     void protect_kernel_image();
     void parse_memory_map();
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
-    static void flush_tlb(VirtualAddress, size_t page_count = 1);
+    static void flush_tlb(const PageDirectory*, VirtualAddress, size_t page_count = 1);
 
     static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);

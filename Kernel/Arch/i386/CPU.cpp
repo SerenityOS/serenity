@@ -1790,10 +1790,10 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     }
 }
 
-void Processor::flush_tlb(VirtualAddress vaddr, size_t page_count)
+void Processor::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     if (s_smp_enabled)
-        smp_broadcast_flush_tlb(vaddr, page_count);
+        smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);
 }
@@ -1911,6 +1911,17 @@ bool Processor::smp_process_pending_messages()
                 msg->callback_with_data.handler(msg->callback_with_data.data);
                 break;
             case ProcessorMessage::FlushTlb:
+				if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
+					// We assume that we don't cross into kernel land!
+					ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+					if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
+						//This processor isn't using this page directory right now, we can ignore this request
+#ifdef SMP_DEBUG
+						dbg() << "SMP[" << id() << "]: No need to flush " << msg->flush_tlb.page_count << " pages at " << VirtualAddress(msg->flush_tlb.ptr);
+#endif
+						break;
+					}
+				}
                 flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
                 break;
             }
@@ -2068,11 +2079,12 @@ void Processor::smp_unicast(u32 cpu, void (*callback)(), bool async)
     smp_unicast_message(cpu, msg, async);
 }
 
-void Processor::smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count)
+void Processor::smp_broadcast_flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     auto& msg = smp_get_from_pool();
     msg.async = false;
     msg.type = ProcessorMessage::FlushTlb;
+    msg.flush_tlb.page_directory = page_directory;
     msg.flush_tlb.ptr = vaddr.as_ptr();
     msg.flush_tlb.page_count = page_count;
     smp_broadcast_message(msg);
