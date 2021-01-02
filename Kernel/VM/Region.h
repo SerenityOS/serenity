@@ -122,6 +122,49 @@ public:
         return vaddr().offset(page_index * PAGE_SIZE);
     }
 
+    bool translate_vmobject_page(size_t& index) const
+    {
+        auto first_index = first_page_index();
+        if (index < first_index) {
+            index = first_index;
+            return false;
+        }
+        index -= first_index;
+        auto total_page_count = this->page_count();
+        if (index >= total_page_count) {
+            index = first_index + total_page_count - 1;
+            return false;
+        }
+        return true;
+    }
+
+    bool translate_vmobject_page_range(size_t& index, size_t& page_count) const
+    {
+        auto first_index = first_page_index();
+        if (index < first_index) {
+            auto delta = first_index - index;
+            index = first_index;
+            if (delta >= page_count) {
+                page_count = 0;
+                return false;
+            }
+            page_count -= delta;
+        }
+        index -= first_index;
+        auto total_page_count = this->page_count();
+        if (index + page_count > total_page_count) {
+            page_count = total_page_count - index;
+            if (page_count == 0)
+                return false;
+        }
+        return true;
+    }
+
+    ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
+    {
+        return first_page_index() + page_index;
+    }
+
     size_t first_page_index() const
     {
         return m_offset_in_vmobject / PAGE_SIZE;
@@ -186,7 +229,7 @@ public:
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
-    bool remap_page_range(size_t page_index, size_t page_count);
+    bool remap_vmobject_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
     enum class SetVolatileError {
@@ -199,6 +242,8 @@ public:
     RefPtr<Process> get_owner();
 
 private:
+    bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
+
     void set_access_bit(Access access, bool b)
     {
         if (b)
@@ -207,7 +252,8 @@ private:
             m_access &= ~access;
     }
 
-    bool remap_page(size_t index, bool with_flush = true);
+    bool do_remap_vmobject_page(size_t index, bool with_flush = true);
+    bool remap_vmobject_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index);

@@ -67,6 +67,10 @@ public:
     VMObject* m_next { nullptr };
     VMObject* m_prev { nullptr };
 
+    ALWAYS_INLINE void ref_region() { m_regions_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed); }
+    ALWAYS_INLINE void unref_region() { m_regions_count.fetch_sub(1, AK::MemoryOrder::memory_order_relaxed); }
+    ALWAYS_INLINE bool is_shared_by_multiple_regions() const { return m_regions_count.load(AK::MemoryOrder::memory_order_relaxed) > 1; }
+
 protected:
     explicit VMObject(size_t);
     explicit VMObject(const VMObject&);
@@ -83,6 +87,8 @@ private:
     VMObject& operator=(const VMObject&) = delete;
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
+
+    Atomic<u32> m_regions_count { 0 };
 };
 
 }
