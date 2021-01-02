@@ -66,6 +66,18 @@ static constexpr u8 UHCI_USBINTR_SHORT_PACKET_INTR_ENABLE = 0x08;
 static constexpr u16 UHCI_FRAMELIST_FRAME_COUNT = 1024; // Each entry is 4 bytes in our allocated page
 static constexpr u16 UHCI_FRAMELIST_FRAME_INVALID = 0x0001;
 
+// Port stuff
+static constexpr u8 UHCI_ROOT_PORT_COUNT = 2;
+static constexpr u16 UHCI_PORTSC_CURRRENT_CONNECT_STATUS = 0x0001;
+static constexpr u16 UHCI_PORTSC_CONNECT_STATUS_CHANGED = 0x0002;
+static constexpr u16 UHCI_PORTSC_PORT_ENABLED = 0x0004;
+static constexpr u16 UHCI_PORTSC_PORT_ENABLE_CHANGED = 0x0008;
+static constexpr u16 UHCI_PORTSC_LINE_STATUS = 0x0030;
+static constexpr u16 UHCI_PORTSC_RESUME_DETECT = 0x40;
+static constexpr u16 UHCI_PORTSC_LOW_SPEED_DEVICE = 0x0100;
+static constexpr u16 UHCI_PORTSC_PORT_RESET = 0x0200;
+static constexpr u16 UHCI_PORTSC_SUSPEND = 0x1000;
+
 // *BSD and a few other drivers seem to use this number
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
@@ -338,9 +350,53 @@ void UHCIController::start()
     klog() << "UHCI: Started!";
 }
 
+void UHCIController::spawn_port_proc()
+{
+    RefPtr<Thread> usb_hotplug_thread;
+    timespec sleep_time;
+
+    sleep_time.tv_sec = 1;
+    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [sleep_time] {
+        for (;;) {
+            for (int port = 0; port < UHCI_ROOT_PORT_COUNT; port++) {
+                u16 port_data = 0;
+
+                if (port == 1) {
+                    // Let's see what's happening on port 1
+                    port_data = UHCIController::the().read_portsc1();
+                    if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
+                        if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
+                            klog() << "UHCI: Device attach detected on Root Port 1!";
+                        } else {
+                            klog() << "UHCI: Device detach detected on Root Port 1!";
+                        }
+
+                        UHCIController::the().write_portsc1(
+                            UHCI_PORTSC_CONNECT_STATUS_CHANGED);
+                    }
+                } else {
+                    port_data = UHCIController::the().read_portsc2();
+                    if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
+                        if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
+                            klog() << "UHCI: Device attach detected on Root Port 2!";
+                        } else {
+                            klog() << "UHCI: Device detach detected on Root Port 2!";
+                        }
+
+                        UHCIController::the().write_portsc2(
+                            UHCI_PORTSC_CONNECT_STATUS_CHANGED);
+                    }
+                }
+            }
+            Thread::current()->sleep(sleep_time);
+        }
+    });
+}
+
 void UHCIController::handle_irq(const RegisterState&)
 {
-    dbg() << "UHCI: Interrupt happened!";
+    klog() << "UHCI: Interrupt happened!";
+    klog() << "Value of USBSTS: " << read_usbsts();
 }
 
 }
