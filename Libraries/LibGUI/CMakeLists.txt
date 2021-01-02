@@ -27,6 +27,7 @@ set(SOURCES
     Dialog.cpp
     DisplayLink.cpp
     DragOperation.cpp
+    EditingEngine.cpp
     EmojiInputDialog.cpp
     Event.cpp
     FileIconProvider.cpp
@@ -69,6 +70,7 @@ set(SOURCES
     ProcessChooser.cpp
     ProgressBar.cpp
     RadioButton.cpp
+    RegularEditingEngine.cpp
     ResizeCorner.cpp
     RunningProcessesModel.cpp
     ScrollBar.cpp
@@ -93,6 +95,7 @@ set(SOURCES
     TreeView.cpp
     UndoStack.cpp
     Variant.cpp
+    VimEditingEngine.cpp
     Widget.cpp
     Window.cpp
     WindowServerConnection.cpp

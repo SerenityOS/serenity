@@ -43,6 +43,7 @@ class TextEditor
     : public ScrollableWidget
     , public TextDocument::Client {
     C_OBJECT(TextEditor)
+
 public:
     enum Type {
         MultiLine,
@@ -64,6 +65,9 @@ public:
 
     const String& placeholder() const { return m_placeholder; }
     void set_placeholder(const StringView& placeholder) { m_placeholder = placeholder; }
+
+    TextDocumentLine& current_line() { return line(m_cursor.line()); }
+    const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
 
     void set_visualize_trailing_whitespace(bool);
     bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
@@ -107,6 +111,10 @@ public:
     void scroll_cursor_into_view();
     void scroll_position_into_view(const TextPosition&);
     size_t line_count() const { return document().line_count(); }
+    TextDocumentLine& line(size_t index) { return document().line(index); }
+    const TextDocumentLine& line(size_t index) const { return document().line(index); }
+    NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
+    const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
@@ -164,10 +172,26 @@ public:
     const AutocompleteProvider* autocomplete_provider() const;
     void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
 
+    const EditingEngine* editing_engine() const;
+    void set_editing_engine(OwnPtr<EditingEngine>);
+
     bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
     void set_should_autocomplete_automatically(bool);
 
     bool is_in_drag_select() const { return m_in_drag_select; }
+
+    TextRange* selection() { return &m_selection; };
+    void did_update_selection();
+    void did_change();
+    void update_cursor();
+
+    void add_code_point(u32 code_point);
+    void reset_cursor_blink();
+    void toggle_selection_if_needed_for_event(bool is_selecting);
+
+    int number_of_visible_lines() const;
+    Gfx::IntRect cursor_content_rect() const;
+    TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
 
 protected:
     explicit TextEditor(Type = Type::MultiLine);
@@ -191,7 +215,6 @@ protected:
     Gfx::IntRect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;
-    TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
     bool ruler_visible() const { return m_ruler_visible; }
     Gfx::IntRect content_rect_for_position(const TextPosition&) const;
     int ruler_width() const;
@@ -211,7 +234,6 @@ private:
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
-    void did_change();
     int fixed_glyph_width() const;
 
     void defer_reflow();
@@ -240,27 +262,13 @@ private:
 
     Gfx::IntRect line_content_rect(size_t item_index) const;
     Gfx::IntRect line_widget_rect(size_t line_index) const;
-    Gfx::IntRect cursor_content_rect() const;
-    void update_cursor();
-    const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
-    NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
-    TextDocumentLine& line(size_t index) { return document().line(index); }
-    const TextDocumentLine& line(size_t index) const { return document().line(index); }
-    TextDocumentLine& current_line() { return line(m_cursor.line()); }
-    const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
-    void toggle_selection_if_needed_for_event(const KeyEvent&);
     void delete_selection();
-    void did_update_selection();
     int content_x_for_position(const TextPosition&) const;
     Gfx::IntRect ruler_rect_in_inner_coordinates() const;
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void flush_pending_change_notification_if_needed();
-    void get_selection_line_boundaries(size_t& first_line, size_t& last_line);
-    void move_selected_lines_up();
-    void move_selected_lines_down();
-    void sort_selected_lines();
 
     size_t visual_line_containing(size_t line_index, size_t column) const;
     void recompute_visual_lines(size_t line_index);
@@ -335,6 +343,8 @@ private:
 
     RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
     RefPtr<Core::Timer> m_autocomplete_timer;
+
+    OwnPtr<EditingEngine> m_editing_engine;
 
     Gfx::IntPoint m_last_mousemove_position;
 
