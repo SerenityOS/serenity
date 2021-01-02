@@ -320,7 +320,7 @@ bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
         index++;
     }
     if (index > page_index)
-        MM.flush_tlb(vaddr_from_page_index(page_index), index - page_index);
+        MM.flush_tlb(m_page_directory, vaddr_from_page_index(page_index), index - page_index);
     return success;
 }
 
@@ -351,7 +351,7 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
     ASSERT(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
-        MM.flush_tlb(vaddr_from_page_index(page_index));
+        MM.flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
     return success;
 }
 
@@ -387,7 +387,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", page ? page->paddr().get() : 0) << " <<";
 #endif
     }
-    MM.flush_tlb(vaddr(), page_count());
+    MM.flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes) {
         if (m_page_directory->range_allocator().contains(range()))
             m_page_directory->range_allocator().deallocate(range());
@@ -419,7 +419,7 @@ bool Region::map(PageDirectory& page_directory)
         ++page_index;
     }
     if (page_index > 0) {
-        MM.flush_tlb(vaddr(), page_index);
+        MM.flush_tlb(m_page_directory, vaddr(), page_index);
         return page_index == page_count();
     }
     return false;

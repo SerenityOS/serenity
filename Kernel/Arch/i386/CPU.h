@@ -666,6 +666,7 @@ struct ProcessorMessage {
             void (*free)(void*);
         } callback_with_data;
         struct {
+            const PageDirectory* page_directory;
             u8* ptr;
             size_t page_count;
         } flush_tlb;
@@ -787,7 +788,7 @@ public:
     }
 
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
-    static void flush_tlb(VirtualAddress vaddr, size_t page_count);
+    static void flush_tlb(const PageDirectory*, VirtualAddress, size_t);
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
@@ -991,7 +992,7 @@ public:
     }
     static void smp_unicast(u32 cpu, void (*callback)(), bool async);
     static void smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
-    static void smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count);
+    static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
 
     template<typename Callback>
     static void deferred_call_queue(Callback callback)
