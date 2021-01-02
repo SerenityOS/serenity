@@ -104,8 +104,8 @@ private:
     {
         if (node->path()->is_bareword()) {
             auto& span = span_for_node(node->path());
-            span.color = m_palette.link();
-            span.is_underlined = true;
+            span.attributes.color = m_palette.link();
+            span.attributes.underline = true;
         } else {
             NodeVisitor::visit(node);
         }
@@ -124,8 +124,8 @@ private:
         auto& span = span_for_node(node);
         span.range.set_start({ node->and_position().start_line.line_number, node->and_position().start_line.line_column });
         set_offset_range_end(span.range, node->and_position().end_line);
-        span.color = m_palette.syntax_punctuation();
-        span.bold = true;
+        span.attributes.color = m_palette.syntax_punctuation();
+        span.attributes.bold = true;
     }
     virtual void visit(const AST::ListConcatenate* node) override
     {
@@ -137,8 +137,8 @@ private:
 
         auto& span = span_for_node(node);
         set_offset_range_start(span.range, node->position().end_line);
-        span.color = m_palette.syntax_punctuation();
-        span.bold = true;
+        span.attributes.color = m_palette.syntax_punctuation();
+        span.attributes.bold = true;
     }
     virtual void visit(const AST::BraceExpansion* node) override
     {
@@ -150,11 +150,11 @@ private:
 
         auto& span = span_for_node(node);
         if (m_is_first_in_command) {
-            span.color = m_palette.syntax_keyword();
-            span.bold = true;
+            span.attributes.color = m_palette.syntax_keyword();
+            span.attributes.bold = true;
             m_is_first_in_command = false;
         } else if (node->text().starts_with("-")) {
-            span.color = m_palette.syntax_preprocessor_statement();
+            span.attributes.color = m_palette.syntax_preprocessor_statement();
         }
     }
     virtual void visit(const AST::CastToCommand* node) override
@@ -166,12 +166,12 @@ private:
         NodeVisitor::visit(node);
 
         auto& start_span = span_for_node(node);
-        start_span.color = m_palette.syntax_punctuation();
+        start_span.attributes.color = m_palette.syntax_punctuation();
         start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 1 });
         start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
 
         auto& end_span = span_for_node(node);
-        end_span.color = m_palette.syntax_punctuation();
+        end_span.attributes.color = m_palette.syntax_punctuation();
         set_offset_range_start(end_span.range, node->position().end_line);
         end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
     }
@@ -188,21 +188,21 @@ private:
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_comment();
+        span.attributes.color = m_palette.syntax_comment();
     }
     virtual void visit(const AST::ContinuationControl* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_control_keyword();
+        span.attributes.color = m_palette.syntax_control_keyword();
     }
     virtual void visit(const AST::DynamicEvaluate* node) override
     {
         NodeVisitor::visit(node);
 
         auto& start_span = span_for_node(node);
-        start_span.color = m_palette.syntax_punctuation();
+        start_span.attributes.color = m_palette.syntax_punctuation();
         start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column });
     }
     virtual void visit(const AST::DoubleQuotedString* node) override
@@ -210,18 +210,18 @@ private:
         NodeVisitor::visit(node);
 
         auto& start_span = span_for_node(node);
-        start_span.color = m_palette.syntax_string();
+        start_span.attributes.color = m_palette.syntax_string();
         set_offset_range_end(start_span.range, node->position().start_line, 0);
         start_span.is_skippable = true;
 
         auto& end_span = span_for_node(node);
         set_offset_range_start(end_span.range, node->position().end_line);
-        end_span.color = m_palette.syntax_string();
+        end_span.attributes.color = m_palette.syntax_string();
         end_span.is_skippable = true;
 
         if (m_is_first_in_command) {
-            start_span.bold = true;
-            end_span.bold = true;
+            start_span.attributes.bold = true;
+            end_span.attributes.bold = true;
         }
         m_is_first_in_command = false;
     }
@@ -237,14 +237,14 @@ private:
         auto& name_span = span_for_node(node);
         name_span.range.set_start({ node->name().position.start_line.line_number, node->name().position.start_line.line_column });
         set_offset_range_end(name_span.range, node->name().position.end_line);
-        name_span.color = m_palette.syntax_identifier();
+        name_span.attributes.color = m_palette.syntax_identifier();
 
         // arguments
         for (auto& arg : node->arguments()) {
             auto& name_span = span_for_node(node);
             name_span.range.set_start({ arg.position.start_line.line_number, arg.position.start_line.line_column });
             set_offset_range_end(name_span.range, arg.position.end_line);
-            name_span.color = m_palette.syntax_identifier();
+            name_span.attributes.color = m_palette.syntax_identifier();
         }
     }
     virtual void visit(const AST::ForLoop* node) override
@@ -257,7 +257,7 @@ private:
         auto& for_span = span_for_node(node);
         // FIXME: "fo\\\nr" is valid too
         for_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 2 });
-        for_span.color = m_palette.syntax_keyword();
+        for_span.attributes.color = m_palette.syntax_keyword();
 
         // "in"
         if (auto maybe_position = node->in_keyword_position(); maybe_position.has_value()) {
@@ -266,7 +266,7 @@ private:
             auto& in_span = span_for_node(node);
             in_span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
             set_offset_range_end(in_span.range, position.end_line);
-            in_span.color = m_palette.syntax_keyword();
+            in_span.attributes.color = m_palette.syntax_keyword();
         }
     }
     virtual void visit(const AST::Glob* node) override
@@ -274,7 +274,7 @@ private:
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_preprocessor_value();
+        span.attributes.color = m_palette.syntax_preprocessor_value();
     }
     virtual void visit(const AST::Execute* node) override
     {
@@ -283,12 +283,12 @@ private:
 
         if (node->does_capture_stdout()) {
             auto& start_span = span_for_node(node);
-            start_span.color = m_palette.syntax_punctuation();
+            start_span.attributes.color = m_palette.syntax_punctuation();
             start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 1 });
             start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
 
             auto& end_span = span_for_node(node);
-            end_span.color = m_palette.syntax_punctuation();
+            end_span.attributes.color = m_palette.syntax_punctuation();
             set_offset_range_start(end_span.range, node->position().end_line);
             end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
         }
@@ -302,7 +302,7 @@ private:
         auto& if_span = span_for_node(node);
         // FIXME: "i\\\nf" is valid too
         if_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 1 });
-        if_span.color = m_palette.syntax_keyword();
+        if_span.attributes.color = m_palette.syntax_keyword();
 
         // "else"
         if (auto maybe_position = node->else_position(); maybe_position.has_value()) {
@@ -311,7 +311,7 @@ private:
             auto& else_span = span_for_node(node);
             else_span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
             set_offset_range_end(else_span.range, node->position().end_line);
-            else_span.color = m_palette.syntax_keyword();
+            else_span.attributes.color = m_palette.syntax_keyword();
         }
     }
     virtual void visit(const AST::Join* node) override
@@ -328,7 +328,7 @@ private:
         auto& match_expr = span_for_node(node);
         // FIXME: "mat\\\nch" is valid too
         match_expr.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 4 });
-        match_expr.color = m_palette.syntax_keyword();
+        match_expr.attributes.color = m_palette.syntax_keyword();
 
         // "as"
         if (auto maybe_position = node->as_position(); maybe_position.has_value()) {
@@ -337,7 +337,7 @@ private:
             auto& as_span = span_for_node(node);
             as_span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
             as_span.range.set_end({ position.end_line.line_number, position.end_line.line_column });
-            as_span.color = m_palette.syntax_keyword();
+            as_span.attributes.color = m_palette.syntax_keyword();
         }
     }
     virtual void visit(const AST::Or* node) override
@@ -354,8 +354,8 @@ private:
         auto& span = span_for_node(node);
         span.range.set_start({ node->or_position().start_line.line_number, node->or_position().start_line.line_column });
         set_offset_range_end(span.range, node->or_position().end_line);
-        span.color = m_palette.syntax_punctuation();
-        span.bold = true;
+        span.attributes.color = m_palette.syntax_punctuation();
+        span.attributes.bold = true;
     }
     virtual void visit(const AST::Pipe* node) override
     {
@@ -368,7 +368,7 @@ private:
         auto& span = span_for_node(node->start());
         span.range.set_start(span.range.end());
         set_offset_range_end(span.range, node->start()->position().end_line, 2);
-        span.color = m_palette.syntax_punctuation();
+        span.attributes.color = m_palette.syntax_punctuation();
     }
     virtual void visit(const AST::ReadRedirection* node) override
     {
@@ -392,8 +392,8 @@ private:
         auto& span = span_for_node(node);
         span.range.set_start({ node->separator_position().start_line.line_number, node->separator_position().start_line.line_column });
         set_offset_range_end(span.range, node->separator_position().end_line);
-        span.color = m_palette.syntax_punctuation();
-        span.bold = true;
+        span.attributes.color = m_palette.syntax_punctuation();
+        span.attributes.bold = true;
         span.is_skippable = true;
     }
     virtual void visit(const AST::Subshell* node) override
@@ -405,14 +405,14 @@ private:
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_identifier();
+        span.attributes.color = m_palette.syntax_identifier();
     }
     virtual void visit(const AST::SpecialVariable* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_identifier();
+        span.attributes.color = m_palette.syntax_identifier();
     }
     virtual void visit(const AST::Juxtaposition* node) override
     {
@@ -426,9 +426,9 @@ private:
             return;
 
         auto& span = span_for_node(node);
-        span.color = m_palette.syntax_string();
+        span.attributes.color = m_palette.syntax_string();
         if (m_is_first_in_command)
-            span.bold = true;
+            span.attributes.bold = true;
         m_is_first_in_command = false;
     }
     virtual void visit(const AST::StringPartCompose* node) override
@@ -440,22 +440,22 @@ private:
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.is_underlined = true;
-        span.background_color = Color(Color::NamedColor::MidRed).lightened(1.3f).with_alpha(128);
+        span.attributes.underline = true;
+        span.attributes.background_color = Color(Color::NamedColor::MidRed).lightened(1.3f).with_alpha(128);
     }
     virtual void visit(const AST::Tilde* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        span.color = m_palette.link();
+        span.attributes.color = m_palette.link();
     }
     virtual void visit(const AST::VariableDeclarations* node) override
     {
         TemporaryChange first_in_command { m_is_first_in_command, false };
         for (auto& decl : node->variables()) {
             auto& name_span = span_for_node(decl.name);
-            name_span.color = m_palette.syntax_identifier();
+            name_span.attributes.color = m_palette.syntax_identifier();
 
             decl.name->visit(*this);
             decl.value->visit(*this);
@@ -463,7 +463,7 @@ private:
             auto& start_span = span_for_node(decl.name);
             start_span.range.set_start({ decl.name->position().end_line.line_number, decl.name->position().end_line.line_column });
             start_span.range.set_end({ decl.value->position().start_line.line_number, decl.value->position().start_line.line_column });
-            start_span.color = m_palette.syntax_punctuation();
+            start_span.attributes.color = m_palette.syntax_punctuation();
             start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
         }
     }
