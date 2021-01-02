@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,37 +26,37 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <AK/HashMap.h>
+#include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <LibGfx/Forward.h>
-#include <LibGfx/Typeface.h>
+#include <AK/Vector.h>
+#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font.h>
+#include <LibTTF/Font.h>
 
 namespace Gfx {
 
-class FontDatabase {
+class Typeface : public RefCounted<Typeface> {
 public:
-    static FontDatabase& the();
+    Typeface(const String& family, const String& variant)
+    : m_family(family)
+    , m_variant(variant)
+    {}
 
-    static Font& default_font();
-    static Font& default_bold_font();
+    String family() const { return m_family; }
+    String variant() const { return m_variant; }
+    unsigned weight() const { return 100; /*TODO*/ }
 
-    static Font& default_fixed_width_font();
-    static Font& default_bold_fixed_width_font();
+    void add_bitmap_font(RefPtr<BitmapFont>);
+    void set_ttf_font(RefPtr<TTF::Font>);
 
-    RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
-    RefPtr<Gfx::Font> get_by_name(const StringView&);
-    void for_each_font(Function<void(const Gfx::Font&)>);
-    void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
-
-    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
+    RefPtr<Font> get_font(unsigned size);
 
 private:
-    FontDatabase();
-    ~FontDatabase();
+    String m_family;
+    String m_variant;
 
-    struct Private;
-    OwnPtr<Private> m_private;
+    Vector<RefPtr<BitmapFont>> m_bitmap_fonts;
+    RefPtr<TTF::Font> m_ttf_font;
 };
 
 }
