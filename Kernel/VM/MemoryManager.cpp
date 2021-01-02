@@ -697,12 +697,12 @@ void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     Processor::flush_tlb_local(vaddr, page_count);
 }
 
-void MemoryManager::flush_tlb(VirtualAddress vaddr, size_t page_count)
+void MemoryManager::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
 {
 #ifdef MM_DEBUG
     dbg() << "MM: Flush " << page_count << " pages at " << vaddr;
 #endif
-    Processor::flush_tlb(vaddr, page_count);
+    Processor::flush_tlb(page_directory, vaddr, page_count);
 }
 
 extern "C" PageTableEntry boot_pd3_pt1023[1024];
