@@ -75,18 +75,27 @@ public:
     {
     }
 
-    Glyph(RefPtr<Bitmap> bitmap)
+    Glyph(RefPtr<Bitmap> bitmap, int left_bearing, int advance, int ascent)
         : m_bitmap(bitmap)
+        , m_left_bearing(left_bearing)
+        , m_advance(advance)
+        , m_ascent(ascent)
     {
     }
 
     bool is_glyph_bitmap() const { return !m_bitmap; }
     GlyphBitmap glyph_bitmap() const { return m_glyph_bitmap; }
     RefPtr<Bitmap> bitmap() const { return m_bitmap; }
+    int left_bearing() const { return m_left_bearing; }
+    int advance() const { return m_advance; }
+    int ascent() const { return m_ascent; }
 
 private:
     GlyphBitmap m_glyph_bitmap;
     RefPtr<Bitmap> m_bitmap;
+    int m_left_bearing;
+    int m_advance;
+    int m_ascent;
 };
 
 class Font : public RefCounted<Font> {

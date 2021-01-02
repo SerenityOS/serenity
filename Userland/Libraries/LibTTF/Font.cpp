@@ -481,6 +481,35 @@ String Font::variant() const
     return m_name.subfamily_name();
 }
 
+u16 Font::weight() const
+{
+    // FIXME: This is pretty naive, read weight from the actual font table(s)
+    auto variant_name = variant();
+
+    if (variant_name == "Thin")
+        return 100;
+    if (variant_name == "Extra Light")
+        return 200;
+    if (variant_name == "Light")
+        return 300;
+    if (variant_name == "Regular")
+        return 400;
+    if (variant_name == "Medium")
+        return 500;
+    if (variant_name == "Semi Bold")
+        return 600;
+    if (variant_name == "Bold")
+        return 700;
+    if (variant_name == "Extra Bold")
+        return 800;
+    if (variant_name == "Black")
+        return 900;
+    if (variant_name == "Extra Black")
+        return 950;
+
+    return 400;
+}
+
 int ScaledFont::width(const StringView& string) const
 {
     Utf8View utf8 { string };
@@ -524,7 +553,8 @@ Gfx::Glyph ScaledFont::glyph(u32 code_point) const
 {
     auto id = glyph_id_for_codepoint(code_point);
     auto bitmap = raster_glyph(id);
-    return Gfx::Glyph(bitmap);
+    auto metrics = glyph_metrics(id);
+    return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
 }
 
 u8 ScaledFont::glyph_width(size_t code_point) const
