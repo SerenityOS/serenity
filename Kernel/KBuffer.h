@@ -106,25 +106,25 @@ private:
 
 class KBuffer {
 public:
-    static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto impl = KBufferImpl::try_create_with_size(size, access, name);
+        auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
             return nullptr;
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 
-    static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name);
+        auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
             return nullptr;
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 
-    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        return KBuffer(KBufferImpl::create_with_size(size, access, name));
+        return KBuffer(KBufferImpl::create_with_size(size, access, name, strategy));
     }
 
     static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
