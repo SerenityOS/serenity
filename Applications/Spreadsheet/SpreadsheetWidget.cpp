@@ -60,7 +60,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
         auto docs = m_selected_view->sheet().gather_documentation();
-        auto help_window = HelpWindow::the();
+        auto help_window = HelpWindow::the(window());
         help_window->set_docs(move(docs));
         help_window->show();
     };
