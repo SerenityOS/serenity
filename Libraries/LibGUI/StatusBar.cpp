@@ -33,6 +33,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, StatusBar)
+
 namespace GUI {
 
 StatusBar::StatusBar(int label_count)

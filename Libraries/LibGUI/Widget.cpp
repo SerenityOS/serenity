@@ -29,34 +29,11 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/BreadcrumbBar.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
-#include <LibGUI/ColorInput.h>
-#include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/GMLParser.h>
-#include <LibGUI/GroupBox.h>
-#include <LibGUI/ImageWidget.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
-#include <LibGUI/LinkLabel.h>
-#include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ProgressBar.h>
-#include <LibGUI/RadioButton.h>
-#include <LibGUI/ScrollBar.h>
-#include <LibGUI/Slider.h>
-#include <LibGUI/SpinBox.h>
-#include <LibGUI/Splitter.h>
-#include <LibGUI/StatusBar.h>
-#include <LibGUI/TabWidget.h>
-#include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
-#include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -66,37 +43,9 @@
 #include <LibGfx/Palette.h>
 #include <unistd.h>
 
-namespace GUI {
-
-REGISTER_WIDGET(GUI, BreadcrumbBar)
-REGISTER_WIDGET(GUI, Button)
-REGISTER_WIDGET(GUI, CheckBox)
-REGISTER_WIDGET(GUI, ColorInput)
-REGISTER_WIDGET(GUI, ComboBox)
-REGISTER_WIDGET(GUI, Frame)
-REGISTER_WIDGET(GUI, GroupBox)
-REGISTER_WIDGET(GUI, HorizontalSlider)
-REGISTER_WIDGET(GUI, HorizontalSplitter)
-REGISTER_WIDGET(GUI, ImageWidget)
-REGISTER_WIDGET(GUI, Label)
-REGISTER_WIDGET(GUI, LinkLabel)
-REGISTER_WIDGET(GUI, ListView)
-REGISTER_WIDGET(GUI, OpacitySlider)
-REGISTER_WIDGET(GUI, ProgressBar)
-REGISTER_WIDGET(GUI, RadioButton)
-REGISTER_WIDGET(GUI, ScrollBar)
-REGISTER_WIDGET(GUI, Slider)
-REGISTER_WIDGET(GUI, SpinBox)
-REGISTER_WIDGET(GUI, StatusBar)
-REGISTER_WIDGET(GUI, TabWidget)
-REGISTER_WIDGET(GUI, TextBox)
-REGISTER_WIDGET(GUI, TextEditor)
-REGISTER_WIDGET(GUI, ToolBar)
-REGISTER_WIDGET(GUI, ToolBarContainer)
-REGISTER_WIDGET(GUI, TreeView)
-REGISTER_WIDGET(GUI, VerticalSlider)
-REGISTER_WIDGET(GUI, VerticalSplitter)
 REGISTER_WIDGET(GUI, Widget)
+
+namespace GUI {
 
 static HashMap<String, WidgetClassRegistration*>& widget_classes()
 {

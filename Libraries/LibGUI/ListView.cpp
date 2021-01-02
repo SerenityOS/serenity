@@ -30,6 +30,8 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, ListView)
+
 namespace GUI {
 
 ListView::ListView()

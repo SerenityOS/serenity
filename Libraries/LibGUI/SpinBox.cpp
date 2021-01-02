@@ -28,6 +28,8 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 
+REGISTER_WIDGET(GUI, SpinBox)
+
 namespace GUI {
 
 SpinBox::SpinBox()
