@@ -29,6 +29,8 @@
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Typeface.h>
+#include <LibTTF/Font.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,6 +88,7 @@ Font& FontDatabase::default_bold_font()
 
 struct FontDatabase::Private {
     HashMap<String, RefPtr<Gfx::Font>> full_name_to_font_map;
+    Vector<RefPtr<Typeface>> typefaces;
 };
 
 FontDatabase::FontDatabase()
@@ -98,12 +101,20 @@ FontDatabase::FontDatabase()
     }
     while (di.has_next()) {
         String name = di.next_path();
-        if (!name.ends_with(".font"))
-            continue;
 
         auto path = String::format("/res/fonts/%s", name.characters());
-        if (auto font = Gfx::Font::load_from_file(path)) {
-            m_private->full_name_to_font_map.set(font->qualified_name(), font);
+        if (name.ends_with(".font")) {
+            if (auto font = Gfx::Font::load_from_file(path)) {
+                m_private->full_name_to_font_map.set(font->qualified_name(), font);
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->add_bitmap_font(font);
+            }
+        } else if (name.ends_with(".ttf")) {
+            // FIXME: What about .otf and .woff
+            if (auto font = TTF::Font::load_from_file(path)) {
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->set_ttf_font(font);
+            }
         }
     }
 }
@@ -154,6 +165,17 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigne
             return font;
     }
     return nullptr;
+}
+
+RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, const String& variant)
+{
+    for (auto typeface : m_private->typefaces) {
+        if (typeface->family() == family && typeface->variant() == variant)
+            return typeface;
+    }
+    auto typeface = adopt(*new Typeface(family, variant));
+    m_private->typefaces.append(typeface);
+    return typeface;
 }
 
 }

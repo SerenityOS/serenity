@@ -57,7 +57,7 @@ public:
     u16 weight() const { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 
-    GlyphBitmap glyph_bitmap(u32 code_point) const;
+    Glyph glyph(u32 code_point) const;
 
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
     int glyph_or_emoji_width(u32 code_point) const;
@@ -86,7 +86,7 @@ public:
     int width(const Utf8View&) const;
     int width(const Utf32View&) const;
 
-    const String& name() const { return m_name; }
+    String name() const { return m_name; }
     void set_name(String name) { m_name = move(name); }
 
     bool is_fixed_width() const { return m_fixed_width; }
@@ -106,8 +106,9 @@ public:
     FontTypes type() { return m_type; }
     void set_type(FontTypes type);
 
-    const String& family() const { return m_family; }
+    String family() const { return m_family; }
     void set_family(String family) { m_family = move(family); }
+    String variant() const { return String::formatted("{}", weight()); }
 
     String qualified_name() const;
 

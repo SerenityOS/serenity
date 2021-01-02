@@ -32,6 +32,7 @@
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/Size.h>
 #include <LibTTF/Cmap.h>
 #include <LibTTF/Glyf.h>
@@ -75,7 +76,7 @@ public:
     u16 units_per_em() const;
     u32 glyph_id_for_codepoint(u32 codepoint) const { return m_cmap.glyph_id_for_codepoint(codepoint); }
     String family() const;
-    String subfamily() const;
+    String variant() const;
 
 private:
     enum class Offsets {
@@ -116,7 +117,7 @@ private:
     Cmap m_cmap;
 };
 
-class ScaledFont {
+class ScaledFont : public Gfx::Font {
 public:
     ScaledFont(RefPtr<Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
         : m_font(font)
@@ -129,13 +130,35 @@ public:
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const;
-    u32 glyph_count() const { return m_font->glyph_count(); }
-    int width(const StringView&) const;
-    int width(const Utf8View&) const;
-    int width(const Utf32View&) const;
+
+    // Gfx::Font implementation
+    virtual NonnullRefPtr<Font> clone() const override { return *this; } /* TODO */
+    virtual u8 presentation_size() const override { return (u8)m_y_scale; }
+    virtual u16 weight() const override { return 400; } /* TODO */
+    virtual Gfx::Glyph glyph(u32 code_point) const override;
+    virtual u8 glyph_width(size_t ch) const override;
+    virtual int glyph_or_emoji_width(u32 code_point) const override;
+    virtual u8 glyph_height() const override { return m_y_scale; }    /* TODO */
+    virtual int x_height() const override { return m_y_scale; }       /* TODO */
+    virtual u8 min_glyph_width() const override { return 1; }         /* TODO */
+    virtual u8 max_glyph_width() const override { return m_x_scale; } /* TODO */
+    virtual u8 glyph_fixed_width() const override;
+    virtual u8 baseline() const override { return m_y_scale; }  /* TODO */
+    virtual u8 mean_line() const override { return m_y_scale; } /* TODO */
+    virtual int width(const StringView&) const override;
+    virtual int width(const Utf8View&) const override;
+    virtual int width(const Utf32View&) const override;
+    virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
+    virtual bool is_fixed_width() const override { return false; }  /* TODO */
+    virtual u8 glyph_spacing() const override { return m_x_scale; } /* TODO */
+    virtual int glyph_count() const override { return m_font->glyph_count(); }
+    virtual String family() const override { return m_font->family(); }
+    virtual String variant() const override { return m_font->variant(); }
+    virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
+    virtual const Font& bold_variant() const override { return *this; } /* TODO */
 
 private:
-    RefPtr<Font> m_font;
+    RefPtr<TTF::Font> m_font;
     float m_x_scale { 0.0 };
     float m_y_scale { 0.0 };
     mutable AK::HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;

@@ -473,7 +473,7 @@ String Font::family() const
     return m_name.family_name();
 }
 
-String Font::subfamily() const
+String Font::variant() const
 {
     auto string = m_name.typographic_subfamily_name();
     if (!string.is_empty())
@@ -518,6 +518,32 @@ RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
     auto glyph_bitmap = m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale);
     m_cached_glyph_bitmaps.set(glyph_id, glyph_bitmap);
     return glyph_bitmap;
+}
+
+Gfx::Glyph ScaledFont::glyph(u32 code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto bitmap = raster_glyph(id);
+    return Gfx::Glyph(bitmap);
+}
+
+u8 ScaledFont::glyph_width(size_t code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
+}
+
+int ScaledFont::glyph_or_emoji_width(u32 code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
+}
+
+u8 ScaledFont::glyph_fixed_width() const
+{
+    return (u8)m_x_scale;
 }
 
 }

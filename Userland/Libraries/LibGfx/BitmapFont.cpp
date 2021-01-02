@@ -221,9 +221,9 @@ bool BitmapFont::write_to_file(const StringView& path)
     return true;
 }
 
-GlyphBitmap BitmapFont::glyph_bitmap(u32 code_point) const
+Glyph BitmapFont::glyph(u32 code_point) const
 {
-    return GlyphBitmap(&m_rows[code_point * m_glyph_height], { glyph_width(code_point), m_glyph_height });
+    return Glyph(GlyphBitmap(&m_rows[code_point * m_glyph_height], { glyph_width(code_point), m_glyph_height }));
 }
 
 int BitmapFont::glyph_or_emoji_width(u32 code_point) const

@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibTTF ttf)
-target_link_libraries(LibTTF LibGfx LibM LibCore)
+target_link_libraries(LibGfx LibM LibCore)
