@@ -33,7 +33,7 @@
 #include <LibGUI/FilteringProxyModel.h>
 
 static ManualSectionNode s_sections[] = {
-    { "1", "Command-line programs" },
+    { "1", "User programs" },
     { "2", "System calls" },
     { "3", "Libraries" },
     { "4", "Special files" },
