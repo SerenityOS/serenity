@@ -142,6 +142,17 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         };
         m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
         m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
+            if (selection.is_empty()) {
+                m_current_cell_label->set_enabled(false);
+                m_current_cell_label->set_text({});
+                m_cell_value_editor->on_change = nullptr;
+                m_cell_value_editor->on_focusin = nullptr;
+                m_cell_value_editor->on_focusout = nullptr;
+                m_cell_value_editor->set_text("");
+                m_cell_value_editor->set_enabled(false);
+                return;
+            }
+
             if (selection.size() == 1) {
                 auto& position = selection.first();
                 StringBuilder builder;
@@ -177,6 +188,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             for (auto& position : selection)
                 cells.append(&m_selected_view->sheet().ensure(position));
 
+            auto first_cell = cells.first();
             m_cell_value_editor->on_change = nullptr;
             m_cell_value_editor->set_text("");
             m_should_change_selected_cells = false;
@@ -195,7 +207,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 }
             };
             m_cell_value_editor->set_enabled(true);
-            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(cells.first());
+            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
             m_cell_value_editor->set_enabled(false);
