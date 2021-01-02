@@ -282,6 +282,12 @@ bool Region::map_individual_page_impl(size_t page_index)
     if (!page || (!is_readable() && !is_writable())) {
         pte->clear();
     } else {
+        if (is_shared()) {
+            // Shared memory should not be lazily populated!
+            ASSERT(!page->is_shared_zero_page());
+            ASSERT(!page->is_lazy_committed_page());
+        }
+
         pte->set_cache_disabled(!m_cacheable);
         pte->set_physical_page_base(page->paddr().get());
         pte->set_present(true);
