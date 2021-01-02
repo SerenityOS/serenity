@@ -38,19 +38,16 @@
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/Forward.h>
+#include <LibGfx/TextAttributes.h>
 #include <LibRegex/Regex.h>
 
 namespace GUI {
 
 struct TextDocumentSpan {
     TextRange range;
-    Color color;
-    Optional<Color> background_color;
-    bool is_skippable { false };
-    bool is_underlined { false };
-    bool bold { false };
+    Gfx::TextAttributes attributes;
     void* data { nullptr };
+    bool is_skippable { false };
 };
 
 class TextDocument : public RefCounted<TextDocument> {

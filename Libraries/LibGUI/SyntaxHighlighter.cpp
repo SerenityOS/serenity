@@ -89,10 +89,10 @@ void SyntaxHighlighter::highlight_matching_token_pair()
         m_brace_buddies[1].index = index1;
         m_brace_buddies[0].span_backup = buddy0;
         m_brace_buddies[1].span_backup = buddy1;
-        buddy0.background_color = Color::DarkCyan;
-        buddy1.background_color = Color::DarkCyan;
-        buddy0.color = Color::White;
-        buddy1.color = Color::White;
+        buddy0.attributes.background_color = Color::DarkCyan;
+        buddy1.attributes.background_color = Color::DarkCyan;
+        buddy0.attributes.color = Color::White;
+        buddy1.attributes.color = Color::White;
         m_editor->update();
     };
 
