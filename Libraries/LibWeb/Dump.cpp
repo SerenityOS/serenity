@@ -144,7 +144,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     if (!is<Layout::Box>(layout_node)) {
         builder.appendff("{}{}{} <{}{}{}>",
             nonbox_color_on,
-            layout_node.class_name(),
+            layout_node.class_name().substring_view(13),
             color_off,
             tag_name,
             nonbox_color_on,
@@ -157,7 +157,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         auto& box = downcast<Layout::Box>(layout_node);
         builder.appendff("{}{}{} <{}{}{}{}> ",
             box_color_on,
-            box.class_name(),
+            box.class_name().substring_view(13),
             color_off,
             box_color_on,
             tag_name,
