@@ -159,6 +159,15 @@ public:
 #endif
     }
 
+    Color multiply(const Color& other) const
+    {
+        return Color(
+            red() * other.red() / 255,
+            green() * other.green() / 255,
+            blue() * other.blue() / 255,
+            alpha() * other.alpha() / 255);
+    }
+
     Color to_grayscale() const
     {
         int gray = (red() + green() + blue()) / 3;
