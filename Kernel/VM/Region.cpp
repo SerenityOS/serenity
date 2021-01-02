@@ -40,13 +40,14 @@
 
 namespace Kernel {
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel, bool shared)
     : PurgeablePageRanges(vmobject)
     , m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(name)
     , m_access(access)
+    , m_shared(shared)
     , m_cacheable(cacheable)
     , m_kernel(kernel)
 {
@@ -236,9 +237,9 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
+NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable, bool shared)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false, shared);
     if (owner)
         region->m_owner = owner->make_weak_ptr();
     region->m_user_accessible = true;
@@ -247,7 +248,7 @@ NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range
 
 NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, true);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, true, false);
     region->m_user_accessible = false;
     return region;
 }

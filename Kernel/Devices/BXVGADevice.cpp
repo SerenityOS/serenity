@@ -191,7 +191,8 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
         vmobject.release_nonnull(),
         0,
         "BXVGA Framebuffer",
-        prot);
+        prot,
+        shared);
     if (!region)
         return KResult(-ENOMEM);
     dbg() << "BXVGADevice: mmap with size " << region->size() << " at " << region->vaddr();

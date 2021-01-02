@@ -238,12 +238,11 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             prot |= PROT_WRITE;
         if (program_header.is_executable())
             prot |= PROT_EXEC;
-        auto* region = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot);
+        auto* region = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot, true);
         if (!region) {
             ph_load_result = KResult(-ENOMEM);
             return IterationDecision::Break;
         }
-        region->set_shared(true);
         if (program_header.offset() == 0)
             load_base_address = (FlatPtr)region->vaddr().as_ptr();
         return IterationDecision::Continue;
