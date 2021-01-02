@@ -89,11 +89,10 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
             if (!ref.region) {
-                auto* region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+                auto* region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0), true);
                 if (!region)
                     return (void*)-ENOMEM;
                 ref.region = region;
-                region->set_shared(true);
             }
             ref.count++;
             m_total_refs++;

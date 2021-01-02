@@ -61,7 +61,7 @@ public:
         ZeroedOnFork,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true, bool shared = false);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
     ~Region();
@@ -182,7 +182,7 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable, bool kernel);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable, bool kernel, bool shared);
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
