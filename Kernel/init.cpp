@@ -72,6 +72,7 @@
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 
@@ -280,6 +281,8 @@ void init_stage2(void*)
     USB::UHCIController::detect();
 
     DMIExpose::initialize();
+
+    VirtIO::detect();
 
     E1000NetworkAdapter::detect();
     NE2000NetworkAdapter::detect();

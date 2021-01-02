@@ -254,7 +254,7 @@ u32 get_BAR5(Address address)
 
 u32 get_BAR(Address address, u8 bar)
 {
-    ASSERT(bar <= 5);
+    VERIFY(bar <= 5);
     switch (bar) {
     case 0:
         return get_BAR0(address);
@@ -269,7 +269,7 @@ u32 get_BAR(Address address, u8 bar)
     case 5:
         return get_BAR5(address);
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
