@@ -134,7 +134,7 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_regex_action = GUI::Action::create("Find regex", { Mod_Ctrl, Key_R }, [&](auto&) {
+    m_find_regex_action = GUI::Action::create("Find regex", { Mod_Ctrl | Mod_Shift, Key_R }, [&](auto&) {
         m_find_regex_button->set_checked(!m_find_regex_button->is_checked());
         m_find_use_regex = m_find_regex_button->is_checked();
     });
