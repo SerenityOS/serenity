@@ -180,6 +180,8 @@ public:
 
     String to_string() const;
 
+    bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+
     template<typename T, typename... Rest>
     bool is_one_of(const T& string, Rest... rest) const
     {

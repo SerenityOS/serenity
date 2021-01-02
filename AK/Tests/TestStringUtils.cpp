@@ -287,4 +287,15 @@ TEST_CASE(contains)
     EXPECT(!AK::StringUtils::contains(test_string, "L", CaseSensitivity::CaseInsensitive));
 }
 
+TEST_CASE(is_whitespace)
+{
+    EXPECT(AK::StringUtils::is_whitespace(""));
+    EXPECT(AK::StringUtils::is_whitespace("   "));
+    EXPECT(AK::StringUtils::is_whitespace("  \t"));
+    EXPECT(AK::StringUtils::is_whitespace("  \t\n"));
+    EXPECT(AK::StringUtils::is_whitespace("  \t\n\r\v"));
+    EXPECT(!AK::StringUtils::is_whitespace("  a "));
+    EXPECT(!AK::StringUtils::is_whitespace("a\t"));
+}
+
 TEST_MAIN(StringUtils)
