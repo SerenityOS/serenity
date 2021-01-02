@@ -31,6 +31,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, ScrollBar)
+
 namespace GUI {
 
 static const char* s_up_arrow_bitmap_data = {

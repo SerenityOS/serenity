@@ -31,6 +31,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, RadioButton)
+
 namespace GUI {
 
 RadioButton::RadioButton(String text)

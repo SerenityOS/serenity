@@ -30,6 +30,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, GroupBox)
+
 namespace GUI {
 
 GroupBox::GroupBox(const StringView& title)

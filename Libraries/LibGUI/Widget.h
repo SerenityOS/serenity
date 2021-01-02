@@ -39,9 +39,10 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
-#define REGISTER_WIDGET(namespace_, class_name)                    \
-    extern GUI::WidgetClassRegistration registration_##class_name; \
-    GUI::WidgetClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); });
+#define REGISTER_WIDGET(namespace_, class_name)                                                                                                 \
+    namespace {                                                                                                                                 \
+    GUI::WidgetClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); }); \
+    }
 
 namespace GUI {
 
