@@ -248,6 +248,7 @@ u32 get_BAR2(Address);
 u32 get_BAR3(Address);
 u32 get_BAR4(Address);
 u32 get_BAR5(Address);
+u32 get_BAR(Address address, u8 bar);
 u8 get_revision_id(Address);
 u8 get_programming_interface(Address);
 u8 get_subclass(Address);

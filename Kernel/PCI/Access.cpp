@@ -281,6 +281,27 @@ u32 get_BAR5(Address address)
     return read32(address, PCI_BAR5);
 }
 
+u32 get_BAR(Address address, u8 bar)
+{
+    ASSERT(bar <= 5);
+    switch (bar) {
+    case 0:
+        return get_BAR0(address);
+    case 1:
+        return get_BAR1(address);
+    case 2:
+        return get_BAR2(address);
+    case 3:
+        return get_BAR3(address);
+    case 4:
+        return get_BAR4(address);
+    case 5:
+        return get_BAR5(address);
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 u8 get_revision_id(Address address)
 {
     return read8(address, PCI_REVISION_ID);
