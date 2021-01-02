@@ -32,6 +32,9 @@
 
 //#define GBOXLAYOUT_DEBUG
 
+REGISTER_WIDGET(GUI, HorizontalBoxLayout)
+REGISTER_WIDGET(GUI, VerticalBoxLayout)
+
 namespace GUI {
 
 BoxLayout::BoxLayout(Orientation orientation)
