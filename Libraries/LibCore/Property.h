@@ -48,6 +48,7 @@ public:
     JsonValue get() const { return m_getter(); }
 
     const String& name() const { return m_name; }
+    bool is_readonly() const { return !m_setter; }
 
 private:
     String m_name;
