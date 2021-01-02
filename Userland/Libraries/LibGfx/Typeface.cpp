@@ -28,6 +28,16 @@
 
 namespace Gfx {
 
+unsigned Typeface::weight() const
+{
+    ASSERT(m_ttf_font || m_bitmap_fonts.size() > 0);
+
+    if (is_fixed_size())
+        return m_bitmap_fonts[0]->weight();
+
+    return m_ttf_font->weight();
+}
+
 void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
 {
     m_bitmap_fonts.append(font);
@@ -51,6 +61,13 @@ RefPtr<Font> Typeface::get_font(unsigned size)
     }
 
     return {};
+}
+
+void Typeface::for_each_fixed_size_font(Function<void(const Font&)> callback) const
+{
+    for (auto font : m_bitmap_fonts) {
+        callback(*font);
+    }
 }
 
 }
