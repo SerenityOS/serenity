@@ -67,6 +67,11 @@ namespace Kernel {
 #define PCI_MAX_DEVICES_PER_BUS 32
 #define PCI_MAX_BUSES 256
 #define PCI_MAX_FUNCTIONS_PER_DEVICE 8
+
+#define PCI_CAPABILITY_NULL             0x0
+#define PCI_CAPABILITY_MSI              0x5
+#define PCI_CAPABILITY_VENDOR_SPECIFIC  0x9
+#define PCI_CAPABILITY_MSIX             0x11
 // clang-format on
 
 //#define PCI_DEBUG 1
@@ -183,9 +188,28 @@ struct ChangeableAddress : public Address {
     }
 };
 
-struct Capability {
-    u8 m_id;
-    u8 m_next_pointer;
+class Capability {
+public:
+    Capability(const Address& address, u8 id, u8 ptr)
+        : m_address(address)
+        , m_id(id)
+        , m_ptr(ptr)
+    {
+    }
+
+    u8 id() const { return m_id; }
+
+    u8 read8(u32) const;
+    u16 read16(u32) const;
+    u32 read32(u32) const;
+    void write8(u32, u8);
+    void write16(u32, u16);
+    void write32(u32, u32);
+
+private:
+    Address m_address;
+    const u8 m_id;
+    const u8 m_ptr;
 };
 
 class PhysicalID {
@@ -197,7 +221,7 @@ public:
     {
 #ifdef PCI_DEBUG
         for (auto capability : capabilities) {
-            dbg() << address << " has capbility " << capability.m_id;
+            dbg() << address << " has capbility " << capability.id();
         }
 #endif
     }

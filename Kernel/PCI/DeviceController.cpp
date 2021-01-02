@@ -37,7 +37,7 @@ DeviceController::DeviceController(Address address)
 bool DeviceController::is_msi_capable() const
 {
     for (auto capability : PCI::get_physical_id(pci_address()).capabilities()) {
-        if (capability.m_id == 0x5)
+        if (capability.id() == PCI_CAPABILITY_MSI)
             return true;
     }
     return false;
@@ -45,7 +45,7 @@ bool DeviceController::is_msi_capable() const
 bool DeviceController::is_msix_capable() const
 {
     for (auto capability : PCI::get_physical_id(pci_address()).capabilities()) {
-        if (capability.m_id == 0x11)
+        if (capability.id() == PCI_CAPABILITY_MSIX)
             return true;
     }
     return false;

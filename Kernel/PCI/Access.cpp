@@ -207,8 +207,8 @@ Vector<Capability> get_capabilities(Address address)
 #endif
         u16 capability_header = PCI::read16(address, capability_pointer);
         u8 capability_id = capability_header & 0xff;
+        capabilities.append({ address, capability_id, capability_pointer });
         capability_pointer = capability_header >> 8;
-        capabilities.append({ capability_id, capability_pointer });
     }
     return capabilities;
 }
@@ -339,6 +339,36 @@ size_t get_BAR_space_size(Address address, u8 bar_number)
     space_size &= 0xfffffff0;
     space_size = (~space_size) + 1;
     return space_size;
+}
+
+u8 Capability::read8(u32 field) const
+{
+    return PCI::read8(m_address, m_ptr + field);
+}
+
+u16 Capability::read16(u32 field) const
+{
+    return PCI::read16(m_address, m_ptr + field);
+}
+
+u32 Capability::read32(u32 field) const
+{
+    return PCI::read32(m_address, m_ptr + field);
+}
+
+void Capability::write8(u32 field, u8 value)
+{
+    PCI::write8(m_address, m_ptr + field, value);
+}
+
+void Capability::write16(u32 field, u16 value)
+{
+    PCI::write16(m_address, m_ptr + field, value);
+}
+
+void Capability::write32(u32 field, u32 value)
+{
+    PCI::write32(m_address, m_ptr + field, value);
 }
 
 }
