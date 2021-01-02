@@ -147,10 +147,10 @@ private:
         idle = 0;
 
         auto all_processes = Core::ProcessStatisticsReader::get_all();
-        if (all_processes.is_empty())
+        if (!all_processes.has_value() || all_processes.value().is_empty())
             return false;
 
-        for (auto& it : all_processes) {
+        for (auto& it : all_processes.value()) {
             for (auto& jt : it.value.threads) {
                 if (it.value.pid == 0)
                     idle += jt.ticks_user + jt.ticks_kernel;

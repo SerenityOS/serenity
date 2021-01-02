@@ -166,9 +166,11 @@ int main(int argc, char* argv[])
     }
 
     printf("%-28s %4s %4s %-10s %4s %s\n", "COMMAND", "PID", "PGID", "USER", "FD", "NAME");
+    auto processes = Core::ProcessStatisticsReader::get_all();
+    if (!processes.has_value())
+        return 1;
     if (arg_pid == -1) {
-        auto processes = Core::ProcessStatisticsReader::get_all();
-        for (auto process : processes) {
+        for (auto process : processes.value()) {
             if (process.key == 0)
                 continue;
             auto open_files = get_open_files_by_pid(process.key);
@@ -187,14 +189,13 @@ int main(int argc, char* argv[])
             }
         }
     } else {
-        auto processes = Core::ProcessStatisticsReader::get_all();
         auto open_files = get_open_files_by_pid(arg_pid);
 
         if (open_files.is_empty())
             return 0;
 
         for (auto file : open_files) {
-            display_entry(file, processes.get(arg_pid).value());
+            display_entry(file, processes.value().get(arg_pid).value());
         }
     }
 

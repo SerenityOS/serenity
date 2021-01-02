@@ -86,7 +86,7 @@ struct ProcessStatistics {
 
 class ProcessStatisticsReader {
 public:
-    static HashMap<pid_t, Core::ProcessStatistics> get_all();
+    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all();
 
 private:
     static String username_from_uid(uid_t);

@@ -197,10 +197,14 @@ bool generate_profile(pid_t pid)
     String process_name;
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (auto it = all_processes.find(pid); it != all_processes.end())
-        process_name = it->value.name;
-    else
+    if (all_processes.has_value()) {
+        if (auto it = all_processes.value().find(pid); it != all_processes.value().end())
+            process_name = it->value.name;
+        else
+            process_name = "(unknown)";
+    } else {
         process_name = "(unknown)";
+    }
 
     if (profiling_enable(pid) < 0) {
         int saved_errno = errno;
