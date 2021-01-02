@@ -287,6 +287,10 @@ int main(int argc, char* argv[])
             auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
             search_model.set_filter_term(search_box.text());
         }
+    } else {
+        String path = "/usr/share/man/man7/Help-index.md";
+        history.push(path);
+        open_page(path);
     }
 
     window->set_focused_widget(&left_tab_bar);
