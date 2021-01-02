@@ -196,9 +196,34 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
             return false;
         }
     }
+    do_main_relocations(total_tls_size);
+    return true;
+}
 
-    do_relocations(total_tls_size);
+void DynamicLoader::do_main_relocations(size_t total_tls_size)
+{
+    auto do_single_relocation = [&](ELF::DynamicObject::Relocation relocation) {
+        switch (do_relocation(total_tls_size, relocation)) {
+        case RelocationResult::Failed:
+            dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
+            ASSERT_NOT_REACHED();
+            break;
+        case RelocationResult::ResolveLater:
+            m_unresolved_relocations.append(relocation);
+            break;
+        case RelocationResult::Success:
+            break;
+        }
+        return IterationDecision::Continue;
+    };
+    m_dynamic_object->relocation_section().for_each_relocation(do_single_relocation);
+    m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
+}
 
+RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_tls_size)
+{
+
+    do_lazy_relocations(total_tls_size);
     if (flags & RTLD_LAZY) {
         setup_plt_trampoline();
     }
@@ -207,14 +232,24 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
     if (m_dynamic_object->has_text_relocations()) {
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_EXEC)) {
             perror("mprotect .text: PROT_READ | PROT_EXEC"); // FIXME: dlerror?
-            return false;
+            return nullptr;
         }
     }
 
     call_object_init_functions();
 
     VERBOSE("Loaded %s\n", m_filename.characters());
-    return true;
+    return m_dynamic_object;
+}
+
+void DynamicLoader::do_lazy_relocations(size_t total_tls_size)
+{
+    for (const auto& relocation : m_unresolved_relocations) {
+        if (auto res = do_relocation(total_tls_size, relocation); res != RelocationResult::Success) {
+            dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
+            ASSERT_NOT_REACHED();
+        }
+    }
 }
 
 void DynamicLoader::load_program_headers()
@@ -294,145 +329,116 @@ void DynamicLoader::load_program_headers()
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
-void DynamicLoader::do_relocations(size_t total_tls_size)
+DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, ELF::DynamicObject::Relocation relocation)
 {
-    auto main_relocation_section = m_dynamic_object->relocation_section();
-    main_relocation_section.for_each_relocation([&](ELF::DynamicObject::Relocation relocation) {
-        VERBOSE("Relocation symbol: %s, type: %d\n", relocation.symbol().name(), relocation.type());
-        FlatPtr* patch_ptr = nullptr;
-        if (is_dynamic())
-            patch_ptr = (FlatPtr*)(m_dynamic_object->base_address().as_ptr() + relocation.offset());
-        else
-            patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
+    VERBOSE("Relocation symbol: %s, type: %d\n", relocation.symbol().name(), relocation.type());
+    FlatPtr* patch_ptr = nullptr;
+    if (is_dynamic())
+        patch_ptr = (FlatPtr*)(m_dynamic_object->base_address().as_ptr() + relocation.offset());
+    else
+        patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
 
-        // VERBOSE("dynamic object name: %s\n", dynamic_object.object_name());
-        VERBOSE("dynamic object base address: %p\n", m_dynamic_object->base_address());
-        VERBOSE("relocation offset: 0x%x\n", relocation.offset());
-        VERBOSE("patch_ptr: %p\n", patch_ptr);
-        switch (relocation.type()) {
-        case R_386_NONE:
-            // Apparently most loaders will just skip these?
-            // Seems if the 'link editor' generates one something is funky with your code
-            VERBOSE("None relocation. No symbol, no nothing.\n");
-            break;
-        case R_386_32: {
-            auto symbol = relocation.symbol();
-            VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
-            auto res = lookup_symbol(symbol);
-            if (!res.found) {
-                dbgln("ERROR: symbol not found: {}", symbol.name());
-                ASSERT_NOT_REACHED();
+    // VERBOSE("dynamic object name: %s\n", dynamic_object.object_name());
+    VERBOSE("dynamic object base address: %p\n", m_dynamic_object->base_address());
+    VERBOSE("relocation offset: 0x%x\n", relocation.offset());
+    VERBOSE("patch_ptr: %p\n", patch_ptr);
+    switch (relocation.type()) {
+    case R_386_NONE:
+        // Apparently most loaders will just skip these?
+        // Seems if the 'link editor' generates one something is funky with your code
+        VERBOSE("None relocation. No symbol, no nothing.\n");
+        break;
+    case R_386_32: {
+        auto symbol = relocation.symbol();
+        VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
+        auto res = lookup_symbol(symbol);
+        if (!res.found) {
+            if (symbol.bind() == STB_WEAK) {
+                return RelocationResult::ResolveLater;
             }
-            u32 symbol_address = res.address;
-            *patch_ptr += symbol_address;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_PC32: {
-            auto symbol = relocation.symbol();
-            VERBOSE("PC-relative relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            auto res = lookup_symbol(symbol);
-            ASSERT(res.found);
-            u32 relative_offset = (res.address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
-            *patch_ptr += relative_offset;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_GLOB_DAT: {
-            auto symbol = relocation.symbol();
-            VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            auto res = lookup_symbol(symbol);
-            if (!res.found) {
-                // We do not support these
-                // TODO: Can we tell gcc not to generate the piece of code that uses these?
-                // (--disable-tm-clone-registry flag in gcc conifugraion?)
-                if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
-                    || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")) {
-                    break;
-                }
-
-                // The "__do_global_dtors_aux" function in libgcc_s.so needs this symbol,
-                // but we do not use that function so we don't actually need to resolve this symbol.
-                // The reason we can't resolve it here is that the symbol is defined in libc.so,
-                // but there's a circular dependency between libgcc_s.so and libc.so,
-                // we deal with it by first loading libgcc_s and then libc.
-                // So we cannot find this symbol at this time (libc is not yet loaded).
-                if (m_filename == "libgcc_s.so" && !strcmp(symbol.name(), "__cxa_finalize")) {
-                    break;
-                }
-
-                // Symbol not found
-                ASSERT_NOT_REACHED();
-            }
-            VERBOSE("was symbol found? %d, address: 0x%x\n", res.found, res.address);
-            VERBOSE("object: %s\n", m_filename.characters());
-
-            if (!res.found) {
-                // TODO this is a hack
-                ASSERT(!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
-                    || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info"));
-                ASSERT_NOT_REACHED();
-                return IterationDecision::Continue;
-            }
-            // ASSERT(res.found);
-            u32 symbol_location = res.address;
-            ASSERT(symbol_location != (FlatPtr)m_dynamic_object->base_address().as_ptr());
-            *patch_ptr = symbol_location;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_RELATIVE: {
-            // FIXME: According to the spec, R_386_relative ones must be done first.
-            //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
-            //     However, our compiler is nice enough to put them at the front of the relocations for us :)
-            VERBOSE("Load address relocation at offset %X\n", relocation.offset());
-            VERBOSE("    patch ptr == %p, adding load base address (%p) to it and storing %p\n", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
-            *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
-            break;
-        }
-        case R_386_TLS_TPOFF32:
-        case R_386_TLS_TPOFF: {
-            VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
-            auto symbol = relocation.symbol();
-            // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
-            if (relocation.symbol_index() == 0)
-                break;
-            VERBOSE("Symbol index: %d\n", symbol.index());
-            VERBOSE("Symbol is_undefined?: %d\n", symbol.is_undefined());
-            VERBOSE("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            auto res = lookup_symbol(symbol);
-            if (!res.found)
-                break;
-            ASSERT(res.found);
-            u32 symbol_value = res.value;
-            VERBOSE("symbol value: %d\n", symbol_value);
-            const auto dynamic_object_of_symbol = res.dynamic_object;
-            ASSERT(dynamic_object_of_symbol);
-            size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
-            // size_t offset_of_tls_end = tls_offset() + tls_size();
-            VERBOSE("patch ptr: 0x%x\n", patch_ptr);
-            VERBOSE("tls end offset: %d, total tls size: %d\n", offset_of_tls_end, total_tls_size);
-            *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
-            VERBOSE("*patch ptr: %d\n", (i32)*patch_ptr);
-            break;
-        }
-        default:
-            // Raise the alarm! Someone needs to implement this relocation type
-            VERBOSE("Found a new exciting relocation type %d\n", relocation.type());
-            // printf("DynamicLoader: Found unknown relocation type %d\n", relocation.type());
+            dbgln("ERROR: symbol not found: {}.", symbol.name());
             ASSERT_NOT_REACHED();
-            break;
         }
-        return IterationDecision::Continue;
-    });
+        u32 symbol_address = res.address;
+        *patch_ptr += symbol_address;
+        VERBOSE("   Symbol address: %p\n", *patch_ptr);
+        break;
+    }
+    case R_386_PC32: {
+        auto symbol = relocation.symbol();
+        VERBOSE("PC-relative relocation: '%s', value: %p\n", symbol.name(), symbol.value());
+        auto res = lookup_symbol(symbol);
+        ASSERT(res.found);
+        u32 relative_offset = (res.address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
+        *patch_ptr += relative_offset;
+        VERBOSE("   Symbol address: %p\n", *patch_ptr);
+        break;
+    }
+    case R_386_GLOB_DAT: {
+        auto symbol = relocation.symbol();
+        VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
+        auto res = lookup_symbol(symbol);
+        if (!res.found) {
+            // We do not support these
+            // TODO: Can we tell gcc not to generate the piece of code that uses these?
+            // (--disable-tm-clone-registry flag in gcc conifugraion?)
+            if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
+                || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")) {
+                break;
+            }
 
-    VERBOSE("plt relocations: 0x%x", m_dynamic_object->plt_relocation_section().address());
-    VERBOSE("plt relocation count: 0x%x", m_dynamic_object->plt_relocation_section().address());
-    VERBOSE("plt size: %d\n", m_dynamic_object->plt_relocation_section().size());
-    VERBOSE("plt entry size: 0x%x\n", m_dynamic_object->plt_relocation_section().entry_size());
+            if (symbol.bind() == STB_WEAK) {
+                return RelocationResult::ResolveLater;
+            }
 
-    // Handle PLT Global offset table relocations.
-    m_dynamic_object->plt_relocation_section().for_each_relocation([&](const DynamicObject::Relocation& relocation) {
+            // Symbol not found
+            return RelocationResult::Failed;
+        }
+        VERBOSE("was symbol found? %d, address: 0x%x\n", res.found, res.address);
+        VERBOSE("object: %s\n", m_filename.characters());
+
+        u32 symbol_location = res.address;
+        ASSERT(symbol_location != (FlatPtr)m_dynamic_object->base_address().as_ptr());
+        *patch_ptr = symbol_location;
+        VERBOSE("   Symbol address: %p\n", *patch_ptr);
+        break;
+    }
+    case R_386_RELATIVE: {
+        // FIXME: According to the spec, R_386_relative ones must be done first.
+        //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
+        //     However, our compiler is nice enough to put them at the front of the relocations for us :)
+        VERBOSE("Load address relocation at offset %X\n", relocation.offset());
+        VERBOSE("    patch ptr == %p, adding load base address (%p) to it and storing %p\n", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
+        *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
+        break;
+    }
+    case R_386_TLS_TPOFF32:
+    case R_386_TLS_TPOFF: {
+        VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
+        auto symbol = relocation.symbol();
+        // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
+        if (relocation.symbol_index() == 0)
+            break;
+        VERBOSE("Symbol index: %d\n", symbol.index());
+        VERBOSE("Symbol is_undefined?: %d\n", symbol.is_undefined());
+        VERBOSE("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
+        auto res = lookup_symbol(symbol);
+        if (!res.found)
+            break;
+        ASSERT(res.found);
+        u32 symbol_value = res.value;
+        VERBOSE("symbol value: %d\n", symbol_value);
+        const auto dynamic_object_of_symbol = res.dynamic_object;
+        ASSERT(dynamic_object_of_symbol);
+        size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
+        // size_t offset_of_tls_end = tls_offset() + tls_size();
+        VERBOSE("patch ptr: 0x%x\n", patch_ptr);
+        VERBOSE("tls end offset: %d, total tls size: %d\n", offset_of_tls_end, total_tls_size);
+        *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
+        VERBOSE("*patch ptr: %d\n", (i32)*patch_ptr);
+        break;
+    }
+    case R_386_JMP_SLOT: {
         // FIXME: Or BIND_NOW flag passed in?
         if (m_dynamic_object->must_bind_now() || s_always_bind_now) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
@@ -440,17 +446,21 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
             VERBOSE("patching plt reloaction: 0x%x\n", relocation.offset_in_section());
             [[maybe_unused]] auto rc = m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
-            ASSERT(relocation.type() == R_386_JMP_SLOT);
-
             u8* relocation_address = relocation.address().as_ptr();
 
             if (m_elf_image.is_dynamic())
                 *(u32*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
         }
-        return IterationDecision::Continue;
-    });
-
-    VERBOSE("Done relocating!\n");
+        break;
+    }
+    default:
+        // Raise the alarm! Someone needs to implement this relocation type
+        VERBOSE("Found a new exciting relocation type %d\n", relocation.type());
+        // printf("DynamicLoader: Found unknown relocation type %d\n", relocation.type());
+        ASSERT_NOT_REACHED();
+        break;
+    }
+    return RelocationResult::Success;
 }
 
 // Defined in <arch>/plt_trampoline.S
