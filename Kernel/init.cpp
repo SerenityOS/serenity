@@ -68,6 +68,7 @@
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VirtIO/VirtIO.h>
 
 // Defined in the linker script
 typedef void (*ctor_func_t)();
@@ -247,6 +248,8 @@ void init_stage2(void*)
     }
 
     UHCIController::detect();
+
+    VirtIO::detect();
 
     E1000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();
