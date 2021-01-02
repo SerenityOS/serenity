@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/JsonObject.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -37,12 +38,12 @@ class HelpWindow : public GUI::Window {
     C_OBJECT(HelpWindow);
 
 public:
-    static NonnullRefPtr<HelpWindow> the()
+    static NonnullRefPtr<HelpWindow> the(GUI::Window* window)
     {
         if (s_the)
             return *s_the;
 
-        return *(s_the = adopt(*new HelpWindow));
+        return *(s_the = adopt(*new HelpWindow(window)));
     }
 
     virtual ~HelpWindow() override;

@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
     help_menu.add_action(GUI::Action::create(
         "Functions Help", [&](auto&) {
             auto docs = spreadsheet_widget.current_worksheet().gather_documentation();
-            auto help_window = Spreadsheet::HelpWindow::the();
+            auto help_window = Spreadsheet::HelpWindow::the(window);
             help_window->set_docs(move(docs));
             help_window->show();
         },
