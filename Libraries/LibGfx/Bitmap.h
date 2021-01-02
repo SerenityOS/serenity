@@ -89,6 +89,7 @@ enum RotationDirection {
 class Bitmap : public RefCounted<Bitmap> {
 public:
     static RefPtr<Bitmap> create(BitmapFormat, const IntSize&);
+    static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, void*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);

@@ -98,6 +98,19 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size
     return adopt(*new Bitmap(format, size, Purgeable::Yes, backing_store.value()));
 }
 
+RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size)
+{
+    if (size_would_overflow(format, size))
+        return nullptr;
+
+    const auto pitch = minimum_pitch(size.width(), format);
+    const auto data_size = size_in_bytes(pitch, size.height());
+    auto shared_buffer = SharedBuffer::create_with_size(data_size);
+    if (!shared_buffer)
+        return nullptr;
+    return adopt(*new Bitmap(format, shared_buffer.release_nonnull(), size, Vector<RGBA32>()));
+}
+
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable, const BackingStore& backing_store)
     : m_size(size)
     , m_data(backing_store.data)
