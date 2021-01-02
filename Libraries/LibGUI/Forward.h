@@ -42,6 +42,7 @@ class CheckBox;
 class Command;
 class DragEvent;
 class DropEvent;
+class EditingEngine;
 class FileSystemModel;
 class Frame;
 class GroupBox;
