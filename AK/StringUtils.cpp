@@ -31,6 +31,7 @@
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <ctype.h>
 
 namespace AK {
 
@@ -302,17 +303,17 @@ bool contains(const StringView& str, const StringView& needle, CaseSensitivity c
     return false;
 }
 
+bool is_whitespace(const StringView& str)
+{
+    for (auto ch : str) {
+        if (!isspace(ch))
+            return false;
+    }
+    return true;
+}
+
 StringView trim_whitespace(const StringView& str, TrimMode mode)
 {
-    auto is_whitespace_character = [](char ch) -> bool {
-        return ch == '\t'
-            || ch == '\n'
-            || ch == '\v'
-            || ch == '\f'
-            || ch == '\r'
-            || ch == ' ';
-    };
-
     size_t substring_start = 0;
     size_t substring_length = str.length();
 
@@ -320,7 +321,7 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
         for (size_t i = 0; i < str.length(); ++i) {
             if (substring_length == 0)
                 return "";
-            if (!is_whitespace_character(str[i]))
+            if (!isspace(str[i]))
                 break;
             ++substring_start;
             --substring_length;
@@ -331,7 +332,7 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
         for (size_t i = str.length() - 1; i > 0; --i) {
             if (substring_length == 0)
                 return "";
-            if (!is_whitespace_character(str[i]))
+            if (!isspace(str[i]))
                 break;
             --substring_length;
         }

@@ -122,6 +122,8 @@ public:
     String to_lowercase() const;
     String to_uppercase() const;
 
+    bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+
 #ifndef KERNEL
     String trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
