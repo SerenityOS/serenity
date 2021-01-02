@@ -438,7 +438,7 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
         deallocate_region(*old_region);
 
         auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
-        auto* new_region = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot);
+        auto* new_region = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot, false);
         new_region->set_mmap(true);
 
         if (!new_region)
