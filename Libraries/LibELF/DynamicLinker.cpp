@@ -207,9 +207,25 @@ static void load_elf(const String& name)
     g_global_objects.append(*dynamic_object);
 
     VERBOSE("load_elf: done %s\n", name.characters());
-    if (name == "libc.so") {
-        initialize_libc(*dynamic_object);
+}
+
+static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
+{
+    auto loader = g_loaders.get(name).value();
+    for (const auto& needed_name : get_dependencies(name)) {
+        String library_name = get_library_name(needed_name);
+        if (g_loaders.contains(library_name)) {
+            commit_elf(library_name);
+        }
     }
+
+    auto object = loader->load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
+    ASSERT(object);
+    if (name == "libc.so") {
+        initialize_libc(*object);
+    }
+    g_loaders.remove(name);
+    return loader;
 }
 
 void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_program_fd, int argc, char** argv, char** envp)
@@ -226,7 +242,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     allocate_tls();
 
     load_elf(main_program_name);
-    auto main_program_lib = g_loaders.get(main_program_name).value();
+    auto main_program_lib = commit_elf(main_program_name);
 
     FlatPtr entry_point = reinterpret_cast<FlatPtr>(main_program_lib->image().entry().as_ptr());
     if (main_program_lib->is_dynamic())

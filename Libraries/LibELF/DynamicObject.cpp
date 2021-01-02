@@ -449,6 +449,9 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
     VERBOSE("looking up symbol: %s\n", symbol.name());
+    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
+        return DynamicLinker::lookup_global_symbol(symbol.name());
+
     if (!symbol.is_undefined()) {
         VERBOSE("symbol is defined in its object\n");
         return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
