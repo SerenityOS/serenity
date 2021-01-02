@@ -548,7 +548,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
             collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom);
-            if (relevant_sibling->height() > 0)
+            if (relevant_sibling->border_box_height() > 0)
                 break;
         }
         relevant_sibling = relevant_sibling->previous_sibling();

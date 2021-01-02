@@ -58,6 +58,12 @@ public:
         return width() + border_box.left + border_box.right;
     }
 
+    float border_box_height() const
+    {
+        auto border_box = box_model().border_box();
+        return height() + border_box.top + border_box.bottom;
+    }
+
     Gfx::FloatRect content_box_as_relative_rect() const
     {
         return { m_offset, m_size };
