@@ -276,7 +276,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     };
 }
 
-KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description)
+KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, bool is_dynamic)
 {
     RefPtr<PageDirectory> old_page_directory;
     NonnullOwnPtrVector<Region> old_regions;
@@ -308,7 +308,7 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
         m_regions = move(old_regions);
     });
 
-    if (!interpreter_description) {
+    if (!is_dynamic) {
         auto result = load_elf_object(main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
         if (result.is_error())
             return result.error();
@@ -321,7 +321,8 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
     FlatPtr random_offset = get_good_random<u16>() * PAGE_SIZE;
     FlatPtr interpreter_load_offset = 0x08000000 + random_offset;
 
-    auto interpreter_load_result = load_elf_object(*interpreter_description, interpreter_load_offset, ShouldAllocateTls::No);
+    auto interpreter_load_result = load_elf_object((interpreter_description) ? *interpreter_description : *main_program_description, interpreter_load_offset, ShouldAllocateTls::No);
+
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
 
@@ -334,7 +335,7 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
     return interpreter_load_result;
 }
 
-int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
+int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, bool is_dynamic)
 {
     ASSERT(is_user_process());
     ASSERT(!Processor::current().in_critical());
@@ -393,7 +394,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
-    auto load_result_or_error = load(main_program_description, interpreter_description);
+    auto load_result_or_error = load(main_program_description, interpreter_description, is_dynamic);
     if (load_result_or_error.is_error()) {
         dbgln("do_exec({}): Failed to load main program or interpreter", path);
         return load_result_or_error.error();
@@ -582,7 +583,7 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
     return KResult(-ENOEXEC);
 }
 
-KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size)
 {
     if (nread < (int)sizeof(Elf32_Ehdr))
         return KResult(-ENOEXEC);
@@ -651,10 +652,16 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
         return interpreter_description;
     }
 
-    if (elf_header->e_type != ET_EXEC) {
+    if (elf_header->e_type == ET_REL) {
         // We can't exec an ET_REL, that's just an object file from the compiler
-        // If it's ET_DYN with no PT_INTERP, then we can't load it properly either
         return KResult(-ENOEXEC);
+    }
+    if (elf_header->e_type == ET_DYN) {
+        // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
+        // for its own relocation (i.e. it's /usr/lib/Loader.so)
+        if (path != "/usr/lib/Loader.so")
+            dbgln("exec({}): WARNING - Dynamic ELF executable without a PT_INTERP header, and isn't /usr/lib/Loader.so");
+        return nullptr;
     }
 
     // No interpreter, but, path refers to a valid elf image
@@ -709,18 +716,22 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
     // #2) ELF32 for i386
     auto elf_result = find_elf_interpreter_for_executable(path, first_page, nread_or_error.value(), metadata.size);
+    // Assume a static ELF executable by default
     RefPtr<FileDescription> interpreter_description;
+    bool is_dynamic = false;
     // We're getting either an interpreter, an error, or KSuccess (i.e. no interpreter but file checks out)
-    if (!elf_result.is_error())
+    if (!elf_result.is_error()) {
+        // It's a dynamic ELF executable, with or without an interpreter. Do not allocate TLS
         interpreter_description = elf_result.value();
-    else if (elf_result.error().is_error())
+        is_dynamic = true;
+    } else if (elf_result.error().is_error())
         return elf_result.error();
 
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
-    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags);
+    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, is_dynamic);
 
     m_exec_tid = 0;
 
