@@ -260,8 +260,15 @@ int main(int argc, char* argv[])
     go_back_action->set_enabled(false);
     go_forward_action->set_enabled(false);
 
+    auto go_home_action = GUI::CommonActions::make_go_home_action([&](auto&) {
+        String path = "/usr/share/man/man7/Help-index.md";
+        history.push(path);
+        open_page(path);
+    });
+
     toolbar.add_action(*go_back_action);
     toolbar.add_action(*go_forward_action);
+    toolbar.add_action(*go_home_action);
 
     auto menubar = GUI::MenuBar::construct();
 
@@ -277,6 +284,7 @@ int main(int argc, char* argv[])
     auto& go_menu = menubar->add_menu("Go");
     go_menu.add_action(*go_back_action);
     go_menu.add_action(*go_forward_action);
+    go_menu.add_action(*go_home_action);
 
     app->set_menubar(move(menubar));
 
@@ -288,9 +296,7 @@ int main(int argc, char* argv[])
             search_model.set_filter_term(search_box.text());
         }
     } else {
-        String path = "/usr/share/man/man7/Help-index.md";
-        history.push(path);
-        open_page(path);
+        go_home_action->activate();
     }
 
     window->set_focused_widget(&left_tab_bar);
