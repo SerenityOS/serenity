@@ -30,6 +30,8 @@
 
 namespace NotificationServer {
 
+void update_notification_window_locations();
+
 class NotificationWindow final : public GUI::Window {
     C_OBJECT(NotificationWindow);
 
