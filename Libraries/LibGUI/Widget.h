@@ -341,8 +341,8 @@ private:
     void handle_mouseup_event(MouseEvent&);
     void handle_enter_event(Core::Event&);
     void handle_leave_event(Core::Event&);
-    void focus_previous_widget(FocusSource);
-    void focus_next_widget(FocusSource);
+    void focus_previous_widget(FocusSource, bool siblings_only);
+    void focus_next_widget(FocusSource, bool siblings_only);
 
     void show_tooltip();
 
