@@ -191,6 +191,7 @@ protected:
     Gfx::IntRect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;
+    TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
     bool ruler_visible() const { return m_ruler_visible; }
     Gfx::IntRect content_rect_for_position(const TextPosition&) const;
     int ruler_width() const;
