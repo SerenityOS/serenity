@@ -52,11 +52,11 @@ public:
     // from the SHT_DYNAMIC in the file.
     RefPtr<DynamicObject> load_from_image(unsigned flags, size_t total_tls_size);
 
-    // Stage 2 of loading: relocations and init functions
-    // Assumes that the program headers have been loaded and that m_dynamic_object is initialized
-    // Splitting loading like this allows us to use the same code to relocate a main executable as an elf binary
+    // Stage 2 of loading: dynamic object loading and primary relocations
     bool load_stage_2(unsigned flags, size_t total_tls_size);
 
+    // Stage 3 of loading: lazy relocations and initializers
+    RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
     // Intended for use by dlsym or other internal methods
     void* symbol_for_name(const char*);
 
@@ -114,11 +114,21 @@ private:
     void load_program_headers();
 
     // Stage 2
-    void do_relocations(size_t total_tls_size);
+    void do_main_relocations(size_t total_tls_size);
+
+    // Stage 3
+    void do_lazy_relocations(size_t total_tls_size);
     void setup_plt_trampoline();
     void call_object_init_functions();
 
     bool validate();
+
+    enum class RelocationResult : uint8_t {
+        Failed = 0,
+        Success = 1,
+        ResolveLater = 2,
+    };
+    RelocationResult do_relocation(size_t total_tls_size, DynamicObject::Relocation relocation);
     size_t calculate_tls_size() const;
 
     DynamicObject::SymbolLookupResult lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const;
@@ -141,6 +151,8 @@ private:
 
     size_t m_tls_offset { 0 };
     size_t m_tls_size { 0 };
+
+    Vector<DynamicObject::Relocation> m_unresolved_relocations;
 };
 
 template<typename F>
