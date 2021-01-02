@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <LibCore/File.h>
+#include <LibCore/Property.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
@@ -46,6 +48,11 @@ public:
     virtual ~GMLAutocompleteProvider() override { }
 
 private:
+    static bool can_have_declared_layout(const StringView& class_name)
+    {
+        return class_name.is_one_of("GUI::Widget", "GUI::Frame");
+    }
+
     virtual void provide_completions(Function<void(Vector<Entry>)> callback) override
     {
         auto cursor = m_editor->cursor();
@@ -121,7 +128,7 @@ private:
             }
         }
 
-        Vector<GUI::AutocompleteProvider::Entry> entries;
+        Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
         switch (state) {
         case Free:
             if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
@@ -130,7 +137,7 @@ private:
                 break;
             }
             GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
-                entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+                class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
             });
             break;
         case InClassName:
@@ -143,7 +150,7 @@ private:
             }
             GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
                 if (registration.class_name().starts_with(class_names.last()))
-                    entries.empend(registration.class_name(), class_names.last().length());
+                    identifier_entries.empend(registration.class_name(), class_names.last().length());
             });
             break;
         case InIdentifier:
@@ -158,9 +165,14 @@ private:
                 auto instance = registration->construct();
                 for (auto& it : instance->properties()) {
                     if (it.key.starts_with(identifier_string))
-                        entries.empend(it.key, identifier_string.length());
+                        identifier_entries.empend(it.key, identifier_string.length());
                 }
             }
+            if (can_have_declared_layout(class_names.last()) && StringView { "layout" }.starts_with(identifier_string))
+                identifier_entries.empend("layout", identifier_string.length());
+            // No need to suggest anything if it's already completely typed out!
+            if (identifier_entries.size() == 1 && identifier_entries.first().completion == identifier_string)
+                identifier_entries.clear();
             break;
         case AfterClassName:
             if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
@@ -174,18 +186,36 @@ private:
                 if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
                     auto instance = registration->construct();
                     for (auto& it : instance->properties()) {
-                        entries.empend(it.key, 0u);
+                        if (!it.value->is_readonly())
+                            identifier_entries.empend(it.key, 0u);
                     }
                 }
             }
             GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
-                entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+                class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
             });
             break;
         case AfterIdentifier:
+            if (last_seen_token && last_seen_token->m_end.line != cursor.line()) {
+                break;
+            }
+            if (identifier_string == "layout") {
+                GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+                    if (registration.class_name().contains("Layout"))
+                        class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
+                });
+            }
+            break;
         default:
             break;
         }
+
+        quick_sort(class_entries, [](auto& a, auto& b) { return a.completion < b.completion; });
+        quick_sort(identifier_entries, [](auto& a, auto& b) { return a.completion < b.completion; });
+
+        Vector<GUI::AutocompleteProvider::Entry> entries;
+        entries.append(move(identifier_entries));
+        entries.append(move(class_entries));
 
         callback(move(entries));
     }
