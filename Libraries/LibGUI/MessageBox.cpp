@@ -108,7 +108,7 @@ void MessageBox::build()
     widget.set_fill_with_background_color(true);
 
     widget.layout()->set_margins({ 8, 8, 8, 8 });
-    widget.layout()->set_spacing(8);
+    widget.layout()->set_spacing(6);
 
     auto& message_container = widget.add<Widget>();
     message_container.set_layout<HorizontalBoxLayout>();
@@ -132,13 +132,17 @@ void MessageBox::build()
     button_container.set_fixed_height(24);
     button_container.layout()->set_spacing(8);
 
+    constexpr int button_width = 80;
+    int button_count = 0;
+
     auto add_button = [&](String label, Dialog::ExecResult result) {
         auto& button = button_container.add<Button>();
-        button.set_fixed_width(96);
+        button.set_fixed_width(button_width);
         button.set_text(label);
         button.on_click = [this, label, result](auto) {
             done(result);
         };
+        ++button_count;
     };
 
     button_container.layout()->add_spacer();
@@ -152,9 +156,8 @@ void MessageBox::build()
         add_button("Cancel", Dialog::ExecCancel);
     button_container.layout()->add_spacer();
 
-    int width = button_container.child_widgets().size() * 96 + 32;
-    if (width < text_width + icon_width + 56)
-        width = text_width + icon_width + 56;
+    int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
+    width = max(width, text_width + icon_width + 56);
 
     set_rect(x(), y(), width, 96);
     set_resizable(false);
