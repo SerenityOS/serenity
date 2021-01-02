@@ -2,6 +2,7 @@ set(SOURCES
     CodeBlock.cpp
     Document.cpp
     Heading.cpp
+    HorizontalRule.cpp
     List.cpp
     Paragraph.cpp
     Table.cpp

@@ -28,6 +28,7 @@
 #include <LibMarkdown/CodeBlock.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Heading.h>
+#include <LibMarkdown/HorizontalRule.h>
 #include <LibMarkdown/List.h>
 #include <LibMarkdown/Paragraph.h>
 #include <LibMarkdown/Table.h>
@@ -105,7 +106,7 @@ OwnPtr<Document> Document::parse(const StringView& str)
         }
 
         bool any = helper<Table>(lines, blocks) || helper<List>(lines, blocks) || helper<CodeBlock>(lines, blocks)
-            || helper<Heading>(lines, blocks);
+            || helper<Heading>(lines, blocks) || helper<HorizontalRule>(lines, blocks);
 
         if (any) {
             if (!paragraph_lines.is_empty()) {
