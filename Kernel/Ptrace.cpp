@@ -86,6 +86,8 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     if (peer->state() == Thread::State::Running)
         return KResult(-EBUSY);
 
+    scheduler_lock.unlock();
+
     switch (params.request) {
     case PT_CONTINUE:
         peer->send_signal(SIGCONT, &caller);
