@@ -36,7 +36,6 @@ FormEditorWidget::FormEditorWidget()
     : m_tool(make<CursorTool>(*this))
 {
     set_fill_with_background_color(true);
-    set_background_color(Color::MidGray);
 
     m_form_widget = add<FormWidget>();
     m_widget_tree_model = WidgetTreeModel::create(*m_form_widget);

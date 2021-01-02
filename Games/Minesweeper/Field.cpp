@@ -252,7 +252,11 @@ void Field::reset()
             square.is_swept = false;
             if (!square.label) {
                 square.label = add<SquareLabel>(square);
-                square.label->set_background_color(Color::from_rgb(0xff4040));
+                // Square with mine will be filled with background color later, i.e. red
+                auto palette = square.label->palette();
+                palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
+                square.label->set_palette(palette);
+                square.label->set_background_role(Gfx::ColorRole::Base);
             }
             square.label->set_fill_with_background_color(false);
             square.label->set_relative_rect(rect);

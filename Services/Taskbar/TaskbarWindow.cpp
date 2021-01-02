@@ -206,12 +206,6 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-
-    if (window.is_minimized()) {
-        button->set_foreground_color(Color::DarkGray);
-    } else {
-        button->set_foreground_color(Color::Black);
-    }
     button->set_text(window.title());
     button->set_checked(show_as_active);
 }

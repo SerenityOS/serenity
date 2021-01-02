@@ -31,7 +31,6 @@
 ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
     : m_profile(profile)
 {
-    set_background_color(Color::White);
     set_fill_with_background_color(true);
     set_fixed_height(80);
 }
