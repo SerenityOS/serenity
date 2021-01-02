@@ -166,7 +166,18 @@ private:
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio thread shared_buffer accept cpath rpath wpath unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio thread shared_buffer accept rpath cpath wpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app_icon = GUI::Icon::default_icon("app-playground");
     auto window = GUI::Window::construct();
     window->set_title("GML Playground");
