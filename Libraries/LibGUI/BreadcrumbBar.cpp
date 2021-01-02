@@ -29,6 +29,8 @@
 #include <LibGUI/Button.h>
 #include <LibGfx/Font.h>
 
+REGISTER_WIDGET(GUI, BreadcrumbBar)
+
 namespace GUI {
 
 // FIXME: Move this somewhere else

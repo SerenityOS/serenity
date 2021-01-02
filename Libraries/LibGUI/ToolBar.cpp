@@ -35,6 +35,8 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, ToolBar)
+
 namespace GUI {
 
 ToolBar::ToolBar(Orientation orientation, int button_size)

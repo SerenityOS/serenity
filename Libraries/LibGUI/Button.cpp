@@ -34,6 +34,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, Button)
+
 namespace GUI {
 
 Button::Button(String text)

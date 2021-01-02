@@ -34,6 +34,8 @@
 
 //#define DEBUG_ITEM_RECTS
 
+REGISTER_WIDGET(GUI, TreeView)
+
 namespace GUI {
 
 struct TreeView::MetadataForIndex {

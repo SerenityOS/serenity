@@ -31,6 +31,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, CheckBox)
+
 namespace GUI {
 
 static const int s_box_width = 13;
