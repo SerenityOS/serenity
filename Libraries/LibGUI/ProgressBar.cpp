@@ -30,6 +30,8 @@
 #include <LibGUI/ProgressBar.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, ProgressBar)
+
 namespace GUI {
 
 ProgressBar::ProgressBar()

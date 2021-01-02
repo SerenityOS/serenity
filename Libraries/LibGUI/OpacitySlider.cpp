@@ -29,6 +29,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, OpacitySlider)
+
 namespace GUI {
 
 OpacitySlider::OpacitySlider(Gfx::Orientation orientation)

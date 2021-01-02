@@ -33,6 +33,8 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
+REGISTER_WIDGET(GUI, ComboBox)
+
 namespace GUI {
 
 class ComboBoxEditor final : public TextEditor {

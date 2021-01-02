@@ -30,6 +30,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
+REGISTER_WIDGET(GUI, ImageWidget)
+
 namespace GUI {
 
 ImageWidget::ImageWidget(const StringView&)

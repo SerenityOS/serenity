@@ -30,6 +30,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, ToolBarContainer)
+
 namespace GUI {
 
 void ToolBarContainer::child_event(Core::ChildEvent& event)

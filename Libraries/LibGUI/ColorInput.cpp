@@ -30,6 +30,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, ColorInput)
+
 namespace GUI {
 
 ColorInput::ColorInput()

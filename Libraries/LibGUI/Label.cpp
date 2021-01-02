@@ -30,6 +30,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, Label)
+
 namespace GUI {
 
 Label::Label(String text)

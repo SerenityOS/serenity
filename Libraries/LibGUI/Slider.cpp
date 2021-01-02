@@ -31,6 +31,10 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, HorizontalSlider)
+REGISTER_WIDGET(GUI, Slider)
+REGISTER_WIDGET(GUI, VerticalSlider)
+
 namespace GUI {
 
 Slider::Slider(Orientation orientation)

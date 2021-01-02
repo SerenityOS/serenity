@@ -30,6 +30,9 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, HorizontalSplitter)
+REGISTER_WIDGET(GUI, VerticalSplitter)
+
 namespace GUI {
 
 Splitter::Splitter(Orientation orientation)

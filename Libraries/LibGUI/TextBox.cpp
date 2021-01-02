@@ -26,6 +26,8 @@
 
 #include <LibGUI/TextBox.h>
 
+REGISTER_WIDGET(GUI, TextBox)
+
 namespace GUI {
 
 TextBox::TextBox()

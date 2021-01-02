@@ -51,6 +51,8 @@
 
 //#define DEBUG_TEXTEDITOR
 
+REGISTER_WIDGET(GUI, TextEditor)
+
 namespace GUI {
 
 TextEditor::TextEditor(Type type)

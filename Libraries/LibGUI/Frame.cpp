@@ -29,6 +29,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+REGISTER_WIDGET(GUI, Frame)
+
 namespace GUI {
 
 Frame::Frame()

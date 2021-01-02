@@ -31,6 +31,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, LinkLabel)
+
 namespace GUI {
 
 LinkLabel::LinkLabel(String text)
