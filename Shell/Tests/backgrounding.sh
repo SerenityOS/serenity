@@ -1,5 +1,8 @@
 #!/bin/Shell
 
+echo "Not running Shell-backgrounding as it has a high failure rate"
+exit 0
+
 setopt --verbose
 
 fail(msg) {
