@@ -151,7 +151,7 @@ public:
     {
         if (is_auto())
             return "[auto]";
-        return String::format("[%g %s]", m_value, unit_name());
+        return String::formatted("[{} {}]", m_value, unit_name());
     }
 
     bool operator==(const Length& other) const

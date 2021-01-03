@@ -78,9 +78,6 @@ String HTMLToken::to_string() const
     }
 
     return builder.to_string();
-
-    //dbg() << "[" << String::format("%42s", state_name(m_state)) << "] " << builder.to_string();
-    //m_current_token = {};
 }
 
 }

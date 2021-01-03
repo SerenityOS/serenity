@@ -128,7 +128,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
     }
     if (role == GUI::ModelRole::Display) {
         if (is<Layout::TextNode>(node))
-            return String::format("TextNode: %s", with_whitespace_collapsed(downcast<Layout::TextNode>(node).text_for_rendering()).characters());
+            return String::formatted("TextNode: {}", with_whitespace_collapsed(downcast<Layout::TextNode>(node).text_for_rendering()));
         StringBuilder builder;
         builder.append(node.class_name());
         builder.append(' ');

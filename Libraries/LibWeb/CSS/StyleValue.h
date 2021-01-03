@@ -329,7 +329,7 @@ public:
     static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
-    String to_string() const override { return String::format("Image{%s}", m_url.to_string().characters()); }
+    String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
