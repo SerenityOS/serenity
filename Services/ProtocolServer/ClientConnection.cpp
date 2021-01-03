@@ -60,15 +60,21 @@ OwnPtr<Messages::ProtocolServer::IsSupportedProtocolResponse> ClientConnection::
 
 OwnPtr<Messages::ProtocolServer::StartDownloadResponse> ClientConnection::handle(const Messages::ProtocolServer::StartDownload& message)
 {
-    URL url(message.url());
-    if (!url.is_valid())
+    const auto& url = message.url();
+    if (!url.is_valid()) {
+        dbgln("StartDownload: Invalid URL requested: '{}'", url);
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+    }
     auto* protocol = Protocol::find_by_name(url.protocol());
-    if (!protocol)
+    if (!protocol) {
+        dbgln("StartDownload: No protocol handler for URL: '{}'", url);
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+    }
     auto download = protocol->start_download(*this, message.method(), url, message.request_headers().entries(), message.request_body());
-    if (!download)
+    if (!download) {
+        dbgln("StartDownload: Protocol handler failed to start download: '{}'", url);
         return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+    }
     auto id = download->id();
     auto fd = download->download_fd();
     m_downloads.set(id, move(download));
