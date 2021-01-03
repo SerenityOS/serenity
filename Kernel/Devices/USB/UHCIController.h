@@ -84,7 +84,6 @@ private:
     Vector<QueueHead*> m_free_qh_pool;
     Vector<TransferDescriptor*> m_free_td_pool;
     Vector<TransferDescriptor*> m_iso_td_list;
-    Vector<QueueHead*> m_interrupt_qh_list;
 
     QueueHead* m_interrupt_transfer_queue;
     QueueHead* m_lowspeed_control_qh;
