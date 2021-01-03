@@ -216,6 +216,7 @@ ByteBuffer CoreDump::create_notes_process_data() const
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
     info.pid = m_process->pid().value();
+    info.termination_signal = m_process->termination_signal();
 
     process_data.append((void*)&info, sizeof(info));
 
