@@ -64,7 +64,7 @@ private:
     Function<void()> m_callback;
     Timer* m_next { nullptr };
     Timer* m_prev { nullptr };
-    Atomic<bool> m_queued { false };
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_queued { false };
 
     bool operator<(const Timer& rhs) const
     {
@@ -78,8 +78,8 @@ private:
     {
         return m_id == rhs.m_id;
     }
-    bool is_queued() const { return m_queued.load(AK::MemoryOrder::memory_order_relaxed); }
-    void set_queued(bool queued) { m_queued.store(queued, AK::MemoryOrder::memory_order_relaxed); }
+    bool is_queued() const { return m_queued; }
+    void set_queued(bool queued) { m_queued = queued; }
     u64 now(bool) const;
 };
 

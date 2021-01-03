@@ -51,7 +51,7 @@ public:
         }
         slabs[0].next = nullptr;
         m_freelist = &slabs[m_slab_count - 1];
-        m_num_allocated.store(0, AK::MemoryOrder::memory_order_release);
+        m_num_allocated = 0;
     }
 
     constexpr size_t slab_size() const { return templated_slab_size; }
@@ -75,7 +75,7 @@ public:
                 next_free = free_slab->next;
             } while (!m_freelist.compare_exchange_strong(free_slab, next_free, AK::memory_order_acq_rel));
 
-            m_num_allocated.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+            m_num_allocated++;
         }
 
 #ifdef SANITIZE_SLABS
@@ -104,11 +104,11 @@ public:
             free_slab->next = next_free;
         } while (!m_freelist.compare_exchange_strong(next_free, free_slab, AK::memory_order_acq_rel));
 
-        m_num_allocated.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+        m_num_allocated--;
     }
 
-    size_t num_allocated() const { return m_num_allocated.load(AK::MemoryOrder::memory_order_consume); }
-    size_t num_free() const { return m_slab_count - m_num_allocated.load(AK::MemoryOrder::memory_order_consume); }
+    size_t num_allocated() const { return m_num_allocated; }
+    size_t num_free() const { return m_slab_count - m_num_allocated; }
 
 private:
     struct FreeSlab {
@@ -117,7 +117,7 @@ private:
     };
 
     Atomic<FreeSlab*> m_freelist { nullptr };
-    Atomic<ssize_t> m_num_allocated;
+    Atomic<ssize_t, AK::MemoryOrder::memory_order_relaxed> m_num_allocated;
     size_t m_slab_count;
     void* m_base { nullptr };
     void* m_end { nullptr };

@@ -205,7 +205,7 @@ void MemoryManager::parse_memory_map()
     ASSERT(m_user_physical_pages > 0);
 
     // We start out with no committed pages
-    m_user_physical_pages_uncommitted = m_user_physical_pages;
+    m_user_physical_pages_uncommitted = m_user_physical_pages.load();
 }
 
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)

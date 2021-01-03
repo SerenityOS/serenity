@@ -58,7 +58,7 @@ public:
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
     void restore_lock(Mode, u32);
-    bool is_locked() const { return m_mode.load(AK::MemoryOrder::memory_order_relaxed) != Mode::Unlocked; }
+    bool is_locked() const { return m_mode != Mode::Unlocked; }
     void clear_waiters();
 
     const char* name() const { return m_name; }
@@ -81,7 +81,7 @@ private:
     Atomic<bool> m_lock { false };
     const char* m_name { nullptr };
     WaitQueue m_queue;
-    Atomic<Mode> m_mode { Mode::Unlocked };
+    Atomic<Mode, AK::MemoryOrder::memory_order_relaxed> m_mode { Mode::Unlocked };
 
     // When locked exclusively, only the thread already holding the lock can
     // lock it again. When locked in shared mode, any thread can do that.

@@ -679,7 +679,7 @@ void Plan9FS::thread_main()
             dbg() << "Plan9FS: Thread terminating, error reading";
             return;
         }
-    } while (!m_thread_shutdown.load(AK::MemoryOrder::memory_order_relaxed));
+    } while (!m_thread_shutdown);
     dbg() << "Plan9FS: Thread terminating";
 }
 

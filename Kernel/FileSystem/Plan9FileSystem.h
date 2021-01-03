@@ -162,7 +162,7 @@ private:
     SpinLock<u8> m_thread_lock;
     RefPtr<Thread> m_thread;
     Atomic<bool> m_thread_running { false };
-    Atomic<bool> m_thread_shutdown { false };
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_thread_shutdown { false };
 };
 
 class Plan9FSInode final : public Inode {

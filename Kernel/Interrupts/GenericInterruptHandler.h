@@ -48,7 +48,7 @@ public:
 
     u8 interrupt_number() const { return m_interrupt_number; }
 
-    size_t get_invoking_count() const { return m_invoking_count.load(AK::MemoryOrder::memory_order_relaxed); }
+    size_t get_invoking_count() const { return m_invoking_count; }
 
     virtual size_t sharing_devices_count() const = 0;
     virtual bool is_shared_handler() const = 0;
@@ -61,7 +61,7 @@ public:
     virtual bool eoi() = 0;
     ALWAYS_INLINE void increment_invoking_counter()
     {
-        m_invoking_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
+        m_invoking_count++;
     }
 
 protected:
@@ -71,7 +71,7 @@ protected:
     void disable_remap() { m_disable_remap = true; }
 
 private:
-    Atomic<u32> m_invoking_count { 0 };
+    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_invoking_count { 0 };
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
 };
