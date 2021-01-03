@@ -19,7 +19,7 @@ the manual page for `man` program itself right now.
 
 The SerenityOS manual is split into the following *sections*, or *chapters*:
 
-1. Command-line programs
+1. User programs
 2. System calls
 3. Libraries
 4. Special files
