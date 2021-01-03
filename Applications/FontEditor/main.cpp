@@ -25,7 +25,9 @@
  */
 
 #include "FontEditor.h"
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -43,12 +45,25 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer thread rpath accept unix cpath wpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer thread rpath accept unix cpath wpath fattr unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio shared_buffer thread rpath accept cpath wpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
 
     if (pledge("stdio shared_buffer thread rpath accept cpath wpath", nullptr) < 0) {
         perror("pledge");
@@ -127,6 +142,9 @@ int main(int argc, char** argv)
     }));
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
         GUI::AboutDialog::show("Font Editor", app_icon.bitmap_for_size(32), window);
     }));
