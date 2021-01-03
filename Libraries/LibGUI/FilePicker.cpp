@@ -65,7 +65,7 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, const Stri
 
 Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension, Options options)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Save, options, String::format("%s.%s", title.characters(), extension.characters()));
+    auto picker = FilePicker::construct(parent_window, Mode::Save, options, String::formatted("{}.{}", title, extension));
 
     if (picker->exec() == Dialog::ExecOK) {
         String file_path = picker->selected_file().string();
@@ -136,7 +136,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     };
 
     auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
-        set_path(String::format("%s/..", m_model->root_path().characters()));
+        set_path(String::formatted("{}/..", m_model->root_path()));
     });
     toolbar.add_action(*open_parent_directory_action);
 
@@ -149,13 +149,10 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
         String value;
         if (InputBox::show(value, this, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath(String::format("%s/%s",
-                                                m_model->root_path().characters(),
-                                                value.characters()))
-                                    .string();
+            auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                MessageBox::show(this, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", MessageBox::Type::Error);
+                MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error", MessageBox::Type::Error);
             } else {
                 m_model->update();
             }
@@ -301,7 +298,7 @@ void FilePicker::clear_preview()
 
 void FilePicker::on_file_return()
 {
-    LexicalPath path(String::format("%s/%s", m_model->root_path().characters(), m_filename_textbox->text().characters()));
+    LexicalPath path(String::formatted("{}/{}", m_model->root_path(), m_filename_textbox->text()));
 
     if (FilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
         auto result = MessageBox::show(this, "File already exists, overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);

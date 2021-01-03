@@ -61,7 +61,7 @@ inline const LogStream& operator<<(const LogStream& stream, const TextPosition& 
 {
     if (!value.is_valid())
         return stream << "GUI::TextPosition(Invalid)";
-    return stream << String::format("(%zu,%zu)", value.line(), value.column());
+    return stream << String::formatted("({},{})", value.line(), value.column());
 }
 
 }

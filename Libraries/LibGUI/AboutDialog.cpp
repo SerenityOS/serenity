@@ -43,7 +43,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     , m_icon(icon)
 {
     resize(413, 205);
-    set_title(String::format("About %s", m_name.characters()));
+    set_title(String::formatted("About {}", m_name));
     set_resizable(false);
 
     if (parent_window)
