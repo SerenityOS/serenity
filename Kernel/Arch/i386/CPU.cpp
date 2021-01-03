@@ -69,56 +69,56 @@ extern "C" void pre_init_finished(void);
 extern "C" void post_init_finished(void);
 extern "C" void handle_interrupt(TrapFrame*);
 
-#define EH_ENTRY(ec, title)                         \
-    extern "C" void title##_asm_entry();            \
-    extern "C" void title##_handler(TrapFrame*); \
-    asm(                                            \
-        ".globl " #title "_asm_entry\n"             \
-        "" #title "_asm_entry: \n"                  \
-        "    pusha\n"                               \
-        "    pushl %ds\n"                           \
-        "    pushl %es\n"                           \
-        "    pushl %fs\n"                           \
-        "    pushl %gs\n"                           \
-        "    pushl %ss\n"                           \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
-        "    mov %ax, %ds\n"                        \
-        "    mov %ax, %es\n"                        \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %fs\n"                        \
-        "    pushl %esp \n" /* set TrapFrame::regs */ \
-        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
-        "    pushl %esp \n"                         \
-        "    cld\n"                                 \
-        "    call enter_trap_no_irq \n"             \
-        "    call " #title "_handler\n"             \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY(ec, title)                                                                                                                                                  \
+    extern "C" void title##_asm_entry();                                                                                                                                     \
+    extern "C" void title##_handler(TrapFrame*);                                                                                                                             \
+    asm(                                                                                                                                                                     \
+        ".globl " #title "_asm_entry\n"                                                                                                                                      \
+        "" #title "_asm_entry: \n"                                                                                                                                           \
+        "    pusha\n"                                                                                                                                                        \
+        "    pushl %ds\n"                                                                                                                                                    \
+        "    pushl %es\n"                                                                                                                                                    \
+        "    pushl %fs\n"                                                                                                                                                    \
+        "    pushl %gs\n"                                                                                                                                                    \
+        "    pushl %ss\n"                                                                                                                                                    \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"                                                                                                                \
+                                                    "    mov %ax, %ds\n"                                                                                                     \
+                                                    "    mov %ax, %es\n"                                                                                                     \
+                                                    "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"                                                                     \
+                                                                                               "    mov %ax, %fs\n"                                                          \
+                                                                                               "    pushl %esp \n" /* set TrapFrame::regs */                                 \
+                                                                                               "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"                     \
+                                                                                                                                             "    pushl %esp \n"             \
+                                                                                                                                             "    cld\n"                     \
+                                                                                                                                             "    call enter_trap_no_irq \n" \
+                                                                                                                                             "    call " #title "_handler\n" \
+                                                                                                                                             "    jmp common_trap_exit \n");
 
-#define EH_ENTRY_NO_CODE(ec, title)                 \
-    extern "C" void title##_handler(TrapFrame*); \
-    extern "C" void title##_asm_entry();            \
-    asm(                                            \
-        ".globl " #title "_asm_entry\n"             \
-        "" #title "_asm_entry: \n"                  \
-        "    pushl $0x0\n"                          \
-        "    pusha\n"                               \
-        "    pushl %ds\n"                           \
-        "    pushl %es\n"                           \
-        "    pushl %fs\n"                           \
-        "    pushl %gs\n"                           \
-        "    pushl %ss\n"                           \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
-        "    mov %ax, %ds\n"                        \
-        "    mov %ax, %es\n"                        \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %fs\n"                        \
-        "    pushl %esp \n" /* set TrapFrame::regs */ \
-        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
-        "    pushl %esp \n"                         \
-        "    cld\n"                                 \
-        "    call enter_trap_no_irq \n"             \
-        "    call " #title "_handler\n"             \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY_NO_CODE(ec, title)                                                                                                                                          \
+    extern "C" void title##_handler(TrapFrame*);                                                                                                                             \
+    extern "C" void title##_asm_entry();                                                                                                                                     \
+    asm(                                                                                                                                                                     \
+        ".globl " #title "_asm_entry\n"                                                                                                                                      \
+        "" #title "_asm_entry: \n"                                                                                                                                           \
+        "    pushl $0x0\n"                                                                                                                                                   \
+        "    pusha\n"                                                                                                                                                        \
+        "    pushl %ds\n"                                                                                                                                                    \
+        "    pushl %es\n"                                                                                                                                                    \
+        "    pushl %fs\n"                                                                                                                                                    \
+        "    pushl %gs\n"                                                                                                                                                    \
+        "    pushl %ss\n"                                                                                                                                                    \
+        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"                                                                                                                \
+                                                    "    mov %ax, %ds\n"                                                                                                     \
+                                                    "    mov %ax, %es\n"                                                                                                     \
+                                                    "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"                                                                     \
+                                                                                               "    mov %ax, %fs\n"                                                          \
+                                                                                               "    pushl %esp \n" /* set TrapFrame::regs */                                 \
+                                                                                               "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"                     \
+                                                                                                                                             "    pushl %esp \n"             \
+                                                                                                                                             "    cld\n"                     \
+                                                                                                                                             "    call enter_trap_no_irq \n" \
+                                                                                                                                             "    call " #title "_handler\n" \
+                                                                                                                                             "    jmp common_trap_exit \n");
 
 static void dump(const RegisterState& regs)
 {
@@ -241,13 +241,13 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
             "rep movsl \n"
             ".global safe_memcpy_1_faulted \n"
             "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
-            : "=S" (src),
-              "=D" (dest),
-              "=c" (remainder),
-              [fault_at] "=d" (fault_at)
-            : "S" (src),
-              "D" (dest),
-              "c" (size_ts)
+            : "=S"(src),
+            "=D"(dest),
+            "=c"(remainder),
+            [fault_at] "=d"(fault_at)
+            : "S"(src),
+            "D"(dest),
+            "c"(size_ts)
             : "memory");
         if (remainder != 0)
             return false; // fault_at is already set!
@@ -263,11 +263,11 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
         "rep movsb \n"
         ".global safe_memcpy_2_faulted \n"
         "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
-        : "=c" (remainder),
-          [fault_at] "=d" (fault_at)
-        : "S" (src),
-          "D" (dest),
-          "c" (n)
+        : "=c"(remainder),
+        [fault_at] "=d"(fault_at)
+        : "S"(src),
+        "D"(dest),
+        "c"(n)
         : "memory");
     if (remainder != 0)
         return false; // fault_at is already set!
@@ -295,12 +295,11 @@ ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
         "xor %[count_on_error], %[count_on_error] \n"
         "dec %[count_on_error] \n" // return -1 on fault
         "2:"
-        : [count_on_error] "=c" (count),
-          [fault_at] "=d" (fault_at)
-        : [str] "b" (str),
-          [count] "c" (count),
-          [max_n] "d" (max_n)
-    );
+        : [count_on_error] "=c"(count),
+        [fault_at] "=d"(fault_at)
+        : [str] "b"(str),
+        [count] "c"(count),
+        [max_n] "d"(max_n));
     if (count >= 0)
         fault_at = nullptr;
     return count;
@@ -323,12 +322,12 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
             "rep stosl \n"
             ".global safe_memset_1_faulted \n"
             "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
-            : "=D" (dest),
-              "=c" (remainder),
-              [fault_at] "=d" (fault_at)
-            : "D" (dest),
-              "a" (expanded_c),
-              "c" (size_ts)
+            : "=D"(dest),
+            "=c"(remainder),
+            [fault_at] "=d"(fault_at)
+            : "D"(dest),
+            "a"(expanded_c),
+            "c"(size_ts)
             : "memory");
         if (remainder != 0)
             return false; // fault_at is already set!
@@ -344,12 +343,12 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         "rep stosb \n"
         ".global safe_memset_2_faulted \n"
         "safe_memset_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
-        : "=D" (dest),
-          "=c" (remainder),
-          [fault_at] "=d" (fault_at)
-        : "D" (dest),
-          "c" (n),
-          "a" (c)
+        : "=D"(dest),
+        "=c"(remainder),
+        [fault_at] "=d"(fault_at)
+        : "D"(dest),
+        "c"(n),
+        "a"(c)
         : "memory");
     if (remainder != 0)
         return false; // fault_at is already set!
@@ -1122,57 +1121,56 @@ String Processor::features_string() const
 {
     StringBuilder builder;
     auto feature_to_str =
-        [](CPUFeature f) -> const char*
-        {
-            switch (f) {
-                case CPUFeature::NX:
-                    return "nx";
-                case CPUFeature::PAE:
-                    return "pae";
-                case CPUFeature::PGE:
-                    return "pge";
-                case CPUFeature::RDRAND:
-                    return "rdrand";
-                case CPUFeature::RDSEED:
-                    return "rdseed";
-                case CPUFeature::SMAP:
-                    return "smap";
-                case CPUFeature::SMEP:
-                    return "smep";
-                case CPUFeature::SSE:
-                    return "sse";
-                case CPUFeature::TSC:
-                    return "tsc";
-                case CPUFeature::RDTSCP:
-                    return "rdtscp";
-                case CPUFeature::CONSTANT_TSC:
-                    return "constant_tsc";
-                case CPUFeature::NONSTOP_TSC:
-                    return "nonstop_tsc";
-                case CPUFeature::UMIP:
-                    return "umip";
-                case CPUFeature::SEP:
-                    return "sep";
-                case CPUFeature::SYSCALL:
-                    return "syscall";
-                case CPUFeature::MMX:
-                    return "mmx";
-                case CPUFeature::SSE2:
-                    return "sse2";
-                case CPUFeature::SSE3:
-                    return "sse3";
-                case CPUFeature::SSSE3:
-                    return "ssse3";
-                case CPUFeature::SSE4_1:
-                    return "sse4.1";
-                case CPUFeature::SSE4_2:
-                    return "sse4.2";
-                // no default statement here intentionally so that we get
-                // a warning if a new feature is forgotten to be added here
-            }
-            // Shouldn't ever happen
-            return "???";
-        };
+        [](CPUFeature f) -> const char* {
+        switch (f) {
+        case CPUFeature::NX:
+            return "nx";
+        case CPUFeature::PAE:
+            return "pae";
+        case CPUFeature::PGE:
+            return "pge";
+        case CPUFeature::RDRAND:
+            return "rdrand";
+        case CPUFeature::RDSEED:
+            return "rdseed";
+        case CPUFeature::SMAP:
+            return "smap";
+        case CPUFeature::SMEP:
+            return "smep";
+        case CPUFeature::SSE:
+            return "sse";
+        case CPUFeature::TSC:
+            return "tsc";
+        case CPUFeature::RDTSCP:
+            return "rdtscp";
+        case CPUFeature::CONSTANT_TSC:
+            return "constant_tsc";
+        case CPUFeature::NONSTOP_TSC:
+            return "nonstop_tsc";
+        case CPUFeature::UMIP:
+            return "umip";
+        case CPUFeature::SEP:
+            return "sep";
+        case CPUFeature::SYSCALL:
+            return "syscall";
+        case CPUFeature::MMX:
+            return "mmx";
+        case CPUFeature::SSE2:
+            return "sse2";
+        case CPUFeature::SSE3:
+            return "sse3";
+        case CPUFeature::SSSE3:
+            return "ssse3";
+        case CPUFeature::SSE4_1:
+            return "sse4.1";
+        case CPUFeature::SSE4_2:
+            return "sse4.2";
+            // no default statement here intentionally so that we get
+            // a warning if a new feature is forgotten to be added here
+        }
+        // Shouldn't ever happen
+        return "???";
+    };
     bool first = true;
     for (u32 flag = 1; flag != 0; flag <<= 1) {
         if ((static_cast<u32>(m_features) & flag) != 0) {
@@ -1239,7 +1237,7 @@ void Processor::initialize(u32 cpu)
         ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
         asm volatile("fxsave %0"
-            : "=m"(s_clean_fpu_state));
+                     : "=m"(s_clean_fpu_state));
     }
 
     m_info = new ProcessorInfo(*this);
@@ -1292,7 +1290,7 @@ void Processor::flush_gdt()
     m_gdtr.address = m_gdt;
     m_gdtr.limit = (m_gdt_length * 8) - 1;
     asm volatile("lgdt %0" ::"m"(m_gdtr)
-        : "memory");
+                 : "memory");
 }
 
 const DescriptorTablePointer& Processor::get_gdtr()
@@ -1305,8 +1303,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     FlatPtr frame_ptr = 0, eip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
-    auto walk_stack = [&](FlatPtr stack_ptr)
-    {
+    auto walk_stack = [&](FlatPtr stack_ptr) {
         stack_trace.append(eip);
         size_t count = 1;
         while (stack_ptr) {
@@ -1332,8 +1329,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             }
         }
     };
-    auto capture_current_thread = [&]()
-    {
+    auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
         eip = (FlatPtr)__builtin_return_address(0);
 
@@ -1360,7 +1356,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         // it may be changing at any time. We need to probably send
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
-        smp_unicast(thread.cpu(),
+        smp_unicast(
+            thread.cpu(),
             [&]() {
                 dbg() << "CPU[" << Processor::current().id() << "] getting stack for cpu #" << proc.id();
                 ProcessPagingScope paging_scope(thread.process());
@@ -1375,7 +1372,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 //       because the other processor is still holding the
                 //       scheduler lock...
                 capture_current_thread();
-            }, false);
+            },
+            false);
     } else {
         switch (thread.state()) {
         case Thread::Running:
@@ -1427,7 +1425,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
     asm volatile("fxsave %0"
-        : "=m"(from_thread->fpu_state()));
+                 : "=m"(from_thread->fpu_state()));
 
     from_tss.fs = get_fs();
     from_tss.gs = get_gs();
@@ -1443,8 +1441,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     to_thread->set_cpu(processor.id());
 
-    asm volatile("fxrstor %0"
-        ::"m"(to_thread->fpu_state()));
+    asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
     // TODO: debug registers
     // TODO: ioperm?
@@ -1489,17 +1486,16 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "popl %%esi \n"
         "popl %%ebx \n"
         "popfl \n"
-        : [from_esp] "=m" (from_thread->tss().esp),
-          [from_eip] "=m" (from_thread->tss().eip),
-          [tss_esp0] "=m" (m_tss.esp0),
-          "=d" (from_thread), // needed so that from_thread retains the correct value
-          "=a" (to_thread) // needed so that to_thread retains the correct value
-        : [to_esp] "g" (to_thread->tss().esp),
-          [to_esp0] "g" (to_thread->tss().esp0),
-          [to_eip] "c" (to_thread->tss().eip),
-          [from_thread] "d" (from_thread),
-          [to_thread] "a" (to_thread)
-    );
+        : [from_esp] "=m"(from_thread->tss().esp),
+        [from_eip] "=m"(from_thread->tss().eip),
+        [tss_esp0] "=m"(m_tss.esp0),
+        "=d"(from_thread), // needed so that from_thread retains the correct value
+        "=a"(to_thread)    // needed so that to_thread retains the correct value
+        : [to_esp] "g"(to_thread->tss().esp),
+        [to_esp0] "g"(to_thread->tss().esp0),
+        [to_eip] "c"(to_thread->tss().eip),
+        [from_thread] "d"(from_thread),
+        [to_thread] "a"(to_thread));
 #ifdef CONTEXT_SWITCH_DEBUG
     dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread;
 #endif
@@ -1527,19 +1523,18 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
 extern "C" void thread_context_first_enter(void);
 asm(
-// enter_thread_context returns to here first time a thread is executing
-".globl thread_context_first_enter \n"
-"thread_context_first_enter: \n"
-// switch_context will have pushed from_thread and to_thread to our new
-// stack prior to thread_context_first_enter() being called, and the
-// pointer to TrapFrame was the top of the stack before that
-"    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
-"    cld \n"
-"    call context_first_init \n"
-"    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
-"    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
-"    jmp common_trap_exit \n"
-);
+    // enter_thread_context returns to here first time a thread is executing
+    ".globl thread_context_first_enter \n"
+    "thread_context_first_enter: \n"
+    // switch_context will have pushed from_thread and to_thread to our new
+    // stack prior to thread_context_first_enter() being called, and the
+    // pointer to TrapFrame was the top of the stack before that
+    "    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
+    "    cld \n"
+    "    call context_first_init \n"
+    "    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
+                                                             "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+                                                             "    jmp common_trap_exit \n");
 
 void exit_kernel_thread(void)
 {
@@ -1653,24 +1648,23 @@ extern "C" u32 do_init_context(Thread* thread, u32 flags)
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
 asm(
-".global do_assume_context \n"
-"do_assume_context: \n"
-"    movl 4(%esp), %ebx \n"
-"    movl 8(%esp), %esi \n"
-// We're going to call Processor::init_context, so just make sure
-// we have enough stack space so we don't stomp over it
-"    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
-"    pushl %esi \n"
-"    pushl %ebx \n"
-"    cld \n"
-"    call do_init_context \n"
-"    addl $8, %esp \n"
-"    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
-"    pushl %ebx \n" // push to_thread
-"    pushl %ebx \n" // push from_thread
-"    pushl $thread_context_first_enter \n" // should be same as tss.eip
-"    jmp enter_thread_context \n"
-);
+    ".global do_assume_context \n"
+    "do_assume_context: \n"
+    "    movl 4(%esp), %ebx \n"
+    "    movl 8(%esp), %esi \n"
+    // We're going to call Processor::init_context, so just make sure
+    // we have enough stack space so we don't stomp over it
+    "    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
+                                                                             "    pushl %esi \n"
+                                                                             "    pushl %ebx \n"
+                                                                             "    cld \n"
+                                                                             "    call do_init_context \n"
+                                                                             "    addl $8, %esp \n"
+                                                                             "    movl %eax, %esp \n"                   // move stack pointer to what Processor::init_context set up for us
+                                                                             "    pushl %ebx \n"                        // push to_thread
+                                                                             "    pushl %ebx \n"                        // push from_thread
+                                                                             "    pushl $thread_context_first_enter \n" // should be same as tss.eip
+                                                                             "    jmp enter_thread_context \n");
 
 void Processor::assume_context(Thread& thread, u32 flags)
 {
@@ -1721,28 +1715,26 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     m_scheduler_initialized = true;
 
     asm volatile(
-        "movl %[new_esp], %%esp \n" // switch to new stack
+        "movl %[new_esp], %%esp \n"  // switch to new stack
         "pushl %[from_to_thread] \n" // to_thread
         "pushl %[from_to_thread] \n" // from_thread
         "pushl $" __STRINGIFY(GDT_SELECTOR_CODE0) " \n"
-        "pushl %[new_eip] \n" // save the entry eip to the stack
-        "movl %%esp, %%ebx \n"
-        "addl $20, %%ebx \n" // calculate pointer to TrapFrame
-        "pushl %%ebx \n"
-        "cld \n"
-        "pushl %[cpu] \n" // push argument for init_finished before register is clobbered
-        "call pre_init_finished \n"
-        "call init_finished \n"
-        "addl $4, %%esp \n"
-        "call post_init_finished \n"
-        "call enter_trap_no_irq \n"
-        "addl $4, %%esp \n"
-        "lret \n"
-        :: [new_esp] "g" (tss.esp),
-           [new_eip] "a" (tss.eip),
-           [from_to_thread] "b" (&initial_thread),
-           [cpu] "c" (id())
-    );
+                                                  "pushl %[new_eip] \n" // save the entry eip to the stack
+                                                  "movl %%esp, %%ebx \n"
+                                                  "addl $20, %%ebx \n" // calculate pointer to TrapFrame
+                                                  "pushl %%ebx \n"
+                                                  "cld \n"
+                                                  "pushl %[cpu] \n" // push argument for init_finished before register is clobbered
+                                                  "call pre_init_finished \n"
+                                                  "call init_finished \n"
+                                                  "addl $4, %%esp \n"
+                                                  "call post_init_finished \n"
+                                                  "call enter_trap_no_irq \n"
+                                                  "addl $4, %%esp \n"
+                                                  "lret \n" ::[new_esp] "g"(tss.esp),
+        [new_eip] "a"(tss.eip),
+        [from_to_thread] "b"(&initial_thread),
+        [cpu] "c"(id()));
 
     ASSERT_NOT_REACHED();
 }
@@ -1782,9 +1774,9 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
         asm volatile("invlpg %0"
-             :
-             : "m"(*ptr)
-             : "memory");
+                     :
+                     : "m"(*ptr)
+                     : "memory");
         ptr += PAGE_SIZE;
         page_count--;
     }
@@ -1879,17 +1871,16 @@ bool Processor::smp_process_pending_messages()
     if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
-            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry*
-            {
-                ProcessorMessageEntry* rev_list = nullptr;
-                while (list) {
-                    auto next = list->next;
-                    list->next = rev_list;
-                    rev_list = list;
-                    list = next;
-                }
-                return rev_list;
-            };
+            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry* {
+            ProcessorMessageEntry* rev_list = nullptr;
+            while (list) {
+                auto next = list->next;
+                list->next = rev_list;
+                rev_list = list;
+                list = next;
+            }
+            return rev_list;
+        };
 
         pending_msgs = reverse_list(pending_msgs);
 
@@ -1911,17 +1902,17 @@ bool Processor::smp_process_pending_messages()
                 msg->callback_with_data.handler(msg->callback_with_data.data);
                 break;
             case ProcessorMessage::FlushTlb:
-				if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
-					// We assume that we don't cross into kernel land!
-					ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
-					if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
-						//This processor isn't using this page directory right now, we can ignore this request
+                if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
+                    // We assume that we don't cross into kernel land!
+                    ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+                    if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
+                        //This processor isn't using this page directory right now, we can ignore this request
 #ifdef SMP_DEBUG
-						dbg() << "SMP[" << id() << "]: No need to flush " << msg->flush_tlb.page_count << " pages at " << VirtualAddress(msg->flush_tlb.ptr);
+                        dbg() << "SMP[" << id() << "]: No need to flush " << msg->flush_tlb.page_count << " pages at " << VirtualAddress(msg->flush_tlb.ptr);
 #endif
-						break;
-					}
-				}
+                        break;
+                    }
+                }
                 flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
                 break;
             }
@@ -2165,17 +2156,16 @@ void Processor::deferred_call_execute_pending()
 
     // We pulled the stack of pending deferred calls in LIFO order, so we need to reverse the list first
     auto reverse_list =
-        [](DeferredCallEntry* list) -> DeferredCallEntry*
-        {
-            DeferredCallEntry* rev_list = nullptr;
-            while (list) {
-                auto next = list->next;
-                list->next = rev_list;
-                rev_list = list;
-                list = next;
-            }
-            return rev_list;
-        };
+        [](DeferredCallEntry* list) -> DeferredCallEntry* {
+        DeferredCallEntry* rev_list = nullptr;
+        while (list) {
+            auto next = list->next;
+            list->next = rev_list;
+            rev_list = list;
+            list = next;
+        }
+        return rev_list;
+    };
     pending_list = reverse_list(pending_list);
 
     do {
@@ -2296,7 +2286,7 @@ void Processor::gdt_init()
     // Make sure CS points to the kernel code descriptor.
     asm volatile(
         "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
-        "sanity:\n");
+                                                  "sanity:\n");
 }
 
 void Processor::set_thread_specific(u8* data, size_t len)
