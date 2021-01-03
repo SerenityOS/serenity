@@ -35,6 +35,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -85,7 +86,15 @@ int main(int argc, char** argv)
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
 
-    // FIXME: Once there is a standalone Download Manager, we can drop the "unix" pledge.
+    // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
+    // the user's downloads directory.
+    // FIXME: This should go away with a standalone download manager at some point.
+    if (!Desktop::Launcher::add_allowed_url(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory()))
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     if (pledge("stdio shared_buffer accept unix cpath rpath wpath sendfd recvfd", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -102,12 +111,6 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/etc/passwd", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    // FIXME: Once there is a standalone Download Manager, we don't need to unveil this
-    if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
     }
