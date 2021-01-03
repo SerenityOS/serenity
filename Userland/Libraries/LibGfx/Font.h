@@ -103,8 +103,6 @@ private:
 
 class Font : public RefCounted<Font> {
 public:
-    static RefPtr<Font> load_from_file(const StringView& path);
-
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 

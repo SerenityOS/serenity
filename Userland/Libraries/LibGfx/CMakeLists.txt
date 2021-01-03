@@ -10,7 +10,6 @@ set(SOURCES
     Color.cpp
     DisjointRectSet.cpp
     Emoji.cpp
-    Font.cpp
     FontDatabase.cpp
     GIFLoader.cpp
     ICOLoader.cpp
