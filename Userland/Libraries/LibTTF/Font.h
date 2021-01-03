@@ -136,31 +136,31 @@ public:
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const;
 
     // Gfx::Font implementation
-    virtual NonnullRefPtr<Font> clone() const override { return *this; } /* TODO */
+    virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_codepoint(code_point) > 0; }
     virtual u8 glyph_width(size_t ch) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
-    virtual u8 glyph_height() const override { return m_point_height; }    /* TODO */
-    virtual int x_height() const override { return m_point_height; }       /* TODO */
-    virtual u8 min_glyph_width() const override { return 1; }              /* TODO */
-    virtual u8 max_glyph_width() const override { return m_point_height; } /* TODO */
+    virtual u8 glyph_height() const override { return m_point_height; }
+    virtual int x_height() const override { return m_point_height; }      // FIXME: Read from font
+    virtual u8 min_glyph_width() const override { return 1; }             // FIXME: Read from font
+    virtual u8 max_glyph_width() const override { return m_point_width; } // FIXME: Read from font
     virtual u8 glyph_fixed_width() const override;
-    virtual u8 baseline() const override { return m_point_height; }  /* TODO */
-    virtual u8 mean_line() const override { return m_point_height; } /* TODO */
+    virtual u8 baseline() const override { return m_point_height; }  // FIXME: Read from font
+    virtual u8 mean_line() const override { return m_point_height; } // FIXME: Read from font
     virtual int width(const StringView&) const override;
     virtual int width(const Utf8View&) const override;
     virtual int width(const Utf32View&) const override;
     virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
-    virtual u8 glyph_spacing() const override { return m_x_scale; } /* TODO */
+    virtual u8 glyph_spacing() const override { return m_x_scale; } // FIXME: Read from font
     virtual int glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
     virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
-    virtual const Font& bold_variant() const override { return *this; } /* TODO */
+    virtual const Font& bold_variant() const override { return *this; } // FIXME: Perhaps remove this from the Gfx::Font interface
 
 private:
     RefPtr<TTF::Font> m_font;
