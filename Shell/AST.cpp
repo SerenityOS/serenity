@@ -813,9 +813,9 @@ void ContinuationControl::dump(int level) const
 RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
 {
     if (m_kind == Break)
-        shell->raise_error(Shell::ShellError::InternalControlFlowBreak, {});
+        shell->raise_error(Shell::ShellError::InternalControlFlowBreak, {}, position());
     else if (m_kind == Continue)
-        shell->raise_error(Shell::ShellError::InternalControlFlowContinue, {});
+        shell->raise_error(Shell::ShellError::InternalControlFlowContinue, {}, position());
     else
         ASSERT_NOT_REACHED();
     return create<ListValue>({});
@@ -1686,7 +1686,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         }
     }
 
-    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!");
+    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!", position());
     return create<AST::ListValue>({});
 }
 
@@ -1960,7 +1960,7 @@ void Range::dump(int level) const
 
 RefPtr<Value> Range::run(RefPtr<Shell> shell)
 {
-    constexpr static auto interpolate = [](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> NonnullRefPtrVector<Value> {
+    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> NonnullRefPtrVector<Value> {
         NonnullRefPtrVector<Value> values;
 
         if (start->is_string() && end->is_string()) {
@@ -2002,7 +2002,7 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                 }
             } else {
             yield_start_end:;
-                shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, String::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str));
+                shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, String::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str), position);
                 // We can't really interpolate between the two, so just yield both.
                 values.append(create<StringValue>(move(start_str)));
                 values.append(create<StringValue>(move(end_str)));
@@ -2548,7 +2548,7 @@ void SyntaxError::dump(int level) const
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
 {
-    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text);
+    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text, position());
     return create<StringValue>("");
 }
 
@@ -2862,7 +2862,7 @@ Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 
     auto results = shell->expand_globs(m_glob, shell->cwd);
     if (results.is_empty())
-        shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!");
+        shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!", m_generation_position);
     return results;
 }
 
