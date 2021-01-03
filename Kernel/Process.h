@@ -154,8 +154,8 @@ public:
 
     bool is_dead() const { return m_dead; }
 
-    bool is_stopped() const { return m_is_stopped.load(AK::MemoryOrder::memory_order_relaxed); }
-    bool set_stopped(bool stopped) { return m_is_stopped.exchange(stopped, AK::MemoryOrder::memory_order_relaxed); }
+    bool is_stopped() const { return m_is_stopped; }
+    bool set_stopped(bool stopped) { return m_is_stopped.exchange(stopped); }
 
     bool is_kernel_process() const { return m_is_kernel_process; }
     bool is_user_process() const { return !m_is_kernel_process; }
@@ -595,7 +595,7 @@ private:
     const bool m_is_kernel_process;
     bool m_dead { false };
     bool m_profiling { false };
-    Atomic<bool> m_is_stopped { false };
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_dump_core { false };
 
     RefPtr<Custody> m_executable;
