@@ -28,6 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/String.h>
+#include <LibCore/File.h>
 #include <unistd.h>
 
 namespace Core {
@@ -86,6 +87,7 @@ struct ProcessStatistics {
 
 class ProcessStatisticsReader {
 public:
+    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all(RefPtr<Core::File>&);
     static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all();
 
 private:
