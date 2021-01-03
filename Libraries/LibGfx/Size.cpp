@@ -34,13 +34,13 @@ namespace Gfx {
 template<>
 String IntSize::to_string() const
 {
-    return String::format("[%dx%d]", m_width, m_height);
+    return String::formatted("[{}x{}]", m_width, m_height);
 }
 
 template<>
 String FloatSize::to_string() const
 {
-    return String::format("[%fx%f]", m_width, m_height);
+    return String::formatted("[{}x{}]", m_width, m_height);
 }
 
 }

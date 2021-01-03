@@ -317,10 +317,10 @@ static RefPtr<Gfx::Bitmap> load(const StringView& path)
 
     auto bitmap = load_impl<TContext>((const u8*)mapped_file.data(), mapped_file.size());
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded %s: %s",
-            bitmap->width(), bitmap->height(),
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}",
+            bitmap->size(),
             TContext::image_type,
-            LexicalPath::canonicalized_path(path).characters()));
+            LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 

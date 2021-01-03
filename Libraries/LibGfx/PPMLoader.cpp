@@ -131,7 +131,7 @@ RefPtr<Gfx::Bitmap> load_ppm_from_memory(const u8* data, size_t length)
 {
     auto bitmap = load_impl<PPMLoadingContext>(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PPM: <memory>", bitmap->width(), bitmap->height()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PPM: <memory>", bitmap->size()));
     return bitmap;
 }
 

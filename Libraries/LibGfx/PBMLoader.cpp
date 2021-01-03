@@ -120,7 +120,7 @@ RefPtr<Gfx::Bitmap> load_pbm_from_memory(const u8* data, size_t length)
 {
     auto bitmap = load_impl<PBMLoadingContext>(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PBM: <memory>", bitmap->width(), bitmap->height()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PBM: <memory>", bitmap->size()));
     return bitmap;
 }
 

@@ -122,7 +122,7 @@ RefPtr<Gfx::Bitmap> load_ico(const StringView& path)
     ICOImageDecoderPlugin decoder((const u8*)mapped_file.data(), mapped_file.size());
     auto bitmap = decoder.bitmap();
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded ICO: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded ICO: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
@@ -131,7 +131,7 @@ RefPtr<Gfx::Bitmap> load_ico_from_memory(const u8* data, size_t length)
     ICOImageDecoderPlugin decoder(data, length);
     auto bitmap = decoder.bitmap();
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded ICO: <memory>", bitmap->width(), bitmap->height()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded ICO: <memory>", bitmap->size()));
     return bitmap;
 }
 

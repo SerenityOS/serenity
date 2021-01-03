@@ -198,7 +198,7 @@ RefPtr<Gfx::Bitmap> load_png(const StringView& path)
         return nullptr;
     auto bitmap = load_png_impl((const u8*)mapped_file.data(), mapped_file.size());
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PNG: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
@@ -206,7 +206,7 @@ RefPtr<Gfx::Bitmap> load_png_from_memory(const u8* data, size_t length)
 {
     auto bitmap = load_png_impl(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded PNG: <memory>", bitmap->width(), bitmap->height()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded PNG: <memory>", bitmap->size()));
     return bitmap;
 }
 

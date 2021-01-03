@@ -1532,7 +1532,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             });
 #ifdef FILL_PATH_DEBUG
             if ((int)scanline % 10 == 0) {
-                draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::format("%d", (int)scanline));
+                draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
             }
 #endif
 
