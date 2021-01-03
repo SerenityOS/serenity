@@ -14,4 +14,3 @@ post_install() {
     mkdir -p "${man_dir}"
     cp "indent-${version}/man/indent.1" "${man_dir}"
 }
-
