@@ -55,6 +55,22 @@ OwnPtr<Messages::LaunchServer::GreetResponse> ClientConnection::handle(const Mes
 
 OwnPtr<Messages::LaunchServer::OpenURLResponse> ClientConnection::handle(const Messages::LaunchServer::OpenURL& request)
 {
+    if (!m_allowed_handlers.is_empty()) {
+        bool allowed = false;
+        for (auto& allowed_handler : m_allowed_handlers) {
+            if (allowed_handler.handler_name == request.handler_name()
+                && (allowed_handler.any_url || allowed_handler.urls.contains_slow(request.url()))) {
+                allowed = true;
+                break;
+            }
+        }
+        if (!allowed) {
+            // You are not on the list, go home!
+            did_misbehave(String::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", request.handler_name(), request.url()).characters());
+            return nullptr;
+        }
+    }
+
     URL url(request.url());
     auto result = Launcher::the().open_url(url, request.handler_name());
     return make<Messages::LaunchServer::OpenURLResponse>(result);
@@ -72,6 +88,55 @@ OwnPtr<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse> ClientConne
     URL url(request.url());
     auto result = Launcher::the().handlers_with_details_for_url(url);
     return make<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse>(result);
+}
+
+OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse> ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL& request)
+{
+    if (m_allowed_handler_list_is_sealed) {
+        did_misbehave("Got request to add more allowed handlers after list was sealed");
+        return nullptr;
+    }
+
+    if (request.handler_name().is_empty()) {
+        did_misbehave("Got request to allow empty handler name");
+        return nullptr;
+    }
+
+    m_allowed_handlers.empend(request.handler_name(), true, Vector<URL>());
+
+    return make<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse>();
+}
+
+OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse> ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs& request)
+{
+    if (m_allowed_handler_list_is_sealed) {
+        did_misbehave("Got request to add more allowed handlers after list was sealed");
+        return nullptr;
+    }
+
+    if (request.handler_name().is_empty()) {
+        did_misbehave("Got request to allow empty handler name");
+        return nullptr;
+    }
+
+    if (request.urls().is_empty()) {
+        did_misbehave("Got request to allow empty URL list");
+        return nullptr;
+    }
+
+    m_allowed_handlers.empend(request.handler_name(), false, request.urls());
+
+    return make<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse>();
+}
+
+OwnPtr<Messages::LaunchServer::SealAllowedHandlersListResponse> ClientConnection::handle(const Messages::LaunchServer::SealAllowedHandlersList&)
+{
+    if (m_allowed_handler_list_is_sealed) {
+        did_misbehave("Got more than one request to seal the allowed handlers list");
+        return nullptr;
+    }
+
+    return make<Messages::LaunchServer::SealAllowedHandlersListResponse>();
 }
 
 }
