@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021 Glenford Williams <gw_dev@outlook.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,9 +39,8 @@ public:
 
 private:
     CalculatorWidget();
-    void add_operation_button(GUI::Button&, Calculator::Operation, Color text_color = Color::Red);
+    void add_operation_button(GUI::Button&, Calculator::Operation);
     void add_digit_button(GUI::Button&, int digit);
-    void add_button(GUI::Button&, Color text_color);
 
     void update_display();
 
