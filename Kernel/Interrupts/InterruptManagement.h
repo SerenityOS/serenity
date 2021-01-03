@@ -61,6 +61,16 @@ private:
     const u16 m_flags;
 };
 
+class InterruptHandlerReference {
+public:
+    InterruptHandlerReference(GenericInterruptHandler& handler, u8 interrupt_vector);
+    ~InterruptHandlerReference();
+
+private:
+    u8 m_interrupt_vector;
+    GenericInterruptHandler& m_handler;
+};
+
 class InterruptManagement {
 public:
     static InterruptManagement& the();
@@ -80,6 +90,9 @@ public:
     u8 get_mapped_interrupt_vector(u8 original_irq);
     u8 get_irq_vector(u8 mapped_interrupt_vector);
 
+    void set_persistent_interrupt_vector(u8 interrupt_vector);
+    bool is_persistent_interrupt_vector(u8 interrupt_vector) const;
+
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(int index);
 
@@ -89,6 +102,7 @@ private:
     void locate_apic_data();
     bool m_smp_enabled { false };
     Vector<RefPtr<IRQController>> m_interrupt_controllers;
+    Vector<u8> m_persistent_interrupt_vectors;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
     Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;

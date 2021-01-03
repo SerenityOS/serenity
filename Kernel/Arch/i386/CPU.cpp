@@ -873,6 +873,7 @@ void handle_interrupt(TrapFrame* trap)
     ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
     auto handler = InterruptArray::the().interrupt_handler(irq);
+    InterruptHandlerReference keeper(*handler, irq);
     handler->increment_invoking_counter();
     handler->handle_interrupt(regs);
     handler->eoi();

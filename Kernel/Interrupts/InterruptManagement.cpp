@@ -44,6 +44,20 @@
 
 namespace Kernel {
 
+InterruptHandlerReference::InterruptHandlerReference(GenericInterruptHandler& handler, u8 interrupt_vector)
+    : m_interrupt_vector(interrupt_vector)
+    , m_handler(handler)
+{
+    if (!InterruptManagement::the().is_persistent_interrupt_vector(m_interrupt_vector))
+        m_handler.try_ref();
+}
+
+InterruptHandlerReference::~InterruptHandlerReference()
+{
+    if (!InterruptManagement::the().is_persistent_interrupt_vector(m_interrupt_vector))
+        m_handler.unref();
+}
+
 static InterruptManagement* s_interrupt_management;
 
 bool InterruptManagement::initialized()
@@ -234,4 +248,12 @@ void InterruptManagement::locate_apic_data()
     }
 }
 
+void InterruptManagement::set_persistent_interrupt_vector(u8 interrupt_vector)
+{
+    m_persistent_interrupt_vectors.append(interrupt_vector);
+}
+bool InterruptManagement::is_persistent_interrupt_vector(u8 interrupt_vector) const
+{
+    return !m_persistent_interrupt_vectors.find(interrupt_vector).is_end();
+}
 }

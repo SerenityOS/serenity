@@ -33,6 +33,7 @@ HardwareTimer::HardwareTimer(u8 irq_number, bool irq_handler, Function<void(cons
     : GenericInterruptHandler(irq_number)
     , m_callback(move(callback))
 {
+    InterruptManagement::the().set_persistent_interrupt_vector(irq_number);
     if (irq_handler) {
         m_responsible_irq_controller = InterruptManagement::the().get_responsible_irq_controller(irq_number);
     }
