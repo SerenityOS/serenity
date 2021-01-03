@@ -510,6 +510,13 @@ u16 Font::weight() const
     return 400;
 }
 
+bool Font::is_fixed_width() const
+{
+    // FIXME: Read this information from the font file itself.
+    // FIXME: Although, it appears some application do similar hacks
+    return glyph_metrics(glyph_id_for_codepoint('.'), 1, 1).advance_width == glyph_metrics(glyph_id_for_codepoint('X'), 1, 1).advance_width;
+}
+
 int ScaledFont::width(const StringView& string) const
 {
     Utf8View utf8 { string };
