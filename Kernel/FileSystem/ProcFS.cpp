@@ -1101,12 +1101,20 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 
     LOCKER(m_inodes_lock);
     auto it = m_inodes.find(inode_id.index());
-    if (it == m_inodes.end()) {
-        auto inode = adopt(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
-        m_inodes.set(inode_id.index(), inode.ptr());
-        return inode;
+    if (it != m_inodes.end()) {
+        // It's possible that the ProcFSInode ref count was dropped to 0 or
+        // the ~ProcFSInode destructor is even running already, but blocked
+        // from removing it from this map. So we need to *try* to ref it,
+        // and if that fails we cannot return this instance anymore and just
+        // create a new one.
+        if (it->value->try_ref())
+            return adopt(*it->value);
+        // We couldn't ref it, so just create a new one and replace the entry
     }
-    return (*it).value;
+    auto inode = adopt(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
+    auto result = m_inodes.set(inode_id.index(), inode.ptr());
+    ASSERT(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
+    return inode;
 }
 
 ProcFSInode::ProcFSInode(ProcFS& fs, unsigned index)
@@ -1117,7 +1125,9 @@ ProcFSInode::ProcFSInode(ProcFS& fs, unsigned index)
 ProcFSInode::~ProcFSInode()
 {
     LOCKER(fs().m_inodes_lock);
-    fs().m_inodes.remove(index());
+    auto it = fs().m_inodes.find(index());
+    if (it != fs().m_inodes.end() && it->value == this)
+        fs().m_inodes.remove(it);
 }
 
 InodeMetadata ProcFSInode::metadata() const
