@@ -825,6 +825,8 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             m_hovered_href_id = {};
             m_hovered_href = {};
         }
+        set_tooltip(m_hovered_href);
+        show_or_hide_tooltip();
         if (!m_hovered_href.is_empty())
             set_override_cursor(Gfx::StandardCursor::Arrow);
         else
@@ -877,6 +879,8 @@ void TerminalWidget::leave_event(Core::Event&)
     bool should_update = !m_hovered_href.is_empty();
     m_hovered_href = {};
     m_hovered_href_id = {};
+    set_tooltip(m_hovered_href);
+    set_override_cursor(Gfx::StandardCursor::IBeam);
     if (should_update)
         update();
 }
