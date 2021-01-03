@@ -173,7 +173,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         download->on_buffered_download_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), download](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
                 if (error_callback)
-                    error_callback(String::format("HTTP error (%u)", status_code.value()));
+                    error_callback(String::formatted("HTTP error ({})", status_code.value()));
                 return;
             }
             --m_pending_loads;
@@ -201,7 +201,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (error_callback)
-        error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
+        error_callback(String::formatted("Protocol not implemented: {}", url.protocol()));
 }
 
 void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)

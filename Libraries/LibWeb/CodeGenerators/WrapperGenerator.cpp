@@ -227,8 +227,8 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         attribute.unsigned_ = unsigned_;
         attribute.type = type;
         attribute.name = name;
-        attribute.getter_callback_name = String::format("%s_getter", snake_name(attribute.name).characters());
-        attribute.setter_callback_name = String::format("%s_setter", snake_name(attribute.name).characters());
+        attribute.getter_callback_name = String::formatted("{}_getter", snake_name(attribute.name));
+        attribute.setter_callback_name = String::formatted("{}_setter", snake_name(attribute.name));
         attribute.extended_attributes = move(extended_attributes);
         interface->attributes.append(move(attribute));
     };
@@ -306,8 +306,8 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         parse_function(extended_attributes);
     }
 
-    interface->wrapper_class = String::format("%sWrapper", interface->name.characters());
-    interface->wrapper_base_class = String::format("%sWrapper", interface->parent_name.is_empty() ? "" : interface->parent_name.characters());
+    interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
+    interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
 
     return interface;
 }
