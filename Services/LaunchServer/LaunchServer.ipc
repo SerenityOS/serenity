@@ -4,4 +4,8 @@ endpoint LaunchServer = 101
     OpenURL(URL url, String handler_name) => (bool response)
     GetHandlersForURL(URL url) => (Vector<String> handlers)
     GetHandlersWithDetailsForURL(URL url) => (Vector<String> handlers_details)
+
+    AddAllowedHandlerWithAnyURL(String handler_name) => ()
+    AddAllowedHandlerWithOnlySpecificURLs(String handler_name, Vector<URL> urls) => ()
+    SealAllowedHandlersList() => ()
 }

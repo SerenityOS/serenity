@@ -51,6 +51,9 @@ public:
         static NonnullRefPtr<Details> from_details_str(const String&);
     };
 
+    [[nodiscard]] static bool add_allowed_handler_with_any_url(const String& handler);
+    [[nodiscard]] static bool add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>&);
+    [[nodiscard]] static bool seal_allowed_handler_list();
     static bool open(const URL&, const String& handler_name = {});
     static bool open(const URL&, const Details& details);
     static Vector<String> get_handlers_for_url(const URL&);
