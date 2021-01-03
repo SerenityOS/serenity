@@ -159,6 +159,7 @@ private:
     RefPtr<Gfx::Bitmap> m_high_priority_icon;
     RefPtr<Gfx::Bitmap> m_low_priority_icon;
     RefPtr<Gfx::Bitmap> m_normal_priority_icon;
+    RefPtr<Core::File> m_proc_all;
 };
 
 namespace AK {
