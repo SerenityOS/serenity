@@ -72,10 +72,45 @@ private:
     virtual void handle(const Messages::LaunchClient::Dummy&) override { }
 };
 
+static LaunchServerConnection& connection()
+{
+    static auto connection = LaunchServerConnection::construct();
+    return connection;
+}
+
+bool Launcher::add_allowed_handler_with_any_url(const String& handler)
+{
+    auto response = connection().send_sync<Messages::LaunchServer::AddAllowedHandlerWithAnyURL>(handler);
+    if (!response) {
+        dbgln("Launcher::add_allowed_handler_with_any_url: Failed");
+        return false;
+    }
+    return true;
+}
+
+bool Launcher::add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>& urls)
+{
+    auto response = connection().send_sync<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs>(handler, urls);
+    if (!response) {
+        dbgln("Launcher::add_allowed_handler_with_only_specific_urls: Failed");
+        return false;
+    }
+    return true;
+}
+
+bool Launcher::seal_allowed_handler_list()
+{
+    auto response = connection().send_sync<Messages::LaunchServer::SealAllowedHandlersList>();
+    if (!response) {
+        dbgln("Launcher::seal_allowed_handler_list: Failed");
+        return false;
+    }
+    return true;
+}
+
 bool Launcher::open(const URL& url, const String& handler_name)
 {
-    auto connection = LaunchServerConnection::construct();
-    return connection->send_sync<Messages::LaunchServer::OpenURL>(url, handler_name)->response();
+    return connection().send_sync<Messages::LaunchServer::OpenURL>(url, handler_name)->response();
 }
 
 bool Launcher::open(const URL& url, const Details& details)
@@ -86,14 +121,12 @@ bool Launcher::open(const URL& url, const Details& details)
 
 Vector<String> Launcher::get_handlers_for_url(const URL& url)
 {
-    auto connection = LaunchServerConnection::construct();
-    return connection->send_sync<Messages::LaunchServer::GetHandlersForURL>(url.to_string())->handlers();
+    return connection().send_sync<Messages::LaunchServer::GetHandlersForURL>(url.to_string())->handlers();
 }
 
 auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
 {
-    auto connection = LaunchServerConnection::construct();
-    auto details = connection->send_sync<Messages::LaunchServer::GetHandlersWithDetailsForURL>(url.to_string())->handlers_details();
+    auto details = connection().send_sync<Messages::LaunchServer::GetHandlersWithDetailsForURL>(url.to_string())->handlers_details();
     NonnullRefPtrVector<Details> handlers_with_details;
     for (auto& value : details) {
         handlers_with_details.append(Details::from_details_str(value));
