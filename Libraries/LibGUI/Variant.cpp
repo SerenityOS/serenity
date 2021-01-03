@@ -435,7 +435,7 @@ String Variant::to_string() const
     case Type::Rect:
         return as_rect().to_string();
     case Type::Font:
-        return String::format("[Font: %s]", as_font().name().characters());
+        return String::formatted("[Font: {}]", as_font().name());
     case Type::TextAlignment: {
         switch (m_value.as_text_alignment) {
         case Gfx::TextAlignment::Center:

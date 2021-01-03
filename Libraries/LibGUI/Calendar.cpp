@@ -246,9 +246,9 @@ void Calendar::update_tiles(unsigned int target_year, unsigned int target_month)
 const String Calendar::selected_calendar_text(bool long_names)
 {
     if (mode() == Month)
-        return String::format("%s %u", long_names ? long_month_names[m_selected_month - 1] : short_month_names[m_selected_month - 1], m_selected_year);
+        return String::formatted("{} {}", long_names ? long_month_names[m_selected_month - 1] : short_month_names[m_selected_month - 1], m_selected_year);
     else
-        return String::format("%u", m_selected_year);
+        return String::number(m_selected_year);
 }
 
 void Calendar::set_selected_calendar(unsigned int year, unsigned int month)
@@ -285,7 +285,7 @@ void Calendar::CalendarTile::update_values(int index, Core::DateTime date_time)
 {
     m_index = index;
     m_date_time = date_time;
-    m_display_date = (m_date_time.day() == 1) ? String::format("%s %u", short_month_names[m_date_time.month() - 1], m_date_time.day()) : String::number(m_date_time.day());
+    m_display_date = (m_date_time.day() == 1) ? String::formatted("{} {}", short_month_names[m_date_time.month() - 1], m_date_time.day()) : String::number(m_date_time.day());
 }
 
 Calendar::CalendarTile::~CalendarTile()

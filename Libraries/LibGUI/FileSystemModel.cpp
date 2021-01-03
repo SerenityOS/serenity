@@ -123,7 +123,7 @@ void FileSystemModel::Node::traverse_if_needed()
     quick_sort(child_names);
 
     for (auto& name : child_names) {
-        String child_path = String::format("%s/%s", full_path.characters(), name.characters());
+        String child_path = String::formatted("{}/{}", full_path, name);
         auto child = adopt_own(*new Node(m_model));
         bool ok = child->fetch_data(child_path, false);
         if (!ok)
