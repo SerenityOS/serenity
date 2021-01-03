@@ -225,6 +225,7 @@ struct Command {
 
     mutable RefPtr<Pipeline> pipeline;
     Vector<NodeWithAction> next_chain;
+    Optional<Position> position;
 };
 
 struct HitTestResult {
@@ -258,8 +259,8 @@ public:
     {
     }
 
-    CommandValue(Vector<String> argv)
-        : m_command({ move(argv), {}, true, false, true, false, nullptr, {} })
+    CommandValue(Vector<String> argv, Position position)
+        : m_command({ move(argv), {}, true, false, true, false, nullptr, {}, move(position) })
     {
     }
 
@@ -347,13 +348,15 @@ public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
-    GlobValue(String glob)
+    GlobValue(String glob, Position position)
         : m_glob(move(glob))
+        , m_generation_position(move(position))
     {
     }
 
 private:
     String m_glob;
+    Position m_generation_position;
 };
 
 class SimpleVariableValue final : public Value {
