@@ -822,12 +822,19 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_PageUp) {
-        if (m_cursor.line() > 0) {
-            size_t page_step = (size_t)visible_content_rect().height() / (size_t)line_height();
-            size_t new_line = m_cursor.line() < page_step ? 0 : m_cursor.line() - page_step;
-            size_t new_column = min(m_cursor.column(), line(new_line).length());
+        if (m_cursor.line() > 0 || m_line_wrapping_enabled) {
+            TextPosition new_cursor;
+            if (m_line_wrapping_enabled) {
+                auto position_above = cursor_content_rect().location().translated(0, -visible_content_rect().height());
+                new_cursor = text_position_at_content_position(position_above);
+            } else {
+                size_t page_step = (size_t)visible_content_rect().height() / (size_t)line_height();
+                size_t new_line = m_cursor.line() < page_step ? 0 : m_cursor.line() - page_step;
+                size_t new_column = min(m_cursor.column(), line(new_line).length());
+                new_cursor = { new_line, new_column };
+            }
             toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
+            set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
@@ -840,11 +847,18 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (is_multi_line() && event.key() == KeyCode::Key_PageDown) {
-        if (m_cursor.line() < (line_count() - 1)) {
-            int new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
-            int new_column = min(m_cursor.column(), lines()[new_line].length());
+        if (m_cursor.line() < (line_count() - 1) || m_line_wrapping_enabled) {
+            TextPosition new_cursor;
+            if (m_line_wrapping_enabled) {
+                auto position_below = cursor_content_rect().location().translated(0, visible_content_rect().height());
+                new_cursor = text_position_at_content_position(position_below);
+            } else {
+                size_t new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
+                size_t new_column = min(m_cursor.column(), lines()[new_line].length());
+                new_cursor = { new_line, new_column };
+            }
             toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
+            set_cursor(new_cursor);
             if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
@@ -956,12 +970,21 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
-        size_t first_nonspace_column = current_line().first_non_whitespace_column();
+        TextPosition new_cursor;
         toggle_selection_if_needed_for_event(event);
-        if (m_cursor.column() == first_nonspace_column)
-            set_cursor(m_cursor.line(), 0);
-        else
-            set_cursor(m_cursor.line(), first_nonspace_column);
+        if (m_line_wrapping_enabled) {
+            // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
+            auto home_position = cursor_content_rect().location().translated(-width(), 0);
+            new_cursor = text_position_at_content_position(home_position);
+        } else {
+            size_t first_nonspace_column = current_line().first_non_whitespace_column();
+            if (m_cursor.column() == first_nonspace_column) {
+                new_cursor = { m_cursor.line(), 0 };
+            } else {
+                new_cursor = { m_cursor.line(), first_nonspace_column };
+            }
+        }
+        set_cursor(new_cursor);
         if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
@@ -969,8 +992,15 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
+        TextPosition new_cursor;
+        if (m_line_wrapping_enabled) {
+            auto end_position = cursor_content_rect().location().translated(width(), 0);
+            new_cursor = text_position_at_content_position(end_position);
+        } else {
+            new_cursor = { m_cursor.line(), current_line().length() };
+        }
         toggle_selection_if_needed_for_event(event);
-        set_cursor(m_cursor.line(), current_line().length());
+        set_cursor(new_cursor);
         if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
