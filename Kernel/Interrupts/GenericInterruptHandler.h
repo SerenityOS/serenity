@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -40,13 +41,16 @@ enum class HandlerType : u8 {
     SpuriousInterruptHandler = 4
 };
 
-class GenericInterruptHandler {
+class GenericInterruptHandler : public RefCounted<GenericInterruptHandler> {
 public:
     static GenericInterruptHandler& from(u8 interrupt_number);
     virtual ~GenericInterruptHandler();
     virtual void handle_interrupt(const RegisterState& regs) = 0;
 
     u8 interrupt_number() const { return m_interrupt_number; }
+
+    virtual void register_handler(GenericInterruptHandler&) = 0;
+    virtual void unregister_handler(GenericInterruptHandler&) = 0;
 
     size_t get_invoking_count() const { return m_invoking_count.load(AK::MemoryOrder::memory_order_relaxed); }
 

@@ -27,11 +27,11 @@
 #pragma once
 
 #include <Kernel/IO.h>
-#include <Kernel/PCI/Device.h>
+#include <Kernel/PCI/DeviceController.h>
 
 namespace Kernel {
 
-class UHCIController final : public PCI::Device {
+class UHCIController final : public PCI::DeviceController {
 public:
     static void detect();
     virtual ~UHCIController() override;
@@ -61,9 +61,6 @@ private:
     void write_portsc1(u16 value) { m_io_base.offset(0x10).out(value); }
     void write_portsc2(u16 value) { m_io_base.offset(0x12).out(value); }
 
-    virtual void handle_irq(const RegisterState&) override;
-
     IOAddress m_io_base;
 };
-
 }

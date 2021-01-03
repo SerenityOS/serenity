@@ -33,9 +33,9 @@
 
 namespace Kernel {
 
-class APICTimer final : public HardwareTimer<GenericInterruptHandler> {
+class APICTimer final : public HardwareTimer {
 public:
-    static APICTimer* initialize(u8, HardwareTimerBase&);
+    static APICTimer* initialize(u8, HardwareTimer&);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
     virtual const char* model() const override { return "LocalAPIC"; }
     virtual size_t ticks_per_second() const override;
@@ -57,10 +57,9 @@ public:
 private:
     explicit APICTimer(u8, Function<void(const RegisterState&)>);
 
-    bool calibrate(HardwareTimerBase&);
+    bool calibrate(HardwareTimer&);
 
     u32 m_timer_period { 0 };
     APIC::TimerMode m_timer_mode { APIC::TimerMode::Periodic };
 };
-
 }

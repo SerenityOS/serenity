@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/InterruptArray.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>

@@ -43,6 +43,15 @@ IRQHandler::~IRQHandler()
 {
 }
 
+void IRQHandler::register_handler(GenericInterruptHandler&)
+{
+    ASSERT_NOT_REACHED();
+}
+void IRQHandler::unregister_handler(GenericInterruptHandler&)
+{
+    ASSERT_NOT_REACHED();
+}
+
 bool IRQHandler::eoi()
 {
 #ifdef IRQ_DEBUG

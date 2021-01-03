@@ -28,9 +28,10 @@
 
 #include <AK/OwnPtr.h>
 #include <Kernel/IO.h>
+#include <Kernel/Net/IRQNetHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
+#include <Kernel/PCI/DeviceController.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
@@ -38,7 +39,7 @@ namespace Kernel {
 #define RTL8139_TX_BUFFER_COUNT 4
 
 class RTL8139NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device {
+    , public PCI::DeviceController {
 public:
     static void detect();
 
@@ -48,11 +49,9 @@ public:
     virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override { return m_link_up; }
 
-    virtual const char* purpose() const override { return class_name(); }
-
 private:
-    virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "RTL8139NetworkAdapter"; }
+    virtual void handle_interrupt(const RegisterState&) override;
 
     void reset();
     void read_mac_address();
@@ -75,5 +74,7 @@ private:
     OwnPtr<Region> m_packet_buffer;
     bool m_link_up { false };
     EntropySource m_entropy_source;
+
+    NonnullRefPtr<IRQNetHandler> m_irq_handler;
 };
 }

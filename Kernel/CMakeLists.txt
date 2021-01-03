@@ -11,6 +11,7 @@ set(KERNEL_SOURCES
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp
     Arch/i386/CPU.cpp
+    Arch/i386/InterruptArray.cpp
     Arch/i386/ProcessorInfo.cpp
     Arch/PC/BIOS.cpp
     CMOS.cpp
@@ -82,6 +83,7 @@ set(KERNEL_SOURCES
     Net/LoopbackAdapter.cpp
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
+    Net/IRQNetHandler.cpp
     Net/RTL8139NetworkAdapter.cpp
     Net/Routing.cpp
     Net/Socket.cpp
@@ -188,6 +190,7 @@ set(KERNEL_SOURCES
     Time/HPETComparator.cpp
     Time/PIT.cpp
     Time/RTC.cpp
+    Time/HardwareTimer.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
     UserOrKernelBuffer.cpp

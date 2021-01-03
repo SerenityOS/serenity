@@ -28,6 +28,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/InterruptArray.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>

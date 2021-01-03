@@ -29,16 +29,16 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/IO.h>
-#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Net/IRQNetHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
+#include <Kernel/PCI/DeviceController.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
 class E1000NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device {
+    , public PCI::DeviceController {
 public:
     static void detect();
 
@@ -48,11 +48,9 @@ public:
     virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override;
 
-    virtual const char* purpose() const override { return class_name(); }
-
 private:
-    virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
+    virtual void handle_interrupt(const RegisterState&) override;
 
     struct [[gnu::packed]] e1000_rx_desc {
         volatile uint64_t addr { 0 };
@@ -108,5 +106,6 @@ private:
     static const size_t number_of_tx_descriptors = 8;
 
     WaitQueue m_wait_queue;
+    NonnullRefPtr<IRQNetHandler> m_irq_handler;
 };
 }

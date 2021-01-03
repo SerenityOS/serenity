@@ -39,17 +39,17 @@ NonnullRefPtr<RealTimeClock> RealTimeClock::create(Function<void(const RegisterS
     return adopt(*new RealTimeClock(move(callback)));
 }
 RealTimeClock::RealTimeClock(Function<void(const RegisterState&)> callback)
-    : HardwareTimer(IRQ_TIMER, move(callback))
+    : HardwareTimer(IRQ_TIMER, true, move(callback))
 {
     InterruptDisabler disabler;
     NonMaskableInterruptDisabler nmi_disabler;
-    enable_irq();
+    m_responsible_irq_controller->enable(*this);
     CMOS::write(0x8B, CMOS::read(0xB) | 0x40);
     reset_to_default_ticks_per_second();
 }
-void RealTimeClock::handle_irq(const RegisterState& regs)
+void RealTimeClock::handle_interrupt(const RegisterState& regs)
 {
-    HardwareTimer::handle_irq(regs);
+    HardwareTimer::handle_interrupt(regs);
     CMOS::read(0x8C);
 }
 
@@ -79,14 +79,16 @@ bool RealTimeClock::try_to_set_frequency(size_t frequency)
     InterruptDisabler disabler;
     if (!is_capable_of_frequency(frequency))
         return false;
-    disable_irq();
+    m_responsible_irq_controller->disable(*this);
+
     u8 previous_rate = CMOS::read(0x8A);
     u8 rate = quick_log2(32768 / frequency) + 1;
     dbg() << "RTC: Set rate to " << rate;
     CMOS::write(0x8A, (previous_rate & 0xF0) | rate);
     m_frequency = frequency;
     dbg() << "RTC: Set frequency to " << frequency << " Hz";
-    enable_irq();
+
+    m_responsible_irq_controller->enable(*this);
     return true;
 }
 bool RealTimeClock::is_capable_of_frequency(size_t frequency) const

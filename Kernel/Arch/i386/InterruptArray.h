@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,33 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/Array.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/InterruptArray.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 
+/* Map IRQ0-15 @ ISR 0x50-0x5F */
+#define IRQ_VECTOR_BASE 0x50
+#define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
+
 namespace Kernel {
-class IRQHandler;
-class SharedIRQHandler final : public GenericInterruptHandler {
+class InterruptArray {
 public:
-    static void initialize(u8 interrupt_number);
-    virtual ~SharedIRQHandler();
-    virtual void handle_interrupt(const RegisterState& regs) override;
+    static InterruptArray& the();
+    static void initialize(u32);
+    void flag_fully_initialized() { m_initalization_ended = true; }
+    static bool is_initialized();
+    RefPtr<GenericInterruptHandler> interrupt_handler(u8 number) const;
+    void set_interrupt_handler(u8 number, GenericInterruptHandler&);
 
-    virtual void register_handler(GenericInterruptHandler&) override;
-    virtual void unregister_handler(GenericInterruptHandler&) override;
-
-    virtual bool eoi() override;
-
-    virtual size_t sharing_devices_count() const override { return m_handlers.size(); }
-    virtual bool is_shared_handler() const override { return true; }
-    virtual bool is_sharing_with_others() const override { return false; }
-
-    virtual HandlerType type() const override { return HandlerType::SharedIRQHandler; }
-    virtual const char* purpose() const override { return "Shared IRQ Handler"; }
-    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
+    bool is_fully_initialized() const { return m_initalization_ended; };
+    InterruptArray();
 
 private:
-    void enable_interrupt_vector();
-    void disable_interrupt_vector();
-    explicit SharedIRQHandler(u8 interrupt_number);
-    bool m_enabled;
-    HashTable<GenericInterruptHandler*> m_handlers;
-    RefPtr<IRQController> m_responsible_irq_controller;
+    bool m_initalization_ended { false };
+
+    Array<RefPtr<GenericInterruptHandler>, 256 - 0x50> m_interrupt_handlers;
 };
 }

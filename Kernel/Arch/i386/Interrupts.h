@@ -26,9 +26,11 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
+#include <AK/Array.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 extern "C" void interrupt_common_asm_entry();
 

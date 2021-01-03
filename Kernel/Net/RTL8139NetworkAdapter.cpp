@@ -140,10 +140,11 @@ void RTL8139NetworkAdapter::detect()
 }
 
 RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::Device(address, irq)
+    : PCI::DeviceController(address)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
     , m_rx_buffer(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Region::Access::Read | Region::Access::Write))
     , m_packet_buffer(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(PACKET_SIZE_MAX), "RTL8139 Packet buffer", Region::Access::Read | Region::Access::Write))
+    , m_irq_handler(IRQNetHandler::initialize(*this, irq))
 {
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
     set_interface_name("rtl8139");
@@ -172,14 +173,14 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     const auto& mac = mac_address();
     klog() << "RTL8139: MAC address: " << mac.to_string().characters();
 
-    enable_irq();
+    m_irq_handler->enable_irq();
 }
 
 RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
+void RTL8139NetworkAdapter::handle_interrupt(const RegisterState&)
 {
     for (;;) {
         int status = in16(REG_ISR);

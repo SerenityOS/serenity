@@ -195,10 +195,11 @@ void E1000NetworkAdapter::detect()
 }
 
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::Device(address, irq)
+    : PCI::DeviceController(address)
     , m_io_base(PCI::get_BAR1(pci_address()) & ~1)
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX", Region::Access::Read | Region::Access::Write))
+    , m_irq_handler(IRQNetHandler::initialize(*this, irq))
 {
     set_interface_name("e1k");
 
@@ -233,14 +234,14 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0);
     in32(REG_INTERRUPT_CAUSE_READ);
 
-    enable_irq();
+    m_irq_handler->enable_irq();
 }
 
 E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq(const RegisterState&)
+void E1000NetworkAdapter::handle_interrupt(const RegisterState&)
 {
     out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
 
@@ -432,7 +433,7 @@ u32 E1000NetworkAdapter::in32(u16 address)
 
 void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-    disable_irq();
+    m_irq_handler->disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
 #ifdef E1000_DEBUG
     klog() << "E1000: Sending packet (" << payload.size() << " bytes)";
@@ -450,7 +451,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     cli();
-    enable_irq();
+    m_irq_handler->enable_irq();
     out32(REG_TXDESCTAIL, tx_current);
     for (;;) {
         if (descriptor.status) {

@@ -48,14 +48,14 @@ inline static void reset_countdown(u16 timer_reload)
 }
 
 PIT::PIT(Function<void(const RegisterState&)> callback)
-    : HardwareTimer(IRQ_TIMER, move(callback))
+    : HardwareTimer(IRQ_TIMER, true, move(callback))
     , m_periodic(true)
 {
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
     klog() << "PIT: " << OPTIMAL_TICKS_PER_SECOND_RATE << " Hz, square wave (" << String::format("%x", BASE_FREQUENCY / OPTIMAL_TICKS_PER_SECOND_RATE) << ")";
     reset_to_default_ticks_per_second();
-    enable_irq();
+    m_responsible_irq_controller->enable(*this);
 }
 
 size_t PIT::ticks_per_second() const
@@ -86,12 +86,15 @@ bool PIT::try_to_set_frequency(size_t frequency)
     InterruptDisabler disabler;
     if (!is_capable_of_frequency(frequency))
         return false;
-    disable_irq();
+
+    m_responsible_irq_controller->disable(*this);
+
     size_t reload_value = BASE_FREQUENCY / frequency;
     IO::out8(TIMER0_CTL, LSB(reload_value));
     IO::out8(TIMER0_CTL, MSB(reload_value));
     m_frequency = frequency;
-    enable_irq();
+
+    m_responsible_irq_controller->enable(*this);
     return true;
 }
 bool PIT::is_capable_of_frequency(size_t frequency) const

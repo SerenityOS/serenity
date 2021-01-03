@@ -84,7 +84,7 @@ KResultOr<timespec> TimeManagement::current_time(clockid_t clock_id) const
     }
 }
 
-bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
+bool TimeManagement::is_system_timer(const HardwareTimer& timer) const
 {
     return &timer == m_system_timer.ptr();
 }
@@ -170,7 +170,7 @@ void TimeManagement::initialize(u32 cpu)
     }
 }
 
-void TimeManagement::set_system_timer(HardwareTimerBase& timer)
+void TimeManagement::set_system_timer(HardwareTimer& timer)
 {
     ASSERT(Processor::current().id() == 0); // This should only be called on the BSP!
     auto original_callback = m_system_timer->set_callback(nullptr);
@@ -221,14 +221,14 @@ timeval TimeManagement::now_as_timeval()
     return tv;
 }
 
-Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
+NonnullRefPtrVector<HardwareTimer> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
     dbg() << "Time: Scanning for periodic timers";
-    Vector<HardwareTimerBase*> timers;
+    NonnullRefPtrVector<HardwareTimer> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer.is_periodic_capable()) {
-            timers.append(&hardware_timer);
+            timers.append(hardware_timer);
             if (should_enable)
                 hardware_timer.set_periodic();
         }
@@ -236,13 +236,13 @@ Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
     return timers;
 }
 
-Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
+NonnullRefPtrVector<HardwareTimer> TimeManagement::scan_for_non_periodic_timers()
 {
     dbg() << "Time: Scanning for non-periodic timers";
-    Vector<HardwareTimerBase*> timers;
+    NonnullRefPtrVector<HardwareTimer> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer.is_periodic_capable())
-            timers.append(&hardware_timer);
+            timers.append(hardware_timer);
     }
     return timers;
 }

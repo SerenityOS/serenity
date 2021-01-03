@@ -50,6 +50,7 @@ public:
     static RefPtr<NetworkAdapter> lookup_by_name(const StringView&);
     virtual ~NetworkAdapter();
 
+    virtual void handle_interrupt(const RegisterState&) { ASSERT_NOT_REACHED(); };
     virtual const char* class_name() const = 0;
 
     const String& name() const { return m_name; }

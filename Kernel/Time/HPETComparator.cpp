@@ -38,7 +38,7 @@ NonnullRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool per
 }
 
 HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
-    : HardwareTimer(irq)
+    : HardwareTimer(irq, true)
     , m_periodic(false)
     , m_periodic_capable(periodic_capable)
     , m_enabled(false)
@@ -69,9 +69,9 @@ void HPETComparator::set_non_periodic()
     HPET::the().disable_periodic_interrupt(*this);
 }
 
-void HPETComparator::handle_irq(const RegisterState& regs)
+void HPETComparator::handle_interrupt(const RegisterState& regs)
 {
-    HardwareTimer::handle_irq(regs);
+    HardwareTimer::handle_interrupt(regs);
     if (!is_periodic())
         set_new_countdown();
 }
@@ -119,7 +119,8 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     } else {
         HPET::the().update_non_periodic_comparator_value(*this);
     }
-    enable_irq(); // Enable if we haven't already
+
+    m_responsible_irq_controller->enable(*this); // Enable if we haven't already
     return true;
 }
 bool HPETComparator::is_capable_of_frequency(size_t frequency) const

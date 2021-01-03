@@ -59,6 +59,6 @@ private:
     void initialize(bool force_pio);
     void detect_disks();
 
-    NonnullOwnPtrVector<IDEChannel> m_channels;
+    NonnullRefPtrVector<IDEChannel> m_channels;
 };
 }

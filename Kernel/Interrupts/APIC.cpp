@@ -31,6 +31,7 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/InterruptArray.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -91,6 +92,9 @@ public:
         new APICIPIInterruptHandler(interrupt_number);
     }
 
+    virtual void register_handler(GenericInterruptHandler&) override { ASSERT_NOT_REACHED(); }
+    virtual void unregister_handler(GenericInterruptHandler&) override { ASSERT_NOT_REACHED(); }
+
     virtual void handle_interrupt(const RegisterState&) override;
 
     virtual bool eoi() override;
@@ -122,6 +126,9 @@ public:
     }
 
     virtual void handle_interrupt(const RegisterState&) override;
+
+    virtual void register_handler(GenericInterruptHandler&) override { ASSERT_NOT_REACHED(); }
+    virtual void unregister_handler(GenericInterruptHandler&) override { ASSERT_NOT_REACHED(); }
 
     virtual bool eoi() override;
 
@@ -528,7 +535,7 @@ void APIC::send_ipi(u32 cpu)
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, 1u << cpu));
 }
 
-APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
+APICTimer* APIC::initialize_timers(HardwareTimer& calibration_timer)
 {
     if (!m_apic_base)
         return nullptr;
@@ -630,11 +637,4 @@ bool APICErrInterruptHandler::eoi()
     APIC::the().eoi();
     return true;
 }
-
-bool HardwareTimer<GenericInterruptHandler>::eoi()
-{
-    APIC::the().eoi();
-    return true;
-}
-
 }

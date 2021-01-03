@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/PCI/Device.h>
+#include <AK/Assertions.h>
+#include <AK/Singleton.h>
+#include <AK/Types.h>
+#include <Kernel/Arch/i386/InterruptArray.h>
 
 namespace Kernel {
-namespace PCI {
+static AK::Singleton<InterruptArray> s_the;
 
-Device::Device(Address address)
-    : m_pci_address(address)
+InterruptArray& InterruptArray::the()
 {
-    // FIXME: Register PCI device somewhere...
+    return *s_the;
 }
 
-Device::~Device()
+void InterruptArray::initialize(u32 cpu)
 {
-    // FIXME: Unregister the device
+    if (cpu == 0) {
+        ASSERT(!s_the.is_initialized());
+        s_the.ensure_instance();
+    } else {
+        ASSERT(s_the.is_initialized());
+    }
 }
 
+InterruptArray::InterruptArray()
+{
 }
+
+RefPtr<GenericInterruptHandler> InterruptArray::interrupt_handler(u8 number) const
+{
+    return m_interrupt_handlers[number];
+}
+void InterruptArray::set_interrupt_handler(u8 number, GenericInterruptHandler& handler)
+{
+    m_interrupt_handlers[number] = handler;
+}
+
+bool InterruptArray::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 }

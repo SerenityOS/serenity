@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,25 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Net/NetworkAdapter.h>
 
 namespace Kernel {
-class IRQHandler;
-class SharedIRQHandler final : public GenericInterruptHandler {
+
+class IRQNetHandler final : public IRQHandler {
 public:
-    static void initialize(u8 interrupt_number);
-    virtual ~SharedIRQHandler();
-    virtual void handle_interrupt(const RegisterState& regs) override;
-
-    virtual void register_handler(GenericInterruptHandler&) override;
-    virtual void unregister_handler(GenericInterruptHandler&) override;
-
-    virtual bool eoi() override;
-
-    virtual size_t sharing_devices_count() const override { return m_handlers.size(); }
-    virtual bool is_shared_handler() const override { return true; }
-    virtual bool is_sharing_with_others() const override { return false; }
-
-    virtual HandlerType type() const override { return HandlerType::SharedIRQHandler; }
-    virtual const char* purpose() const override { return "Shared IRQ Handler"; }
-    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
+    virtual ~IRQNetHandler() {};
+    static NonnullRefPtr<IRQNetHandler> initialize(const NetworkAdapter&, u8 irq_number);
+    virtual void handle_irq(const RegisterState&) override;
+    virtual const char* purpose() const override;
 
 private:
-    void enable_interrupt_vector();
-    void disable_interrupt_vector();
-    explicit SharedIRQHandler(u8 interrupt_number);
-    bool m_enabled;
-    HashTable<GenericInterruptHandler*> m_handlers;
-    RefPtr<IRQController> m_responsible_irq_controller;
+    IRQNetHandler(const NetworkAdapter&, u8 irq_number);
+    NonnullRefPtr<NetworkAdapter> m_network_adapter;
 };
+
 }

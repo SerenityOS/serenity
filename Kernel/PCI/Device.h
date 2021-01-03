@@ -31,13 +31,12 @@
 #include <Kernel/PCI/Definitions.h>
 
 namespace Kernel {
-class PCI::Device : public IRQHandler {
+class PCI::Device {
 public:
     Address pci_address() const { return m_pci_address; };
 
 protected:
     Device(Address pci_address);
-    Device(Address pci_address, u8 interrupt_vector);
     ~Device();
 
 private:

@@ -34,7 +34,6 @@
 #include <Kernel/VirtualAddress.h>
 
 #define PAGE_SIZE 4096
-#define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
 #define PAGE_MASK ((FlatPtr)0xfffff000u)
 
 namespace Kernel {
@@ -418,9 +417,6 @@ public:
     NonMaskableInterruptDisabler();
     ~NonMaskableInterruptDisabler();
 };
-
-/* Map IRQ0-15 @ ISR 0x50-0x5F */
-#define IRQ_VECTOR_BASE 0x50
 
 struct PageFaultFlags {
     enum Flags {

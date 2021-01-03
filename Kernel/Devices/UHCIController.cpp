@@ -62,7 +62,7 @@ void UHCIController::detect()
 }
 
 UHCIController::UHCIController(PCI::Address address, PCI::ID id)
-    : PCI::Device(address)
+    : PCI::DeviceController(address)
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
 {
     klog() << "UHCI: Controller found " << id << " @ " << address;
@@ -112,10 +112,6 @@ void UHCIController::start()
             break;
     }
     klog() << "UHCI: Started!";
-}
-
-void UHCIController::handle_irq(const RegisterState&)
-{
 }
 
 }

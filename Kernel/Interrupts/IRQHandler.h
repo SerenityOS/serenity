@@ -42,6 +42,9 @@ public:
     virtual void handle_interrupt(const RegisterState& regs) { handle_irq(regs); }
     virtual void handle_irq(const RegisterState&) = 0;
 
+    virtual void register_handler(GenericInterruptHandler&) override;
+    virtual void unregister_handler(GenericInterruptHandler&) override;
+
     void enable_irq();
     void disable_irq();
 

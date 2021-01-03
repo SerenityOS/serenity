@@ -747,6 +747,26 @@ static OwnPtr<KBuffer> procfs$mounts(InodeIdentifier)
     return builder.build();
 }
 
+/*
+static OwnPtr<KBuffer> procfs$storage(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    VFS::the().for_each_mount([&builder](auto& mount) {
+        auto& fs = mount.guest_fs();
+        builder.appendf("%s @ ", fs.class_name());
+        if (mount.host() == nullptr)
+            builder.appendf("/");
+        else {
+            builder.appendf("%u:%u", mount.host()->fsid(), mount.host()->index());
+            builder.append(' ');
+            builder.append(mount.absolute_path());
+        }
+        builder.append('\n');
+    });
+    return builder.build();
+}
+*/
+
 static OwnPtr<KBuffer> procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.

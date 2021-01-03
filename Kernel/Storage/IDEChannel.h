@@ -104,7 +104,7 @@ public:
     };
 
 public:
-    static NonnullOwnPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
     IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
     virtual ~IDEChannel() override;
 

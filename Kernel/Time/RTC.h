@@ -31,7 +31,7 @@
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
-class RealTimeClock final : public HardwareTimer<IRQHandler> {
+class RealTimeClock final : public HardwareTimer {
 public:
     static NonnullRefPtr<RealTimeClock> create(Function<void(const RegisterState&)> callback);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
@@ -51,6 +51,6 @@ public:
 
 private:
     explicit RealTimeClock(Function<void(const RegisterState&)> callback);
-    virtual void handle_irq(const RegisterState&) override;
+    virtual void handle_interrupt(const RegisterState&) override;
 };
 }

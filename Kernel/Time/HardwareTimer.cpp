@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/PCI/Device.h>
+#include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
-namespace PCI {
-
-Device::Device(Address address)
-    : m_pci_address(address)
+HardwareTimer::HardwareTimer(u8 irq_number, bool irq_handler, Function<void(const RegisterState&)> callback)
+    : GenericInterruptHandler(irq_number)
+    , m_callback(move(callback))
 {
-    // FIXME: Register PCI device somewhere...
+    if (irq_handler) {
+        m_responsible_irq_controller = InterruptManagement::the().get_responsible_irq_controller(irq_number);
+    }
 }
-
-Device::~Device()
+bool HardwareTimer::eoi()
 {
-    // FIXME: Unregister the device
-}
-
+    if (!m_responsible_irq_controller) {
+        APIC::the().eoi();
+        return true;
+    }
+    m_responsible_irq_controller->eoi(*this);
+    return true;
 }
 }

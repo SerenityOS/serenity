@@ -36,7 +36,7 @@ namespace Kernel {
 
 #define OPTIMAL_TICKS_PER_SECOND_RATE 250
 
-class HardwareTimerBase;
+class HardwareTimer;
 
 enum class TimePrecision {
     Coarse = 0,
@@ -65,7 +65,7 @@ public:
     time_t ticks_per_second() const;
     time_t boot_time() const;
 
-    bool is_system_timer(const HardwareTimerBase&) const;
+    bool is_system_timer(const HardwareTimer&) const;
 
     static void update_time(const RegisterState&);
     static void update_time_hpet(const RegisterState&);
@@ -83,10 +83,10 @@ public:
 private:
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
-    Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
-    Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
-    NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
-    void set_system_timer(HardwareTimerBase&);
+    NonnullRefPtrVector<HardwareTimer> scan_and_initialize_periodic_timers();
+    NonnullRefPtrVector<HardwareTimer> scan_for_non_periodic_timers();
+    NonnullRefPtrVector<HardwareTimer> m_hardware_timers;
+    void set_system_timer(HardwareTimer&);
     static void system_timer_tick(const RegisterState&);
 
     // Variables between m_update1 and m_update2 are synchronized
@@ -100,8 +100,8 @@ private:
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     bool m_can_query_precise_time { false };
 
-    RefPtr<HardwareTimerBase> m_system_timer;
-    RefPtr<HardwareTimerBase> m_time_keeper_timer;
+    RefPtr<HardwareTimer> m_system_timer;
+    RefPtr<HardwareTimer> m_time_keeper_timer;
 };
 
 }

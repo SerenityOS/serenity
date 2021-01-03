@@ -55,7 +55,7 @@ public:
     Thread* get_idle_thread(u32 cpu) const;
     u32 enabled_processor_count() const { return m_processor_enabled_cnt; }
 
-    APICTimer* initialize_timers(HardwareTimerBase&);
+    APICTimer* initialize_timers(HardwareTimer&);
     APICTimer* get_timer() const { return m_apic_timer; }
     enum class TimerMode {
         OneShot,
