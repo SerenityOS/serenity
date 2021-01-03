@@ -104,7 +104,7 @@ FontDatabase::FontDatabase()
 
         auto path = String::format("/res/fonts/%s", name.characters());
         if (name.ends_with(".font")) {
-            if (auto font = Gfx::Font::load_from_file(path)) {
+            if (auto font = Gfx::BitmapFont::load_from_file(path)) {
                 m_private->full_name_to_font_map.set(font->qualified_name(), font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
