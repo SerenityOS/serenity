@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/URL.h>
 #include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibCore/ArgsParser.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -471,6 +473,9 @@ int main(int argc, char** argv)
     view_menu.add_action(pick_font_action);
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Terminal", app_icon.bitmap_for_size(32), window);
     }));

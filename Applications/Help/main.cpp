@@ -88,10 +88,10 @@ int main(int argc, char* argv[])
 
     unveil(nullptr, nullptr);
 
-    const char* term_to_search_for_at_launch = nullptr;
+    const char* start_page = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(term_to_search_for_at_launch, "Term to search for at launch", "term", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(start_page, "Page to open at launch", "page", Core::ArgsParser::Required::No);
 
     args_parser.parse(argc, argv);
 
@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
 
     auto open_page = [&](const String& path) {
         if (path.is_null()) {
+            window->set_title("Help");
             page_view.load_empty_document();
             return;
         }
@@ -171,19 +172,19 @@ int main(int argc, char* argv[])
             html = md_document->render_to_html();
         }
 
-        page_view.load_html(html, URL::create_with_file_protocol(path));
+        auto url = URL::create_with_file_protocol(path);
+        page_view.load_html(html, url);
 
-        String page_and_section = model->page_and_section(tree_view.selection().first());
+        auto tree_view_index = model->index_from_path(path);
+        if (tree_view_index.has_value())
+            tree_view.expand_tree(tree_view_index.value().parent());
+
+        String page_and_section = model->page_and_section(tree_view_index.value());
         window->set_title(String::formatted("{} - Help", page_and_section));
     };
 
     tree_view.on_selection_change = [&] {
         String path = model->page_path(tree_view.selection().first());
-        if (path.is_null()) {
-            page_view.load_empty_document();
-            window->set_title("Help");
-            return;
-        }
         history.push(path);
         update_actions();
         open_page(path);
@@ -263,6 +264,7 @@ int main(int argc, char* argv[])
     auto go_home_action = GUI::CommonActions::make_go_home_action([&](auto&) {
         String path = "/usr/share/man/man7/Help-index.md";
         history.push(path);
+        update_actions();
         open_page(path);
     });
 
@@ -288,12 +290,19 @@ int main(int argc, char* argv[])
 
     app->set_menubar(move(menubar));
 
-    if (term_to_search_for_at_launch) {
-        left_tab_bar.set_active_widget(&search_view);
-        search_box.set_text(term_to_search_for_at_launch);
-        if (auto model = search_list_view.model()) {
-            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-            search_model.set_filter_term(search_box.text());
+    if (start_page) {
+        URL url = URL::create_with_url_or_path(start_page);
+        if (url.is_valid() && url.path().ends_with(".md")) {
+            history.push(url.path());
+            update_actions();
+            open_page(url.path());
+        } else {
+            left_tab_bar.set_active_widget(&search_view);
+            search_box.set_text(start_page);
+            if (auto model = search_list_view.model()) {
+                auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
+                search_model.set_filter_term(search_box.text());
+            }
         }
     } else {
         go_home_action->activate();
