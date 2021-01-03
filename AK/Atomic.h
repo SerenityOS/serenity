@@ -31,15 +31,6 @@
 
 namespace AK {
 
-enum MemoryOrder {
-    memory_order_relaxed = __ATOMIC_RELAXED,
-    memory_order_consume = __ATOMIC_CONSUME,
-    memory_order_acquire = __ATOMIC_ACQUIRE,
-    memory_order_release = __ATOMIC_RELEASE,
-    memory_order_acq_rel = __ATOMIC_ACQ_REL,
-    memory_order_seq_cst = __ATOMIC_SEQ_CST
-};
-
 template<typename T>
 static inline T atomic_exchange(volatile T* var, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
 {
@@ -145,14 +136,16 @@ static inline void atomic_store(volatile T** var, std::nullptr_t, MemoryOrder or
     __atomic_store_n(const_cast<V**>(var), nullptr, order);
 }
 
-template<typename T>
+template<typename T, MemoryOrder DefaultMemoryOrder = AK::MemoryOrder::memory_order_seq_cst>
 class Atomic {
     T m_value { 0 };
 
 public:
     Atomic() noexcept = default;
-    Atomic(const Atomic&) = delete;
     Atomic& operator=(const Atomic&) volatile = delete;
+    Atomic& operator=(Atomic&&) volatile = delete;
+    Atomic(const Atomic&) = delete;
+    Atomic(Atomic&&) = delete;
 
     Atomic(T val) noexcept
         : m_value(val)
@@ -164,12 +157,12 @@ public:
         return &m_value;
     }
 
-    T exchange(T desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    T exchange(T desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_exchange_n(&m_value, desired, order);
     }
 
-    [[nodiscard]] bool compare_exchange_strong(T& expected, T desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    [[nodiscard]] bool compare_exchange_strong(T& expected, T desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         if (order == memory_order_acq_rel || order == memory_order_release)
             return __atomic_compare_exchange_n(&m_value, &expected, desired, false, memory_order_release, memory_order_acquire);
@@ -192,7 +185,7 @@ public:
         return fetch_add(val) + val;
     }
 
-    ALWAYS_INLINE T fetch_add(T val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE T fetch_add(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_add(&m_value, val, order);
     }
@@ -212,7 +205,7 @@ public:
         return fetch_sub(val) - val;
     }
 
-    ALWAYS_INLINE T fetch_sub(T val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE T fetch_sub(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_sub(&m_value, val, order);
     }
@@ -222,7 +215,7 @@ public:
         return fetch_and(val) & val;
     }
 
-    ALWAYS_INLINE T fetch_and(T val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE T fetch_and(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_and(&m_value, val, order);
     }
@@ -232,7 +225,7 @@ public:
         return fetch_or(val) | val;
     }
 
-    ALWAYS_INLINE T fetch_or(T val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE T fetch_or(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_or(&m_value, val, order);
     }
@@ -242,7 +235,7 @@ public:
         return fetch_xor(val) ^ val;
     }
 
-    ALWAYS_INLINE T fetch_xor(T val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE T fetch_xor(T val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_xor(&m_value, val, order);
     }
@@ -252,7 +245,7 @@ public:
         return load();
     }
 
-    ALWAYS_INLINE T load(MemoryOrder order = memory_order_seq_cst) const volatile noexcept
+    ALWAYS_INLINE T load(MemoryOrder order = DefaultMemoryOrder) const volatile noexcept
     {
         return __atomic_load_n(&m_value, order);
     }
@@ -263,7 +256,7 @@ public:
         return desired;
     }
 
-    ALWAYS_INLINE void store(T desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    ALWAYS_INLINE void store(T desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         __atomic_store_n(&m_value, desired, order);
     }
@@ -274,14 +267,16 @@ public:
     }
 };
 
-template<typename T>
-class Atomic<T*> {
+template<typename T, MemoryOrder DefaultMemoryOrder>
+class Atomic<T*, DefaultMemoryOrder> {
     T* m_value { nullptr };
 
 public:
     Atomic() noexcept = default;
-    Atomic(const Atomic&) = delete;
     Atomic& operator=(const Atomic&) volatile = delete;
+    Atomic& operator=(Atomic&&) volatile = delete;
+    Atomic(const Atomic&) = delete;
+    Atomic(Atomic&&) = delete;
 
     Atomic(T* val) noexcept
         : m_value(val)
@@ -293,12 +288,12 @@ public:
         return &m_value;
     }
 
-    T* exchange(T* desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    T* exchange(T* desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_exchange_n(&m_value, desired, order);
     }
 
-    [[nodiscard]] bool compare_exchange_strong(T*& expected, T* desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    [[nodiscard]] bool compare_exchange_strong(T*& expected, T* desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         if (order == memory_order_acq_rel || order == memory_order_release)
             return __atomic_compare_exchange_n(&m_value, &expected, desired, false, memory_order_release, memory_order_acquire);
@@ -321,7 +316,7 @@ public:
         return fetch_add(val) + val;
     }
 
-    T* fetch_add(ptrdiff_t val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    T* fetch_add(ptrdiff_t val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_add(&m_value, val * sizeof(*m_value), order);
     }
@@ -341,7 +336,7 @@ public:
         return fetch_sub(val) - val;
     }
 
-    T* fetch_sub(ptrdiff_t val, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    T* fetch_sub(ptrdiff_t val, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         return __atomic_fetch_sub(&m_value, val * sizeof(*m_value), order);
     }
@@ -351,7 +346,7 @@ public:
         return load();
     }
 
-    T* load(MemoryOrder order = memory_order_seq_cst) const volatile noexcept
+    T* load(MemoryOrder order = DefaultMemoryOrder) const volatile noexcept
     {
         return __atomic_load_n(&m_value, order);
     }
@@ -362,7 +357,7 @@ public:
         return desired;
     }
 
-    void store(T* desired, MemoryOrder order = memory_order_seq_cst) volatile noexcept
+    void store(T* desired, MemoryOrder order = DefaultMemoryOrder) volatile noexcept
     {
         __atomic_store_n(&m_value, desired, order);
     }
