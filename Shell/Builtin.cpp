@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "AST.h"
 #include "Shell.h"
 #include <AK/LexicalPath.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -719,6 +721,37 @@ int Shell::builtin_shift(int argc, const char** argv)
 
     for (auto i = 0; i < count; ++i)
         values.take_first();
+
+    return 0;
+}
+
+int Shell::builtin_source(int argc, const char** argv)
+{
+    const char* file_to_source = nullptr;
+    Vector<const char*> args;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(file_to_source, "File to read commands from", "path");
+    parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv)))
+        return 1;
+
+    Vector<String> string_argv;
+    for (auto& arg : args)
+        string_argv.append(arg);
+
+    auto previous_argv = lookup_local_variable("ARGV");
+    ScopeGuard guard { [&] {
+        if (!args.is_empty())
+            set_local_variable("ARGV", move(previous_argv));
+    } };
+
+    if (!args.is_empty())
+        set_local_variable("ARGV", AST::create<AST::ListValue>(move(string_argv)));
+
+    if (!run_file(file_to_source, true))
+        return 126;
 
     return 0;
 }
