@@ -472,14 +472,6 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(pick_font_action);
 
-    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help",
-            { URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md") })
-        || !Desktop::Launcher::seal_allowed_handler_list()) {
-        warnln("Failed to set up allowed launch handlers");
-        return 1;
-    }
-
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md"), "/bin/Help");
