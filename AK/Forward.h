@@ -70,7 +70,7 @@ class SimpleIterator;
 using ReadonlyBytes = Span<const u8>;
 using Bytes = Span<u8>;
 
-template<typename T>
+template<typename T, AK::MemoryOrder DefaultMemoryOrder>
 class Atomic;
 
 template<typename T>
