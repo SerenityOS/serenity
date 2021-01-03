@@ -208,12 +208,12 @@ private:
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
 
-    unsigned m_user_physical_pages { 0 };
-    unsigned m_user_physical_pages_used { 0 };
-    unsigned m_user_physical_pages_committed { 0 };
-    unsigned m_user_physical_pages_uncommitted { 0 };
-    unsigned m_super_physical_pages { 0 };
-    unsigned m_super_physical_pages_used { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_used { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_committed { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_uncommitted { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_super_physical_pages { 0 };
+    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_super_physical_pages_used { 0 };
 
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;

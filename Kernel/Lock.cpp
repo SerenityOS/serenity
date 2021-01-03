@@ -55,13 +55,13 @@ void Lock::lock(Mode mode)
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             do {
                 // FIXME: Do not add new readers if writers are queued.
-                auto current_mode = m_mode.load(AK::MemoryOrder::memory_order_relaxed);
+                Mode current_mode = m_mode;
                 switch (current_mode) {
                 case Mode::Unlocked: {
 #ifdef LOCK_TRACE_DEBUG
                     dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently unlocked";
 #endif
-                    m_mode.store(mode, AK::MemoryOrder::memory_order_relaxed);
+                    m_mode = mode;
                     ASSERT(!m_holder);
                     ASSERT(m_shared_holders.is_empty());
                     if (mode == Mode::Exclusive) {
@@ -140,7 +140,7 @@ void Lock::unlock()
     ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
-            auto current_mode = m_mode.load(AK::MemoryOrder::memory_order_relaxed);
+            Mode current_mode = m_mode;
 #ifdef LOCK_TRACE_DEBUG
             if (current_mode == Mode::Shared)
                 dbg() << "Lock::unlock @ " << this << ": release " << mode_to_string(current_mode) << ", locks held: " << m_times_locked;
@@ -177,7 +177,7 @@ void Lock::unlock()
 
             if (m_times_locked == 0) {
                 ASSERT(current_mode == Mode::Exclusive ? !m_holder : m_shared_holders.is_empty());
-                m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+                m_mode = Mode::Unlocked;
             }
 
 #ifdef LOCK_DEBUG
@@ -218,7 +218,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                 ASSERT(m_times_locked > 0);
                 lock_count_to_restore = m_times_locked;
                 m_times_locked = 0;
-                m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+                m_mode = Mode::Unlocked;
                 m_lock.store(false, AK::memory_order_release);
 #ifdef LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
@@ -247,7 +247,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                 ASSERT(m_times_locked >= lock_count_to_restore);
                 m_times_locked -= lock_count_to_restore;
                 if (m_times_locked == 0)
-                    m_mode.store(Mode::Unlocked, AK::MemoryOrder::memory_order_relaxed);
+                    m_mode = Mode::Unlocked;
                 m_lock.store(false, AK::memory_order_release);
                 previous_mode = Mode::Shared;
                 break;
@@ -290,7 +290,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
             switch (mode) {
             case Mode::Exclusive: {
                 auto expected_mode = Mode::Unlocked;
-                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Exclusive, AK::MemoryOrder::memory_order_relaxed))
+                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Exclusive))
                     break;
 #ifdef LOCK_RESTORE_DEBUG
                 dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was unlocked";
@@ -308,7 +308,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
             }
             case Mode::Shared: {
                 auto expected_mode = Mode::Unlocked;
-                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Shared, AK::MemoryOrder::memory_order_relaxed) && expected_mode != Mode::Shared)
+                if (!m_mode.compare_exchange_strong(expected_mode, Mode::Shared) && expected_mode != Mode::Shared)
                     break;
 #ifdef LOCK_RESTORE_DEBUG
                 dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was " << mode_to_string(expected_mode);
@@ -339,7 +339,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
 
 void Lock::clear_waiters()
 {
-    ASSERT(m_mode.load(AK::MemoryOrder::memory_order_relaxed) != Mode::Shared);
+    ASSERT(m_mode != Mode::Shared);
     m_queue.wake_all();
 }
 
