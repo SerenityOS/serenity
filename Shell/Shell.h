@@ -84,7 +84,13 @@ public:
 
     void setup_signals();
 
-    int run_command(const StringView&);
+    struct SourcePosition {
+        String source_file;
+        String literal_source_text;
+        Optional<AST::Position> position;
+    };
+
+    int run_command(const StringView&, Optional<SourcePosition> = {});
     bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
@@ -146,6 +152,7 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
+    static String escape_token_for_single_quotes(const String& token);
     static String escape_token(const String& token);
     static String unescape_token(const String& token);
 
@@ -209,12 +216,15 @@ public:
         EvaluatedSyntaxError,
         NonExhaustiveMatchRules,
         InvalidGlobError,
+        OpenFailure,
     };
 
-    void raise_error(ShellError kind, String description)
+    void raise_error(ShellError kind, String description, Optional<AST::Position> position = {})
     {
         m_error = kind;
         m_error_description = move(description);
+        if (m_source_position.has_value() && position.has_value())
+            m_source_position.value().position = position.release_value();
     }
     bool has_error(ShellError err) const { return m_error == err; }
     const String& error_description() const { return m_error_description; }
@@ -226,6 +236,16 @@ public:
         return err;
     }
     void possibly_print_error() const;
+    bool is_control_flow(ShellError error)
+    {
+        switch (error) {
+        case ShellError::InternalControlFlowBreak:
+        case ShellError::InternalControlFlowContinue:
+            return true;
+        default:
+            return false;
+        }
+    }
 
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
     bool name { default_ };
@@ -293,6 +313,7 @@ private:
 
     ShellError m_error { ShellError::None };
     String m_error_description;
+    Optional<SourcePosition> m_source_position;
 
     bool m_should_format_live { false };
 

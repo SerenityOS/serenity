@@ -866,10 +866,12 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     Core::EventLoop loop;
     setup_signals();
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin)                        \
-    if (name == #builtin) {                                       \
-        retval = builtin_##builtin(argv.size() - 1, argv.data()); \
-        return true;                                              \
+#define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
+    if (name == #builtin) {                                              \
+        retval = builtin_##builtin(argv.size() - 1, argv.data());        \
+        if (!has_error(ShellError::None))                                \
+            raise_error(m_error, m_error_description, command.position); \
+        return true;                                                     \
     }
 
     ENUMERATE_SHELL_BUILTINS();

@@ -470,7 +470,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     }
 
     if (command.argv.size() - 1 < function.arguments.size()) {
-        fprintf(stderr, "Shell: expected at least %zu arguments to %s, but got %zu\n", function.arguments.size(), function.name.characters(), command.argv.size() - 1);
+        raise_error(ShellError::EvaluatedSyntaxError, String::formatted("Expected at least {} arguments to {}, but got {}", function.arguments.size(), function.name, command.argv.size() - 1), command.position);
         retval = 1;
         return true;
     }
@@ -550,13 +550,20 @@ bool Shell::is_runnable(const StringView& name)
         [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
 
-int Shell::run_command(const StringView& cmd)
+int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_position_override)
 {
     // The default-constructed mode of the shell
     // should not be used for execution!
     ASSERT(!m_default_constructed);
 
     take_error();
+
+    ScopedValueRollback source_position_rollback { m_source_position };
+    if (source_position_override.has_value())
+        m_source_position = move(source_position_override);
+
+    if (!m_source_position.has_value())
+        m_source_position = SourcePosition { .source_file = {}, .literal_source_text = cmd, .position = {} };
 
     if (cmd.is_empty())
         return 0;
@@ -574,18 +581,24 @@ int Shell::run_command(const StringView& cmd)
     if (command->is_syntax_error()) {
         auto& error_node = command->syntax_error_node();
         auto& position = error_node.position();
-        fprintf(stderr, "Shell: Syntax error in command: %s\n", error_node.error_text().characters());
-        fprintf(stderr, "Around '%.*s' at %zu:%zu to %zu:%zu\n",
-            (int)min(position.end_offset - position.start_offset, (size_t)10),
-            cmd.characters_without_null_termination() + position.start_offset,
-            position.start_line.line_column, position.start_line.line_number,
-            position.end_line.line_column, position.end_line.line_number);
+        raise_error(ShellError::EvaluatedSyntaxError, error_node.error_text(), position);
+    }
+
+    if (!has_error(ShellError::None)) {
+        possibly_print_error();
+        take_error();
         return 1;
     }
 
     tcgetattr(0, &termios);
 
     command->run(*this);
+
+    if (!has_error(ShellError::None)) {
+        possibly_print_error();
+        take_error();
+        return 1;
+    }
 
     return last_return_code;
 }
@@ -903,6 +916,8 @@ void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAc
 {
     if (m_error != ShellError::None) {
         possibly_print_error();
+        if (!is_control_flow(m_error))
+            take_error();
         return;
     }
     auto evaluate = [&] {
@@ -945,6 +960,8 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 {
     if (m_error != ShellError::None) {
         possibly_print_error();
+        if (!is_control_flow(m_error))
+            take_error();
         return {};
     }
 
@@ -984,6 +1001,12 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         }
     }
 
+    if (m_error != ShellError::None) {
+        possibly_print_error();
+        if (!is_control_flow(m_error))
+            take_error();
+    }
+
     return spawned_jobs;
 }
 
@@ -991,13 +1014,15 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
+    TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = {}, .position = {} } };
 
     auto file_result = Core::File::open(filename, Core::File::ReadOnly);
     if (file_result.is_error()) {
+        auto error = String::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
         if (explicitly_invoked)
-            fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
+            raise_error(ShellError::OpenFailure, error);
         else
-            dbgln("open() failed for '{}' with {}", filename, file_result.error());
+            dbgln("open() failed for {}", error);
         return false;
     }
     auto file = file_result.value();
@@ -1065,6 +1090,24 @@ String Shell::get_history_path()
     return String::formatted("{}/.history", home);
 }
 
+String Shell::escape_token_for_single_quotes(const String& token)
+{
+    StringBuilder builder;
+
+    for (auto c : token) {
+        switch (c) {
+        case '\'':
+            builder.append("'\\'");
+            break;
+        default:
+            break;
+        }
+        builder.append(c);
+    }
+
+    return builder.build();
+}
+
 String Shell::escape_token(const String& token)
 {
     StringBuilder builder;
@@ -1077,6 +1120,10 @@ String Shell::escape_token(const String& token)
         case '|':
         case '>':
         case '<':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
         case '&':
         case '\\':
         case ' ':
@@ -1748,17 +1795,87 @@ void Shell::possibly_print_error() const
     switch (m_error) {
     case ShellError::EvaluatedSyntaxError:
         warnln("Shell Syntax Error: {}", m_error_description);
-        return;
+        break;
     case ShellError::InvalidGlobError:
     case ShellError::NonExhaustiveMatchRules:
         warnln("Shell: {}", m_error_description);
-        return;
+        break;
+    case ShellError::OpenFailure:
+        warnln("Shell: Open failed for {}", m_error_description);
+        break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
         return;
     case ShellError::None:
         return;
     }
+
+    if (m_source_position.has_value() && m_source_position->position.has_value()) {
+        auto& source_position = m_source_position.value();
+        auto do_line = [&](auto line, auto& current_line) {
+            auto is_in_range = line >= (i64)source_position.position->start_line.line_number && line <= (i64)source_position.position->end_line.line_number;
+            warnln("{:>3}| {}", line, current_line);
+            if (is_in_range) {
+                warn("\x1b[31m");
+                size_t length_written_so_far = 0;
+                if (line == (i64)source_position.position->start_line.line_number) {
+                    warn("{:~>{}}", "", 5 + source_position.position->start_line.line_column);
+                    length_written_so_far += source_position.position->start_line.line_column;
+                } else {
+                    warn("{:~>{}}", "", 5);
+                }
+                if (line == (i64)source_position.position->end_line.line_number) {
+                    warn("{:^>{}}", "", source_position.position->end_line.line_column - length_written_so_far);
+                    length_written_so_far += source_position.position->start_line.line_column;
+                } else {
+                    warn("{:^>{}}", "", current_line.length() - length_written_so_far);
+                }
+                warnln("\x1b[0m");
+            }
+        };
+        int line = -1;
+        String current_line;
+        i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
+
+        if (!source_position.source_file.is_null()) {
+            auto file = Core::File::open(source_position.source_file, Core::IODevice::OpenMode::ReadOnly);
+            if (file.is_error()) {
+                warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file.error(), source_position.source_file);
+                return;
+            }
+            while (line < line_to_skip_to) {
+                if (file.value()->eof())
+                    return;
+                current_line = file.value()->read_line();
+                ++line;
+            }
+
+            for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
+                do_line(line, current_line);
+                if (file.value()->eof())
+                    current_line = "";
+                else
+                    current_line = file.value()->read_line();
+            }
+        } else if (!source_position.literal_source_text.is_empty()) {
+            GenericLexer lexer { source_position.literal_source_text };
+            while (line < line_to_skip_to) {
+                if (lexer.is_eof())
+                    return;
+                current_line = lexer.consume_line();
+                ++line;
+            }
+
+            for (; line < (i64)source_position.position->end_line.line_number + 2; ++line) {
+                do_line(line, current_line);
+                if (lexer.is_eof())
+                    current_line = "";
+                else
+                    current_line = lexer.consume_line();
+            }
+        }
+    }
+    warnln();
 }
 
 void FileDescriptionCollector::collect()
