@@ -74,7 +74,7 @@ public:
         ASSERT(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
-    ALWAYS_INLINE bool try_ref() const
+    [[nodiscard]] ALWAYS_INLINE bool try_ref() const
     {
         RefCountType expected = m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
