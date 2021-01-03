@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/Format.h>
 #include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
 
@@ -156,6 +156,18 @@ const LogStream& operator<<(const LogStream& stream, const Gfx::Size<T>& size)
 
 using IntSize = Size<int>;
 using FloatSize = Size<float>;
+
+}
+
+namespace AK {
+
+template<typename T>
+struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const Gfx::Size<T>& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
+};
 
 }
 
