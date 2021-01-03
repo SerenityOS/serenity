@@ -141,12 +141,12 @@ private:
         }
     }
 
-    static bool get_cpu_usage(unsigned& busy, unsigned& idle)
+    bool get_cpu_usage(unsigned& busy, unsigned& idle)
     {
         busy = 0;
         idle = 0;
 
-        auto all_processes = Core::ProcessStatisticsReader::get_all();
+        auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
         if (!all_processes.has_value() || all_processes.value().is_empty())
             return false;
 
@@ -161,13 +161,20 @@ private:
         return true;
     }
 
-    static bool get_memory_usage(unsigned& allocated, unsigned& available)
+    bool get_memory_usage(unsigned& allocated, unsigned& available)
     {
-        auto proc_memstat = Core::File::construct("/proc/memstat");
-        if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
-            return false;
+        if (m_proc_mem) {
+            // Seeking to the beginning causes a data refresh!
+            if (!m_proc_mem->seek(0, Core::File::SeekMode::SetPosition))
+                return false;
+        } else {
+            auto proc_memstat = Core::File::construct("/proc/memstat");
+            if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
+                return false;
+            m_proc_mem = move(proc_memstat);
+        }
 
-        auto file_contents = proc_memstat->read_all();
+        auto file_contents = m_proc_mem->read_all();
         auto json = JsonValue::from_string(file_contents);
         ASSERT(json.has_value());
         unsigned user_physical_allocated = json.value().as_object().get("user_physical_allocated").to_u32();
@@ -184,6 +191,8 @@ private:
     unsigned m_last_cpu_busy { 0 };
     unsigned m_last_cpu_idle { 0 };
     String m_tooltip;
+    RefPtr<Core::File> m_proc_all;
+    RefPtr<Core::File> m_proc_mem;
 };
 
 int main(int argc, char** argv)
