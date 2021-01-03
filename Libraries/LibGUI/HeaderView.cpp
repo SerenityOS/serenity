@@ -274,7 +274,7 @@ void HeaderView::paint_vertical(Painter& painter)
         bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
         bool hovered = false;
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
-        String text = String::format("%d", section);
+        String text = String::number(section);
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.move_by(1, 1);
