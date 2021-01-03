@@ -78,7 +78,7 @@ public:
     String family() const;
     String variant() const;
     u16 weight() const;
-    bool is_fixed_width() const { return false; } /* TODO */
+    bool is_fixed_width() const;
 
 private:
     enum class Offsets {
