@@ -190,9 +190,9 @@ static String& hostname()
 static size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution, const char* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
-        if (auto* full_path = realpath(path_for_hyperlink, nullptr)) {
-            printf("\033]8;;file://%s%s\033\\", hostname().characters(), full_path);
-            free(full_path);
+        auto full_path = Core::File::real_path_for(path_for_hyperlink);
+        if (!full_path.is_null()) {
+            out("\033]8;;file://{}{}\033\\", hostname(), full_path);
         }
     }
 
