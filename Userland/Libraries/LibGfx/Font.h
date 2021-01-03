@@ -70,8 +70,11 @@ private:
 
 class Glyph {
 public:
-    Glyph(const GlyphBitmap& glyph_bitmap)
+    Glyph(const GlyphBitmap& glyph_bitmap, int left_bearing, int advance, int ascent)
         : m_glyph_bitmap(glyph_bitmap)
+        , m_left_bearing(left_bearing)
+        , m_advance(advance)
+        , m_ascent(ascent)
     {
     }
 
