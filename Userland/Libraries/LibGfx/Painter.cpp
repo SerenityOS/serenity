@@ -901,11 +901,11 @@ FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, Color co
 FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
     auto glyph = font.glyph(code_point);
-    if (glyph.is_glyph_bitmap()) {
-        draw_bitmap(point, glyph.glyph_bitmap(), color);
-    } else {
-        auto top_left = point + IntPoint(glyph.left_bearing(), font.x_height() - glyph.ascent());
+    auto top_left = point + IntPoint(glyph.left_bearing(), font.glyph_height() - glyph.ascent());
 
+    if (glyph.is_glyph_bitmap()) {
+        draw_bitmap(top_left, glyph.glyph_bitmap(), color);
+    } else {
         blit_filtered(top_left, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
             return pixel.multiply(color);
         });
