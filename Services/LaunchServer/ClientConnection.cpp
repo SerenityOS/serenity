@@ -55,9 +55,9 @@ OwnPtr<Messages::LaunchServer::GreetResponse> ClientConnection::handle(const Mes
 
 OwnPtr<Messages::LaunchServer::OpenURLResponse> ClientConnection::handle(const Messages::LaunchServer::OpenURL& request)
 {
-    if (!m_allowed_handlers.is_empty()) {
+    if (!m_allowlist.is_empty()) {
         bool allowed = false;
-        for (auto& allowed_handler : m_allowed_handlers) {
+        for (auto& allowed_handler : m_allowlist) {
             if (allowed_handler.handler_name == request.handler_name()
                 && (allowed_handler.any_url || allowed_handler.urls.contains_slow(request.url()))) {
                 allowed = true;
@@ -90,9 +90,26 @@ OwnPtr<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse> ClientConne
     return make<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse>(result);
 }
 
+OwnPtr<Messages::LaunchServer::AddAllowedURLResponse> ClientConnection::handle(const Messages::LaunchServer::AddAllowedURL& request)
+{
+    if (m_allowlist_is_sealed) {
+        did_misbehave("Got request to add more allowed handlers after list was sealed");
+        return nullptr;
+    }
+
+    if (!request.url().is_valid()) {
+        did_misbehave("Got request to allow invalid URL");
+        return nullptr;
+    }
+
+    m_allowlist.empend(String(), false, Vector<URL> { request.url() });
+
+    return make<Messages::LaunchServer::AddAllowedURLResponse>();
+}
+
 OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse> ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL& request)
 {
-    if (m_allowed_handler_list_is_sealed) {
+    if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
         return nullptr;
     }
@@ -102,14 +119,14 @@ OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse> ClientConnec
         return nullptr;
     }
 
-    m_allowed_handlers.empend(request.handler_name(), true, Vector<URL>());
+    m_allowlist.empend(request.handler_name(), true, Vector<URL>());
 
     return make<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse>();
 }
 
 OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse> ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs& request)
 {
-    if (m_allowed_handler_list_is_sealed) {
+    if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
         return nullptr;
     }
@@ -124,19 +141,19 @@ OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse> Cl
         return nullptr;
     }
 
-    m_allowed_handlers.empend(request.handler_name(), false, request.urls());
+    m_allowlist.empend(request.handler_name(), false, request.urls());
 
     return make<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse>();
 }
 
-OwnPtr<Messages::LaunchServer::SealAllowedHandlersListResponse> ClientConnection::handle(const Messages::LaunchServer::SealAllowedHandlersList&)
+OwnPtr<Messages::LaunchServer::SealAllowlistResponse> ClientConnection::handle(const Messages::LaunchServer::SealAllowlist&)
 {
-    if (m_allowed_handler_list_is_sealed) {
+    if (m_allowlist_is_sealed) {
         did_misbehave("Got more than one request to seal the allowed handlers list");
         return nullptr;
     }
 
-    return make<Messages::LaunchServer::SealAllowedHandlersListResponse>();
+    return make<Messages::LaunchServer::SealAllowlistResponse>();
 }
 
 }
