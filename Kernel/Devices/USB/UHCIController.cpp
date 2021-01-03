@@ -395,6 +395,10 @@ void UHCIController::spawn_port_proc()
 
 void UHCIController::handle_irq(const RegisterState&)
 {
+    // Shared IRQ. Not ours!
+    if(!read_usbsts())
+        return;
+
     klog() << "UHCI: Interrupt happened!";
     klog() << "Value of USBSTS: " << read_usbsts();
 }
