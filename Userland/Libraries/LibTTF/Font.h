@@ -140,6 +140,7 @@ public:
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
+    virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_codepoint(code_point) > 0; }
     virtual u8 glyph_width(size_t ch) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
     virtual u8 glyph_height() const override { return m_point_height; }    /* TODO */
