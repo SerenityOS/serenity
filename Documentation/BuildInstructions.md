@@ -37,6 +37,11 @@ On Ubuntu it's in the repositories of 20.04 (Focal) and later - add the `ubuntu-
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```
 
+On Ubuntu 18.04 (and derivatives like Elementary Linux), as you don't have the latest `gcc`, you can install `clang`; package name `clang-10`
+```bash
+apt-get install clang-10
+```
+
 On Debian you can use the Debian testing branch:
 ```bash
 sudo echo "deb http://http.us.debian.org/debian/ testing non-free contrib main" >> /etc/apt/sources.list
