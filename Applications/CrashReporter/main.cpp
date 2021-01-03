@@ -45,6 +45,7 @@
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <string.h>
 
 static String build_backtrace(const CoreDump::Reader& coredump)
 {
@@ -87,6 +88,7 @@ int main(int argc, char** argv)
     String backtrace;
     String executable_path;
     int pid { 0 };
+    u8 termination_signal { 0 };
 
     {
         auto coredump = CoreDump::Reader::create(coredump_path);
@@ -98,6 +100,7 @@ int main(int argc, char** argv)
         backtrace = build_backtrace(*coredump);
         executable_path = String(process_info.executable_path);
         pid = process_info.pid;
+        termination_signal = process_info.termination_signal;
     }
 
     auto app = GUI::Application::construct(argc, argv);
@@ -147,7 +150,7 @@ int main(int argc, char** argv)
         app_name = af->name();
 
     auto& description_label = *widget.find_descendant_of_type_named<GUI::Label>("description");
-    description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed!", app_name, pid));
+    description_label.set_text(String::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
 
     auto& executable_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
