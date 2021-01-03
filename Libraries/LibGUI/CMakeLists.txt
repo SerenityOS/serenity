@@ -36,6 +36,7 @@ set(SOURCES
     FontPicker.cpp
     FontPickerDialogGML.h
     Frame.cpp
+    GMLFormatter.cpp
     GMLLexer.cpp
     GMLParser.cpp
     GMLSyntaxHighlighter.cpp
