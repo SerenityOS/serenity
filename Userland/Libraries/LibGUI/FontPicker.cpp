@@ -154,7 +154,16 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
                         m_sizes.append(font.presentation_size());
                     });
                 } else {
+                    m_sizes.append(8);
+                    m_sizes.append(10);
                     m_sizes.append(12);
+                    m_sizes.append(14);
+                    m_sizes.append(16);
+                    m_sizes.append(18);
+                    m_sizes.append(20);
+                    m_sizes.append(22);
+                    m_sizes.append(24);
+                    m_sizes.append(36);
                 }
             }
         });
