@@ -750,8 +750,9 @@ public:
         m_in_block = true;
         T t(forward<Args>(args)...);
 
-        Atomic<bool> timeout_unblocked(false);
-        Atomic<bool> did_unblock(false);
+        // Relaxed semantics are fine for timeout_unblocked because we
+        // synchronize on the spin locks already.
+        Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
         RefPtr<Timer> timer;
         {
             switch (state()) {
@@ -785,7 +786,7 @@ public:
                     // NOTE: this may execute on the same or any other processor!
                     ScopedSpinLock scheduler_lock(g_scheduler_lock);
                     ScopedSpinLock block_lock(m_block_lock);
-                    if (m_blocker && timeout_unblocked.exchange(true, AK::MemoryOrder::memory_order_relaxed) == false)
+                    if (m_blocker && timeout_unblocked.exchange(true) == false)
                         unblock();
                 });
                 if (!timer) {
@@ -833,7 +834,7 @@ public:
             }
             // Prevent the timeout from unblocking this thread if it happens to
             // be in the process of firing already
-            did_timeout |= timeout_unblocked.exchange(true, AK::MemoryOrder::memory_order_relaxed);
+            did_timeout |= timeout_unblocked.exchange(true);
             if (m_blocker) {
                 // Remove ourselves...
                 ASSERT(m_blocker == &t);
