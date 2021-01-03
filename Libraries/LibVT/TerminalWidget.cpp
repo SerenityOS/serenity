@@ -49,6 +49,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
@@ -309,6 +310,30 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         row_with_cursor = m_terminal.cursor_row() + rows_from_history;
     }
 
+    // Pass: Compute the rect(s) of the currently hovered link, if any.
+    Vector<Gfx::IntRect> hovered_href_rects;
+    if (!m_hovered_href_id.is_null()) {
+        for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
+            auto& line = m_terminal.line(first_row_from_history + visual_row);
+            for (size_t column = 0; column < line.length(); ++column) {
+                if (m_hovered_href_id == line.attributes()[column].href_id) {
+                    bool merged_with_existing_rect = false;
+                    auto glyph_rect = this->glyph_rect(visual_row, column);
+                    for (auto& rect : hovered_href_rects) {
+                        if (rect.inflated(1, 1).intersects(glyph_rect)) {
+                            rect = rect.united(glyph_rect);
+                            merged_with_existing_rect = true;
+                            break;
+                        }
+                    }
+                    if (!merged_with_existing_rect)
+                        hovered_href_rects.append(glyph_rect);
+                }
+            }
+        }
+    }
+
+    // Pass: Paint background & text decorations.
     for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
         auto row_rect = this->row_rect(visual_row);
         if (!event.rect().contains(row_rect))
@@ -321,16 +346,15 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
-            u32 code_point = line.code_point(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
             auto attribute = line.attributes()[column];
-            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
+            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
             if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection) {
                 painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
             }
@@ -368,9 +392,40 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                         painter.set_pixel({ x, y }, dotted_line_color);
                 }
             }
+        }
+    }
+
+    // Paint the hovered link rects, if any.
+    for (auto rect : hovered_href_rects) {
+        rect.inflate(6, 6);
+        painter.fill_rect(rect, palette().base());
+        painter.draw_rect(rect.inflated(2, 2).intersected(frame_inner_rect()), palette().base_text());
+    }
+
+    // Pass: Paint foreground (text).
+    for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
+        auto row_rect = this->row_rect(visual_row);
+        if (!event.rect().contains(row_rect))
+            continue;
+        auto& line = m_terminal.line(first_row_from_history + visual_row);
+        for (size_t column = 0; column < line.length(); ++column) {
+            auto attribute = line.attributes()[column];
+            bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && m_has_logical_focus
+                && visual_row == row_with_cursor
+                && column == m_terminal.cursor_column();
+            should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
+            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
+            u32 code_point = line.code_point(column);
 
             if (code_point == ' ')
                 continue;
+
+            auto character_rect = glyph_rect(visual_row, column);
+
+            if (!m_hovered_href_id.is_null() && attribute.href_id == m_hovered_href_id) {
+                text_color = palette().base_text();
+            }
 
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
@@ -380,6 +435,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         }
     }
 
+    // Draw cursor.
     if (!m_has_logical_focus && row_with_cursor < m_terminal.rows()) {
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
@@ -656,6 +712,13 @@ VT::Range TerminalWidget::find_previous(const StringView& needle, const VT::Posi
 void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
+        auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
+        if (!attribute.href_id.is_null()) {
+            dbgln("Open hyperlinked URL: '{}'", attribute.href);
+            Desktop::Launcher::open(attribute.href);
+            return;
+        }
+
         m_triple_click_timer.start();
 
         auto position = buffer_position_at(event.position());
@@ -705,11 +768,6 @@ void TerminalWidget::copy()
 void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
-        auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
-        if (!m_active_href_id.is_null() && attribute.href_id == m_active_href_id) {
-            dbgln("Open hyperlinked URL: '{}'", attribute.href);
-            Desktop::Launcher::open(attribute.href);
-        }
         if (!m_active_href_id.is_null()) {
             m_active_href = {};
             m_active_href_id = {};
@@ -768,7 +826,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             m_hovered_href = {};
         }
         if (!m_hovered_href.is_empty())
-            set_override_cursor(Gfx::StandardCursor::Hand);
+            set_override_cursor(Gfx::StandardCursor::Arrow);
         else
             set_override_cursor(Gfx::StandardCursor::IBeam);
         update();
