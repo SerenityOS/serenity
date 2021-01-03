@@ -580,7 +580,7 @@ int ScaledFont::glyph_or_emoji_width(u32 code_point) const
 
 u8 ScaledFont::glyph_fixed_width() const
 {
-    return (u8)m_x_scale;
+    return glyph_metrics(glyph_id_for_codepoint(' ')).advance_width;
 }
 
 }
