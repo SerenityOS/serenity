@@ -77,7 +77,7 @@ public:
     void mask(u16 m) { m_address &= m; }
 
     template<typename T>
-    ALWAYS_INLINE T in()
+    ALWAYS_INLINE T in() const
     {
         if constexpr (sizeof(T) == 4)
             return IO::in32(get());
@@ -89,7 +89,7 @@ public:
     }
 
     template<typename T>
-    ALWAYS_INLINE void out(T value)
+    ALWAYS_INLINE void out(T value) const
     {
         if constexpr (sizeof(T) == 4) {
             IO::out32(get(), value);
@@ -106,7 +106,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    inline void out(u32 value, u8 bit_width)
+    inline void out(u32 value, u8 bit_width) const
     {
         if (bit_width == 32) {
             IO::out32(get(), value);
