@@ -37,17 +37,24 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
+Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
 {
-    auto file = Core::File::construct("/proc/all");
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "ProcessStatisticsReader: Failed to open /proc/all: %s\n", file->error_string());
-        return {};
+    if (proc_all_file) {
+        if (!proc_all_file->seek(0, Core::File::SeekMode::SetPosition)) {
+            fprintf(stderr, "ProcessStatisticsReader: Failed to refresh /proc/all: %s\n", proc_all_file->error_string());
+            return {};
+        }
+    } else {
+        proc_all_file = Core::File::construct("/proc/all");
+        if (!proc_all_file->open(Core::IODevice::ReadOnly)) {
+            fprintf(stderr, "ProcessStatisticsReader: Failed to open /proc/all: %s\n", proc_all_file->error_string());
+            return {};
+        }
     }
 
     HashMap<pid_t, Core::ProcessStatistics> map;
 
-    auto file_contents = file->read_all();
+    auto file_contents = proc_all_file->read_all();
     auto json = JsonValue::from_string(file_contents);
     if (!json.has_value())
         return {};
@@ -110,6 +117,12 @@ Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_a
     });
 
     return map;
+}
+
+Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
+{
+    RefPtr<Core::File> proc_all_file;
+    return get_all(proc_all_file);
 }
 
 String ProcessStatisticsReader::username_from_uid(uid_t uid)
