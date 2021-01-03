@@ -51,13 +51,13 @@ void Point<T>::constrain(const Rect<T>& rect)
 template<>
 String IntPoint::to_string() const
 {
-    return String::format("[%d,%d]", x(), y());
+    return String::formatted("[{},{}]", x(), y());
 }
 
 template<>
 String FloatPoint::to_string() const
 {
-    return String::format("[%f,%f]", x(), y());
+    return String::formatted("[{},{}]", x(), y());
 }
 
 }

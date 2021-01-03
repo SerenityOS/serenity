@@ -113,7 +113,7 @@ RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
     GIFImageDecoderPlugin gif_decoder((const u8*)mapped_file.data(), mapped_file.size());
     auto bitmap = gif_decoder.bitmap();
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: %s", bitmap->width(), bitmap->height(), LexicalPath::canonicalized_path(path).characters()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded GIF: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;
 }
 
@@ -122,7 +122,7 @@ RefPtr<Gfx::Bitmap> load_gif_from_memory(const u8* data, size_t length)
     GIFImageDecoderPlugin gif_decoder(data, length);
     auto bitmap = gif_decoder.bitmap();
     if (bitmap)
-        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded GIF: <memory>", bitmap->width(), bitmap->height()));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded GIF: <memory>", bitmap->size()));
     return bitmap;
 }
 

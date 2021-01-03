@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
@@ -234,6 +234,18 @@ const LogStream& operator<<(const LogStream& stream, const Point<T>& point)
 
 using IntPoint = Point<int>;
 using FloatPoint = Point<float>;
+
+}
+
+namespace AK {
+
+template<typename T>
+struct Formatter<Gfx::Point<T>> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const Gfx::Point<T>& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
+};
 
 }
 
