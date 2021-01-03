@@ -449,6 +449,8 @@ public:
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
+    u8 termination_signal() const { return m_termination_signal; }
+
     u16 thread_count() const
     {
         return m_thread_count.load(AK::MemoryOrder::memory_order_relaxed);

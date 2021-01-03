@@ -51,6 +51,7 @@ struct [[gnu::packed]] NotesEntry {
 struct [[gnu::packed]] ProcessInfo {
     NotesEntryHeader header;
     int pid;
+    u8 termination_signal;
     char executable_path[]; // Null terminated
 };
 
