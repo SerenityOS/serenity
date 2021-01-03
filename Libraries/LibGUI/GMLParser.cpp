@@ -45,6 +45,9 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
         return tokens.head().m_type;
     };
 
+    while (peek() == GMLToken::Type::Comment)
+        tokens.dequeue();
+
     if (peek() != GMLToken::Type::ClassMarker) {
         dbgln("Expected class marker");
         return {};
