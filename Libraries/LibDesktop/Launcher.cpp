@@ -78,6 +78,16 @@ static LaunchServerConnection& connection()
     return connection;
 }
 
+bool Launcher::add_allowed_url(const URL& url)
+{
+    auto response = connection().send_sync<Messages::LaunchServer::AddAllowedURL>(url);
+    if (!response) {
+        dbgln("Launcher::add_allowed_url: Failed");
+        return false;
+    }
+    return true;
+}
+
 bool Launcher::add_allowed_handler_with_any_url(const String& handler)
 {
     auto response = connection().send_sync<Messages::LaunchServer::AddAllowedHandlerWithAnyURL>(handler);
@@ -98,11 +108,11 @@ bool Launcher::add_allowed_handler_with_only_specific_urls(const String& handler
     return true;
 }
 
-bool Launcher::seal_allowed_handler_list()
+bool Launcher::seal_allowlist()
 {
-    auto response = connection().send_sync<Messages::LaunchServer::SealAllowedHandlersList>();
+    auto response = connection().send_sync<Messages::LaunchServer::SealAllowlist>();
     if (!response) {
-        dbgln("Launcher::seal_allowed_handler_list: Failed");
+        dbgln("Launcher::seal_allowlist: Failed");
         return false;
     }
     return true;
