@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021 Glenford Williams <gw_dev@outlook.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,7 @@
  */
 
 #include "CalculatorWidget.h"
+#include "Applications/Calculator/CalculatorGML.h"
 #include <AK/Assertions.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -35,150 +37,100 @@
 
 CalculatorWidget::CalculatorWidget()
 {
-    set_fill_with_background_color(true);
+    load_from_gml(calculator_gml);
 
-    m_entry = add<GUI::TextBox>();
+    m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
     m_entry->set_font(Gfx::FontDatabase::default_fixed_width_font());
 
-    m_label = add<GUI::Label>();
-    m_label->set_relative_rect(12, 42, 27, 27);
+    m_label = *find_descendant_of_type_named<GUI::Label>("label");
+
     m_label->set_frame_shadow(Gfx::FrameShadow::Sunken);
     m_label->set_frame_shape(Gfx::FrameShape::Container);
     m_label->set_frame_thickness(2);
-    auto label_palette = m_label->palette();
-    label_palette.set_color(Gfx::ColorRole::WindowText, Color::Red);
-    m_label->set_palette(label_palette);
-
-    update_display();
 
     for (int i = 0; i < 10; i++) {
-        m_digit_button[i] = add<GUI::Button>();
-        auto& button = *m_digit_button[i];
-        int p = i ? i + 2 : 0;
-        int x = 55 + (p % 3) * 39;
-        int y = 177 - (p / 3) * 33;
-        button.move_to(x, y);
-        add_digit_button(button, i);
+        m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(String::formatted("{}_button", i));
+        add_digit_button(*m_digit_button[i], i);
     }
 
-    m_mem_add_button = add<GUI::Button>();
-    m_mem_add_button->move_to(9, 177);
-    m_mem_add_button->set_text("M+");
+    m_mem_add_button = *find_descendant_of_type_named<GUI::Button>("mem_add_button");
     add_operation_button(*m_mem_add_button, Calculator::Operation::MemAdd);
 
-    m_mem_save_button = add<GUI::Button>();
-    m_mem_save_button->move_to(9, 144);
-    m_mem_save_button->set_text("MS");
+    m_mem_save_button = *find_descendant_of_type_named<GUI::Button>("mem_save_button");
     add_operation_button(*m_mem_save_button, Calculator::Operation::MemSave);
 
-    m_mem_recall_button = add<GUI::Button>();
-    m_mem_recall_button->move_to(9, 111);
-    m_mem_recall_button->set_text("MR");
+    m_mem_recall_button = *find_descendant_of_type_named<GUI::Button>("mem_recall_button");
     add_operation_button(*m_mem_recall_button, Calculator::Operation::MemRecall);
 
-    m_mem_clear_button = add<GUI::Button>();
-    m_mem_clear_button->move_to(9, 78);
-    m_mem_clear_button->set_text("MC");
+    m_mem_clear_button = *find_descendant_of_type_named<GUI::Button>("mem_clear_button");
     add_operation_button(*m_mem_clear_button, Calculator::Operation::MemClear);
 
-    m_clear_button = add<GUI::Button>();
-    m_clear_button->set_text("C");
+    m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
         update_display();
     };
-    add_button(*m_clear_button, Color::Red);
-    m_clear_button->set_relative_rect(187, 40, 60, 28);
 
-    m_clear_error_button = add<GUI::Button>();
-    m_clear_error_button->set_text("CE");
+    m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
     m_clear_error_button->on_click = [this](auto) {
         m_keypad.set_value(0.0);
         update_display();
     };
-    add_button(*m_clear_error_button, Color::Red);
-    m_clear_error_button->set_relative_rect(124, 40, 59, 28);
 
-    m_backspace_button = add<GUI::Button>();
-    m_backspace_button->set_text("Backspace");
+    m_backspace_button = *find_descendant_of_type_named<GUI::Button>("backspace_button");
     m_backspace_button->on_click = [this](auto) {
         m_keypad.type_backspace();
         update_display();
     };
-    add_button(*m_backspace_button, Color::Red);
-    m_backspace_button->set_relative_rect(55, 40, 65, 28);
 
-    m_decimal_point_button = add<GUI::Button>();
-    m_decimal_point_button->move_to(133, 177);
-    m_decimal_point_button->set_text(".");
+    m_decimal_point_button = *find_descendant_of_type_named<GUI::Button>("decimal_button");
     m_decimal_point_button->on_click = [this](auto) {
         m_keypad.type_decimal_point();
         update_display();
     };
-    add_button(*m_decimal_point_button, Color::Blue);
 
-    m_sign_button = add<GUI::Button>();
-    m_sign_button->move_to(94, 177);
-    m_sign_button->set_text("+/-");
-    add_operation_button(*m_sign_button, Calculator::Operation::ToggleSign, Color::Blue);
+    m_sign_button = *find_descendant_of_type_named<GUI::Button>("sign_button");
+    add_operation_button(*m_sign_button, Calculator::Operation::ToggleSign);
 
-    m_add_button = add<GUI::Button>();
-    m_add_button->move_to(172, 177);
-    m_add_button->set_text("+");
+    m_add_button = *find_descendant_of_type_named<GUI::Button>("add_button");
     add_operation_button(*m_add_button, Calculator::Operation::Add);
 
-    m_subtract_button = add<GUI::Button>();
-    m_subtract_button->move_to(172, 144);
-    m_subtract_button->set_text("-");
+    m_subtract_button = *find_descendant_of_type_named<GUI::Button>("subtract_button");
     add_operation_button(*m_subtract_button, Calculator::Operation::Subtract);
 
-    m_multiply_button = add<GUI::Button>();
-    m_multiply_button->move_to(172, 111);
-    m_multiply_button->set_text("*");
+    m_multiply_button = *find_descendant_of_type_named<GUI::Button>("multiply_button");
     add_operation_button(*m_multiply_button, Calculator::Operation::Multiply);
 
-    m_divide_button = add<GUI::Button>();
-    m_divide_button->move_to(172, 78);
-    m_divide_button->set_text("/");
+    m_divide_button = *find_descendant_of_type_named<GUI::Button>("divide_button");
     add_operation_button(*m_divide_button, Calculator::Operation::Divide);
 
-    m_sqrt_button = add<GUI::Button>();
-    m_sqrt_button->move_to(211, 78);
-    m_sqrt_button->set_text("sqrt");
-    add_operation_button(*m_sqrt_button, Calculator::Operation::Sqrt, Color::Blue);
+    m_sqrt_button = *find_descendant_of_type_named<GUI::Button>("sqrt_button");
+    add_operation_button(*m_sqrt_button, Calculator::Operation::Sqrt);
 
-    m_inverse_button = add<GUI::Button>();
-    m_inverse_button->move_to(211, 144);
-    m_inverse_button->set_text("1/x");
-    add_operation_button(*m_inverse_button, Calculator::Operation::Inverse, Color::Blue);
+    m_inverse_button = *find_descendant_of_type_named<GUI::Button>("inverse_button");
+    add_operation_button(*m_inverse_button, Calculator::Operation::Inverse);
 
-    m_percent_button = add<GUI::Button>();
-    m_percent_button->move_to(211, 111);
-    m_percent_button->set_text("%");
-    add_operation_button(*m_percent_button, Calculator::Operation::Percent, Color::Blue);
+    m_percent_button = *find_descendant_of_type_named<GUI::Button>("mod_button");
+    add_operation_button(*m_percent_button, Calculator::Operation::Percent);
 
-    m_equals_button = add<GUI::Button>();
-    m_equals_button->move_to(211, 177);
-    m_equals_button->set_text("=");
+    m_equals_button = *find_descendant_of_type_named<GUI::Button>("equal_button");
     m_equals_button->on_click = [this](auto) {
         double argument = m_keypad.value();
         double res = m_calculator.finish_operation(argument);
         m_keypad.set_value(res);
         update_display();
     };
-    add_button(*m_equals_button, Color::Red);
 }
 
 CalculatorWidget::~CalculatorWidget()
 {
 }
 
-void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation, Color text_color)
+void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation)
 {
-    add_button(button, text_color);
     button.on_click = [this, operation](auto) {
         double argument = m_keypad.value();
         double res = m_calculator.begin_operation(operation, argument);
@@ -189,20 +141,10 @@ void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Ope
 
 void CalculatorWidget::add_digit_button(GUI::Button& button, int digit)
 {
-    add_button(button, Color::Blue);
-    button.set_text(String::number(digit));
     button.on_click = [this, digit](auto) {
         m_keypad.type_digit(digit);
         update_display();
     };
-}
-
-void CalculatorWidget::add_button(GUI::Button& button, Color text_color)
-{
-    button.resize(35, 28);
-    auto palette = button.palette();
-    palette.set_color(Gfx::ColorRole::ButtonText, text_color);
-    button.set_palette(palette);
 }
 
 void CalculatorWidget::update_display()
