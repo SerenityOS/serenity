@@ -387,7 +387,7 @@ void Widget::handle_enter_event(Core::Event& event)
 {
     if (auto* window = this->window())
         window->update_cursor({});
-    show_tooltip();
+    show_or_hide_tooltip();
     enter_event(event);
 }
 
@@ -905,14 +905,16 @@ Gfx::IntRect Widget::content_rect() const
 void Widget::set_tooltip(const StringView& tooltip)
 {
     m_tooltip = tooltip;
-    if (GUI::Application::the()->tooltip_source_widget() == this)
-        show_tooltip();
+    if (Application::the()->tooltip_source_widget() == this)
+        show_or_hide_tooltip();
 }
 
-void Widget::show_tooltip()
+void Widget::show_or_hide_tooltip()
 {
     if (has_tooltip())
         Application::the()->show_tooltip(m_tooltip, this);
+    else
+        Application::the()->hide_tooltip();
 }
 
 Gfx::IntRect Widget::children_clip_rect() const
