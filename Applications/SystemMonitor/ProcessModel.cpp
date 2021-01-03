@@ -350,7 +350,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void ProcessModel::update()
 {
     auto previous_pid_count = m_pids.size();
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     u64 last_sum_ticks_scheduled = 0;
     for (auto& it : m_threads)
