@@ -130,6 +130,22 @@ static inline void print_indented(const String& str, int indent)
     dbgprintf("%s\n", str.characters());
 }
 
+static inline Optional<Position> merge_positions(const Optional<Position>& left, const Optional<Position>& right)
+{
+    if (!left.has_value())
+        return right;
+
+    if (!right.has_value())
+        return left;
+
+    return Position {
+        .start_offset = left->start_offset,
+        .end_offset = right->end_offset,
+        .start_line = left->start_line,
+        .end_line = right->end_line,
+    };
+}
+
 static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command> right)
 {
     Command command;
@@ -146,6 +162,8 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
     command.is_pipe_source = first_in_right.is_pipe_source;
     command.should_notify_if_in_background = first_in_right.should_notify_if_in_background || last_in_left.should_notify_if_in_background;
+
+    command.position = merge_positions(last_in_left.position, first_in_right.position);
 
     Vector<Command> commands;
     commands.append(left);
@@ -184,7 +202,7 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
     if (would_execute()) {
         // Wrap the node in a "should immediately execute next" command.
         return {
-            Command { {}, {}, true, false, true, true, {}, { NodeWithAction(*this, NodeWithAction::Sequence) } }
+            Command { {}, {}, true, false, true, true, {}, { NodeWithAction(*this, NodeWithAction::Sequence) }, position() }
         };
     }
 
@@ -343,10 +361,13 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
         if (result->is_command() || element_value->is_command()) {
             auto joined_commands = join_commands(result->resolve_as_commands(shell), element_value->resolve_as_commands(shell));
 
-            if (joined_commands.size() == 1)
-                result = create<CommandValue>(joined_commands[0]);
-            else
+            if (joined_commands.size() == 1) {
+                auto& command = joined_commands[0];
+                command.position = position();
+                result = create<CommandValue>(command);
+            } else {
                 result = create<CommandSequenceValue>(move(joined_commands));
+            }
         } else {
             NonnullRefPtrVector<Value> values;
 
@@ -594,7 +615,7 @@ RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
         return value;
 
     auto argv = value->resolve_as_list(shell);
-    return create<CommandValue>(move(argv));
+    return create<CommandValue>(move(argv), position());
 }
 
 void CastToCommand::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -715,6 +736,7 @@ void CloseFdRedirection::dump(int level) const
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
 {
     Command command;
+    command.position = position();
     command.redirections.append(adopt(*new CloseRedirection(m_fd)));
     return create<CommandValue>(move(command));
 }
@@ -870,7 +892,7 @@ RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
 
     // If it's anything else, we're just gonna cast it to a list.
     auto list = result->resolve_as_list(shell);
-    return create<CommandValue>(move(list));
+    return create<CommandValue>(move(list), position());
 }
 
 void DynamicEvaluate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -908,6 +930,7 @@ void Fd2FdRedirection::dump(int level) const
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
 {
     Command command;
+    command.position = position();
     command.redirections.append(FdRedirection::create(m_new_fd, m_old_fd, Rewiring::Close::None));
     return create<CommandValue>(move(command));
 }
@@ -1156,7 +1179,7 @@ void Glob::dump(int level) const
 
 RefPtr<Value> Glob::run(RefPtr<Shell>)
 {
-    return create<GlobValue>(m_text);
+    return create<GlobValue>(m_text, position());
 }
 
 void Glob::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
