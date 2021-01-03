@@ -458,7 +458,7 @@ TextEditorWidget::TextEditorWidget()
 
     view_menu.add_action(GUI::Action::create("Editor font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
         [&](auto&) {
-            auto picker = GUI::FontPicker::construct(window(), &m_editor->font(), true);
+            auto picker = GUI::FontPicker::construct(window(), &m_editor->font(), false);
             if (picker->exec() == GUI::Dialog::ExecOK) {
                 dbgln("setting font {}", picker->font()->qualified_name());
                 m_editor->set_font(picker->font());
