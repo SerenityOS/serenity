@@ -263,4 +263,5 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     ASSERT_NOT_REACHED();
 }
+
 }
