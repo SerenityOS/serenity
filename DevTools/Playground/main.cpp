@@ -31,6 +31,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GMLFormatter.h>
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
@@ -298,6 +299,35 @@ int main(int argc, char** argv)
 
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
+    }));
+
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::Action::create("Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
+        auto source = editor.text();
+        GUI::GMLLexer lexer(source);
+        for (auto& token : lexer.lex()) {
+            if (token.m_type == GUI::GMLToken::Type::Comment) {
+                auto result = GUI::MessageBox::show(
+                    window,
+                    "Your GML contains comments, which currently are not supported by the formatter and will be removed. Proceed?",
+                    "Warning",
+                    GUI::MessageBox::Type::Warning,
+                    GUI::MessageBox::InputType::OKCancel);
+                if (result == GUI::MessageBox::ExecCancel)
+                    return;
+                break;
+            }
+        }
+        auto formatted_gml = GUI::format_gml(source);
+        if (!formatted_gml.is_null()) {
+            editor.set_text(formatted_gml);
+        } else {
+            GUI::MessageBox::show(
+                window,
+                "GML could not be formatted, please check the debug console for parsing errors.",
+                "Error",
+                GUI::MessageBox::Type::Error);
+        }
     }));
 
     auto& help_menu = menubar->add_menu("Help");
