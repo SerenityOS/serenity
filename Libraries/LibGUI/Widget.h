@@ -328,6 +328,8 @@ protected:
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;
 
+    void show_or_hide_tooltip();
+
 private:
     void handle_paint_event(PaintEvent&);
     void handle_resize_event(ResizeEvent&);
@@ -338,8 +340,6 @@ private:
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
-
-    void show_tooltip();
 
     bool load_from_json(const JsonObject&);
 
