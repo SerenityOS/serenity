@@ -132,7 +132,6 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Crash Reporter");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_resizable(false);
     window->resize(460, 340);
     window->center_on_screen();
 
@@ -164,6 +163,7 @@ int main(int argc, char** argv)
 
     auto& backtrace_text_editor = *widget.find_descendant_of_type_named<GUI::TextEditor>("backtrace_text_editor");
     backtrace_text_editor.set_text(backtrace);
+    backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
 
     auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
