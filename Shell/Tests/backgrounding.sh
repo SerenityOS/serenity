@@ -53,4 +53,3 @@ assert_job_count 2 $i $j
 unblock $i
 unblock $j
 wait
-
