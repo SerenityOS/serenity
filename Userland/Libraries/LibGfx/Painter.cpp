@@ -929,9 +929,8 @@ void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const 
 
 void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    if (code_point < (u32)font.glyph_count()) {
-        // This looks like a regular character.
-        draw_glyph(point, (size_t)code_point, font, color);
+    if (font.contains_glyph(code_point)) {
+        draw_glyph(point, code_point, font, color);
         return;
     }
 
