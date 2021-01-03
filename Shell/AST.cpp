@@ -123,18 +123,6 @@ void AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Sh
 
 namespace Shell::AST {
 
-template<typename T, typename... Args>
-static inline NonnullRefPtr<T> create(Args... args)
-{
-    return adopt(*new T(args...));
-}
-
-template<typename T>
-static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
-{
-    return adopt(*new T(arg));
-}
-
 static inline void print_indented(const String& str, int indent)
 {
     for (auto i = 0; i < indent; ++i)
@@ -1829,7 +1817,7 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     if (first_in_right.pipeline) {
         last_in_left.pipeline = first_in_right.pipeline;
     } else {
-        auto pipeline = adopt(*new Pipeline);
+        auto pipeline = create<Pipeline>();
         last_in_left.pipeline = pipeline;
         first_in_right.pipeline = pipeline;
     }
