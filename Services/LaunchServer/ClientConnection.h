@@ -47,17 +47,18 @@ private:
     virtual OwnPtr<Messages::LaunchServer::OpenURLResponse> handle(const Messages::LaunchServer::OpenURL&) override;
     virtual OwnPtr<Messages::LaunchServer::GetHandlersForURLResponse> handle(const Messages::LaunchServer::GetHandlersForURL&) override;
     virtual OwnPtr<Messages::LaunchServer::GetHandlersWithDetailsForURLResponse> handle(const Messages::LaunchServer::GetHandlersWithDetailsForURL&) override;
+    virtual OwnPtr<Messages::LaunchServer::AddAllowedURLResponse> handle(const Messages::LaunchServer::AddAllowedURL&) override;
     virtual OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse> handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL&) override;
     virtual OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse> handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs&) override;
-    virtual OwnPtr<Messages::LaunchServer::SealAllowedHandlersListResponse> handle(const Messages::LaunchServer::SealAllowedHandlersList&) override;
+    virtual OwnPtr<Messages::LaunchServer::SealAllowlistResponse> handle(const Messages::LaunchServer::SealAllowlist&) override;
 
-    struct AllowedHandler {
+    struct AllowlistEntry {
         String handler_name;
         bool any_url { false };
         Vector<URL> urls;
     };
 
-    Vector<AllowedHandler> m_allowed_handlers;
-    bool m_allowed_handler_list_is_sealed { false };
+    Vector<AllowlistEntry> m_allowlist;
+    bool m_allowlist_is_sealed { false };
 };
 }
