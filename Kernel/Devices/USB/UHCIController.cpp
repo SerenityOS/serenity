@@ -142,10 +142,6 @@ void UHCIController::reset()
     create_structures();
     setup_schedule();
 
-    // Let's set each of the frame values to TERMINATE so that the controller ignores them
-    for (auto frame = 0; frame < 1024; frame++) {
-    }
-
     write_flbaseadd(m_framelist->physical_page(0)->paddr().get()); // Frame list (physical) address
     write_frnum(0);                                                // Set the initial frame number
 
@@ -168,28 +164,14 @@ void UHCIController::create_structures()
         auto placement_addr = reinterpret_cast<void*>(m_qh_pool->vaddr().get() + (i * sizeof(QueueHead)));
         auto paddr = static_cast<u32>(m_qh_pool->physical_page(0)->paddr().get() + (i * sizeof(QueueHead)));
         m_free_qh_pool.at(i) = new (placement_addr) QueueHead(paddr);
-
-        //auto& queue_head = m_free_qh_pool.at(i);
     }
 
-    // Create the Interrupt Transfer, Full Speed/Low Speed Control and Bulk Queue Heads
+    // Create the Full Speed, Low Speed Control and Bulk Queue Heads
     m_interrupt_transfer_queue = allocate_queue_head();
     m_lowspeed_control_qh = allocate_queue_head();
     m_fullspeed_control_qh = allocate_queue_head();
     m_bulk_qh = allocate_queue_head();
     m_dummy_qh = allocate_queue_head();
-
-    // Now let's create the interrupt Queue Heads
-    m_interrupt_qh_list.resize(UHCI_NUMBER_OF_INTERRUPT_QHS);
-    for (size_t i = 0; i < m_interrupt_qh_list.size(); i++) {
-        m_interrupt_qh_list.at(i) = reinterpret_cast<QueueHead*>(m_qh_pool->vaddr().get() + (i * sizeof(QueueHead)));
-
-        auto& queue_head = m_interrupt_qh_list.at(i);
-        queue_head->paddr = static_cast<u32>(m_qh_pool->physical_page(0)->paddr().get() + (i * sizeof(QueueHead)));
-        queue_head->in_use = true;
-        queue_head->link_ptr = m_lowspeed_control_qh->paddr; // Link to the low-speed control queue head
-        queue_head->element_link_ptr = QueueHead::Terminate; // No elements attached to this queue head
-    }
 
     // Now the Transfer Descriptor pool
     auto td_pool_vmobject = ContiguousVMObject::create_with_size(2 * PAGE_SIZE);
@@ -226,8 +208,8 @@ void UHCIController::create_structures()
         // that we store in `paddr`, meaning our member functions directly
         // access the raw descriptor (that we later send to the controller)
         m_free_td_pool.at(i) = new (placement_addr) Kernel::USB::TransferDescriptor(paddr);
-        //auto transfer_descriptor = m_free_td_pool.at(i);
-        //transfer_descriptor->print();
+        auto transfer_descriptor = m_free_td_pool.at(i);
+        transfer_descriptor->print();
     }
 
 #ifdef UHCI_DEBUG
