@@ -105,6 +105,8 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("fixed_height", dummy_fixed_height, set_fixed_height);
     REGISTER_SIZE_PROPERTY("fixed_size", dummy_fixed_size, set_fixed_size);
 
+    REGISTER_BOOL_PROPERTY("shrink_to_fit", is_shrink_to_fit, set_shrink_to_fit);
+
     REGISTER_INT_PROPERTY("x", x, set_x);
     REGISTER_INT_PROPERTY("y", y, set_y);
 
@@ -1008,6 +1010,14 @@ bool Widget::has_focus_within() const
         return false;
     auto& effective_focus_widget = focus_proxy() ? *focus_proxy() : *this;
     return window->focused_widget() == &effective_focus_widget || is_ancestor_of(*window->focused_widget());
+}
+
+void Widget::set_shrink_to_fit(bool b)
+{
+    if (m_shrink_to_fit == b)
+        return;
+    m_shrink_to_fit = b;
+    invalidate_layout();
 }
 
 }
