@@ -34,7 +34,6 @@
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
@@ -476,9 +475,7 @@ TextEditorWidget::TextEditorWidget()
     syntax_menu.add_action(*m_shell_highlight);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Text Editor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-text-editor.png"), window());
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
 
     GUI::Application::the()->set_menubar(move(menubar));
 

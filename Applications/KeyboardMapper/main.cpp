@@ -26,7 +26,6 @@
 
 #include "KeyboardMapperWidget.h"
 #include <LibCore/ArgsParser.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -56,7 +55,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper");
 
     auto window = GUI::Window::construct();
-    window->set_title("KeyboardMapper");
+    window->set_title("Keyboard Mapper");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_main_widget<KeyboardMapperWidget>();
     window->resize(775, 315);
@@ -98,15 +97,10 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto about_action = GUI::Action::create("About",
-        [&](auto&) {
-            GUI::AboutDialog::show("KeyboardMapper", app_icon.bitmap_for_size(32), window);
-        });
-
     // Menu
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("KeyboardMapper");
+    auto& app_menu = menubar->add_menu("Keyboard Mapper");
     app_menu.add_action(open_action);
     app_menu.add_action(save_action);
     app_menu.add_action(save_as_action);
@@ -114,7 +108,7 @@ int main(int argc, char** argv)
     app_menu.add_action(quit_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(about_action);
+    help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
 
     app->set_menubar(move(menubar));
 

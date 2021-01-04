@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -57,7 +56,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-mouse");
     auto window = GUI::Window::construct();
-    window->set_title("Mouse settings");
+    window->set_title("Mouse Settings");
     window->resize(200, 130);
     window->set_resizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -121,14 +120,12 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Mouse settings");
+    auto& app_menu = menubar->add_menu("Mouse Settings");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Mouse settings", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Mouse Settings", app_icon, window));
     app->set_menubar(move(menubar));
 
     window->show();

@@ -27,7 +27,6 @@
 #include "ChessWidget.h"
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -221,9 +220,7 @@ int main(int argc, char** argv)
     }
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Chess", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window));
 
     app->set_menubar(move(menubar));
 

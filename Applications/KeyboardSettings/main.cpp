@@ -30,7 +30,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -114,7 +113,7 @@ int main(int argc, char** argv)
     ASSERT(initial_keymap_index < character_map_files.size());
 
     auto window = GUI::Window::construct();
-    window->set_title("Keyboard settings");
+    window->set_title("Keyboard Settings");
     window->resize(300, 70);
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -187,18 +186,13 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto about_action = GUI::Action::create("About",
-        [&](auto&) {
-            GUI::AboutDialog::show("Keyboard settings", app_icon.bitmap_for_size(32), window);
-        });
-
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Keyboard settings");
+    auto& app_menu = menubar->add_menu("Keyboard Settings");
     app_menu.add_action(quit_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(about_action);
+    help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Settings", app_icon, window));
 
     app->set_menubar(move(menubar));
 

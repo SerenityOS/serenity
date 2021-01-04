@@ -26,7 +26,6 @@
 
 #include "EyesWidget.h"
 #include <LibCore/ArgsParser.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -104,9 +103,7 @@ int main(int argc, char* argv[])
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Eyes Demo", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window));
 
     app->set_menubar(move(menubar));
     window->show();
