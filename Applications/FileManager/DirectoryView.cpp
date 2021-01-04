@@ -532,7 +532,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    m_open_terminal_action = GUI::Action::create("Open Terminal here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());

@@ -255,7 +255,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 
     auto properties_action
         = GUI::Action::create(
-            "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action&) {
+            "Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action&) {
                 String path = directory_view.path();
                 Vector<String> selected = directory_view.selected_file_paths();
 
@@ -276,11 +276,11 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-    auto file_manager_action = GUI::Action::create("Show in FileManager...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
+    auto file_manager_action = GUI::Action::create("Show in FileManager", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
     });
 
-    auto display_properties_action = GUI::Action::create("Display settings...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
+    auto display_properties_action = GUI::Action::create("Display settings", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
@@ -513,7 +513,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto properties_action
         = GUI::Action::create(
-            "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
+            "Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
                 String container_dir_path;
                 String path;
                 Vector<String> selected;
