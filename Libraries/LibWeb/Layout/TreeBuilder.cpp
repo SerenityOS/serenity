@@ -54,7 +54,7 @@ static NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block(Node& paren
 
 static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_parent, Layout::Node& layout_node)
 {
-    if (layout_parent.is_inline())
+    if (layout_parent.is_inline() && !layout_parent.is_inline_block())
         return layout_parent;
 
     if (!layout_parent.has_children() || layout_parent.children_are_inline())
