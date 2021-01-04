@@ -104,6 +104,7 @@ set(KERNEL_SOURCES
     SharedBuffer.cpp
     StdLib.cpp
     Syscall.cpp
+    Syscalls/abort.cpp
     Syscalls/access.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp

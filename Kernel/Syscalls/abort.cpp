@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,31 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/internals.h>
-#include <unistd.h>
+#include <AK/StringView.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Process.h>
 
-extern "C" {
+namespace Kernel {
 
-extern bool __stdio_is_initialized;
-#ifdef DEBUG
-void __assertion_failed(const char* msg)
+void Process::sys$abort()
 {
-    dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
-    if (__stdio_is_initialized)
-        fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
-
-    Syscall::SC_set_coredump_metadata_params params {
-        { "assertion", strlen("assertion") },
-        { msg, strlen(msg) },
-    };
-    syscall(SC_set_coredump_metadata, &params);
-    syscall(SC_abort);
-    for (;;) { }
+    cli();
+    crash(SIGABRT, 0);
 }
-#endif
+
 }

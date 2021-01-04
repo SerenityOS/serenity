@@ -197,7 +197,8 @@ namespace Kernel {
     S(allocate_tls)           \
     S(prctl)                  \
     S(mremap)                 \
-    S(set_coredump_metadata)
+    S(set_coredump_metadata)  \
+    S(abort)
 
 namespace Syscall {
 
