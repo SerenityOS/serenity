@@ -33,7 +33,8 @@
 #include <Kernel/VM/MemoryManager.h>
 
 #define UHCI_ENABLED 1
-#define UHCI_DEBUG
+//#define UHCI_DEBUG
+//#define UHCI_VERBOSE_DEBUG
 
 static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
 static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
@@ -113,6 +114,8 @@ UHCIController::UHCIController(PCI::Address address, PCI::ID id)
 
     reset();
     start();
+
+    spawn_port_proc();
 }
 
 UHCIController::~UHCIController()
@@ -136,6 +139,7 @@ void UHCIController::reset()
     auto framelist_vmobj = ContiguousVMObject::create_with_size(PAGE_SIZE);
     m_framelist = MemoryManager::the().allocate_kernel_region_with_vmobject(*framelist_vmobj, PAGE_SIZE, "UHCI Framelist", Region::Access::Write);
     klog() << "UHCI: Allocated framelist at physical address " << m_framelist->physical_page(0)->paddr();
+    klog() << "FUCK!";
     klog() << "UHCI: Framelist is at virtual address " << m_framelist->vaddr();
     write_sofmod(64); // 1mS frame time
 
@@ -193,7 +197,10 @@ void UHCIController::create_structures()
         transfer_descriptor->set_in_use(true); // Isochronous transfers are ALWAYS marked as in use (in case we somehow get allocated one...)
         transfer_descriptor->set_isochronous();
         transfer_descriptor->link_queue_head(m_interrupt_transfer_queue->paddr());
+
+#ifdef UHCI_VERBOSE_DEBUG
         transfer_descriptor->print();
+#endif
     }
 
     kprintf("Done!\n");
@@ -208,8 +215,11 @@ void UHCIController::create_structures()
         // that we store in `paddr`, meaning our member functions directly
         // access the raw descriptor (that we later send to the controller)
         m_free_td_pool.at(i) = new (placement_addr) Kernel::USB::TransferDescriptor(paddr);
+
+#ifdef UHCI_VERBOSE_DEBUG
         auto transfer_descriptor = m_free_td_pool.at(i);
         transfer_descriptor->print();
+#endif
     }
 
 #ifdef UHCI_DEBUG
@@ -332,29 +342,102 @@ void UHCIController::start()
     klog() << "UHCI: Started!";
 }
 
+struct setup_packet {
+    u8 bmRequestType;
+    u8 bRequest;
+    u16 wValue;
+    u16 wIndex;
+    u16 wLength;
+};
+
+void UHCIController::do_debug_transfer()
+{
+    klog() << "UHCI: Attempting a dummy transfer...";
+
+    // Okay, let's set up the buffer so we can write some data
+    auto vmobj = ContiguousVMObject::create_with_size(PAGE_SIZE);
+    m_td_buffer_region = MemoryManager::the().allocate_kernel_region_with_vmobject(*vmobj, PAGE_SIZE, "UHCI Debug Data Region", Region::Access::Write);
+
+    // We need to set up THREE Transfer descriptors here
+    // 1. The SETUP packet TD
+    // 2. The DATA packet
+    // 3. The ACK TD that will be filled by the device
+    // We can use the buffer pool provided above to do this, using nasty pointer offsets!
+    auto setup_td = allocate_transfer_descriptor();
+    auto data_td = allocate_transfer_descriptor();
+    auto response_td = allocate_transfer_descriptor();
+
+    kprintf("BUFFER PHYSICAL ADDRESS = 0x%08x\n", m_td_buffer_region->physical_page(0)->paddr().get());
+
+    setup_packet* packet = reinterpret_cast<setup_packet*>(m_td_buffer_region->vaddr().as_ptr());
+    packet->bmRequestType = 0x81;
+    packet->bRequest = 0x06;
+    packet->wValue = 0x2200;
+    packet->wIndex = 0x0;
+    packet->wLength = 8;
+
+    // Let's begin....
+    setup_td->set_status(0x18800000);
+    setup_td->set_token(0x00E0002D);
+    setup_td->set_buffer_address(m_td_buffer_region->physical_page(0)->paddr().get());
+
+    data_td->set_status(0x18800000);
+    data_td->set_token(0x00E80069);
+    data_td->set_buffer_address(m_td_buffer_region->physical_page(0)->paddr().get() + 16);
+
+    response_td->set_status(0x19800000);
+    response_td->set_token(0xFFE800E1);
+
+    setup_td->insert_next_transfer_descriptor(data_td);
+    data_td->insert_next_transfer_descriptor(response_td);
+    response_td->terminate();
+
+    setup_td->print();
+    data_td->print();
+    response_td->print();
+
+    // Now let's (attempt) to attach to one of the queue heads
+    m_lowspeed_control_qh->attach_transfer_descriptor_chain(setup_td);
+}
+
 void UHCIController::spawn_port_proc()
 {
     RefPtr<Thread> usb_hotplug_thread;
     timespec sleep_time;
 
     sleep_time.tv_sec = 1;
-    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [sleep_time] {
+    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&, sleep_time] {
         for (;;) {
             for (int port = 0; port < UHCI_ROOT_PORT_COUNT; port++) {
                 u16 port_data = 0;
 
                 if (port == 1) {
                     // Let's see what's happening on port 1
-                    port_data = UHCIController::the().read_portsc1();
+                    // Current status
+                    port_data = read_portsc1();
                     if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
                         if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
                             klog() << "UHCI: Device attach detected on Root Port 1!";
+
+                            // Reset the port
+                            port_data = read_portsc1();
+                            write_portsc1(port_data | UHCI_PORTSC_PORT_RESET);
+                            for (size_t i = 0; i < 50000; ++i)
+                                IO::in8(0x80);
+
+                            write_portsc1(port_data & ~UHCI_PORTSC_PORT_RESET);
+                            for (size_t i = 0; i < 100000; ++i)
+                                IO::in8(0x80);
+
+                            write_portsc1(port_data & (~UHCI_PORTSC_PORT_ENABLE_CHANGED | ~UHCI_PORTSC_CONNECT_STATUS_CHANGED));
                         } else {
                             klog() << "UHCI: Device detach detected on Root Port 1!";
                         }
 
-                        UHCIController::the().write_portsc1(
-                            UHCI_PORTSC_CONNECT_STATUS_CHANGED);
+                        port_data = read_portsc1();
+                        write_portsc1(port_data | UHCI_PORTSC_PORT_ENABLED);
+                        kprintf("port should be enabled now: 0x%x\n", read_portsc1());
+                        do_debug_transfer();
                     }
                 } else {
                     port_data = UHCIController::the().read_portsc2();
@@ -378,11 +461,13 @@ void UHCIController::spawn_port_proc()
 void UHCIController::handle_irq(const RegisterState&)
 {
     // Shared IRQ. Not ours!
-    if(!read_usbsts())
+    if (!read_usbsts())
         return;
 
+#ifdef UHCI_DEBUG
     klog() << "UHCI: Interrupt happened!";
     klog() << "Value of USBSTS: " << read_usbsts();
+#endif
 }
 
 }
