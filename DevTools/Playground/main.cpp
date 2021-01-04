@@ -25,8 +25,10 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/Property.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
@@ -231,6 +233,19 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
+    if (pledge("stdio thread shared_buffer accept rpath cpath wpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/Playground.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     if (pledge("stdio thread shared_buffer accept rpath cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -331,6 +346,9 @@ int main(int argc, char** argv)
     }));
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Playground.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("GML Playground", app_icon.bitmap_for_size(32), window);
     }));
