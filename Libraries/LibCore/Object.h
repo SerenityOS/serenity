@@ -120,7 +120,7 @@ public:
     void save_to(AK::JsonObject&);
 
     bool set_property(const StringView& name, const JsonValue& value);
-    JsonValue property(const StringView& name);
+    JsonValue property(const StringView& name) const;
     const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
     static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
