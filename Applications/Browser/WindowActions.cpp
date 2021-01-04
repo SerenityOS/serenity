@@ -25,6 +25,7 @@
  */
 
 #include "WindowActions.h"
+#include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
@@ -64,7 +65,7 @@ WindowActions::WindowActions(GUI::Window& window)
         &window);
 
     m_about_action = GUI::Action::create(
-        "About", [this](const GUI::Action&) {
+        "About Browser", GUI::Icon::default_icon("app-browser").bitmap_for_size(16), [this](const GUI::Action&) {
             if (on_about)
                 on_about();
         },
