@@ -7,7 +7,7 @@
 
     @GUI::GroupBox {
         title: "Bell mode"
-        fixed_height: 94
+        shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6, 16, 6, 6]
@@ -31,7 +31,7 @@
 
     @GUI::GroupBox {
         title: "Background opacity"
-        fixed_height: 50
+        shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6, 16, 6, 6]
@@ -47,6 +47,7 @@
 
     @GUI::GroupBox {
         title: "Scrollback size (lines)"
+        shrink_to_fit: true
 
         layout: @GUI::VerticalBoxLayout {
             margins: [6, 16, 6, 6]
