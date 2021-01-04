@@ -34,57 +34,6 @@ REGISTER_WIDGET(GUI, ToolBarContainer)
 
 namespace GUI {
 
-void ToolBarContainer::child_event(Core::ChildEvent& event)
-{
-    Frame::child_event(event);
-
-    if (event.type() == Core::Event::ChildAdded) {
-        if (event.child() && is<Widget>(event.child()))
-            did_add_toolbar((Widget&)*event.child());
-    } else if (event.type() == Core::Event::ChildRemoved) {
-        if (event.child() && is<Widget>(event.child())) {
-            did_remove_toolbar((Widget&)*event.child());
-        }
-    }
-}
-
-void ToolBarContainer::did_remove_toolbar(Widget& toolbar)
-{
-    m_toolbars.remove_first_matching([&](auto& entry) { return entry.ptr() == &toolbar; });
-    recompute_preferred_size();
-}
-
-void ToolBarContainer::did_add_toolbar(Widget& toolbar)
-{
-    m_toolbars.append(toolbar);
-    recompute_preferred_size();
-}
-
-void ToolBarContainer::custom_layout()
-{
-    recompute_preferred_size();
-}
-
-void ToolBarContainer::recompute_preferred_size()
-{
-    int visible_toolbar_count = 0;
-    int preferred_size = 4;
-
-    for (auto& toolbar : m_toolbars) {
-        if (!toolbar.is_visible())
-            continue;
-        ++visible_toolbar_count;
-        preferred_size += toolbar.min_size().secondary_size_for_orientation(m_orientation);
-    }
-
-    preferred_size += (visible_toolbar_count - 1) * 2;
-
-    if (m_orientation == Gfx::Orientation::Horizontal)
-        set_fixed_height(preferred_size);
-    else
-        set_fixed_width(preferred_size);
-}
-
 ToolBarContainer::ToolBarContainer(Gfx::Orientation orientation)
     : m_orientation(orientation)
 {
@@ -97,6 +46,8 @@ ToolBarContainer::ToolBarContainer(Gfx::Orientation orientation)
     auto& layout = set_layout<VerticalBoxLayout>();
     layout.set_spacing(2);
     layout.set_margins({ 2, 2, 2, 2 });
+
+    set_shrink_to_fit(true);
 }
 
 void ToolBarContainer::paint_event(GUI::PaintEvent& event)
@@ -104,13 +55,14 @@ void ToolBarContainer::paint_event(GUI::PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    for (auto& toolbar : m_toolbars) {
-        if (!toolbar.is_visible())
-            continue;
-        auto rect = toolbar.relative_rect();
-        painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
-        painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
-    }
+    for_each_child_of_type<ToolBar>([&](auto& toolbar) {
+        if (toolbar.is_visible()) {
+            auto rect = toolbar.relative_rect();
+            painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
+            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
+        }
+        return IterationDecision::Continue;
+    });
 
     Frame::paint_event(event);
 }

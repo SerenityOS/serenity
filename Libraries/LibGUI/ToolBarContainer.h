@@ -38,17 +38,9 @@ public:
 private:
     explicit ToolBarContainer(Gfx::Orientation = Gfx::Orientation::Horizontal);
 
-    virtual void custom_layout() override;
     virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void child_event(Core::ChildEvent&) override;
-
-    void did_add_toolbar(Widget&);
-    void did_remove_toolbar(Widget&);
-    void recompute_preferred_size();
 
     Gfx::Orientation m_orientation { Gfx::Orientation::Horizontal };
-
-    NonnullRefPtrVector<Widget> m_toolbars;
 };
 
 }
