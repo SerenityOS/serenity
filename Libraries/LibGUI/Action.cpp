@@ -24,16 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Window.h>
 
 namespace GUI {
 
 namespace CommonActions {
+
+NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent)
+{
+    WeakPtr<Window> weak_parent = parent ? parent->make_weak_ptr<Window>() : nullptr;
+    return Action::create(String::formatted("About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
+        AboutDialog::show(app_name, app_icon.bitmap_for_size(32), weak_parent.ptr());
+    });
+}
 
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)> callback, Core::Object* parent)
 {
