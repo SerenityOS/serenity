@@ -87,12 +87,12 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"));
 
     auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
+    widget.set_layout<GUI::VerticalBoxLayout>();
     widget.set_fill_with_background_color(true);
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& left_frame = splitter.add<GUI::Frame>();
-    left_frame.set_layout<GUI::VerticalBoxLayout>().set_margins({ 0, 0, 0, 0 });
+    left_frame.set_layout<GUI::VerticalBoxLayout>();
     left_frame.set_fixed_width(100);
     m_listview = left_frame.add<GUI::ListView>();
     m_listview->set_activates_on_selection(true);
