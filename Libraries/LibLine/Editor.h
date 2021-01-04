@@ -349,10 +349,7 @@ private:
         if (cursor > m_cursor)
             cursor = m_cursor;
         auto buffer_metrics = actual_rendered_string_metrics(buffer_view().substring_view(0, cursor));
-        if (buffer_metrics.line_lengths.size() > 1)
-            return buffer_metrics.line_lengths.last() % m_num_columns;
-
-        return (buffer_metrics.line_lengths.last() + current_prompt_metrics().line_lengths.last()) % m_num_columns;
+        return current_prompt_metrics().offset_with_addition(buffer_metrics, m_num_columns);
     }
 
     void set_origin()
