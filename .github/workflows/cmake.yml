@@ -10,10 +10,24 @@ env:
 
 jobs:
   build_and_test:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            allow-test-failure: false
+            # There sure is a lot of logic here, is there a better way?
+            # TODO: Make IRC notifications its own job/workflow?
+            should-notify-irc: ${{ github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master')) }}
+          - os: macos-10.15
+            allow-test-failure: true
+            should-notify-irc: false
 
     steps:
     - uses: actions/checkout@v2
+    # Set default Python to python 3.x, and set Python path such that pip install works properly
+    - uses: actions/setup-python@v2
 
     # === OS SETUP ===
 
@@ -23,7 +37,8 @@ jobs:
     - name: Purge interfering packages
       # Remove GCC 9 and clang-format 10 (installed by default)
       run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev clang-format-10
-    - name: Install dependencies
+      if: ${{ runner.os == 'Linux' }}
+    - name: "Install Ubuntu dependencies"
       # These packages are already part of the ubuntu-20.04 image:
       # cmake gcc-10 g++-10 shellcheck libgmp-dev
       # These aren't:
@@ -34,17 +49,30 @@ jobs:
         sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm
       # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
       # e2fsprogs qemu-system-i386 qemu-utils
-    - name: Install prettier
-      run: sudo npm install -g prettier
+      if: ${{ runner.os == 'Linux' }}
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+      if: ${{ runner.os == 'Linux' }}
+
+    - name: Install macOS dependencies
+      run: brew install coreutils ninja
+      if: ${{ runner.os == 'macOS' }}
+
+    - name: Install JS dependencies
+      run: sudo npm install -g prettier
+    - name: Install Python dependencies
+      # The setup-python action set default python to python3.x. Note that we are not using system python here.
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 requests
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version
 
     # === PREPARE FOR BUILDING ===
 
     - name: Lint (Phase 1/2)
       run: ${{ github.workspace }}/Meta/lint-ci.sh
+      if: ${{ runner.os == 'Linux' }}
     - name: Toolchain cache
       uses: actions/cache@v2
       with:
@@ -66,7 +94,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
 
     # === ACTUALLY BUILD AND TEST ===
 
@@ -84,14 +112,14 @@ jobs:
       run: ./check-symbols.sh
     - name: Run CMake tests
       working-directory: ${{ github.workspace }}/Build
-      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test
+      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test || ${{ matrix.allow-test-failure }}
       timeout-minutes: 2
     - name: Run JS tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
-      run: DISABLE_DBG_OUTPUT=1 ./test-js
+      run: DISABLE_DBG_OUTPUT=1 ./test-js || ${{ matrix.allow-test-failure }}
     - name: Run LibCompress tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
-      run: DISABLE_DBG_OUTPUT=1 ./test-compress
+      run: ./test-compress
 
      # Run analysis last, so contributors get lint/test feedback ASAP.
     - name: Perform post build CodeQL Analysis
@@ -107,14 +135,14 @@ jobs:
         ${{ toJSON(github.event) }}
         EOF
     - name: Generate IRC message
-      # I really dislike putting so much logic here, but I can't come up with something better.
-      if: github.repository == 'SerenityOS/serenity' && !cancelled() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+      if: matrix.should-notify-irc == true && !cancelled()
       run: |
         ${{ github.workspace }}/Meta/notify_irc.py <<"EOF"
         ["${{ github.actor }}", ${{ github.run_id }}, "${{ job.status }}",
         ${{ toJSON(github.event) }}
         ]
         EOF
+
   build_lagom_with_fuzzers:
     runs-on: ubuntu-20.04
 
@@ -145,51 +173,3 @@ jobs:
     - name: Build Lagom with Fuzzers
       working-directory: ${{ github.workspace }}/Meta/Lagom/Build
       run: cmake --build .
-  build_and_test_on_macos:
-    runs-on: macos-10.15
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install dependencies
-      run: brew install coreutils ninja
-    - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang --version; clang++ --version; python --version; python3 --version; ninja --version
-    - name: Toolchain cache
-      uses: actions/cache@v2
-      with:
-        path: ${{ github.workspace }}/Toolchain/Cache/
-        # This assumes that *ALL* LibC headers have an impact on the Toolchain.
-        # This is wrong, and causes more Toolchain rebuilds than necessary.
-        # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-i686-${{ hashFiles('Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}
-    - name: Restore or regenerate Toolchain
-      run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
-
-    # TODO: ccache
-    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
-    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
-    - name: Create build environment
-      working-directory: ${{ github.workspace }}
-      # Note that this needs to run *even if* the Toolchain was built,
-      # in order to set options like BUILD_LAGOM.
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-
-    # === ACTUALLY BUILD AND TEST ===
-
-    - name: Build Serenity and Tests
-      working-directory: ${{ github.workspace }}/Build
-      run: cmake --build .
-    - name: Run CMake tests
-      working-directory: ${{ github.workspace }}/Build
-      # FIXME: Fix tests on MacOS
-      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test || true
-      continue-on-error: true
-      timeout-minutes: 2
-    - name: Run JS tests
-      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
-      # FIXME: Fix tests on MacOS
-      run: DISABLE_DBG_OUTPUT=1 ./test-js || true
