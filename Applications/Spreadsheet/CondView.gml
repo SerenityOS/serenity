@@ -1,19 +1,16 @@
 @GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
-        spacing: 2
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-            spacing: 10
-        }
+        shrink_to_fit: true
 
-        fixed_height: 25
+        layout: @GUI::HorizontalBoxLayout {
+        }
 
         @GUI::Label {
             text: "if..."
             fixed_width: 40
-            fixed_height: 25
         }
 
         @GUI::TextEditor {
@@ -24,40 +21,34 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-            spacing: 10
-        }
+        shrink_to_fit: true
 
-        fixed_height: 25
+        layout: @GUI::HorizontalBoxLayout {
+        }
 
         @GUI::Label {
             text: "Foreground..."
             fixed_width: 150
-            fixed_height: 25
         }
 
         @GUI::ColorInput {
             name: "foreground_input"
-            fixed_height: 25
         }
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-            spacing: 10
-        }
+        shrink_to_fit: true
 
-        fixed_height: 25
+        layout: @GUI::HorizontalBoxLayout {
+        }
 
         @GUI::Label {
             text: "Background..."
             fixed_width: 150
-            fixed_height: 25
         }
 
         @GUI::ColorInput {
             name: "background_input"
-            fixed_height: 25
         }
     }
 }
