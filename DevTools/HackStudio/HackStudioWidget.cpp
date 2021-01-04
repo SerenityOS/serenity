@@ -873,7 +873,7 @@ void HackStudioWidget::create_view_menubar(GUI::MenuBar& menubar)
     auto hide_action_tabs_action = GUI::Action::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [this](auto&) {
         hide_action_tabs();
     });
-    auto open_locator_action = GUI::Action::create("Open Locator...", { Mod_Ctrl, Key_K }, [this](auto&) {
+    auto open_locator_action = GUI::Action::create("Open locator", { Mod_Ctrl, Key_K }, [this](auto&) {
         m_locator->open();
     });
 
