@@ -44,6 +44,70 @@ BoxLayout::BoxLayout(Orientation orientation)
         "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);
 }
 
+Gfx::IntSize BoxLayout::preferred_size() const
+{
+    Gfx::IntSize size;
+    size.set_primary_size_for_orientation(orientation(), preferred_primary_size());
+    size.set_secondary_size_for_orientation(orientation(), preferred_secondary_size());
+    return size;
+}
+
+int BoxLayout::preferred_primary_size() const
+{
+    int size = 0;
+
+    for (auto& entry : m_entries) {
+        if (!entry.widget)
+            continue;
+        int min_size = entry.widget->min_size().primary_size_for_orientation(orientation());
+        int max_size = entry.widget->max_size().primary_size_for_orientation(orientation());
+        int preferred_primary_size = -1;
+        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
+            preferred_primary_size = entry.widget->layout()->preferred_size().primary_size_for_orientation(orientation());
+        }
+        int item_size = max(0, preferred_primary_size);
+        item_size = max(min_size, item_size);
+        item_size = min(max_size, item_size);
+        size += item_size + spacing();
+    }
+    if (size > 0)
+        size -= spacing();
+
+    if (orientation() == Gfx::Orientation::Horizontal)
+        size += margins().left() + margins().right();
+    else
+        size += margins().top() + margins().bottom();
+
+    if (!size)
+        return -1;
+    return size;
+}
+
+int BoxLayout::preferred_secondary_size() const
+{
+    int size = 0;
+    for (auto& entry : m_entries) {
+        if (!entry.widget)
+            continue;
+        int min_size = entry.widget->min_size().secondary_size_for_orientation(orientation());
+        int preferred_secondary_size = -1;
+        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
+            preferred_secondary_size = entry.widget->layout()->preferred_size().secondary_size_for_orientation(orientation());
+            size = max(size, preferred_secondary_size);
+        }
+        size = max(min_size, size);
+    }
+
+    if (orientation() == Gfx::Orientation::Horizontal)
+        size += margins().top() + margins().bottom();
+    else
+        size += margins().left() + margins().right();
+
+    if (!size)
+        return -1;
+    return size;
+}
+
 void BoxLayout::run(Widget& widget)
 {
     if (m_entries.is_empty())
@@ -71,6 +135,12 @@ void BoxLayout::run(Widget& widget)
             continue;
         auto min_size = entry.widget->min_size();
         auto max_size = entry.widget->max_size();
+
+        if (entry.widget->is_shrink_to_fit() && entry.widget->layout()) {
+            auto preferred_size = entry.widget->layout()->preferred_size();
+            min_size = max_size = preferred_size;
+        }
+
         items.append(Item { entry.widget.ptr(), min_size.primary_size_for_orientation(orientation()), max_size.primary_size_for_orientation(orientation()) });
     }
 

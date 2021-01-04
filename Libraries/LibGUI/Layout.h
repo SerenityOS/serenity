@@ -32,6 +32,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
+#include <LibGfx/Forward.h>
 
 namespace GUI {
 
@@ -49,6 +50,7 @@ public:
     void remove_widget(Widget&);
 
     virtual void run(Widget&) = 0;
+    virtual Gfx::IntSize preferred_size() const = 0;
 
     void notify_adopted(Badge<Widget>, Widget&);
     void notify_disowned(Badge<Widget>, Widget&);

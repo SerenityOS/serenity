@@ -297,6 +297,9 @@ public:
 
     bool load_from_gml(const StringView&);
 
+    void set_shrink_to_fit(bool);
+    bool is_shrink_to_fit() const { return m_shrink_to_fit; }
+
 protected:
     Widget();
 
@@ -367,6 +370,7 @@ private:
     bool m_enabled { true };
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
+    bool m_shrink_to_fit { false };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
