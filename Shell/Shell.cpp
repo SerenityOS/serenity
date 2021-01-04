@@ -1564,7 +1564,6 @@ void Shell::notify_child_event()
                 if (errno == ECHILD) {
                     // The child process went away before we could process its death, just assume it exited all ok.
                     // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbgln("Child process gone, cannot get exit code for {}", job_id);
                     child_pid = job.pid();
                 } else {
                     ASSERT_NOT_REACHED();
