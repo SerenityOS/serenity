@@ -49,6 +49,8 @@ public:
     void start();
     void spawn_port_proc();
 
+    void do_debug_transfer();
+
 private:
     UHCIController(PCI::Address, PCI::ID);
 

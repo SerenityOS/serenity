@@ -247,7 +247,6 @@ void init_stage2(void*)
     }
 
     USB::UHCIController::detect();
-    USB::UHCIController::the().spawn_port_proc();
 
     E1000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();
