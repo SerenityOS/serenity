@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     dbgln("main window: {}", window);
-    window->set_title("Display settings");
+    window->set_title("Display Settings");
     window->resize(360, 410);
     window->set_resizable(false);
     window->set_main_widget(tab_widget.ptr());
@@ -69,14 +69,14 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Display settings");
+    auto& app_menu = menubar->add_menu("Display Settings");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
         app->quit();
     }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Display settings", app_icon.bitmap_for_size(32), window);
+        GUI::AboutDialog::show("Display Settings", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
