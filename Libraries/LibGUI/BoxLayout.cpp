@@ -57,7 +57,7 @@ int BoxLayout::preferred_primary_size() const
     int size = 0;
 
     for (auto& entry : m_entries) {
-        if (!entry.widget)
+        if (!entry.widget || !entry.widget->is_visible())
             continue;
         int min_size = entry.widget->min_size().primary_size_for_orientation(orientation());
         int max_size = entry.widget->max_size().primary_size_for_orientation(orientation());
@@ -87,7 +87,7 @@ int BoxLayout::preferred_secondary_size() const
 {
     int size = 0;
     for (auto& entry : m_entries) {
-        if (!entry.widget)
+        if (!entry.widget || !entry.widget->is_visible())
             continue;
         int min_size = entry.widget->min_size().secondary_size_for_orientation(orientation());
         int preferred_secondary_size = -1;
