@@ -335,7 +335,26 @@ int main(int argc, char** argv)
         }
         auto formatted_gml = GUI::format_gml(source);
         if (!formatted_gml.is_null()) {
+            if (formatted_gml.is_empty()) {
+                editor.clear();
+                return;
+            }
+            // FIXME: This could be improved, but not moving the cursor in most cases is already better than
+            // always moving the cursor to the beginning (which happens when set_text() is called).
+            auto cursor = editor.cursor();
+            auto lines = formatted_gml.split('\n', true);
+            if (cursor.line() > lines.size() - 1) {
+                // Cursor was beyond the new text length, just put it at the end
+                cursor.set_line(lines.size() - 1);
+                cursor.set_column(lines.last().length() - 1);
+            } else if (cursor.column() > lines[lines.size() - 1].length() - 1) {
+                // Cursor was beyond the current line's lenght, keep it on the same line but at the end
+                cursor.set_column(lines[lines.size() - 1].length());
+            }
+            // Otherwise we can keep the cursor at the same position,
+            // and with a bit of luck it even makes sense to the user :^)
             editor.set_text(formatted_gml);
+            editor.set_cursor(cursor);
         } else {
             GUI::MessageBox::show(
                 window,
