@@ -121,7 +121,6 @@ void DisplaySettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
-    button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.on_click = [this](auto) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(nullptr, "Select wallpaper from file system.");
 
