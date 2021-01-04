@@ -1,4 +1,4 @@
 [App]
-Name=Keyboard settings
+Name=Keyboard Settings
 Executable=/bin/KeyboardSettings
 Category=Settings

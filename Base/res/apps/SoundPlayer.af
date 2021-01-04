@@ -1,5 +1,5 @@
 [App]
-Name=SoundPlayer
+Name=Sound Player
 Executable=/bin/SoundPlayer
 Category=Sound
 

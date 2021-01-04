@@ -1,4 +1,4 @@
 [App]
-Name=Display settings
+Name=Display Settings
 Executable=/bin/DisplaySettings
 Category=Settings
