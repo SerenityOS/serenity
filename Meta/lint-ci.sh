@@ -21,7 +21,8 @@ for cmd in \
         Meta/lint-executable-resources.sh \
         Meta/lint-ipc-ids.sh \
         Meta/lint-shell-scripts.sh \
-        Meta/lint-prettier.sh; do
+        Meta/lint-prettier.sh \
+        Meta/lint-python.sh; do
     echo "Running ${cmd}... "
     if "${cmd}" "$@"; then
         echo -e "[${GREEN}OK${NC}]: ${cmd}"
