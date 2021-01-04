@@ -1,4 +1,4 @@
 [App]
-Name=Mouse settings
+Name=Mouse Settings
 Executable=/bin/MouseSettings
 Category=Settings
