@@ -822,7 +822,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
 
 void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
 {
-    auto& app_menu = menubar.add_menu("HackStudio");
+    auto& app_menu = menubar.add_menu("Hack Studio");
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);
     app_menu.add_separator();
