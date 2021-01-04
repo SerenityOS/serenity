@@ -247,7 +247,7 @@ void HackStudioWidget::open_file(const String& filename)
     if (m_currently_open_file.starts_with(m_project->root_path()))
         relative_file_path = m_currently_open_file.substring(m_project->root_path().length() + 1);
 
-    window()->set_title(String::formatted("{} - {} - HackStudio", relative_file_path, m_project->name()));
+    window()->set_title(String::formatted("{} - {} - Hack Studio", relative_file_path, m_project->name()));
     m_project_tree_view->update();
 
     current_editor_wrapper().filename_label().set_text(filename);

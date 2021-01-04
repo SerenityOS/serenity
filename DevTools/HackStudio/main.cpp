@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 
     s_hack_studio_widget = s_window->set_main_widget<HackStudioWidget>(project_path);
 
-    s_window->set_title(String::formatted("{} - HackStudio", s_hack_studio_widget->project().name()));
+    s_window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
     auto menubar = GUI::MenuBar::construct();
     s_hack_studio_widget->initialize_menubar(menubar);
