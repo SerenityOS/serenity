@@ -29,7 +29,8 @@
 
         @GUI::Button {
             name: "wallpaper_open_button"
-            tooltip: "Select Wallpaper from file system."
+            tooltip: "Select wallpaper from file system."
+            button_style: "CoolBar"
             fixed_width: 22
             fixed_height: 22
         }
