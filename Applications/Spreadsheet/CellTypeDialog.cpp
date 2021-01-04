@@ -57,9 +57,9 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
     StringBuilder builder;
 
     if (positions.size() == 1)
-        builder.appendff("Format Cell {}{}", positions.first().column, positions.first().row);
+        builder.appendff("Format cell {}{}", positions.first().column, positions.first().row);
     else
-        builder.appendff("Format {} Cells", positions.size());
+        builder.appendff("Format {} cells", positions.size());
 
     set_title(builder.string_view());
     set_icon(parent->icon());
@@ -73,7 +73,7 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
     setup_tabs(tab_widget, positions, sheet);
 
     auto& buttonbox = main_widget.add<GUI::Widget>();
-    buttonbox.set_fixed_height(20);
+    buttonbox.set_shrink_to_fit(true);
     auto& button_layout = buttonbox.set_layout<GUI::HorizontalBoxLayout>();
     button_layout.set_spacing(10);
     button_layout.add_spacer();
@@ -148,7 +148,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& type_tab = tabs.add_tab<GUI::Widget>("Type");
-    type_tab.set_layout<GUI::HorizontalBoxLayout>().set_margins({ 2, 2, 2, 2 });
+    type_tab.set_layout<GUI::HorizontalBoxLayout>().set_margins({ 4, 4, 4, 4 });
     {
         auto& left_side = type_tab.add<GUI::Widget>();
         left_side.set_layout<GUI::VerticalBoxLayout>();
@@ -177,9 +177,6 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             if (m_length > -1)
                 spinbox.set_value(m_length);
 
-            checkbox.set_fixed_height(20);
-            spinbox.set_fixed_height(20);
-
             checkbox.on_checked = [&](auto checked) {
                 spinbox.set_enabled(checked);
                 if (!checked) {
@@ -199,9 +196,6 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             editor.set_enabled(!m_format.is_empty());
             editor.set_text(m_format);
 
-            checkbox.set_fixed_height(20);
-            editor.set_fixed_height(20);
-
             checkbox.on_checked = [&](auto checked) {
                 editor.set_enabled(checked);
                 if (!checked)
@@ -215,7 +209,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& alignment_tab = tabs.add_tab<GUI::Widget>("Alignment");
-    alignment_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
+    alignment_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
     {
         // FIXME: Frame?
         // Horizontal alignment
@@ -227,10 +221,9 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
             auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
             horizontal_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-            horizontal_alignment_label.set_text("Horizontal Text Alignment");
+            horizontal_alignment_label.set_text("Horizontal text alignment");
 
             auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
-            horizontal_combobox.set_fixed_height(22);
             horizontal_combobox.set_only_allow_values_from_model(true);
             horizontal_combobox.set_model(*GUI::ItemListModel<String>::create(g_horizontal_alignments));
             horizontal_combobox.set_selected_index((int)m_horizontal_alignment);
@@ -260,10 +253,9 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
             auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
             vertical_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-            vertical_alignment_label.set_text("Vertical Text Alignment");
+            vertical_alignment_label.set_text("Vertical text alignment");
 
             auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
-            vertical_combobox.set_fixed_height(22);
             vertical_combobox.set_only_allow_values_from_model(true);
             vertical_combobox.set_model(*GUI::ItemListModel<String>::create(g_vertical_alignments));
             vertical_combobox.set_selected_index((int)m_vertical_alignment);
@@ -286,14 +278,13 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     }
 
     auto& colors_tab = tabs.add_tab<GUI::Widget>("Color");
-    colors_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
+    colors_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
     {
         // Static formatting
         {
             auto& static_formatting_container = colors_tab.add<GUI::Widget>();
             static_formatting_container.set_layout<GUI::VerticalBoxLayout>();
-            static_formatting_container.layout()->set_margins({ 0, 0, 0, 0 });
-            static_formatting_container.set_fixed_height(44);
+            static_formatting_container.set_shrink_to_fit(true);
 
             // Foreground
             {
@@ -305,10 +296,9 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
                 foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-                foreground_label.set_text("Static Foreground Color");
+                foreground_label.set_text("Static foreground color");
 
                 auto& foreground_selector = foreground_container.add<GUI::ColorInput>();
-                foreground_selector.set_fixed_height(22);
                 if (m_static_format.foreground_color.has_value())
                     foreground_selector.set_color(m_static_format.foreground_color.value());
                 foreground_selector.on_change = [&]() {
@@ -326,10 +316,9 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
                 auto& background_label = background_container.add<GUI::Label>();
                 background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-                background_label.set_text("Static Background Color");
+                background_label.set_text("Static background color");
 
                 auto& background_selector = background_container.add<GUI::ColorInput>();
-                background_selector.set_fixed_height(22);
                 if (m_static_format.background_color.has_value())
                     background_selector.set_color(m_static_format.background_color.value());
                 background_selector.on_change = [&]() {
@@ -339,7 +328,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         }
     }
 
-    auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional Format");
+    auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional format");
     conditional_fmt_tab.load_from_gml(cond_fmt_gml);
     {
         auto& view = *conditional_fmt_tab.find_descendant_of_type_named<Spreadsheet::ConditionsView>("conditions_view");

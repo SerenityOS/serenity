@@ -3,6 +3,7 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
+        margins: [4, 4, 4, 4]
         spacing: 4
     }
 
@@ -11,24 +12,29 @@
     }
 
     @GUI::Widget {
-        fixed_height: 20
+        shrink_to_fit: true
 
         layout: @GUI::HorizontalBoxLayout {
             spacing: 10
         }
 
+        @GUI::Widget {
+        }
+
         @GUI::Button {
             name: "add_button"
             text: "Add"
-            fixed_width: 100
-            fixed_height: 20
+            fixed_width: 70
         }
 
         @GUI::Button {
             name: "remove_button"
             text: "Remove"
-            fixed_width: 100
-            fixed_height: 20
+            fixed_width: 70
         }
+
+        @GUI::Widget {
+        }
+
     }
 }
