@@ -12,9 +12,8 @@
     }
 
     @GUI::Widget {
-        fixed_height: 22
+        shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [0, 4, 0, 0]
         }
 
         @GUI::Label {
@@ -37,9 +36,8 @@
     }
 
     @GUI::Widget {
-        fixed_height: 22
+        shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [0, 4, 0, 0]
         }
 
         @GUI::Label {
@@ -54,9 +52,8 @@
     }
 
     @GUI::Widget {
-        fixed_height: 22
+        shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [0, 4, 0, 0]
         }
 
         @GUI::Label {
@@ -72,9 +69,8 @@
 
 
     @GUI::Widget {
-        fixed_height: 22
+        shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
-            margins: [0, 4, 0, 0]
         }
 
         @GUI::Label {
@@ -93,7 +89,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 22
+        shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {
         }
 
