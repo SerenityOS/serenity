@@ -545,8 +545,15 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
     set_prompt(prompt);
     reset();
-    set_origin();
     strip_styles(true);
+
+    auto prompt_lines = max(current_prompt_metrics().line_lengths.size(), 1ul) - 1;
+    for (size_t i = 0; i < prompt_lines; ++i)
+        putc('\n', stderr);
+
+    VT::move_relative(-prompt_lines, 0);
+
+    set_origin();
 
     m_history_cursor = m_history.size();
 
@@ -856,8 +863,18 @@ void Editor::handle_read_event()
             }
             reverse_tab = false;
 
-            auto completion_mode = m_times_tab_pressed == 1 ? SuggestionManager::CompletePrefix : m_times_tab_pressed == 2 ? SuggestionManager::ShowSuggestions
-                                                                                                                           : SuggestionManager::CycleSuggestions;
+            SuggestionManager::CompletionMode completion_mode;
+            switch (m_times_tab_pressed) {
+            case 1:
+                completion_mode = SuggestionManager::CompletePrefix;
+                break;
+            case 2:
+                completion_mode = SuggestionManager::ShowSuggestions;
+                break;
+            default:
+                completion_mode = SuggestionManager::CycleSuggestions;
+                break;
+            }
 
             auto completion_result = m_suggestion_manager.attempt_completion(completion_mode, token_start);
 
@@ -1016,13 +1033,9 @@ void Editor::cleanup()
     if (new_lines < shown_lines)
         m_extra_forward_lines = max(shown_lines - new_lines, m_extra_forward_lines);
 
-    VT::move_relative(-m_extra_forward_lines, m_pending_chars.size() - m_chars_inserted_in_the_middle);
-    auto current_line = cursor_line();
-
-    // There's a newline at the top, don't clear that line.
-    if (current_prompt_metrics().line_lengths.first() == 0)
-        --current_line;
-    VT::clear_lines(current_line - 1, num_lines() - current_line + m_extra_forward_lines);
+    reposition_cursor(true);
+    auto current_line = num_lines() - 1;
+    VT::clear_lines(current_line, m_extra_forward_lines);
     m_extra_forward_lines = 0;
     reposition_cursor();
 };
@@ -1047,13 +1060,21 @@ void Editor::refresh_display()
     }
     // We might be at the last line, and have more than one line;
     // Refreshing the display will cause the terminal to scroll,
-    // so note that fact and bring origin up.
+    // so note that fact and bring origin up, making sure to
+    // reserve the space for however many lines we move it up.
     auto current_num_lines = num_lines();
-    if (m_origin_row + current_num_lines > m_num_lines + 1) {
-        if (current_num_lines > m_num_lines)
+    if (m_origin_row + current_num_lines > m_num_lines) {
+        if (current_num_lines > m_num_lines) {
+            for (size_t i = 0; i < m_num_lines; ++i)
+                putc('\n', stderr);
             m_origin_row = 0;
-        else
+        } else {
+            auto old_origin_row = m_origin_row;
             m_origin_row = m_num_lines - current_num_lines + 1;
+            for (size_t i = 0; i < old_origin_row - m_origin_row; ++i)
+                putc('\n', stderr);
+        }
+        fflush(stderr);
     }
     // Do not call hook on pure cursor movement.
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
@@ -1172,7 +1193,15 @@ void Editor::reposition_cursor(bool to_end)
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
+    ASSERT(column + m_origin_column <= m_num_columns);
     VT::move_absolute(line + m_origin_row, column + m_origin_column);
+
+    if (line + m_origin_row > m_num_lines) {
+        for (size_t i = m_num_lines; i < line + m_origin_row; ++i)
+            fputc('\n', stderr);
+        m_origin_row -= line + m_origin_row - m_num_lines;
+        VT::move_relative(0, column + m_origin_column);
+    }
 
     m_cursor = saved_cursor;
 }
@@ -1622,4 +1651,15 @@ size_t StringMetrics::lines_with_addition(const StringMetrics& offset, size_t co
 
     return lines;
 }
+
+size_t StringMetrics::offset_with_addition(const StringMetrics& offset, size_t column_width) const
+{
+    if (offset.line_lengths.size() > 1)
+        return offset.line_lengths.first() % column_width;
+
+    auto last = line_lengths.last();
+    last += offset.line_lengths.first();
+    return last % column_width;
+}
+
 }
