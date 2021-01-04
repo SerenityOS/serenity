@@ -96,6 +96,8 @@ void EditEventHandler::handle_delete(DOM::Range& range)
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
     m_frame.document()->force_layout();
+
+    m_frame.did_edit({});
 }
 
 void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
@@ -116,5 +118,7 @@ void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
     //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
     //        which really hurts performance.
     m_frame.document()->force_layout();
+
+    m_frame.did_edit({});
 }
 }

@@ -70,6 +70,14 @@ void Frame::setup()
     });
 }
 
+void Frame::did_edit(Badge<EditEventHandler>)
+{
+    // The user has edited the content, restart the cursor blink cycle so that
+    // the cursor doesn't disappear during rapid continuous editing.
+    m_cursor_blink_state = true;
+    m_cursor_blink_timer->restart();
+}
+
 bool Frame::is_focused_frame() const
 {
     return m_page && &m_page->focused_frame() == this;
