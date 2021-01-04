@@ -42,6 +42,7 @@
 namespace GUI {
 
 namespace CommonActions {
+NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent = nullptr);
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)>, Core::Object* parent = nullptr);
