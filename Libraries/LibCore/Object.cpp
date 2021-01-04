@@ -195,7 +195,7 @@ void Object::save_to(JsonObject& json)
     }
 }
 
-JsonValue Object::property(const StringView& name)
+JsonValue Object::property(const StringView& name) const
 {
     auto it = m_properties.find(name);
     if (it == m_properties.end())
