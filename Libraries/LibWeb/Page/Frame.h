@@ -94,6 +94,8 @@ public:
 
     String selected_text() const;
 
+    void did_edit(Badge<EditEventHandler>);
+
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
