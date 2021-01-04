@@ -26,7 +26,6 @@
 
 #include "SoundPlayerWidget.h"
 #include <LibAudio/ClientConnection.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -61,13 +60,13 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-sound-player");
 
     auto window = GUI::Window::construct();
-    window->set_title("SoundPlayer");
+    window->set_title("Sound Player");
     window->set_resizable(false);
     window->resize(350, 140);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("SoundPlayer");
+    auto& app_menu = menubar->add_menu("Sound Player");
     auto& player = window->set_main_widget<SoundPlayerWidget>(window, audio_client);
 
     if (argc > 1) {
@@ -101,9 +100,7 @@ int main(int argc, char** argv)
     playback_menu.add_action(move(loop));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("SoundPlayer", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
 
     app->set_menubar(move(menubar));
 

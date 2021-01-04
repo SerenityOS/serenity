@@ -28,7 +28,6 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MimeData.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -247,11 +246,6 @@ int main(int argc, char** argv)
             toolbar_container.set_visible(!toolbar_container.is_visible());
         });
 
-    auto about_action = GUI::Action::create("About",
-        [&](auto&) {
-            GUI::AboutDialog::show("QuickShow", app_icon.bitmap_for_size(32), window);
-        });
-
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         if (widget.bitmap())
             GUI::Clipboard::the().set_bitmap(*widget.bitmap());
@@ -301,7 +295,7 @@ int main(int argc, char** argv)
     view_menu.add_action(hide_show_toolbar_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(about_action);
+    help_menu.add_action(GUI::CommonActions::make_about_action("QuickShow", app_icon, window));
 
     app->set_menubar(move(menubar));
 

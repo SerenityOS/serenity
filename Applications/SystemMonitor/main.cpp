@@ -36,7 +36,6 @@
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -305,9 +304,7 @@ int main(int argc, char** argv)
     make_frequency_action("5 sec", 5000);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("System Monitor", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 
     app->set_menubar(move(menubar));
 

@@ -36,7 +36,6 @@
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -649,9 +648,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("File Manager", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-folder.png"), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("filetype-folder")));
 
     GUI::Application::the()->set_menubar(move(menubar));
 

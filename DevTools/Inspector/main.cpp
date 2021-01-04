@@ -28,7 +28,6 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
@@ -108,9 +107,7 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Inspector", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Inspector", app_icon, window));
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
