@@ -28,7 +28,6 @@
 #include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -476,9 +475,7 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Terminal", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window));
 
     app->set_menubar(move(menubar));
 

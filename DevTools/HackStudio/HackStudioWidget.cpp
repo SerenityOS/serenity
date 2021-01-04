@@ -51,7 +51,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -890,9 +889,7 @@ void HackStudioWidget::create_view_menubar(GUI::MenuBar& menubar)
 void HackStudioWidget::create_help_menubar(GUI::MenuBar& menubar)
 {
     auto& help_menu = menubar.add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [this](auto&) {
-        GUI::AboutDialog::show("HackStudio", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"), window());
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"), window()));
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()

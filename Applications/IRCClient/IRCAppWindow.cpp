@@ -28,7 +28,6 @@
 #include "IRCChannel.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -296,9 +295,7 @@ void IRCAppWindow::setup_menus()
     channel_menu.add_action(*m_part_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::Action::create("About", [this](auto&) {
-        GUI::AboutDialog::show("IRC Client", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"), this);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("IRC Client", GUI::Icon::default_icon("app-irc-client"), this));
 
     GUI::Application::the()->set_menubar(move(menubar));
 }

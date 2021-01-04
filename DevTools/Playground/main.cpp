@@ -29,7 +29,6 @@
 #include <LibCore/File.h>
 #include <LibCore/Property.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/FilePicker.h>
@@ -349,9 +348,7 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Playground.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("GML Playground", app_icon.bitmap_for_size(32), window);
-    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window));
 
     app->set_menubar(move(menubar));
 

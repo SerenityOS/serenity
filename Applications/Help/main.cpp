@@ -30,7 +30,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -275,9 +274,7 @@ int main(int argc, char* argv[])
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Help");
-    app_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Help", app_icon.bitmap_for_size(32), window);
-    }));
+    app_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();

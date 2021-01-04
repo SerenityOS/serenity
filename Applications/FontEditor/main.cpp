@@ -28,7 +28,6 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -145,9 +144,8 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Font Editor", app_icon.bitmap_for_size(32), window);
-    }));
+
+    help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", app_icon, window));
 
     app->set_menubar(move(menubar));
 
