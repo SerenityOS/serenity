@@ -406,8 +406,6 @@ void Window::handle_input_entered_or_left_event(Core::Event& event)
 void Window::handle_became_active_or_inactive_event(Core::Event& event)
 {
     m_is_active = event.type() == Event::WindowBecameActive;
-    if (on_activity_change)
-        on_activity_change(m_is_active);
     if (m_main_widget)
         m_main_widget->dispatch_event(event, this);
     if (m_focused_widget)
