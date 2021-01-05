@@ -124,7 +124,7 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
 #endif
 }
 
-void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
+__attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
 {
     FlatPtr dummy;
 
