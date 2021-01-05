@@ -37,6 +37,7 @@ struct CharacterMapData {
     u32 shift_map[CHAR_MAP_SIZE];
     u32 alt_map[CHAR_MAP_SIZE];
     u32 altgr_map[CHAR_MAP_SIZE];
+    u32 shift_altgr_map[CHAR_MAP_SIZE];
 };
 
 // clang-format off
@@ -77,6 +78,16 @@ static const CharacterMapData default_character_map =
     },
 
     .altgr_map = {
+        0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
+                '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
+                   0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,
+                '\\',    'z',    'x',    'c',    'v',    'b',    'n',    'm',    ',',    '.',    '/',      0,    '*',       0,
+                 ' ',      0,      0,
+     //60                            70                                               80
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '\\', 0, 0, 0,
+    },
+
+    .shift_altgr_map = {
         0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
                 '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
                    0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,

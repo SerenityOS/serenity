@@ -58,6 +58,7 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
     Vector<u32> shift_map = read_map(json, "shift_map");
     Vector<u32> alt_map = read_map(json, "alt_map");
     Vector<u32> altgr_map = read_map(json, "altgr_map");
+    Vector<u32> shift_altgr_map = read_map(json, "shift_altgr_map");
 
     CharacterMapData character_map;
     for (int i = 0; i < CHAR_MAP_SIZE; i++) {
@@ -69,6 +70,12 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
             character_map.altgr_map[i] = alt_map.at(i);
         } else {
             character_map.altgr_map[i] = altgr_map.at(i);
+        }
+        if (shift_altgr_map.is_empty()) {
+            // Shift+AltGr map was not found, using Alt map as fallback.
+            character_map.shift_altgr_map[i] = alt_map.at(i);
+        } else {
+            character_map.shift_altgr_map[i] = shift_altgr_map.at(i);
         }
     }
 
