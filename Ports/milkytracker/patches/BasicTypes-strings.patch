@@ -1,0 +1,10 @@
+--- MilkyTracker-1.0.0bk/src/ppui/BasicTypes.h	2021-01-03 16:49:34.708314454 +0100
++++ MilkyTracker-1.0.0/src/ppui/BasicTypes.h	2021-01-03 17:14:26.352641274 +0100
+@@ -30,6 +30,7 @@
+ typedef unsigned int	pp_uint32;
+ typedef signed int		pp_int32;
+ 
++#include <strings.h>
+ #include "ScanCodes.h"
+ 
+ #if defined(WIN32) || defined(_WIN32_WCE) 

@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/CMakeListsorig.txt	2021-01-04 15:50:36.284423249 +0100
++++ MilkyTracker-1.03.00/CMakeLists.txt	2021-01-04 15:50:25.028625114 +0100
+@@ -220,8 +220,6 @@
+     set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
+ endif()
+ 
+-add_subdirectory(docs)
+-add_subdirectory(resources/music)
+ add_subdirectory(src/compression)
+ add_subdirectory(src/fx)
+ add_subdirectory(src/milkyplay)

@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/src/tracker/SampleEditor.cpp	2020-12-09 23:58:14.000000000 +0100
++++ SampleEditor.cpp	2021-01-07 21:31:05.830204543 +0100
+@@ -1620,7 +1620,7 @@
+ 
+ 			f = (1.0f-frac)*f1 + frac*f2;
+ 
+-			step = powf(16.0f,fabsf(fi));
++			step = powf(16.0f,fi);
+ 			// the lower half wave is matched
+ 			// to keep the frequency constant
+ 			if (f*fi<0.0f)
