@@ -163,8 +163,7 @@ void InProcessWebView::page_did_change_selection()
 
 void InProcessWebView::page_did_request_cursor_change(Gfx::StandardCursor cursor)
 {
-    if (window())
-        window()->set_cursor(cursor);
+    set_override_cursor(cursor);
 }
 
 void InProcessWebView::page_did_request_context_menu(const Gfx::IntPoint& content_position)
