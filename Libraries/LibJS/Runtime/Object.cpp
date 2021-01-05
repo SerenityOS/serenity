@@ -90,7 +90,7 @@ Object* Object::create_empty(GlobalObject& global_object)
 Object::Object(GlobalObjectTag)
 {
     // This is the global object
-    m_shape = heap().allocate_without_global_object<Shape>(static_cast<GlobalObject&>(*this));
+    m_shape = heap().allocate_without_global_object<Shape>(*this);
 }
 
 Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
