@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/ElapsedTimer.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
@@ -36,17 +34,13 @@
 #include <stdio.h>
 #include <time.h>
 
-#define WIDTH 64
-#define HEIGHT 48
-#define INTERVAL 10000
-
 class Screensaver final : public GUI::Widget {
     C_OBJECT(Screensaver)
 public:
     virtual ~Screensaver() override;
 
 private:
-    Screensaver();
+    Screensaver(int width = 64, int height = 48, int interval = 10000);
     RefPtr<Gfx::Bitmap> m_bitmap;
 
     void draw();
@@ -57,12 +51,12 @@ private:
     virtual void mousemove_event(GUI::MouseEvent& event) override;
 };
 
-Screensaver::Screensaver()
+Screensaver::Screensaver(int width, int height, int interval)
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height });
     srand(time(nullptr));
     stop_timer();
-    start_timer(INTERVAL);
+    start_timer(interval);
     draw();
 }
 
@@ -93,9 +87,8 @@ void Screensaver::paint_event(GUI::PaintEvent& event)
 
 void Screensaver::timer_event(Core::TimerEvent&)
 {
-    Core::ElapsedTimer timer;
-    timer.start();
     draw();
+    update();
 }
 
 void Screensaver::draw()
@@ -104,7 +97,6 @@ void Screensaver::draw()
         Color::Blue,
         Color::Cyan,
         Color::Green,
-        Color::LightGray,
         Color::Magenta,
         Color::Red,
         Color::Yellow,
@@ -128,12 +120,15 @@ void Screensaver::draw()
         m_bitmap->rect(),
         colors[start_color_index],
         colors[end_color_index]);
-
-    update();
 }
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath shared_buffer cpath unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
@@ -151,19 +146,25 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-screensaver");
     auto window = GUI::Window::construct();
-    window->set_double_buffering_enabled(true);
+    window->set_double_buffering_enabled(false);
     window->set_title("Screensaver");
     window->set_resizable(false);
+    window->set_frameless(true);
     window->set_fullscreen(true);
+    window->set_minimizable(false);
+    window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& screensaver_window = window->set_main_widget<Screensaver>();
+    auto& screensaver_window = window->set_main_widget<Screensaver>(64, 48, 10000);
+    screensaver_window.set_fill_with_background_color(false);
+    screensaver_window.set_override_cursor(Gfx::StandardCursor::Hidden);
     screensaver_window.update();
 
     window->show();
-
-    auto app_icon = GUI::Icon::default_icon("app-screensaver");
-    window->set_icon(app_icon.bitmap_for_size(16));
+    window->move_to_front();
+    window->set_cursor(Gfx::StandardCursor::Hidden);
+    window->update();
 
     return app->exec();
 }
