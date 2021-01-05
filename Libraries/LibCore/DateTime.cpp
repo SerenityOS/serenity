@@ -27,8 +27,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
+#include <ctype.h>
 #include <sys/time.h>
-#include <time.h>
 
 namespace Core {
 
@@ -253,6 +253,107 @@ bool DateTime::is_before(const String& other) const
 {
     auto now_string = String::formatted("{:04}{:02}{:02}{:02}{:02}{:02}Z", year(), month(), weekday(), hour(), minute(), second());
     return __builtin_strcasecmp(now_string.characters(), other.characters()) < 0;
+}
+
+time_t DateTime::parse_simplified_iso8601(const String& iso_8601)
+{
+    // Date.parse() is allowed to accept many formats. We strictly only accept things matching
+    // http://www.ecma-international.org/ecma-262/#sec-date-time-string-format
+    GenericLexer lexer(iso_8601);
+    auto lex_n_digits = [&](size_t n, int& out) {
+        if (lexer.tell_remaining() < n)
+            return false;
+        int r = 0;
+        for (size_t i = 0; i < n; ++i) {
+            char ch = lexer.consume();
+            if (!isdigit(ch))
+                return false;
+            r = 10 * r + ch - '0';
+        }
+        out = r;
+        return true;
+    };
+
+    int year = -1, month = -1, day = -1;
+    int hours = -1, minutes = -1, seconds = -1, milliseconds = -1;
+    char timezone = -1;
+    int timezone_hours = -1, timezone_minutes = -1;
+    auto lex_year = [&]() {
+        if (lexer.consume_specific('+'))
+            return lex_n_digits(6, year);
+        if (lexer.consume_specific('-')) {
+            int absolute_year;
+            if (!lex_n_digits(6, absolute_year))
+                return false;
+            year = -absolute_year;
+            return true;
+        }
+        return lex_n_digits(4, year);
+    };
+    auto lex_month = [&]() { return lex_n_digits(2, month) && month >= 1 && month <= 12; };
+    auto lex_day = [&]() { return lex_n_digits(2, day) && day >= 1 && day <= 31; };
+    auto lex_date = [&]() { return lex_year() && (!lexer.consume_specific('-') || (lex_month() && (!lexer.consume_specific('-') || lex_day()))); };
+
+    auto lex_hours_minutes = [&](int& out_h, int& out_m) {
+        int h, m;
+        if (lex_n_digits(2, h) && h >= 0 && h <= 24 && lexer.consume_specific(':') && lex_n_digits(2, m) && m >= 0 && m <= 59) {
+            out_h = h;
+            out_m = m;
+            return true;
+        }
+        return false;
+    };
+    auto lex_seconds = [&]() { return lex_n_digits(2, seconds) && seconds >= 0 && seconds <= 59; };
+    auto lex_milliseconds = [&]() { return lex_n_digits(3, milliseconds); };
+    auto lex_seconds_milliseconds = [&]() { return lex_seconds() && (!lexer.consume_specific('.') || lex_milliseconds()); };
+    auto lex_timezone = [&]() {
+        if (lexer.consume_specific('+')) {
+            timezone = '+';
+            return lex_hours_minutes(timezone_hours, timezone_minutes);
+        }
+        if (lexer.consume_specific('-')) {
+            timezone = '-';
+            return lex_hours_minutes(timezone_hours, timezone_minutes);
+        }
+        if (lexer.consume_specific('Z'))
+            timezone = 'Z';
+        return true;
+    };
+    auto lex_time = [&]() { return lex_hours_minutes(hours, minutes) && (!lexer.consume_specific(':') || lex_seconds_milliseconds()) && lex_timezone(); };
+
+    if (!lex_date() || (lexer.consume_specific('T') && !lex_time()) || !lexer.is_eof()) {
+        return 0;
+    }
+
+    // We parsed a valid date simplified ISO 8601 string. Values not present in the string are -1.
+    ASSERT(year != -1); // A valid date string always has at least a year.
+    struct tm tm = {};
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month == -1 ? 0 : month - 1;
+    tm.tm_mday = day == -1 ? 1 : day;
+    tm.tm_hour = hours == -1 ? 0 : hours;
+    tm.tm_min = minutes == -1 ? 0 : minutes;
+    tm.tm_sec = seconds == -1 ? 0 : seconds;
+
+    // http://www.ecma-international.org/ecma-262/#sec-date.parse:
+    // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
+    time_t timestamp;
+    if (timezone != -1 || hours == -1)
+        timestamp = timegm(&tm);
+    else
+        timestamp = mktime(&tm);
+
+    if (timezone == '-')
+        timestamp += (timezone_hours * 60 + timezone_minutes) * 60;
+    else if (timezone == '+')
+        timestamp -= (timezone_hours * 60 + timezone_minutes) * 60;
+
+    // FIXME: reject timestamp if resulting value wouldn't fit in a double
+
+    if (milliseconds == -1)
+        milliseconds = 0;
+
+    return 1000.0 * timestamp + milliseconds;
 }
 
 const LogStream& operator<<(const LogStream& stream, const DateTime& value)

@@ -54,6 +54,7 @@ public:
     static DateTime create(unsigned year, unsigned month = 1, unsigned day = 0, unsigned hour = 0, unsigned minute = 0, unsigned second = 0);
     static DateTime now();
     static DateTime from_timestamp(time_t);
+    static time_t parse_simplified_iso8601(const String& iso_8601);
 
     // FIXME: This should be replaced with a proper comparison
     //        operator when we get the equivalent of strptime

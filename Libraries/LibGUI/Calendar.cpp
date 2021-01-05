@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
@@ -35,6 +36,8 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, Calendar);
+
 namespace GUI {
 
 static const char* long_day_names[] = {
@@ -64,6 +67,67 @@ Calendar::Calendar(Core::DateTime date_time)
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
+
+    REGISTER_BOOL_PROPERTY("grid", has_grid, set_grid);
+    REGISTER_ENUM_PROPERTY("mode", mode, set_mode, Calendar::Mode,
+        { Mode::Month, "Month" },
+        { Mode::Year, "Year" });
+
+    register_property(
+        "date", [this]() -> JsonValue { return selected_date().to_string(); },
+        [&](auto& value) {
+            if (value.is_null()) {
+                return false;
+            }
+
+            bool valid_date = true;
+            struct tm tm = {};
+
+            auto set_day = [&](auto val) {
+                return tm.tm_mday = val.is_null() ? 1 : val.to_i32();
+            };
+
+            auto set_month = [&](auto val) {
+                return tm.tm_mon = val.is_null() ? 0 : val.to_i32() - 1;
+            };
+
+            auto set_year = [&](auto val) {
+                return tm.tm_year = val.is_null() ? Core::DateTime::now().year() : val.to_i32() - 1900;
+            };
+
+            if (value.is_array() && !value.as_array().is_empty()) {
+
+                value.as_array().for_each([&](auto& i) {
+                    if (i.is_null())
+                        valid_date = false;
+                });
+
+                if (!valid_date)
+                    return false;
+
+                if (value.as_array().size() == 2) {
+                    tm.tm_mday = set_day(JsonValue());
+                    tm.tm_mon = set_month(value.as_array().at(1));
+                    tm.tm_year = set_year(value.as_array().at(0));
+                } else if (value.as_array().size() == 3) {
+                    tm.tm_mday = set_day(value.as_array().at(2));
+                    tm.tm_mon = set_month(value.as_array().at(1));
+                    tm.tm_year = set_year(value.as_array().at(0));
+                } else {
+                    tm.tm_year = set_year(value.as_array().at(0));
+                }
+                set_selected_date(Core::DateTime::from_timestamp(mktime(&tm)));
+                update_tiles();
+                return true;
+            } else if (value.is_string()) {
+                auto timestamp = Core::DateTime::parse_simplified_iso8601(value.to_string()) / 1000;
+                Core::DateTime date = Core::DateTime::from_timestamp(timestamp);
+
+                set_selected_date(date);
+                update_tiles();
+            }
+            return false;
+        });
 
     m_day_name_container = add<GUI::Widget>();
     m_day_name_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -133,11 +197,17 @@ Calendar::Calendar(Core::DateTime date_time)
             i++;
         }
 
-    update_tiles(selected_year(), selected_month());
+    update_tiles();
 }
 
 Calendar::~Calendar()
 {
+}
+
+void Calendar::set_mode(Mode m)
+{
+    m_mode = m;
+    toggle_mode();
 }
 
 void Calendar::toggle_mode()
@@ -155,7 +225,7 @@ void Calendar::toggle_mode()
     }
 
     this->resize(this->height(), this->width());
-    update_tiles(selected_year(), selected_month());
+    update_tiles();
 }
 
 void Calendar::set_grid(bool grid)
@@ -196,6 +266,11 @@ void Calendar::resize_event(GUI::ResizeEvent& event)
     }
 
     (event.size().width() < 200) ? set_grid(false) : set_grid(true);
+}
+
+void Calendar::update_tiles()
+{
+    update_tiles(selected_year(), selected_month());
 }
 
 void Calendar::update_tiles(unsigned int target_year, unsigned int target_month)
@@ -255,6 +330,13 @@ void Calendar::set_selected_calendar(unsigned int year, unsigned int month)
 {
     m_selected_year = year;
     m_selected_month = month;
+}
+
+void Calendar::set_selected_date(Core::DateTime date_time)
+{
+    m_selected_date = date_time;
+    m_selected_month = date_time.month();
+    m_selected_year = date_time.year();
 }
 
 Calendar::MonthTile::MonthTile(int index, Core::DateTime date_time)

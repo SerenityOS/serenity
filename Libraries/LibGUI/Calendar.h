@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
@@ -50,20 +51,22 @@ public:
         LongNames
     };
 
-    Calendar(Core::DateTime);
+    Calendar(Core::DateTime dateTime = Core::DateTime::now());
     virtual ~Calendar() override;
 
     unsigned int selected_year() const { return m_selected_year; }
     unsigned int selected_month() const { return m_selected_month; }
     const String selected_calendar_text(bool long_names = ShortNames);
+    void update_tiles();
     void update_tiles(unsigned int target_year, unsigned int target_month);
     void set_selected_calendar(unsigned int year, unsigned int month);
-    void set_selected_date(Core::DateTime date_time) { m_selected_date = date_time; }
+    void set_selected_date(Core::DateTime date_time);
     Core::DateTime selected_date() const { return m_selected_date; }
     void toggle_mode();
     void set_grid(bool grid);
     bool has_grid() { return m_grid; }
     Mode mode() const { return m_mode; }
+    void set_mode(Mode m);
 
     Function<void()> on_calendar_tile_click;
     Function<void()> on_calendar_tile_doubleclick;
@@ -133,6 +136,7 @@ private:
 
     Core::DateTime m_selected_date;
     Core::DateTime m_previous_selected_date;
+    String m_date_format;
     unsigned int m_selected_year { 0 };
     unsigned int m_selected_month { 0 };
     bool m_grid { true };
