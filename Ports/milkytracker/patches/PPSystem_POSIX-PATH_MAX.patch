@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/src/ppui/osinterface/posix/PPSystem_POSIX.cpp	2020-12-09 23:58:14.000000000 +0100
++++ MilkyTracker-1.03.00DD/src/ppui/osinterface/posix/PPSystem_POSIX.cpp	2021-01-04 15:25:18.830924884 +0100
+@@ -53,6 +53,8 @@
+ #include <Path.h>
+ #endif
+ 
++#define PATH_MAX 4096
++
+ SYSCHAR System::buffer[PATH_MAX+1];
+ 
+ const SYSCHAR* System::getTempFileName()

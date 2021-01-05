@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00d/src/tracker/EQConstants.cpp	2021-01-04 15:24:28.260299502 +0100
++++ MilkyTracker-1.03.00/src/tracker/EQConstants.cpp	2021-01-04 15:35:02.287589250 +0100
+@@ -23,7 +23,7 @@
+ #include "EQConstants.h"
+ #include "math.h"
+ 
+-#define p(e) ldexp(66904.0f, e-4*4)
++#define p(e) 0
+ 
+ const float EQConstants::EQ3bands[3] = 
+ {

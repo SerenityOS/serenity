@@ -1,0 +1,10 @@
+--- MilkyTracker-1.03.00/src/tracker/sdl/SDL_Main.cpp	2020-12-09 23:58:14.000000000 +0100
++++ MilkyTracker-1.03.00DD/src/tracker/sdl/SDL_Main.cpp	2021-01-04 15:26:23.821172703 +0100
+@@ -51,6 +51,7 @@
+  *    - Fix for french azerty keyboards (their number keys are shifted)
+  *
+  */
++#define PATH_MAX 4096
+ 
+ #ifdef HAVE_CONFIG_H
+ #include "config.h"

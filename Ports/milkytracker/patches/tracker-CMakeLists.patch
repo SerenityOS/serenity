@@ -1,0 +1,18 @@
+--- MilkyTracker-1.03.00d/src/tracker/CMakeLists.txt	2021-01-04 15:49:14.173940007 +0100
++++ MilkyTracker-1.03.00/src/tracker/CMakeLists.txt	2021-01-04 15:48:03.179731481 +0100
+@@ -367,6 +367,7 @@
+     endif()
+ endif()
+ 
++
+ # OS X and Windows install to the root of the prefix, the others install to bin
+ if(APPLE OR WIN32)
+     set(INSTALL_DEST .)
+@@ -374,4 +375,7 @@
+     set(INSTALL_DEST ${CMAKE_INSTALL_BINDIR})
+ endif()
+ 
++target_link_libraries(tracker -L../../SDL2/SDL-master-serenity/ -lSDL2 -lgui -lipc -lgfx -lcore -lpthread)
++set(INSTALL_DEST ../../../../../../usr/bin/)
++
+ install(TARGETS tracker DESTINATION ${INSTALL_DEST})

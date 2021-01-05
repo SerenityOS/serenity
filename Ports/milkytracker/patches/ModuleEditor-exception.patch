@@ -1,0 +1,24 @@
+--- ModuleEditor.orig	2021-01-03 21:04:15.779375382 +0100
++++ MilkyTracker-1.03.00/src/tracker/ModuleEditor.cpp	2021-01-03 21:06:27.099748162 +0100
+@@ -699,16 +699,16 @@
+ 	
+ 		PPSystemString tempFile(getTempFilename());
+ 	
+-		try
+-		{
++		//try
++		//{
+ 			res = module->saveExtendedModule(tempFile) == MP_OK;
+ 			if(!res)
+ 				return res;
+ 
+ 			res = module->loadModule(tempFile) == MP_OK;
+-		} catch (const std::bad_alloc &) {
+-			return false;
+-		}
++		//} catch (const std::bad_alloc &) {
++		//	return false;
++		//}
+ 	
+ 		// restore one shot looping flag
+ 		if (type == XModule::ModuleType_MOD)

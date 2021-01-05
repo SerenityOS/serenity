@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/src/milkyplay/ChannelMixer.h	2020-12-09 23:58:14.000000000 +0100
++++ MilkyTracker-1.03.00uh/src/milkyplay/ChannelMixer.h	2021-01-04 20:07:06.430444825 +0100
+@@ -426,7 +426,7 @@
+ 	virtual mp_sint32 setBufferSize(mp_uint32 bufferSize);
+ 	
+ 	mp_uint32		getBeatPacketSize() const { return beatPacketSize; }
+-	mp_uint32		getNumBeatPackets() const { return mixBufferSize / beatPacketSize; } 
++	mp_uint32		getNumBeatPackets() const { return 256; } //return mixBufferSize / beatPacketSize; } 
+ 
+ 	// volume control
+ 	void			setMasterVolume(mp_sint32 vol) { masterVolume = vol; }
