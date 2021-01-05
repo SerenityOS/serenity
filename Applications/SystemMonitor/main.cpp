@@ -549,16 +549,26 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
             auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
             cpu_graph.set_max(100);
-            cpu_graph.set_text_color(Color::Green);
-            cpu_graph.set_graph_color(Color::from_rgb(0x00bb00));
-            cpu_graph.text_formatter = [](int value, int) {
-                return String::formatted("{}%", value);
-            };
+            cpu_graph.set_background_color(Color::White);
+            cpu_graph.set_value_format(0, {
+                                              .line_color = Color::Blue,
+                                              .background_color = Color::from_rgb(0xaaaaff),
+                                              .text_formatter = [](int value) {
+                                                  return String::formatted("Total: {}%", value);
+                                              },
+                                          });
+            cpu_graph.set_value_format(1, {
+                                              .line_color = Color::Red,
+                                              .background_color = Color::from_rgb(0xffaaaa),
+                                              .text_formatter = [](int value) {
+                                                  return String::formatted("Kernel: {}%", value);
+                                              },
+                                          });
             cpu_graphs.append(&cpu_graph);
         }
         ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
             for (size_t i = 0; i < cpus.size(); i++)
-                cpu_graphs[i]->add_value(cpus[i].total_cpu_percent);
+                cpu_graphs[i]->add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
         };
 
         auto& memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
@@ -566,11 +576,29 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
         memory_graph_group_box.set_fixed_height(120);
         auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
-        memory_graph.set_text_color(Color::Cyan);
-        memory_graph.set_graph_color(Color::from_rgb(0x00bbbb));
-        memory_graph.text_formatter = [](int value, int max) {
-            return String::formatted("{} / {} KiB", value, max);
-        };
+        memory_graph.set_background_color(Color::White);
+        memory_graph.set_stack_values(true);
+        memory_graph.set_value_format(0, {
+                                             .line_color = Color::from_rgb(0x619910),
+                                             .background_color = Color::from_rgb(0xbbffbb),
+                                             .text_formatter = [&memory_graph](int value) {
+                                                 return String::formatted("Committed: {} KiB", value);
+                                             },
+                                         });
+        memory_graph.set_value_format(1, {
+                                             .line_color = Color::Blue,
+                                             .background_color = Color::from_rgb(0xaaaaff),
+                                             .text_formatter = [&memory_graph](int value) {
+                                                 return String::formatted("Allocated: {} KiB", value);
+                                             },
+                                         });
+        memory_graph.set_value_format(2, {
+                                             .line_color = Color::Red,
+                                             .background_color = Color::from_rgb(0xffaaaa),
+                                             .text_formatter = [&memory_graph](int value) {
+                                                 return String::formatted("Kernel heap: {} KiB", value);
+                                             },
+                                         });
 
         self.add<MemoryStatsWidget>(memory_graph);
     };
