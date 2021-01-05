@@ -26,6 +26,7 @@
 
 #include <AK/QuickSort.h>
 #include <AK/URL.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/Property.h>
 #include <LibDesktop/Launcher.h>
@@ -250,6 +251,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    const char* path = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
     auto app_icon = GUI::Icon::default_icon("app-playground");
     auto window = GUI::Window::construct();
     window->set_title("GML Playground");
@@ -265,14 +271,24 @@ int main(int argc, char** argv)
     editor.set_autocomplete_provider(make<GMLAutocompleteProvider>());
     editor.set_should_autocomplete_automatically(true);
     editor.set_automatic_indentation_enabled(true);
-    editor.set_text(R"~~~(@GUI::Widget {
+
+    if (String(path).is_empty()) {
+        editor.set_text(R"~~~(@GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
     }
 
     // Now add some widgets!
 }
 )~~~");
-    editor.set_cursor(4, 28); // after "...widgets!"
+        editor.set_cursor(4, 28); // after "...widgets!"
+    } else {
+        auto file = Core::File::construct(path);
+        if (!file->open(Core::IODevice::ReadOnly)) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            return 1;
+        }
+        editor.set_text(file->read_all());
+    }
 
     editor.on_change = [&] {
         preview.remove_all_children();
