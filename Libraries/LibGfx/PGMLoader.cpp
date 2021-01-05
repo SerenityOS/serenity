@@ -67,6 +67,21 @@ struct PGMLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 };
 
+static void set_adjusted_pixels(PGMLoadingContext& context, const AK::Vector<Gfx::Color>& color_data)
+{
+    size_t index = 0;
+    for (size_t y = 0; y < context.height; ++y) {
+        for (size_t x = 0; x < context.width; ++x) {
+            Color color = color_data.at(index);
+            if (context.max_val < 255) {
+                color = adjust_color(context.max_val, color);
+            }
+            context.bitmap->set_pixel(x, y, color);
+            ++index;
+        }
+    }
+}
+
 static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
@@ -90,9 +105,14 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
         }
     }
 
-    if (!create_bitmap(context)) {
+    size_t context_size = (u32)context.width * (u32)context.height;
+    if (context_size != color_data.size()) {
+        dbgln("Not enough color data in image.");
         return false;
     }
+
+    if (!create_bitmap(context))
+        return false;
 
     set_adjusted_pixels(context, color_data);
 
