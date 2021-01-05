@@ -50,7 +50,7 @@ CharacterMap::CharacterMap(const String& file_name)
 
 int CharacterMap::set_system_map()
 {
-    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, { m_character_map_name.characters(), m_character_map_name.length() } };
+    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, m_character_map_data.shift_altgr_map, { m_character_map_name.characters(), m_character_map_name.length() } };
     return syscall(SC_setkeymap, &params);
 }
 
@@ -63,10 +63,12 @@ u32 CharacterMap::get_char(KeyEvent event)
     auto caps_lock_on = event.caps_lock_on;
 
     u32 code_point;
-    if (modifiers & Mod_Shift)
-        code_point = m_character_map_data.shift_map[index];
-    else if (modifiers & Mod_Alt)
+    if (modifiers & Mod_Alt)
         code_point = m_character_map_data.alt_map[index];
+    else if ((modifiers & Mod_Shift) && (modifiers & Mod_AltGr))
+        code_point = m_character_map_data.shift_altgr_map[index];
+    else if (modifiers & Mod_Shift)
+        code_point = m_character_map_data.shift_map[index];
     else if (modifiers & Mod_AltGr)
         code_point = m_character_map_data.altgr_map[index];
     else
