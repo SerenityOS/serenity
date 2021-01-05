@@ -109,6 +109,13 @@ void DynamicObject::parse()
             m_fini_array_size = entry.val();
             break;
         case DT_HASH:
+            // Use SYSV hash only if GNU hash is not available
+            if (m_hash_type == HashType::SYSV) {
+                m_hash_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            }
+            break;
+        case DT_GNU_HASH:
+            m_hash_type = HashType::GNU;
             m_hash_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_SYMTAB:
@@ -235,7 +242,8 @@ const DynamicObject::Section DynamicObject::fini_array_section() const
 
 const DynamicObject::HashSection DynamicObject::hash_section() const
 {
-    return HashSection(Section(*this, m_hash_table_offset, 0, 0, "DT_HASH"), HashType::SYSV);
+    const char* section_name = m_hash_type == HashType::SYSV ? "DT_HASH" : "DT_GNU_HASH";
+    return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
 }
 
 const DynamicObject::RelocationSection DynamicObject::relocation_section() const
@@ -254,33 +262,40 @@ u32 DynamicObject::HashSection::calculate_elf_hash(const char* name) const
     // Note that the GNU HASH algorithm has less collisions
 
     uint32_t hash = 0;
-    uint32_t top_nibble_of_hash = 0;
 
     while (*name != '\0') {
         hash = hash << 4;
         hash += *name;
         name++;
 
-        top_nibble_of_hash = hash & 0xF0000000U;
-        if (top_nibble_of_hash != 0)
-            hash ^= top_nibble_of_hash >> 24;
+        const uint32_t top_nibble_of_hash = hash & 0xF0000000U;
+        hash ^= top_nibble_of_hash >> 24;
         hash &= ~top_nibble_of_hash;
     }
 
     return hash;
 }
 
-u32 DynamicObject::HashSection::calculate_gnu_hash(const char*) const
+u32 DynamicObject::HashSection::calculate_gnu_hash(const char* name) const
 {
-    // FIXME: Implement the GNU hash algorithm
-    ASSERT_NOT_REACHED();
+    // GNU ELF hash algorithm
+    u32 hash = 5381;
+
+    for (; *name != '\0'; ++name) {
+        hash = hash * 33 + *name;
+    }
+
+    return hash;
 }
 
 const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char* name) const
 {
-    // FIXME: If we enable gnu hash in the compiler, we should use that here instead
-    //     The algo is way better with less collisions
-    u32 hash_value = (this->*(m_hash_function))(name);
+    return (this->*(m_lookup_function))(name);
+}
+
+const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const char* name) const
+{
+    u32 hash_value = calculate_elf_hash(name);
 
     u32* hash_table_begin = (u32*)address().as_ptr();
 
@@ -289,7 +304,8 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
     // This is here for completeness, but, since we're using the fact that every chain
     // will end at chain 0 (which means 'not found'), we don't need to check num_chains.
     // Interestingly, num_chains is required to be num_symbols
-    //size_t num_chains = hash_table_begin[1];
+
+    // size_t num_chains = hash_table_begin[1];
 
     u32* buckets = &hash_table_begin[2];
     u32* chains = &buckets[num_buckets];
@@ -297,10 +313,59 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
         if (strcmp(name, symbol.name()) == 0) {
-            VERBOSE("Returning dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
+            VERBOSE("Returning SYSV dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
+    return Symbol::create_undefined(m_dynamic);
+}
+
+const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const char* name) const
+{
+    // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
+    // TODO: Handle 64bit bloomwords for ELF_CLASS64
+    using BloomWord = u32;
+    constexpr size_t bloom_word_size = sizeof(BloomWord) * 8;
+
+    const u32* hash_table_begin = (u32*)address().as_ptr();
+
+    const size_t num_buckets = hash_table_begin[0];
+    const size_t num_omitted_symbols = hash_table_begin[1];
+    const u32 num_maskwords = hash_table_begin[2];
+    // This works because num_maskwords is required to be a power of 2
+    const u32 num_maskwords_bitmask = num_maskwords - 1;
+    const u32 shift2 = hash_table_begin[3];
+
+    const BloomWord* bloom_words = &hash_table_begin[4];
+    const u32* const buckets = &bloom_words[num_maskwords];
+    const u32* const chains = &buckets[num_buckets];
+
+    BloomWord hash1 = calculate_gnu_hash(name);
+    BloomWord hash2 = hash1 >> shift2;
+    const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
+
+    if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask) {
+        return Symbol::create_undefined(m_dynamic);
+    }
+
+    size_t current_sym = buckets[hash1 % num_buckets];
+    if (current_sym == 0) {
+        return Symbol::create_undefined(m_dynamic);
+    }
+    const u32* current_chain = &chains[current_sym - num_omitted_symbols];
+
+    for (hash1 &= ~1;; ++current_sym) {
+        hash2 = *(current_chain++);
+        const auto symbol = m_dynamic.symbol(current_sym);
+        if ((hash1 == (hash2 & ~1)) && strcmp(name, symbol.name()) == 0) {
+            VERBOSE("Returning GNU dynamic symbol with index %zu for %s: %p\n", current_sym, symbol.name(), symbol.address().as_ptr());
+            return symbol;
+        }
+        if (hash2 & 1) {
+            break;
+        }
+    }
+
     return Symbol::create_undefined(m_dynamic);
 }
 
@@ -439,7 +504,7 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 
     u32 symbol_location = res.address;
 
-    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
+    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), (void*)symbol_location, (void*)relocation_address);
 
     *(u32*)relocation_address = symbol_location;
 
