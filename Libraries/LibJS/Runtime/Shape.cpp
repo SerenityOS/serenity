@@ -72,7 +72,7 @@ Shape::Shape(ShapeWithoutGlobalObjectTag)
 {
 }
 
-Shape::Shape(GlobalObject& global_object)
+Shape::Shape(Object& global_object)
     : m_global_object(&global_object)
 {
 }
