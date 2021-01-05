@@ -204,15 +204,15 @@ public:
 
     class HashSection : public Section {
     public:
-        HashSection(const Section& section, HashType hash_type = HashType::SYSV)
+        HashSection(const Section& section, HashType hash_type)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
         {
             switch (hash_type) {
             case HashType::SYSV:
-                m_hash_function = &HashSection::calculate_elf_hash;
+                m_lookup_function = &HashSection::lookup_elf_symbol;
                 break;
             case HashType::GNU:
-                m_hash_function = &HashSection::calculate_gnu_hash;
+                m_lookup_function = &HashSection::lookup_gnu_symbol;
                 break;
             default:
                 ASSERT_NOT_REACHED();
@@ -226,8 +226,11 @@ public:
         u32 calculate_elf_hash(const char* name) const;
         u32 calculate_gnu_hash(const char* name) const;
 
-        typedef u32 (HashSection::*HashFunction)(const char*) const;
-        HashFunction m_hash_function;
+        const DynamicObject::Symbol lookup_elf_symbol(const char* name) const;
+        const DynamicObject::Symbol lookup_gnu_symbol(const char* name) const;
+
+        typedef const DynamicObject::Symbol (HashSection::*LookupFunction)(const char*) const;
+        LookupFunction m_lookup_function;
     };
 
     unsigned symbol_count() const { return m_symbol_count; }
@@ -318,6 +321,7 @@ private:
     size_t m_fini_array_size { 0 };
 
     FlatPtr m_hash_table_offset { 0 };
+    HashType m_hash_type { HashType::SYSV };
 
     FlatPtr m_string_table_offset { 0 };
     size_t m_size_of_string_table { 0 };
