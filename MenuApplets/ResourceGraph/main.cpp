@@ -82,13 +82,12 @@ private:
             break;
         }
         case GraphType::Memory: {
-            unsigned allocated;
-            unsigned available;
+            u64 allocated, available;
             if (get_memory_usage(allocated, available)) {
-                float total_memory = allocated + available;
-                float memory = (float)allocated / total_memory;
+                double total_memory = allocated + available;
+                double memory = (double)allocated / total_memory;
                 m_history.enqueue(memory);
-                m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)allocated / MiB, total_memory / MiB);
+                m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)(allocated / MiB), (float)(total_memory / MiB));
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = StringView("Unable to determine memory usage");
@@ -161,7 +160,7 @@ private:
         return true;
     }
 
-    bool get_memory_usage(unsigned& allocated, unsigned& available)
+    bool get_memory_usage(u64& allocated, u64& available)
     {
         if (m_proc_mem) {
             // Seeking to the beginning causes a data refresh!
@@ -177,10 +176,17 @@ private:
         auto file_contents = m_proc_mem->read_all();
         auto json = JsonValue::from_string(file_contents);
         ASSERT(json.has_value());
-        unsigned user_physical_allocated = json.value().as_object().get("user_physical_allocated").to_u32();
-        unsigned user_physical_available = json.value().as_object().get("user_physical_available").to_u32();
-        allocated = (user_physical_allocated * PAGE_SIZE);
-        available = (user_physical_available * PAGE_SIZE);
+        auto& obj = json.value().as_object();
+        unsigned kmalloc_allocated = obj.get("kmalloc_allocated").to_u32();
+        unsigned kmalloc_available = obj.get("kmalloc_available").to_u32();
+        unsigned user_physical_allocated = obj.get("user_physical_allocated").to_u32();
+        unsigned user_physical_committed = obj.get("user_physical_committed").to_u32();
+        unsigned user_physical_uncommitted = obj.get("user_physical_uncommitted").to_u32();
+        unsigned kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
+        unsigned kmalloc_pages_total = (kmalloc_bytes_total + PAGE_SIZE - 1) / PAGE_SIZE;
+        unsigned total_userphysical_and_swappable_pages = kmalloc_pages_total + user_physical_allocated + user_physical_committed + user_physical_uncommitted;
+        allocated = kmalloc_allocated + ((u64)(user_physical_allocated + user_physical_committed) * PAGE_SIZE);
+        available = (u64)(total_userphysical_and_swappable_pages * PAGE_SIZE) - allocated;
         return true;
     }
 
