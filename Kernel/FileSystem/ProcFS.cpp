@@ -790,14 +790,26 @@ static bool procfs$memstat(InodeIdentifier, KBufferBuilder& builder)
     kmalloc_stats stats;
     get_kmalloc_stats(stats);
 
+    ScopedSpinLock mm_lock(s_mm_lock);
+    auto user_physical_pages_total = MM.user_physical_pages();
+    auto user_physical_pages_used = MM.user_physical_pages_used();
+    auto user_physical_pages_committed = MM.user_physical_pages_committed();
+    auto user_physical_pages_uncommitted = MM.user_physical_pages_uncommitted();
+
+    auto super_physical_total = MM.super_physical_pages();
+    auto super_physical_used = MM.super_physical_pages_used();
+    mm_lock.unlock();
+
     JsonObjectSerializer<KBufferBuilder> json { builder };
     json.add("kmalloc_allocated", stats.bytes_allocated);
     json.add("kmalloc_available", stats.bytes_free);
     json.add("kmalloc_eternal_allocated", stats.bytes_eternal);
-    json.add("user_physical_allocated", MM.user_physical_pages_used());
-    json.add("user_physical_available", MM.user_physical_pages() - MM.user_physical_pages_used());
-    json.add("super_physical_allocated", MM.super_physical_pages_used());
-    json.add("super_physical_available", MM.super_physical_pages() - MM.super_physical_pages_used());
+    json.add("user_physical_allocated", user_physical_pages_used);
+    json.add("user_physical_available", user_physical_pages_total - user_physical_pages_used);
+    json.add("user_physical_committed", user_physical_pages_committed);
+    json.add("user_physical_uncommitted", user_physical_pages_uncommitted);
+    json.add("super_physical_allocated", super_physical_used);
+    json.add("super_physical_available", super_physical_total - super_physical_used);
     json.add("kmalloc_call_count", stats.kmalloc_call_count);
     json.add("kfree_call_count", stats.kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
