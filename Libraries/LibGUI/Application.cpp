@@ -235,4 +235,16 @@ void Application::tooltip_hide_timer_did_fire()
         m_tooltip_window->hide();
 }
 
+void Application::window_did_become_active(Badge<Window>, Window& window)
+{
+    m_active_window = window.make_weak_ptr<Window>();
+}
+
+void Application::window_did_become_inactive(Badge<Window>, Window& window)
+{
+    if (m_active_window.ptr() != &window)
+        return;
+    m_active_window = nullptr;
+}
+
 }

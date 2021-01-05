@@ -29,6 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
@@ -76,6 +77,12 @@ public:
 
     Core::EventLoop& event_loop() { return *m_event_loop; }
 
+    Window* active_window() { return m_active_window; }
+    const Window* active_window() const { return m_active_window; }
+
+    void window_did_become_active(Badge<Window>, Window&);
+    void window_did_become_inactive(Badge<Window>, Window&);
+
 private:
     Application(int argc, char** argv);
 
@@ -92,6 +99,7 @@ private:
     RefPtr<Core::Timer> m_tooltip_hide_timer;
     RefPtr<TooltipWindow> m_tooltip_window;
     RefPtr<Widget> m_tooltip_source_widget;
+    WeakPtr<Window> m_active_window;
     bool m_quit_when_last_window_deleted { true };
     bool m_focus_debugging_enabled { false };
     String m_invoked_as;
