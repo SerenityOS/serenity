@@ -95,6 +95,7 @@ public:
     struct CpuInfo {
         u32 id;
         float total_cpu_percent { 0.0 };
+        float total_cpu_percent_kernel { 0.0 };
 
         CpuInfo(u32 id)
             : id(id)
@@ -144,6 +145,7 @@ private:
         unsigned file_read_bytes;
         unsigned file_write_bytes;
         float cpu_percent;
+        float cpu_percent_kernel;
     };
 
     struct Thread {
