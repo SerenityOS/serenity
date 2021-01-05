@@ -84,6 +84,8 @@ void KeyboardMapperWidget::create_frame()
                     map = m_character_map.alt_map;
                 } else if (m_current_map_name == "altgr_map") {
                     map = m_character_map.altgr_map;
+                } else if (m_current_map_name == "shift_altgr_map") {
+                    map = m_character_map.shift_altgr_map;
                 } else {
                     ASSERT_NOT_REACHED();
                 }
@@ -130,6 +132,11 @@ void KeyboardMapperWidget::create_frame()
     radio_alt.set_name("alt_map");
     radio_alt.on_checked = [this](bool) {
         set_current_map("alt_map");
+    };
+    auto& radio_shift_altgr = m_map_group->add<GUI::RadioButton>("Shift+AltGr");
+    radio_shift_altgr.set_name("shift_altgr_map");
+    radio_shift_altgr.on_checked = [this](bool) {
+        set_current_map("shift_altgr_map");
     };
 
     bottom_widget.layout()->add_spacer();
@@ -186,6 +193,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     add_array("shift_map", m_character_map.shift_map);
     add_array("alt_map", m_character_map.alt_map);
     add_array("altgr_map", m_character_map.altgr_map);
+    add_array("shift_altgr_map", m_character_map.shift_altgr_map);
 
     // Write to file.
     String file_content = map_json.to_string();
@@ -253,6 +261,8 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
         map = m_character_map.alt_map;
     } else if (m_current_map_name == "altgr_map") {
         map = m_character_map.altgr_map;
+    } else if (m_current_map_name == "shift_altgr_map") {
+        map = m_character_map.shift_altgr_map;
     } else {
         ASSERT_NOT_REACHED();
     }
