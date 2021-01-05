@@ -43,6 +43,7 @@
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,6 +132,17 @@ int main(int argc, char** argv)
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
+
+    auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::IODevice::ReadOnly);
+    if (!ad_filter_list_or_error.is_error()) {
+        auto& ad_filter_list = *ad_filter_list_or_error.value();
+        while (!ad_filter_list.eof()) {
+            auto line = ad_filter_list.read_line();
+            if (line.is_empty())
+                continue;
+            Web::ContentFilter::the().add_pattern(line);
+        }
+    }
 
     bool bookmarksbar_enabled = true;
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), bookmarksbar_enabled);
