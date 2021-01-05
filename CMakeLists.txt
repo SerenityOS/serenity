@@ -116,7 +116,8 @@ endforeach()
 
 set(CMAKE_INSTALL_NAME_TOOL "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu")
+set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu")
 
 # Note: MacOS has different rpath rules from linux.
 # We disable it completely for MacOS hosts to avoid having to track down all the individual flags to unset
