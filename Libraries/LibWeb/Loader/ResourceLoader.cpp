@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -110,8 +111,15 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
 void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
     auto& url = request.url();
+
     if (is_port_blocked(url.port())) {
         dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
+        return;
+    }
+
+    if (ContentFilter::the().is_filtered(url)) {
+        dbgln("\033[32;1mResourceLoader::load: URL was filtered! {}\033[0m", url);
+        error_callback("URL was filtered");
         return;
     }
 

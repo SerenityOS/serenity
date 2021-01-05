@@ -177,6 +177,7 @@ set(SOURCES
     Layout/TreeBuilder.cpp
     Layout/WidgetBox.cpp
     LayoutTreeModel.cpp
+    Loader/ContentFilter.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
