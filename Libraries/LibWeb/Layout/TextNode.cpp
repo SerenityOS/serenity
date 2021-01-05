@@ -196,7 +196,6 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
     auto& containing_block = context.containing_block();
 
     auto& font = specified_style().font();
-    float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     auto& line_boxes = containing_block.line_boxes();
     containing_block.ensure_last_line_box();
@@ -255,14 +254,17 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
             continue;
 
         float chunk_width;
-        bool need_collapse = false;
         if (do_wrap_lines) {
-            need_collapse = do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace();
+            if (do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
+                // This is a non-empty chunk that starts with collapsible whitespace.
+                // We are at either at the start of a new line, or after something that ended in whitespace,
+                // so we don't need to contribute our own whitespace to the line. Skip over it instead!
+                ++chunk.start;
+                --chunk.length;
+                chunk.view = chunk.view.substring_view(1, chunk.view.byte_length() - 1);
+            }
 
-            if (need_collapse)
-                chunk_width = space_width;
-            else
-                chunk_width = font.width(chunk.view) + font.glyph_spacing();
+            chunk_width = font.width(chunk.view) + font.glyph_spacing();
 
             if (line_boxes.last().width() > 0 && chunk_width > available_width) {
                 containing_block.add_line_box();
@@ -271,13 +273,11 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
                 if (do_collapse && chunk.is_all_whitespace)
                     continue;
             }
-            if (need_collapse & line_boxes.last().fragments().is_empty())
-                continue;
         } else {
             chunk_width = font.width(chunk.view);
         }
 
-        line_boxes.last().add_fragment(*this, chunk.start, need_collapse ? 1 : chunk.length, chunk_width, font.glyph_height());
+        line_boxes.last().add_fragment(*this, chunk.start, chunk.length, chunk_width, font.glyph_height());
         available_width -= chunk_width;
 
         if (do_wrap_lines) {
