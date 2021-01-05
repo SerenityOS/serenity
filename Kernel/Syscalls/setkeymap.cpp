@@ -50,6 +50,8 @@ int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_p
         return -EFAULT;
     if (!copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32)))
         return -EFAULT;
+    if (!copy_from_user(character_map_data.shift_altgr_map, params.shift_altgr_map, CHAR_MAP_SIZE * sizeof(u32)))
+        return -EFAULT;
 
     auto map_name = get_syscall_path_argument(params.map_name);
     if (map_name.is_error()) {
