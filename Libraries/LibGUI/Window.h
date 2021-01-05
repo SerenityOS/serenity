@@ -113,7 +113,7 @@ public:
     virtual void event(Core::Event&) override;
 
     bool is_visible() const;
-    bool is_active() const { return m_is_active; }
+    bool is_active() const;
     bool is_active_input() const { return m_is_active_input; }
 
     bool is_accessory() const { return m_accessory; }
@@ -247,7 +247,6 @@ private:
     WindowType m_window_type { WindowType::Normal };
     Gfx::StandardCursor m_cursor { Gfx::StandardCursor::None };
     Gfx::StandardCursor m_effective_cursor { Gfx::StandardCursor::None };
-    bool m_is_active { false };
     bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
