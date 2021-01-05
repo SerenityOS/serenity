@@ -336,6 +336,7 @@ struct SC_setkeymap_params {
     const u32* shift_map;
     const u32* alt_map;
     const u32* altgr_map;
+    const u32* shift_altgr_map;
     StringArgument map_name;
 };
 
