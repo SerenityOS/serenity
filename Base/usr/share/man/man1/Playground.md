@@ -5,7 +5,7 @@ Playground - GUI Markup Language (GML) editor
 ## Synopsis
 
 ```**sh
-$ Playground
+$ Playground [file]
 ```
 
 ## Description
@@ -20,7 +20,7 @@ window, allowing rapid prototyping and development of application GUIs.
 ## Examples
 
 ```sh
-$ Playground
+$ Playground /home/anon/example.gml
 ```
 
 ## See also
