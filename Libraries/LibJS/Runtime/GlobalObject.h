@@ -125,4 +125,9 @@ inline void GlobalObject::add_constructor(const FlyString& property_name, Constr
     define_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 
+inline GlobalObject* Shape::global_object() const
+{
+    return static_cast<GlobalObject*>(m_global_object);
+}
+
 }
