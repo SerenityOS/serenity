@@ -131,6 +131,8 @@ public:
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
     unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
+    unsigned user_physical_pages_committed() const { return m_user_physical_pages_committed; }
+    unsigned user_physical_pages_uncommitted() const { return m_user_physical_pages_uncommitted; }
     unsigned super_physical_pages() const { return m_super_physical_pages; }
     unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
 
