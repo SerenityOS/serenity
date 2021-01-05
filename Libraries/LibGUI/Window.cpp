@@ -405,7 +405,10 @@ void Window::handle_input_entered_or_left_event(Core::Event& event)
 
 void Window::handle_became_active_or_inactive_event(Core::Event& event)
 {
-    m_is_active = event.type() == Event::WindowBecameActive;
+    if (event.type() == Event::WindowBecameActive)
+        Application::the()->window_did_become_active({}, *this);
+    else
+        Application::the()->window_did_become_inactive({}, *this);
     if (m_main_widget)
         m_main_widget->dispatch_event(event, this);
     if (m_focused_widget)
@@ -939,6 +942,12 @@ void Window::focus_a_widget_if_possible(FocusSource source)
 void Window::did_disable_focused_widget(Badge<Widget>)
 {
     focus_a_widget_if_possible(FocusSource::Mouse);
+}
+
+bool Window::is_active() const
+{
+    ASSERT(Application::the());
+    return this == Application::the()->active_window();
 }
 
 }
