@@ -35,12 +35,25 @@ public:
     virtual ~GraphWidget() override;
 
     void set_max(int max) { m_max = max; }
-    void add_value(int);
+    int max() const { return m_max; }
 
-    void set_graph_color(Color color) { m_graph_color = color; }
-    void set_text_color(Color color) { m_text_color = color; }
+    void add_value(Vector<int, 1>&&);
 
-    Function<String(int value, int max)> text_formatter;
+    void set_background_color(Color color) { m_background_color = color; }
+
+    struct ValueFormat {
+        Color line_color { Color::Transparent };
+        Color background_color { Color::Transparent };
+        Color text_shadow_color { Color::Transparent };
+        Function<String(int)> text_formatter;
+    };
+    void set_value_format(size_t index, ValueFormat&& format)
+    {
+        if (m_value_format.size() <= index)
+            m_value_format.resize(index + 1);
+        m_value_format[index] = move(format);
+    }
+    void set_stack_values(bool stack_values) { m_stack_values = stack_values; }
 
 private:
     explicit GraphWidget();
@@ -48,7 +61,10 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
     int m_max { 100 };
-    CircularQueue<int, 4000> m_values;
-    Color m_graph_color;
-    Color m_text_color;
+    Vector<ValueFormat, 1> m_value_format;
+    CircularQueue<Vector<int, 1>, 4000> m_values;
+    Color m_background_color { Color::Black };
+    bool m_stack_values { false };
+
+    Vector<Gfx::IntPoint, 1> m_calculated_points;
 };
