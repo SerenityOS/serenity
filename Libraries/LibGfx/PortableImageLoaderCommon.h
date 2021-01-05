@@ -217,22 +217,6 @@ static bool create_bitmap(TContext& context)
 }
 
 template<typename TContext>
-static void set_adjusted_pixels(TContext& context, const AK::Vector<Gfx::Color>& color_data)
-{
-    size_t index = 0;
-    for (size_t y = 0; y < context.height; ++y) {
-        for (size_t x = 0; x < context.width; ++x) {
-            Color color = color_data.at(index);
-            if (context.max_val < 255) {
-                color = adjust_color(context.max_val, color);
-            }
-            context.bitmap->set_pixel(x, y, color);
-            index++;
-        }
-    }
-}
-
-template<typename TContext>
 static void set_pixels(TContext& context, const AK::Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
