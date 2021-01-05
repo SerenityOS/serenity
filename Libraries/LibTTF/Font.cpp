@@ -25,6 +25,7 @@
  */
 
 #include "AK/ByteBuffer.h"
+#include <AK/Checked.h>
 #include <AK/LogStream.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -271,6 +272,12 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         u32 tag = be_u32(buffer.offset_pointer(record_offset));
         u32 table_offset = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Offset));
         u32 table_length = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Length));
+
+        if (Checked<u32>::addition_would_overflow(table_offset, table_length)) {
+            dbgln("Invalid table offset/length in font.");
+            return nullptr;
+        }
+
         if (buffer.size() < table_offset + table_length) {
             dbg() << "Font file too small";
             return nullptr;
