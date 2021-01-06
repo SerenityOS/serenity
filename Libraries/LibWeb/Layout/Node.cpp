@@ -205,10 +205,16 @@ bool Node::is_fixed_position() const
 
 NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> specified_style)
     : Node(document, node)
-    , m_specified_style(move(specified_style))
 {
     m_has_style = true;
-    apply_style(*m_specified_style);
+    apply_style(*specified_style);
+}
+
+NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+    : Node(document, node)
+    , m_computed_values(move(computed_values))
+{
+    m_has_style = true;
 }
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
@@ -315,4 +321,15 @@ bool Node::is_inline_block() const
 {
     return is_inline() && is<BlockBox>(*this);
 }
+
+NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
+{
+    auto wrapper = adopt(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    wrapper->m_font = m_font;
+    wrapper->m_font_size = m_font_size;
+    wrapper->m_line_height = m_line_height;
+    wrapper->m_background_image = m_background_image;
+    return wrapper;
+}
+
 }

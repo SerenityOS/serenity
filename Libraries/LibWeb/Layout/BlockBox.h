@@ -34,6 +34,7 @@ namespace Web::Layout {
 class BlockBox : public Box {
 public:
     BlockBox(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
+    BlockBox(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockBox() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;

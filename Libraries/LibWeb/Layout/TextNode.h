@@ -47,8 +47,6 @@ public:
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
-    const CSS::StyleProperties& specified_style() const { return parent()->specified_style(); }
-
 private:
     void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
