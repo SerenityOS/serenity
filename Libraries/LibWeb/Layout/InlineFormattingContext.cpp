@@ -55,7 +55,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
     AvailableSpaceForLineInfo info;
 
     // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
-    float line_height = context.containing_block().specified_style().line_height(context.containing_block());
+    float line_height = context.containing_block().line_height();
     float y = (line_index * line_height);
 
     auto& bfc = static_cast<const BlockFormattingContext&>(*context.parent());
@@ -110,7 +110,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
         containing_block().line_boxes().take_last();
 
     auto text_align = containing_block().computed_values().text_align();
-    float min_line_height = containing_block().specified_style().line_height(containing_block());
+    float min_line_height = containing_block().line_height();
     float content_height = 0;
     float max_linebox_width = 0;
 
