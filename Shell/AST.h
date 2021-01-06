@@ -429,6 +429,7 @@ public:
 
     virtual bool is_list() const { return false; }
     virtual bool would_execute() const { return false; }
+    virtual bool should_override_execution_in_current_process() const { return false; }
 
     const Position& position() const { return m_position; }
     void set_is_syntax_error(const SyntaxError& error_node)
@@ -829,6 +830,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual bool would_execute() const override { return true; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NameWithPosition m_name;
     Vector<NameWithPosition> m_arguments;
