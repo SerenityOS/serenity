@@ -86,7 +86,7 @@ public:
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
-    const CSS::StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
+    const CSS::StyleProperties* specified_css_values() const { return m_specified_css_values.ptr(); }
     NonnullRefPtr<CSS::StyleProperties> computed_style();
 
     const CSS::StyleDeclaration* inline_style() const { return m_inline_style; }
@@ -110,7 +110,7 @@ private:
 
     RefPtr<CSS::StyleDeclaration> m_inline_style;
 
-    RefPtr<CSS::StyleProperties> m_resolved_style;
+    RefPtr<CSS::StyleProperties> m_specified_css_values;
 
     Vector<FlyString> m_classes;
 };
