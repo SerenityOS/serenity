@@ -65,7 +65,7 @@ void LineBox::trim_trailing_whitespace()
         return;
     auto& last_fragment = m_fragments.last();
 
-    int space_width = last_fragment.layout_node().specified_style().font().glyph_width(' ');
+    int space_width = last_fragment.layout_node().font().glyph_width(' ');
     while (last_fragment.length() && isspace(last_text[last_fragment.length() - 1])) {
         last_fragment.m_length -= 1;
         last_fragment.set_width(last_fragment.width() - space_width);

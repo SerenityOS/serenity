@@ -222,6 +222,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
 
+    m_font = specified_style.font();
+
     auto position = specified_style.position();
     if (position.has_value())
         computed_values.set_position(position.value());
