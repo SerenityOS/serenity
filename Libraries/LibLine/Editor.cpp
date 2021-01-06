@@ -480,8 +480,7 @@ void Editor::interrupted()
     m_finish = false;
     reposition_cursor(true);
     if (m_suggestion_display->cleanup())
-        reposition_cursor();
-    cleanup();
+        reposition_cursor(true);
     fprintf(stderr, "\n");
     fflush(stderr);
     m_buffer.clear();
