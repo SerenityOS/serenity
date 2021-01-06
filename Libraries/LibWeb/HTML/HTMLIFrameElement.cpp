@@ -54,9 +54,9 @@ HTMLIFrameElement::~HTMLIFrameElement()
 {
 }
 
-RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto style = document().style_resolver().resolve_style(*this);
     return adopt(*new Layout::FrameBox(document(), *this, move(style)));
 }
 

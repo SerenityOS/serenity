@@ -38,7 +38,7 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-RefPtr<Layout::Node> HTMLBRElement::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> HTMLBRElement::create_layout_node()
 {
     return adopt(*new Layout::BreakNode(document(), *this));
 }

@@ -430,9 +430,9 @@ SVGPathElement::SVGPathElement(DOM::Document& document, const QualifiedName& qua
 {
 }
 
-RefPtr<Layout::Node> SVGPathElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> SVGPathElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt(*new Layout::SVGPathBox(document(), *this, move(style)));

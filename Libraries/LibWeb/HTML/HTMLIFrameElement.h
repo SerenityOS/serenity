@@ -37,7 +37,7 @@ public:
     HTMLIFrameElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLIFrameElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 
     Frame* content_frame() { return m_content_frame; }
     const Frame* content_frame() const { return m_content_frame; }

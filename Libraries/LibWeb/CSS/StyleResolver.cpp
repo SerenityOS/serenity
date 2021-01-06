@@ -564,11 +564,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& element, const StyleProperties* parent_style) const
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& element) const
 {
     auto style = StyleProperties::create();
 
-    if (parent_style) {
+    if (auto* parent_style = element.parent_element() ? element.parent_element()->specified_css_values() : nullptr) {
         parent_style->for_each_property([&](auto property_id, auto& value) {
             if (is_inherited_property(property_id))
                 set_property_expanding_shorthands(style, property_id, value, m_document);
