@@ -184,7 +184,10 @@ void VariablesModel::update()
 
 RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
 {
-    auto variables = Debugger::the().session()->debug_info().get_variables_in_current_scope(regs);
+    auto lib = Debugger::the().session()->library_at(regs.eip);
+    if (!lib)
+        return nullptr;
+    auto variables = lib->debug_info->get_variables_in_current_scope(regs);
     return adopt(*new VariablesModel(move(variables), regs));
 }
 

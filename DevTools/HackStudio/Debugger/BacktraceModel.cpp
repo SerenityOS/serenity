@@ -57,7 +57,10 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::
     u32 current_instruction = regs.eip;
     Vector<BacktraceModel::FrameInfo> frames;
     do {
-        String name = debug_session.debug_info().name_of_containing_function(current_instruction);
+        auto lib = debug_session.library_at(regs.eip);
+        if (!lib)
+            continue;
+        String name = lib->debug_info->name_of_containing_function(current_instruction - lib->base_address);
         if (name.is_null()) {
             dbgln("BacktraceModel: couldn't find containing function for address: {:p}", current_instruction);
             name = "<missing>";
