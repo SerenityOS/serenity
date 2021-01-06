@@ -76,7 +76,7 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
 
         box.for_each_child_of_type<Box>([&](auto& child_box) {
             if (child_box.is_absolutely_positioned()) {
-                layout_absolutely_positioned_child(child_box);
+                layout_absolutely_positioned_element(child_box);
             }
             return IterationDecision::Continue;
         });
@@ -85,16 +85,16 @@ void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
 
 void BlockFormattingContext::compute_width(Box& box)
 {
+    if (box.is_absolutely_positioned()) {
+        compute_width_for_absolutely_positioned_element(box);
+        return;
+    }
+
     if (is<ReplacedBox>(box)) {
         // FIXME: This should not be done *by* ReplacedBox
         auto& replaced = downcast<ReplacedBox>(box);
         replaced.prepare_for_replaced_layout();
         compute_width_for_block_level_replaced_element_in_normal_flow(replaced);
-        return;
-    }
-
-    if (box.is_absolutely_positioned()) {
-        compute_width_for_absolutely_positioned_block(box);
         return;
     }
 
@@ -270,146 +270,6 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
 void BlockFormattingContext::compute_height_for_block_level_replaced_element_in_normal_flow(ReplacedBox& box)
 {
     box.set_height(compute_height_for_replaced_element(box));
-}
-
-void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& box)
-{
-    auto& containing_block = *box.containing_block();
-    auto& computed_values = box.computed_values();
-    auto zero_value = CSS::Length::make_px(0);
-
-    auto margin_left = CSS::Length::make_auto();
-    auto margin_right = CSS::Length::make_auto();
-    const auto border_left = computed_values.border_left().width;
-    const auto border_right = computed_values.border_right().width;
-    const auto padding_left = computed_values.padding().left.resolved_or_zero(box, containing_block.width());
-    const auto padding_right = computed_values.padding().right.resolved_or_zero(box, containing_block.width());
-
-    auto try_compute_width = [&](const auto& a_width) {
-        margin_left = computed_values.margin().left.resolved_or_zero(box, containing_block.width());
-        margin_right = computed_values.margin().right.resolved_or_zero(box, containing_block.width());
-
-        auto left = computed_values.offset().left.resolved_or_auto(box, containing_block.width());
-        auto right = computed_values.offset().right.resolved_or_auto(box, containing_block.width());
-        auto width = a_width;
-
-        auto solve_for_left = [&] {
-            return CSS::Length(containing_block.width() - margin_left.to_px(box) - border_left - padding_left.to_px(box) - width.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
-        };
-
-        auto solve_for_width = [&] {
-            return CSS::Length(containing_block.width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box) - right.to_px(box), CSS::Length::Type::Px);
-        };
-
-        auto solve_for_right = [&] {
-            return CSS::Length(containing_block.width() - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left.to_px(box) - width.to_px(box) - padding_right.to_px(box) - border_right - margin_right.to_px(box), CSS::Length::Type::Px);
-        };
-
-        // If all three of 'left', 'width', and 'right' are 'auto':
-        if (left.is_auto() && width.is_auto() && right.is_auto()) {
-            // First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
-            if (margin_left.is_auto())
-                margin_left = CSS::Length::make_px(0);
-            if (margin_right.is_auto())
-                margin_right = CSS::Length::make_px(0);
-            // Then, if the 'direction' property of the element establishing the static-position containing block
-            // is 'ltr' set 'left' to the static position and apply rule number three below;
-            // otherwise, set 'right' to the static position and apply rule number one below.
-            // FIXME: This is very hackish.
-            left = CSS::Length::make_px(0);
-            goto Rule3;
-        }
-
-        if (!left.is_auto() && !width.is_auto() && !right.is_auto()) {
-            // FIXME: This should be solved in a more complicated way.
-            return width;
-        }
-
-        if (margin_left.is_auto())
-            margin_left = CSS::Length::make_px(0);
-        if (margin_right.is_auto())
-            margin_right = CSS::Length::make_px(0);
-
-        // 1. 'left' and 'width' are 'auto' and 'right' is not 'auto',
-        //    then the width is shrink-to-fit. Then solve for 'left'
-        if (left.is_auto() && width.is_auto() && !right.is_auto()) {
-            auto result = calculate_shrink_to_fit_widths(box);
-            solve_for_left();
-            auto available_width = solve_for_width();
-            width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width), CSS::Length::Type::Px);
-        }
-
-        // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
-        //    then if the 'direction' property of the element establishing
-        //    the static-position containing block is 'ltr' set 'left'
-        //    to the static position, otherwise set 'right' to the static position.
-        //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-        else if (left.is_auto() && right.is_auto() && !width.is_auto()) {
-            // FIXME: Check direction
-            // FIXME: Use the static-position containing block
-            left = zero_value;
-            right = solve_for_right();
-        }
-
-        // 3. 'width' and 'right' are 'auto' and 'left' is not 'auto',
-        //    then the width is shrink-to-fit. Then solve for 'right'
-        else if (width.is_auto() && right.is_auto() && !left.is_auto()) {
-        Rule3:
-            auto result = calculate_shrink_to_fit_widths(box);
-            auto available_width = solve_for_width();
-            width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width), CSS::Length::Type::Px);
-            right = solve_for_right();
-        }
-
-        // 4. 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-        else if (left.is_auto() && !width.is_auto() && !right.is_auto()) {
-            left = solve_for_left();
-        }
-
-        // 5. 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-        else if (width.is_auto() && !left.is_auto() && !right.is_auto()) {
-            width = solve_for_width();
-        }
-
-        // 6. 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
-        else if (right.is_auto() && !left.is_auto() && !width.is_auto()) {
-            right = solve_for_right();
-        }
-
-        return width;
-    };
-
-    auto specified_width = computed_values.width().resolved_or_auto(box, containing_block.width());
-
-    // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto used_width = try_compute_width(specified_width);
-
-    // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
-    //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = computed_values.max_width().resolved_or_auto(box, containing_block.width());
-    if (!specified_max_width.is_auto()) {
-        if (used_width.to_px(box) > specified_max_width.to_px(box)) {
-            used_width = try_compute_width(specified_max_width);
-        }
-    }
-
-    // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
-    //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = computed_values.min_width().resolved_or_auto(box, containing_block.width());
-    if (!specified_min_width.is_auto()) {
-        if (used_width.to_px(box) < specified_min_width.to_px(box)) {
-            used_width = try_compute_width(specified_min_width);
-        }
-    }
-
-    box.set_width(used_width.to_px(box));
-
-    box.box_model().margin.left = margin_left.to_px(box);
-    box.box_model().margin.right = margin_right.to_px(box);
-    box.box_model().border.left = border_left;
-    box.box_model().border.right = border_right;
-    box.box_model().padding.left = padding_left.to_px(box);
-    box.box_model().padding.right = padding_right.to_px(box);
 }
 
 void BlockFormattingContext::compute_height(Box& box)
@@ -701,72 +561,6 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
     }
 
     box.set_offset(x, box.effective_offset().y());
-}
-
-void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
-{
-    auto& containing_block = context_box();
-    auto& box_model = box.box_model();
-
-    auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
-
-    compute_width(box);
-    layout_inside(box, LayoutMode::Default);
-    compute_height(box);
-
-    box_model.margin.left = box.computed_values().margin().left.resolved_or_auto(box, containing_block.width()).to_px(box);
-    box_model.margin.top = box.computed_values().margin().top.resolved_or_auto(box, containing_block.height()).to_px(box);
-    box_model.margin.right = box.computed_values().margin().right.resolved_or_auto(box, containing_block.width()).to_px(box);
-    box_model.margin.bottom = box.computed_values().margin().bottom.resolved_or_auto(box, containing_block.height()).to_px(box);
-
-    box_model.border.left = box.computed_values().border_left().width;
-    box_model.border.right = box.computed_values().border_right().width;
-    box_model.border.top = box.computed_values().border_top().width;
-    box_model.border.bottom = box.computed_values().border_bottom().width;
-
-    box_model.offset.left = box.computed_values().offset().left.resolved_or_auto(box, containing_block.width()).to_px(box);
-    box_model.offset.top = box.computed_values().offset().top.resolved_or_auto(box, containing_block.height()).to_px(box);
-    box_model.offset.right = box.computed_values().offset().right.resolved_or_auto(box, containing_block.width()).to_px(box);
-    box_model.offset.bottom = box.computed_values().offset().bottom.resolved_or_auto(box, containing_block.height()).to_px(box);
-
-    if (box.computed_values().offset().left.is_auto() && specified_width.is_auto() && box.computed_values().offset().right.is_auto()) {
-        if (box.computed_values().margin().left.is_auto())
-            box_model.margin.left = 0;
-        if (box.computed_values().margin().right.is_auto())
-            box_model.margin.right = 0;
-    }
-
-    Gfx::FloatPoint used_offset;
-
-    if (!box.computed_values().offset().left.is_auto()) {
-        float x_offset = box_model.offset.left
-            + box_model.border_box().left;
-        used_offset.set_x(x_offset + box_model.margin.left);
-    } else if (!box.computed_values().offset().right.is_auto()) {
-        float x_offset = 0
-            - box_model.offset.right
-            - box_model.border_box().right;
-        used_offset.set_x(containing_block.width() + x_offset - box.width() - box_model.margin.right);
-    } else {
-        float x_offset = box_model.margin_box().left;
-        used_offset.set_x(x_offset);
-    }
-
-    if (!box.computed_values().offset().top.is_auto()) {
-        float y_offset = box_model.offset.top
-            + box_model.border_box().top;
-        used_offset.set_y(y_offset + box_model.margin.top);
-    } else if (!box.computed_values().offset().bottom.is_auto()) {
-        float y_offset = 0
-            - box_model.offset.bottom
-            - box_model.border_box().bottom;
-        used_offset.set_y(containing_block.height() + y_offset - box.height() - box_model.margin.bottom);
-    } else {
-        float y_offset = box_model.margin_box().top;
-        used_offset.set_y(y_offset);
-    }
-
-    box.set_offset(used_offset);
 }
 
 }
