@@ -100,6 +100,33 @@ static bool handle_disassemble_command(const String& command, void* first_instru
     return true;
 }
 
+static bool insert_breakpoint_at_address(FlatPtr address)
+{
+    return g_debug_session->insert_breakpoint((void*)address);
+}
+
+static bool insert_breakpoint_at_source_position(const String& file, size_t line)
+{
+    auto result = g_debug_session->insert_breakpoint(file, line);
+    if (!result.has_value()) {
+        warnln("Could not insert breakpoint at {}:{}", file, line);
+        return false;
+    }
+    outln("Breakpoint inserted [{}:{} ({}:{:p})]", result.value().file_name, result.value().line_number, result.value().library_name, result.value().address);
+    return true;
+}
+
+static bool insert_breakpoint_at_symbol(const String& symbol)
+{
+    auto result = g_debug_session->insert_breakpoint(symbol);
+    if (!result.has_value()) {
+        warnln("Could not insert breakpoint at symbol: {}", symbol);
+        return false;
+    }
+    outln("Breakpoint inserted [{}:{:p}]", result.value().library_name, result.value().address);
+    return true;
+}
+
 static bool handle_breakpoint_command(const String& command)
 {
     auto parts = command.split(' ');
@@ -110,8 +137,6 @@ static bool handle_breakpoint_command(const String& command)
     if (argument.is_empty())
         return false;
 
-    u32 breakpoint_address = 0;
-
     if (argument.contains(":")) {
         auto source_arguments = argument.split(':');
         if (source_arguments.size() != 2)
@@ -120,32 +145,13 @@ static bool handle_breakpoint_command(const String& command)
         if (!line.has_value())
             return false;
         auto file = source_arguments[0];
-        if (!file.contains("/"))
-            file = String::formatted("./{}", file);
-        auto result = g_debug_session->debug_info().get_instruction_from_source(file, line.value());
-        if (!result.has_value()) {
-            outln("No matching instruction found");
-            return false;
-        }
-        breakpoint_address = result.value();
-    } else if ((argument.starts_with("0x"))) {
-        breakpoint_address = strtoul(argument.characters() + 2, nullptr, 16);
-    } else {
-        auto symbol = g_debug_session->elf().find_demangled_function(argument);
-        if (!symbol.has_value()) {
-            outln("symbol {} not found", parts[1]);
-            return false;
-        }
-        breakpoint_address = reinterpret_cast<u32>(symbol.value().value());
+        return insert_breakpoint_at_source_position(file, line.value());
+    }
+    if ((argument.starts_with("0x"))) {
+        return insert_breakpoint_at_address(strtoul(argument.characters() + 2, nullptr, 16));
     }
 
-    bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
-    if (!success) {
-        warnln("could not insert breakpoint at: {:p}", breakpoint_address);
-        return false;
-    }
-    warnln("breakpoint inserted at: {:p}", breakpoint_address);
-    return true;
+    return insert_breakpoint_at_symbol(argument);
 }
 
 static bool handle_examine_command(const String& command)
@@ -212,14 +218,10 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    // bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
-    // bool rc = g_debug_session->insert_breakpoint((void*)0x08048f49);
-    // ASSERT(rc);
-
     Debug::DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;
 
-    g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+    g_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Stopped, [&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             outln("Program exited.");
             return Debug::DebugSession::DebugDecision::Detach;
@@ -228,8 +230,9 @@ int main(int argc, char** argv)
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
-        auto symbol_at_ip = g_debug_session->elf().symbolicate(regs.eip);
-        auto source_position = g_debug_session->debug_info().get_source_position(regs.eip);
+        auto symbol_at_ip = g_debug_session->symbolicate(regs.eip);
+
+        auto source_position = g_debug_session->get_source_position(regs.eip);
 
         if (in_step_line) {
             bool no_source_info = !source_position.has_value();
@@ -242,7 +245,10 @@ int main(int argc, char** argv)
             }
         }
 
-        outln("Program is stopped at: {:p} ({})", regs.eip, symbol_at_ip);
+        if (symbol_at_ip.has_value())
+            outln("Program is stopped at: {:p} ({}:{})", regs.eip, symbol_at_ip.value().library_name, symbol_at_ip.value().symbol);
+        else
+            outln("Program is stopped at: {:p}", regs.eip);
 
         if (source_position.has_value()) {
             previous_source_position = source_position.value();
