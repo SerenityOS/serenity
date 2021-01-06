@@ -57,7 +57,8 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(link, "Link files instead of copying", "link", 'l');
-    args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'r');
+    args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'R');
+    args_parser.add_option(recursion_allowed, "Same as -R", nullptr, 'r');
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(sources, "Source file path", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
@@ -99,7 +100,7 @@ bool copy_file_or_directory(String src_path, String dst_path, bool recursion_all
 
     if (S_ISDIR(src_stat.st_mode)) {
         if (!recursion_allowed) {
-            fprintf(stderr, "cp: -r not specified; omitting directory '%s'\n", src_path.characters());
+            fprintf(stderr, "cp: -R not specified; omitting directory '%s'\n", src_path.characters());
             return false;
         }
         return copy_directory(src_path, dst_path, link);
