@@ -125,6 +125,17 @@ void Job::on_socket_connected()
     register_on_ready_to_read([&] {
         if (is_cancelled())
             return;
+
+        if (m_state == State::Finished) {
+            // This is probably just a EOF notification, which means we should receive nothing
+            // and then get eof() == true.
+            [[maybe_unused]] auto payload = receive(64);
+            // These assertions are only correct if "Connection: close".
+            ASSERT(payload.is_empty());
+            ASSERT(eof());
+            return;
+        }
+
         if (m_state == State::InStatus) {
             if (!can_read_line())
                 return;
