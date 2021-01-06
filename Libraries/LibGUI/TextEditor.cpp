@@ -1055,6 +1055,11 @@ bool TextEditor::write_to_file(const StringView& path)
         perror("open");
         return false;
     }
+    
+    if (file_size == 0) {
+        close(fd);
+        return true;
+    }
 
     // Compute the final file size and ftruncate() to make writing fast.
     // FIXME: Remove this once the kernel is smart enough to do this instead.
@@ -1079,10 +1084,17 @@ bool TextEditor::write_to_file(const StringView& path)
                 close(fd);
                 return false;
             }
-        }
-        if (i != line_count() - 1) {
-            char ch = '\n';
-            ssize_t nwritten = write(fd, &ch, 1);
+
+            char newline = '\n';
+            nwritten = write(fd, &newline, 1);
+            if (nwritten != 1) {
+                perror("write");
+                close(fd);
+                return false;
+            }
+        } else if (i == line_count() - 1) {
+            char newline = '\n';
+            ssize_t nwritten = write(fd, &newline, 1);
             if (nwritten != 1) {
                 perror("write");
                 close(fd);
