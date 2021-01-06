@@ -114,7 +114,7 @@ bool Element::has_class(const FlyString& class_name) const
 RefPtr<Layout::Node> Element::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    const_cast<Element&>(*this).m_resolved_style = style;
+    const_cast<Element&>(*this).m_specified_css_values = style;
     auto display = style->display();
 
     if (display == CSS::Display::None)
@@ -203,7 +203,7 @@ void Element::recompute_style()
         return;
     ASSERT(parent_layout_node);
     auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->specified_style());
-    m_resolved_style = style;
+    m_specified_css_values = style;
     if (!layout_node()) {
         if (style->display() == CSS::Display::None)
             return;
@@ -233,7 +233,7 @@ void Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
-    auto properties = m_resolved_style->clone();
+    auto properties = m_specified_css_values->clone();
     if (layout_node() && layout_node()->has_style()) {
         CSS::PropertyID box_model_metrics[] = {
             CSS::PropertyID::MarginTop,
