@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibGfx/Forward.h>
-#include <LibWeb/Layout/LayoutStyle.h>
+#include <LibWeb/CSS/ComputedValues.h>
 
 namespace Web::Painting {
 
@@ -37,6 +37,6 @@ enum class BorderEdge {
     Bottom,
     Left,
 };
-void paint_border(PaintContext&, BorderEdge, const Gfx::FloatRect&, const LayoutStyle&);
+void paint_border(PaintContext&, BorderEdge, const Gfx::FloatRect&, const CSS::ComputedValues&);
 
 }

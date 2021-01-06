@@ -109,7 +109,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     if (!containing_block().line_boxes().is_empty() && containing_block().line_boxes().last().fragments().is_empty())
         containing_block().line_boxes().take_last();
 
-    auto text_align = containing_block().style().text_align();
+    auto text_align = containing_block().computed_values().text_align();
     float min_line_height = containing_block().specified_style().line_height(containing_block());
     float content_height = 0;
     float max_linebox_width = 0;
@@ -209,16 +209,16 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
     if (box.is_inline_block()) {
         auto& inline_block = const_cast<BlockBox&>(downcast<BlockBox>(box));
 
-        if (inline_block.style().width().is_undefined_or_auto()) {
+        if (inline_block.computed_values().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
-            auto margin_left = inline_block.style().margin().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
-            auto border_left_width = inline_block.style().border_left().width;
-            auto padding_left = inline_block.style().padding().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto margin_left = inline_block.computed_values().margin().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto border_left_width = inline_block.computed_values().border_left().width;
+            auto padding_left = inline_block.computed_values().padding().left.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
-            auto margin_right = inline_block.style().margin().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
-            auto border_right_width = inline_block.style().border_right().width;
-            auto padding_right = inline_block.style().padding().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto margin_right = inline_block.computed_values().margin().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
+            auto border_right_width = inline_block.computed_values().border_right().width;
+            auto padding_right = inline_block.computed_values().padding().right.resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block);
 
             auto available_width = containing_block().width()
                 - margin_left
@@ -231,14 +231,14 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_width(width);
         } else {
-            inline_block.set_width(inline_block.style().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
+            inline_block.set_width(inline_block.computed_values().width().resolved_or_zero(inline_block, containing_block().width()).to_px(inline_block));
         }
         layout_inside(inline_block, layout_mode);
 
-        if (inline_block.style().height().is_undefined_or_auto()) {
+        if (inline_block.computed_values().height().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         } else {
-            inline_block.set_height(inline_block.style().height().resolved_or_zero(inline_block, containing_block().height()).to_px(inline_block));
+            inline_block.set_height(inline_block.computed_values().height().resolved_or_zero(inline_block, containing_block().height()).to_px(inline_block));
         }
         return;
     }
