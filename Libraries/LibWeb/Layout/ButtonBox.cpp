@@ -45,8 +45,7 @@ ButtonBox::~ButtonBox()
 
 void ButtonBox::prepare_for_replaced_layout()
 {
-    auto& font = specified_style().font();
-    set_intrinsic_width(font.width(dom_node().value()) + 20);
+    set_intrinsic_width(font().width(dom_node().value()) + 20);
     set_has_intrinsic_width(true);
 
     set_intrinsic_height(20);
@@ -67,7 +66,7 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
         auto text_rect = enclosing_int_rect(absolute_rect());
         if (m_being_pressed)
             text_rect.move_by(1, 1);
-        context.painter().draw_text(text_rect, dom_node().value(), specified_style().font(), Gfx::TextAlignment::Center, context.palette().button_text());
+        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, context.palette().button_text());
     }
 }
 

@@ -81,7 +81,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     }
 
     if (phase == PaintPhase::Foreground) {
-        painter.set_font(specified_style().font());
+        painter.set_font(font());
 
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
@@ -99,7 +99,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
 
         painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, style().color());
 
-        auto selection_rect = fragment.selection_rect(specified_style().font());
+        auto selection_rect = fragment.selection_rect(font());
         if (!selection_rect.is_empty()) {
             painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
@@ -130,7 +130,7 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
 
     auto fragment_rect = fragment.absolute_rect();
 
-    float cursor_x = fragment_rect.x() + specified_style().font().width(fragment.text().substring_view(0, frame().cursor_position().offset() - fragment.start()));
+    float cursor_x = fragment_rect.x() + font().width(fragment.text().substring_view(0, frame().cursor_position().offset() - fragment.start()));
     float cursor_top = fragment_rect.top();
     float cursor_height = fragment_rect.height();
     Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
@@ -195,7 +195,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 {
     auto& containing_block = context.containing_block();
 
-    auto& font = specified_style().font();
+    auto& font = this->font();
 
     auto& line_boxes = containing_block.line_boxes();
     containing_block.ensure_last_line_box();
