@@ -84,8 +84,8 @@ u32 CharacterMap::get_char(KeyEvent event)
     if (event.e0_prefix && event.key == Key_Slash) {
         // If Key_Slash (scancode = 0x35) mapped to other form "/", we fix num pad key of "/" with this case.
         code_point = '/';
-    } else if (event.e0_prefix) {
-        // Except for `keypad-/`, all e0 scan codes are not actually characters. i.e., `keypad-0` and
+    } else if (event.e0_prefix && event.key != Key_Return) {
+        // Except for `keypad-/` and 'keypad-return', all e0 scan codes are not actually characters. i.e., `keypad-0` and
         // `Insert` have the same scancode except for the prefix, but insert should not have a code_point.
         code_point = 0;
     }
