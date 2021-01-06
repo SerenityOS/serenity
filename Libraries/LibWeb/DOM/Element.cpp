@@ -198,14 +198,12 @@ void Element::recompute_style()
 {
     set_needs_style_update(false);
     ASSERT(parent());
-    auto* parent_layout_node = parent()->layout_node();
-    if (!parent_layout_node)
-        return;
-    ASSERT(parent_layout_node);
-    auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->specified_style());
-    m_specified_css_values = style;
+    auto old_specified_css_values = m_specified_css_values;
+    auto* parent_specified_css_values = parent()->is_element() ? downcast<Element>(*parent()).specified_css_values() : nullptr;
+    auto new_specified_css_values = document().style_resolver().resolve_style(*this, parent_specified_css_values);
+    m_specified_css_values = new_specified_css_values;
     if (!layout_node()) {
-        if (style->display() == CSS::Display::None)
+        if (new_specified_css_values->display() == CSS::Display::None)
             return;
         // We need a new layout tree here!
         Layout::TreeBuilder tree_builder;
@@ -217,11 +215,13 @@ void Element::recompute_style()
     if (is<Layout::WidgetBox>(layout_node()))
         return;
 
-    auto diff = compute_style_difference(layout_node()->specified_style(), *style, document());
+    auto diff = StyleDifference::NeedsRelayout;
+    if (old_specified_css_values)
+        diff = compute_style_difference(*old_specified_css_values, *new_specified_css_values, document());
     if (diff == StyleDifference::None)
         return;
-    layout_node()->set_specified_style(*style);
-    layout_node()->apply_style(*style);
+    layout_node()->set_specified_style(*new_specified_css_values);
+    layout_node()->apply_style(*new_specified_css_values);
     if (diff == StyleDifference::NeedsRelayout) {
         document().force_layout();
         return;
@@ -233,6 +233,7 @@ void Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
+    // FIXME: This implementation is not doing anything it's supposed to.
     auto properties = m_specified_css_values->clone();
     if (layout_node() && layout_node()->has_style()) {
         CSS::PropertyID box_model_metrics[] = {
@@ -250,7 +251,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
             CSS::PropertyID::BorderRightWidth,
         };
         for (CSS::PropertyID id : box_model_metrics) {
-            auto prop = layout_node()->specified_style().property(id);
+            auto prop = m_specified_css_values->property(id);
             if (prop.has_value())
                 properties->set_property(id, prop.value());
         }
