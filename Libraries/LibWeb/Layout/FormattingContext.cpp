@@ -437,8 +437,10 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
 void FormattingContext::compute_width_for_absolutely_positioned_replaced_element(ReplacedBox& box)
 {
-    // FIXME: Implement this.
-    return compute_width_for_absolutely_positioned_non_replaced_element(box);
+    // 10.3.8 Absolutely positioned, replaced elements
+    // The used value of 'width' is determined as for inline replaced elements.
+    box.prepare_for_replaced_layout();
+    box.set_width(compute_width_for_replaced_element(box));
 }
 
 void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box& box)
