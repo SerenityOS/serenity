@@ -106,6 +106,8 @@ void KeyCallbackMachine::interrupted(Editor& editor)
     m_current_matching_keys.clear();
     if (auto callback = m_key_callbacks.get({ ctrl('C') }); callback.has_value())
         m_should_process_this_key = callback.value()->callback(editor);
+    else
+        m_should_process_this_key = true;
 }
 
 }
