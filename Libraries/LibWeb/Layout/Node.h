@@ -127,7 +127,7 @@ public:
 
     const Gfx::Font& font() const;
     const CSS::StyleProperties& specified_style() const;
-    const CSS::ImmutableComputedValues& style() const;
+    const CSS::ImmutableComputedValues& computed_values() const;
 
     NodeWithStyle* parent();
     const NodeWithStyle* parent() const;
@@ -247,7 +247,7 @@ inline const CSS::StyleProperties& Node::specified_style() const
     return parent()->specified_style();
 }
 
-inline const CSS::ImmutableComputedValues& Node::style() const
+inline const CSS::ImmutableComputedValues& Node::computed_values() const
 {
     if (m_has_style)
         return static_cast<const NodeWithStyle*>(this)->computed_values();
