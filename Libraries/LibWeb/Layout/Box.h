@@ -113,6 +113,11 @@ protected:
     {
     }
 
+    Box(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+        : NodeWithStyleAndBoxModelMetrics(document, node, move(computed_values))
+    {
+    }
+
     virtual void did_set_rect() { }
 
     Vector<LineBox> m_line_boxes;

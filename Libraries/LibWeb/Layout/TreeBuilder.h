@@ -41,11 +41,11 @@ public:
 private:
     void create_layout_tree(DOM::Node&);
 
-    void push_parent(Layout::Node& node) { m_parent_stack.append(&node); }
+    void push_parent(Layout::NodeWithStyle& node) { m_parent_stack.append(&node); }
     void pop_parent() { m_parent_stack.take_last(); }
 
     RefPtr<Layout::Node> m_layout_root;
-    Vector<Layout::Node*> m_parent_stack;
+    Vector<Layout::NodeWithStyle*> m_parent_stack;
 };
 
 }

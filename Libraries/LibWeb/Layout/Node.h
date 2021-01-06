@@ -126,7 +126,6 @@ public:
     bool can_contain_boxes_with_position_absolute() const;
 
     const Gfx::Font& font() const;
-    const CSS::StyleProperties& specified_style() const;
     const CSS::ImmutableComputedValues& computed_values() const;
 
     NodeWithStyle* parent();
@@ -198,9 +197,6 @@ class NodeWithStyle : public Node {
 public:
     virtual ~NodeWithStyle() override { }
 
-    const CSS::StyleProperties& specified_style() const { return m_specified_style; }
-    void set_specified_style(const CSS::StyleProperties& style) { m_specified_style = style; }
-
     const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
 
     void apply_style(const CSS::StyleProperties&);
@@ -210,8 +206,11 @@ public:
     float font_size() const { return m_font_size; }
     const CSS::ImageStyleValue* background_image() const { return m_background_image; }
 
+    NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
+    NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
 
 private:
     CSS::ComputedValues m_computed_values;
@@ -220,7 +219,6 @@ private:
     float m_font_size { 0 };
     RefPtr<CSS::ImageStyleValue> m_background_image;
 
-    NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
 };
 
@@ -232,6 +230,11 @@ public:
 protected:
     NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : NodeWithStyle(document, node, move(style))
+    {
+    }
+
+    NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+        : NodeWithStyle(document, node, move(computed_values))
     {
     }
 
@@ -251,13 +254,6 @@ inline float Node::font_size() const
     if (m_has_style)
         return static_cast<const NodeWithStyle*>(this)->font_size();
     return parent()->font_size();
-}
-
-inline const CSS::StyleProperties& Node::specified_style() const
-{
-    if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->specified_style();
-    return parent()->specified_style();
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const

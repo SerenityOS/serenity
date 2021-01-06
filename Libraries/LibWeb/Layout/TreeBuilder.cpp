@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TableBox.h>
@@ -37,22 +38,10 @@ TreeBuilder::TreeBuilder()
 {
 }
 
-static NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block(Node& parent_box)
-{
-    auto new_style = CSS::StyleProperties::create();
-
-    parent_box.specified_style().for_each_property([&](auto property_id, auto& value) {
-        if (CSS::StyleResolver::is_inherited_property(property_id))
-            new_style->set_property(property_id, value);
-    });
-
-    return new_style;
-}
-
 // The insertion_parent_for_*() functions maintain the invariant that block-level boxes must have either
 // only block-level children or only inline-level children.
 
-static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_parent, Layout::Node& layout_node)
+static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& layout_parent)
 {
     if (layout_parent.is_inline() && !layout_parent.is_inline_block())
         return layout_parent;
@@ -62,7 +51,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_paren
 
     // Parent has block-level children, insert into an anonymous wrapper block (and create it first if needed)
     if (!layout_parent.last_child()->is_anonymous() || !layout_parent.last_child()->children_are_inline()) {
-        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+        layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     }
     return *layout_parent.last_child();
 }
@@ -86,7 +75,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+    layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
@@ -102,7 +91,9 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     if (dom_node.parent() && !dom_node.parent()->layout_node())
         return;
 
-    const CSS::StyleProperties* parent_style = m_parent_stack.is_empty() ? nullptr : &m_parent_stack.last()->specified_style();
+    const CSS::StyleProperties* parent_style = nullptr;
+    if (!m_parent_stack.is_empty() && m_parent_stack.last()->dom_node() && m_parent_stack.last()->dom_node()->is_element())
+        parent_style = downcast<DOM::Element>(*m_parent_stack.last()->dom_node()).specified_css_values();
 
     auto layout_node = dom_node.create_layout_node(parent_style);
     if (!layout_node)
@@ -117,7 +108,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     } else {
         if (layout_node->is_inline()) {
             // Inlines can be inserted into the nearest ancestor.
-            auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last(), *layout_node);
+            auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last());
             insertion_point.append_child(*layout_node);
             insertion_point.set_children_are_inline(true);
         } else {
@@ -136,7 +127,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     }
 
     if (dom_node.has_children() && layout_node->can_have_children()) {
-        push_parent(*layout_node);
+        push_parent(downcast<NodeWithStyle>(*layout_node));
         downcast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
             create_layout_tree(dom_child);
         });
@@ -149,7 +140,7 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
     if (dom_node.parent()) {
         // We're building a partial layout tree, so start by building up the stack of parent layout nodes.
         for (auto* ancestor = dom_node.parent()->layout_node(); ancestor; ancestor = ancestor->parent())
-            m_parent_stack.prepend(ancestor);
+            m_parent_stack.prepend(downcast<NodeWithStyle>(ancestor));
     }
 
     create_layout_tree(dom_node);
