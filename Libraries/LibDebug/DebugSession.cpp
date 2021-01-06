@@ -25,15 +25,20 @@
  */
 
 #include "DebugSession.h"
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
+#include <LibCore/File.h>
+#include <LibRegex/Regex.h>
 #include <stdlib.h>
 
 namespace Debug {
 
-DebugSession::DebugSession(pid_t pid)
+DebugSession::DebugSession(pid_t pid, String source_root)
     : m_debuggee_pid(pid)
-    , m_executable(map_executable_for_process(pid))
-    , m_debug_info(make<ELF::Image>(reinterpret_cast<const u8*>(m_executable.data()), m_executable.size()))
+    , m_source_root(source_root)
+
 {
 }
 
@@ -59,7 +64,7 @@ DebugSession::~DebugSession()
     }
 }
 
-OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
+OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String source_root)
 {
     auto pid = fork();
 
@@ -80,7 +85,10 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
-        int rc = execvp(args[0], const_cast<char**>(args));
+        const char** envp = (const char**)calloc(2, sizeof(const char*));
+        // This causes loader to stop on a breakpoint before jumping to the entry point of the program.
+        envp[0] = "_LOADER_BREAKPOINT=1";
+        int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));
         if (rc < 0) {
             perror("execvp");
         }
@@ -107,7 +115,19 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command)
         return nullptr;
     }
 
-    return adopt_own(*new DebugSession(pid));
+    auto debug_session = adopt_own(*new DebugSession(pid, source_root));
+
+    // Continue until breakpoint before entry point of main program
+    int wstatus = debug_session->continue_debuggee_and_wait();
+    if (WSTOPSIG(wstatus) != SIGTRAP) {
+        dbgln("expected SIGTRAP");
+        return nullptr;
+    }
+
+    // At this point, libraries should have been loaded
+    debug_session->update_loaded_libs();
+
+    return move(debug_session);
 }
 
 bool DebugSession::poke(u32* address, u32 data)
@@ -266,6 +286,154 @@ void DebugSession::detach()
         remove_breakpoint(breakpoint);
     }
     continue_debuggee();
+}
+
+Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(const String& symbol_name)
+{
+    Optional<InsertBreakpointAtSymbolResult> result;
+    for_each_loaded_library([this, symbol_name, &result](auto& lib) {
+        // The loader contains its own definitions for LibC symbols, so we don't want to include it in the search.
+        if (lib.name == "Loader.so")
+            return IterationDecision::Continue;
+
+        auto symbol = lib.debug_info->elf().find_demangled_function(symbol_name);
+        if (!symbol.has_value())
+            return IterationDecision::Continue;
+
+        auto breakpoint_address = symbol.value().value() + lib.base_address;
+        bool rc = this->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
+        if (!rc)
+            return IterationDecision::Break;
+
+        result = InsertBreakpointAtSymbolResult { lib.name, breakpoint_address };
+        return IterationDecision::Break;
+    });
+    return result;
+}
+
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& file_name, size_t line_number)
+{
+    auto address_and_source_position = get_address_from_source_position(file_name, line_number);
+    if (!address_and_source_position.has_value())
+        return {};
+
+    auto address = address_and_source_position.value().address;
+    bool rc = this->insert_breakpoint(reinterpret_cast<void*>(address));
+    if (!rc)
+        return {};
+
+    auto lib = library_at(address);
+    ASSERT(lib);
+
+    return InsertBreakpointAtSourcePositionResult { lib->name, address_and_source_position.value().file, address_and_source_position.value().line, address };
+}
+
+void DebugSession::update_loaded_libs()
+{
+    auto file = Core::File::construct(String::format("/proc/%u/vm", m_debuggee_pid));
+    bool rc = file->open(Core::IODevice::ReadOnly);
+    ASSERT(rc);
+
+    auto file_contents = file->read_all();
+    auto json = JsonValue::from_string(file_contents);
+    ASSERT(json.has_value());
+
+    auto vm_entries = json.value().as_array();
+    Regex<PosixExtended> re("(.+): \\.text");
+
+    auto get_path_to_object = [&re](const String& vm_name) -> Optional<String> {
+        if (vm_name == "/usr/lib/Loader.so")
+            return vm_name;
+        RegexResult result;
+        auto rc = re.search(vm_name, result);
+        if (!rc)
+            return {};
+        auto lib_name = result.capture_group_matches.at(0).at(0).view.u8view().to_string();
+        if (lib_name.starts_with("/"))
+            return lib_name;
+        return String::format("/usr/lib/%s", lib_name.characters());
+    };
+
+    vm_entries.for_each([&](auto& entry) {
+        // TODO: check that region is executable
+        auto vm_name = entry.as_object().get("name").as_string();
+
+        auto object_path = get_path_to_object(vm_name);
+        if (!object_path.has_value())
+            return IterationDecision::Continue;
+
+        String lib_name = object_path.value();
+        if (lib_name.ends_with(".so"))
+            lib_name = LexicalPath(object_path.value()).basename();
+
+        // FIXME: DebugInfo currently cannot parse the debug information of libgcc_s.so
+        if (lib_name == "libgcc_s.so")
+            return IterationDecision::Continue;
+
+        if (m_loaded_libraries.contains(lib_name))
+            return IterationDecision::Continue;
+
+        MappedFile lib_file(object_path.value());
+        if (!lib_file.is_valid())
+            return IterationDecision::Continue;
+
+        FlatPtr base_address = entry.as_object().get("address").as_u32();
+        auto debug_info = make<DebugInfo>(make<ELF::Image>(reinterpret_cast<const u8*>(lib_file.data()), lib_file.size()), m_source_root, base_address);
+        auto lib = make<LoadedLibrary>(lib_name, move(lib_file), move(debug_info), base_address);
+        m_loaded_libraries.set(lib_name, move(lib));
+
+        return IterationDecision::Continue;
+    });
+}
+
+const DebugSession::LoadedLibrary* DebugSession::library_at(FlatPtr address) const
+{
+    const LoadedLibrary* result = nullptr;
+    for_each_loaded_library([&result, address](const auto& lib) {
+        if (address >= lib.base_address && address < lib.base_address + lib.debug_info->elf().size()) {
+            result = &lib;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return result;
+}
+
+Optional<DebugSession::SymbolicationResult> DebugSession::symbolicate(FlatPtr address) const
+{
+    auto* lib = library_at(address);
+    if (!lib)
+        return {};
+    //FIXME: ELF::Image symlicate() API should return String::empty() if symbol is not found (It currently returns ??)
+    auto symbol = lib->debug_info->elf().symbolicate(address - lib->base_address);
+    return { { lib->name, symbol } };
+}
+
+Optional<DebugInfo::SourcePositionAndAddress> DebugSession::get_address_from_source_position(const String& file, size_t line) const
+{
+    Optional<DebugInfo::SourcePositionAndAddress> result;
+    for_each_loaded_library([this, file, line, &result](auto& lib) {
+        // The loader contains its own definitions for LibC symbols, so we don't want to include it in the search.
+        if (lib.name == "Loader.so")
+            return IterationDecision::Continue;
+
+        auto source_position_and_address = lib.debug_info->get_address_from_source_position(file, line);
+        if (!source_position_and_address.has_value())
+            return IterationDecision::Continue;
+
+        result = source_position_and_address;
+        result.value().address += lib.base_address;
+        return IterationDecision::Break;
+    });
+    return result;
+}
+
+Optional<DebugInfo::SourcePosition> DebugSession::get_source_position(FlatPtr address) const
+{
+    auto* lib = library_at(address);
+    if (!lib)
+        return {};
+    return lib->debug_info->get_source_position(address - lib->base_address);
 }
 
 }

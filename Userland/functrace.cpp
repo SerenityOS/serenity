@@ -84,25 +84,27 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
 
 static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
 {
-    [[maybe_unused]] auto r = demangle("foo"); // Required for linked with __cxa_demangle
     auto instrumented = make<HashMap<void*, X86::Instruction>>();
-    g_debug_session->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
-        if (section.name() != ".text")
-            return IterationDecision::Continue;
+    g_debug_session->for_each_loaded_library([&](const Debug::DebugSession::LoadedLibrary& lib) {
+        lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
+            if (section.name() != ".text")
+                return IterationDecision::Continue;
 
-        X86::SimpleInstructionStream stream((const u8*)((u32)g_debug_session->executable().data() + section.offset()), section.size());
-        X86::Disassembler disassembler(stream);
-        for (;;) {
-            auto offset = stream.offset();
-            void* instruction_address = (void*)(section.address() + offset);
-            auto insn = disassembler.next();
-            if (!insn.has_value())
-                break;
-            if (insn.value().mnemonic() == "RET" || insn.value().mnemonic() == "CALL") {
-                g_debug_session->insert_breakpoint(instruction_address);
-                instrumented->set(instruction_address, insn.value());
+            X86::SimpleInstructionStream stream((const u8*)((u32)lib.file.data() + section.offset()), section.size());
+            X86::Disassembler disassembler(stream);
+            for (;;) {
+                auto offset = stream.offset();
+                void* instruction_address = (void*)(section.address() + offset + lib.base_address);
+                auto insn = disassembler.next();
+                if (!insn.has_value())
+                    break;
+                if (insn.value().mnemonic() == "RET" || insn.value().mnemonic() == "CALL") {
+                    g_debug_session->insert_breakpoint(instruction_address);
+                    instrumented->set(instruction_address, insn.value());
+                }
             }
-        }
+            return IterationDecision::Continue;
+        });
         return IterationDecision::Continue;
     });
     return instrumented;
@@ -142,7 +144,7 @@ int main(int argc, char** argv)
     size_t depth = 0;
     bool new_function = true;
 
-    g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> regs) {
+    g_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Running, [&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             outln("Program exited.");
             return Debug::DebugSession::DebugDecision::Detach;
@@ -154,8 +156,8 @@ int main(int argc, char** argv)
         }
 
         if (new_function) {
-            auto function_name = g_debug_session->elf().symbolicate(regs.value().eip);
-            print_function_call(function_name, depth);
+            auto function_name = g_debug_session->symbolicate(regs.value().eip);
+            print_function_call(function_name.value().symbol, depth);
             new_function = false;
             return Debug::DebugSession::ContinueBreakAtSyscall;
         }
