@@ -242,13 +242,13 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         }
     }
 
-    if (show_specified_style) {
+    if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && downcast<DOM::Element>(layout_node.dom_node())->specified_css_values()) {
         struct NameAndValue {
             String name;
             String value;
         };
         Vector<NameAndValue> properties;
-        layout_node.specified_style().for_each_property([&](auto property_id, auto& value) {
+        downcast<DOM::Element>(*layout_node.dom_node()).specified_css_values()->for_each_property([&](auto property_id, auto& value) {
             properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
         });
         quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
