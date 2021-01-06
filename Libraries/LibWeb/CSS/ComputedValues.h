@@ -84,6 +84,13 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
+    ComputedValues clone_inherited_values() const
+    {
+        ComputedValues clone;
+        clone.m_inherited = m_inherited;
+        return clone;
+    }
+
 protected:
     struct {
         Color color { InitialValues::color() };

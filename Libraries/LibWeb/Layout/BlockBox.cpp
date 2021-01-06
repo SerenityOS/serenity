@@ -44,6 +44,11 @@ BlockBox::BlockBox(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::
 {
 }
 
+BlockBox::BlockBox(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+    : Box(document, node, move(computed_values))
+{
+}
+
 BlockBox::~BlockBox()
 {
 }
