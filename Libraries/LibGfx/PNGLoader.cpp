@@ -362,7 +362,7 @@ ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& conte
     }
 }
 
-NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
+NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
 {
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {
@@ -435,6 +435,8 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
                 auto* palette_index = context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    if (palette_index[i] >= context.palette_data.size())
+                        return false;
                     auto& color = context.palette_data.at((int)palette_index[i]);
                     auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1u
                         ? context.palette_transparency_data.data()[palette_index[i]]
@@ -454,6 +456,8 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
                     auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
                     auto palette_index = (palette_indexes[i / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    if ((size_t)palette_index >= context.palette_data.size())
+                        return false;
                     auto& color = context.palette_data.at(palette_index);
                     auto transparency = context.palette_transparency_data.size() >= palette_index + 1u
                         ? context.palette_transparency_data.data()[palette_index]
@@ -513,6 +517,8 @@ NEVER_INLINE FLATTEN static void unfilter(PNGLoadingContext& context)
             continue;
         }
     }
+
+    return true;
 }
 
 static bool decode_png_header(PNGLoadingContext& context)
@@ -633,9 +639,7 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         return false;
     }
 
-    unfilter(context);
-
-    return true;
+    return unfilter(context);
 }
 
 static int adam7_height(PNGLoadingContext& context, int pass)
@@ -733,7 +737,10 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
     }
 
     subimage_context.bitmap = Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height });
-    unfilter(subimage_context);
+    if (!unfilter(subimage_context)) {
+        subimage_context.bitmap = nullptr;
+        return false;
+    }
 
     // Copy the subimage data into the main image according to the pass pattern
     for (int y = 0, dy = adam7_starty[pass]; y < subimage_context.height && dy < context.height; ++y, dy += adam7_stepy[pass]) {
@@ -771,8 +778,8 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     if (context.width == -1 || context.height == -1)
         return false; // Didn't see an IHDR chunk.
 
-    if (context.color_type == 3 && context.palette_data.size() < (1u << context.bit_depth))
-        return false; // Didn't see an PLTE chunk for a palettized image, or not enough entries.
+    if (context.color_type == 3 && context.palette_data.is_empty())
+        return false; // Didn't see a PLTE chunk for a palettized image, or it was empty.
 
     unsigned long srclen = context.compressed_data.size() - 6;
     unsigned long destlen = 0;
