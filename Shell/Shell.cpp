@@ -729,6 +729,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         }
     }
 
+    if (command.argv.is_empty() && !command.next_chain.is_empty() && command.should_immediately_execute_next && command.next_chain.first().node->should_override_execution_in_current_process()) {
+        for (auto& next_in_chain : command.next_chain)
+            run_tail(command, next_in_chain, last_return_code);
+        return nullptr;
+    }
+
     Vector<const char*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
