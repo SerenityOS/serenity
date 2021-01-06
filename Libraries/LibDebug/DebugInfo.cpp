@@ -25,6 +25,7 @@
  */
 
 #include "DebugInfo.h"
+#include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
@@ -35,8 +36,10 @@
 
 namespace Debug {
 
-DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf)
+DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf, String source_root, FlatPtr base_address)
     : m_elf(move(elf))
+    , m_source_root(source_root)
+    , m_base_address(base_address)
     , m_dwarf_info(*m_elf)
 {
     prepare_variable_scopes();
@@ -124,6 +127,9 @@ void DebugInfo::prepare_lines()
             auto start_index = file_path.index_of(serenity_slash).value() + serenity_slash.length();
             file_path = file_path.substring(start_index, file_path.length() - start_index);
         }
+        if (file_path.starts_with("./") && !m_source_root.is_null()) {
+            file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file_path));
+        }
         m_sorted_lines.append({ line_info.address, file_path, line_info.line });
     }
     quick_sort(m_sorted_lines, [](auto& a, auto& b) {
@@ -147,19 +153,34 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
     return {};
 }
 
-Optional<u32> DebugInfo::get_instruction_from_source(const String& file, size_t line) const
+Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(const String& file, size_t line) const
 {
     String file_path = file;
+    if (!file_path.starts_with("/"))
+        file_path = String::format("/%s", file_path.characters());
+
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     if (file.starts_with(SERENITY_LIBS_PREFIX)) {
         file_path = file.substring(sizeof(SERENITY_LIBS_PREFIX), file.length() - sizeof(SERENITY_LIBS_PREFIX));
         file_path = String::format("../%s", file_path.characters());
     }
+
+    Optional<SourcePositionAndAddress> result;
     for (const auto& line_entry : m_sorted_lines) {
-        if (line_entry.file == file_path && line_entry.line == line)
-            return Optional<u32>(line_entry.address);
+        if (!line_entry.file.ends_with(file_path))
+            continue;
+
+        if (line_entry.line > line)
+            continue;
+
+        // We look for the source position that is closest to the desired position, and is not after it.
+        // For example, get_address_of_source_position("main.cpp", 73) could return the address for an instruction whose location is ("main.cpp", 72)
+        // as there might not be an instruction mapped for "main.cpp", 73.
+        if (!result.has_value() || (line_entry.line > result.value().line)) {
+            result = SourcePositionAndAddress { line_entry.file, line_entry.line, line_entry.address };
+        }
     }
-    return {};
+    return result;
 }
 
 NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current_scope(const PtraceRegisters& regs) const
@@ -168,7 +189,7 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
 
     // TODO: We can store the scopes in a better data structure
     for (const auto& scope : m_scopes) {
-        if (regs.eip < scope.address_low || regs.eip >= scope.address_high)
+        if (regs.eip - m_base_address < scope.address_low || regs.eip - m_base_address >= scope.address_high)
             continue;
 
         for (const auto& die_entry : scope.dies_of_variables) {
@@ -336,7 +357,7 @@ Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const Variabl
 
 DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const Dwarf::LineProgram::LineInfo& line)
 {
-    return { line.file, line.line, line.address };
+    return { line.file, line.line, { line.address } };
 }
 
 }

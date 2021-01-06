@@ -40,14 +40,30 @@ namespace Debug {
 
 class DebugInfo {
 public:
-    explicit DebugInfo(NonnullOwnPtr<const ELF::Image>);
+    explicit DebugInfo(NonnullOwnPtr<const ELF::Image>, String source_root = {}, FlatPtr base_address = 0);
 
     const ELF::Image& elf() const { return *m_elf; }
 
     struct SourcePosition {
         FlyString file_path;
         size_t line_number { 0 };
-        u32 address_of_first_statement { 0 };
+        Optional<u32> address_of_first_statement;
+
+        SourcePosition()
+            : SourcePosition(String::empty(), 0)
+        {
+        }
+        SourcePosition(String file_path, size_t line_number)
+            : file_path(file_path)
+            , line_number(line_number)
+        {
+        }
+        SourcePosition(String file_path, size_t line_number, u32 address_of_first_statement)
+            : file_path(file_path)
+            , line_number(line_number)
+            , address_of_first_statement(address_of_first_statement)
+        {
+        }
 
         bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
         bool operator!=(const SourcePosition& other) const { return !(*this == other); }
@@ -93,7 +109,14 @@ public:
     NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(const PtraceRegisters&) const;
 
     Optional<SourcePosition> get_source_position(u32 address) const;
-    Optional<u32> get_instruction_from_source(const String& file, size_t line) const;
+
+    struct SourcePositionAndAddress {
+        String file;
+        size_t line;
+        FlatPtr address;
+    };
+
+    Optional<SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
 
     template<typename Callback>
     void for_each_source_position(Callback callback) const
@@ -120,6 +143,8 @@ private:
     OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&) const;
 
     NonnullOwnPtr<const ELF::Image> m_elf;
+    String m_source_root;
+    FlatPtr m_base_address { 0 };
     Dwarf::DwarfInfo m_dwarf_info;
 
     Vector<VariablesScope> m_scopes;
