@@ -84,7 +84,7 @@ void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& co
 {
     size_t column_index = 0;
     auto* table = row.first_ancestor_of_type<TableBox>();
-    bool use_auto_layout = !table || table->style().width().is_undefined_or_auto();
+    bool use_auto_layout = !table || table->computed_values().width().is_undefined_or_auto();
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         compute_width(cell);
         if (use_auto_layout) {
@@ -103,7 +103,7 @@ void TableFormattingContext::layout_row(Box& row, Vector<float>& column_widths)
     float tallest_cell_height = 0;
     float content_width = 0;
     auto* table = row.first_ancestor_of_type<TableBox>();
-    bool use_auto_layout = !table || table->style().width().is_undefined_or_auto();
+    bool use_auto_layout = !table || table->computed_values().width().is_undefined_or_auto();
 
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         cell.set_offset(row.effective_offset().translated(content_width, 0));

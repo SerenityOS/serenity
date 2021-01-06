@@ -57,7 +57,7 @@ Node::~Node()
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    return style().position() != CSS::Position::Static || is<InitialContainingBlockBox>(*this);
+    return computed_values().position() != CSS::Position::Static || is<InitialContainingBlockBox>(*this);
 }
 
 const BlockBox* Node::containing_block() const
@@ -72,7 +72,7 @@ const BlockBox* Node::containing_block() const
     if (is<TextNode>(*this))
         return nearest_block_ancestor();
 
-    auto position = style().position();
+    auto position = computed_values().position();
 
     if (position == CSS::Position::Absolute) {
         auto* ancestor = parent();
@@ -186,19 +186,19 @@ bool Node::is_floating() const
 {
     if (!has_style())
         return false;
-    return style().float_() != CSS::Float::None;
+    return computed_values().float_() != CSS::Float::None;
 }
 
 bool Node::is_positioned() const
 {
-    return has_style() && style().position() != CSS::Position::Static;
+    return has_style() && computed_values().position() != CSS::Position::Static;
 }
 
 bool Node::is_absolutely_positioned() const
 {
     if (!has_style())
         return false;
-    auto position = style().position();
+    auto position = computed_values().position();
     return position == CSS::Position::Absolute || position == CSS::Position::Fixed;
 }
 
@@ -206,7 +206,7 @@ bool Node::is_fixed_position() const
 {
     if (!has_style())
         return false;
-    auto position = style().position();
+    auto position = computed_values().position();
     return position == CSS::Position::Fixed;
 }
 

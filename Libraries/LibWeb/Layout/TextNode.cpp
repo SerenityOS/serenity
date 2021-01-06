@@ -77,7 +77,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), style().background_color());
+        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
     }
 
     if (phase == PaintPhase::Foreground) {
@@ -86,18 +86,18 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
-        if (style().text_decoration_line() == CSS::TextDecorationLine::Underline)
-            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), style().color());
+        if (computed_values().text_decoration_line() == CSS::TextDecorationLine::Underline)
+            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), computed_values().color());
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
-        auto text_transform = style().text_transform();
+        auto text_transform = computed_values().text_transform();
         if (text_transform == CSS::TextTransform::Uppercase)
             text = m_text_for_rendering.to_uppercase();
         if (text_transform == CSS::TextTransform::Lowercase)
             text = m_text_for_rendering.to_lowercase();
 
-        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, style().color());
+        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, computed_values().color());
 
         auto selection_rect = fragment.selection_rect(font());
         if (!selection_rect.is_empty()) {
@@ -135,7 +135,7 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     float cursor_height = fragment_rect.height();
     Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
 
-    context.painter().draw_rect(cursor_rect, style().color());
+    context.painter().draw_rect(cursor_rect, computed_values().color());
 }
 
 template<typename Callback>
@@ -302,19 +302,19 @@ void TextNode::split_into_lines(InlineFormattingContext& context, LayoutMode lay
     bool do_wrap_lines = true;
     bool do_wrap_breaks = false;
 
-    if (style().white_space() == CSS::WhiteSpace::Nowrap) {
+    if (computed_values().white_space() == CSS::WhiteSpace::Nowrap) {
         do_collapse = true;
         do_wrap_lines = false;
         do_wrap_breaks = false;
-    } else if (style().white_space() == CSS::WhiteSpace::Pre) {
+    } else if (computed_values().white_space() == CSS::WhiteSpace::Pre) {
         do_collapse = false;
         do_wrap_lines = false;
         do_wrap_breaks = true;
-    } else if (style().white_space() == CSS::WhiteSpace::PreLine) {
+    } else if (computed_values().white_space() == CSS::WhiteSpace::PreLine) {
         do_collapse = true;
         do_wrap_lines = true;
         do_wrap_breaks = true;
-    } else if (style().white_space() == CSS::WhiteSpace::PreWrap) {
+    } else if (computed_values().white_space() == CSS::WhiteSpace::PreWrap) {
         do_collapse = false;
         do_wrap_lines = true;
         do_wrap_breaks = true;
