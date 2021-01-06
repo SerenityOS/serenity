@@ -312,6 +312,8 @@ Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
     for_each_symbol([&](const Image::Symbol symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
+        if (symbol.is_undefined())
+            return IterationDecision::Continue;
         auto demangled = demangle(symbol.name());
         auto index_of_paren = demangled.index_of("(");
         if (index_of_paren.has_value()) {

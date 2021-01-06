@@ -76,6 +76,7 @@ public:
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
         const Section section() const { return m_image.section(section_index()); }
+        bool is_undefined() const { return section_index() == 0; }
         StringView raw_data() const;
 
     private:
