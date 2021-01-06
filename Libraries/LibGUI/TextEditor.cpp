@@ -1092,7 +1092,9 @@ bool TextEditor::write_to_file(const StringView& path)
                 close(fd);
                 return false;
             }
-        } else if (i == line_count() - 1) {
+        }
+
+        else if (i != line_count() - 1) {
             char newline = '\n';
             ssize_t nwritten = write(fd, &newline, 1);
             if (nwritten != 1) {
