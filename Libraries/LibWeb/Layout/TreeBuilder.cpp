@@ -91,16 +91,8 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     if (dom_node.parent() && !dom_node.parent()->layout_node())
         return;
 
-    const CSS::StyleProperties* parent_style = nullptr;
-    if (!m_parent_stack.is_empty() && m_parent_stack.last()->dom_node() && m_parent_stack.last()->dom_node()->is_element())
-        parent_style = downcast<DOM::Element>(*m_parent_stack.last()->dom_node()).specified_css_values();
-
     auto layout_node = dom_node.create_layout_node();
     if (!layout_node)
-        return;
-
-    // Discard empty whitespace nodes. This might not be ideal for correctness, but it does make the tree nicer.
-    if (is<TextNode>(*layout_node) && downcast<TextNode>(*layout_node).text_for_style(*parent_style) == " ")
         return;
 
     if (!dom_node.parent()) {
