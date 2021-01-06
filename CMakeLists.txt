@@ -119,12 +119,9 @@ set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu")
 set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu")
 
-# Note: MacOS has different rpath rules from linux.
-# We disable it completely for MacOS hosts to avoid having to track down all the individual flags to unset
+# We disable it completely because it makes cmake very spammy.
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
-if (CMAKE_SYSTEM_NAME MATCHES Darwin)
-    set(CMAKE_SKIP_RPATH TRUE)
-endif()
+set(CMAKE_SKIP_RPATH TRUE)
 
 add_compile_options(-Os -g1 -fno-exceptions -fstack-protector-strong -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined)
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
