@@ -40,7 +40,6 @@ public:
 
     const DOM::Text& dom_node() const { return static_cast<const DOM::Text&>(*Node::dom_node()); }
 
-    const String& text_for_style(const CSS::StyleProperties&) const;
     const String& text_for_rendering() const { return m_text_for_rendering; }
 
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const override;
