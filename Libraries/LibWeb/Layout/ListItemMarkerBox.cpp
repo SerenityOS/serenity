@@ -45,7 +45,7 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     Gfx::IntRect bullet_rect { 0, 0, 4, 4 };
     bullet_rect.center_within(enclosing_int_rect(absolute_rect()));
     // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.
-    auto color = parent()->style().color();
+    auto color = parent()->computed_values().color();
     context.painter().fill_rect(bullet_rect, color);
 }
 

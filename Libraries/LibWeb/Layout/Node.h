@@ -30,11 +30,11 @@
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/Layout/LayoutStyle.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/TreeNode.h>
 
@@ -126,7 +126,7 @@ public:
     bool can_contain_boxes_with_position_absolute() const;
 
     const CSS::StyleProperties& specified_style() const;
-    const ImmutableLayoutStyle& style() const;
+    const CSS::ImmutableComputedValues& style() const;
 
     NodeWithStyle* parent();
     const NodeWithStyle* parent() const;
@@ -200,7 +200,7 @@ public:
     const CSS::StyleProperties& specified_style() const { return m_specified_style; }
     void set_specified_style(const CSS::StyleProperties& style) { m_specified_style = style; }
 
-    const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
+    const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
 
     void apply_style(const CSS::StyleProperties&);
 
@@ -208,7 +208,7 @@ protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
 
 private:
-    LayoutStyle m_style;
+    CSS::ComputedValues m_computed_values;
 
     NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
@@ -236,11 +236,11 @@ inline const CSS::StyleProperties& Node::specified_style() const
     return parent()->specified_style();
 }
 
-inline const ImmutableLayoutStyle& Node::style() const
+inline const CSS::ImmutableComputedValues& Node::style() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->style();
-    return parent()->style();
+        return static_cast<const NodeWithStyle*>(this)->computed_values();
+    return parent()->computed_values();
 }
 
 inline const NodeWithStyle* Node::parent() const
