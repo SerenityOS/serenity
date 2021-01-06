@@ -52,13 +52,8 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (phase == PaintPhase::Background && !is_body()) {
         context.painter().fill_rect(enclosing_int_rect(padded_rect), computed_values().background_color());
 
-        auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
-        if (bgimage.has_value() && bgimage.value()->is_image()) {
-            auto& image_value = static_cast<const CSS::ImageStyleValue&>(*bgimage.value());
-            if (image_value.bitmap()) {
-                context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *image_value.bitmap());
-            }
-        }
+        if (background_image() && background_image()->bitmap())
+            context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *background_image()->bitmap());
     }
 
     if (phase == PaintPhase::Border) {
