@@ -35,7 +35,7 @@ float Length::relative_length_to_px(const Layout::Node& layout_node) const
 {
     switch (m_type) {
     case Type::Ex:
-        return m_value * layout_node.specified_style().font().x_height();
+        return m_value * layout_node.font().x_height();
     case Type::Em:
         return m_value * layout_node.font_size();
     case Type::Rem:

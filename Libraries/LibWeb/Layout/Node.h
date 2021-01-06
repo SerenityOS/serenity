@@ -125,6 +125,7 @@ public:
 
     bool can_contain_boxes_with_position_absolute() const;
 
+    const Gfx::Font& font() const;
     const CSS::StyleProperties& specified_style() const;
     const CSS::ImmutableComputedValues& style() const;
 
@@ -204,11 +205,14 @@ public:
 
     void apply_style(const CSS::StyleProperties&);
 
+    const Gfx::Font& font() const { return *m_font; }
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
 
 private:
     CSS::ComputedValues m_computed_values;
+    RefPtr<Gfx::Font> m_font;
 
     NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
@@ -228,6 +232,13 @@ protected:
 private:
     BoxModelMetrics m_box_model;
 };
+
+inline const Gfx::Font& Node::font() const
+{
+    if (m_has_style)
+        return static_cast<const NodeWithStyle*>(this)->font();
+    return parent()->font();
+}
 
 inline const CSS::StyleProperties& Node::specified_style() const
 {
