@@ -231,6 +231,13 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
 void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_program_fd, int argc, char** argv, char** envp)
 {
     g_envp = envp;
+    bool do_breakpoint_trap_before_entry = false;
+    for (char** env = envp; *env; ++env) {
+        if (StringView { *env } == "_LOADER_BREAKPOINT=1") {
+            do_breakpoint_trap_before_entry = true;
+        }
+    }
+
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
 
@@ -253,6 +260,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     MainFunction main_function = (MainFunction)(entry_point);
     VERBOSE("jumping to main program entry point: %p\n", main_function);
+    if (do_breakpoint_trap_before_entry) {
+        asm("int3");
+    }
     int rc = main_function(argc, argv, envp);
     VERBOSE("rc: %d\n", rc);
     if (g_libc_exit != nullptr) {
