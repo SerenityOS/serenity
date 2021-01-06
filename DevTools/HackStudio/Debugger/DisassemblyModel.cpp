@@ -38,7 +38,10 @@ namespace HackStudio {
 
 DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
-    auto containing_function = debug_session.debug_info().get_containing_function(regs.eip);
+    auto lib = debug_session.library_at(regs.eip);
+    if (!lib)
+        return;
+    auto containing_function = lib->debug_info->get_containing_function(regs.eip - lib->base_address);
     if (!containing_function.has_value()) {
         dbgln("Cannot disassemble as the containing function was not found.");
         return;
@@ -54,7 +57,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
         kernel_elf = make<ELF::Image>((const u8*)kernel_file->data(), kernel_file->size());
         elf = kernel_elf.ptr();
     } else {
-        elf = &debug_session.elf();
+        elf = &lib->debug_info->elf();
     }
 
     auto symbol = elf->find_symbol(containing_function.value().address_low);

@@ -45,6 +45,7 @@ public:
     };
 
     static void initialize(
+        String source_root,
         Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
@@ -102,6 +103,7 @@ private:
     };
 
     explicit Debugger(
+        String source_root,
         Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
@@ -118,6 +120,7 @@ private:
     void insert_temporary_breakpoint_at_return_address(const PtraceRegisters&);
 
     OwnPtr<Debug::DebugSession> m_debug_session;
+    String m_source_root;
     DebuggingState m_state;
 
     pthread_mutex_t m_ui_action_mutex {};

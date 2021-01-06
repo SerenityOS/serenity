@@ -38,11 +38,12 @@ Debugger& Debugger::the()
 }
 
 void Debugger::initialize(
+    String source_root,
     Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
 {
-    s_the = new Debugger(move(on_stop_callback), move(on_continue_callback), move(on_exit_callback));
+    s_the = new Debugger(source_root, move(on_stop_callback), move(on_continue_callback), move(on_exit_callback));
 }
 
 bool Debugger::is_initialized()
@@ -51,10 +52,12 @@ bool Debugger::is_initialized()
 }
 
 Debugger::Debugger(
+    String source_root,
     Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
     Function<void()> on_continue_callback,
     Function<void()> on_exit_callback)
-    : m_on_stopped_callback(move(on_stop_callback))
+    : m_source_root(source_root)
+    , m_on_stopped_callback(move(on_stop_callback))
     , m_on_continue_callback(move(on_continue_callback))
     , m_on_exit_callback(move(on_exit_callback))
 {
@@ -76,7 +79,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     if (!session)
         return;
 
-    auto address = session->debug_info().get_instruction_from_source(position.file_path, position.line_number);
+    auto address = session->get_address_from_source_position(position.file_path, position.line_number);
     if (!address.has_value()) {
         dbgln("Warning: couldn't get instruction address from source");
         // TODO: Currently, the GUI will indicate that a breakpoint was inserted/removed at this line,
@@ -86,10 +89,10 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     }
 
     if (change_type == BreakpointChange::Added) {
-        bool success = session->insert_breakpoint(reinterpret_cast<void*>(address.value()));
+        bool success = session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
         ASSERT(success);
     } else {
-        bool success = session->remove_breakpoint(reinterpret_cast<void*>(address.value()));
+        bool success = session->remove_breakpoint(reinterpret_cast<void*>(address.value().address));
         ASSERT(success);
     }
 }
@@ -109,14 +112,14 @@ int Debugger::start_static()
 
 void Debugger::start()
 {
-    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path);
+    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root);
     ASSERT(!!m_debug_session);
 
     for (const auto& breakpoint : m_breakpoints) {
-        dbgln("insertig breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
-        auto address = m_debug_session->debug_info().get_instruction_from_source(breakpoint.file_path, breakpoint.line_number);
+        dbgln("inserting breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
+        auto address = m_debug_session->get_address_from_source_position(breakpoint.file_path, breakpoint.line_number);
         if (address.has_value()) {
-            bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address.value()));
+            bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
             ASSERT(success);
         } else {
             dbgln("couldn't insert breakpoint");
@@ -130,7 +133,7 @@ int Debugger::debugger_loop()
 {
     ASSERT(m_debug_session);
 
-    m_debug_session->run([this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+    m_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Running, [this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             dbgln("Program exited");
             m_on_exit_callback();
@@ -140,9 +143,16 @@ int Debugger::debugger_loop()
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
-        auto source_position = m_debug_session->debug_info().get_source_position(regs.eip);
+        auto source_position = m_debug_session->get_source_position(regs.eip);
+        if (!source_position.has_value())
+            return Debug::DebugSession::DebugDecision::SingleStep;
+
+        // We currently do no support stepping through assembly source
+        if (source_position.value().file_path.ends_with(".S"))
+            return Debug::DebugSession::DebugDecision::SingleStep;
+
+        ASSERT(source_position.has_value());
         if (m_state.get() == Debugger::DebuggingState::SingleStepping) {
-            ASSERT(source_position.has_value());
             if (m_state.should_stop_single_stepping(source_position.value())) {
                 m_state.set_normal();
             } else {
@@ -241,11 +251,18 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
 {
     // To step over, we insert a temporary breakpoint at each line in the current function,
     // as well as at the current function's return point, and continue execution.
-    auto current_function = m_debug_session->debug_info().get_containing_function(regs.eip);
+    auto lib = m_debug_session->library_at(regs.eip);
+    if (!lib)
+        return;
+    auto current_function = lib->debug_info->get_containing_function(regs.eip - lib->base_address);
+    if (!current_function.has_value()) {
+        dbgln("cannot perform step_over, failed to find containing function of: {:p}", regs.eip);
+        return;
+    }
     ASSERT(current_function.has_value());
-    auto lines_in_current_function = m_debug_session->debug_info().source_lines_in_scope(current_function.value());
+    auto lines_in_current_function = lib->debug_info->source_lines_in_scope(current_function.value());
     for (const auto& line : lines_in_current_function) {
-        insert_temporary_breakpoint(line.address_of_first_statement);
+        insert_temporary_breakpoint(line.address_of_first_statement.value() + lib->base_address);
     }
     insert_temporary_breakpoint_at_return_address(regs);
 }
