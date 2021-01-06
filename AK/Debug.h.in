@@ -150,6 +150,10 @@
 #cmakedefine01 GIF_DEBUG
 #endif
 
+#ifndef GL_DEBUG
+#cmakedefine01 GL_DEBUG
+#endif
+
 #ifndef GLOBAL_DTORS_DEBUG
 #cmakedefine01 GLOBAL_DTORS_DEBUG
 #endif
