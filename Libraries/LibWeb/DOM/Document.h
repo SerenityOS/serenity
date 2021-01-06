@@ -223,7 +223,7 @@ public:
 private:
     explicit Document(const URL&);
 
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 
     void tear_down_layout_tree();
 

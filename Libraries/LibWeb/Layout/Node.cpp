@@ -26,6 +26,7 @@
 
 #include <AK/Demangle.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
@@ -215,6 +216,7 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     , m_computed_values(move(computed_values))
 {
     m_has_style = true;
+    m_font = Gfx::FontDatabase::default_font();
 }
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)

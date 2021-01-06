@@ -62,7 +62,7 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
-RefPtr<Layout::Node> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
 {
     ASSERT(document().page());
     auto& page = *document().page();
@@ -71,7 +71,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(const CSS::StyleProper
     if (type() == "hidden")
         return nullptr;
 
-    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
 

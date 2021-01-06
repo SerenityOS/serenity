@@ -48,7 +48,7 @@ public:
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
 
-    NonnullRefPtr<StyleProperties> resolve_style(const DOM::Element&, const StyleProperties* parent_style) const;
+    NonnullRefPtr<StyleProperties> resolve_style(const DOM::Element&) const;
 
     Vector<MatchingRule> collect_matching_rules(const DOM::Element&) const;
     void sort_matching_rules(Vector<MatchingRule>&) const;

@@ -40,9 +40,9 @@ SVGSVGElement::SVGSVGElement(DOM::Document& document, const QualifiedName& quali
 {
 }
 
-RefPtr<Layout::Node> SVGSVGElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> SVGSVGElement::create_layout_node()
 {
-    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
     return adopt(*new Layout::SVGSVGBox(document(), *this, move(style)));

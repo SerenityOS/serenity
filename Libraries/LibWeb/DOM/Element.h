@@ -99,7 +99,7 @@ public:
     virtual bool is_focusable() const { return false; }
 
 protected:
-    RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    RefPtr<Layout::Node> create_layout_node() override;
 
 private:
     Attribute* find_attribute(const FlyString& name);

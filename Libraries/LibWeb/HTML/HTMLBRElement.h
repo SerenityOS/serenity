@@ -37,7 +37,7 @@ public:
     HTMLBRElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLBRElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 };
 
 }

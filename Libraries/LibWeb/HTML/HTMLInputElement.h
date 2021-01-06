@@ -37,7 +37,7 @@ public:
     HTMLInputElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLInputElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 
     String type() const { return attribute(HTML::AttributeNames::type); }
     String value() const { return attribute(HTML::AttributeNames::value); }
