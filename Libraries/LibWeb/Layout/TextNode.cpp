@@ -57,21 +57,6 @@ static bool is_all_whitespace(const StringView& string)
     return true;
 }
 
-const String& TextNode::text_for_style(const CSS::StyleProperties& style) const
-{
-    static String one_space = " ";
-    if (is_all_whitespace(dom_node().data())) {
-        switch (style.white_space().value_or(CSS::WhiteSpace::Normal)) {
-        case CSS::WhiteSpace::Pre:
-        case CSS::WhiteSpace::PreWrap:
-            break;
-        default:
-            return one_space;
-        }
-    }
-    return dom_node().data();
-}
-
 void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
 {
     auto& painter = context.painter();
