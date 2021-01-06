@@ -51,7 +51,6 @@ protected:
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 
-    void compute_width_for_absolutely_positioned_block(Box&);
     void compute_width_for_floating_box(Box&);
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox&);
@@ -65,7 +64,6 @@ private:
     void place_block_level_replaced_element_in_normal_flow(Box& child, Box& container);
     void place_block_level_non_replaced_element_in_normal_flow(Box& child, Box& container);
 
-    void layout_absolutely_positioned_child(Box&);
     void layout_floating_child(Box&, Box& containing_block);
 
     Vector<Box*> m_left_floating_boxes;

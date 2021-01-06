@@ -95,8 +95,10 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     containing_block().line_boxes().clear();
     containing_block().for_each_child([&](auto& child) {
         ASSERT(child.is_inline());
-        if (child.is_absolutely_positioned())
+        if (is<Box>(child) && child.is_absolutely_positioned()) {
+            layout_absolutely_positioned_element(downcast<Box>(child));
             return;
+        }
 
         child.split_into_lines(*this, layout_mode);
     });

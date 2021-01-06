@@ -63,6 +63,14 @@ protected:
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
+    void layout_absolutely_positioned_element(Box&);
+    void compute_width_for_absolutely_positioned_element(Box&);
+    void compute_width_for_absolutely_positioned_non_replaced_element(Box&);
+    void compute_width_for_absolutely_positioned_replaced_element(ReplacedBox&);
+    void compute_height_for_absolutely_positioned_element(Box&);
+    void compute_height_for_absolutely_positioned_non_replaced_element(Box&);
+    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox&);
+
     FormattingContext* m_parent { nullptr };
     Box* m_context_box { nullptr };
 };
