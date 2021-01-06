@@ -45,7 +45,7 @@ namespace Debug {
 
 class DebugSession {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(const String& command);
+    static OwnPtr<DebugSession> exec_and_attach(const String& command, String source_root = {});
 
     ~DebugSession();
 
@@ -60,10 +60,26 @@ public:
     };
 
     struct BreakPoint {
-        void* address;
-        u32 original_first_word;
-        BreakPointState state;
+        void* address { nullptr };
+        u32 original_first_word { 0 };
+        BreakPointState state { BreakPointState::Disabled };
     };
+
+    struct InsertBreakpointAtSymbolResult {
+        String library_name;
+        FlatPtr address { 0 };
+    };
+
+    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(const String& symbol_name);
+
+    struct InsertBreakpointAtSourcePositionResult {
+        String library_name;
+        String file_name;
+        size_t line_number { 0 };
+        FlatPtr address { 0 };
+    };
+
+    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(const String& file_name, size_t line_number);
 
     bool insert_breakpoint(void* address);
     bool disable_breakpoint(void* address);
@@ -95,12 +111,12 @@ public:
 
     void detach();
 
+    enum DesiredInitialDebugeeState {
+        Running,
+        Stopped
+    };
     template<typename Callback>
-    void run(Callback callback);
-
-    const ELF::Image& elf() const { return m_debug_info.elf(); }
-    const MappedFile& executable() const { return m_executable; }
-    const DebugInfo& debug_info() const { return m_debug_info; }
+    void run(DesiredInitialDebugeeState, Callback);
 
     enum DebugDecision {
         Continue,
@@ -116,38 +132,79 @@ public:
         Exited,
     };
 
+    struct LoadedLibrary {
+        String name;
+        MappedFile file;
+        NonnullOwnPtr<DebugInfo> debug_info;
+        FlatPtr base_address;
+
+        LoadedLibrary(const String& name, MappedFile&& file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
+            : name(name)
+            , file(move(file))
+            , debug_info(move(debug_info))
+            , base_address(base_address)
+        {
+        }
+    };
+
+    template<typename Func>
+    void for_each_loaded_library(Func f) const
+    {
+        for (const auto& lib_name : m_loaded_libraries.keys()) {
+            const auto& lib = *m_loaded_libraries.get(lib_name).value();
+            if (f(lib) == IterationDecision::Break)
+                break;
+        }
+    }
+
+    const LoadedLibrary* library_at(FlatPtr address) const;
+
+    struct SymbolicationResult {
+        String library_name;
+        String symbol;
+    };
+    Optional<SymbolicationResult> symbolicate(FlatPtr address) const;
+
+    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
+
+    Optional<DebugInfo::SourcePosition> get_source_position(FlatPtr address) const;
+
 private:
-    explicit DebugSession(pid_t);
+    explicit DebugSession(pid_t, String source_root);
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
 
     static MappedFile map_executable_for_process(pid_t);
 
+    void update_loaded_libs();
+
     int m_debuggee_pid { -1 };
+    String m_source_root;
     bool m_is_debuggee_dead { false };
 
-    MappedFile m_executable;
-    DebugInfo m_debug_info;
-
     HashMap<void*, BreakPoint> m_breakpoints;
+
+    // Maps from base address to loaded library
+    HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
 };
 
 template<typename Callback>
-void DebugSession::run(Callback callback)
+void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callback callback)
 {
 
     enum class State {
+        FirstIteration,
         FreeRun,
         Syscall,
         ConsecutiveBreakpoint,
         SingleStep,
     };
 
-    State state { State::FreeRun };
+    State state { State::FirstIteration };
 
     auto do_continue_and_wait = [&]() {
-        int wstatus = continue_debuggee_and_wait((state == State::FreeRun) ? ContinueType::FreeRun : ContinueType::Syscall);
+        int wstatus = continue_debuggee_and_wait((state == State::Syscall) ? ContinueType::Syscall : ContinueType::FreeRun);
 
         // FIXME: This check actually only checks whether the debuggee
         // stopped because it hit a breakpoint/syscall/is in single stepping mode or not
@@ -160,10 +217,12 @@ void DebugSession::run(Callback callback)
     };
 
     for (;;) {
-        if (state == State::FreeRun || state == State::Syscall) {
+        if ((state == State::FirstIteration && initial_debugee_state == DesiredInitialDebugeeState::Running) || state == State::FreeRun || state == State::Syscall) {
             if (do_continue_and_wait())
                 break;
         }
+        if (state == State::FirstIteration)
+            state = State::FreeRun;
 
         auto regs = get_registers();
         Optional<BreakPoint> current_breakpoint;
