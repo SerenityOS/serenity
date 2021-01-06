@@ -343,15 +343,10 @@ RefPtr<Gfx::Bitmap> Document::background_image() const
     if (!body_layout_node)
         return {};
 
-    auto background_image = body_layout_node->specified_style().property(CSS::PropertyID::BackgroundImage);
-    if (!background_image.has_value() || !background_image.value()->is_image())
+    auto background_image = body_layout_node->background_image();
+    if (!background_image)
         return {};
-
-    auto& image_value = static_cast<const CSS::ImageStyleValue&>(*background_image.value());
-    if (!image_value.bitmap())
-        return {};
-
-    return *image_value.bitmap();
+    return background_image->bitmap();
 }
 
 URL Document::complete_url(const String& string) const

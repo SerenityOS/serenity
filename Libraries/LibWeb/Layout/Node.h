@@ -206,6 +206,9 @@ public:
     void apply_style(const CSS::StyleProperties&);
 
     const Gfx::Font& font() const { return *m_font; }
+    float line_height() const { return m_line_height; }
+    float font_size() const { return m_font_size; }
+    const CSS::ImageStyleValue* background_image() const { return m_background_image; }
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
@@ -213,6 +216,9 @@ protected:
 private:
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::Font> m_font;
+    float m_line_height { 0 };
+    float m_font_size { 0 };
+    RefPtr<CSS::ImageStyleValue> m_background_image;
 
     NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
@@ -238,6 +244,13 @@ inline const Gfx::Font& Node::font() const
     if (m_has_style)
         return static_cast<const NodeWithStyle*>(this)->font();
     return parent()->font();
+}
+
+inline float Node::font_size() const
+{
+    if (m_has_style)
+        return static_cast<const NodeWithStyle*>(this)->font_size();
+    return parent()->font_size();
 }
 
 inline const CSS::StyleProperties& Node::specified_style() const

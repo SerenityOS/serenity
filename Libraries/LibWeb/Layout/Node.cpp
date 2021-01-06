@@ -157,13 +157,6 @@ void Node::set_needs_display()
     }
 }
 
-float Node::font_size() const
-{
-    // FIXME: This doesn't work right for relative font-sizes
-    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(10, CSS::Length::Type::Px));
-    return length.raw_value();
-}
-
 Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
@@ -223,6 +216,18 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
 
     m_font = specified_style.font();
+    m_line_height = specified_style.line_height(*this);
+
+    {
+        // FIXME: This doesn't work right for relative font-sizes
+        auto length = specified_style.length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(10, CSS::Length::Type::Px));
+        m_font_size = length.raw_value();
+    }
+
+    auto bgimage = specified_style.property(CSS::PropertyID::BackgroundImage);
+    if (bgimage.has_value() && bgimage.value()->is_image()) {
+        m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
+    }
 
     auto position = specified_style.position();
     if (position.has_value())
@@ -310,5 +315,4 @@ bool Node::is_inline_block() const
 {
     return is_inline() && is<BlockBox>(*this);
 }
-
 }
