@@ -36,9 +36,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-bool copy_file_or_directory(String, String, bool);
+bool copy_file_or_directory(String, String, bool, bool);
 bool copy_file(String, String, const struct stat&, int);
-bool copy_directory(String, String);
+bool copy_directory(String, String, bool);
 
 static mode_t my_umask = 0;
 
@@ -49,12 +49,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool link = false;
     bool recursion_allowed = false;
     bool verbose = false;
     Vector<const char*> sources;
     const char* destination = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(link, "Link files instead of copying", "link", 'l');
     args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'r');
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(sources, "Source file path", "source");
@@ -65,7 +67,7 @@ int main(int argc, char** argv)
     umask(my_umask);
 
     for (auto& source : sources) {
-        bool ok = copy_file_or_directory(source, destination, recursion_allowed);
+        bool ok = copy_file_or_directory(source, destination, recursion_allowed, link);
         if (!ok)
             return 1;
         if (verbose)
@@ -80,7 +82,7 @@ int main(int argc, char** argv)
  *
  * Directories should only be copied if recursion_allowed is set.
  */
-bool copy_file_or_directory(String src_path, String dst_path, bool recursion_allowed)
+bool copy_file_or_directory(String src_path, String dst_path, bool recursion_allowed, bool link)
 {
     int src_fd = open(src_path.characters(), O_RDONLY);
     if (src_fd < 0) {
@@ -100,8 +102,16 @@ bool copy_file_or_directory(String src_path, String dst_path, bool recursion_all
             fprintf(stderr, "cp: -r not specified; omitting directory '%s'\n", src_path.characters());
             return false;
         }
-        return copy_directory(src_path, dst_path);
+        return copy_directory(src_path, dst_path, link);
     }
+    if (link) {
+        if (::link(src_path.characters(), dst_path.characters()) < 0) {
+            perror("link");
+            return false;
+        }
+        return true;
+    }
+
     return copy_file(src_path, dst_path, src_stat, src_fd);
 }
 
@@ -172,7 +182,7 @@ bool copy_file(String src_path, String dst_path, const struct stat& src_stat, in
 /**
  * Copy the contents of a source directory into a destination directory.
  */
-bool copy_directory(String src_path, String dst_path)
+bool copy_directory(String src_path, String dst_path, bool link)
 {
     int rc = mkdir(dst_path.characters(), 0755);
     if (rc < 0) {
@@ -201,7 +211,7 @@ bool copy_directory(String src_path, String dst_path)
         bool is_copied = copy_file_or_directory(
             String::format("%s/%s", src_path.characters(), filename.characters()),
             String::format("%s/%s", dst_path.characters(), filename.characters()),
-            true);
+            true, link);
         if (!is_copied) {
             return false;
         }
