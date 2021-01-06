@@ -327,7 +327,7 @@ Color Document::background_color(const Palette& palette) const
     if (!body_layout_node)
         return default_color;
 
-    auto color = body_layout_node->style().background_color();
+    auto color = body_layout_node->computed_values().background_color();
     if (!color.alpha())
         return default_color;
     return color;

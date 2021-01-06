@@ -30,7 +30,7 @@
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
-namespace Web {
+namespace Web::CSS {
 
 class InitialValues {
 public:
@@ -53,7 +53,7 @@ public:
     float width { 0 };
 };
 
-class LayoutStyle {
+class ComputedValues {
 public:
     CSS::Float float_() const { return m_float; }
     CSS::Clear clear() const { return m_clear; }
@@ -111,10 +111,10 @@ protected:
     CSS::ListStyleType m_list_style_type { InitialValues::list_style_type() };
 };
 
-class ImmutableLayoutStyle final : public LayoutStyle {
+class ImmutableComputedValues final : public ComputedValues {
 };
 
-class MutableLayoutStyle final : public LayoutStyle {
+class MutableComputedValues final : public ComputedValues {
 public:
     void set_color(const Color& color) { m_color = color; }
     void set_background_color(const Color& color) { m_background_color = color; }

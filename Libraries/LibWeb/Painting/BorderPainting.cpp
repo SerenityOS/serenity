@@ -30,7 +30,7 @@
 
 namespace Web::Painting {
 
-void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& rect, const LayoutStyle& style)
+void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& rect, const CSS::ComputedValues& style)
 {
     const auto& border_data = [&] {
         switch (edge) {

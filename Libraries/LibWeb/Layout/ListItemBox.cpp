@@ -45,7 +45,7 @@ void ListItemBox::layout_marker()
         m_marker = nullptr;
     }
 
-    if (style().list_style_type() == CSS::ListStyleType::None)
+    if (computed_values().list_style_type() == CSS::ListStyleType::None)
         return;
 
     if (!m_marker) {

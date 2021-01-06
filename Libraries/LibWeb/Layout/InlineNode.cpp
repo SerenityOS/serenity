@@ -46,15 +46,15 @@ void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode l
 {
     auto& containing_block = context.context_box();
 
-    if (!style().padding().left.is_undefined_or_auto()) {
-        float padding_left = style().padding().left.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+    if (!computed_values().padding().left.is_undefined_or_auto()) {
+        float padding_left = computed_values().padding().left.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
     }
 
     NodeWithStyleAndBoxModelMetrics::split_into_lines(context, layout_mode);
 
-    if (!style().padding().right.is_undefined_or_auto()) {
-        float padding_right = style().padding().right.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+    if (!computed_values().padding().right.is_undefined_or_auto()) {
+        float padding_right = computed_values().padding().right.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_right, 0, LineBoxFragment::Type::Trailing);
     }
 }
@@ -64,7 +64,7 @@ void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fr
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Background) {
-        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), style().background_color());
+        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), computed_values().background_color());
     }
 }
 

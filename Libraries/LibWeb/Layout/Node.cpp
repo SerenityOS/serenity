@@ -220,64 +220,64 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullRe
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
-    auto& style = static_cast<MutableLayoutStyle&>(m_style);
+    auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
 
     auto position = specified_style.position();
     if (position.has_value())
-        style.set_position(position.value());
+        computed_values.set_position(position.value());
 
     auto text_align = specified_style.text_align();
     if (text_align.has_value())
-        style.set_text_align(text_align.value());
+        computed_values.set_text_align(text_align.value());
 
     auto white_space = specified_style.white_space();
     if (white_space.has_value())
-        style.set_white_space(white_space.value());
+        computed_values.set_white_space(white_space.value());
 
     auto float_ = specified_style.float_();
     if (float_.has_value())
-        style.set_float(float_.value());
+        computed_values.set_float(float_.value());
 
     auto clear = specified_style.clear();
     if (clear.has_value())
-        style.set_clear(clear.value());
+        computed_values.set_clear(clear.value());
 
     auto text_decoration_line = specified_style.text_decoration_line();
     if (text_decoration_line.has_value())
-        style.set_text_decoration_line(text_decoration_line.value());
+        computed_values.set_text_decoration_line(text_decoration_line.value());
 
     auto text_transform = specified_style.text_transform();
     if (text_transform.has_value())
-        style.set_text_transform(text_transform.value());
+        computed_values.set_text_transform(text_transform.value());
 
     if (auto list_style_type = specified_style.list_style_type(); list_style_type.has_value())
-        style.set_list_style_type(list_style_type.value());
+        computed_values.set_list_style_type(list_style_type.value());
 
-    style.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, document(), Color::Black));
-    style.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
+    computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, document(), Color::Black));
+    computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
 
-    style.set_z_index(specified_style.z_index());
-    style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
-    style.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
-    style.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
-    style.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
-    style.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
-    style.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
+    computed_values.set_z_index(specified_style.z_index());
+    computed_values.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
+    computed_values.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
+    computed_values.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
+    computed_values.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
+    computed_values.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
+    computed_values.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));
 
-    style.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
-    style.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
-    style.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
+    computed_values.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
+    computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
+    computed_values.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
 
-    auto do_border_style = [&](BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
+    auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
         border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this, 0).to_px(*this);
         border.color = specified_style.color_or_fallback(color_property, document(), Color::Transparent);
         border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
     };
 
-    do_border_style(style.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
-    do_border_style(style.border_top(), CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopStyle);
-    do_border_style(style.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
-    do_border_style(style.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
+    do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
+    do_border_style(computed_values.border_top(), CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopStyle);
+    do_border_style(computed_values.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
+    do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 }
 
 void Node::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)

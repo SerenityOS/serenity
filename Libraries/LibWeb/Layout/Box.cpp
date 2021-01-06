@@ -50,7 +50,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     padded_rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
 
     if (phase == PaintPhase::Background && !is_body()) {
-        context.painter().fill_rect(enclosing_int_rect(padded_rect), style().background_color());
+        context.painter().fill_rect(enclosing_int_rect(padded_rect), computed_values().background_color());
 
         auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {
@@ -68,10 +68,10 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         bordered_rect.set_y(padded_rect.y() - box_model().border.top);
         bordered_rect.set_height(padded_rect.height() + box_model().border.top + box_model().border.bottom);
 
-        Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, style());
-        Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, style());
-        Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, style());
-        Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, style());
+        Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, computed_values());
+        Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, computed_values());
+        Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
+        Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
     }
 
     Layout::NodeWithStyleAndBoxModelMetrics::paint(context, phase);
@@ -183,8 +183,8 @@ bool Box::establishes_stacking_context() const
         return false;
     if (dom_node() == document().root())
         return true;
-    auto position = style().position();
-    auto z_index = style().z_index();
+    auto position = computed_values().position();
+    auto z_index = computed_values().z_index();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
         if (z_index.has_value())
             return true;

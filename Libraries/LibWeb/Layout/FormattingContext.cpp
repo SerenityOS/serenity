@@ -128,10 +128,10 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
 
     auto& containing_block = *box.containing_block();
-    auto specified_min_width = box.style().min_width().resolved_or_zero(box, containing_block.width()).to_px(box);
-    auto specified_max_width = box.style().max_width().resolved(CSS::Length::make_px(w), box, containing_block.width()).to_px(box);
-    auto specified_min_height = box.style().min_height().resolved_or_auto(box, containing_block.height()).to_px(box);
-    auto specified_max_height = box.style().max_height().resolved(CSS::Length::make_px(h), box, containing_block.height()).to_px(box);
+    auto specified_min_width = box.computed_values().min_width().resolved_or_zero(box, containing_block.width()).to_px(box);
+    auto specified_max_width = box.computed_values().max_width().resolved(CSS::Length::make_px(w), box, containing_block.width()).to_px(box);
+    auto specified_min_height = box.computed_values().min_height().resolved_or_auto(box, containing_block.height()).to_px(box);
+    auto specified_max_height = box.computed_values().max_height().resolved(CSS::Length::make_px(h), box, containing_block.height()).to_px(box);
 
     auto min_width = min(specified_min_width, specified_max_width);
     auto max_width = max(specified_min_width, specified_max_width);
@@ -164,7 +164,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
 float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox& box, const CSS::Length& width)
 {
     auto& containing_block = *box.containing_block();
-    auto specified_height = box.style().height().resolved_or_auto(box, containing_block.height());
+    auto specified_height = box.computed_values().height().resolved_or_auto(box, containing_block.height());
 
     float used_width = width.to_px(box);
 
@@ -203,8 +203,8 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
     auto zero_value = CSS::Length::make_px(0);
     auto& containing_block = *box.containing_block();
 
-    auto margin_left = box.style().margin().left.resolved_or_zero(box, containing_block.width());
-    auto margin_right = box.style().margin().right.resolved_or_zero(box, containing_block.width());
+    auto margin_left = box.computed_values().margin().left.resolved_or_zero(box, containing_block.width());
+    auto margin_right = box.computed_values().margin().right.resolved_or_zero(box, containing_block.width());
 
     // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
     if (margin_left.is_auto())
@@ -212,14 +212,14 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto specified_width = box.style().width().resolved_or_auto(box, containing_block.width());
+    auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = tentative_width_for_replaced_element(box, specified_width);
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
-    auto specified_max_width = box.style().max_width().resolved_or_auto(box, containing_block.width());
+    auto specified_max_width = box.computed_values().max_width().resolved_or_auto(box, containing_block.width());
     if (!specified_max_width.is_auto()) {
         if (used_width > specified_max_width.to_px(box)) {
             used_width = tentative_width_for_replaced_element(box, specified_max_width);
@@ -228,7 +228,7 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
 
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
-    auto specified_min_width = box.style().min_width().resolved_or_auto(box, containing_block.width());
+    auto specified_min_width = box.computed_values().min_width().resolved_or_auto(box, containing_block.width());
     if (!specified_min_width.is_auto()) {
         if (used_width < specified_min_width.to_px(box)) {
             used_width = tentative_width_for_replaced_element(box, specified_min_width);
@@ -241,7 +241,7 @@ float FormattingContext::compute_width_for_replaced_element(const ReplacedBox& b
 float FormattingContext::tentative_height_for_replaced_element(const ReplacedBox& box, const CSS::Length& height)
 {
     auto& containing_block = *box.containing_block();
-    auto specified_width = box.style().width().resolved_or_auto(box, containing_block.width());
+    auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
 
     float used_height = height.to_px(box);
 
@@ -265,8 +265,8 @@ float FormattingContext::compute_height_for_replaced_element(const ReplacedBox& 
     // 'inline-block' replaced elements in normal flow and floating replaced elements
 
     auto& containing_block = *box.containing_block();
-    auto specified_width = box.style().width().resolved_or_auto(box, containing_block.width());
-    auto specified_height = box.style().height().resolved_or_auto(box, containing_block.height());
+    auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
+    auto specified_height = box.computed_values().height().resolved_or_auto(box, containing_block.height());
 
     float used_height = tentative_height_for_replaced_element(box, specified_height);
 
