@@ -84,7 +84,7 @@ public:
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
     void remove_all_children();
 
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style);
+    virtual RefPtr<Layout::Node> create_layout_node();
 
     virtual FlyString node_name() const = 0;
 

@@ -408,7 +408,7 @@ void Document::update_style()
     update_layout();
 }
 
-RefPtr<Layout::Node> Document::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> Document::create_layout_node()
 {
     return adopt(*new Layout::InitialContainingBlockBox(*this, CSS::StyleProperties::create()));
 }

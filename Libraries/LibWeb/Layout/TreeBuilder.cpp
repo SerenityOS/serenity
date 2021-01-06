@@ -95,7 +95,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     if (!m_parent_stack.is_empty() && m_parent_stack.last()->dom_node() && m_parent_stack.last()->dom_node()->is_element())
         parent_style = downcast<DOM::Element>(*m_parent_stack.last()->dom_node()).specified_css_values();
 
-    auto layout_node = dom_node.create_layout_node(parent_style);
+    auto layout_node = dom_node.create_layout_node();
     if (!layout_node)
         return;
 

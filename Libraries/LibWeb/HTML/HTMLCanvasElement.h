@@ -49,7 +49,7 @@ public:
     unsigned height() const;
 
 private:
-    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<CanvasRenderingContext2D> m_context;

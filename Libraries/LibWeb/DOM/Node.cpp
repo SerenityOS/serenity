@@ -105,7 +105,7 @@ void Node::set_text_content(const String& content)
     document().invalidate_layout();
 }
 
-RefPtr<Layout::Node> Node::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> Node::create_layout_node()
 {
     return nullptr;
 }
