@@ -113,11 +113,11 @@ FLATTEN SignedBigInteger SignedBigInteger::minus(const SignedBigInteger& other) 
     // -x - -y = y - x
     if (m_unsigned_data < other.m_unsigned_data) {
         // The result will be positive.
-        return SignedBigInteger { m_unsigned_data.minus(other.m_unsigned_data) };
+        return SignedBigInteger { other.m_unsigned_data.minus(m_unsigned_data), true };
     }
     // The result will be either zero, or negative.
     // y - x = - (x - y)
-    return { other.m_unsigned_data.minus(m_unsigned_data), true };
+    return SignedBigInteger { m_unsigned_data.minus(other.m_unsigned_data) };
 }
 
 FLATTEN SignedBigInteger SignedBigInteger::plus(const UnsignedBigInteger& other) const
