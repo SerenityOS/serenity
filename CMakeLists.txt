@@ -109,9 +109,11 @@ foreach(lang ASM C CXX OBJC OBJCXX)
     unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
     unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
     unset(CMAKE_${lang}_SYSROOT_FLAG)
-    # MacOS Workaround. Don't generate install_name flag when cross compiling
-    set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
-        "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+        ## MacOS Workaround. Don't generate install_name flag when cross compiling
+        set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
+            "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    endif()
 endforeach()
 
 set(CMAKE_INSTALL_NAME_TOOL "")
