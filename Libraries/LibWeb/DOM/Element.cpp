@@ -135,11 +135,11 @@ RefPtr<Layout::Node> Element::create_layout_node()
     if (display == CSS::Display::ListItem)
         return adopt(*new Layout::ListItemBox(document(), *this, move(style)));
     if (display == CSS::Display::Table)
-        return adopt(*new Layout::TableBox(document(), *this, move(style)));
+        return adopt(*new Layout::TableBox(document(), this, move(style)));
     if (display == CSS::Display::TableRow)
-        return adopt(*new Layout::TableRowBox(document(), *this, move(style)));
+        return adopt(*new Layout::TableRowBox(document(), this, move(style)));
     if (display == CSS::Display::TableCell)
-        return adopt(*new Layout::TableCellBox(document(), *this, move(style)));
+        return adopt(*new Layout::TableCellBox(document(), this, move(style)));
     if (display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup)
         return adopt(*new Layout::TableRowGroupBox(document(), *this, move(style)));
     if (display == CSS::Display::InlineBlock) {

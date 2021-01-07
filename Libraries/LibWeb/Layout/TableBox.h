@@ -32,7 +32,8 @@ namespace Web::Layout {
 
 class TableBox final : public Layout::BlockBox {
 public:
-    TableBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
+    TableBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
+    TableBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableBox() override;
 };
 

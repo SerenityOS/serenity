@@ -32,7 +32,8 @@ namespace Web::Layout {
 
 class TableCellBox final : public BlockBox {
 public:
-    TableCellBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
+    TableCellBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
+    TableCellBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableCellBox() override;
 
     TableCellBox* next_cell() { return next_sibling_of_type<TableCellBox>(); }
