@@ -104,6 +104,8 @@ public:
     void insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify = true);
     NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
 
+    void remove_all_children();
+
     bool is_child_allowed(const T&) const { return true; }
 
     T* next_in_pre_order()
@@ -311,6 +313,13 @@ private:
     T* m_next_sibling { nullptr };
     T* m_previous_sibling { nullptr };
 };
+
+template<typename T>
+inline void TreeNode<T>::remove_all_children()
+{
+    while (RefPtr<T> child = first_child())
+        remove_child(child.release_nonnull());
+}
 
 template<typename T>
 inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)

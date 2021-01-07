@@ -82,7 +82,6 @@ public:
 
     RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
-    void remove_all_children();
 
     virtual RefPtr<Layout::Node> create_layout_node();
 
