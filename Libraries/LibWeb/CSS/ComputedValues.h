@@ -41,6 +41,7 @@ public:
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
+    static CSS::Display display() { return CSS::Display::Inline; }
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
@@ -57,6 +58,7 @@ class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
+    CSS::Display display() const { return m_noninherited.display; }
     Optional<int> z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextDecorationLine text_decoration_line() const { return m_noninherited.text_decoration_line; }
@@ -103,6 +105,7 @@ protected:
     struct {
         CSS::Float float_ { InitialValues::float_() };
         CSS::Clear clear { InitialValues::clear() };
+        CSS::Display display { InitialValues::display() };
         Optional<int> z_index;
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
         CSS::Position position { InitialValues::position() };
@@ -148,6 +151,7 @@ public:
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
+    void set_display(CSS::Display value) { m_noninherited.display = value; }
     BorderData& border_left() { return m_noninherited.border_left; }
     BorderData& border_top() { return m_noninherited.border_top; }
     BorderData& border_right() { return m_noninherited.border_right; }
