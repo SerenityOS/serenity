@@ -35,6 +35,8 @@ public:
     TableBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableBox() override;
+
+    static CSS::Display static_display() { return CSS::Display::Table; }
 };
 
 }
