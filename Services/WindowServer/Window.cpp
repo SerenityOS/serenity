@@ -227,7 +227,7 @@ void Window::set_minimized(bool minimized)
     update_menu_item_text(PopupMenuItem::Minimize);
     Compositor::the().invalidate_occlusions();
     Compositor::the().invalidate_screen(frame().rect());
-    if (!is_blocked_by_modal_window())
+    if (!blocking_modal_window())
         start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
@@ -330,7 +330,7 @@ void Window::event(Core::Event& event)
         return;
     }
 
-    if (is_blocked_by_modal_window()) {
+    if (blocking_modal_window()) {
         // We still want to handle the WindowDeactivated event below when a new modal is
         // created to notify its parent window, despite it being "blocked by modal window".
         if (event.type() != Event::WindowDeactivated)
@@ -472,7 +472,7 @@ bool Window::is_active() const
     return WindowManager::the().active_window() == this;
 }
 
-Window* Window::is_blocked_by_modal_window()
+Window* Window::blocking_modal_window()
 {
     // A window is blocked if any immediate child, or any child further
     // down the chain is modal
@@ -481,8 +481,8 @@ Window* Window::is_blocked_by_modal_window()
             if (window->is_modal())
                 return window;
 
-            if (auto* blocking_modal_window = window->is_blocked_by_modal_window())
-                return blocking_modal_window;
+            if (auto* blocking_window = window->blocking_modal_window())
+                return blocking_window;
         }
     }
     return nullptr;

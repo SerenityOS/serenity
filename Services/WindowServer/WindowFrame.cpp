@@ -282,7 +282,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         if (event.type() == Event::MouseDown)
             wm.move_to_front_and_make_active(m_window);
 
-        if (m_window.is_blocked_by_modal_window())
+        if (m_window.blocking_modal_window())
             return;
 
         if (title_bar_icon_rect().contains(event.position())) {

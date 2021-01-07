@@ -122,7 +122,7 @@ public:
     WindowFrame& frame() { return m_frame; }
     const WindowFrame& frame() const { return m_frame; }
 
-    Window* is_blocked_by_modal_window();
+    Window* blocking_modal_window();
 
     bool listens_to_wm_events() const { return m_listens_to_wm_events; }
 

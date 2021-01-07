@@ -679,8 +679,8 @@ void ClientConnection::handle(const Messages::WindowServer::WM_PopupWindowMenu& 
         return;
     }
     auto& window = *(*it).value;
-    if (auto* blocked_by_modal = window.is_blocked_by_modal_window()) {
-        blocked_by_modal->popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+    if (auto* modal_window = window.blocking_modal_window()) {
+        modal_window->popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
     } else {
         window.popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
     }
