@@ -398,6 +398,12 @@ CSS::Display StyleProperties::display() const
         return CSS::Display::TableRow;
     case CSS::ValueID::TableCell:
         return CSS::Display::TableCell;
+    case CSS::ValueID::TableColumn:
+        return CSS::Display::TableColumn;
+    case CSS::ValueID::TableColumnGroup:
+        return CSS::Display::TableColumnGroup;
+    case CSS::ValueID::TableCaption:
+        return CSS::Display::TableCaption;
     case CSS::ValueID::TableRowGroup:
         return CSS::Display::TableRowGroup;
     case CSS::ValueID::TableHeaderGroup:
