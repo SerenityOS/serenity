@@ -115,6 +115,8 @@ public:
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) {};
 
+    virtual bool is_box() const { return false; }
+
     bool is_floating() const;
     bool is_positioned() const;
     bool is_absolutely_positioned() const;
