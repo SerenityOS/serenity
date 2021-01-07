@@ -902,7 +902,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         return;
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->is_blocked_by_modal_window())
+        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->blocking_modal_window())
             continue;
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         auto translated_event = event.translated(-window->position());
@@ -975,7 +975,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     start_window_move(window, event);
                     return;
                 }
-                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
                     hovered_window = &window;
                     start_window_resize(window, event);
                     return;
@@ -997,7 +997,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             if (event.type() == Event::MouseDown) {
                 // We're clicking on something that's blocked by a modal window.
                 // Flash the modal window to let the user know about it.
-                if (auto* blocking_modal_window = window.is_blocked_by_modal_window())
+                if (auto* blocking_modal_window = window.blocking_modal_window())
                     blocking_modal_window->frame().start_flash_animation();
 
                 if (window.type() == WindowType::Normal)
@@ -1009,7 +1009,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
             if (window.rect().contains(event.position())) {
                 hovered_window = &window;
-                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.is_blocked_by_modal_window()) {
+                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.blocking_modal_window()) {
                     auto translated_event = event.translated(-window.position());
                     deliver_mouse_event(window, translated_event);
                     if (event.type() == Event::MouseDown) {
@@ -1210,7 +1210,7 @@ Window* WindowManager::set_active_input_window(Window* window)
 void WindowManager::set_active_window(Window* window, bool make_input)
 {
     if (window) {
-        if (auto* modal_window = window->is_blocked_by_modal_window()) {
+        if (auto* modal_window = window->blocking_modal_window()) {
             ASSERT(modal_window->is_modal());
             ASSERT(modal_window != window);
             window = modal_window;
@@ -1326,7 +1326,7 @@ const Cursor& WindowManager::active_cursor() const
     }
 
     if (m_hovered_window) {
-        if (auto* modal_window = const_cast<Window&>(*m_hovered_window).is_blocked_by_modal_window()) {
+        if (auto* modal_window = const_cast<Window&>(*m_hovered_window).blocking_modal_window()) {
             if (modal_window->cursor())
                 return *modal_window->cursor();
         } else if (m_hovered_window->cursor()) {
