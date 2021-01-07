@@ -116,3 +116,12 @@ private:
 };
 
 }
+
+namespace AK {
+template<>
+inline bool is<Web::DOM::Element>(const Web::DOM::Node& input)
+{
+    return input.is_element();
+}
+
+}
