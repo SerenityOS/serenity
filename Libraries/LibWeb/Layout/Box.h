@@ -123,6 +123,8 @@ protected:
     Vector<LineBox> m_line_boxes;
 
 private:
+    virtual bool is_box() const final { return true; }
+
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;
 
@@ -131,5 +133,14 @@ private:
 
     OwnPtr<StackingContext> m_stacking_context;
 };
+
+}
+
+namespace AK {
+template<>
+inline bool is<Web::Layout::Box>(const Web::Layout::Node& input)
+{
+    return input.is_box();
+}
 
 }
