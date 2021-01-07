@@ -47,7 +47,7 @@ public:
     virtual ~VirtIOConsole() override;
 
 private:
-    virtual const char* class_name() const override { return m_class_name; }
+    virtual const char* class_name() const override { return m_class_name.characters(); }
 
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
@@ -56,10 +56,7 @@ private:
 
     virtual mode_t required_mode() const override { return 0666; }
 
-    virtual void handle_device_config_change() override;
-
-    VirtIOQueue* m_receive_queue { nullptr };
-    VirtIOQueue* m_send_queue { nullptr };
+    virtual bool handle_device_config_change() override;
 };
 
 }

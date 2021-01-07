@@ -32,7 +32,7 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
     : CharacterDevice(229, 0)
     , VirtIODevice(address, "VirtIOConsole")
 {
-    if (auto* cfg = get_device_config()) {
+    if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
             if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_SIZE))
@@ -46,11 +46,11 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             u16 cols = 0, rows = 0;
             read_config_atomic([&]() {
                 if (is_feature_accepted(VIRTIO_CONSOLE_F_SIZE)) {
-                    cols = config_read16(cfg, 0x0);
-                    rows = config_read16(cfg, 0x2);
+                    cols = config_read16(*cfg, 0x0);
+                    rows = config_read16(*cfg, 0x2);
                 }
                 if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT)) {
-                    max_nr_ports = config_read32(cfg, 0x4);
+                    max_nr_ports = config_read32(*cfg, 0x4);
                 }
             });
             klog() << "VirtIOConsole: cols: " << cols << " rows: " << rows << " max nr ports: " << max_nr_ports;
@@ -58,12 +58,10 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             success = finish_init();
         }
         if (success) {
-            m_receive_queue = get_queue(RECEIVEQ);
-            m_receive_queue->on_data_available = [&]() {
+            get_queue(RECEIVEQ).on_data_available = [&]() {
                 klog() << "VirtIOConsole: receive_queue on_data_available";
             };
-            m_send_queue = get_queue(TRANSMITQ);
-            m_send_queue->on_data_available = [&]() {
+            get_queue(TRANSMITQ).on_data_available = [&]() {
                 klog() << "VirtIOConsole: send_queue on_data_available";
             };
             klog() << "TODO: Populate receive queue with a receive buffer";
@@ -75,9 +73,10 @@ VirtIOConsole::~VirtIOConsole()
 {
 }
 
-void VirtIOConsole::handle_device_config_change()
+bool VirtIOConsole::handle_device_config_change()
 {
     klog() << "VirtIOConsole: Handle device config change";
+    return true;
 }
 
 bool VirtIOConsole::can_read(const FileDescription&, size_t) const

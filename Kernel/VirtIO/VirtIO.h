@@ -86,6 +86,21 @@ namespace Kernel {
 #define QUEUE_INTERRUPT 0x1
 #define DEVICE_CONFIG_INTERRUPT 0x2
 
+enum class ConfigurationType : u8 {
+    Common = 1,
+    Notify = 2,
+    ISR = 3,
+    Device = 4,
+    PCI = 5
+};
+
+struct Configuration {
+    ConfigurationType cfg_type;
+    u8 bar;
+    u32 offset;
+    u32 length;
+};
+
 class VirtIO {
 public:
     static void detect();
@@ -93,11 +108,11 @@ public:
 
 class VirtIODevice : public PCI::Device {
 public:
-    VirtIODevice(PCI::Address, const char*);
+    VirtIODevice(PCI::Address, String);
     virtual ~VirtIODevice() override;
 
 protected:
-    const char* const m_class_name;
+    const String m_class_name;
 
     struct MappedMMIO {
         OwnPtr<Region> base;
@@ -124,16 +139,9 @@ protected:
         }
     };
 
-    struct Configuration {
-        u8 cfg_type;
-        u8 bar;
-        u32 offset;
-        u32 length;
-    };
-
-    const Configuration* get_config(u8 cfg_type, u32 index = 0) const
+    const Configuration* get_config(ConfigurationType cfg_type, u32 index = 0) const
     {
-        for (const auto& cfg : m_configs) {
+        for (auto& cfg : m_configs) {
             if (cfg.cfg_type != cfg_type)
                 continue;
             if (index > 0) {
@@ -144,8 +152,6 @@ protected:
         }
         return nullptr;
     }
-    const Configuration* get_common_config(u32 index = 0) const;
-    const Configuration* get_device_config(u32 index = 0) const;
 
     template<typename F>
     void read_config_atomic(F f)
@@ -153,22 +159,22 @@ protected:
         if (m_common_cfg) {
             u8 generation_before, generation_after;
             do {
-                generation_before = config_read8(m_common_cfg, 0x15);
+                generation_before = config_read8(*m_common_cfg, 0x15);
                 f();
-                generation_after = config_read8(m_common_cfg, 0x15);
+                generation_after = config_read8(*m_common_cfg, 0x15);
             } while (generation_before != generation_after);
         } else {
             f();
         }
     }
 
-    u8 config_read8(const Configuration*, u32);
-    u16 config_read16(const Configuration*, u32);
-    u32 config_read32(const Configuration*, u32);
-    void config_write8(const Configuration*, u32, u8);
-    void config_write16(const Configuration*, u32, u16);
-    void config_write32(const Configuration*, u32, u32);
-    void config_write64(const Configuration*, u32, u64);
+    u8 config_read8(const Configuration&, u32);
+    u16 config_read16(const Configuration&, u32);
+    u32 config_read32(const Configuration&, u32);
+    void config_write8(const Configuration&, u32, u8);
+    void config_write16(const Configuration&, u32, u16);
+    void config_write32(const Configuration&, u32, u32);
+    void config_write64(const Configuration&, u32, u64);
 
     auto mapping_for_bar(u8) -> MappedMMIO&;
 
@@ -178,9 +184,10 @@ protected:
     u64 get_device_features();
     bool finish_init();
 
-    VirtIOQueue* get_queue(u16 queue_index)
+    VirtIOQueue& get_queue(u16 queue_index)
     {
-        return &m_queues[queue_index];
+        ASSERT(queue_index < m_queue_count);
+        return m_queues[queue_index];
     }
     void set_requested_queue_count(u16);
 
@@ -207,7 +214,7 @@ protected:
     void supply_buffer_and_notify(u16 queue_index, const u8* buffer, u32 len, BufferType);
 
     virtual void handle_irq(const RegisterState&) override;
-    virtual void handle_device_config_change() = 0;
+    virtual bool handle_device_config_change() = 0;
 
 private:
     template<typename T>
@@ -233,7 +240,7 @@ private:
     u8 isr_status();
 
     NonnullOwnPtrVector<VirtIOQueue> m_queues;
-    Vector<Configuration> m_configs;
+    NonnullOwnPtrVector<Configuration> m_configs;
     const Configuration* m_common_cfg { nullptr }; // Cached due to high usage
     const Configuration* m_notify_cfg { nullptr }; // Cached due to high usage
     const Configuration* m_isr_cfg { nullptr };    // Cached due to high usage
