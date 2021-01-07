@@ -34,6 +34,7 @@ class StyleProperties;
 class StyleResolver;
 class StyleRule;
 class StyleSheet;
+enum class Display;
 }
 
 namespace Web::DOM {
