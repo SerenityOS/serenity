@@ -237,6 +237,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
     }
 
+    computed_values.set_display(specified_style.display());
+
     auto position = specified_style.position();
     if (position.has_value())
         computed_values.set_position(position.value());
