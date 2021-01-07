@@ -199,13 +199,6 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
     return node;
 }
 
-void Node::remove_all_children()
-{
-    while (RefPtr<Node> child = first_child()) {
-        remove_child(*child);
-    }
-}
-
 void Node::set_document(Badge<Document>, Document& document)
 {
     if (m_document == &document)
