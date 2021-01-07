@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,12 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableCellBox.h>
+#include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 
@@ -136,7 +140,163 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
     }
 
     create_layout_tree(dom_node);
+
+    if (auto* root = dom_node.document().layout_node())
+        fixup_tables(*root);
+
     return move(m_layout_root);
+}
+
+template<CSS::Display display, typename Callback>
+void TreeBuilder::for_each_in_tree_with_display(NodeWithStyle& root, Callback callback)
+{
+    root.for_each_in_subtree_of_type<Box>([&](auto& box) {
+        if (box.computed_values().display() == display)
+            callback(box);
+        return IterationDecision::Continue;
+    });
+}
+
+void TreeBuilder::fixup_tables(NodeWithStyle& root)
+{
+    // NOTE: Even if we only do a partial build, we always do fixup from the root.
+
+    remove_irrelevant_boxes(root);
+    generate_missing_child_wrappers(root);
+    generate_missing_parents(root);
+}
+
+void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
+{
+    // The following boxes are discarded as if they were display:none:
+
+    NonnullRefPtrVector<Box> to_remove;
+
+    // Children of a table-column.
+    for_each_in_tree_with_display<CSS::Display::TableColumn>(root, [&](Box& table_column) {
+        table_column.for_each_child([&](auto& child) {
+            to_remove.append(child);
+        });
+    });
+
+    // Children of a table-column-group which are not a table-column.
+    for_each_in_tree_with_display<CSS::Display::TableColumnGroup>(root, [&](Box& table_column_group) {
+        table_column_group.for_each_child([&](auto& child) {
+            if (child.computed_values().display() != CSS::Display::TableColumn)
+                to_remove.append(child);
+        });
+    });
+
+    // FIXME:
+    // Anonymous inline boxes which contain only white space and are between two immediate siblings each of which is a table-non-root box.
+    // Anonymous inline boxes which meet all of the following criteria:
+    // - they contain only white space
+    // - they are the first and/or last child of a tabular container
+    // - whose immediate sibling, if any, is a table-non-root box
+
+    for (auto& box : to_remove)
+        box.parent()->remove_child(box);
+}
+
+static bool is_table_track(CSS::Display display)
+{
+    return display == CSS::Display::TableRow || display == CSS::Display::TableColumn;
+}
+
+static bool is_table_track_group(CSS::Display display)
+{
+    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableColumnGroup;
+}
+
+static bool is_not_proper_table_child(const Node& node)
+{
+    if (!node.has_style())
+        return true;
+    auto display = node.computed_values().display();
+    return !is_table_track_group(display) && !is_table_track(display) && display != CSS::Display::TableCaption;
+}
+
+static bool is_not_table_row(const Node& node)
+{
+    if (!node.has_style())
+        return true;
+    auto display = node.computed_values().display();
+    return display != CSS::Display::TableRow;
+}
+
+static bool is_not_table_cell(const Node& node)
+{
+    if (!node.has_style())
+        return true;
+    auto display = node.computed_values().display();
+    return display != CSS::Display::TableCell;
+}
+
+template<typename Matcher, typename Callback>
+static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& parent, Matcher matcher, Callback callback)
+{
+    NonnullRefPtrVector<Node> sequence;
+    Node* next_sibling = nullptr;
+    for (auto* child = parent.first_child(); child; child = next_sibling) {
+        next_sibling = child->next_sibling();
+        if (matcher(*child)) {
+            sequence.append(*child);
+        } else {
+            if (!sequence.is_empty()) {
+                callback(sequence, next_sibling);
+                sequence.clear();
+            }
+        }
+    }
+    if (!sequence.is_empty())
+        callback(sequence, nullptr);
+}
+
+template<typename WrapperBoxType>
+static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest_sibling)
+{
+    ASSERT(!sequence.is_empty());
+    auto& parent = *sequence.first().parent();
+    auto computed_values = parent.computed_values().clone_inherited_values();
+    static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());
+    auto wrapper = adopt(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
+    for (auto& child : sequence) {
+        parent.remove_child(child);
+        wrapper->append_child(child);
+    }
+    if (nearest_sibling)
+        parent.insert_before(move(wrapper), *nearest_sibling);
+    else
+        parent.append_child(move(wrapper));
+}
+
+void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
+{
+    // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root box which are not proper table child boxes.
+    for_each_in_tree_with_display<CSS::Display::Table>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_proper_table_child, [&](auto sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+
+    // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
+    for_each_in_tree_with_display<CSS::Display::TableRowGroup>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+
+    // An anonymous table-cell box must be generated around each sequence of consecutive children of a table-row box which are not table-cell boxes. !Testcase
+    for_each_in_tree_with_display<CSS::Display::TableRow>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_cell, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableCellBox>(sequence, nearest_sibling);
+        });
+    });
+}
+
+void TreeBuilder::generate_missing_parents(NodeWithStyle&)
+{
+    // FIXME: Implement.
 }
 
 }
