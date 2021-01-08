@@ -113,6 +113,15 @@ void TabWidget::set_active_widget(Widget* widget)
     update_bar();
 }
 
+void TabWidget::set_tab_index(int index)
+{
+    if (m_tabs.at(index).widget == m_active_widget)
+        return;
+    set_active_widget(m_tabs.at(index).widget);
+
+    update_bar();
+}
+
 void TabWidget::resize_event(ResizeEvent& event)
 {
     if (!m_active_widget)
