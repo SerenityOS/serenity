@@ -107,27 +107,11 @@ private:
         NonnullOwnPtr<Event> event;
     };
 
-    class SignalHandlers {
+    class SignalHandlers : public RefCounted<SignalHandlers> {
         AK_MAKE_NONCOPYABLE(SignalHandlers);
+        AK_MAKE_NONMOVABLE(SignalHandlers);
 
     public:
-        SignalHandlers(SignalHandlers&& from)
-            : m_signo(from.m_signo)
-            , m_original_handler(from.m_original_handler)
-            , m_handlers(move(from.m_handlers))
-        {
-            from.m_valid = false;
-        }
-        SignalHandlers& operator=(SignalHandlers&& from)
-        {
-            if (this != &from) {
-                m_signo = from.m_signo;
-                m_original_handler = from.m_original_handler;
-                m_handlers = move(from.m_handlers);
-                from.m_valid = false;
-            }
-            return *this;
-        }
         SignalHandlers(int signo);
         ~SignalHandlers();
 
@@ -137,24 +121,37 @@ private:
 
         bool is_empty() const
         {
+            if (m_calling_handlers) {
+                for (auto& handler : m_handlers_pending) {
+                    if (handler.value)
+                        return false; // an add is pending
+                }
+            }
             return m_handlers.is_empty();
         }
 
         bool have(int handler_id) const
         {
+            if (m_calling_handlers) {
+                auto it = m_handlers_pending.find(handler_id);
+                if (it != m_handlers_pending.end()) {
+                    if (!it->value)
+                        return false; // a deletion is pending
+                }
+            }
             return m_handlers.contains(handler_id);
         }
 
         int m_signo;
         void (*m_original_handler)(int); // TODO: can't use sighandler_t?
         HashMap<int, Function<void(int)>> m_handlers;
-        bool m_valid { true };
+        HashMap<int, Function<void(int)>> m_handlers_pending;
+        bool m_calling_handlers { false };
     };
     friend class SignalHandlers;
 
     Vector<QueuedEvent, 64> m_queued_events;
-    static HashMap<int, SignalHandlers> s_signal_handlers;
-    static int s_handling_signal;
+    static HashMap<int, NonnullRefPtr<SignalHandlers>> s_signal_handlers;
     static int s_next_signal_id;
     static pid_t s_pid;
 
