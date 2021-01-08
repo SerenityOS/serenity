@@ -56,34 +56,44 @@ class Singleton {
 public:
     Singleton() = default;
 
-    T* ptr() const
+    template<bool allow_create = true>
+    static T* get(T*& obj_var)
     {
-        T* obj = AK::atomic_load(&m_obj, AK::memory_order_consume);
+        T* obj = AK::atomic_load(&obj_var, AK::memory_order_acquire);
         if (FlatPtr(obj) <= 0x1) {
             // If this is the first time, see if we get to initialize it
 #ifdef KERNEL
             Kernel::ScopedCritical critical;
 #endif
-            if (obj == nullptr && AK::atomic_compare_exchange_strong(&m_obj, obj, (T*)0x1, AK::memory_order_acq_rel)) {
-                // We're the first one
-                obj = InitFunction();
-                AK::atomic_store(&m_obj, obj, AK::memory_order_release);
-            } else {
-                // Someone else was faster, wait until they're done
-                while (obj == (T*)0x1) {
-#ifdef KERNEL
-                    Kernel::Processor::wait_check();
-#else
-                    // TODO: yield
-#endif
-                    obj = AK::atomic_load(&m_obj, AK::memory_order_consume);
+            if constexpr (allow_create) {
+                if (obj == nullptr && AK::atomic_compare_exchange_strong(&obj_var, obj, (T*)0x1, AK::memory_order_acq_rel)) {
+                    // We're the first one
+                    obj = InitFunction();
+                    AK::atomic_store(&obj_var, obj, AK::memory_order_release);
+                    return obj;
                 }
             }
-            // We should always return an instance
-            ASSERT(obj != nullptr);
+            // Someone else was faster, wait until they're done
+            while (obj == (T*)0x1) {
+#ifdef KERNEL
+                Kernel::Processor::wait_check();
+#else
+                // TODO: yield
+#endif
+                obj = AK::atomic_load(&obj_var, AK::memory_order_acquire);
+            }
+            if constexpr (allow_create) {
+                // We should always return an instance if we allow creating one
+                ASSERT(obj != nullptr);
+            }
             ASSERT(obj != (T*)0x1);
         }
         return obj;
+    }
+
+    T* ptr() const
+    {
+        return get(m_obj);
     }
 
     T* operator->() const
