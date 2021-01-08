@@ -176,3 +176,11 @@ inline const LogStream& operator<<(const LogStream& stream, IOAddress value)
 {
     return stream << "IO " << String::format("%x", value.get());
 }
+
+template<>
+struct AK::Formatter<IOAddress> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, IOAddress value)
+    {
+        return Formatter<FormatString>::format(builder, "IO {:x}", value.get());
+    }
+};

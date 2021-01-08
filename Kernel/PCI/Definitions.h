@@ -247,3 +247,13 @@ class Device;
 }
 
 }
+
+template<>
+struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::PCI::Address value)
+    {
+        return Formatter<FormatString>::format(
+            builder,
+            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.seg(), value.bus(), value.slot(), value.function());
+    }
+};

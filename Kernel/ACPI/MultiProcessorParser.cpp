@@ -57,7 +57,7 @@ void MultiProcessorParser::parse_floating_pointer_data()
 {
     auto floating_pointer = map_typed<MultiProcessor::FloatingPointer>(m_floating_pointer);
     m_configuration_table = PhysicalAddress(floating_pointer->physical_address_ptr);
-    dbg() << "Features " << floating_pointer->feature_info[0] << ", IMCR? " << (floating_pointer->feature_info[0] & (1 << 7));
+    dbgln("Features {}, IMCR? {}", floating_pointer->feature_info[0], (floating_pointer->feature_info[0] & (1 << 7)));
 }
 
 void MultiProcessorParser::parse_configuration_table()
@@ -126,7 +126,7 @@ Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
 
 Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_redirections()
 {
-    dbg() << "MultiProcessor: Get PCI IOAPIC redirections";
+    dbgln("MultiProcessor: Get PCI IOAPIC redirections");
     Vector<PCIInterruptOverrideMetadata> overrides;
     auto pci_bus_ids = get_pci_bus_ids();
     for (auto& entry : m_io_interrupt_assignment_entries) {

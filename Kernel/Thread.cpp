@@ -238,7 +238,7 @@ void Thread::die_if_needed()
     // actual context switch
     u32 prev_flags;
     Processor::current().clear_critical(prev_flags, false);
-    dbg() << "die_if_needed returned from clear_critical!!! in irq: " << Processor::current().in_irq();
+    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current().in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     ASSERT_NOT_REACHED();
@@ -377,7 +377,7 @@ void Thread::finalize()
     }
 
     if (m_dump_backtrace_on_finalization)
-        dbg() << backtrace_impl();
+        dbgln("{}", backtrace_impl());
 
     kfree_aligned(m_fpu_state);
     drop_thread_count(false);
@@ -897,7 +897,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
         if (previous_state == Invalid) {
             // If we were *just* created, we may have already pending signals
             if (has_unmasked_pending_signals()) {
-                dbg() << "Dispatch pending signals to new thread " << *this;
+                dbgln("Dispatch pending signals to new thread {}", *this);
                 dispatch_one_pending_signal();
             }
         }
@@ -1114,4 +1114,11 @@ bool Thread::should_be_stopped() const
     return process().is_stopped();
 }
 
+}
+
+void AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, const Kernel::Thread& value)
+{
+    return AK::Formatter<FormatString>::format(
+        builder,
+        "{}({}:{})", value.process().name(), value.pid().value(), value.tid().value());
 }
