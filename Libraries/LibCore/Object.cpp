@@ -231,8 +231,7 @@ void Object::dispatch_event(Core::Event& e, Object* stay_within)
         target = target->parent();
         if (target == stay_within) {
             // Prevent the event from bubbling any further.
-            e.accept();
-            break;
+            return;
         }
     } while (target && !e.is_accepted());
 }
