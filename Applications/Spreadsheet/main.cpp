@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
             auto& sheet = spreadsheet_widget.current_worksheet();
 
             for (auto& line : spreadsheet_data.value().split_view('\n')) {
-                dbg() << "Paste line '" << line << "'";
+                dbgln("Paste line '{}'", line);
                 auto position = sheet.position_from_url(line);
                 if (position.has_value())
                     source_positions.append(position.release_value());

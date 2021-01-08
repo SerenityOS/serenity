@@ -532,7 +532,7 @@ void Scheduler::notify_finalizer()
 
 void Scheduler::idle_loop(void*)
 {
-    dbg() << "Scheduler[" << Processor::current().id() << "]: idle loop running";
+    dbgln("Scheduler[{}]: idle loop running", Processor::current().id());
     ASSERT(are_interrupts_enabled());
 
     for (;;) {

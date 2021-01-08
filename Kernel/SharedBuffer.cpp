@@ -48,10 +48,15 @@ void SharedBuffer::sanity_check(const char* what)
         found_refs += ref.count;
 
     if (found_refs != m_total_refs) {
-        dbg() << what << " sanity -- SharedBuffer{" << this << "} id: " << m_shbuf_id << " has total refs " << m_total_refs << " but we found " << found_refs;
-        for (const auto& ref : m_refs) {
-            dbg() << "    ref from pid " << ref.pid.value() << ": refcnt " << ref.count;
-        }
+        dbgln("{} sanity -- SharedBuffer({}) id: {} has total refs {} but we found {}",
+            what,
+            this,
+            m_shbuf_id,
+            m_total_refs,
+            found_refs);
+
+        for (const auto& ref : m_refs)
+            dbgln("    ref from pid {}: reference count {}", ref.pid.value(), ref.count);
         ASSERT_NOT_REACHED();
     }
 }

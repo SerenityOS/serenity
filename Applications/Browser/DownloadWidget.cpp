@@ -162,7 +162,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
 
 void DownloadWidget::did_finish(bool success)
 {
-    dbg() << "did_finish, success=" << success;
+    dbgln("did_finish, success={}", success);
 
     m_close_button->set_enabled(true);
     m_cancel_button->set_text("Open in Folder");
