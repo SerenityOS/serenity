@@ -35,6 +35,7 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -153,6 +154,12 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
+    const char* args_tab = "processes";
+    Core::ArgsParser parser;
+    parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'pci', 'devices', 'network', 'processors' or 'interrupts'", "open-tab", 't', "tab");
+    parser.parse(argc, argv);
+    StringView args_tab_view = args_tab;
+
     auto app_icon = GUI::Icon::default_icon("app-system-monitor");
 
     auto window = GUI::Window::construct();
@@ -166,23 +173,29 @@ int main(int argc, char** argv)
 
     auto& tabwidget = keeper.add<GUI::TabWidget>();
 
-    auto& process_container_splitter = tabwidget.add_tab<GUI::VerticalSplitter>("Processes");
-    process_container_splitter.layout()->set_margins({ 4, 4, 4, 4 });
+    auto process_container_splitter = GUI::VerticalSplitter::construct();
+    tabwidget.add_widget("Processes", process_container_splitter);
+    process_container_splitter->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& process_table_container = process_container_splitter.add<GUI::Widget>();
+    auto& process_table_container = process_container_splitter->add<GUI::Widget>();
 
-    tabwidget.add_widget("Graphs", build_graphs_tab());
+    auto graphs_widget = build_graphs_tab();
+    tabwidget.add_widget("Graphs", graphs_widget);
 
-    tabwidget.add_widget("File systems", build_file_systems_tab());
+    auto file_systems_widget = build_file_systems_tab();
+    tabwidget.add_widget("File systems", file_systems_widget);
 
-    tabwidget.add_widget("PCI devices", build_pci_devices_tab());
+    auto pci_devices_widget = build_pci_devices_tab();
+    tabwidget.add_widget("PCI devices", pci_devices_widget);
 
-    tabwidget.add_widget("Devices", build_devices_tab());
+    auto devices_widget = build_devices_tab();
+    tabwidget.add_widget("Devices", devices_widget);
 
     auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget.add_widget("Network", network_stats_widget);
 
-    tabwidget.add_widget("Processors", build_processors_tab());
+    auto processors_widget = build_processors_tab();
+    tabwidget.add_widget("Processors", processors_widget);
 
     auto interrupts_widget = InterruptsWidget::construct();
     tabwidget.add_widget("Interrupts", interrupts_widget);
@@ -308,10 +321,10 @@ int main(int argc, char** argv)
 
     app->set_menubar(move(menubar));
 
-    auto& process_tab_unused_widget = process_container_splitter.add<UnavailableProcessWidget>("No process selected");
+    auto& process_tab_unused_widget = process_container_splitter->add<UnavailableProcessWidget>("No process selected");
     process_tab_unused_widget.set_visible(true);
 
-    auto& process_tab_widget = process_container_splitter.add<GUI::TabWidget>();
+    auto& process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
     process_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     process_tab_widget.set_visible(false);
 
@@ -341,6 +354,23 @@ int main(int argc, char** argv)
     window->show();
 
     window->set_icon(app_icon.bitmap_for_size(16));
+
+    if (args_tab_view == "processes")
+        tabwidget.set_active_widget(process_container_splitter);
+    else if (args_tab_view == "graphs")
+        tabwidget.set_active_widget(graphs_widget);
+    else if (args_tab_view == "fs")
+        tabwidget.set_active_widget(file_systems_widget);
+    else if (args_tab_view == "pci")
+        tabwidget.set_active_widget(pci_devices_widget);
+    else if (args_tab_view == "devices")
+        tabwidget.set_active_widget(devices_widget);
+    else if (args_tab_view == "network")
+        tabwidget.set_active_widget(network_stats_widget);
+    else if (args_tab_view == "processors")
+        tabwidget.set_active_widget(processors_widget);
+    else if (args_tab_view == "interrupts")
+        tabwidget.set_active_widget(interrupts_widget);
 
     return app->exec();
 }
