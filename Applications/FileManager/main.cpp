@@ -889,24 +889,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
-    tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
-        if (!event.mime_data().has_urls())
-            return;
-        auto urls = event.mime_data().urls();
+    auto copy_urls_to_directory = [&](const Vector<URL>& urls, const String& directory) {
         if (urls.is_empty()) {
-            dbgln("No files to drop");
+            dbgln("No files to copy");
             return;
         }
-
-        auto& target_node = directories_model->node(index);
-        if (!target_node.is_directory())
-            return;
-
-        bool had_accepted_drop = false;
+        bool had_accepted_copy = false;
         for (auto& url_to_copy : urls) {
-            if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
+            if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
-            auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath(url_to_copy.path()).basename());
+            auto new_path = String::formatted("{}/{}", directory, LexicalPath(url_to_copy.path()).basename());
             if (url_to_copy.path() == new_path)
                 continue;
 
@@ -914,11 +906,27 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
                 GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
-                had_accepted_drop = true;
+                had_accepted_copy = true;
             }
         }
-        if (had_accepted_drop)
+        if (had_accepted_copy)
             refresh_tree_view();
+    };
+
+    breadcrumb_bar.on_drop = [&](size_t segment_index, const GUI::DropEvent& event) {
+        if (!event.mime_data().has_urls())
+            return;
+        copy_urls_to_directory(event.mime_data().urls(), breadcrumb_bar.segment_data(segment_index));
+    };
+
+    tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+        if (!event.mime_data().has_urls())
+            return;
+        auto& target_node = directories_model->node(index);
+        if (!target_node.is_directory())
+            return;
+        copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
+        ;
     };
 
     directory_view.open(initial_location);
