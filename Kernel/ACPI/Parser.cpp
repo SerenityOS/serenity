@@ -150,15 +150,15 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
     switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
     case GenericAddressStructure::AddressSpace::SystemIO: {
         IOAddress address(structure.address);
-        dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << address;
+        dbgln("ACPI: Sending value {:x} to {:p}", value, address);
         switch (structure.access_size) {
         case (u8)GenericAddressStructure::AccessSize::QWord: {
-            dbg() << "Trying to send QWord to IO port";
+            dbgln("Trying to send QWord to IO port");
             ASSERT_NOT_REACHED();
             break;
         }
         case (u8)GenericAddressStructure::AccessSize::Undefined: {
-            dbg() << "ACPI Warning: Unknown access size " << structure.access_size;
+            dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
             ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
             ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
             dbg() << "ACPI: Bit Width - " << structure.bit_width << " bits";
@@ -172,7 +172,7 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
         return;
     }
     case GenericAddressStructure::AddressSpace::SystemMemory: {
-        dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << PhysicalAddress(structure.address);
+        dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
         switch ((GenericAddressStructure::AccessSize)structure.access_size) {
         case GenericAddressStructure::AccessSize::Byte:
             *map_typed<u8>(PhysicalAddress(structure.address)) = value;
@@ -195,10 +195,10 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
     case GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
         // According to the ACPI specification 6.2, page 168, PCI addresses must be confined to devices on Segment group 0, bus 0.
         auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
-        dbg() << "ACPI: Sending value 0x" << String::format("%x", value) << " to " << pci_address;
+        dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
         u32 offset_in_pci_address = structure.address & 0xFFFF;
         if (structure.access_size == (u8)GenericAddressStructure::AccessSize::QWord) {
-            dbg() << "Trying to send QWord to PCI configuration space";
+            dbgln("Trying to send QWord to PCI configuration space");
             ASSERT_NOT_REACHED();
         }
         ASSERT(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
