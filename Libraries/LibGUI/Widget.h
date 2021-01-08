@@ -184,10 +184,12 @@ public:
     void set_focus_policy(FocusPolicy policy);
     FocusPolicy focus_policy() const;
 
-    enum class ShouldRespectGreediness { No = 0,
-        Yes };
+    enum class ShouldRespectGreediness {
+        No = 0,
+        Yes
+    };
     struct HitTestResult {
-        Widget* widget { nullptr };
+        WeakPtr<Widget> widget;
         Gfx::IntPoint local_position;
     };
     HitTestResult hit_test(const Gfx::IntPoint&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
