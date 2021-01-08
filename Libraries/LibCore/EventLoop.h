@@ -107,52 +107,7 @@ private:
         NonnullOwnPtr<Event> event;
     };
 
-    class SignalHandlers : public RefCounted<SignalHandlers> {
-        AK_MAKE_NONCOPYABLE(SignalHandlers);
-        AK_MAKE_NONMOVABLE(SignalHandlers);
-
-    public:
-        SignalHandlers(int signo);
-        ~SignalHandlers();
-
-        void dispatch();
-        int add(Function<void(int)>&& handler);
-        bool remove(int handler_id);
-
-        bool is_empty() const
-        {
-            if (m_calling_handlers) {
-                for (auto& handler : m_handlers_pending) {
-                    if (handler.value)
-                        return false; // an add is pending
-                }
-            }
-            return m_handlers.is_empty();
-        }
-
-        bool have(int handler_id) const
-        {
-            if (m_calling_handlers) {
-                auto it = m_handlers_pending.find(handler_id);
-                if (it != m_handlers_pending.end()) {
-                    if (!it->value)
-                        return false; // a deletion is pending
-                }
-            }
-            return m_handlers.contains(handler_id);
-        }
-
-        int m_signo;
-        void (*m_original_handler)(int); // TODO: can't use sighandler_t?
-        HashMap<int, Function<void(int)>> m_handlers;
-        HashMap<int, Function<void(int)>> m_handlers_pending;
-        bool m_calling_handlers { false };
-    };
-    friend class SignalHandlers;
-
     Vector<QueuedEvent, 64> m_queued_events;
-    static HashMap<int, NonnullRefPtr<SignalHandlers>> s_signal_handlers;
-    static int s_next_signal_id;
     static pid_t s_pid;
 
     bool m_exit_requested { false };
