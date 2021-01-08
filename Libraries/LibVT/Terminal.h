@@ -173,6 +173,7 @@ private:
     void IND();
     void RI();
     void DSR(const ParamVector&);
+    void ICH(const ParamVector&);
 
     TerminalClient& m_client;
 
