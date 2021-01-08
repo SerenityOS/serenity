@@ -822,13 +822,13 @@ public:
             scheduler_lock.lock();
             ScopedSpinLock block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
-                dbg() << "Thread should be stopped, current state: " << state_string();
+                dbgln("Thread should be stopped, current state: {}", state_string());
                 set_state(Thread::Blocked);
                 continue;
             }
             if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
                 block_lock2.unlock();
-                dbg() << "Thread should not be unblocking, current state: " << state_string();
+                dbgln("Thread should not be unblocking, current state: ", state_string());
                 set_state(Thread::Blocked);
                 continue;
             }
@@ -1311,3 +1311,8 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 }
 
 }
+
+template<>
+struct AK::Formatter<Kernel::Thread> : AK::Formatter<FormatString> {
+    void format(FormatBuilder&, const Kernel::Thread&);
+};
