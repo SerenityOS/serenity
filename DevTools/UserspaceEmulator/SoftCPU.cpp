@@ -2449,19 +2449,19 @@ void SoftCPU::MOVSW(const X86::Instruction& insn)
 void SoftCPU::MOVSX_reg16_RM8(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read8(*this, insn);
-    gpr16(insn.reg16()) = ValueWithShadow<u16>(sign_extended_to<u16>(src.value()), 0x0100 | (src.shadow()));
+    gpr16(insn.reg16()) = shadow_wrap_with_taint_from<u16>(sign_extended_to<u16>(src.value()), src.shadow());
 }
 
 void SoftCPU::MOVSX_reg32_RM16(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read16(*this, insn);
-    gpr32(insn.reg32()) = ValueWithShadow<u32>(sign_extended_to<u32>(src.value()), 0x01010000 | (src.shadow()));
+    gpr32(insn.reg32()) = shadow_wrap_with_taint_from<u32>(sign_extended_to<u32>(src.value()), src.shadow());
 }
 
 void SoftCPU::MOVSX_reg32_RM8(const X86::Instruction& insn)
 {
     auto src = insn.modrm().read8(*this, insn);
-    gpr32(insn.reg32()) = ValueWithShadow<u32>(sign_extended_to<u32>(src.value()), 0x01010100 | (src.shadow()));
+    gpr32(insn.reg32()) = shadow_wrap_with_taint_from<u32>(sign_extended_to<u32>(src.value()), src.shadow());
 }
 
 void SoftCPU::MOVZX_reg16_RM8(const X86::Instruction& insn)
