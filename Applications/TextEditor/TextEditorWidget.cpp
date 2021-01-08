@@ -125,7 +125,7 @@ TextEditorWidget::TextEditorWidget()
             m_editor->document().update_regex_matches(needle);
 
         auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end(), GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
-        dbg() << "find_next(\"" << needle << "\") returned " << found_range;
+        dbgln("find_next('{}') returned {}", needle, found_range);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {

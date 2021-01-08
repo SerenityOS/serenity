@@ -36,7 +36,7 @@
 
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a
-// page fault happens in the middle of a dbg(), klog(), etc
+// page fault happens in the middle of a dbgln(), klog(), etc
 static RecursiveSpinLock s_log_lock;
 
 void set_serial_debug(bool on_or_off)

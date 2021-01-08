@@ -128,7 +128,7 @@ void RemoteProcess::set_property(FlatPtr object, const StringView& name, const J
 void RemoteProcess::update()
 {
     m_socket->on_connected = [this] {
-        dbg() << "Connected to PID " << m_pid;
+        dbgln("Connected to PID {}", m_pid);
 
         {
             JsonObject request;
