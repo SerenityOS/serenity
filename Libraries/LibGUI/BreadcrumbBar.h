@@ -46,6 +46,7 @@ public:
     Optional<size_t> selected_segment() const { return m_selected_segment; }
 
     Function<void(size_t index)> on_segment_click;
+    Function<void(size_t index, DropEvent&)> on_drop;
 
 private:
     BreadcrumbBar();
