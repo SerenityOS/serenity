@@ -33,17 +33,23 @@ REGISTER_WIDGET(GUI, BreadcrumbBar)
 
 namespace GUI {
 
-// FIXME: Move this somewhere else
-class UnuncheckableButton : public GUI::Button {
-    C_OBJECT(UnuncheckableButton);
+class BreadcrumbButton : public GUI::Button {
+    C_OBJECT(BreadcrumbButton);
 
 public:
-    virtual ~UnuncheckableButton() override { }
+    virtual ~BreadcrumbButton() override { }
 
     virtual bool is_uncheckable() const override { return false; }
+    virtual void drop_event(DropEvent& event) override
+    {
+        if (on_drop)
+            on_drop(event);
+    }
+
+    Function<void(DropEvent&)> on_drop;
 
 private:
-    UnuncheckableButton() { }
+    BreadcrumbButton() { }
 };
 
 BreadcrumbBar::BreadcrumbBar()
@@ -64,7 +70,7 @@ void BreadcrumbBar::clear_segments()
 
 void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, const String& data)
 {
-    auto& button = add<UnuncheckableButton>();
+    auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.set_text(text);
     button.set_icon(icon);
@@ -74,6 +80,10 @@ void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, 
     button.on_click = [this, index = m_segments.size()](auto) {
         if (on_segment_click)
             on_segment_click(index);
+    };
+    button.on_drop = [this, index = m_segments.size()](auto& drop_event) {
+        if (on_drop)
+            on_drop(index, drop_event);
     };
 
     auto button_text_width = button.font().width(text);
