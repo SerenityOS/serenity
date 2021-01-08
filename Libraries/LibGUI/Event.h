@@ -65,6 +65,8 @@ public:
         WindowCloseRequest,
         ContextMenu,
         EnabledChange,
+        DragEnter,
+        DragLeave,
         DragMove,
         Drop,
         ThemeChange,

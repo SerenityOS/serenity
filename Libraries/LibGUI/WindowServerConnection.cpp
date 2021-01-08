@@ -325,6 +325,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::DragAccepted&)
 void WindowServerConnection::handle(const Messages::WindowClient::DragCancelled&)
 {
     DragOperation::notify_cancelled({});
+    Application::the()->notify_drag_cancelled({});
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WindowStateChanged& message)
