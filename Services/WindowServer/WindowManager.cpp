@@ -1084,8 +1084,15 @@ void WindowManager::event(Core::Event& event)
         auto& key_event = static_cast<const KeyEvent&>(event);
         m_keyboard_modifiers = key_event.modifiers();
 
+        // Escape key cancels an ongoing drag.
         if (key_event.type() == Event::KeyDown && key_event.key() == Key_Escape && m_dnd_client) {
+            // Notify the drag-n-drop client that the drag was cancelled.
             m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
+
+            // Also notify the currently hovered window (if any) that the ongoing drag was cancelled.
+            if (m_hovered_window && m_hovered_window->client() && m_hovered_window->client() != m_dnd_client)
+                m_hovered_window->client()->post_message(Messages::WindowClient::DragCancelled());
+
             end_dnd_drag();
             return;
         }
