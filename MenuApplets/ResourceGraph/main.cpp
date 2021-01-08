@@ -131,7 +131,7 @@ private:
         if (event.button() != GUI::MouseButton::Left)
             return;
         pid_t child_pid;
-        const char* argv[] = { "SystemMonitor", nullptr };
+        const char* argv[] = { "SystemMonitor", "-t", "graphs", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
         } else {
