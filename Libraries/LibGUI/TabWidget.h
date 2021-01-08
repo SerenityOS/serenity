@@ -48,6 +48,7 @@ public:
     Widget* active_widget() { return m_active_widget.ptr(); }
     const Widget* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(Widget*);
+    void set_tab_index(int);
 
     int bar_height() const { return m_bar_visible ? 21 : 0; }
 
