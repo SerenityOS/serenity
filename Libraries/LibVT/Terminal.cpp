@@ -704,6 +704,9 @@ void Terminal::execute_escape_sequence(u8 final)
     case 'n':
         DSR(params);
         break;
+    case '@':
+        ICH(params);
+        break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
         break;
@@ -819,6 +822,28 @@ void Terminal::DSR(const ParamVector& params)
     } else {
         dbg() << "Unknown DSR";
     }
+}
+
+void Terminal::ICH(const ParamVector& params)
+{
+    int num = 0;
+    if (params.size() >= 1) {
+        num = params[0];
+    }
+    if (num == 0)
+        num = 1;
+
+    auto& line = m_lines[m_cursor_row];
+
+    // Move characters after cursor to the right
+    for (int i = line.length() - num; i >= m_cursor_column; --i)
+        line.set_code_point(i + num, line.code_point(i));
+
+    // Fill n characters after cursor with blanks
+    for (int i = 0; i < num; i++)
+        line.set_code_point(m_cursor_column + i, ' ');
+
+    line.set_dirty(true);
 }
 
 void Terminal::on_input(u8 ch)
