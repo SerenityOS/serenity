@@ -314,16 +314,21 @@ void Widget::handle_paint_event(PaintEvent& event)
     });
     second_paint_event(event);
 
+    auto* app = Application::the();
+
+    if (app && app->dnd_debugging_enabled() && has_pending_drop()) {
+        Painter painter(*this);
+        painter.draw_rect(rect(), Color::Blue);
+    }
+
+    if (app && app->focus_debugging_enabled() && is_focused()) {
+        Painter painter(*this);
+        painter.draw_rect(rect(), Color::Cyan);
+    }
+
     if (is_being_inspected()) {
         Painter painter(*this);
         painter.draw_rect(rect(), Color::Magenta);
-    }
-
-    if (Application::the()->focus_debugging_enabled()) {
-        if (is_focused()) {
-            Painter painter(*this);
-            painter.draw_rect(rect(), Color::Cyan);
-        }
     }
 }
 
@@ -499,27 +504,23 @@ void Widget::change_event(Event&)
 {
 }
 
-void Widget::drag_move_event(DragEvent& event)
+void Widget::drag_move_event(DragEvent&)
 {
-    event.ignore();
 }
 
 void Widget::drag_enter_event(DragEvent& event)
 {
     dbgln("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), event.data_type());
-    event.ignore();
 }
 
-void Widget::drag_leave_event(Event& event)
+void Widget::drag_leave_event(Event&)
 {
     dbgln("{} {:p} DRAG LEAVE", class_name(), this);
-    event.ignore();
 }
 
 void Widget::drop_event(DropEvent& event)
 {
     dbgln("{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
-    event.ignore();
 }
 
 void Widget::theme_change_event(ThemeChangeEvent&)
@@ -1033,6 +1034,11 @@ void Widget::set_shrink_to_fit(bool b)
         return;
     m_shrink_to_fit = b;
     invalidate_layout();
+}
+
+bool Widget::has_pending_drop() const
+{
+    return Application::the()->pending_drop_widget() == this;
 }
 
 }
