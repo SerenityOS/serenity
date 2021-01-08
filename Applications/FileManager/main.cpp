@@ -926,7 +926,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         if (!target_node.is_directory())
             return;
         copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
-        ;
     };
 
     directory_view.open(initial_location);
