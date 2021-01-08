@@ -302,6 +302,8 @@ public:
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }
 
+    bool has_pending_drop() const;
+
 protected:
     Widget();
 

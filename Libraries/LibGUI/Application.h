@@ -74,6 +74,7 @@ public:
     void set_system_palette(SharedBuffer&);
 
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
+    bool dnd_debugging_enabled() const { return m_dnd_debugging_enabled; }
 
     Core::EventLoop& event_loop() { return *m_event_loop; }
 
@@ -85,6 +86,9 @@ public:
 
     Widget* drag_hovered_widget() { return m_drag_hovered_widget.ptr(); }
     const Widget* drag_hovered_widget() const { return m_drag_hovered_widget.ptr(); }
+
+    Widget* pending_drop_widget() { return m_pending_drop_widget.ptr(); }
+    const Widget* pending_drop_widget() const { return m_pending_drop_widget.ptr(); }
 
     void set_drag_hovered_widget(Badge<Window>, Widget* widget, const Gfx::IntPoint& position = {}, const String& mime_type = {})
     {
@@ -99,6 +103,7 @@ private:
     void tooltip_hide_timer_did_fire();
 
     void set_drag_hovered_widget_impl(Widget*, const Gfx::IntPoint& = {}, const String& = {});
+    void set_pending_drop_widget(Widget*);
 
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<MenuBar> m_menubar;
@@ -113,9 +118,11 @@ private:
     WeakPtr<Window> m_active_window;
     bool m_quit_when_last_window_deleted { true };
     bool m_focus_debugging_enabled { false };
+    bool m_dnd_debugging_enabled { false };
     String m_invoked_as;
     Vector<String> m_args;
     WeakPtr<Widget> m_drag_hovered_widget;
+    WeakPtr<Widget> m_pending_drop_widget;
 };
 
 }

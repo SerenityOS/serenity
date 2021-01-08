@@ -93,6 +93,9 @@ Application::Application(int argc, char** argv)
     if (getenv("GUI_FOCUS_DEBUG"))
         m_focus_debugging_enabled = true;
 
+    if (getenv("GUI_DND_DEBUG"))
+        m_dnd_debugging_enabled = true;
+
     for (int i = 1; i < argc; i++) {
         String arg(argv[i]);
         m_args.append(move(arg));
@@ -247,21 +250,36 @@ void Application::window_did_become_inactive(Badge<Window>, Window& window)
     m_active_window = nullptr;
 }
 
+void Application::set_pending_drop_widget(Widget* widget)
+{
+    if (m_pending_drop_widget == widget)
+        return;
+    if (m_pending_drop_widget)
+        m_pending_drop_widget->update();
+    m_pending_drop_widget = widget;
+    if (m_pending_drop_widget)
+        m_pending_drop_widget->update();
+}
+
 void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoint& position, const String& mime_type)
 {
     if (widget == m_drag_hovered_widget)
         return;
 
     if (m_drag_hovered_widget) {
-        m_drag_hovered_widget->update();
-        Core::EventLoop::current().post_event(*m_drag_hovered_widget, make<Event>(Event::DragLeave));
+        Event leave_event(Event::DragLeave);
+        m_drag_hovered_widget->dispatch_event(leave_event, m_drag_hovered_widget->window());
     }
 
+    set_pending_drop_widget(nullptr);
     m_drag_hovered_widget = widget;
 
     if (m_drag_hovered_widget) {
-        m_drag_hovered_widget->update();
-        Core::EventLoop::current().post_event(*m_drag_hovered_widget, make<DragEvent>(Event::DragEnter, position, mime_type));
+        DragEvent enter_event(Event::DragEnter, position, mime_type);
+        enter_event.ignore();
+        m_drag_hovered_widget->dispatch_event(enter_event, m_drag_hovered_widget->window());
+        if (enter_event.is_accepted())
+            set_pending_drop_widget(m_drag_hovered_widget);
     }
 }
 
