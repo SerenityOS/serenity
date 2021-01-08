@@ -993,20 +993,21 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 return;
             }
 
+            ASSERT(window.frame().rect().contains(event.position()));
+            if (event.type() == Event::MouseDown) {
+                // We're clicking on something that's blocked by a modal window.
+                // Flash the modal window to let the user know about it.
+                if (auto* blocking_modal_window = window.is_blocked_by_modal_window())
+                    blocking_modal_window->frame().start_flash_animation();
+
+                if (window.type() == WindowType::Normal)
+                    move_to_front_and_make_active(window);
+                else if (window.type() == WindowType::Desktop)
+                    set_active_window(&window);
+            }
+
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
             if (window.rect().contains(event.position())) {
-                if (event.type() == Event::MouseDown) {
-                    // We're clicking on something that's blocked by a modal window.
-                    // Flash the modal window to let the user know about it.
-                    if (auto* blocking_modal_window = window.is_blocked_by_modal_window())
-                        blocking_modal_window->frame().start_flash_animation();
-
-                    if (window.type() == WindowType::Normal)
-                        move_to_front_and_make_active(window);
-                    else if (window.type() == WindowType::Desktop)
-                        set_active_window(&window);
-                }
-
                 hovered_window = &window;
                 if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.is_blocked_by_modal_window()) {
                     auto translated_event = event.translated(-window.position());
