@@ -247,4 +247,27 @@ void Application::window_did_become_inactive(Badge<Window>, Window& window)
     m_active_window = nullptr;
 }
 
+void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoint& position, const String& mime_type)
+{
+    if (widget == m_drag_hovered_widget)
+        return;
+
+    if (m_drag_hovered_widget) {
+        m_drag_hovered_widget->update();
+        Core::EventLoop::current().post_event(*m_drag_hovered_widget, make<Event>(Event::DragLeave));
+    }
+
+    m_drag_hovered_widget = widget;
+
+    if (m_drag_hovered_widget) {
+        m_drag_hovered_widget->update();
+        Core::EventLoop::current().post_event(*m_drag_hovered_widget, make<DragEvent>(Event::DragEnter, position, mime_type));
+    }
+}
+
+void Application::notify_drag_cancelled(Badge<WindowServerConnection>)
+{
+    set_drag_hovered_widget_impl(nullptr);
+}
+
 }
