@@ -1,6 +1,6 @@
 PROGRAM = little
 OBJS = main.o other.o
-CXXFLAGS = -g -Os -std=c++2a
+CXXFLAGS = -g -std=c++2a
 
 all: $(PROGRAM)
 
