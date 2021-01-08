@@ -273,8 +273,12 @@ void Widget::event(Core::Event& event)
         return handle_mouseup_event(static_cast<MouseEvent&>(event));
     case Event::MouseWheel:
         return mousewheel_event(static_cast<MouseEvent&>(event));
+    case Event::DragEnter:
+        return drag_enter_event(static_cast<DragEvent&>(event));
     case Event::DragMove:
         return drag_move_event(static_cast<DragEvent&>(event));
+    case Event::DragLeave:
+        return drag_leave_event(static_cast<Event&>(event));
     case Event::Drop:
         return drop_event(static_cast<DropEvent&>(event));
     case Event::ThemeChange:
@@ -497,13 +501,24 @@ void Widget::change_event(Event&)
 
 void Widget::drag_move_event(DragEvent& event)
 {
-    dbg() << class_name() << "{" << this << "} DRAG MOVE  position: " << event.position() << ", data_type: '" << event.data_type() << "'";
+    event.ignore();
+}
+
+void Widget::drag_enter_event(DragEvent& event)
+{
+    dbgln("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), event.data_type());
+    event.ignore();
+}
+
+void Widget::drag_leave_event(Event& event)
+{
+    dbgln("{} {:p} DRAG LEAVE", class_name(), this);
     event.ignore();
 }
 
 void Widget::drop_event(DropEvent& event)
 {
-    dbg() << class_name() << "{" << this << "} DROP  position: " << event.position() << ", text: '" << event.text() << "'";
+    dbgln("{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
     event.ignore();
 }
 

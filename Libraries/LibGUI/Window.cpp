@@ -446,12 +446,14 @@ void Window::handle_drag_move_event(DragEvent& event)
     auto result = m_main_widget->hit_test(event.position());
     auto local_event = make<DragEvent>(static_cast<Event::Type>(event.type()), result.local_position, event.data_type());
     ASSERT(result.widget);
+    Application::the()->set_drag_hovered_widget({}, result.widget, result.local_position, event.data_type());
     return result.widget->dispatch_event(*local_event, this);
 }
 
 void Window::handle_left_event()
 {
     set_hovered_widget(nullptr);
+    Application::the()->set_drag_hovered_widget({}, nullptr);
 }
 
 void Window::event(Core::Event& event)

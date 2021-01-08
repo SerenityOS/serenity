@@ -34,7 +34,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Forward.h>
+#include <LibGfx/Point.h>
 
 namespace GUI {
 
@@ -83,11 +83,22 @@ public:
     void window_did_become_active(Badge<Window>, Window&);
     void window_did_become_inactive(Badge<Window>, Window&);
 
+    Widget* drag_hovered_widget() { return m_drag_hovered_widget.ptr(); }
+    const Widget* drag_hovered_widget() const { return m_drag_hovered_widget.ptr(); }
+
+    void set_drag_hovered_widget(Badge<Window>, Widget* widget, const Gfx::IntPoint& position = {}, const String& mime_type = {})
+    {
+        set_drag_hovered_widget_impl(widget, position, mime_type);
+    }
+    void notify_drag_cancelled(Badge<WindowServerConnection>);
+
 private:
     Application(int argc, char** argv);
 
     void tooltip_show_timer_did_fire();
     void tooltip_hide_timer_did_fire();
+
+    void set_drag_hovered_widget_impl(Widget*, const Gfx::IntPoint& = {}, const String& = {});
 
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<MenuBar> m_menubar;
@@ -104,6 +115,7 @@ private:
     bool m_focus_debugging_enabled { false };
     String m_invoked_as;
     Vector<String> m_args;
+    WeakPtr<Widget> m_drag_hovered_widget;
 };
 
 }

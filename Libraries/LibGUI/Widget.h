@@ -324,7 +324,9 @@ protected:
     virtual void leave_event(Core::Event&);
     virtual void child_event(Core::ChildEvent&) override;
     virtual void change_event(Event&);
+    virtual void drag_enter_event(DragEvent&);
     virtual void drag_move_event(DragEvent&);
+    virtual void drag_leave_event(Event&);
     virtual void drop_event(DropEvent&);
     virtual void theme_change_event(ThemeChangeEvent&);
 
