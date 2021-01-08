@@ -761,7 +761,7 @@ inline u32 Thread::effective_priority() const
 #define REQUIRE_NO_PROMISES                        \
     do {                                           \
         if (Process::current()->has_promises()) {  \
-            dbg() << "Has made a promise";         \
+            dbgln("Has made a promise");           \
             cli();                                 \
             Process::current()->crash(SIGABRT, 0); \
             ASSERT_NOT_REACHED();                  \
@@ -772,7 +772,7 @@ inline u32 Thread::effective_priority() const
     do {                                                             \
         if (Process::current()->has_promises()                       \
             && !Process::current()->has_promised(Pledge::promise)) { \
-            dbg() << "Has not pledged " << #promise;                 \
+            dbgln("Has not pledged {}", #promise);                   \
             cli();                                                   \
             Process::current()->crash(SIGABRT, 0);                   \
             ASSERT_NOT_REACHED();                                    \
@@ -785,3 +785,11 @@ inline static String copy_string_from_user(const Kernel::Syscall::StringArgument
 {
     return copy_string_from_user(string.characters, string.length);
 }
+
+template<>
+struct AK::Formatter<Kernel::Process> : AK::Formatter<String> {
+    void format(FormatBuilder& builder, const Kernel::Process& value)
+    {
+        return AK::Formatter<String>::format(builder, String::formatted("{}({})", value.name(), value.pid().value()));
+    }
+};

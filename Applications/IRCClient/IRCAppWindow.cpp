@@ -260,7 +260,7 @@ void IRCAppWindow::setup_menus()
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("IRC Client");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        dbg() << "Terminal: Quit menu activated!";
+        dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
         return;
     }));

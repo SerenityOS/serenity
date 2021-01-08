@@ -168,15 +168,15 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject <= offset_in_vmobject) {
-        dbg() << "allocate_region_with_vmobject: Overflow (offset + size)";
+        dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
         return nullptr;
     }
     if (offset_in_vmobject >= vmobject->size()) {
-        dbg() << "allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.";
+        dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.");
         return nullptr;
     }
     if (end_in_vmobject > vmobject->size()) {
-        dbg() << "allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.";
+        dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.");
         return nullptr;
     }
     offset_in_vmobject &= PAGE_MASK;
@@ -304,7 +304,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
-        dbg() << "Failed to exec " << path << ": " << error;
+        dbgln("Failed to exec {}: {}", path, error);
         first_thread = nullptr;
         return {};
     }
@@ -469,13 +469,13 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     ASSERT(Process::current() == this);
 
     if (out_of_memory) {
-        dbg() << "\033[31;1mOut of memory\033[m, killing: " << *this;
+        dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
     } else {
         if (eip >= 0xc0000000 && g_kernel_symbols_available) {
             auto* symbol = symbolicate_kernel_address(eip);
-            dbg() << "\033[31;1m" << String::format("%p", eip) << "  " << (symbol ? demangle(symbol->name) : "(k?)") << " +" << (symbol ? eip - symbol->address : 0) << "\033[0m\n";
+            dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", eip, (symbol ? demangle(symbol->name) : "(k?)"), (symbol ? eip - symbol->address : 0));
         } else {
-            dbg() << "\033[31;1m" << String::format("%p", eip) << "  (?)\033[0m\n";
+            dbgln("\033[31;1m{:p}  (?)\033[0m\n", eip);
         }
         dump_backtrace();
     }
@@ -797,7 +797,7 @@ void Process::terminate_due_to_signal(u8 signal)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
     ASSERT(Process::current() == this);
-    dbg() << "Terminating " << *this << " due to signal " << signal;
+    dbgln("Terminating {} due to signal {}", *this, signal);
     m_termination_status = 0;
     m_termination_signal = signal;
     die();
