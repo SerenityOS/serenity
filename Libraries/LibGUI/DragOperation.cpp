@@ -98,8 +98,8 @@ void DragOperation::notify_accepted(Badge<WindowServerConnection>)
 
 void DragOperation::notify_cancelled(Badge<WindowServerConnection>)
 {
-    ASSERT(s_current_drag_operation);
-    s_current_drag_operation->done(Outcome::Cancelled);
+    if (s_current_drag_operation)
+        s_current_drag_operation->done(Outcome::Cancelled);
 }
 
 void DragOperation::set_text(const String& text)
