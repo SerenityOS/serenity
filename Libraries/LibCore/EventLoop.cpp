@@ -30,6 +30,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/NeverDestroyed.h>
+#include <AK/Singleton.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
@@ -82,11 +83,64 @@ static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
-HashMap<int, NonnullRefPtr<EventLoop::SignalHandlers>> EventLoop::s_signal_handlers;
-int EventLoop::s_next_signal_id = 0;
-pid_t EventLoop::s_pid;
 static RefPtr<LocalServer> s_rpc_server;
 HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
+
+class SignalHandlers : public RefCounted<SignalHandlers> {
+    AK_MAKE_NONCOPYABLE(SignalHandlers);
+    AK_MAKE_NONMOVABLE(SignalHandlers);
+
+public:
+    SignalHandlers(int signo, void (*handle_signal)(int));
+    ~SignalHandlers();
+
+    void dispatch();
+    int add(Function<void(int)>&& handler);
+    bool remove(int handler_id);
+
+    bool is_empty() const
+    {
+        if (m_calling_handlers) {
+            for (auto& handler : m_handlers_pending) {
+                if (handler.value)
+                    return false; // an add is pending
+            }
+        }
+        return m_handlers.is_empty();
+    }
+
+    bool have(int handler_id) const
+    {
+        if (m_calling_handlers) {
+            auto it = m_handlers_pending.find(handler_id);
+            if (it != m_handlers_pending.end()) {
+                if (!it->value)
+                    return false; // a deletion is pending
+            }
+        }
+        return m_handlers.contains(handler_id);
+    }
+
+    int m_signo;
+    void (*m_original_handler)(int); // TODO: can't use sighandler_t?
+    HashMap<int, Function<void(int)>> m_handlers;
+    HashMap<int, Function<void(int)>> m_handlers_pending;
+    bool m_calling_handlers { false };
+};
+
+struct SignalHandlersInfo {
+    HashMap<int, NonnullRefPtr<SignalHandlers>> signal_handlers;
+    int next_signal_id { 0 };
+};
+
+template<bool create_if_null = true>
+inline SignalHandlersInfo* signals_info()
+{
+    static SignalHandlersInfo* s_signals;
+    return AK::Singleton<SignalHandlersInfo>::get(s_signals);
+}
+
+pid_t EventLoop::s_pid;
 
 class RPCClient : public Object {
     C_OBJECT(RPCClient)
@@ -416,16 +470,16 @@ void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
     m_queued_events.empend(receiver, move(event));
 }
 
-EventLoop::SignalHandlers::SignalHandlers(int signo)
+SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
     : m_signo(signo)
-    , m_original_handler(signal(signo, EventLoop::handle_signal))
+    , m_original_handler(signal(signo, handle_signal))
 {
 #ifdef EVENTLOOP_DEBUG
     dbgln("Core::EventLoop: Registered handler for signal {}", m_signo);
 #endif
 }
 
-EventLoop::SignalHandlers::~SignalHandlers()
+SignalHandlers::~SignalHandlers()
 {
 #ifdef EVENTLOOP_DEBUG
     dbgln("Core::EventLoop: Unregistering handler for signal {}", m_signo);
@@ -433,7 +487,7 @@ EventLoop::SignalHandlers::~SignalHandlers()
     signal(m_signo, m_original_handler);
 }
 
-void EventLoop::SignalHandlers::dispatch()
+void SignalHandlers::dispatch()
 {
     TemporaryChange change(m_calling_handlers, true);
     for (auto& handler : m_handlers)
@@ -452,9 +506,9 @@ void EventLoop::SignalHandlers::dispatch()
     }
 }
 
-int EventLoop::SignalHandlers::add(Function<void(int)>&& handler)
+int SignalHandlers::add(Function<void(int)>&& handler)
 {
-    int id = ++EventLoop::s_next_signal_id; // TODO: worry about wrapping and duplicates?
+    int id = ++signals_info()->next_signal_id; // TODO: worry about wrapping and duplicates?
     if (m_calling_handlers)
         m_handlers_pending.set(id, move(handler));
     else
@@ -462,7 +516,7 @@ int EventLoop::SignalHandlers::add(Function<void(int)>&& handler)
     return id;
 }
 
-bool EventLoop::SignalHandlers::remove(int handler_id)
+bool SignalHandlers::remove(int handler_id)
 {
     ASSERT(handler_id != 0);
     if (m_calling_handlers) {
@@ -486,8 +540,9 @@ bool EventLoop::SignalHandlers::remove(int handler_id)
 
 void EventLoop::dispatch_signal(int signo)
 {
-    auto handlers = s_signal_handlers.find(signo);
-    if (handlers != s_signal_handlers.end()) {
+    auto& info = *signals_info();
+    auto handlers = info.signal_handlers.find(signo);
+    if (handlers != info.signal_handlers.end()) {
         // Make sure we bump the ref count while dispatching the handlers!
         // This allows a handler to unregister/register while the handlers
         // are being called!
@@ -520,11 +575,12 @@ void EventLoop::handle_signal(int signo)
 int EventLoop::register_signal(int signo, Function<void(int)> handler)
 {
     ASSERT(signo != 0);
-    auto handlers = s_signal_handlers.find(signo);
-    if (handlers == s_signal_handlers.end()) {
-        auto signal_handlers = adopt(*new SignalHandlers(signo));
+    auto& info = *signals_info();
+    auto handlers = info.signal_handlers.find(signo);
+    if (handlers == info.signal_handlers.end()) {
+        auto signal_handlers = adopt(*new SignalHandlers(signo, EventLoop::handle_signal));
         auto handler_id = signal_handlers->add(move(handler));
-        s_signal_handlers.set(signo, move(signal_handlers));
+        info.signal_handlers.set(signo, move(signal_handlers));
         return handler_id;
     } else {
         return handlers->value->add(move(handler));
@@ -535,7 +591,8 @@ void EventLoop::unregister_signal(int handler_id)
 {
     ASSERT(handler_id != 0);
     int remove_signo = 0;
-    for (auto& h : s_signal_handlers) {
+    auto& info = *signals_info();
+    for (auto& h : info.signal_handlers) {
         auto& handlers = *h.value;
         if (handlers.remove(handler_id)) {
             if (handlers.is_empty())
@@ -544,7 +601,7 @@ void EventLoop::unregister_signal(int handler_id)
         }
     }
     if (remove_signo != 0)
-        s_signal_handlers.remove(remove_signo);
+        info.signal_handlers.remove(remove_signo);
 }
 
 void EventLoop::notify_forked(ForkEvent event)
@@ -555,8 +612,10 @@ void EventLoop::notify_forked(ForkEvent event)
         s_event_loop_stack->clear();
         s_timers->clear();
         s_notifiers->clear();
-        s_signal_handlers.clear();
-        s_next_signal_id = 0;
+        if (auto* info = signals_info<false>()) {
+            info->signal_handlers.clear();
+            info->next_signal_id = 0;
+        }
         s_pid = 0;
         s_rpc_server = nullptr;
         s_rpc_clients.clear();
