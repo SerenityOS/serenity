@@ -82,8 +82,7 @@ static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
-HashMap<int, EventLoop::SignalHandlers> EventLoop::s_signal_handlers;
-int EventLoop::s_handling_signal = 0;
+HashMap<int, NonnullRefPtr<EventLoop::SignalHandlers>> EventLoop::s_signal_handlers;
 int EventLoop::s_next_signal_id = 0;
 pid_t EventLoop::s_pid;
 static RefPtr<LocalServer> s_rpc_server;
@@ -428,43 +427,75 @@ EventLoop::SignalHandlers::SignalHandlers(int signo)
 
 EventLoop::SignalHandlers::~SignalHandlers()
 {
-    if (m_valid) {
 #ifdef EVENTLOOP_DEBUG
-        dbgln("Core::EventLoop: Unregistering handler for signal {}", m_signo);
+    dbgln("Core::EventLoop: Unregistering handler for signal {}", m_signo);
 #endif
-        signal(m_signo, m_original_handler);
-    }
+    signal(m_signo, m_original_handler);
 }
 
 void EventLoop::SignalHandlers::dispatch()
 {
+    TemporaryChange change(m_calling_handlers, true);
     for (auto& handler : m_handlers)
         handler.value(m_signo);
+    if (!m_handlers_pending.is_empty()) {
+        // Apply pending adds/removes
+        for (auto& handler : m_handlers_pending) {
+            if (handler.value) {
+                auto result = m_handlers.set(handler.key, move(handler.value));
+                ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+            } else {
+                m_handlers.remove(handler.key);
+            }
+        }
+        m_handlers_pending.clear();
+    }
 }
 
 int EventLoop::SignalHandlers::add(Function<void(int)>&& handler)
 {
     int id = ++EventLoop::s_next_signal_id; // TODO: worry about wrapping and duplicates?
-    m_handlers.set(id, move(handler));
+    if (m_calling_handlers)
+        m_handlers_pending.set(id, move(handler));
+    else
+        m_handlers.set(id, move(handler));
     return id;
 }
 
 bool EventLoop::SignalHandlers::remove(int handler_id)
 {
     ASSERT(handler_id != 0);
+    if (m_calling_handlers) {
+        auto it = m_handlers.find(handler_id);
+        if (it != m_handlers.end()) {
+            // Mark pending remove
+            m_handlers_pending.set(handler_id, nullptr);
+            return true;
+        }
+        it = m_handlers_pending.find(handler_id);
+        if (it != m_handlers_pending.end()) {
+            if (!it->value)
+                return false; // already was marked as deleted
+            it->value = nullptr;
+            return true;
+        }
+        return false;
+    }
     return m_handlers.remove(handler_id);
 }
 
 void EventLoop::dispatch_signal(int signo)
 {
-    // We need to protect the handler from being removed while handling it
-    TemporaryChange change(s_handling_signal, signo);
     auto handlers = s_signal_handlers.find(signo);
     if (handlers != s_signal_handlers.end()) {
+        // Make sure we bump the ref count while dispatching the handlers!
+        // This allows a handler to unregister/register while the handlers
+        // are being called!
+        auto handler = handlers->value;
 #ifdef EVENTLOOP_DEBUG
         dbgln("Core::EventLoop: dispatching signal {}", signo);
 #endif
-        handlers->value.dispatch();
+        handler->dispatch();
     }
 }
 
@@ -489,15 +520,14 @@ void EventLoop::handle_signal(int signo)
 int EventLoop::register_signal(int signo, Function<void(int)> handler)
 {
     ASSERT(signo != 0);
-    ASSERT(s_handling_signal != signo); // can't register the same signal while handling it
     auto handlers = s_signal_handlers.find(signo);
     if (handlers == s_signal_handlers.end()) {
-        SignalHandlers signal_handlers(signo);
-        auto handler_id = signal_handlers.add(move(handler));
+        auto signal_handlers = adopt(*new SignalHandlers(signo));
+        auto handler_id = signal_handlers->add(move(handler));
         s_signal_handlers.set(signo, move(signal_handlers));
         return handler_id;
     } else {
-        return handlers->value.add(move(handler));
+        return handlers->value->add(move(handler));
     }
 }
 
@@ -506,11 +536,8 @@ void EventLoop::unregister_signal(int handler_id)
     ASSERT(handler_id != 0);
     int remove_signo = 0;
     for (auto& h : s_signal_handlers) {
-        auto& handlers = h.value;
-        if (handlers.m_signo == s_handling_signal) {
-            // can't remove the same signal while handling it
-            ASSERT(!handlers.have(handler_id));
-        } else if (handlers.remove(handler_id)) {
+        auto& handlers = *h.value;
+        if (handlers.remove(handler_id)) {
             if (handlers.is_empty())
                 remove_signo = handlers.m_signo;
             break;
@@ -529,7 +556,6 @@ void EventLoop::notify_forked(ForkEvent event)
         s_timers->clear();
         s_notifiers->clear();
         s_signal_handlers.clear();
-        s_handling_signal = 0;
         s_next_signal_id = 0;
         s_pid = 0;
         s_rpc_server = nullptr;
