@@ -26,6 +26,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -140,9 +141,17 @@ int tgetnum(const char* id)
     ASSERT_NOT_REACHED();
 }
 
+static Vector<char> s_tgoto_buffer;
 char* tgoto([[maybe_unused]] const char* cap, [[maybe_unused]] int col, [[maybe_unused]] int row)
 {
-    ASSERT_NOT_REACHED();
+    auto cap_str = String(cap);
+    cap_str.replace("%p1%d", String::format("%d", col));
+    cap_str.replace("%p2%d", String::format("%d", row));
+
+    s_tgoto_buffer.clear_with_capacity();
+    s_tgoto_buffer.ensure_capacity(cap_str.length());
+    (void)cap_str.copy_characters_to_buffer(s_tgoto_buffer.data(), cap_str.length());
+    return s_tgoto_buffer.data();
 }
 
 int tputs(const char* str, [[maybe_unused]] int affcnt, int (*putc)(int))
