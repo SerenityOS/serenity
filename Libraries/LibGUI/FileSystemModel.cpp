@@ -589,11 +589,11 @@ String FileSystemModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-bool FileSystemModel::accepts_drag(const ModelIndex& index, const StringView& data_type)
+bool FileSystemModel::accepts_drag(const ModelIndex& index, const Vector<String>& mime_types)
 {
     if (!index.is_valid())
         return false;
-    if (data_type != "text/uri-list")
+    if (!mime_types.contains_slow("text/uri-list"))
         return false;
     auto& node = this->node(index);
     return node.is_directory();

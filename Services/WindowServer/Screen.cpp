@@ -162,6 +162,8 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);
     if (m_cursor_location != prev_location) {
         auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
+        if (WindowManager::the().dnd_client())
+            message->set_mime_data(WindowManager::the().dnd_mime_data());
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     }
 

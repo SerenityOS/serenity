@@ -246,7 +246,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::MouseMove& mes
 {
     if (auto* window = Window::from_window_id(message.window_id())) {
         if (message.is_drag())
-            Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, message.mouse_position(), message.drag_data_type()));
+            Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, message.mouse_position(), message.mime_types()));
         else
             Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
     }

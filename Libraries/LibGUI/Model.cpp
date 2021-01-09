@@ -71,7 +71,7 @@ ModelIndex Model::index(int row, int column, const ModelIndex&) const
     return create_index(row, column);
 }
 
-bool Model::accepts_drag(const ModelIndex&, const StringView&)
+bool Model::accepts_drag(const ModelIndex&, const Vector<String>&)
 {
     return false;
 }

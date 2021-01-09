@@ -90,9 +90,9 @@ public:
     Widget* pending_drop_widget() { return m_pending_drop_widget.ptr(); }
     const Widget* pending_drop_widget() const { return m_pending_drop_widget.ptr(); }
 
-    void set_drag_hovered_widget(Badge<Window>, Widget* widget, const Gfx::IntPoint& position = {}, const String& mime_type = {})
+    void set_drag_hovered_widget(Badge<Window>, Widget* widget, const Gfx::IntPoint& position = {}, Vector<String> mime_types = {})
     {
-        set_drag_hovered_widget_impl(widget, position, mime_type);
+        set_drag_hovered_widget_impl(widget, position, move(mime_types));
     }
     void notify_drag_cancelled(Badge<WindowServerConnection>);
 
@@ -102,7 +102,7 @@ private:
     void tooltip_show_timer_did_fire();
     void tooltip_hide_timer_did_fire();
 
-    void set_drag_hovered_widget_impl(Widget*, const Gfx::IntPoint& = {}, const String& = {});
+    void set_drag_hovered_widget_impl(Widget*, const Gfx::IntPoint& = {}, Vector<String> = {});
     void set_pending_drop_widget(Widget*);
 
     OwnPtr<Core::EventLoop> m_event_loop;
