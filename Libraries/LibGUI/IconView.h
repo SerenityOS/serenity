@@ -71,7 +71,6 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
-    virtual void drag_move_event(DragEvent&) override;
     virtual void did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
     virtual void did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
 
@@ -164,8 +163,6 @@ private:
     Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_current;
-
-    ModelIndex m_drop_candidate_index;
 
     FlowDirection m_flow_direction { FlowDirection::LeftToRight };
 

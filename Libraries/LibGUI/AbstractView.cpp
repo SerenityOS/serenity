@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ void AbstractView::model_did_update(unsigned int flags)
         m_edit_index = {};
         m_hovered_index = {};
         m_cursor_index = {};
+        m_drop_candidate_index = {};
         clear_selection();
     } else {
         // FIXME: These may no longer point to whatever they did before,
@@ -86,6 +87,8 @@ void AbstractView::model_did_update(unsigned int flags)
             m_hovered_index = {};
         if (!model()->is_valid(m_cursor_index))
             m_cursor_index = {};
+        if (!model()->is_valid(m_drop_candidate_index))
+            m_drop_candidate_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
 }
@@ -717,6 +720,45 @@ void AbstractView::focusin_event(FocusEvent& event)
     if (model() && !cursor_index().is_valid()) {
         move_cursor(CursorMovement::Home, SelectionUpdate::None);
         clear_selection();
+    }
+}
+
+void AbstractView::drag_enter_event(DragEvent& event)
+{
+    if (!model())
+        return;
+    // NOTE: Right now, AbstractView always accepts drags since we won't get "drag move" events
+    //       unless we accept the "drag enter" event.
+    //       We might be able to reduce event traffic by communicating the set of drag-accepting
+    //       rects in this widget to the windowing system somehow.
+    event.accept();
+    dbgln("accepting drag of {}", event.mime_types().first());
+}
+
+void AbstractView::drag_move_event(DragEvent& event)
+{
+    if (!model())
+        return;
+    auto index = index_at_event_position(event.position());
+    ModelIndex new_drop_candidate_index;
+    if (index.is_valid()) {
+        bool acceptable = model()->accepts_drag(index, event.mime_types());
+        if (acceptable)
+            new_drop_candidate_index = index;
+    }
+    if (m_drop_candidate_index != new_drop_candidate_index) {
+        m_drop_candidate_index = new_drop_candidate_index;
+        update();
+    }
+    if (m_drop_candidate_index.is_valid())
+        event.accept();
+}
+
+void AbstractView::drag_leave_event(Event&)
+{
+    if (m_drop_candidate_index.is_valid()) {
+        m_drop_candidate_index = {};
+        update();
     }
 }
 
