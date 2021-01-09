@@ -110,10 +110,8 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         handled_event = true;
     }
 
-    if (button == GUI::MouseButton::Left) {
-        dump_selection("MouseUp");
+    if (button == GUI::MouseButton::Left)
         m_in_mouse_selection = false;
-    }
     return handled_event;
 }
 
@@ -174,7 +172,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
         auto href = link->href();
         auto url = document->complete_url(href);
-        dbg() << "Web::EventHandler: Clicking on a link to " << url;
+        dbgln("Web::EventHandler: Clicking on a link to {}", url);
         if (button == GUI::MouseButton::Left) {
             auto href = link->href();
             auto url = document->complete_url(href);
@@ -205,7 +203,6 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             if (result.layout_node && result.layout_node->dom_node()) {
                 m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
                 layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
-                dump_selection("MouseDown");
                 m_in_mouse_selection = true;
             }
         } else if (button == GUI::MouseButton::Right) {
@@ -271,7 +268,6 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             if (hit.layout_node && hit.layout_node->dom_node()) {
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
-            dump_selection("MouseMove");
             if (auto* page = m_frame.page())
                 page->client().page_did_change_selection();
         }
@@ -299,15 +295,6 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         }
     }
     return true;
-}
-
-void EventHandler::dump_selection([[maybe_unused]] const char* event_name) const
-{
-#ifdef SELECTION_DEBUG
-    dbg() << event_name << " selection start: "
-          << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
-          << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
-#endif
 }
 
 bool EventHandler::focus_next_element()

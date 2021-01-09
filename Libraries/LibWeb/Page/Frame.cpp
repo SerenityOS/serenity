@@ -221,7 +221,7 @@ void Frame::set_cursor_position(const DOM::Position& position)
     if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
         m_cursor_position.node()->layout_node()->set_needs_display();
 
-    dbg() << "Cursor position: " << m_cursor_position;
+    dbgln("Cursor position: {}", m_cursor_position);
 }
 
 String Frame::selected_text() const

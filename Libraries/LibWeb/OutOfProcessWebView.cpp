@@ -155,9 +155,6 @@ void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 s
 
 void OutOfProcessWebView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "server did invalidate content_rect: " << content_rect << ", current front_shbuf_id=" << m_front_bitmap->shbuf_id() << ", current back_shbuf_id=" << m_back_bitmap->shbuf_id();
-#endif
     request_repaint();
 }
 

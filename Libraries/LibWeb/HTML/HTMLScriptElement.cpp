@@ -130,7 +130,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
             url,
             [this, url](auto data, auto&) {
                 if (data.is_null()) {
-                    dbg() << "HTMLScriptElement: Failed to load " << url;
+                    dbgln("HTMLScriptElement: Failed to load {}", url);
                     return;
                 }
                 m_script_source = String::copy(data);

@@ -60,8 +60,6 @@ private:
     Layout::InitialContainingBlockBox* layout_root();
     const Layout::InitialContainingBlockBox* layout_root() const;
 
-    void dump_selection(const char* event_name) const;
-
     Frame& m_frame;
 
     bool m_in_mouse_selection { false };

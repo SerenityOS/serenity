@@ -57,11 +57,22 @@ public:
         return !(*this == other);
     }
 
+    String to_string() const;
+
 private:
     RefPtr<Node> m_node;
     unsigned m_offset { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const Position&);
+}
+
+namespace AK {
+template<>
+struct Formatter<Web::DOM::Position> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const Web::DOM::Position& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
+};
 
 }
