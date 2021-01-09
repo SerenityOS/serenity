@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     }
 
     auto buffer = file->read_all();
-    dbg() << "Read size " << buffer.size();
+    dbgln("Read size {}", buffer.size());
 
     auto input = String::copy(buffer);
     auto document = Markdown::Document::parse(input);

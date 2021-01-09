@@ -62,7 +62,7 @@ static Options parse_options(int argc, char* argv[])
             Core::File::ShouldCloseFileDescriptor::No);
         ASSERT(success);
         auto buffer = c_stdin->read_all();
-        dbg() << "Read size " << buffer.size();
+        dbgln("Read size {}", buffer.size());
         options.data = String((char*)buffer.data(), buffer.size());
     } else {
         // Copy the rest of our command-line args.

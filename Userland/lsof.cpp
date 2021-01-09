@@ -66,13 +66,13 @@ static bool parse_name(StringView name, OpenFile& file)
             return true;
         } else {
             if (!lexer.consume_specific('(')) {
-                dbg() << "parse_name: expected (";
+                dbgln("parse_name: expected (");
                 return false;
             }
 
             auto component3 = lexer.consume_until(')');
             if (lexer.tell_remaining() != 0) {
-                dbg() << "parse_name: expected EOF";
+                dbgln("parse_name: expected EOF");
                 return false;
             }
 
