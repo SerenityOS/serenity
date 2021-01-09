@@ -52,8 +52,10 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    if (geteuid() != 0)
-        fprintf(stderr, "Not running as root :(\n");
+    if (geteuid() != 0) {
+        warnln("Not running as root :(");
+        return 1;
+    }
 
     auto account_or_error = (user)
         ? Core::Account::from_name(user, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly)
@@ -73,12 +75,12 @@ int main(int argc, char** argv)
     if (getuid() != 0 && account.has_password()) {
         auto password = Core::get_password();
         if (password.is_error()) {
-            fprintf(stderr, "%s\n", strerror(password.error()));
+            warnln("{}", strerror(password.error()));
             return 1;
         }
 
         if (!account.authenticate(password.value().characters())) {
-            fprintf(stderr, "Incorrect or disabled password.\n");
+            warnln("Incorrect or disabled password.");
             return 1;
         }
     }
