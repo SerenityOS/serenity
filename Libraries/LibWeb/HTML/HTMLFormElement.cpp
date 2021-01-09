@@ -50,14 +50,14 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
         return;
 
     if (action().is_null()) {
-        dbg() << "Unsupported form action ''";
+        dbgln("Unsupported form action ''");
         return;
     }
 
     auto effective_method = method().to_lowercase();
 
     if (effective_method == "dialog") {
-        dbg() << "Failed to submit form: Unsupported form method '" << method() << "'";
+        dbgln("Failed to submit form: Unsupported form method '{}'", method());
         return;
     }
 
@@ -97,21 +97,21 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
     URL url(document().complete_url(action()));
 
     if (!url.is_valid()) {
-        dbg() << "Failed to submit form: Invalid URL: " << action();
+        dbgln("Failed to submit form: Invalid URL: {}", action());
         return;
     }
 
     if (url.protocol() == "file") {
         if (document().url().protocol() != "file") {
-            dbg() << "Failed to submit form: Security violation: " << document().url() << " may not submit to " << url;
+            dbgln("Failed to submit form: Security violation: {} may not submit to {}", document().url(), url);
             return;
         }
         if (effective_method != "get") {
-            dbg() << "Failed to submit form: Unsupported form method '" << method() << "' for URL: " << url;
+            dbgln("Failed to submit form: Unsupported form method '{}' for URL: {}", method(), url);
             return;
         }
     } else if (url.protocol() != "http" && url.protocol() != "https") {
-        dbg() << "Failed to submit form: Unsupported protocol for URL: " << url;
+        dbgln("Failed to submit form: Unsupported protocol for URL: {}", url);
         return;
     }
 
