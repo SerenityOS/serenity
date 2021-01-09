@@ -960,8 +960,9 @@ void TerminalWidget::terminal_history_changed()
 
 void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
 {
-    m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (columns * font().glyph_width('x')) + m_scrollbar->width();
-    m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing));
+    auto pixel_size = widget_size_for_font(font());
+    m_pixel_width = pixel_size.width();
+    m_pixel_height = pixel_size.height();
 
     if (m_automatic_size_policy) {
         set_fixed_size(m_pixel_width, m_pixel_height);
@@ -1118,4 +1119,18 @@ void TerminalWidget::update_copy_action()
 void TerminalWidget::update_paste_action()
 {
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
+}
+
+Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
+{
+    return {
+        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * font.glyph_width('x')) + m_scrollbar->width(),
+        (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * (font.glyph_height() + m_line_spacing))
+    };
+}
+
+void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
+{
+    set_font(font);
+    resize(widget_size_for_font(font));
 }
