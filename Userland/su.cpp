@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Core::Account account = account_or_error.value();
+    const auto& account = account_or_error.value();
 
     if (getuid() != 0 && account.has_password()) {
         auto password = Core::get_password();

@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     }
 
     // target_account is the account we are changing the password of.
-    auto target_account = account_or_error.value();
+    auto& target_account = account_or_error.value();
 
     if (current_uid != 0 && current_uid != target_account.uid()) {
         fprintf(stderr, "You can't modify passwd for %s\n", username);
