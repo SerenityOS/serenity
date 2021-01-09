@@ -280,7 +280,9 @@ void Window::handle_drop_event(DropEvent& event)
     auto result = m_main_widget->hit_test(event.position());
     auto local_event = make<DropEvent>(result.local_position, event.text(), event.mime_data());
     ASSERT(result.widget);
-    return result.widget->dispatch_event(*local_event, this);
+    result.widget->dispatch_event(*local_event, this);
+
+    Application::the()->set_drag_hovered_widget({}, nullptr);
 }
 
 void Window::handle_mouse_event(MouseEvent& event)
