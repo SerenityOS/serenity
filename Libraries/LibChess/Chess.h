@@ -48,31 +48,31 @@ enum class Type {
 String char_for_piece(Type type);
 Chess::Type piece_for_char_promotion(const StringView& str);
 
-enum class Colour {
+enum class Color {
     White,
     Black,
     None,
 };
 
-Colour opposing_colour(Colour colour);
+Color opposing_color(Color color);
 
 struct Piece {
     constexpr Piece()
-        : colour(Colour::None)
+        : color(Color::None)
         , type(Type::None)
     {
     }
-    constexpr Piece(Colour c, Type t)
-        : colour(c)
+    constexpr Piece(Color c, Type t)
+        : color(c)
         , type(t)
     {
     }
-    Colour colour : 4;
+    Color color : 4;
     Type type : 4;
-    bool operator==(const Piece& other) const { return colour == other.colour && type == other.type; }
+    bool operator==(const Piece& other) const { return color == other.color && type == other.type; }
 };
 
-constexpr Piece EmptyPiece = { Colour::None, Type::None };
+constexpr Piece EmptyPiece = { Color::None, Type::None };
 
 struct Square {
     unsigned rank; // zero indexed;
@@ -122,7 +122,7 @@ struct Move {
     }
     bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
-    static Move from_algebraic(const StringView& algebraic, const Colour turn, const Board& board);
+    static Move from_algebraic(const StringView& algebraic, const Color turn, const Board& board);
     String to_long_algebraic() const;
     String to_algebraic() const;
 };
@@ -134,12 +134,12 @@ public:
     Piece get_piece(const Square&) const;
     Piece set_piece(const Square&, const Piece&);
 
-    bool is_legal(const Move&, Colour colour = Colour::None) const;
-    bool in_check(Colour colour) const;
+    bool is_legal(const Move&, Color color = Color::None) const;
+    bool in_check(Color color) const;
 
-    bool is_promotion_move(const Move&, Colour colour = Colour::None) const;
+    bool is_promotion_move(const Move&, Color color = Color::None) const;
 
-    bool apply_move(const Move&, Colour colour = Colour::None);
+    bool apply_move(const Move&, Color color = Color::None);
     const Optional<Move>& last_move() const { return m_last_move; }
 
     String to_fen() const;
@@ -157,32 +157,32 @@ public:
         NotFinished,
     };
 
-    static String result_to_string(Result, Colour turn);
-    static String result_to_points(Result, Colour turn);
+    static String result_to_string(Result, Color turn);
+    static String result_to_points(Result, Color turn);
 
     template<typename Callback>
-    void generate_moves(Callback callback, Colour colour = Colour::None) const;
-    Move random_move(Colour colour = Colour::None) const;
+    void generate_moves(Callback callback, Color color = Color::None) const;
+    Move random_move(Color color = Color::None) const;
     Result game_result() const;
-    Colour game_winner() const;
+    Color game_winner() const;
     int game_score() const;
     bool game_finished() const;
-    void set_resigned(Colour);
+    void set_resigned(Color);
     int material_imbalance() const;
 
-    Colour turn() const { return m_turn; }
+    Color turn() const { return m_turn; }
     const Vector<Move>& moves() const { return m_moves; }
 
     bool operator==(const Board& other) const;
 
 private:
-    bool is_legal_no_check(const Move&, Colour colour) const;
-    bool is_legal_promotion(const Move&, Colour colour) const;
-    bool apply_illegal_move(const Move&, Colour colour);
+    bool is_legal_no_check(const Move&, Color color) const;
+    bool is_legal_promotion(const Move&, Color color) const;
+    bool apply_illegal_move(const Move&, Color color);
 
     Piece m_board[8][8];
-    Colour m_turn { Colour::White };
-    Colour m_resigned { Colour::None };
+    Color m_turn { Color::White };
+    Color m_resigned { Color::None };
     Optional<Move> m_last_move;
     int m_moves_since_capture { 0 };
     int m_moves_since_pawn_advance { 0 };
@@ -198,13 +198,13 @@ private:
 };
 
 template<typename Callback>
-void Board::generate_moves(Callback callback, Colour colour) const
+void Board::generate_moves(Callback callback, Color color) const
 {
-    if (colour == Colour::None)
-        colour = turn();
+    if (color == Color::None)
+        color = turn();
 
     auto try_move = [&](Move m) {
-        if (is_legal(m, colour)) {
+        if (is_legal(m, color)) {
             if (callback(m) == IterationDecision::Break)
                 return false;
         }
@@ -213,7 +213,7 @@ void Board::generate_moves(Callback callback, Colour colour) const
 
     Square::for_each([&](Square sq) {
         auto piece = get_piece(sq);
-        if (piece.colour != colour)
+        if (piece.color != color)
             return IterationDecision::Continue;
 
         bool keep_going = true;
@@ -298,7 +298,7 @@ template<>
 struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
     static unsigned hash(Chess::Piece piece)
     {
-        return pair_int_hash(static_cast<u32>(piece.colour), static_cast<u32>(piece.type));
+        return pair_int_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
     }
 };
 

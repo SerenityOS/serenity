@@ -131,7 +131,7 @@ void MCTSTree::do_round()
 
 Chess::Move MCTSTree::best_move() const
 {
-    int score_multiplier = (m_board.turn() == Chess::Colour::White) ? 1 : -1;
+    int score_multiplier = (m_board.turn() == Chess::Color::White) ? 1 : -1;
 
     Chess::Move best_move = { { 0, 0 }, { 0, 0 } };
     double best_score = -double(INFINITY);
@@ -156,13 +156,13 @@ double MCTSTree::expected_value() const
     return double(m_white_points) / m_simulations;
 }
 
-double MCTSTree::uct(Chess::Colour colour) const
+double MCTSTree::uct(Chess::Color color) const
 {
     // UCT: Upper Confidence Bound Applied to Trees.
     //      Kocsis, Levente; Szepesvári, Csaba (2006). "Bandit based Monte-Carlo Planning"
 
     // Fun fact: Szepesvári was my data structures professor.
-    double expected = expected_value() * ((colour == Chess::Colour::White) ? 1 : -1);
+    double expected = expected_value() * ((color == Chess::Color::White) ? 1 : -1);
     return expected + m_exploration_parameter * sqrt(log(m_parent->m_simulations) / m_simulations);
 }
 

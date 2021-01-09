@@ -59,13 +59,13 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
     size_t tile_width = width() / 8;
     size_t tile_height = height() / 8;
-    unsigned coord_rank_file = (side() == Chess::Colour::White) ? 0 : 7;
+    unsigned coord_rank_file = (side() == Chess::Color::White) ? 0 : 7;
 
     Chess::Board& active_board = (m_playback ? board_playback() : board());
 
     Chess::Square::for_each([&](Chess::Square sq) {
         Gfx::IntRect tile_rect;
-        if (side() == Chess::Colour::White) {
+        if (side() == Chess::Color::White) {
             tile_rect = { sq.file * tile_width, (7 - sq.rank) * tile_height, tile_width, tile_height };
         } else {
             tile_rect = { (7 - sq.file) * tile_width, sq.rank * tile_height, tile_width, tile_height };
@@ -141,7 +141,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             Gfx::FloatPoint arrow_start;
             Gfx::FloatPoint arrow_end;
 
-            if (side() == Chess::Colour::White) {
+            if (side() == Chess::Color::White) {
                 arrow_start = { m.from.file * tile_width + tile_width / 2.0f, (7 - m.from.rank) * tile_height + tile_height / 2.0f };
                 arrow_end = { m.to.file * tile_width + tile_width / 2.0f, (7 - m.to.rank) * tile_height + tile_height / 2.0f };
             } else {
@@ -175,7 +175,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 
     auto square = mouse_to_square(event);
     auto piece = board().get_piece(square);
-    if (drag_enabled() && piece.colour == board().turn() && !m_playback) {
+    if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
@@ -227,7 +227,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
             String msg;
             switch (board().game_result()) {
             case Chess::Board::Result::CheckMate:
-                if (board().turn() == Chess::Colour::White) {
+                if (board().turn() == Chess::Color::White) {
                     msg = "Black wins by Checkmate.";
                 } else {
                     msg = "White wins by Checkmate.";
@@ -333,18 +333,18 @@ static RefPtr<Gfx::Bitmap> get_piece(const StringView& set, const StringView& im
 void ChessWidget::set_piece_set(const StringView& set)
 {
     m_piece_set = set;
-    m_pieces.set({ Chess::Colour::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"));
-    m_pieces.set({ Chess::Colour::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"));
-    m_pieces.set({ Chess::Colour::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"));
-    m_pieces.set({ Chess::Colour::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"));
-    m_pieces.set({ Chess::Colour::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"));
-    m_pieces.set({ Chess::Colour::White, Chess::Type::King }, get_piece(set, "white-king.png"));
-    m_pieces.set({ Chess::Colour::Black, Chess::Type::King }, get_piece(set, "black-king.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Pawn }, get_piece(set, "white-pawn.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Pawn }, get_piece(set, "black-pawn.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Knight }, get_piece(set, "white-knight.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Knight }, get_piece(set, "black-knight.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Bishop }, get_piece(set, "white-bishop.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Bishop }, get_piece(set, "black-bishop.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Rook }, get_piece(set, "white-rook.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Rook }, get_piece(set, "black-rook.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::Queen }, get_piece(set, "white-queen.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::Queen }, get_piece(set, "black-queen.png"));
+    m_pieces.set({ Chess::Color::White, Chess::Type::King }, get_piece(set, "white-king.png"));
+    m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"));
 }
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
@@ -352,7 +352,7 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     size_t tile_width = width() / 8;
     size_t tile_height = height() / 8;
 
-    if (side() == Chess::Colour::White) {
+    if (side() == Chess::Color::White) {
         return { 7 - (event.y() / tile_height), event.x() / tile_width };
     } else {
         return { event.y() / tile_height, 7 - (event.x() / tile_width) };
@@ -371,7 +371,7 @@ void ChessWidget::reset()
     m_playback_move_number = 0;
     m_board_playback = Chess::Board();
     m_board = Chess::Board();
-    m_side = (arc4random() % 2) ? Chess::Colour::White : Chess::Colour::Black;
+    m_side = (arc4random() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
     input_engine_move();
     update();
@@ -380,7 +380,7 @@ void ChessWidget::reset()
 void ChessWidget::set_board_theme(const StringView& name)
 {
     // FIXME: Add some kind of themes.json
-    // The following Colours have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
+    // The following Colors have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
     if (name == "Beige") {
         m_board_theme = { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     } else if (name == "Green") {
@@ -497,7 +497,7 @@ bool ChessWidget::import_pgn(const StringView& import_path)
     bool skip = false;
     bool recursive_annotation = false;
     bool future_expansion = false;
-    Chess::Colour turn = Chess::Colour::White;
+    Chess::Color turn = Chess::Color::White;
     String movetext;
 
     for (size_t j = i; j < lines.size(); j++)
@@ -549,11 +549,11 @@ bool ChessWidget::import_pgn(const StringView& import_path)
             break;
         // FIXME: When we become able to set more of the game state, fix these end results
         if (token.contains("1-0")) {
-            m_board.set_resigned(Chess::Colour::Black);
+            m_board.set_resigned(Chess::Color::Black);
             break;
         }
         if (token.contains("0-1")) {
-            m_board.set_resigned(Chess::Colour::White);
+            m_board.set_resigned(Chess::Color::White);
             break;
         }
         if (token.contains("1/2-1/2")) {
@@ -561,7 +561,7 @@ bool ChessWidget::import_pgn(const StringView& import_path)
         }
         if (!token.ends_with(".")) {
             m_board.apply_move(Chess::Move::from_algebraic(token, turn, m_board));
-            turn = Chess::opposing_colour(turn);
+            turn = Chess::opposing_color(turn);
         }
     }
 
@@ -593,8 +593,8 @@ bool ChessWidget::export_pgn(const StringView& export_path) const
     String username(getlogin());
     const String player1 = (!username.is_empty() ? username : "?");
     const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine" : "?");
-    file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Colour::White ? player1 : player2));
-    file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Colour::Black ? player1 : player2));
+    file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2));
+    file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2));
 
     file.write(String::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
     file.write("[WhiteElo \"?\"]\n");
@@ -632,7 +632,7 @@ void ChessWidget::flip_board()
         GUI::MessageBox::show(window(), "You can only flip the board on your turn.", "Flip Board", GUI::MessageBox::Type::Information);
         return;
     }
-    m_side = Chess::opposing_colour(m_side);
+    m_side = Chess::opposing_color(m_side);
     input_engine_move();
     update();
 }

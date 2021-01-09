@@ -54,8 +54,8 @@ public:
     Chess::Board& board_playback() { return m_board_playback; };
     const Chess::Board& board_playback() const { return m_board_playback; };
 
-    Chess::Colour side() const { return m_side; };
-    void set_side(Chess::Colour side) { m_side = side; };
+    Chess::Color side() const { return m_side; };
+    void set_side(Chess::Color side) { m_side = side; };
 
     void set_piece_set(const StringView& set);
     const String& piece_set() const { return m_piece_set; };
@@ -135,7 +135,7 @@ private:
     Color m_marking_primary_color { Color::from_rgba(0x66ff0000) };
     Color m_marking_alternate_color { Color::from_rgba(0x66ffaa00) };
     Color m_marking_secondary_color { Color::from_rgba(0x6655dd55) };
-    Chess::Colour m_side { Chess::Colour::White };
+    Chess::Color m_side { Chess::Color::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
     String m_piece_set;
     Chess::Square m_moving_square { 50, 50 };
