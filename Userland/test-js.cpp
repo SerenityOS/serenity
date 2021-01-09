@@ -193,7 +193,7 @@ static void cleanup_and_exit()
 
 static void handle_sigabrt(int)
 {
-    dbg() << "test-js: SIGABRT received, cleaning up.";
+    dbgln("test-js: SIGABRT received, cleaning up.");
     cleanup_and_exit();
 }
 

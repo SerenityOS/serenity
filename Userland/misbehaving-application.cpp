@@ -33,7 +33,7 @@ int main(int, char**)
     Core::EventLoop event_loop;
 
     auto timer = Core::Timer::construct(10, [&] {
-        dbg() << "Now hanging!";
+        dbgln("Now hanging!");
         while (true) {
             sleep(1);
         }
