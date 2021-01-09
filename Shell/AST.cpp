@@ -232,8 +232,8 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     auto matching_node = hit_test_result.matching_node;
     if (matching_node) {
         if (matching_node->is_bareword()) {
-            auto corrected_offset = offset - matching_node->position().start_offset;
             auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+            auto corrected_offset = find_offset_into_node(node->text(), offset - matching_node->position().start_offset);
 
             if (corrected_offset > node->text().length())
                 return {};

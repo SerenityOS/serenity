@@ -1114,30 +1114,35 @@ String Shell::escape_token_for_single_quotes(const String& token)
     return builder.build();
 }
 
+bool Shell::is_special(char c)
+{
+    switch (c) {
+    case '\'':
+    case '"':
+    case '$':
+    case '|':
+    case '>':
+    case '<':
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case '&':
+    case '\\':
+    case ' ':
+        return true;
+    default:
+        return false;
+    }
+}
+
 String Shell::escape_token(const String& token)
 {
     StringBuilder builder;
 
     for (auto c : token) {
-        switch (c) {
-        case '\'':
-        case '"':
-        case '$':
-        case '|':
-        case '>':
-        case '<':
-        case '(':
-        case ')':
-        case '{':
-        case '}':
-        case '&':
-        case '\\':
-        case ' ':
+        if (is_special(c))
             builder.append('\\');
-            break;
-        default:
-            break;
-        }
         builder.append(c);
     }
 
@@ -1256,7 +1261,6 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, const String& part, size_t offset)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
-    StringView original_token = token;
     String path;
 
     ssize_t last_slash = token.length() - 1;
@@ -1294,7 +1298,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token).length();
     if (m_editor)
-        m_editor->suggest(token_length, original_token.length() - token_length);
+        m_editor->suggest(token_length, last_slash + 1);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
