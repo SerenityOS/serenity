@@ -50,12 +50,23 @@ public:
 
     virtual void drag_enter_event(DragEvent& event) override
     {
+        update();
         if (on_drag_enter)
             on_drag_enter(event);
     }
 
     virtual void drag_leave_event(Event&) override
     {
+        update();
+    }
+
+    virtual void paint_event(PaintEvent& event) override
+    {
+        Button::paint_event(event);
+        if (has_pending_drop()) {
+            Painter painter(*this);
+            painter.draw_rect(rect(), palette().selection(), true);
+        }
     }
 
     Function<void(DropEvent&)> on_drop;
