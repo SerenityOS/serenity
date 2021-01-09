@@ -43,8 +43,6 @@ void* memmove(void*, const void*, size_t);
 void* memchr(const void*, int c, size_t);
 const void* memmem(const void* haystack, size_t, const void* needle, size_t);
 
-void bzero(void*, size_t);
-void bcopy(const void*, void*, size_t);
 void* memset(void*, int, size_t);
 
 __attribute__((malloc)) char* strdup(const char*);
