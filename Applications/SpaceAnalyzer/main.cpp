@@ -39,7 +39,7 @@
 #include <LibGUI/StatusBar.h>
 #include <sys/stat.h>
 
-static const char* APP_NAME = "SpaceAnalyzer";
+static const char* APP_NAME = "Space Analyzer";
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     TreeNode(String name)
