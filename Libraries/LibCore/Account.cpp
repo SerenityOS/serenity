@@ -63,7 +63,36 @@ static Vector<gid_t> get_gids(const StringView& username)
     return extra_gids;
 }
 
-Result<Account, String> Account::from_name(const char* username)
+Result<Account, String> Account::from_passwd(const passwd& pwd, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
+{
+    RefPtr<Core::File> passwd_file;
+    if (open_passwd_file != Core::Account::OpenPasswdFile::No) {
+        auto open_mode = open_passwd_file == Core::Account::OpenPasswdFile::ReadOnly
+            ? Core::File::OpenMode::ReadOnly
+            : Core::File::OpenMode::ReadWrite;
+        auto file_or_error = Core::File::open("/etc/passwd", open_mode);
+        if (file_or_error.is_error())
+            return file_or_error.error();
+        passwd_file = file_or_error.value();
+    }
+
+    RefPtr<Core::File> shadow_file;
+    if (open_shadow_file != Core::Account::OpenShadowFile::No) {
+        auto open_mode = open_shadow_file == Core::Account::OpenShadowFile::ReadOnly
+            ? Core::File::OpenMode::ReadOnly
+            : Core::File::OpenMode::ReadWrite;
+        auto file_or_error = Core::File::open("/etc/shadow", open_mode);
+        if (file_or_error.is_error())
+            return file_or_error.error();
+        shadow_file = file_or_error.value();
+    }
+
+    Account account(pwd, get_gids(pwd.pw_name), move(passwd_file), move(shadow_file));
+    endpwent();
+    return account;
+}
+
+Result<Account, String> Account::from_name(const char* username, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
 {
     struct passwd* pwd = nullptr;
     errno = 0;
@@ -74,13 +103,10 @@ Result<Account, String> Account::from_name(const char* username)
 
         return String(strerror(errno));
     }
-
-    Account account(pwd, get_gids(pwd->pw_name));
-    endpwent();
-    return account;
+    return from_passwd(*pwd, open_passwd_file, open_shadow_file);
 }
 
-Result<Account, String> Account::from_uid(uid_t uid)
+Result<Account, String> Account::from_uid(uid_t uid, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
 {
     struct passwd* pwd = nullptr;
     errno = 0;
@@ -91,10 +117,7 @@ Result<Account, String> Account::from_uid(uid_t uid)
 
         return String(strerror(errno));
     }
-
-    Account account(pwd, get_gids(pwd->pw_name));
-    endpwent();
-    return account;
+    return from_passwd(*pwd, open_passwd_file, open_shadow_file);
 }
 
 bool Account::authenticate(const char* password) const
@@ -144,21 +167,25 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(struct passwd* pwd, Vector<gid_t> extra_gids)
-    : m_username(pwd->pw_name)
-    , m_password_hash(pwd->pw_passwd)
-    , m_uid(pwd->pw_uid)
-    , m_gid(pwd->pw_gid)
-    , m_gecos(pwd->pw_gecos)
-    , m_home_directory(pwd->pw_dir)
-    , m_shell(pwd->pw_shell)
+Account::Account(const passwd& pwd, Vector<gid_t> extra_gids, RefPtr<Core::File> passwd_file, RefPtr<Core::File> shadow_file)
+    : m_passwd_file(move(passwd_file))
+    , m_shadow_file(move(shadow_file))
+    , m_username(pwd.pw_name)
+    , m_uid(pwd.pw_uid)
+    , m_gid(pwd.pw_gid)
+    , m_gecos(pwd.pw_gecos)
+    , m_home_directory(pwd.pw_dir)
+    , m_shell(pwd.pw_shell)
     , m_extra_gids(extra_gids)
 {
+    if (m_shadow_file) {
+        load_shadow_file();
+    }
 }
 
-bool Account::sync()
+String Account::generate_passwd_file() const
 {
-    StringBuilder new_passwd_file;
+    StringBuilder builder;
 
     setpwent();
 
@@ -166,42 +193,124 @@ bool Account::sync()
     errno = 0;
     while ((p = getpwent())) {
         if (p->pw_uid == m_uid) {
-            new_passwd_file.appendff("{}:{}:{}:{}:{}:{}:{}\n",
+            builder.appendff("{}:!:{}:{}:{}:{}:{}\n",
                 m_username,
-                m_password_hash,
                 m_uid, m_gid,
                 m_gecos,
                 m_home_directory,
                 m_shell);
 
         } else {
-            new_passwd_file.appendff("{}:{}:{}:{}:{}:{}:{}\n",
-                p->pw_name, p->pw_passwd, p->pw_uid,
+            builder.appendff("{}:!:{}:{}:{}:{}:{}\n",
+                p->pw_name, p->pw_uid,
                 p->pw_gid, p->pw_gecos, p->pw_dir,
                 p->pw_shell);
         }
     }
     endpwent();
 
-    if (errno)
-        return false;
+    if (errno) {
+        dbgln("errno was non-zero after generating new passwd file.");
+        return {};
+    }
 
-    String contents = new_passwd_file.build();
+    return builder.to_string();
+}
 
-    FILE* passwd_file = fopen("/etc/passwd", "w");
-    if (!passwd_file)
-        return false;
+void Account::load_shadow_file()
+{
+    ASSERT(m_shadow_file);
+    ASSERT(m_shadow_file->is_open());
 
-    fwrite(contents.characters(), 1, contents.length(), passwd_file);
-    if (ferror(passwd_file)) {
-        int error = ferror(passwd_file);
-        fclose(passwd_file);
-        errno = error;
+    if (!m_shadow_file->seek(0)) {
+        ASSERT_NOT_REACHED();
+    }
+
+    Vector<ShadowEntry> entries;
+
+    for (;;) {
+        auto line = m_shadow_file->read_line();
+        if (line.is_null())
+            break;
+        auto parts = line.split(':');
+        if (parts.size() != 2) {
+            dbgln("Malformed shadow entry, ignoring.");
+            continue;
+        }
+        const auto& username = parts[0];
+        const auto& password_hash = parts[1];
+        entries.append({ username, password_hash });
+
+        if (username == m_username) {
+            m_password_hash = password_hash;
+        }
+    }
+
+    m_shadow_entries = move(entries);
+}
+
+String Account::generate_shadow_file() const
+{
+    StringBuilder builder;
+    bool updated_entry_in_place = false;
+    for (auto& entry : m_shadow_entries) {
+        if (entry.username == m_username) {
+            updated_entry_in_place = true;
+            builder.appendff("{}:{}\n", m_username, m_password_hash);
+        } else {
+            builder.appendff("{}:{}\n", entry.username, entry.password_hash);
+        }
+    }
+    if (!updated_entry_in_place)
+        builder.appendff("{}:{}\n", m_username, m_password_hash);
+    return builder.to_string();
+}
+
+bool Account::sync()
+{
+    ASSERT(m_passwd_file);
+    ASSERT(m_passwd_file->mode() == Core::File::OpenMode::ReadWrite);
+    ASSERT(m_shadow_file);
+    ASSERT(m_shadow_file->mode() == Core::File::OpenMode::ReadWrite);
+
+    // FIXME: Maybe reorganize this to create temporary files and finish it completely before renaming them to /etc/{passwd,shadow}
+    //        If truncation succeeds but write fails, we'll have an empty file :(
+
+    auto new_passwd_file = generate_passwd_file();
+    auto new_shadow_file = generate_shadow_file();
+
+    if (new_passwd_file.is_null() || new_shadow_file.is_null()) {
+        ASSERT_NOT_REACHED();
+    }
+
+    if (!m_passwd_file->seek(0) || !m_shadow_file->seek(0)) {
+        ASSERT_NOT_REACHED();
+    }
+
+    if (!m_passwd_file->truncate(0)) {
+        dbgln("Truncating passwd file failed.");
         return false;
     }
 
-    fclose(passwd_file);
+    if (!m_passwd_file->write(new_passwd_file)) {
+        // FIXME: Improve Core::File::write() error reporting.
+        dbgln("Writing to passwd file failed.");
+        return false;
+    }
+
+    if (!m_shadow_file->truncate(0)) {
+        dbgln("Truncating shadow file failed.");
+        return false;
+    }
+
+    if (!m_shadow_file->write(new_shadow_file)) {
+        // FIXME: Improve Core::File::write() error reporting.
+        dbgln("Writing to shadow file failed.");
+        return false;
+    }
+
     return true;
     // FIXME: Sync extra groups.
 }
+
 }
