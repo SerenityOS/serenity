@@ -64,13 +64,13 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
         if (child.get_attribute(Dwarf::Attribute::Inline).has_value()) {
 #ifdef DEBUG_SPAM
-            dbg() << "DWARF inlined functions are not supported";
+            dbgln("DWARF inlined functions are not supported");
 #endif
             return;
         }
         if (child.get_attribute(Dwarf::Attribute::Ranges).has_value()) {
 #ifdef DEBUG_SPAM
-            dbg() << "DWARF ranges are not supported";
+            dbgln("DWARF ranges are not supported");
 #endif
             return;
         }
@@ -83,7 +83,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
 #ifdef DEBUG_SPAM
-            dbg() << "DWARF: Couldn't find attribute LowPc for scope";
+            dbgln("DWARF: Couldn't find attribute LowPc for scope");
 #endif
             return;
         }
@@ -215,7 +215,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
     if (type_name.has_value()) {
         variable_info.type_name = type_name.value().data.as_string;
     } else {
-        dbg() << "Unnamed DWARF type at offset: " << type_die.offset();
+        dbgln("Unnamed DWARF type at offset: {}", type_die.offset());
         variable_info.name = "[Unnamed Type]";
     }
 
