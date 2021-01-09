@@ -135,12 +135,16 @@ void _start(int argc, char** argv, char** envp)
 
     int main_program_fd = -1;
     String main_program_name;
+    bool is_secure = false;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFileDescriptor) {
             main_program_fd = auxvp->a_un.a_val;
         }
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFilename) {
             main_program_name = (const char*)auxvp->a_un.a_ptr;
+        }
+        if (auxvp->a_type == ELF::AuxiliaryValue::Secure) {
+            is_secure = auxvp->a_un.a_val == 1;
         }
     }
 
@@ -156,7 +160,7 @@ void _start(int argc, char** argv, char** envp)
     ASSERT(main_program_fd >= 0);
     ASSERT(!main_program_name.is_empty());
 
-    ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, argc, argv, envp);
+    ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, is_secure, argc, argv, envp);
     ASSERT_NOT_REACHED();
 }
 }
