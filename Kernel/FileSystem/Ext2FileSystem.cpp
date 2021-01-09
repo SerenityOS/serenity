@@ -804,6 +804,24 @@ KResult Ext2FSInode::resize(u64 new_size)
     set_metadata_dirty(true);
 
     m_block_list = move(block_list);
+
+    if (new_size > old_size) {
+        // If we're growing the inode, make sure we zero out all the new space.
+        // FIXME: There are definitely more efficient ways to achieve this.
+        size_t bytes_to_clear = new_size - old_size;
+        size_t clear_from = old_size;
+        u8 zero_buffer[PAGE_SIZE];
+        memset(zero_buffer, 0, sizeof(zero_buffer));
+        while (bytes_to_clear) {
+            auto nwritten = write_bytes(clear_from, min(sizeof(zero_buffer), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr);
+            if (nwritten < 0)
+                return KResult(-nwritten);
+            ASSERT(nwritten != 0);
+            bytes_to_clear -= nwritten;
+            clear_from += nwritten;
+        }
+    }
+
     return KSuccess;
 }
 
