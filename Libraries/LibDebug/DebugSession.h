@@ -90,7 +90,7 @@ public:
     void dump_breakpoints()
     {
         for (auto addr : m_breakpoints.keys()) {
-            dbg() << addr;
+            dbgln("{}", addr);
         }
     }
 
