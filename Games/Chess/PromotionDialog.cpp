@@ -44,6 +44,7 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
 
     for (auto& type : Vector({ Chess::Type::Queen, Chess::Type::Knight, Chess::Type::Rook, Chess::Type::Bishop })) {
         auto& button = main_widget.add<GUI::Button>("");
+        button.set_fixed_height(70);
         button.set_icon(chess_widget.get_piece_graphic({ chess_widget.board().turn(), type }));
         button.on_click = [this, type](auto) {
             m_selected_piece = type;
