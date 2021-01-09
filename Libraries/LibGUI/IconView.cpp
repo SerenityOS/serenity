@@ -265,22 +265,6 @@ void IconView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
-void IconView::drag_move_event(DragEvent& event)
-{
-    auto index = index_at_event_position(event.position());
-    ModelIndex new_drop_candidate_index;
-    if (index.is_valid()) {
-        bool acceptable = model()->accepts_drag(index, event.mime_types());
-        if (acceptable)
-            new_drop_candidate_index = index;
-    }
-    if (m_drop_candidate_index != new_drop_candidate_index) {
-        m_drop_candidate_index = new_drop_candidate_index;
-        update();
-    }
-    event.accept();
-}
-
 bool IconView::update_rubber_banding(const Gfx::IntPoint& position)
 {
     auto adjusted_position = to_content_position(position);
@@ -577,7 +561,7 @@ void IconView::paint_event(PaintEvent& event)
             draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, item_data.text, font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
         }
 
-        if (item_data.index == m_drop_candidate_index) {
+        if (item_data.index == drop_candidate_index()) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
             painter.draw_rect(item_data.icon_rect.inflated(8, 8), palette().selection(), true);
         }
