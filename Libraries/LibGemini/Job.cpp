@@ -68,7 +68,7 @@ void Job::on_socket_connected()
         m_sent_data = true;
         auto raw_request = m_request.to_raw_request();
 #ifdef JOB_DEBUG
-        dbg() << "Job: raw_request:";
+        dbgln("Job: raw_request:");
         dbg() << String::copy(raw_request).characters();
 #endif
         bool success = write(raw_request);
@@ -153,7 +153,7 @@ void Job::on_socket_connected()
 
         if (!is_established()) {
 #ifdef JOB_DEBUG
-            dbg() << "Connection appears to have closed, finishing up";
+            dbgln("Connection appears to have closed, finishing up");
 #endif
             finish_up();
         }

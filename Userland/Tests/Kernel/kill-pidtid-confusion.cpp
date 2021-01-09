@@ -68,7 +68,7 @@ static void fork_into(void(fn)())
         return;
     }
     fn();
-    dbg() << "child finished (?)";
+    dbgln("child finished (?)");
     exit(1);
 }
 
@@ -108,12 +108,12 @@ int main(int, char**)
     // This entire function is the entirety of process PX.
 
     // Time 0: PX forks into PZ (mnemonic: Zombie)
-    dbg() << "PX forks into PZ";
+    dbgln("PX forks into PZ");
     fork_into(run_pz);
     sleep_steps(4);
 
     // Time 4:
-    dbg() << "Let's hope everything went fine!";
+    dbgln("Let's hope everything went fine!");
     pid_t guessed_pid = getpid() + 1;
     pid_t guessed_tid = guessed_pid + 1;
     printf("About to kill PID %d, TID %d.\n", guessed_pid, guessed_tid);
@@ -136,12 +136,12 @@ static void run_pz()
     sleep_steps(1);
 
     // Time 1: PZ's main thread T1 creates a new thread T2
-    dbg() << "PZ calls pthread_create";
+    dbgln("PZ calls pthread_create");
     thread_into(run_pz_t2_wrap);
     sleep_steps(2);
 
     // Time 3: T1 calls thread_exit()
-    dbg() << "PZ(T1) calls thread_exit";
+    dbgln("PZ(T1) calls thread_exit");
     pthread_exit(nullptr);
     ASSERT_NOT_REACHED();
 }
@@ -160,7 +160,7 @@ static void run_pz_t2()
     // Time 2: Nothing
     // FIXME: For some reason, both printf() and dbg() crash.
     // This also prevents us from using a pipe to communicate to PX both process and thread ID
-    // dbg() << "T2: I'm alive and well.";
+    // dbgln("T2: I'm alive and well.");
     sleep_steps(18);
 
     // Time 20: Cleanup

@@ -1296,7 +1296,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         return -EIO;
     if (!description->data()) {
 #ifdef PROCFS_DEBUG
-        dbg() << "ProcFS: Do not have cached data!";
+        dbgln("ProcFS: Do not have cached data!");
 #endif
         return -EIO;
     }

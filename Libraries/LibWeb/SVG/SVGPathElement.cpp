@@ -92,7 +92,7 @@ static void print_instruction(const PathInstruction& instruction)
             dbg() << "    (rx=" << data[i] << ", ry=" << data[i + 1] << ") x-axis-rotation=" << data[i + 2] << ", large-arc-flag=" << data[i + 3] << ", sweep-flag=" << data[i + 4] << ", (x=" << data[i + 5] << ", y=" << data[i + 6] << ")";
         break;
     case PathInstructionType::Invalid:
-        dbg() << "Invalid";
+        dbgln("Invalid");
         break;
     }
 }

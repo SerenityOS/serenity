@@ -224,7 +224,7 @@ timeval TimeManagement::now_as_timeval()
 Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
-    dbg() << "Time: Scanning for periodic timers";
+    dbgln("Time: Scanning for periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer.is_periodic_capable()) {
@@ -238,7 +238,7 @@ Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 
 Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
 {
-    dbg() << "Time: Scanning for non-periodic timers";
+    dbgln("Time: Scanning for non-periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer.is_periodic_capable())
@@ -264,10 +264,10 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     if (!HPET::test_and_initialize())
         return false;
     if (!HPET::the().comparators().size()) {
-        dbg() << "HPET initialization aborted.";
+        dbgln("HPET initialization aborted.");
         return false;
     }
-    dbg() << "HPET: Setting appropriate functions to timers.";
+    dbgln("HPET: Setting appropriate functions to timers.");
 
     for (auto& hpet_comparator : HPET::the().comparators())
         m_hardware_timers.append(hpet_comparator);
@@ -315,10 +315,10 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
 {
     if (ACPI::is_enabled()) {
         if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
-            dbg() << "ACPI: CMOS RTC Not Present";
+            dbgln("ACPI: CMOS RTC Not Present");
             return false;
         } else {
-            dbg() << "ACPI: CMOS RTC Present";
+            dbgln("ACPI: CMOS RTC Present");
         }
     }
 

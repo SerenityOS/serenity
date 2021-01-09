@@ -113,7 +113,7 @@ int main(int, char**)
         return 1;
     }
 
-    dbg() << "Entering WindowServer main loop";
+    dbgln("Entering WindowServer main loop");
     loop.exec();
     ASSERT_NOT_REACHED();
 }

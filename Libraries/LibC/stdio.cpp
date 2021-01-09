@@ -624,7 +624,7 @@ int feof(FILE* stream)
 int fflush(FILE* stream)
 {
     if (!stream) {
-        dbg() << "FIXME: fflush(nullptr) should flush all open streams";
+        dbgln("FIXME: fflush(nullptr) should flush all open streams");
         return 0;
     }
     return stream->flush() ? 0 : EOF;

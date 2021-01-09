@@ -38,14 +38,14 @@ int Process::sys$reboot()
 
     REQUIRE_NO_PROMISES;
 
-    dbg() << "acquiring FS locks...";
+    dbgln("acquiring FS locks...");
     FS::lock_all();
-    dbg() << "syncing mounted filesystems...";
+    dbgln("syncing mounted filesystems...");
     FS::sync();
-    dbg() << "attempting reboot via ACPI";
+    dbgln("attempting reboot via ACPI");
     if (ACPI::is_enabled())
         ACPI::Parser::the()->try_acpi_reboot();
-    dbg() << "attempting reboot via KB Controller...";
+    dbgln("attempting reboot via KB Controller...");
     IO::out8(0x64, 0xFE);
 
     return 0;
@@ -58,18 +58,18 @@ int Process::sys$halt()
 
     REQUIRE_NO_PROMISES;
 
-    dbg() << "acquiring FS locks...";
+    dbgln("acquiring FS locks...");
     FS::lock_all();
-    dbg() << "syncing mounted filesystems...";
+    dbgln("syncing mounted filesystems...");
     FS::sync();
-    dbg() << "attempting system shutdown...";
+    dbgln("attempting system shutdown...");
     // QEMU Shutdown
     IO::out16(0x604, 0x2000);
     // If we're here, the shutdown failed. Try VirtualBox shutdown.
     IO::out16(0x4004, 0x3400);
     // VirtualBox shutdown failed. Try Bochs/Old QEMU shutdown.
     IO::out16(0xb004, 0x2000);
-    dbg() << "shutdown attempts failed, applications will stop responding.";
+    dbgln("shutdown attempts failed, applications will stop responding.");
 
     return 0;
 }

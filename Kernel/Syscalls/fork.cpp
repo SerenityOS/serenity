@@ -90,7 +90,7 @@ pid_t Process::sys$fork(RegisterState& regs)
 #endif
             auto region_clone = region.clone(*child);
             if (!region_clone) {
-                dbg() << "fork: Cannot clone region, insufficient memory";
+                dbgln("fork: Cannot clone region, insufficient memory");
                 // TODO: tear down new process?
                 return -ENOMEM;
             }

@@ -34,7 +34,7 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
 {
     LexicalPath path(cursor_path);
     if (!path.is_valid()) {
-        dbg() << "Cannot parse invalid cursor path, use default cursor params";
+        dbgln("Cannot parse invalid cursor path, use default cursor params");
         return { default_hotspot };
     }
     auto file_title = path.title();
@@ -86,7 +86,7 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
             if (value.value() >= 100 && value.value() <= 1000)
                 params.m_frame_ms = value.value();
             else
-                dbg() << "Cursor frame rate outside of valid range (100-1000ms)";
+                dbgln("Cursor frame rate outside of valid range (100-1000ms)");
             break;
         default:
             dbg() << "Ignore unknown property '" << property << "' with value " << value.value() << " parsed from cursor path: " << cursor_path;

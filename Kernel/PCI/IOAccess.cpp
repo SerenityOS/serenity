@@ -37,7 +37,7 @@ void IOAccess::initialize()
     if (!Access::is_initialized()) {
         new IOAccess();
 #ifdef PCI_DEBUG
-        dbg() << "PCI: IO access initialised.";
+        dbgln("PCI: IO access initialised.");
 #endif
     }
 }
@@ -102,7 +102,7 @@ void IOAccess::write32_field(Address address, u32 field, u32 value)
 void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
 #ifdef PCI_DEBUG
-    dbg() << "PCI: IO enumerating hardware";
+    dbgln("PCI: IO enumerating hardware");
 #endif
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {

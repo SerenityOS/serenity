@@ -127,7 +127,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 int
 
 PhysicalAddress InterruptManagement::search_for_madt()
 {
-    dbg() << "Early access to ACPI tables for interrupt setup";
+    dbgln("Early access to ACPI tables for interrupt setup");
     auto rsdp = ACPI::StaticParsing::find_rsdp();
     if (!rsdp.has_value())
         return {};
@@ -165,7 +165,7 @@ void InterruptManagement::switch_to_ioapic_mode()
     InterruptDisabler disabler;
 
     if (m_madt.is_null()) {
-        dbg() << "Interrupts: ACPI MADT is not available, reverting to PIC mode";
+        dbgln("Interrupts: ACPI MADT is not available, reverting to PIC mode");
         switch_to_pic_mode();
         return;
     }

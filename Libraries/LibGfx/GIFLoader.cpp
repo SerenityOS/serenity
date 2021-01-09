@@ -357,7 +357,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
 #ifdef GIF_DEBUG
-                dbg() << "Unexpectedly reached end of gif frame data";
+                dbgln("Unexpectedly reached end of gif frame data");
 #endif
                 return false;
             }
@@ -506,7 +506,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             if (extension_type == 0xF9) {
                 if (sub_block.size() != 4) {
 #ifdef GIF_DEBUG
-                    dbg() << "Unexpected graphic control size";
+                    dbgln("Unexpected graphic control size");
 #endif
                     continue;
                 }
@@ -536,7 +536,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
                 if (sub_block[11] != 1) {
 #ifdef GIF_DEBUG
-                    dbg() << "Unexpected application extension format";
+                    dbgln("Unexpected application extension format");
 #endif
                     continue;
                 }

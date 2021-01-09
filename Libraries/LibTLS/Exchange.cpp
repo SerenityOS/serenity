@@ -38,7 +38,7 @@ bool TLSv12::expand_key()
     auto is_aead = this->is_aead();
 
     if (m_context.master_key.size() == 0) {
-        dbg() << "expand_key() with empty master key";
+        dbgln("expand_key() with empty master key");
         return false;
     }
 
@@ -73,18 +73,18 @@ bool TLSv12::expand_key()
     offset += iv_size;
 
 #ifdef TLS_DEBUG
-    dbg() << "client key";
+    dbgln("client key");
     print_buffer(client_key, key_size);
-    dbg() << "server key";
+    dbgln("server key");
     print_buffer(server_key, key_size);
-    dbg() << "client iv";
+    dbgln("client iv");
     print_buffer(client_iv, iv_size);
-    dbg() << "server iv";
+    dbgln("server iv");
     print_buffer(server_iv, iv_size);
     if (!is_aead) {
-        dbg() << "client mac key";
+        dbgln("client mac key");
         print_buffer(m_context.crypto.local_mac, mac_size);
-        dbg() << "server mac key";
+        dbgln("server mac key");
         print_buffer(m_context.crypto.remote_mac, mac_size);
     }
 #endif
@@ -111,7 +111,7 @@ bool TLSv12::expand_key()
 void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     if (!secret.size()) {
-        dbg() << "null secret";
+        dbgln("null secret");
         return;
     }
 
@@ -155,7 +155,7 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
 bool TLSv12::compute_master_secret(size_t length)
 {
     if (m_context.premaster_key.size() == 0 || length < 48) {
-        dbg() << "there's no way I can make a master secret like this";
+        dbgln("there's no way I can make a master secret like this");
         dbg() << "I'd like to talk to your manager about this length of " << length;
         return false;
     }
@@ -172,7 +172,7 @@ bool TLSv12::compute_master_secret(size_t length)
 
     m_context.premaster_key.clear();
 #ifdef TLS_DEBUG
-    dbg() << "master key:";
+    dbgln("master key:");
     print_buffer(m_context.master_key);
 #endif
     expand_key();
@@ -187,7 +187,7 @@ ByteBuffer TLSv12::build_certificate()
     Vector<Certificate>* local_certificates = nullptr;
 
     if (m_context.is_server) {
-        dbg() << "Unsupported: Server mode";
+        dbgln("Unsupported: Server mode");
         ASSERT_NOT_REACHED();
     } else {
         local_certificates = &m_context.client_certificates;
@@ -214,7 +214,7 @@ ByteBuffer TLSv12::build_certificate()
 
     if (!total_certificate_size) {
 #ifdef TLS_DEBUG
-        dbg() << "No certificates, sending empty certificate message";
+        dbgln("No certificates, sending empty certificate message");
 #endif
         builder.append_u24(certificate_vector_header_size);
         builder.append_u24(total_certificate_size);
@@ -246,7 +246,7 @@ ByteBuffer TLSv12::build_change_cipher_spec()
 
 ByteBuffer TLSv12::build_server_key_exchange()
 {
-    dbg() << "FIXME: build_server_key_exchange";
+    dbgln("FIXME: build_server_key_exchange");
     return {};
 }
 
@@ -267,13 +267,13 @@ ByteBuffer TLSv12::build_client_key_exchange()
 
 ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
 {
-    dbg() << "FIXME: parse_server_key_exchange";
+    dbgln("FIXME: parse_server_key_exchange");
     return 0;
 }
 
 ssize_t TLSv12::handle_verify(ReadonlyBytes)
 {
-    dbg() << "FIXME: parse_verify";
+    dbgln("FIXME: parse_verify");
     return 0;
 }
 

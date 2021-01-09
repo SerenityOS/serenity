@@ -135,7 +135,7 @@ void Download::did_request_certificates(Badge<Client>)
     if (on_certificate_requested) {
         auto result = on_certificate_requested();
         if (!m_client->set_certificate({}, *this, result.certificate, result.key)) {
-            dbg() << "Download: set_certificate failed";
+            dbgln("Download: set_certificate failed");
         }
     }
 }

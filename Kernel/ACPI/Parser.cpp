@@ -66,7 +66,7 @@ void Parser::locate_static_data()
 PhysicalAddress Parser::find_table(const StringView& signature)
 {
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: Calling Find Table method!";
+    dbgln("ACPI: Calling Find Table method!");
 #endif
     for (auto p_sdt : m_sdt_pointers) {
         auto sdt = map_typed<Structures::SDTHeader>(p_sdt);
@@ -244,7 +244,7 @@ size_t Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: Checking SDT Length";
+    dbgln("ACPI: Checking SDT Length");
 #endif
     return map_typed<Structures::SDTHeader>(table_header)->length;
 }
@@ -253,7 +253,7 @@ u8 Parser::get_table_revision(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: Checking SDT Revision";
+    dbgln("ACPI: Checking SDT Revision");
 #endif
     return map_typed<Structures::SDTHeader>(table_header)->revision;
 }
@@ -261,7 +261,7 @@ u8 Parser::get_table_revision(PhysicalAddress table_header)
 void Parser::initialize_main_system_description_table()
 {
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: Checking Main SDT Length to choose the correct mapping size";
+    dbgln("ACPI: Checking Main SDT Length to choose the correct mapping size");
 #endif
     ASSERT(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);

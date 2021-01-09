@@ -245,14 +245,14 @@ Optional<Text> Text::parse(const StringView& str)
         case '[':
 #ifdef DEBUG_MARKDOWN
             if (first_span_in_the_current_link != -1)
-                dbg() << "Dropping the outer link";
+                dbgln("Dropping the outer link");
 #endif
             first_span_in_the_current_link = spans.size();
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
 #ifdef DEBUG_MARKDOWN
-                dbg() << "Unmatched ]";
+                dbgln("Unmatched ]");
 #endif
                 continue;
             }

@@ -147,7 +147,7 @@ bool HPET::test_and_initialize()
 
     if (TimeManagement::is_hpet_periodic_mode_allowed()) {
         if (!check_for_exisiting_periodic_timers()) {
-            dbg() << "HPET: No periodic capable timers";
+            dbgln("HPET: No periodic capable timers");
             return false;
         }
     }

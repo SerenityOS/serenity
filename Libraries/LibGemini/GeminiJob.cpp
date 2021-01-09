@@ -42,7 +42,7 @@ void GeminiJob::start()
     m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_connected = [this] {
 #ifdef GEMINIJOB_DEBUG
-        dbg() << "GeminiJob: on_connected callback";
+        dbgln("GeminiJob: on_connected callback");
 #endif
         on_socket_connected();
     };
@@ -97,7 +97,7 @@ void GeminiJob::read_while_data_available(Function<IterationDecision()> read)
 void GeminiJob::set_certificate(String certificate, String private_key)
 {
     if (!m_socket->add_client_key(certificate.bytes(), private_key.bytes())) {
-        dbg() << "LibGemini: Failed to set a client certificate";
+        dbgln("LibGemini: Failed to set a client certificate");
         // FIXME: Do something about this failure
         ASSERT_NOT_REACHED();
     }

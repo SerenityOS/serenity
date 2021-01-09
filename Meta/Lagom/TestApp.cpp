@@ -33,7 +33,7 @@ int main(int, char**)
     Core::EventLoop event_loop;
 
     auto timer = Core::Timer::construct(100, [&] {
-        dbg() << "Timer fired, good-bye! :^)";
+        dbgln("Timer fired, good-bye! :^)");
         event_loop.quit(0);
     });
 
