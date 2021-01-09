@@ -237,7 +237,7 @@ void Editor::enter_search()
         // Disable our own notifier so as to avoid interfering with the search editor.
         m_notifier->set_enabled(false);
 
-        m_search_editor = Editor::construct(Configuration { Configuration::Eager }); // Has anyone seen 'Inception'?
+        m_search_editor = Editor::construct(Configuration { Configuration::Eager, Configuration::NoSignalHandlers }); // Has anyone seen 'Inception'?
         m_search_editor->initialize();
         add_child(*m_search_editor);
 
