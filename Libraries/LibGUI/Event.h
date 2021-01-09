@@ -347,19 +347,19 @@ private:
 
 class DragEvent final : public Event {
 public:
-    DragEvent(Type type, const Gfx::IntPoint& position, const String& data_type)
+    DragEvent(Type type, const Gfx::IntPoint& position, Vector<String> mime_types)
         : Event(type)
         , m_position(position)
-        , m_data_type(data_type)
+        , m_mime_types(move(mime_types))
     {
     }
 
     const Gfx::IntPoint& position() const { return m_position; }
-    const String& data_type() const { return m_data_type; }
+    const Vector<String>& mime_types() const { return m_mime_types; }
 
 private:
     Gfx::IntPoint m_position;
-    String m_data_type;
+    Vector<String> m_mime_types;
 };
 
 class DropEvent final : public Event {

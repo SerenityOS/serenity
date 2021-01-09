@@ -261,7 +261,7 @@ void Application::set_pending_drop_widget(Widget* widget)
         m_pending_drop_widget->update();
 }
 
-void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoint& position, const String& mime_type)
+void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoint& position, Vector<String> mime_types)
 {
     if (widget == m_drag_hovered_widget)
         return;
@@ -275,7 +275,7 @@ void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoi
     m_drag_hovered_widget = widget;
 
     if (m_drag_hovered_widget) {
-        DragEvent enter_event(Event::DragEnter, position, mime_type);
+        DragEvent enter_event(Event::DragEnter, position, move(mime_types));
         enter_event.ignore();
         m_drag_hovered_widget->dispatch_event(enter_event, m_drag_hovered_widget->window());
         if (enter_event.is_accepted())

@@ -126,7 +126,13 @@ public:
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
     bool is_drag() const { return m_drag; }
-    const String& drag_data_type() const { return m_drag_data_type; }
+
+    Vector<String> mime_types() const
+    {
+        if (!m_mime_data)
+            return {};
+        return m_mime_data->formats();
+    }
 
     void set_drag(bool b) { m_drag = b; }
     void set_mime_data(const Core::MimeData& mime_data) { m_mime_data = mime_data; }
@@ -140,7 +146,6 @@ private:
     unsigned m_modifiers { 0 };
     int m_wheel_delta { 0 };
     bool m_drag { false };
-    String m_drag_data_type;
     RefPtr<const Core::MimeData> m_mime_data;
 };
 
