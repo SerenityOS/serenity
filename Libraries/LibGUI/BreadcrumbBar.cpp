@@ -27,13 +27,15 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/BreadcrumbBar.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, BreadcrumbBar)
 
 namespace GUI {
 
-class BreadcrumbButton : public GUI::Button {
+class BreadcrumbButton : public Button {
     C_OBJECT(BreadcrumbButton);
 
 public:
@@ -46,7 +48,18 @@ public:
             on_drop(event);
     }
 
+    virtual void drag_enter_event(DragEvent& event) override
+    {
+        if (on_drag_enter)
+            on_drag_enter(event);
+    }
+
+    virtual void drag_leave_event(Event&) override
+    {
+    }
+
     Function<void(DropEvent&)> on_drop;
+    Function<void(DragEvent&)> on_drag_enter;
 
 private:
     BreadcrumbButton() { }
@@ -82,8 +95,12 @@ void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, 
             on_segment_click(index);
     };
     button.on_drop = [this, index = m_segments.size()](auto& drop_event) {
-        if (on_drop)
-            on_drop(index, drop_event);
+        if (on_segment_drop)
+            on_segment_drop(index, drop_event);
+    };
+    button.on_drag_enter = [this, index = m_segments.size()](auto& event) {
+        if (on_segment_drag_enter)
+            on_segment_drag_enter(index, event);
     };
 
     auto button_text_width = button.font().width(text);
