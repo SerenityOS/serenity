@@ -56,7 +56,6 @@ EditorWrapper::EditorWrapper()
 
     m_editor = add<Editor>();
     m_editor->set_ruler_visible(true);
-    m_editor->set_line_wrapping_enabled(true);
     m_editor->set_automatic_indentation_enabled(true);
 
     m_editor->on_cursor_change = [this] {
