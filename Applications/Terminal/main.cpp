@@ -417,7 +417,8 @@ int main(int argc, char** argv)
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(window, &terminal.font(), true);
             if (picker->exec() == GUI::Dialog::ExecOK) {
-                terminal.set_font(picker->font());
+                terminal.set_font_and_resize_to_fit(*picker->font());
+                window->resize(terminal.size());
                 config->write_entry("Text", "Font", picker->font()->qualified_name());
                 config->sync();
             }
