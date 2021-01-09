@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio wpath rpath cpath tty", nullptr) < 0) {
+    if (pledge("stdio wpath rpath cpath tty id", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -83,6 +83,27 @@ int main(int argc, char** argv)
 
     if (account_or_error.is_error()) {
         fprintf(stderr, "Core::Account::%s: %s\n", (username) ? "from_name" : "from_uid", account_or_error.error().characters());
+        return 1;
+    }
+
+    // Drop privileges after opening all the files through the Core::Account object.
+    auto gid = getgid();
+    if (setresgid(gid, gid, gid) < 0) {
+        perror("setresgid");
+        return 1;
+    }
+
+    auto uid = getuid();
+    if (setresuid(uid, uid, uid) < 0) {
+        perror("setresuid");
+        return 1;
+    }
+
+    // Make sure /etc/passwd is open and ready for reading, then we can drop a bunch of pledge promises.
+    setpwent();
+
+    if (pledge("stdio tty", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
