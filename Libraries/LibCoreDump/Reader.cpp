@@ -29,6 +29,7 @@
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <string.h>
+#include <sys/stat.h>
 
 namespace CoreDump {
 
@@ -175,6 +176,40 @@ const HashMap<String, String> Reader::metadata() const
         metadata.set(key, value.as_string_or({}));
     });
     return metadata;
+}
+
+struct LibraryData {
+    String name;
+    OwnPtr<MappedFile> file;
+    ELF::Image lib_elf;
+};
+
+const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
+{
+    static HashMap<String, OwnPtr<LibraryData>> cached_libs;
+    auto* region = region_containing(address);
+    if (!region)
+        return {};
+
+    auto name = region->object_name();
+
+    String path;
+    if (name.contains(".so"))
+        path = String::format("/usr/lib/%s", name.characters());
+    else {
+        path = name;
+    }
+
+    if (!cached_libs.contains(path)) {
+        auto lib_file = make<MappedFile>(path);
+        if (!lib_file->is_valid())
+            return {};
+        auto image = ELF::Image((const u8*)lib_file->data(), lib_file->size());
+        cached_libs.set(path, make<LibraryData>(name, region->region_start, move(lib_file), move(image)));
+    }
+
+    auto lib_data = cached_libs.get(path).value();
+    return lib_data;
 }
 
 }
