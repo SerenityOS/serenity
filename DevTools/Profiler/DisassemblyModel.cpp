@@ -55,26 +55,39 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
     , m_node(node)
 {
-    String path;
-    if (m_node.address() >= 0xc0000000)
-        path = "/boot/Kernel";
-    else
-        path = profile.executable_path();
-    m_file = make<MappedFile>(path);
+    OwnPtr<ELF::Image> kernel_elf;
+    const ELF::Image* elf;
+    FlatPtr base_address = 0;
+    if (m_node.address() >= 0xc0000000) {
+        if (!m_kernel_file) {
+            m_kernel_file = new MappedFile("/boot/Kernel");
+            if (!m_kernel_file->is_valid())
+                return;
+        }
+        kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
+        elf = kernel_elf.ptr();
+    } else {
+        auto library_data = profile.coredump().library_containing(node.address());
+        if (!library_data) {
+            dbgln("no library data");
+            return;
+        }
+        elf = &library_data->lib_elf;
+        base_address = library_data->base_address;
+    }
 
-    if (!m_file->is_valid())
+    ASSERT(elf != nullptr);
+
+    auto symbol = elf->find_symbol(node.address() - base_address);
+    if (!symbol.has_value()) {
+        dbgln("DisassemblyModel: symbol not found");
         return;
-
-    auto elf = ELF::Image((const u8*)m_file->data(), m_file->size());
-
-    auto symbol = elf.find_symbol(node.address());
-    if (!symbol.has_value())
-        return;
+    }
     ASSERT(symbol.has_value());
 
     auto view = symbol.value().raw_data();
 
-    X86::ELFSymbolProvider symbol_provider(elf);
+    X86::ELFSymbolProvider symbol_provider(*elf);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
