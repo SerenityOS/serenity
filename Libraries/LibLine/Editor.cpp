@@ -180,7 +180,7 @@ void Editor::set_default_keybinds()
 Editor::Editor(Configuration configuration)
     : m_configuration(move(configuration))
 {
-    m_always_refresh = configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
+    m_always_refresh = m_configuration.refresh_behaviour == Configuration::RefreshBehaviour::Eager;
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     get_terminal_size();
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
@@ -451,19 +451,24 @@ void Editor::initialize()
     for (auto& keybind : m_configuration.keybindings)
         register_key_input_callback(keybind);
 
-    Core::EventLoop::register_signal(SIGINT, [this](int) {
-        interrupted();
-    });
+    if (m_configuration.m_signal_mode == Configuration::WithSignalHandlers) {
+        m_signal_handlers.append(Core::EventLoop::register_signal(SIGINT, [this](int) {
+            interrupted();
+        }));
 
-    Core::EventLoop::register_signal(SIGWINCH, [this](int) {
-        resized();
-    });
+        m_signal_handlers.append(Core::EventLoop::register_signal(SIGWINCH, [this](int) {
+            resized();
+        }));
+    }
 
     m_initialized = true;
 }
 
 void Editor::interrupted()
 {
+    if (m_is_searching)
+        return m_search_editor->interrupted();
+
     if (!m_is_editing)
         return;
 
@@ -482,7 +487,7 @@ void Editor::interrupted()
     m_buffer.clear();
     m_is_editing = false;
     restore();
-    m_notifier->set_event_mask(Core::Notifier::None);
+    m_notifier->set_enabled(false);
     deferred_invoke([this](auto&) {
         remove_child(*m_notifier);
         m_notifier = nullptr;
@@ -503,7 +508,7 @@ void Editor::really_quit_event_loop()
 
     m_returned_line = string;
 
-    m_notifier->set_event_mask(Core::Notifier::None);
+    m_notifier->set_enabled(false);
     deferred_invoke([this](auto&) {
         remove_child(*m_notifier);
         m_notifier = nullptr;

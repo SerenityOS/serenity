@@ -39,6 +39,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibLine/KeyCallbackMachine.h>
@@ -74,6 +75,10 @@ struct Configuration {
         NoEscapeSequences,
         NonInteractive,
     };
+    enum SignalHandler {
+        WithSignalHandlers,
+        NoSignalHandlers,
+    };
 
     Configuration()
     {
@@ -88,11 +93,13 @@ struct Configuration {
 
     void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
     void set(OperationMode mode) { operation_mode = mode; }
+    void set(SignalHandler mode) { m_signal_mode = mode; }
     void set(const KeyBinding& binding) { keybindings.append(binding); }
 
     static Configuration from_config(const StringView& libname = "line");
 
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
+    SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
     OperationMode operation_mode { OperationMode::Unset };
     Vector<KeyBinding> keybindings;
 };
@@ -180,6 +187,8 @@ public:
         m_previous_num_columns = m_num_columns;
         get_terminal_size();
         m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
+        if (m_is_searching)
+            m_search_editor->resized();
     }
 
     size_t cursor() const { return m_cursor; }
@@ -321,6 +330,8 @@ private:
         ASSERT(m_initialized);
         tcsetattr(0, TCSANOW, &m_default_termios);
         m_initialized = false;
+        for (auto id : m_signal_handlers)
+            Core::EventLoop::unregister_signal(id);
     }
 
     const StringMetrics& current_prompt_metrics() const
@@ -462,6 +473,7 @@ private:
 
     bool m_initialized { false };
     bool m_refresh_needed { false };
+    Vector<int, 2> m_signal_handlers;
 
     bool m_is_editing { false };
 
