@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    dbg() << "Loading man page from " << file->filename();
+    dbgln("Loading man page from {}", file->filename());
     auto buffer = file->read_all();
     auto source = String::copy(buffer);
 

@@ -79,14 +79,14 @@ static void fork_into(void (*fn)(void*), void* arg)
         const int disown_rc = disown(rc);
         if (disown_rc < 0) {
             perror("disown");
-            dbg() << "This might cause PA1 to remain in the Zombie state, "
-                     "and thus in the process list, meaning the leader is "
-                     "still 'alive' for the purpose of lookup.";
+            dbgln("This might cause PA1 to remain in the Zombie state, "
+                  "and thus in the process list, meaning the leader is "
+                  "still 'alive' for the purpose of lookup.");
         }
         return;
     }
     fn(arg);
-    dbg() << "child finished (?)";
+    dbgln("child finished (?)");
     exit(1);
 }
 
@@ -116,19 +116,19 @@ int main(int, char**)
         perror("pipe");
         exit(1);
     }
-    dbg() << "PX starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
-    dbg() << "PX forks into PA1";
+    dbgln("PX starts with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
+    dbgln("PX forks into PA1");
     fork_into(run_pa1, nullptr);
     sleep_steps(4);
 
     // Time 4: PX forks into PB1
-    dbg() << "PX forks into PB1";
+    dbgln("PX forks into PB1");
     fork_into(run_pb1, &(fds[1]));
     sleep_steps(5);
 
     // Time 9: If PX hasn't received any message yet through the pipe, it declares
     // the test as failed (for lack of knowledge). Otherwise, it outputs accordingly.
-    dbg() << "PX reads from pipe";
+    dbgln("PX reads from pipe");
     unsigned char buf = 42;
     ssize_t rc = read(fds[0], &buf, 1);
     if (rc == 0) {
@@ -166,36 +166,36 @@ static void run_pa1(void*)
     sleep_steps(1);
 
     // Time 1: PA1 creates a new session (SA) and pgrp (PGA)
-    dbg() << "PA1 starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
-    dbg() << "PA1 calls setsid()";
+    dbgln("PA1 starts with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
+    dbgln("PA1 calls setsid()");
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PA)");
         ASSERT_NOT_REACHED();
     }
-    dbg() << "PA1 did setsid() -> PGA=" << rc << ", SA=" << getsid(0) << ", yay!";
+    dbgln("PA1 did setsid() -> PGA={}, SA={}, yay!", rc, getsid(0));
     sleep_steps(1);
 
     // Time 2: PA1 forks into PA2
-    dbg() << "PA1 forks into PA2";
+    dbgln("PA1 forks into PA2");
     fork_into(run_pa2, nullptr);
     sleep_steps(1);
 
     // Time 3: PA1 dies (PGA now has no leader)
-    dbg() << "PA1 dies. You should see a 'Reaped unparented process' "
-             "message with my ID next, OR THIS TEST IS MEANINGLESS "
-             "(see fork_into()).";
+    dbgln("PA1 dies. You should see a 'Reaped unparented process' "
+          "message with my ID next, OR THIS TEST IS MEANINGLESS "
+          "(see fork_into()).");
     exit(0);
 }
 
 static void run_pa2(void*)
 {
     // Time 2: PA1 forks into PA2
-    dbg() << "PA2 starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
+    dbgln("PA2 starts with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
     sleep_steps(18);
 
     // pa_2 never *does* anything.
-    dbg() << "PA2 dies from boredom.";
+    dbgln("PA2 dies from boredom.");
     exit(1);
 }
 
@@ -205,25 +205,25 @@ static void run_pb1(void* pipe_fd_ptr)
     sleep_steps(1);
 
     // Time 5: PB1 creates a new session (SB) and pgrp (PGB)
-    dbg() << "PB1 starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
-    dbg() << "PB1 calls setsid()";
+    dbgln("PB1 starts with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
+    dbgln("PB1 calls setsid()");
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PB)");
         ASSERT_NOT_REACHED();
     }
-    dbg() << "PB1 did setsid() -> PGB=" << rc << ", SB=" << getsid(0) << ", yay!";
+    dbgln("PB1 did setsid() -> PGB={}, SB={}, yay!", rc, getsid(0));
     sleep_steps(1);
 
     // Time 6: PB1 forks into PB2
-    dbg() << "PB1 forks into PB2";
+    dbgln("PB1 forks into PB2");
     fork_into(run_pb2, pipe_fd_ptr);
     sleep_steps(1);
 
     // Time 7: PB1 dies (PGB now has no leader)
-    dbg() << "PB1 dies. You should see a 'Reaped unparented process' "
-             "message with my ID next, OR THIS TEST IS MEANINGLESS "
-             "(see fork_into()).";
+    dbgln("PB1 dies. You should see a 'Reaped unparented process' "
+          "message with my ID next, OR THIS TEST IS MEANINGLESS "
+          "(see fork_into()).");
     exit(0);
 }
 
@@ -232,9 +232,9 @@ static void simulate_sid_from_pgid(pid_t pgid)
     pid_t rc = getpgid(pgid); // Same confusion as in the Kernel
     int saved_errno = errno;
     if (rc < 0 && saved_errno == ESRCH) {
-        dbg() << "The old get_sid_from_pgid(" << pgid << ") would return -1";
+        dbgln("The old get_sid_from_pgid({}) would return -1", pgid);
     } else if (rc >= 0) {
-        dbg() << "FAIL: Process " << pgid << " still exists?! PGID is " << rc << ".";
+        dbgln("FAIL: Process {} still exists?! PGID is {}.", pgid, rc);
     } else {
         perror("pgid (probably fail)");
     }
@@ -247,49 +247,49 @@ static void run_pb2(void* pipe_fd_ptr)
 
     // Time 8: PB2 calls pgrp(0, PGA)
     //   Note: PB2 writes "1" (exploit successful) or "0" (bug is fixed) to a pipe
-    dbg() << "PB2 starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
-    dbg() << "PB2 calls pgrp(0, PGA)";
+    dbgln("PB2 starts with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
+    dbgln("PB2 calls pgrp(0, PGA)");
     int pga = getpid() - 3;
-    dbg() << "PB2: Actually, what is PGA? I guess it's " << pga << "?";
+    dbgln("PB2: Actually, what is PGA? I guess it's {}?", pga);
     simulate_sid_from_pgid(pga);
     int rc = setpgid(0, pga);
     unsigned char to_write = 123;
     if (rc == 0) {
-        dbg() << "PB2: setgpid SUCCESSFUL! CHANGED PGROUP!";
+        dbgln("PB2: setgpid SUCCESSFUL! CHANGED PGROUP!");
         to_write = 1;
     } else {
         ASSERT(rc == -1);
         switch (errno) {
         case EACCES:
-            dbg() << "PB2: Failed with EACCES. Huh?!";
+            dbgln("PB2: Failed with EACCES. Huh?!");
             to_write = 101;
             break;
         case EINVAL:
-            dbg() << "PB2: Failed with EINVAL. Huh?!";
+            dbgln("PB2: Failed with EINVAL. Huh?!");
             to_write = 102;
             break;
         case ESRCH:
-            dbg() << "PB2: Failed with ESRCH. Huh?!";
+            dbgln("PB2: Failed with ESRCH. Huh?!");
             to_write = 103;
             break;
         case EPERM:
-            dbg() << "PB2: Failed with EPERM. Aww, no exploit today :^)";
+            dbgln("PB2: Failed with EPERM. Aww, no exploit today :^)");
             to_write = 0;
             break;
         default:
-            dbg() << "PB2: Failed with errno=" << errno << "?!";
+            dbgln("PB2: Failed with errno={}?!", errno);
             perror("setpgid");
             to_write = 104;
             break;
         }
     }
 
-    dbg() << "PB2 ends with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
+    dbgln("PB2 ends with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
     int* pipe_fd = static_cast<int*>(pipe_fd_ptr);
     ASSERT(*pipe_fd);
     rc = write(*pipe_fd, &to_write, 1);
     if (rc != 1) {
-        dbg() << "Wrote only " << rc << " bytes instead of 1?!";
+        dbgln("Wrote only {} bytes instead of 1?!", rc);
         exit(1);
     }
     exit(0);

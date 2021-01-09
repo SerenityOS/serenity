@@ -244,7 +244,7 @@ int main(int argc, char** argv)
         download->on_headers_received = [&](auto& response_headers, auto status_code) {
             if (received_actual_headers)
                 return;
-            dbg() << "Received headers! response code = " << status_code.value_or(0);
+            dbgln("Received headers! response code = {}", status_code.value_or(0));
             received_actual_headers = true; // And not trailers!
             String output_name;
             if (auto content_disposition = response_headers.get("Content-Disposition"); content_disposition.has_value()) {

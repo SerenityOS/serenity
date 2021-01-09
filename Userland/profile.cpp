@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
     cmd_argv.append(nullptr);
 
-    dbg() << "Enabling profiling for PID " << getpid();
+    dbgln("Enabling profiling for PID {}", getpid());
     profiling_enable(getpid());
     if (execvp(cmd_argv[0], const_cast<char**>(cmd_argv.data())) < 0) {
         perror("execv");
