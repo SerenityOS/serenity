@@ -480,7 +480,7 @@ double Value::to_double(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return 0;
+        return INVALID;
     return number.as_double();
 }
 
@@ -488,7 +488,7 @@ i32 Value::to_i32(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return 0;
+        return INVALID;
     if (number.is_nan() || number.is_infinity())
         return 0;
     return number.as_i32();
