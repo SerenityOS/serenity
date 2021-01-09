@@ -147,7 +147,7 @@ public:
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
-    virtual bool accepts_drag(const ModelIndex&, const Vector<String>& mime_types) override;
+    virtual bool accepts_drag(const ModelIndex&, const Vector<String>& mime_types) const override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
     virtual bool is_editable(const ModelIndex&) const override;
     virtual bool is_searchable() const override { return true; }

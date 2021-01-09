@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,7 @@ ModelIndex Model::index(int row, int column, const ModelIndex&) const
     return create_index(row, column);
 }
 
-bool Model::accepts_drag(const ModelIndex&, const Vector<String>&)
+bool Model::accepts_drag(const ModelIndex&, const Vector<String>&) const
 {
     return false;
 }
