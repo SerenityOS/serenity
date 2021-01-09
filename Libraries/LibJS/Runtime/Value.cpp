@@ -669,7 +669,7 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
     if (global_object.vm().exception())
         return {};
     if (lhs_numeric.is_number())
-        return Value(~(i32)lhs_numeric.as_double());
+        return Value(~lhs_numeric.to_i32(global_object));
     auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
     big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
     big_integer_bitwise_not.negate();
