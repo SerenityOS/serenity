@@ -1540,7 +1540,7 @@ Vector<size_t, 2> Editor::vt_dsr()
     do {
         auto nread = read(0, buf + length, 16 - length);
         if (nread < 0) {
-            if (errno == 0) {
+            if (errno == 0 || errno == EINTR) {
                 // ????
                 continue;
             }
