@@ -634,18 +634,19 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_menu.add_separator();
     view_menu.add_action(action_show_dotfiles);
 
+    auto go_to_location_action = GUI::Action::create("Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
+        location_toolbar.set_visible(true);
+        breadcrumb_toolbar.set_visible(false);
+        location_textbox.select_all();
+        location_textbox.set_focus(true);
+    });
+
     auto& go_menu = menubar->add_menu("Go");
     go_menu.add_action(go_back_action);
     go_menu.add_action(go_forward_action);
     go_menu.add_action(open_parent_directory_action);
     go_menu.add_action(go_home_action);
-    go_menu.add_action(GUI::Action::create(
-        "Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
-            location_toolbar.set_visible(true);
-            breadcrumb_toolbar.set_visible(false);
-            location_textbox.select_all();
-            location_textbox.set_focus(true);
-        }));
+    go_menu.add_action(go_to_location_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("filetype-folder")));
@@ -922,6 +923,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     breadcrumb_bar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
         if (event.mime_types().contains_slow("text/uri-list"))
             event.accept();
+    };
+
+    breadcrumb_bar.on_doubleclick = [&](const GUI::MouseEvent&) {
+        go_to_location_action->activate();
     };
 
     tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
