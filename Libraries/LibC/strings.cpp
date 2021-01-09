@@ -26,9 +26,20 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <string.h>
 #include <strings.h>
 
 extern "C" {
+
+void bzero(void* dest, size_t n)
+{
+    memset(dest, 0, n);
+}
+
+void bcopy(const void* src, void* dest, size_t n)
+{
+    memmove(dest, src, n);
+}
 
 static char foldcase(char ch)
 {
