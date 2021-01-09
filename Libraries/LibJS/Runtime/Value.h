@@ -36,6 +36,8 @@
 
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
+// 2 ** 32 - 1
+static constexpr double MAX_U32 = 4294967295.0;
 
 namespace JS {
 
@@ -241,6 +243,7 @@ public:
     Function& as_function();
 
     i32 as_i32() const;
+    u32 as_u32() const;
     size_t as_size_t() const;
 
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
@@ -252,6 +255,7 @@ public:
     BigInt* to_bigint(GlobalObject&) const;
     double to_double(GlobalObject&) const;
     i32 to_i32(GlobalObject&) const;
+    u32 to_u32(GlobalObject&) const;
     size_t to_size_t(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
