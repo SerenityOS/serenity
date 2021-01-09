@@ -33,6 +33,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
+#include <LibCoreDump/Reader.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -176,13 +177,15 @@ public:
     void set_show_percentages(bool);
 
     const String& executable_path() const { return m_executable_path; }
+    const CoreDump::Reader& coredump() const { return *m_coredump; }
 
 private:
-    Profile(String executable_path, Vector<Event>);
+    Profile(String executable_path, NonnullOwnPtr<CoreDump::Reader>&&, Vector<Event>);
 
     void rebuild_tree();
 
     String m_executable_path;
+    NonnullOwnPtr<CoreDump::Reader> m_coredump;
 
     RefPtr<ProfileModel> m_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
