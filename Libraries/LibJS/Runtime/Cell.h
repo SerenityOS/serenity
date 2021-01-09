@@ -75,17 +75,13 @@ private:
 
 }
 
-namespace AK {
-
 template<>
-struct Formatter<JS::Cell> : Formatter<StringView> {
+struct AK::Formatter<JS::Cell> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const JS::Cell* cell)
     {
         if (!cell)
-            Formatter<StringView>::format(builder, "Cell{nullptr}");
+            Formatter<FormatString>::format(builder, "Cell{nullptr}");
         else
-            Formatter<StringView>::format(builder, String::formatted("{}{{{}}}", cell->class_name(), static_cast<const void*>(cell)));
+            Formatter<FormatString>::format(builder, "{}({})", cell->class_name(), cell);
     }
 };
-
-}

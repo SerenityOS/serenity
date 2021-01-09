@@ -268,12 +268,3 @@ const LogStream& operator<<(const LogStream& stream, const Object& object)
 }
 
 }
-
-namespace AK {
-
-void Formatter<Core::Object>::format(FormatBuilder& builder, const Core::Object& value)
-{
-    Formatter<StringView>::format(builder, String::formatted("{}({})", value.class_name(), &value));
-}
-
-}

@@ -66,17 +66,13 @@ inline const LogStream& operator<<(const LogStream& stream, const TextPosition& 
 
 }
 
-namespace AK {
-
 template<>
-struct Formatter<GUI::TextPosition> : Formatter<StringView> {
+struct AK::Formatter<GUI::TextPosition> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, const GUI::TextPosition& value)
     {
         if (value.is_valid())
-            Formatter<StringView>::format(builder, String::formatted("({},{})", value.line(), value.column()));
+            Formatter<FormatString>::format(builder, "({},{})", value.line(), value.column());
         else
-            Formatter<StringView>::format(builder, "GUI::TextPosition(Invalid)");
+            Formatter<FormatString>::format(builder, "GUI::TextPosition(Invalid)");
     }
 };
-
-}

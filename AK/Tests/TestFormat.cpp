@@ -274,4 +274,20 @@ TEST_CASE(format_nullptr)
     EXPECT_EQ(String::formatted("{}", nullptr), String::formatted("{:p}", static_cast<FlatPtr>(0)));
 }
 
+struct C {
+    int i;
+};
+template<>
+struct AK::Formatter<C> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, C c)
+    {
+        return AK::Formatter<FormatString>::format(builder, "C(i={})", c.i);
+    }
+};
+
+TEST_CASE(use_format_string_formatter)
+{
+    EXPECT_EQ(String::formatted("{:*<10}", C { 42 }), "C(i=42)***");
+}
+
 TEST_MAIN(Format)
