@@ -69,7 +69,7 @@ private:
 
     Profile& m_profile;
     ProfileNode& m_node;
-    OwnPtr<MappedFile> m_file;
+    OwnPtr<MappedFile> m_kernel_file;
 
     Vector<InstructionData> m_instructions;
 };
