@@ -58,6 +58,14 @@ public:
     Optional<uint32_t> peek_memory(FlatPtr address) const;
     const ELF::Core::MemoryRegionInfo* region_containing(FlatPtr address) const;
 
+    struct LibraryData {
+        String name;
+        FlatPtr base_address { 0 };
+        OwnPtr<MappedFile> file;
+        ELF::Image lib_elf;
+    };
+    const LibraryData* library_containing(FlatPtr address) const;
+
     const Backtrace backtrace() const;
     const HashMap<String, String> metadata() const;
 
