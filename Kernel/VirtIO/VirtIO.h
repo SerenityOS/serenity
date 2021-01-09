@@ -233,6 +233,7 @@ private:
 
     bool setup_queues();
     bool setup_queue(u16 queue_index);
+    bool activate_queue(u16 queue_index);
     void notify_queue(u16 queue_index);
 
     void reset_device();

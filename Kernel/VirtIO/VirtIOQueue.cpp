@@ -77,10 +77,11 @@ bool VirtIOQueue::supply_buffer(const u8* buffer, u32 len, BufferType buffer_typ
     m_free_buffers--;
     m_free_head = (m_free_head + 1) % m_queue_size;
 
-    m_driver->rings[m_driver->index % m_queue_size] = descriptor_index;
+    m_driver->rings[m_driver_index_shadow % m_queue_size] = descriptor_index; // m_driver_index_shadow is used to prevent accesses to index before the rings are updated
 
     memory_barrier();
 
+    m_driver_index_shadow++;
     m_driver->index++;
 
     memory_barrier();

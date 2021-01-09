@@ -37,8 +37,14 @@ void VirtIO::detect()
         if (id.vendor_id != VIRTIO_PCI_VENDOR_ID)
             return;
         switch (id.device_id) {
-        case VIRTIO_CONSOLE_PCI_DEVICE_ID:
+        case VIRTIO_CONSOLE_PCI_DEVICE_ID: {
             [[maybe_unused]] auto& unused = adopt(*new VirtIOConsole(address)).leak_ref();
+            break;
+        }
+        default:
+#ifdef VIRTIO_DEBUG
+            klog() << "VirtIO: Unknown VirtIO device with ID: " << id.device_id;
+#endif
             break;
         }
     });
@@ -52,6 +58,8 @@ VirtIODevice::VirtIODevice(PCI::Address address, String class_name)
     klog() << m_class_name << ": Found @ " << pci_address();
 
     enable_bus_mastering(pci_address());
+    PCI::enable_interrupt_line(pci_address());
+    enable_irq();
 
     reset_device();
     set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
@@ -262,7 +270,6 @@ void VirtIODevice::reset_device()
     while (config_read8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS) != 0) {
         // TODO: delay a bit?
     }
-    return;
 }
 
 bool VirtIODevice::setup_queue(u16 queue_index)
@@ -290,10 +297,24 @@ bool VirtIODevice::setup_queue(u16 queue_index)
     config_write64(*m_common_cfg, COMMON_CFG_QUEUE_DEVICE, queue->device_area().get());
 
 #ifdef VIRTIO_DEBUG
-    klog() << m_class_name << ": Queue[" << queue_index << "] size: " << queue_size;
+    klog() << m_class_name << ": Queue[" << queue_index << "] configured with size: " << queue_size;
 #endif
 
     m_queues.append(move(queue));
+    return true;
+}
+
+bool VirtIODevice::activate_queue(u16 queue_index)
+{
+    if (!m_common_cfg)
+        return false;
+
+    config_write16(*m_common_cfg, COMMON_CFG_QUEUE_SELECT, queue_index);
+    config_write16(*m_common_cfg, COMMON_CFG_QUEUE_ENABLE, true);
+
+#ifdef VIRTIO_DEBUG
+    klog() << m_class_name << ": Queue[" << queue_index << "] activated";
+#endif
     return true;
 }
 
@@ -319,6 +340,10 @@ bool VirtIODevice::setup_queues()
 #endif
     for (u16 i = 0; i < m_queue_count; i++) {
         if (!setup_queue(i))
+            return false;
+    }
+    for (u16 i = 0; i < m_queue_count; i++) { // Queues can only be activated *after* all others queues were also configured
+        if (!activate_queue(i))
             return false;
     }
     return true;
@@ -357,7 +382,7 @@ void VirtIODevice::handle_irq(const RegisterState&)
 {
     u8 isr_type = isr_status();
 #ifdef VIRTIO_DEBUG
-    klog() << "VirtIODevice: Handling interrupt with status: " << isr_type;
+    klog() << m_class_name << ": Handling interrupt with status: " << isr_type;
 #endif
     if (isr_type & DEVICE_CONFIG_INTERRUPT) {
         if (!handle_device_config_change()) {
