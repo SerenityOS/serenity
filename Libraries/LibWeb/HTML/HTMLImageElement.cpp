@@ -46,7 +46,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, const QualifiedName&
     };
 
     m_image_loader.on_fail = [this] {
-        dbg() << "HTMLImageElement: Resource did fail: " << this->src();
+        dbgln("HTMLImageElement: Resource did fail: {}", src());
         this->document().update_layout();
         dispatch_event(DOM::Event::create(EventNames::error));
     };

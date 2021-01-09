@@ -39,11 +39,11 @@ Position::~Position()
 {
 }
 
-const LogStream& operator<<(const LogStream& stream, const Position& position)
+String Position::to_string() const
 {
-    if (!position.node())
-        return stream << "DOM::Position(nullptr, " << position.offset() << ")";
-    return stream << "DOM::Position(" << position.node()->node_name() << "{" << position.node() << "}, " << position.offset() << ")";
+    if (!node())
+        return String::formatted("DOM::Position(nullptr, {})", offset());
+    return String::formatted("DOM::Position({} ({})), {})", node()->node_name(), node(), offset());
 }
 
 }

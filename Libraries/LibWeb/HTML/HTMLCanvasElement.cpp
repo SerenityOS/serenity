@@ -80,11 +80,11 @@ static Gfx::IntSize bitmap_size_for_canvas(const HTMLCanvasElement& canvas)
     area *= height;
 
     if (area.has_overflow()) {
-        dbg() << "Refusing to create " << width << "x" << height << " canvas (overflow)";
+        dbgln("Refusing to create {}x{} canvas (overflow)", width, height);
         return {};
     }
     if (area.value() > max_canvas_area) {
-        dbg() << "Refusing to create " << width << "x" << height << " canvas (exceeds maximum size)";
+        dbgln("Refusing to create {}x{} canvas (exceeds maximum size)", width, height);
         return {};
     }
     return Gfx::IntSize(width, height);
