@@ -470,6 +470,12 @@ i32 Value::as_i32() const
     return static_cast<i32>(as_double());
 }
 
+u32 Value::as_u32() const
+{
+    ASSERT(as_double() >= 0);
+    return min((double)as_i32(), MAX_U32);
+}
+
 size_t Value::as_size_t() const
 {
     ASSERT(as_double() >= 0);
@@ -492,6 +498,19 @@ i32 Value::to_i32(GlobalObject& global_object) const
     if (number.is_nan() || number.is_infinity())
         return 0;
     return number.as_i32();
+}
+
+u32 Value::to_u32(GlobalObject& global_object) const
+{
+    // 7.1.7 ToUint32, https://tc39.es/ecma262/#sec-touint32
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    if (number.is_nan() || number.is_infinity())
+        return 0;
+    if (number.as_double() <= 0)
+        return 0;
+    return number.as_u32();
 }
 
 size_t Value::to_size_t(GlobalObject& global_object) const
