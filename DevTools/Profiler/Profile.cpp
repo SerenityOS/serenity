@@ -259,14 +259,17 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         return String::formatted("Unable to open {}, error: {}", path, file->error_string());
 
     auto json = JsonValue::from_string(file->read_all());
-    ASSERT(json.has_value());
-    if (!json.value().is_object())
+    if (!json.has_value() || !json.value().is_object())
         return String { "Invalid perfcore format (not a JSON object)" };
 
     auto& object = json.value().as_object();
     auto executable_path = object.get("executable").to_string();
 
-    auto coredump = CoreDump::Reader::create(String::formatted("/tmp/profiler_coredumps/{}", object.get("pid").as_u32()));
+    auto pid = object.get("pid");
+    if (!pid.is_u32())
+        return String { "Invalid perfcore format (no process ID)" };
+
+    auto coredump = CoreDump::Reader::create(String::formatted("/tmp/profiler_coredumps/{}", pid.as_u32()));
     if (!coredump)
         return String { "Could not open coredump" };
 
