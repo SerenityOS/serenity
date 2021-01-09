@@ -1671,7 +1671,6 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::math) {
-        dbg() << "<math> element encountered.";
         reconstruct_the_active_formatting_elements();
         adjust_mathml_attributes(token);
         adjust_foreign_attributes(token);
@@ -1686,7 +1685,6 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::svg) {
-        dbg() << "<svg> element encountered.";
         reconstruct_the_active_formatting_elements();
         adjust_svg_attributes(token);
         adjust_foreign_attributes(token);
