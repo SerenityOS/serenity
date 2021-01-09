@@ -76,11 +76,10 @@ inline const LogStream& operator<<(const LogStream& stream, VirtualAddress value
     return stream << 'V' << value.as_ptr();
 }
 
-namespace AK {
-
 template<>
-struct Formatter<VirtualAddress> : Formatter<StringView> {
-    void format(FormatBuilder&, const VirtualAddress&);
+struct AK::Formatter<VirtualAddress> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, const VirtualAddress& value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
+    }
 };
-
-}

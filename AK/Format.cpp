@@ -521,6 +521,11 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
     builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
 }
 
+void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
+{
+    return Formatter<String>::format(builder, String::vformatted(fmtstr, params));
+}
+
 template<typename T>
 void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatBuilder& builder, T value)
 {
