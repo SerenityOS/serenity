@@ -206,7 +206,6 @@ set(KERNEL_SOURCES
     VM/Region.cpp
     VM/SharedInodeVMObject.cpp
     VM/VMObject.cpp
-    VirtualAddress.cpp
     WaitQueue.cpp
     init.cpp
     kprintf.cpp
