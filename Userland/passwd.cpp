@@ -35,7 +35,7 @@
 int main(int argc, char** argv)
 {
     if (geteuid() != 0) {
-        fprintf(stderr, "Not running as root :^(\n");
+        warnln("Not running as root :^(");
         return 1;
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
         : Core::Account::from_uid(current_uid, Core::Account::OpenPasswdFile::ReadWrite, Core::Account::OpenShadowFile::ReadWrite);
 
     if (account_or_error.is_error()) {
-        fprintf(stderr, "Core::Account::%s: %s\n", (username) ? "from_name" : "from_uid", account_or_error.error().characters());
+        warnln("Core::Account::{}: {}", (username) ? "from_name" : "from_uid", account_or_error.error());
         return 1;
     }
 
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     auto& target_account = account_or_error.value();
 
     if (current_uid != 0 && current_uid != target_account.uid()) {
-        fprintf(stderr, "You can't modify passwd for %s\n", username);
+        warnln("You can't modify passwd for {}", username);
         return 1;
     }
 
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     } else {
         auto new_password = Core::get_password("New password: ");
         if (new_password.is_error()) {
-            fprintf(stderr, "%s\n", strerror(new_password.error()));
+            warnln("{}", strerror(new_password.error()));
             return 1;
         }
 
