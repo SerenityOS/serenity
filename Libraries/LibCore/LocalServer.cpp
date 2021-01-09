@@ -78,11 +78,11 @@ bool LocalServer::take_over_from_system_server()
         } else {
             if (rc != 0)
                 perror("fstat");
-            dbg() << "It's not a socket, what the heck??";
+            dbgln("It's not a socket, what the heck??");
         }
     }
 
-    dbg() << "Failed to take the socket over from SystemServer";
+    dbgln("Failed to take the socket over from SystemServer");
 
     return false;
 }

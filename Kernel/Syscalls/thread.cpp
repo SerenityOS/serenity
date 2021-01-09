@@ -140,7 +140,7 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
         }
         if (result == Thread::BlockResult::InterruptedByDeath)
             break;
-        dbg() << "join_thread: retrying";
+        dbgln("join_thread: retrying");
     }
 
     if (exit_value && !copy_to_user(exit_value, &joinee_exit_value))

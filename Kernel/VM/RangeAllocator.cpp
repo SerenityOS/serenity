@@ -209,7 +209,7 @@ void RangeAllocator::deallocate(Range range)
         }
     }
 #ifdef VRA_DEBUG
-    dbg() << "VRA: After deallocate";
+    dbgln("VRA: After deallocate");
     dump();
 #endif
 }

@@ -77,7 +77,7 @@ bool TLSv12::write(ReadonlyBytes buffer)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
 #ifdef TLS_DEBUG
-        dbg() << "write request while not connected";
+        dbgln("write request while not connected");
 #endif
         return false;
     }
@@ -194,7 +194,7 @@ bool TLSv12::check_connection_state(bool read)
     if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
         // an abrupt closure (the server is a jerk)
 #ifdef TLS_DEBUG
-        dbg() << "Socket not open, assuming abrupt closure";
+        dbgln("Socket not open, assuming abrupt closure");
 #endif
         m_context.connection_finished = true;
     }
@@ -218,7 +218,7 @@ bool TLSv12::check_connection_state(bool read)
         } else {
             m_context.connection_finished = false;
 #ifdef TLS_DEBUG
-            dbg() << "FINISHED";
+            dbgln("FINISHED");
 #endif
         }
         if (!m_context.application_buffer.size()) {
@@ -239,7 +239,7 @@ bool TLSv12::flush()
         return true;
 
 #ifdef TLS_DEBUG
-    dbg() << "SENDING...";
+    dbgln("SENDING...");
     print_buffer(out_buffer, out_buffer_length);
 #endif
     if (Core::Socket::write(&out_buffer[out_buffer_index], out_buffer_length)) {

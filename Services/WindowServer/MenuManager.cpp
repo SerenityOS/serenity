@@ -217,7 +217,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
         if (!window) {
-            dbg() << "MenuManager::handle_mouse_event: No menu window";
+            dbgln("MenuManager::handle_mouse_event: No menu window");
             return;
         }
         ASSERT(window->is_visible());

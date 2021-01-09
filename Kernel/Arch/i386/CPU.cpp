@@ -471,7 +471,7 @@ void page_fault_handler(TrapFrame* trap)
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
-        dbg() << "Continuing after resolved page fault";
+        dbgln("Continuing after resolved page fault");
 #endif
     } else {
         ASSERT_NOT_REACHED();
@@ -605,7 +605,7 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 {
     ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
     if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
-        dbg() << "Trying to unregister unused handler (?)";
+        dbgln("Trying to unregister unused handler (?)");
         return;
     }
     if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
@@ -844,7 +844,7 @@ static void idt_init()
     register_interrupt_handler(0xfe, interrupt_254_asm_entry);
     register_interrupt_handler(0xff, interrupt_255_asm_entry);
 
-    dbg() << "Installing Unhandled Handlers";
+    dbgln("Installing Unhandled Handlers");
 
     for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
         new UnhandledInterruptHandler(i);

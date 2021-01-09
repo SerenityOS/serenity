@@ -76,7 +76,7 @@ I8042Controller::I8042Controller()
             do_wait_then_write(I8042_STATUS, 0x60);
             do_wait_then_write(I8042_BUFFER, configuration);
         } else {
-            dbg() << "I8042: Controller self test failed";
+            dbgln("I8042: Controller self test failed");
         }
 
         // Test ports and enable them if available
@@ -88,7 +88,7 @@ I8042Controller::I8042Controller()
             configuration |= 1;
             configuration &= ~(1 << 4);
         } else {
-            dbg() << "I8042: Keyboard port not available";
+            dbgln("I8042: Keyboard port not available");
         }
 
         if (m_is_dual_channel) {
@@ -99,7 +99,7 @@ I8042Controller::I8042Controller()
                 configuration |= 2;
                 configuration &= ~(1 << 5);
             } else {
-                dbg() << "I8042: Mouse port not available";
+                dbgln("I8042: Mouse port not available");
             }
         }
 
@@ -116,7 +116,7 @@ I8042Controller::I8042Controller()
         if (KeyboardDevice::the().initialize()) {
             m_devices[0].device = &KeyboardDevice::the();
         } else {
-            dbg() << "I8042: Keyboard device failed to initialize, disable";
+            dbgln("I8042: Keyboard device failed to initialize, disable");
             m_devices[0].available = false;
             configuration &= ~1;
             configuration |= 1 << 4;
@@ -129,7 +129,7 @@ I8042Controller::I8042Controller()
         if (PS2MouseDevice::the().initialize()) {
             m_devices[1].device = &PS2MouseDevice::the();
         } else {
-            dbg() << "I8042: Mouse device failed to initialize, disable";
+            dbgln("I8042: Mouse device failed to initialize, disable");
             m_devices[1].available = false;
             configuration |= 1 << 5;
             ScopedSpinLock lock(m_lock);
@@ -223,7 +223,7 @@ u8 I8042Controller::do_write_to_device(Device device, u8 data)
         response = do_wait_then_read(I8042_BUFFER);
     } while (response == I8042_RESEND && ++attempts < 3);
     if (attempts >= 3)
-        dbg() << "Failed to write byte to device, gave up";
+        dbgln("Failed to write byte to device, gave up");
     return response;
 }
 

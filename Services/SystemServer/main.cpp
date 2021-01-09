@@ -165,7 +165,7 @@ static void prepare_devfs()
 
 static void mount_all_filesystems()
 {
-    dbg() << "Spawning mount -a to mount all filesystems.";
+    dbgln("Spawning mount -a to mount all filesystems.");
     pid_t pid = fork();
 
     if (pid < 0) {

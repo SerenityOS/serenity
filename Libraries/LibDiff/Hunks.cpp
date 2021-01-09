@@ -80,14 +80,14 @@ Vector<Hunk> parse_hunks(const String& diff)
 
 #ifdef DEBUG_HUNKS
     for (const auto& hunk : hunks) {
-        dbg() << "Hunk location:";
+        dbgln("Hunk location:");
         dbg() << "orig: " << hunk.original_start_line;
         dbg() << "target: " << hunk.target_start_line;
-        dbg() << "removed:";
+        dbgln("removed:");
         for (const auto& line : hunk.removed_lines) {
             dbg() << "- " << line;
         }
-        dbg() << "added:";
+        dbgln("added:");
         for (const auto& line : hunk.added_lines) {
             dbg() << "+ " << line;
         }

@@ -215,7 +215,7 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
     if (!blocks_remaining)
         return shape;
 
-    dbg() << "we don't know how to compute tind ext2fs blocks yet!";
+    dbgln("we don't know how to compute tind ext2fs blocks yet!");
     ASSERT_NOT_REACHED();
 
     shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
@@ -420,7 +420,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         return true;
 
     // FIXME: Implement!
-    dbg() << "we don't know how to write tind ext2fs blocks yet!";
+    dbgln("we don't know how to write tind ext2fs blocks yet!");
     ASSERT_NOT_REACHED();
 }
 
@@ -1137,7 +1137,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 
     Vector<BlockIndex> blocks;
 #ifdef EXT2_DEBUG
-    dbg() << "Ext2FS: allocate_blocks:";
+    dbgln("Ext2FS: allocate_blocks:");
 #endif
     blocks.ensure_capacity(count);
 
@@ -1474,7 +1474,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
 
     size_t needed_blocks = ceil_div(static_cast<size_t>(size), block_size());
     if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
-        dbg() << "Ext2FS: create_inode: not enough free blocks";
+        dbgln("Ext2FS: create_inode: not enough free blocks");
         return KResult(-ENOSPC);
     }
 

@@ -190,7 +190,7 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
     if (!child)
         return append_child(move(node), notify);
     if (child->parent_node() != this) {
-        dbg() << "FIXME: Trying to insert_before() a bogus child";
+        dbgln("FIXME: Trying to insert_before() a bogus child");
         return nullptr;
     }
     if (&node->document() != &document())

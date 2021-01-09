@@ -113,7 +113,7 @@ static bool mount_all()
         int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
         if (strcmp(mountpoint, "/") == 0) {
-            dbg() << "Skipping mounting root";
+            dbgln("Skipping mounting root");
             continue;
         }
 
