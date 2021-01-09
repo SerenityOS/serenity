@@ -71,6 +71,9 @@ size_t g_current_tls_offset = 0;
 size_t g_total_tls_size = 0;
 char** g_envp = nullptr;
 LibCExitFunction g_libc_exit = nullptr;
+
+bool g_allowed_to_check_environment_variables { false };
+bool g_do_breakpoint_trap_before_entry { false };
 }
 
 DynamicObject::SymbolLookupResult DynamicLinker::lookup_global_symbol(const char* symbol_name)
@@ -228,15 +231,22 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
     return loader;
 }
 
-void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_program_fd, int argc, char** argv, char** envp)
+static void read_environment_variables()
 {
-    g_envp = envp;
-    bool do_breakpoint_trap_before_entry = false;
-    for (char** env = envp; *env; ++env) {
+    for (char** env = g_envp; *env; ++env) {
         if (StringView { *env } == "_LOADER_BREAKPOINT=1") {
-            do_breakpoint_trap_before_entry = true;
+            g_do_breakpoint_trap_before_entry = true;
         }
     }
+}
+
+void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
+{
+    g_envp = envp;
+
+    g_allowed_to_check_environment_variables = !is_secure;
+    if (g_allowed_to_check_environment_variables)
+        read_environment_variables();
 
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
@@ -260,7 +270,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     MainFunction main_function = (MainFunction)(entry_point);
     VERBOSE("jumping to main program entry point: %p\n", main_function);
-    if (do_breakpoint_trap_before_entry) {
+    if (g_do_breakpoint_trap_before_entry) {
         asm("int3");
     }
     int rc = main_function(argc, argv, envp);
