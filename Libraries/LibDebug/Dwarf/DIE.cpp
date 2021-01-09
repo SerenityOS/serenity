@@ -180,7 +180,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         break;
     }
     default:
-        dbg() << "Unimplemented AttributeDataForm: " << (u32)form;
+        dbgln("Unimplemented AttributeDataForm: {}", (u32)form);
         ASSERT_NOT_REACHED();
     }
     return value;
