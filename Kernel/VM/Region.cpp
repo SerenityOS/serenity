@@ -500,7 +500,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
 #ifdef PAGE_FAULT_DEBUG
-        dbg() << "MM: zero_page() but page already present. Fine with me!";
+        dbgln("MM: zero_page() but page already present. Fine with me!");
 #endif
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
@@ -581,7 +581,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         current_thread->did_inode_fault();
 
 #ifdef MM_DEBUG
-    dbg() << "MM: page_in_from_inode ready to read from inode";
+    dbgln("MM: page_in_from_inode ready to read from inode");
 #endif
 
     u8 page_buffer[PAGE_SIZE];

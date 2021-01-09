@@ -75,7 +75,7 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 {
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
-        dbg() << "WebContentServer::UpdateSystemTheme: SharedBuffer already gone! Ignoring :^)";
+        dbgln("WebContentServer::UpdateSystemTheme: SharedBuffer already gone! Ignoring :^)");
         return;
     }
     Gfx::set_system_theme(*shared_buffer);
@@ -123,7 +123,7 @@ void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
 #ifdef DEBUG_SPAM
-        dbg() << "WebContentServer::Paint: SharedBuffer already gone! Ignoring :^)";
+        dbgln("WebContentServer::Paint: SharedBuffer already gone! Ignoring :^)");
 #endif
         return;
     }

@@ -41,9 +41,9 @@
         ASSERT_NOT_REACHED();                                             \
     }
 
-#define PARSE_ERROR()               \
-    do {                            \
-        dbg() << "CSS parse error"; \
+#define PARSE_ERROR()             \
+    do {                          \
+        dbgln("CSS parse error"); \
     } while (0)
 
 namespace Web {

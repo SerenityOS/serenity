@@ -204,7 +204,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
     }
     auto file = file_or_error.value();
     if (!file->open(Core::IODevice::ReadOnly)) {
-        dbg() << "Could not open file";
+        dbgln("Could not open file");
         return nullptr;
     }
     auto buffer = file->read_all();
@@ -214,25 +214,25 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
 RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
 {
     if (buffer.size() < 4) {
-        dbg() << "Font file too small";
+        dbgln("Font file too small");
         return nullptr;
     }
     u32 tag = be_u32(buffer.data());
     if (tag == tag_from_str("ttcf")) {
         // It's a font collection
         if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1)) {
-            dbg() << "Font file too small";
+            dbgln("Font file too small");
             return nullptr;
         }
         u32 offset = be_u32(buffer.offset_pointer((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
         return load_from_offset(move(buffer), offset);
     }
     if (tag == tag_from_str("OTTO")) {
-        dbg() << "CFF fonts not supported yet";
+        dbgln("CFF fonts not supported yet");
         return nullptr;
     }
     if (tag != 0x00010000) {
-        dbg() << "Not a valid font";
+        dbgln("Not a valid font");
         return nullptr;
     }
     return load_from_offset(move(buffer), 0);
@@ -242,7 +242,7 @@ RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
 RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
 {
     if (buffer.size() < offset + (u32)Sizes::OffsetTable) {
-        dbg() << "Font file too small";
+        dbgln("Font file too small");
         return nullptr;
     }
 
@@ -263,7 +263,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord) {
-        dbg() << "Font file too small";
+        dbgln("Font file too small");
         return nullptr;
     }
 
@@ -279,7 +279,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         }
 
         if (buffer.size() < table_offset + table_length) {
-            dbg() << "Font file too small";
+            dbgln("Font file too small");
             return nullptr;
         }
         auto buffer_here = ReadonlyBytes(buffer.offset_pointer(table_offset), table_length);
@@ -303,43 +303,43 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     }
 
     if (!opt_head_slice.has_value() || !(opt_head = Head::from_slice(opt_head_slice.value())).has_value()) {
-        dbg() << "Could not load Head";
+        dbgln("Could not load Head");
         return nullptr;
     }
     auto head = opt_head.value();
 
     if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value()) {
-        dbg() << "Could not load Hhea";
+        dbgln("Could not load Hhea");
         return nullptr;
     }
     auto hhea = opt_hhea.value();
 
     if (!opt_maxp_slice.has_value() || !(opt_maxp = Maxp::from_slice(opt_maxp_slice.value())).has_value()) {
-        dbg() << "Could not load Maxp";
+        dbgln("Could not load Maxp");
         return nullptr;
     }
     auto maxp = opt_maxp.value();
 
     if (!opt_hmtx_slice.has_value() || !(opt_hmtx = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics())).has_value()) {
-        dbg() << "Could not load Hmtx";
+        dbgln("Could not load Hmtx");
         return nullptr;
     }
     auto hmtx = opt_hmtx.value();
 
     if (!opt_cmap_slice.has_value() || !(opt_cmap = Cmap::from_slice(opt_cmap_slice.value())).has_value()) {
-        dbg() << "Could not load Cmap";
+        dbgln("Could not load Cmap");
         return nullptr;
     }
     auto cmap = opt_cmap.value();
 
     if (!opt_loca_slice.has_value() || !(opt_loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format())).has_value()) {
-        dbg() << "Could not load Loca";
+        dbgln("Could not load Loca");
         return nullptr;
     }
     auto loca = opt_loca.value();
 
     if (!opt_glyf_slice.has_value()) {
-        dbg() << "Could not load Glyf";
+        dbgln("Could not load Glyf");
         return nullptr;
     }
     auto glyf = Glyf(opt_glyf_slice.value());

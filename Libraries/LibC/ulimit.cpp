@@ -39,7 +39,7 @@ long ulimit([[maybe_unused]] int cmd, [[maybe_unused]] long newlimit)
 
 int getrusage([[maybe_unused]] int who, [[maybe_unused]] struct rusage* usage)
 {
-    dbg() << "LibC: getrusage is not implemented";
+    dbgln("LibC: getrusage is not implemented");
     return -1;
 }
 }

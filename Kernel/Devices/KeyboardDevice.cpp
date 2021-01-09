@@ -356,7 +356,7 @@ KeyboardDevice::~KeyboardDevice()
 bool KeyboardDevice::initialize()
 {
     if (!m_controller.reset_device(I8042Controller::Device::Keyboard)) {
-        dbg() << "KeyboardDevice: I8042 controller failed to reset device";
+        dbgln("KeyboardDevice: I8042 controller failed to reset device");
         return false;
     }
     return true;

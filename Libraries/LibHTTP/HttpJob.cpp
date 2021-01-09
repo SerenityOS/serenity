@@ -40,7 +40,7 @@ void HttpJob::start()
     m_socket = Core::TCPSocket::construct(this);
     m_socket->on_connected = [this] {
 #ifdef CHTTPJOB_DEBUG
-        dbg() << "HttpJob: on_connected callback";
+        dbgln("HttpJob: on_connected callback");
 #endif
         on_socket_connected();
     };

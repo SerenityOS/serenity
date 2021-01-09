@@ -30,7 +30,7 @@
 extern "C" {
 const char* __cxa_demangle(const char*, void*, void*, int*)
 {
-    dbg() << "WARNING: __cxa_demangle not supported";
+    dbgln("WARNING: __cxa_demangle not supported");
     return "";
 }
 

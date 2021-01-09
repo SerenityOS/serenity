@@ -119,7 +119,7 @@ KResult VFS::unmount(Inode& guest_inode)
         if (&mount.guest() == &guest_inode) {
             auto result = mount.guest_fs().prepare_to_unmount();
             if (result.is_error()) {
-                dbg() << "VFS: Failed to unmount!";
+                dbgln("VFS: Failed to unmount!");
                 return result;
             }
             dbg() << "VFS: found fs " << mount.guest_fs().fsid() << " at mount index " << i << "! Unmounting...";

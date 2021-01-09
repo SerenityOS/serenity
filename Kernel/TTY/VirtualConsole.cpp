@@ -95,7 +95,7 @@ void VirtualConsole::switch_to(unsigned index)
         // can set the video mode on our own. Just stop anyone from trying for
         // now.
         if (active_console->is_graphical()) {
-            dbg() << "Cannot switch away from graphical console yet :(";
+            dbgln("Cannot switch away from graphical console yet :(");
             return;
         }
         active_console->set_active(false);
@@ -305,7 +305,7 @@ void VirtualConsole::flush_dirty_lines()
 void VirtualConsole::beep()
 {
     // TODO
-    dbg() << "Beep!1";
+    dbgln("Beep!1");
 }
 
 void VirtualConsole::set_window_title(const StringView&)

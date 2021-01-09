@@ -118,7 +118,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
     switch (m_data_state) {
     case 0:
         if (!(byte & 0x08)) {
-            dbg() << "PS2Mouse: Stream out of sync.";
+            dbgln("PS2Mouse: Stream out of sync.");
             break;
         }
         ++m_data_state;
@@ -223,7 +223,7 @@ void PS2MouseDevice::set_sample_rate(u8 rate)
 bool PS2MouseDevice::initialize()
 {
     if (!m_controller.reset_device(I8042Controller::Device::Mouse)) {
-        dbg() << "PS2MouseDevice: I8042 controller failed to reset device";
+        dbgln("PS2MouseDevice: I8042 controller failed to reset device");
         return false;
     }
 
@@ -284,7 +284,7 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
 #ifdef PS2MOUSE_DEBUG
         dbg() << "PS2 Mouse Read: Buttons " << String::format("%x", packet.buttons);
         dbg() << "PS2 Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z << " Relative " << packet.buttons;
-        dbg() << "PS2 Mouse Read: Filter packets";
+        dbgln("PS2 Mouse Read: Filter packets");
 #endif
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
         if (!buffer.write(&packet, nread, bytes_read_from_packet))

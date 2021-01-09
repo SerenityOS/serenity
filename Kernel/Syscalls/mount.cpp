@@ -89,7 +89,7 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
         if (description.is_null())
             return -EBADF;
         if (!description->file().is_seekable()) {
-            dbg() << "mount: this is not a seekable file";
+            dbgln("mount: this is not a seekable file");
             return -ENODEV;
         }
 

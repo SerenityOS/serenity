@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
     } else if (operation == "FUZZILLI_PRINT") {
         static FILE* fzliout = fdopen(REPRL_DWFD, "w");
         if (!fzliout) {
-            dbg() << "Fuzzer output not available";
+            dbgln("Fuzzer output not available");
             fzliout = stdout;
         }
 

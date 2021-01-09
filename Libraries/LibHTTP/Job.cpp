@@ -43,16 +43,16 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
 
     if (content_encoding == "gzip") {
         if (!Core::Gzip::is_compressed(buf)) {
-            dbg() << "Job::handle_content_encoding: buf is not gzip compressed!";
+            dbgln("Job::handle_content_encoding: buf is not gzip compressed!");
         }
 
 #ifdef JOB_DEBUG
-        dbg() << "Job::handle_content_encoding: buf is gzip compressed!";
+        dbgln("Job::handle_content_encoding: buf is gzip compressed!");
 #endif
 
         auto uncompressed = Core::Gzip::decompress(buf);
         if (!uncompressed.has_value()) {
-            dbg() << "Job::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
+            dbgln("Job::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.");
             return buf;
         }
 
@@ -115,7 +115,7 @@ void Job::on_socket_connected()
         m_sent_data = true;
         auto raw_request = m_request.to_raw_request();
 #ifdef JOB_DEBUG
-        dbg() << "Job: raw_request:";
+        dbgln("Job: raw_request:");
         dbg() << String::copy(raw_request).characters();
 #endif
         bool success = write(raw_request);
@@ -234,7 +234,7 @@ void Job::on_socket_connected()
                     dbg() << "Job: Received a chunk with size _" << size_data << "_";
 #endif
                     if (size_lines.size() == 0) {
-                        dbg() << "Job: Reached end of stream";
+                        dbgln("Job: Reached end of stream");
                         finish_up();
                         return IterationDecision::Break;
                     } else {
@@ -355,7 +355,7 @@ void Job::on_socket_connected()
 
         if (!is_established()) {
 #ifdef JOB_DEBUG
-            dbg() << "Connection appears to have closed, finishing up";
+            dbgln("Connection appears to have closed, finishing up");
 #endif
             finish_up();
         }

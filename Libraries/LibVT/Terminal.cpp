@@ -565,7 +565,7 @@ void Terminal::execute_xterm_command()
     m_final = '@';
 
     if (numeric_params.is_empty()) {
-        dbg() << "Empty Xterm params?";
+        dbgln("Empty Xterm params?");
         return;
     }
 
@@ -820,7 +820,7 @@ void Terminal::DSR(const ParamVector& params)
         // Cursor position query
         emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
     } else {
-        dbg() << "Unknown DSR";
+        dbgln("Unknown DSR");
     }
 }
 

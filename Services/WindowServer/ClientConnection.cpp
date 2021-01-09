@@ -404,7 +404,7 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
     }
     auto& window = *(*it).value;
     if (window.is_fullscreen()) {
-        dbg() << "ClientConnection: Ignoring SetWindowRect request for fullscreen window";
+        dbgln("ClientConnection: Ignoring SetWindowRect request for fullscreen window");
         return nullptr;
     }
 
