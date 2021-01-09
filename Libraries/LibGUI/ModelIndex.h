@@ -82,8 +82,14 @@ const LogStream& operator<<(const LogStream&, const ModelIndex&);
 namespace AK {
 
 template<>
-struct Formatter<GUI::ModelIndex> : Formatter<StringView> {
-    void format(FormatBuilder&, const GUI::ModelIndex&);
+struct Formatter<GUI::ModelIndex> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, const GUI::ModelIndex& value)
+    {
+        if (value.internal_data())
+            return Formatter<FormatString>::format(builder, "ModelIndex({},{},{})", value.row(), value.column(), value.internal_data());
+        else
+            return Formatter<FormatString>::format(builder, "ModelIndex({},{})", value.row(), value.column());
+    }
 };
 
 template<>

@@ -173,12 +173,13 @@ private:
 
 }
 
-namespace AK {
 template<>
-struct Formatter<Core::Object> : Formatter<StringView> {
-    void format(FormatBuilder&, const Core::Object&);
+struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, const Core::Object& value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
+    }
 };
-}
 
 namespace Core {
 template<typename T, typename Callback>
