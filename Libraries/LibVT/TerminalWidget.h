@@ -106,6 +106,8 @@ public:
 
     GUI::Menu& context_menu() { return *m_context_menu; }
 
+    void set_font_and_resize_to_fit(const Gfx::Font&);
+
 private:
     // ^GUI::Widget
     virtual void event(Core::Event&) override;
@@ -137,6 +139,8 @@ private:
 
     Gfx::IntRect glyph_rect(u16 row, u16 column);
     Gfx::IntRect row_rect(u16 row);
+
+    Gfx::IntSize widget_size_for_font(const Gfx::Font&) const;
 
     void update_cursor();
     void invalidate_cursor();
