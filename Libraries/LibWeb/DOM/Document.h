@@ -132,6 +132,7 @@ public:
     Layout::InitialContainingBlockBox* layout_node();
 
     void schedule_style_update();
+    void schedule_forced_layout();
 
     NonnullRefPtrVector<Element> get_elements_by_name(const String&) const;
     NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
@@ -262,6 +263,7 @@ private:
     Optional<Color> m_visited_link_color;
 
     RefPtr<Core::Timer> m_style_update_timer;
+    RefPtr<Core::Timer> m_forced_layout_timer;
 
     String m_source;
 
