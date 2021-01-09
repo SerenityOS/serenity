@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -57,6 +58,17 @@ static String ak_string_from(VM& vm, GlobalObject& global_object)
     if (!this_object)
         return {};
     return Value(this_object).to_string(global_object);
+}
+
+static Optional<size_t> split_match(const String& haystack, size_t start, const String& needle)
+{
+    auto r = needle.length();
+    auto s = haystack.length();
+    if (start + r > s)
+        return {};
+    if (!haystack.substring_view(start).starts_with(needle))
+        return {};
+    return start + r;
 }
 
 StringPrototype::StringPrototype(GlobalObject& global_object)
@@ -90,6 +102,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.substring, substring, 2, attr);
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.split, split, 2, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
@@ -505,6 +518,74 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
     return js_string(vm, string_part);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
+{
+    // FIXME Implement the @@split part
+
+    auto string = ak_string_from(vm, global_object);
+    if (string.is_null())
+        return {};
+
+    auto* result = Array::create(global_object);
+    size_t result_len = 0;
+
+    auto limit = static_cast<u32>(MAX_U32);
+    if (!vm.argument(1).is_undefined()) {
+        limit = vm.argument(1).to_u32(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    auto separator = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    if (limit == 0)
+        return result;
+
+    if (vm.argument(0).is_undefined()) {
+        result->define_property(0, js_string(vm, string));
+        return result;
+    }
+
+    auto len = string.length();
+    auto separator_len = separator.length();
+    if (len == 0) {
+        if (separator_len > 0)
+            result->define_property(0, js_string(vm, string));
+        return result;
+    }
+
+    size_t start = 0;
+    auto pos = start;
+    if (separator_len == 0) {
+        for (pos = 0; pos < len; pos++)
+            result->define_property(pos, js_string(vm, string.substring(pos, 1)));
+        return result;
+    }
+
+    while (pos != len) {
+        auto e = split_match(string, pos, separator);
+        if (!e.has_value()) {
+            pos += 1;
+            continue;
+        }
+
+        auto segment = string.substring_view(start, pos - start);
+        result->define_property(result_len, js_string(vm, segment));
+        result_len++;
+        if (result_len == limit)
+            return result;
+        start = e.value();
+        pos = start;
+    }
+
+    auto rest = string.substring(start, len - start);
+    result->define_property(result_len, js_string(vm, rest));
+
+    return result;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
