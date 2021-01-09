@@ -154,6 +154,10 @@ void ColumnsView::paint_event(PaintEvent& event)
                 painter.draw_focus_rect(row_rect, palette().focus_outline());
             }
 
+            if (has_pending_drop() && index == drop_candidate_index()) {
+                painter.draw_rect(row_rect, palette().selection(), true);
+            }
+
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
                 Gfx::IntRect arrow_rect = {
