@@ -198,3 +198,6 @@ jobs:
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
       # FIXME: Fix tests on MacOS
       run: DISABLE_DBG_OUTPUT=1 ./test-js || true
+    - name: Run LibCompress tests
+      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      run: DISABLE_DBG_OUTPUT=1 ./test-compress
