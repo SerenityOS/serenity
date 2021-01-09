@@ -372,7 +372,7 @@ String Image::symbolicate(u32 address, u32* out_offset) const
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(symbol_count);
         for_each_symbol([this](auto& symbol) {
-            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, {} });
+            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
             return IterationDecision::Continue;
         });
         quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
