@@ -54,6 +54,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/etc/shadow", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     bool del = false;
@@ -72,7 +77,9 @@ int main(int argc, char** argv)
 
     uid_t current_uid = getuid();
 
-    auto account_or_error = (username) ? Core::Account::from_name(username) : Core::Account::from_uid(current_uid);
+    auto account_or_error = (username)
+        ? Core::Account::from_name(username, Core::Account::OpenPasswdFile::ReadWrite, Core::Account::OpenShadowFile::ReadWrite)
+        : Core::Account::from_uid(current_uid, Core::Account::OpenPasswdFile::ReadWrite, Core::Account::OpenShadowFile::ReadWrite);
 
     if (account_or_error.is_error()) {
         fprintf(stderr, "Core::Account::%s: %s\n", (username) ? "from_name" : "from_uid", account_or_error.error().characters());
