@@ -156,6 +156,7 @@ public:
     static String escape_token_for_single_quotes(const String& token);
     static String escape_token(const String& token);
     static String unescape_token(const String& token);
+    static bool is_special(char c);
 
     static bool is_glob(const StringView&);
     static Vector<StringView> split_path(const StringView&);
@@ -328,6 +329,23 @@ private:
 static constexpr bool is_word_character(char c)
 {
     return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a');
+}
+
+inline size_t find_offset_into_node(const String& unescaped_text, size_t escaped_offset)
+{
+    size_t unescaped_offset = 0;
+    size_t offset = 0;
+    for (auto& c : unescaped_text) {
+        if (offset == escaped_offset)
+            return unescaped_offset;
+
+        if (Shell::is_special(c))
+            ++offset;
+        ++offset;
+        ++unescaped_offset;
+    }
+
+    return unescaped_offset;
 }
 
 }
