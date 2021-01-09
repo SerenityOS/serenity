@@ -36,6 +36,11 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath tty exec id", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (!isatty(STDIN_FILENO)) {
         warnln("{}: standard in is not a terminal", argv[0]);
         return 1;
@@ -55,6 +60,11 @@ int main(int argc, char** argv)
         : Core::Account::from_uid(0, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly);
     if (account_or_error.is_error()) {
         fprintf(stderr, "Core::Account::from_name: %s\n", account_or_error.error().characters());
+        return 1;
+    }
+
+    if (pledge("stdio tty exec id", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
