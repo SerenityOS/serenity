@@ -356,14 +356,14 @@ int main(int argc, char** argv)
     }
 
 #if 0
-    dbg() << "Attributes:";
+    dbgln("Attributes:");
     for (auto& attribute : interface->attributes) {
         dbg() << "  " << (attribute.readonly ? "Readonly " : "")
               << attribute.type.name << (attribute.type.nullable ? "?" : "")
               << " " << attribute.name;
     }
 
-    dbg() << "Functions:";
+    dbgln("Functions:");
     for (auto& function : interface->functions) {
         dbg() << "  " << function.return_type.name << (function.return_type.nullable ? "?" : "")
               << " " << function.name;

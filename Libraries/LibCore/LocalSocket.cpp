@@ -88,7 +88,7 @@ RefPtr<LocalSocket> LocalSocket::take_over_accepted_socket_from_system_server()
     if (rc < 0 || !S_ISSOCK(stat.st_mode)) {
         if (rc != 0)
             perror("fstat");
-        dbg() << "ERROR: The fd we got from SystemServer is not a socket";
+        dbgln("ERROR: The fd we got from SystemServer is not a socket");
         return nullptr;
     }
 

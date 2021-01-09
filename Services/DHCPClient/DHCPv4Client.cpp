@@ -74,7 +74,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
 
     bool fits = iface.m_ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
     if (!fits) {
-        dbg() << "Interface name doesn't fit into IFNAMSIZ!";
+        dbgln("Interface name doesn't fit into IFNAMSIZ!");
         return;
     }
 
@@ -123,7 +123,7 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
     };
 
     if (!m_server->bind({}, 68)) {
-        dbg() << "The server we just created somehow came already bound, refusing to continue";
+        dbgln("The server we just created somehow came already bound, refusing to continue");
         ASSERT_NOT_REACHED();
     }
 

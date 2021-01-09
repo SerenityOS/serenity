@@ -43,7 +43,7 @@ void HttpsJob::start()
     m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_connected = [this] {
 #ifdef HTTPSJOB_DEBUG
-        dbg() << "HttpsJob: on_connected callback";
+        dbgln("HttpsJob: on_connected callback");
 #endif
         on_socket_connected();
     };
@@ -90,7 +90,7 @@ void HttpsJob::shutdown()
 void HttpsJob::set_certificate(String certificate, String private_key)
 {
     if (!m_socket->add_client_key(certificate.bytes(), private_key.bytes())) {
-        dbg() << "LibHTTP: Failed to set a client certificate";
+        dbgln("LibHTTP: Failed to set a client certificate");
         // FIXME: Do something about this failure
         ASSERT_NOT_REACHED();
     }

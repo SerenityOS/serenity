@@ -138,7 +138,7 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
         }
     }
     errno_rollback.set_override_rollback_value(ENOENT);
-    dbg() << "execvpe() leaving :(";
+    dbgln("execvpe() leaving :(");
     return -1;
 }
 

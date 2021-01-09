@@ -128,7 +128,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
 
     auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
     if (!text_base) {
-        dbg() << "No .text section found in module!";
+        dbgln("No .text section found in module!");
         return -EINVAL;
     }
 

@@ -255,10 +255,10 @@ void Service::did_exit(int exit_code)
     if (!exited_successfully && run_time_in_msec < 1000) {
         switch (m_restart_attempts) {
         case 0:
-            dbg() << "Trying again";
+            dbgln("Trying again");
             break;
         case 1:
-            dbg() << "Third time's a charm?";
+            dbgln("Third time's a charm?");
             break;
         default:
             dbg() << "Giving up on " << name() << ". Good luck!";

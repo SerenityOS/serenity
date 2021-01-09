@@ -63,14 +63,14 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
     auto encoded_buffer = SharedBuffer::create_from_shbuf_id(message.encoded_shbuf_id());
     if (!encoded_buffer) {
 #ifdef IMAGE_DECODER_DEBUG
-        dbg() << "Could not map encoded data buffer";
+        dbgln("Could not map encoded data buffer");
 #endif
         return nullptr;
     }
 
     if (message.encoded_size() > (size_t)encoded_buffer->size()) {
 #ifdef IMAGE_DECODER_DEBUG
-        dbg() << "Encoded buffer is smaller than encoded size";
+        dbgln("Encoded buffer is smaller than encoded size");
 #endif
         return nullptr;
     }
@@ -84,7 +84,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
 
     if (!bitmap) {
 #ifdef IMAGE_DECODER_DEBUG
-        dbg() << "Could not decode image from encoded data";
+        dbgln("Could not decode image from encoded data");
 #endif
         return make<Messages::ImageDecoderServer::DecodeImageResponse>(-1, Gfx::IntSize(), (i32)Gfx::BitmapFormat::Invalid, Vector<u32>());
     }

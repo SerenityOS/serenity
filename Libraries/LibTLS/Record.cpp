@@ -205,12 +205,12 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
 #ifdef TLS_DEBUG
-    dbg() << "========================= PACKET DATA ==========================";
+    dbgln("========================= PACKET DATA ==========================");
     print_buffer((const u8*)&sequence_number, sizeof(u64));
     print_buffer(buf.data(), buf.size());
     if (buf2.has_value())
         print_buffer(buf2.value().data(), buf2.value().size());
-    dbg() << "========================= PACKET DATA ==========================";
+    dbgln("========================= PACKET DATA ==========================");
 #endif
     hmac.update((const u8*)&sequence_number, sizeof(u64));
     hmac.update(buf);
@@ -271,7 +271,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
     if (m_context.cipher_spec_set && type != MessageType::ChangeCipher) {
 #ifdef TLS_DEBUG
-        dbg() << "Encrypted: ";
+        dbgln("Encrypted: ");
         print_buffer(buffer.slice(header_size, length));
 #endif
 
@@ -279,7 +279,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             ASSERT(m_aes_remote.gcm);
 
             if (length < 24) {
-                dbg() << "Invalid packet length";
+                dbgln("Invalid packet length");
                 auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
                 write_packet(packet);
                 return (i8)Error::BrokenPacket;
@@ -352,13 +352,13 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             length = decrypted_span.size();
 
 #ifdef TLS_DEBUG
-            dbg() << "Decrypted: ";
+            dbgln("Decrypted: ");
             print_buffer(decrypted);
 #endif
 
             auto mac_size = mac_length();
             if (length < mac_size) {
-                dbg() << "broken packet";
+                dbgln("broken packet");
                 auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
                 write_packet(packet);
                 return (i8)Error::BrokenPacket;
@@ -374,9 +374,9 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto message_mac = ReadonlyBytes { message_hmac, mac_size };
             if (hmac != message_mac) {
                 dbg() << "integrity check failed (mac length " << mac_size << ")";
-                dbg() << "mac received:";
+                dbgln("mac received:");
                 print_buffer(message_mac);
-                dbg() << "mac computed:";
+                dbgln("mac computed:");
                 print_buffer(hmac);
                 auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
                 write_packet(packet);
@@ -391,7 +391,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     switch (type) {
     case MessageType::ApplicationData:
         if (m_context.connection_status != ConnectionStatus::Established) {
-            dbg() << "unexpected application data";
+            dbgln("unexpected application data");
             payload_res = (i8)Error::UnexpectedMessage;
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             write_packet(packet);
@@ -405,18 +405,18 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         break;
     case MessageType::Handshake:
 #ifdef TLS_DEBUG
-        dbg() << "tls handshake message";
+        dbgln("tls handshake message");
 #endif
         payload_res = handle_payload(plain);
         break;
     case MessageType::ChangeCipher:
         if (m_context.connection_status != ConnectionStatus::KeyExchange) {
-            dbg() << "unexpected change cipher message";
+            dbgln("unexpected change cipher message");
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
 #ifdef TLS_DEBUG
-            dbg() << "change cipher spec message";
+            dbgln("change cipher spec message");
 #endif
             m_context.cipher_spec_set = true;
             m_context.remote_sequence_number = 0;
@@ -447,7 +447,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 m_context.connection_finished = true;
                 if (!m_context.cipher_spec_set) {
                     // AWS CloudFront hits this.
-                    dbg() << "Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.";
+                    dbgln("Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.");
                     m_context.critical_error = (u8)AlertDescription::HandshakeFailure;
                     try_disambiguate_error();
                 }
@@ -456,7 +456,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     default:
-        dbg() << "message not understood";
+        dbgln("message not understood");
         return (i8)Error::NotUnderstood;
     }
 

@@ -1548,7 +1548,7 @@ Vector<size_t, 2> Editor::vt_dsr()
         if (nread == 0) {
             m_input_error = Error::Empty;
             finish();
-            dbg() << "Terminal DSR issue; received no response";
+            dbgln("Terminal DSR issue; received no response");
             return { 1, 1 };
         }
         length += nread;
@@ -1559,13 +1559,13 @@ Vector<size_t, 2> Editor::vt_dsr()
         auto parts = StringView(buf + 2, length - 3).split_view(';');
         auto row_opt = parts[0].to_int();
         if (!row_opt.has_value()) {
-            dbg() << "Terminal DSR issue; received garbage row";
+            dbgln("Terminal DSR issue; received garbage row");
         } else {
             row = row_opt.value();
         }
         auto col_opt = parts[1].to_int();
         if (!col_opt.has_value()) {
-            dbg() << "Terminal DSR issue; received garbage col";
+            dbgln("Terminal DSR issue; received garbage col");
         } else {
             col = col_opt.value();
         }

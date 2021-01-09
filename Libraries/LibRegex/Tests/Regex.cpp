@@ -507,12 +507,12 @@ TEST_CASE(ECMA262_parse)
         Regex<ECMA262> re(test.pattern);
         EXPECT_EQ(re.parser_result.error, test.expected_error);
 #ifdef REGEX_DEBUG
-        dbg() << "\n";
+        dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);
         regex_dbg.print_header();
         regex_dbg.print_bytecode(re);
-        dbg() << "\n";
+        dbgln("\n");
 #endif
     }
 }
@@ -552,12 +552,12 @@ TEST_CASE(ECMA262_match)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
 #ifdef REGEX_DEBUG
-        dbg() << "\n";
+        dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);
         regex_dbg.print_header();
         regex_dbg.print_bytecode(re);
-        dbg() << "\n";
+        dbgln("\n");
 #endif
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.match(test.subject).success, test.matches);
@@ -585,12 +585,12 @@ TEST_CASE(replace)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
 #ifdef REGEX_DEBUG
-        dbg() << "\n";
+        dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);
         regex_dbg.print_header();
         regex_dbg.print_bytecode(re);
-        dbg() << "\n";
+        dbgln("\n");
 #endif
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);

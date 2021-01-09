@@ -53,7 +53,7 @@ RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
 
     auto encoded_buffer = SharedBuffer::create_with_size(encoded_data.size());
     if (!encoded_buffer) {
-        dbg() << "Could not allocate encoded shbuf";
+        dbgln("Could not allocate encoded shbuf");
         return nullptr;
     }
 
@@ -66,13 +66,13 @@ RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
     auto bitmap_format = (Gfx::BitmapFormat)response->bitmap_format();
     if (bitmap_format == Gfx::BitmapFormat::Invalid) {
 #ifdef IMAGE_DECODER_CLIENT_DEBUG
-        dbg() << "Response image was invalid";
+        dbgln("Response image was invalid");
 #endif
         return nullptr;
     }
 
     if (response->size().is_empty()) {
-        dbg() << "Response image was empty";
+        dbgln("Response image was empty");
         return nullptr;
     }
 

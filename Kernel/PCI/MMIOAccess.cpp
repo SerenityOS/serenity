@@ -85,7 +85,7 @@ void MMIOAccess::initialize(PhysicalAddress mcfg)
     if (!Access::is_initialized()) {
         new MMIOAccess(mcfg);
 #ifdef PCI_DEBUG
-        dbg() << "PCI: MMIO access initialised.";
+        dbgln("PCI: MMIO access initialised.");
 #endif
     }
 }
@@ -97,7 +97,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
 
     auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
 #ifdef PCI_DEBUG
-    dbg() << "PCI: Checking MCFG Table length to choose the correct mapping size";
+    dbgln("PCI: Checking MCFG Table length to choose the correct mapping size");
 #endif
 
     auto* sdt = (ACPI::Structures::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();

@@ -192,7 +192,7 @@ void ColumnsView::push_column(const ModelIndex& parent_index)
     }
 
     // Add the new column.
-    dbg() << "Adding a new column";
+    dbgln("Adding a new column");
     m_columns.append({ parent_index, 0 });
     update_column_sizes();
     update();
@@ -278,7 +278,7 @@ void ColumnsView::model_did_update(unsigned flags)
     AbstractView::model_did_update(flags);
 
     // FIXME: Don't drop the columns on minor updates.
-    dbg() << "Model was updated; dropping columns :(";
+    dbgln("Model was updated; dropping columns :(");
     m_columns.clear();
     m_columns.append({ {}, 0 });
 

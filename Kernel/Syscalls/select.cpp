@@ -104,7 +104,7 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted()) {
 #ifdef DEBUG_POLL_SELECT
-        dbg() << "select was interrupted";
+        dbgln("select was interrupted");
 #endif
         return -EINTR;
     }

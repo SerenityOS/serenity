@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {
-            dbg() << "NotificationServer: accept failed.";
+            dbgln("NotificationServer: accept failed.");
             return;
         }
         static int s_next_client_id = 0;

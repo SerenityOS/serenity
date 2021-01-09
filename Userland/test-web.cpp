@@ -177,7 +177,7 @@ static void cleanup_and_exit()
 #if 0
 static void handle_sigabrt(int)
 {
-    dbg() << "test-web: SIGABRT received, cleaning up.";
+    dbgln("test-web: SIGABRT received, cleaning up.");
     cleanup_and_exit();
 }
 #endif

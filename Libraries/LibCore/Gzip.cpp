@@ -55,12 +55,12 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     };
 
 #ifdef DEBUG_GZIP
-    dbg() << "get_gzip_payload: Skipping over gzip header.";
+    dbgln("get_gzip_payload: Skipping over gzip header.");
 #endif
 
     // Magic Header
     if (read_byte() != 0x1F || read_byte() != 0x8B) {
-        dbg() << "get_gzip_payload: Wrong magic number.";
+        dbgln("get_gzip_payload: Wrong magic number.");
         return Optional<ByteBuffer>();
     }
 
@@ -85,21 +85,21 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
 
     // FNAME
     if (flags & 8) {
-        dbg() << "get_gzip_payload: Header has FNAME flag set.";
+        dbgln("get_gzip_payload: Header has FNAME flag set.");
         while (read_byte() != '\0')
             ;
     }
 
     // FCOMMENT
     if (flags & 16) {
-        dbg() << "get_gzip_payload: Header has FCOMMENT flag set.";
+        dbgln("get_gzip_payload: Header has FCOMMENT flag set.");
         while (read_byte() != '\0')
             ;
     }
 
     // FHCRC
     if (flags & 2) {
-        dbg() << "get_gzip_payload: Header has FHCRC flag set.";
+        dbgln("get_gzip_payload: Header has FHCRC flag set.");
         current += 2;
     }
 
@@ -142,7 +142,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 
         if (puff_ret == 0) {
 #ifdef DEBUG_GZIP
-            dbg() << "Gzip::decompress: Decompression success.";
+            dbgln("Gzip::decompress: Decompression success.");
 #endif
             destination.trim(destination_len);
             break;
@@ -151,7 +151,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
         if (puff_ret == 1) {
             // FIXME: Find a better way of decompressing without needing to try over and over again.
 #ifdef DEBUG_GZIP
-            dbg() << "Gzip::decompress: Output buffer exhausted. Growing.";
+            dbgln("Gzip::decompress: Output buffer exhausted. Growing.");
 #endif
             destination.grow(destination.size() * 2);
         } else {

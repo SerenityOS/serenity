@@ -106,7 +106,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_mime_type = url().data_mime_type();
     } else {
 #ifdef RESOURCE_DEBUG
-        dbg() << "No Content-Type header to go on! Guessing based on filename...";
+        dbgln("No Content-Type header to go on! Guessing based on filename...");
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = Core::guess_mime_type_based_on_filename(url().path());

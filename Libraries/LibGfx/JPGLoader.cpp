@@ -273,7 +273,7 @@ static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTa
     }
 
 #ifdef JPG_DEBUG
-    dbg() << "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!";
+    dbgln("If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
 #endif
     return {};
 }

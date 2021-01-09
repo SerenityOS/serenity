@@ -515,7 +515,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
             process_event_for_doubleclick(*m_move_window, event);
             if (event.type() == Event::MouseDoubleClick) {
 #if defined(DOUBLECLICK_DEBUG)
-                dbg() << "[WM] Click up became doubleclick!";
+                dbgln("[WM] Click up became doubleclick!");
 #endif
                 m_move_window->set_maximized(!m_move_window->is_maximized());
             }
@@ -528,7 +528,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 #ifdef MOVE_DEBUG
         dbg() << "[WM] Moving, origin: " << m_move_origin << ", now: " << event.position();
         if (m_move_window->is_maximized()) {
-            dbg() << "  [!] The window is still maximized. Not moving yet.";
+            dbgln("  [!] The window is still maximized. Not moving yet.");
         }
 
 #endif
@@ -540,7 +540,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of window move";
             if (pixels_moved_from_start > 5) {
-                // dbg() << "[WM] de-maximizing window";
+                // dbgln("[WM] de-maximizing window");
                 m_move_origin = event.position();
                 if (m_move_origin.y() <= secondary_deadzone)
                     return true;

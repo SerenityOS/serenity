@@ -246,7 +246,7 @@ bool Plan9FS::initialize()
 
     result = post_message_and_wait_for_a_reply(attach_message);
     if (result.is_error()) {
-        dbg() << "Attaching failed";
+        dbgln("Attaching failed");
         return false;
     }
 
@@ -663,7 +663,7 @@ ssize_t Plan9FS::adjust_buffer_size(ssize_t size) const
 
 void Plan9FS::thread_main()
 {
-    dbg() << "Plan9FS: Thread running";
+    dbgln("Plan9FS: Thread running");
     do {
         auto result = read_and_dispatch_one_message();
         if (result.is_error()) {
@@ -676,11 +676,11 @@ void Plan9FS::thread_main()
             }
             m_completions.clear();
             m_completion_blocker.unblock_all();
-            dbg() << "Plan9FS: Thread terminating, error reading";
+            dbgln("Plan9FS: Thread terminating, error reading");
             return;
         }
     } while (!m_thread_shutdown);
-    dbg() << "Plan9FS: Thread terminating";
+    dbgln("Plan9FS: Thread terminating");
 }
 
 void Plan9FS::ensure_thread()

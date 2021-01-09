@@ -188,7 +188,7 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     case SO_ERROR: {
         if (size < sizeof(int))
             return KResult(-EINVAL);
-        dbg() << "getsockopt(SO_ERROR): FIXME!";
+        dbgln("getsockopt(SO_ERROR): FIXME!");
         int errno = 0;
         if (!copy_to_user(static_ptr_cast<int*>(value), &errno))
             return KResult(-EFAULT);

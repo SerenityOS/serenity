@@ -52,12 +52,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {
-            dbg() << "LaunchServer: accept failed.";
+            dbgln("LaunchServer: accept failed.");
             return;
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        dbg() << "Received connection";
+        dbgln("Received connection");
         IPC::new_client_connection<LaunchServer::ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 

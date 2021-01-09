@@ -414,7 +414,7 @@ void APIC::boot_aps()
     Processor::smp_enable();
 
 #ifdef APIC_DEBUG
-    dbg() << "All processors initialized and waiting, trigger all to continue";
+    dbgln("All processors initialized and waiting, trigger all to continue");
 #endif
 
     // Now trigger all APs to continue execution (need to do this after

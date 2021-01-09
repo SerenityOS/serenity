@@ -96,7 +96,7 @@ static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, 
 {
     if (length == 7) {
         // Elliptic Curve pubkey
-        dbg() << "Cert.algorithm: EC, unsupported";
+        dbgln("Cert.algorithm: EC, unsupported");
         return false;
     }
 
@@ -113,7 +113,7 @@ static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, 
     }
 
     if (length != 9) {
-        dbg() << "Invalid certificate algorithm";
+        dbgln("Invalid certificate algorithm");
         return false;
     }
 
@@ -193,7 +193,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
     while (position < size) {
         size_t start_position = position;
         if (size - position < 2) {
-            dbg() << "not enough data for certificate size";
+            dbgln("not enough data for certificate size");
             return (i8)Error::NeedMoreData;
         }
         u8 first = buffer[position++];
@@ -210,7 +210,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
 
         if (octets > 4 || octets > size - position) {
 #ifdef TLS_DEBUG
-            dbg() << "could not read the certificate";
+            dbgln("could not read the certificate");
 #endif
             return position;
         }
@@ -218,7 +218,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         position += octets;
         if (size - position < length) {
 #ifdef TLS_DEBUG
-            dbg() << "not enough data for sequence";
+            dbgln("not enough data for sequence");
 #endif
             return (i8)Error::NeedMoreData;
         }
@@ -420,7 +420,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         cert.fingerprint.grow(fingerprint.data_length());
         cert.fingerprint.overwrite(0, fingerprint.immutable_data(), fingerprint.data_length());
 #ifdef TLS_DEBUG
-        dbg() << "Certificate fingerprint:";
+        dbgln("Certificate fingerprint:");
         print_buffer(cert.fingerprint);
 #endif
     }
@@ -453,7 +453,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
     if (buffer.size() < 3) {
 #ifdef TLS_DEBUG
-        dbg() << "not enough certificate header data";
+        dbgln("not enough certificate header data");
 #endif
         return (i8)Error::NeedMoreData;
     }
@@ -471,7 +471,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
     if (certificate_total_length > buffer.size() - res) {
 #ifdef TLS_DEBUG
-        dbg() << "not enough data for claimed total cert length";
+        dbgln("not enough data for claimed total cert length");
 #endif
         return (i8)Error::NeedMoreData;
     }
@@ -484,7 +484,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
         ++index;
         if (buffer.size() - res < 3) {
 #ifdef TLS_DEBUG
-            dbg() << "not enough data for certificate length";
+            dbgln("not enough data for certificate length");
 #endif
             return (i8)Error::NeedMoreData;
         }
@@ -493,7 +493,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
         if (buffer.size() - res < certificate_size) {
 #ifdef TLS_DEBUG
-            dbg() << "not enough data for certificate body";
+            dbgln("not enough data for certificate body");
 #endif
             return (i8)Error::NeedMoreData;
         }
@@ -504,7 +504,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
         do {
             if (remaining <= 3) {
-                dbg() << "Ran out of data";
+                dbgln("Ran out of data");
                 break;
             }
             ++certificates_in_chain;
@@ -603,7 +603,7 @@ void TLSv12::consume(ReadonlyBytes record)
         index += length;
         buffer_length -= length;
         if (m_context.critical_error) {
-            dbg() << "Broken connection";
+            dbgln("Broken connection");
             m_context.error_code = Error::BrokenConnection;
             break;
         }
@@ -674,61 +674,61 @@ bool Certificate::is_valid() const
 
 void TLSv12::try_disambiguate_error() const
 {
-    dbg() << "Possible failure cause(s): ";
+    dbgln("Possible failure cause(s): ");
     switch ((AlertDescription)m_context.critical_error) {
     case AlertDescription::HandshakeFailure:
         if (!m_context.cipher_spec_set) {
             dbg() << "- No cipher suite in common with " << m_context.SNI;
         } else {
-            dbg() << "- Unknown internal issue";
+            dbgln("- Unknown internal issue");
         }
         break;
     case AlertDescription::InsufficientSecurity:
         dbg() << "- No cipher suite in common with " << m_context.SNI << " (the server is oh so secure)";
         break;
     case AlertDescription::ProtocolVersion:
-        dbg() << "- The server refused to negotiate with TLS 1.2 :(";
+        dbgln("- The server refused to negotiate with TLS 1.2 :(");
         break;
     case AlertDescription::UnexpectedMessage:
-        dbg() << "- We sent an invalid message for the state we're in.";
+        dbgln("- We sent an invalid message for the state we're in.");
         break;
     case AlertDescription::BadRecordMAC:
-        dbg() << "- Bad MAC record from our side.";
-        dbg() << "- Ciphertext wasn't an even multiple of the block length.";
-        dbg() << "- Bad block cipher padding.";
-        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        dbgln("- Bad MAC record from our side.");
+        dbgln("- Ciphertext wasn't an even multiple of the block length.");
+        dbgln("- Bad block cipher padding.");
+        dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
     case AlertDescription::RecordOverflow:
-        dbg() << "- Sent a ciphertext record which has a length bigger than 18432 bytes.";
-        dbg() << "- Sent record decrypted to a compressed record that has a length bigger than 18432 bytes.";
-        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        dbgln("- Sent a ciphertext record which has a length bigger than 18432 bytes.");
+        dbgln("- Sent record decrypted to a compressed record that has a length bigger than 18432 bytes.");
+        dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
     case AlertDescription::DecompressionFailure:
-        dbg() << "- We sent invalid input for decompression (e.g. data that would expand to excessive length)";
+        dbgln("- We sent invalid input for decompression (e.g. data that would expand to excessive length)");
         break;
     case AlertDescription::IllegalParameter:
-        dbg() << "- We sent a parameter in the handshake that is out of range or inconsistent with the other parameters.";
+        dbgln("- We sent a parameter in the handshake that is out of range or inconsistent with the other parameters.");
         break;
     case AlertDescription::DecodeError:
-        dbg() << "- The message we sent cannot be decoded because a field was out of range or the length was incorrect.";
-        dbg() << "- If both sides are compliant, the only cause is messages being corrupted in the network.";
+        dbgln("- The message we sent cannot be decoded because a field was out of range or the length was incorrect.");
+        dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
     case AlertDescription::DecryptError:
-        dbg() << "- A handshake crypto operation failed. This includes signature verification and validating Finished.";
+        dbgln("- A handshake crypto operation failed. This includes signature verification and validating Finished.");
         break;
     case AlertDescription::AccessDenied:
-        dbg() << "- The certificate is valid, but once access control was applied, the sender decided to stop negotiation.";
+        dbgln("- The certificate is valid, but once access control was applied, the sender decided to stop negotiation.");
         break;
     case AlertDescription::InternalError:
-        dbg() << "- No one knows, but it isn't a protocol failure.";
+        dbgln("- No one knows, but it isn't a protocol failure.");
         break;
     case AlertDescription::DecryptionFailed:
     case AlertDescription::NoCertificate:
     case AlertDescription::ExportRestriction:
-        dbg() << "- No one knows, the server sent a non-compliant alert.";
+        dbgln("- No one knows, the server sent a non-compliant alert.");
         break;
     default:
-        dbg() << "- No one knows.";
+        dbgln("- No one knows.");
         break;
     }
 }
@@ -736,7 +736,7 @@ void TLSv12::try_disambiguate_error() const
 void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 {
     if (!m_context.root_ceritificates.is_empty())
-        dbg() << "TLS warn: resetting root certificates!";
+        dbgln("TLS warn: resetting root certificates!");
 
     for (auto& cert : certificates) {
         if (!cert.is_valid())
@@ -750,7 +750,7 @@ bool Context::verify_chain() const
 {
     const Vector<Certificate>* local_chain = nullptr;
     if (is_server) {
-        dbg() << "Unsupported: Server mode";
+        dbgln("Unsupported: Server mode");
         TODO();
     } else {
         local_chain = &certificates;
@@ -853,13 +853,13 @@ bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes 
     }
     auto decoded_certificate = Crypto::decode_pem(certificate_pem_buffer, 0);
     if (decoded_certificate.is_empty()) {
-        dbg() << "Certificate not PEM";
+        dbgln("Certificate not PEM");
         return false;
     }
 
     auto maybe_certificate = parse_asn1(decoded_certificate);
     if (!maybe_certificate.has_value()) {
-        dbg() << "Invalid certificate";
+        dbgln("Invalid certificate");
         return false;
     }
 

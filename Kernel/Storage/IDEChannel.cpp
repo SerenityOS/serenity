@@ -147,7 +147,7 @@ void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, b
 {
     ScopedSpinLock lock(m_request_lock);
 #ifdef PATA_DEBUG
-    dbg() << "IDEChannel::start_request";
+    dbgln("IDEChannel::start_request");
 #endif
     m_current_request = &request;
     m_current_request_block_index = 0;
@@ -246,7 +246,7 @@ void IDEChannel::handle_irq(const RegisterState&)
 
     if (!m_current_request) {
 #ifdef PATA_DEBUG
-        dbg() << "IDEChannel: IRQ but no pending request!";
+        dbgln("IDEChannel: IRQ but no pending request!");
 #endif
         return;
     }
@@ -444,7 +444,7 @@ void IDEChannel::ata_read_sectors(bool slave_request)
     auto& request = *m_current_request;
     ASSERT(request.block_count() <= 256);
 #ifdef PATA_DEBUG
-    dbg() << "IDEChannel::ata_read_sectors";
+    dbgln("IDEChannel::ata_read_sectors");
 #endif
 
     while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)

@@ -44,7 +44,7 @@ int main(int, char**)
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {
-            dbg() << "AudioServer: accept failed.";
+            dbgln("AudioServer: accept failed.");
             return;
         }
         static int s_next_client_id = 0;

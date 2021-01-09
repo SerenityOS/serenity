@@ -968,14 +968,14 @@ bool Widget::load_from_json(const JsonObject& json)
 
     auto layout_value = json.get("layout");
     if (!layout_value.is_null() && !layout_value.is_object()) {
-        dbg() << "layout is not an object";
+        dbgln("layout is not an object");
         return false;
     }
     if (layout_value.is_object()) {
         auto& layout = layout_value.as_object();
         auto class_name = layout.get("class");
         if (class_name.is_null()) {
-            dbg() << "Invalid layout class name";
+            dbgln("Invalid layout class name");
             return false;
         }
 
@@ -1001,7 +1001,7 @@ bool Widget::load_from_json(const JsonObject& json)
             auto& child_json = child_json_value.as_object();
             auto class_name = child_json.get("class");
             if (!class_name.is_string()) {
-                dbg() << "No class name in entry";
+                dbgln("No class name in entry");
                 return false;
             }
             auto* registration = WidgetClassRegistration::find(class_name.as_string());

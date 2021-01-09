@@ -525,7 +525,7 @@ void Menu::popup(const Gfx::IntPoint& position)
 void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
 {
     if (is_empty()) {
-        dbg() << "Menu: Empty menu popup";
+        dbgln("Menu: Empty menu popup");
         return;
     }
 

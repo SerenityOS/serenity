@@ -308,7 +308,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     // Prevent this by just ignoring later drag initiations (until the current drag operation ends).
     TemporaryChange dragging { m_is_dragging, true };
 
-    dbg() << "Initiate drag!";
+    dbgln("Initiate drag!");
     auto drag_operation = DragOperation::construct();
 
     drag_operation->set_mime_data(m_model->mime_data(m_selection));
@@ -317,10 +317,10 @@ void AbstractView::mousemove_event(MouseEvent& event)
 
     switch (outcome) {
     case DragOperation::Outcome::Accepted:
-        dbg() << "Drag was accepted!";
+        dbgln("Drag was accepted!");
         break;
     case DragOperation::Outcome::Cancelled:
-        dbg() << "Drag was cancelled!";
+        dbgln("Drag was cancelled!");
         break;
     default:
         ASSERT_NOT_REACHED();

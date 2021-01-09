@@ -207,7 +207,7 @@ void CanvasRenderingContext2D::fill(const String& fill_rule)
 RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
 {
     if (!wrapper()) {
-        dbg() << "Hmm! Attempted to create ImageData for wrapper-less CRC2D.";
+        dbgln("Hmm! Attempted to create ImageData for wrapper-less CRC2D.");
         return nullptr;
     }
     return ImageData::create_with_size(wrapper()->global_object(), width, height);

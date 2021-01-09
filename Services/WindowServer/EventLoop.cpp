@@ -58,7 +58,7 @@ EventLoop::EventLoop()
     m_server->on_ready_to_accept = [this] {
         auto client_socket = m_server->accept();
         if (!client_socket) {
-            dbg() << "WindowServer: accept failed.";
+            dbgln("WindowServer: accept failed.");
             return;
         }
         static int s_next_client_id = 0;

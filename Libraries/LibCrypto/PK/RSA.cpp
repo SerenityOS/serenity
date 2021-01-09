@@ -85,7 +85,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
             ASN1::Kind::Integer, 1, &n)) {
         // that's no key
         // that's a death star
-        dbg() << "that's a death star";
+        dbgln("that's a death star");
         return keypair;
     }
 
@@ -105,7 +105,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
     }
     if (n == 1) {
         // multiprime key, we don't know how to deal with this
-        dbg() << "Unsupported key type";
+        dbgln("Unsupported key type");
         return keypair;
     }
     // it's a broken public key
@@ -120,7 +120,7 @@ void RSA::encrypt(ReadonlyBytes in, Bytes& out)
 #endif
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
-        dbg() << "value too large for key";
+        dbgln("value too large for key");
         out = {};
         return;
     }
@@ -175,7 +175,7 @@ void RSA::import_private_key(ReadonlyBytes bytes, bool pem)
 
     auto key = parse_rsa_key(bytes);
     if (!key.private_key.length()) {
-        dbg() << "We expected to see a private key, but we found none";
+        dbgln("We expected to see a private key, but we found none");
         ASSERT_NOT_REACHED();
     }
     m_private_key = key.private_key;
@@ -191,7 +191,7 @@ void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
 
     auto key = parse_rsa_key(bytes);
     if (!key.public_key.length()) {
-        dbg() << "We expected to see a public key, but we found none";
+        dbgln("We expected to see a public key, but we found none");
         ASSERT_NOT_REACHED();
     }
     m_public_key = key.public_key;
@@ -235,12 +235,12 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     dbg() << "key size: " << mod_len;
 #endif
     if (in.size() > mod_len - 11) {
-        dbg() << "message too long :(";
+        dbgln("message too long :(");
         out = out.trim(0);
         return;
     }
     if (out.size() < mod_len) {
-        dbg() << "output buffer too small";
+        dbgln("output buffer too small");
         return;
     }
 
@@ -303,14 +303,14 @@ void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, Bytes& out)
         ++offset;
 
     if (offset == out.size()) {
-        dbg() << "garbage data, no zero to split padding";
+        dbgln("garbage data, no zero to split padding");
         return;
     }
 
     ++offset;
 
     if (offset - 3 < 8) {
-        dbg() << "PS too small";
+        dbgln("PS too small");
         return;
     }
 
@@ -319,11 +319,11 @@ void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, Bytes& out)
 
 void RSA_PKCS1_EME::sign(ReadonlyBytes, Bytes&)
 {
-    dbg() << "FIXME: RSA_PKCS_EME::sign";
+    dbgln("FIXME: RSA_PKCS_EME::sign");
 }
 void RSA_PKCS1_EME::verify(ReadonlyBytes, Bytes&)
 {
-    dbg() << "FIXME: RSA_PKCS_EME::verify";
+    dbgln("FIXME: RSA_PKCS_EME::verify");
 }
 }
 }
