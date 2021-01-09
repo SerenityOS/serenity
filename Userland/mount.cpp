@@ -85,7 +85,7 @@ static int get_source_fd(const char* source)
 static bool mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
-    dbg() << "Mounting all filesystems...";
+    dbgln("Mounting all filesystems...");
 
     auto fstab = Core::File::construct("/etc/fstab");
     if (!fstab->open(Core::IODevice::OpenMode::ReadOnly)) {

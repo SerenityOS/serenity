@@ -65,11 +65,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    dbg() << "Updating utmp from UID=" << getuid() << " GID=" << getgid() << " EGID=" << getegid() << " PID=" << pid;
+    dbgln("Updating utmp from UID={} GID={} EGID={} PID={}", getuid(), getgid(), getegid(), pid);
 
     auto file_or_error = Core::File::open("/var/run/utmp", Core::IODevice::ReadWrite);
     if (file_or_error.is_error()) {
-        dbg() << "Error: " << file_or_error.error();
+        dbgln("Error: {}", file_or_error.error());
         return 1;
     }
 
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     JsonObject json;
 
     if (!previous_json.has_value() || !previous_json.value().is_object()) {
-        dbg() << "Error: Could not parse JSON";
+        dbgln("Error: Could not parse JSON");
     } else {
         json = previous_json.value().as_object();
     }
@@ -95,22 +95,22 @@ int main(int argc, char** argv)
         json.set(tty_name, move(entry));
     } else {
         ASSERT(flag_delete);
-        dbg() << "Removing " << tty_name << " from utmp";
+        dbgln("Removing {} from utmp", tty_name);
         json.remove(tty_name);
     }
 
     if (!file.seek(0)) {
-        dbg() << "Seek failed";
+        dbgln("Seek failed");
         return 1;
     }
 
     if (!file.truncate(0)) {
-        dbg() << "Truncation failed";
+        dbgln("Truncation failed");
         return 1;
     }
 
     if (!file.write(json.to_string())) {
-        dbg() << "Write failed";
+        dbgln("Write failed");
         return 1;
     }
 
