@@ -378,6 +378,10 @@ void TreeView::paint_event(PaintEvent& event)
                     else
                         painter.blit(toggle_rect.location(), *m_expand_bitmap, m_expand_bitmap->rect());
                 }
+
+                if (has_pending_drop() && index == drop_candidate_index()) {
+                    painter.draw_rect(rect, palette().selection(), true);
+                }
             }
             x_offset += column_width + horizontal_padding() * 2;
         }
