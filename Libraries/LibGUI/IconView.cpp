@@ -561,7 +561,7 @@ void IconView::paint_event(PaintEvent& event)
             draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, item_data.text, font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
         }
 
-        if (item_data.index == drop_candidate_index()) {
+        if (has_pending_drop() && item_data.index == drop_candidate_index()) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
             painter.draw_rect(item_data.icon_rect.inflated(8, 8), palette().selection(), true);
         }

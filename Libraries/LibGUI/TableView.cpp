@@ -161,6 +161,10 @@ void TableView::paint_event(PaintEvent& event)
             painter.draw_rect(row_rect, widget_background_color);
             painter.draw_focus_rect(row_rect, palette().focus_outline());
         }
+
+        if (has_pending_drop() && selection_behavior() == SelectionBehavior::SelectRows && row_index == drop_candidate_index().row()) {
+            painter.draw_rect(row_rect, palette().selection(), true);
+        }
         ++painted_item_index;
     };
 
