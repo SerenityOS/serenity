@@ -476,4 +476,11 @@ size_t strxfrm(char* dest, const char* src, size_t n)
         dest[i] = '\0';
     return i;
 }
+
+void explicit_bzero(void* ptr, size_t size)
+{
+    memset(ptr, 0, size);
+    asm volatile("" ::
+                     : "memory");
+}
 }
