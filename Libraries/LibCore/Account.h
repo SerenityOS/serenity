@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <pwd.h>
 #include <sys/types.h>
 
@@ -37,8 +38,20 @@ namespace Core {
 
 class Account {
 public:
-    static Result<Account, String> from_name(const char* username);
-    static Result<Account, String> from_uid(uid_t uid);
+    enum class OpenPasswdFile {
+        No,
+        ReadOnly,
+        ReadWrite,
+    };
+
+    enum class OpenShadowFile {
+        No,
+        ReadOnly,
+        ReadWrite,
+    };
+
+    static Result<Account, String> from_name(const char* username, OpenPasswdFile = OpenPasswdFile::No, OpenShadowFile = OpenShadowFile::No);
+    static Result<Account, String> from_uid(uid_t uid, OpenPasswdFile = OpenPasswdFile::No, OpenShadowFile = OpenShadowFile::No);
 
     bool authenticate(const char* password) const;
     bool login() const;
@@ -63,7 +76,16 @@ public:
     bool sync();
 
 private:
-    Account(struct passwd* pwd, Vector<gid_t> extra_gids);
+    static Result<Account, String> from_passwd(const passwd&, OpenPasswdFile, OpenShadowFile);
+
+    Account(const passwd& pwd, Vector<gid_t> extra_gids, RefPtr<Core::File> passwd_file, RefPtr<Core::File> shadow_file);
+    void load_shadow_file();
+
+    String generate_passwd_file() const;
+    String generate_shadow_file() const;
+
+    RefPtr<Core::File> m_passwd_file;
+    RefPtr<Core::File> m_shadow_file;
 
     String m_username;
 
@@ -76,6 +98,12 @@ private:
     String m_home_directory;
     String m_shell;
     Vector<gid_t> m_extra_gids;
+
+    struct ShadowEntry {
+        String username;
+        String password_hash;
+    };
+    Vector<ShadowEntry> m_shadow_entries;
 };
 
 }

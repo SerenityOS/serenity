@@ -62,6 +62,7 @@ chmod 4750 mnt/bin/shutdown
 chmod 4750 mnt/bin/keymap
 chown 0:$utmp_gid mnt/bin/utmpupdate
 chmod 2755 mnt/bin/utmpupdate
+chmod 600 mnt/etc/shadow
 
 echo "done"
 

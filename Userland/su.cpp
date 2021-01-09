@@ -50,7 +50,9 @@ int main(int argc, char** argv)
     if (geteuid() != 0)
         fprintf(stderr, "Not running as root :(\n");
 
-    auto account_or_error = (user) ? Core::Account::from_name(user) : Core::Account::from_uid(0);
+    auto account_or_error = (user)
+        ? Core::Account::from_name(user, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly)
+        : Core::Account::from_uid(0, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly);
     if (account_or_error.is_error()) {
         fprintf(stderr, "Core::Account::from_name: %s\n", account_or_error.error().characters());
         return 1;
