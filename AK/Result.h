@@ -54,12 +54,6 @@ public:
     {
     }
 
-    Result(const ValueType& res, const ErrorType& error)
-        : m_result(res)
-        , m_error(error)
-    {
-    }
-
     Result(Result&& other) = default;
     Result(const Result& other) = default;
     ~Result() = default;
@@ -77,6 +71,16 @@ public:
     bool is_error() const
     {
         return m_error.has_value();
+    }
+
+    ValueType release_value()
+    {
+        return m_result.release_value();
+    }
+
+    ErrorType release_error()
+    {
+        return m_error.release_value();
     }
 
 private:
@@ -111,6 +115,11 @@ public:
     bool is_error() const
     {
         return m_error.has_value();
+    }
+
+    void release_error()
+    {
+        return m_error.release_value();
     }
 
 private:
