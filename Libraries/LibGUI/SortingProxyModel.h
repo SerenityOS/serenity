@@ -49,6 +49,7 @@ public:
     virtual bool is_searchable() const override;
     virtual void set_data(const ModelIndex&, const Variant&) override;
     virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual bool accepts_drag(const ModelIndex&, const Vector<String>& mime_types) const override;
 
     virtual bool is_column_sortable(int column_index) const override;
 

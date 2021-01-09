@@ -589,7 +589,7 @@ String FileSystemModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-bool FileSystemModel::accepts_drag(const ModelIndex& index, const Vector<String>& mime_types)
+bool FileSystemModel::accepts_drag(const ModelIndex& index, const Vector<String>& mime_types) const
 {
     if (!index.is_valid())
         return false;

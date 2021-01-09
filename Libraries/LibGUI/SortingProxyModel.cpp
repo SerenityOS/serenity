@@ -63,6 +63,11 @@ void SortingProxyModel::model_did_update(unsigned flags)
     invalidate(flags);
 }
 
+bool SortingProxyModel::accepts_drag(const ModelIndex& proxy_index, const Vector<String>& mime_types) const
+{
+    return source().accepts_drag(map_to_source(proxy_index), mime_types);
+}
+
 int SortingProxyModel::row_count(const ModelIndex& proxy_index) const
 {
     return source().row_count(map_to_source(proxy_index));
