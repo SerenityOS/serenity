@@ -39,6 +39,7 @@
 #include "Project.h"
 #include "ProjectFile.h"
 #include "TerminalWrapper.h"
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
@@ -169,5 +170,10 @@ private:
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
     RefPtr<GUI::Action> m_run_action;
+
+    GUI::ActionGroup m_wrapping_mode_actions;
+    RefPtr<GUI::Action> m_no_wrapping_action;
+    RefPtr<GUI::Action> m_wrap_anywhere_action;
+    RefPtr<GUI::Action> m_wrap_at_words_action;
 };
 }

@@ -70,7 +70,6 @@ TextEditorWidget::TextEditorWidget()
     m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
-    m_editor->set_line_wrapping_enabled(true);
     m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
 
     m_editor->on_change = [this] {
@@ -364,11 +363,6 @@ TextEditorWidget::TextEditorWidget()
         m_save_as_action->activate();
     });
 
-    m_line_wrapping_setting_action = GUI::Action::create_checkable("Line wrapping", [&](auto& action) {
-        m_editor->set_line_wrapping_enabled(action.is_checked());
-    });
-    m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
-
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Text Editor");
     app_menu.add_action(*m_new_action);
@@ -434,7 +428,29 @@ TextEditorWidget::TextEditorWidget()
         }));
 
     view_menu.add_separator();
-    view_menu.add_action(*m_line_wrapping_setting_action);
+
+    m_wrapping_mode_actions.set_exclusive(true);
+    auto& wrapping_mode_menu = view_menu.add_submenu("Wrapping mode");
+    m_no_wrapping_action = GUI::Action::create_checkable("No wrapping", [&](auto&) {
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    });
+    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap anywhere", [&](auto&) {
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+    });
+    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at words", [&](auto&) {
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+    });
+
+    m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_anywhere_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_at_words_action);
+
+    wrapping_mode_menu.add_action(*m_no_wrapping_action);
+    wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
+    wrapping_mode_menu.add_action(*m_wrap_at_words_action);
+
+    m_wrap_anywhere_action->set_checked(true);
+
     view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);

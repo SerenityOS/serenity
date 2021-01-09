@@ -75,7 +75,6 @@ private:
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_find_replace_action;
-    RefPtr<GUI::Action> m_line_wrapping_setting_action;
     RefPtr<GUI::Action> m_vim_emulation_setting_action;
 
     RefPtr<GUI::Action> m_find_next_action;
@@ -103,6 +102,11 @@ private:
     RefPtr<GUI::Widget> m_find_replace_widget;
     RefPtr<GUI::Widget> m_find_widget;
     RefPtr<GUI::Widget> m_replace_widget;
+
+    GUI::ActionGroup m_wrapping_mode_actions;
+    RefPtr<GUI::Action> m_no_wrapping_action;
+    RefPtr<GUI::Action> m_wrap_anywhere_action;
+    RefPtr<GUI::Action> m_wrap_at_words_action;
 
     GUI::ActionGroup syntax_actions;
     RefPtr<GUI::Action> m_plain_text_highlight;

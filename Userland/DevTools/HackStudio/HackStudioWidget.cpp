@@ -875,13 +875,30 @@ void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
 
     edit_menu.add_separator();
 
-    auto line_wrapping_action = GUI::Action::create_checkable("Line wrapping", [this](auto& action) {
-        for (auto& wrapper : m_all_editor_wrappers) {
-            wrapper.editor().set_line_wrapping_enabled(action.is_checked());
-        }
+    m_wrapping_mode_actions.set_exclusive(true);
+    auto& wrapping_mode_menu = edit_menu.add_submenu("Wrapping mode");
+    m_no_wrapping_action = GUI::Action::create_checkable("No wrapping", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     });
-    line_wrapping_action->set_checked(current_editor().is_line_wrapping_enabled());
-    edit_menu.add_action(line_wrapping_action);
+    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap anywhere", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+    });
+    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at words", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+    });
+
+    m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_anywhere_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_at_words_action);
+
+    wrapping_mode_menu.add_action(*m_no_wrapping_action);
+    wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
+    wrapping_mode_menu.add_action(*m_wrap_at_words_action);
+
+    m_wrap_anywhere_action->set_checked(true);
 
     edit_menu.add_separator();
 

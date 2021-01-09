@@ -56,6 +56,12 @@ public:
         DisplayOnly
     };
 
+    enum WrappingMode {
+        NoWrap,
+        WrapAnywhere,
+        WrapAtWords
+    };
+
     virtual ~TextEditor() override;
 
     const TextDocument& document() const { return *m_document; }
@@ -80,8 +86,9 @@ public:
 
     virtual int soft_tab_width() const final { return m_soft_tab_width; }
 
-    bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
-    void set_line_wrapping_enabled(bool);
+    WrappingMode wrapping_mode() const { return m_wrapping_mode; }
+    bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
+    void set_wrapping_mode(WrappingMode);
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(Gfx::TextAlignment);
@@ -299,7 +306,7 @@ private:
     bool m_ruler_visible { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
-    bool m_line_wrapping_enabled { false };
+    WrappingMode m_wrapping_mode { WrappingMode::WrapAnywhere };
     bool m_has_visible_list { false };
     bool m_visualize_trailing_whitespace { true };
     int m_line_spacing { 4 };
