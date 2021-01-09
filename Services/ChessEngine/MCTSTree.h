@@ -49,7 +49,7 @@ public:
 
     Chess::Move best_move() const;
     double expected_value() const;
-    double uct(Chess::Colour colour) const;
+    double uct(Chess::Color color) const;
     bool expanded() const;
 
     EvalMethod eval_method() const { return m_eval_method; }

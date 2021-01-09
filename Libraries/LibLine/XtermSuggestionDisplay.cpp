@@ -122,7 +122,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         if (lines_used + m_prompt_lines_at_suggestion_initiation >= m_num_lines)
             return IterationDecision::Break;
 
-        // Only apply colour to the selection if something is *actually* added to the buffer.
+        // Only apply color to the selection if something is *actually* added to the buffer.
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
             VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) });
             fflush(stderr);
