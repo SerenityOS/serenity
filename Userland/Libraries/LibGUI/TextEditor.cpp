@@ -157,7 +157,7 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
 
     size_t line_index = 0;
 
-    if (is_line_wrapping_enabled()) {
+    if (is_wrapping_enabled()) {
         for (size_t i = 0; i < line_count(); ++i) {
             auto& rect = m_line_visual_data[i].visual_rect;
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
@@ -198,7 +198,7 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
         break;
     case Gfx::TextAlignment::CenterRight:
         // FIXME: Support right-aligned line wrapping, I guess.
-        ASSERT(!is_line_wrapping_enabled());
+        ASSERT(!is_wrapping_enabled());
         column_index = (position.x() - content_x_for_position({ line_index, 0 }) + fixed_glyph_width() / 2) / fixed_glyph_width();
         break;
     default:
@@ -872,7 +872,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
         return m_horizontal_content_padding + ((is_single_line() && icon()) ? (icon_size() + icon_padding()) : 0) + x_offset;
     case Gfx::TextAlignment::CenterRight:
         // FIXME
-        ASSERT(!is_line_wrapping_enabled());
+        ASSERT(!is_wrapping_enabled());
         return content_width() - m_horizontal_content_padding - (line.length() * fixed_glyph_width()) + (position.column() * fixed_glyph_width());
     default:
         ASSERT_NOT_REACHED();
@@ -952,7 +952,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
-    if (is_line_wrapping_enabled())
+    if (is_wrapping_enabled())
         return m_line_visual_data[line_index].visual_rect;
     return {
         content_x_for_position({ line_index, 0 }),
@@ -1286,7 +1286,7 @@ void TextEditor::did_update_selection()
     m_copy_action->set_enabled(has_selection());
     if (on_selection_change)
         on_selection_change();
-    if (is_line_wrapping_enabled()) {
+    if (is_wrapping_enabled()) {
         // FIXME: Try to repaint less.
         update();
     }
@@ -1413,16 +1413,31 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 
     int available_width = visible_text_rect_in_inner_coordinates().width();
 
-    if (is_line_wrapping_enabled()) {
+    if (is_wrapping_enabled()) {
         int line_width_so_far = 0;
 
+        size_t last_whitespace_index = 0;
+        size_t line_width_since_last_whitespace = 0;
         auto glyph_spacing = font().glyph_spacing();
         for (size_t i = 0; i < line.length(); ++i) {
             auto code_point = line.code_points()[i];
+            if (isspace(code_point)) {
+                last_whitespace_index = i;
+                line_width_since_last_whitespace = 0;
+            }
             auto glyph_width = font().glyph_or_emoji_width(code_point);
+            line_width_since_last_whitespace += glyph_width + glyph_spacing;
             if ((line_width_so_far + glyph_width + glyph_spacing) > available_width) {
-                visual_data.visual_line_breaks.append(i);
-                line_width_so_far = glyph_width + glyph_spacing;
+                if (m_wrapping_mode == WrappingMode::WrapAtWords && last_whitespace_index != 0) {
+                    // Plus 1 to get the first letter of the word.
+                    visual_data.visual_line_breaks.append(last_whitespace_index + 1);
+                    line_width_so_far = line_width_since_last_whitespace;
+                    last_whitespace_index = 0;
+                    line_width_since_last_whitespace = 0;
+                } else {
+                    visual_data.visual_line_breaks.append(i);
+                    line_width_so_far = glyph_width + glyph_spacing;
+                }
                 continue;
             }
             line_width_so_far += glyph_width + glyph_spacing;
@@ -1431,7 +1446,7 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 
     visual_data.visual_line_breaks.append(line.length());
 
-    if (is_line_wrapping_enabled())
+    if (is_wrapping_enabled())
         visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_line_breaks.size()) * line_height() };
     else
         visual_data.visual_rect = { m_horizontal_content_padding, 0, font().width(line.view()), line_height() };
@@ -1469,13 +1484,13 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
     }
 }
 
-void TextEditor::set_line_wrapping_enabled(bool enabled)
+void TextEditor::set_wrapping_mode(WrappingMode mode)
 {
-    if (m_line_wrapping_enabled == enabled)
+    if (m_wrapping_mode == mode)
         return;
 
-    m_line_wrapping_enabled = enabled;
-    horizontal_scrollbar().set_visible(!m_line_wrapping_enabled);
+    m_wrapping_mode = mode;
+    horizontal_scrollbar().set_visible(m_wrapping_mode == WrappingMode::NoWrap);
     update_content_size();
     recompute_all_visual_lines();
     update();

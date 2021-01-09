@@ -244,7 +244,7 @@ void EditingEngine::move_to_line_beginning(const KeyEvent& event)
 {
     TextPosition new_cursor;
     m_editor->toggle_selection_if_needed_for_event(event.shift());
-    if (m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->is_wrapping_enabled()) {
         // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
         auto home_position = m_editor->cursor_content_rect().location().translated(-m_editor->width(), 0);
         new_cursor = m_editor->text_position_at_content_position(home_position);
@@ -262,7 +262,7 @@ void EditingEngine::move_to_line_beginning(const KeyEvent& event)
 void EditingEngine::move_to_line_end(const KeyEvent& event)
 {
     TextPosition new_cursor;
-    if (m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->is_wrapping_enabled()) {
         auto end_position = m_editor->cursor_content_rect().location().translated(m_editor->width(), 0);
         new_cursor = m_editor->text_position_at_content_position(end_position);
     } else {
@@ -274,13 +274,13 @@ void EditingEngine::move_to_line_end(const KeyEvent& event)
 
 void EditingEngine::move_one_up(const KeyEvent& event)
 {
-    if (m_editor->cursor().line() > 0 || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_up();
             return;
         }
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_above = m_editor->cursor_content_rect().location().translated(0, -m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_above);
         } else {
@@ -295,13 +295,13 @@ void EditingEngine::move_one_up(const KeyEvent& event)
 
 void EditingEngine::move_one_down(const KeyEvent& event)
 {
-    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_down();
             return;
         }
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             new_cursor = m_editor->text_position_at_content_position(m_editor->cursor_content_rect().location().translated(0, m_editor->line_height()));
             auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_below);
@@ -317,11 +317,11 @@ void EditingEngine::move_one_down(const KeyEvent& event)
 
 void EditingEngine::move_up(const KeyEvent& event, double page_height_factor)
 {
-    if (m_editor->cursor().line() > 0 || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
 
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_above = m_editor->cursor_content_rect().location().translated(0, -pixels);
             new_cursor = m_editor->text_position_at_content_position(position_above);
         } else {
@@ -337,10 +337,10 @@ void EditingEngine::move_up(const KeyEvent& event, double page_height_factor)
 
 void EditingEngine::move_down(const KeyEvent& event, double page_height_factor)
 {
-    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_below = m_editor->cursor_content_rect().location().translated(0, pixels);
             new_cursor = m_editor->text_position_at_content_position(position_below);
         } else {
