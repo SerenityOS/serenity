@@ -72,9 +72,9 @@ Chess::Type piece_for_char_promotion(const StringView& str)
     return Type::None;
 }
 
-Colour opposing_colour(Colour colour)
+Color opposing_color(Color color)
 {
-    return (colour == Colour::White) ? Colour::Black : Colour::White;
+    return (color == Color::White) ? Color::Black : Color::White;
 }
 
 Square::Square(const StringView& name)
@@ -122,14 +122,14 @@ String Move::to_long_algebraic() const
     return builder.build();
 }
 
-Move Move::from_algebraic(const StringView& algebraic, const Colour turn, const Board& board)
+Move Move::from_algebraic(const StringView& algebraic, const Color turn, const Board& board)
 {
     String move_string = algebraic;
     Move move({ 50, 50 }, { 50, 50 });
 
     if (move_string.contains("-")) {
-        move.from = Square(turn == Colour::White ? 0 : 7, 4);
-        move.to = Square(turn == Colour::White ? 0 : 7, move_string == "O-O" ? 6 : 2);
+        move.from = Square(turn == Color::White ? 0 : 7, 4);
+        move.to = Square(turn == Color::White ? 0 : 7, move_string == "O-O" ? 6 : 2);
         move.promote_to = Type::None;
         move.piece = { turn, Type::King };
 
@@ -251,33 +251,33 @@ Board::Board()
 
     // Fill white pawns.
     for (unsigned file = 0; file < 8; ++file) {
-        set_piece({ 1, file }, { Colour::White, Type::Pawn });
+        set_piece({ 1, file }, { Color::White, Type::Pawn });
     }
 
     // Fill black pawns.
     for (unsigned file = 0; file < 8; ++file) {
-        set_piece({ 6, file }, { Colour::Black, Type::Pawn });
+        set_piece({ 6, file }, { Color::Black, Type::Pawn });
     }
 
     // Fill while pieces.
-    set_piece(Square("a1"), { Colour::White, Type::Rook });
-    set_piece(Square("b1"), { Colour::White, Type::Knight });
-    set_piece(Square("c1"), { Colour::White, Type::Bishop });
-    set_piece(Square("d1"), { Colour::White, Type::Queen });
-    set_piece(Square("e1"), { Colour::White, Type::King });
-    set_piece(Square("f1"), { Colour::White, Type::Bishop });
-    set_piece(Square("g1"), { Colour::White, Type::Knight });
-    set_piece(Square("h1"), { Colour::White, Type::Rook });
+    set_piece(Square("a1"), { Color::White, Type::Rook });
+    set_piece(Square("b1"), { Color::White, Type::Knight });
+    set_piece(Square("c1"), { Color::White, Type::Bishop });
+    set_piece(Square("d1"), { Color::White, Type::Queen });
+    set_piece(Square("e1"), { Color::White, Type::King });
+    set_piece(Square("f1"), { Color::White, Type::Bishop });
+    set_piece(Square("g1"), { Color::White, Type::Knight });
+    set_piece(Square("h1"), { Color::White, Type::Rook });
 
     // Fill black pieces.
-    set_piece(Square("a8"), { Colour::Black, Type::Rook });
-    set_piece(Square("b8"), { Colour::Black, Type::Knight });
-    set_piece(Square("c8"), { Colour::Black, Type::Bishop });
-    set_piece(Square("d8"), { Colour::Black, Type::Queen });
-    set_piece(Square("e8"), { Colour::Black, Type::King });
-    set_piece(Square("f8"), { Colour::Black, Type::Bishop });
-    set_piece(Square("g8"), { Colour::Black, Type::Knight });
-    set_piece(Square("h8"), { Colour::Black, Type::Rook });
+    set_piece(Square("a8"), { Color::Black, Type::Rook });
+    set_piece(Square("b8"), { Color::Black, Type::Knight });
+    set_piece(Square("c8"), { Color::Black, Type::Bishop });
+    set_piece(Square("d8"), { Color::Black, Type::Queen });
+    set_piece(Square("e8"), { Color::Black, Type::King });
+    set_piece(Square("f8"), { Color::Black, Type::Bishop });
+    set_piece(Square("g8"), { Color::Black, Type::Knight });
+    set_piece(Square("h8"), { Color::Black, Type::Rook });
 }
 
 String Board::to_fen() const
@@ -301,7 +301,7 @@ String Board::to_fen() const
             if (piece == "")
                 piece = "P";
 
-            builder.append(p.colour == Colour::Black ? piece.to_lowercase() : piece);
+            builder.append(p.color == Color::Black ? piece.to_lowercase() : piece);
         }
         if (empty > 0) {
             builder.append(String::number(empty));
@@ -312,8 +312,8 @@ String Board::to_fen() const
     }
 
     // 2. Active color
-    ASSERT(m_turn != Colour::None);
-    builder.append(m_turn == Colour::White ? " w " : " b ");
+    ASSERT(m_turn != Color::None);
+    builder.append(m_turn == Color::White ? " w " : " b ");
 
     // 3. Castling availability
     builder.append(m_white_can_castle_kingside ? "K" : "");
@@ -361,7 +361,7 @@ Piece Board::set_piece(const Square& square, const Piece& piece)
     return m_board[square.rank][square.file] = piece;
 }
 
-bool Board::is_legal_promotion(const Move& move, Colour colour) const
+bool Board::is_legal_promotion(const Move& move, Color color) const
 {
     auto piece = get_piece(move.from);
 
@@ -375,7 +375,7 @@ bool Board::is_legal_promotion(const Move& move, Colour colour) const
         return false;
     }
 
-    unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
+    unsigned promotion_rank = (color == Color::White) ? 7 : 0;
 
     if (move.to.rank != promotion_rank && move.promote_to != Type::None) {
         // attempted promotion from invalid rank
@@ -390,31 +390,31 @@ bool Board::is_legal_promotion(const Move& move, Colour colour) const
     return true;
 }
 
-bool Board::is_legal(const Move& move, Colour colour) const
+bool Board::is_legal(const Move& move, Color color) const
 {
-    if (colour == Colour::None)
-        colour = turn();
+    if (color == Color::None)
+        color = turn();
 
-    if (!is_legal_no_check(move, colour))
+    if (!is_legal_no_check(move, color))
         return false;
 
-    if (!is_legal_promotion(move, colour))
+    if (!is_legal_promotion(move, color))
         return false;
 
     Board clone = *this;
-    clone.apply_illegal_move(move, colour);
-    if (clone.in_check(colour))
+    clone.apply_illegal_move(move, color);
+    if (clone.in_check(color))
         return false;
 
     // Don't allow castling through check or out of check.
     Vector<Square> check_squares;
-    if (colour == Colour::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Colour::White, Type::King)) {
+    if (color == Color::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Color::White, Type::King)) {
         if (move.to == Square("a1") || move.to == Square("c1")) {
             check_squares = { Square("e1"), Square("d1"), Square("c1") };
         } else if (move.to == Square("h1") || move.to == Square("g1")) {
             check_squares = { Square("e1"), Square("f1"), Square("g1") };
         }
-    } else if (colour == Colour::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Colour::Black, Type::King)) {
+    } else if (color == Color::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Color::Black, Type::King)) {
         if (move.to == Square("a8") || move.to == Square("c8")) {
             check_squares = { Square("e8"), Square("d8"), Square("c8") };
         } else if (move.to == Square("h8") || move.to == Square("g8")) {
@@ -424,19 +424,19 @@ bool Board::is_legal(const Move& move, Colour colour) const
     for (auto& square : check_squares) {
         Board clone = *this;
         clone.set_piece(move.from, EmptyPiece);
-        clone.set_piece(square, { colour, Type::King });
-        if (clone.in_check(colour))
+        clone.set_piece(square, { color, Type::King });
+        if (clone.in_check(color))
             return false;
     }
 
     return true;
 }
 
-bool Board::is_legal_no_check(const Move& move, Colour colour) const
+bool Board::is_legal_no_check(const Move& move, Color color) const
 {
     auto piece = get_piece(move.from);
 
-    if (piece.colour != colour)
+    if (piece.color != color)
         // attempted move of opponent's piece
         return false;
 
@@ -445,8 +445,8 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
         return false;
 
     if (piece.type == Type::Pawn) {
-        int dir = (colour == Colour::White) ? +1 : -1;
-        unsigned start_rank = (colour == Colour::White) ? 1 : 6;
+        int dir = (color == Color::White) ? +1 : -1;
+        unsigned start_rank = (color == Color::White) ? 1 : 6;
 
         if (move.from.rank == start_rank && move.to.rank == move.from.rank + (2 * dir) && move.to.file == move.from.file
             && get_piece(move.to).type == Type::None && get_piece({ move.from.rank + dir, move.from.file }).type == Type::None) {
@@ -464,15 +464,15 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
         }
 
         if (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1) {
-            unsigned other_start_rank = (colour == Colour::White) ? 6 : 1;
-            unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
+            unsigned other_start_rank = (color == Color::White) ? 6 : 1;
+            unsigned en_passant_rank = (color == Color::White) ? 4 : 3;
             Move en_passant_last_move = { { other_start_rank, move.to.file }, { en_passant_rank, move.to.file } };
-            if (get_piece(move.to).colour == opposing_colour(colour)) {
+            if (get_piece(move.to).color == opposing_color(color)) {
                 // Pawn capture.
                 return true;
             }
             if (m_last_move.has_value() && move.from.rank == en_passant_rank && m_last_move.value() == en_passant_last_move
-                && get_piece(en_passant_last_move.to) == Piece(opposing_colour(colour), Type::Pawn)) {
+                && get_piece(en_passant_last_move.to) == Piece(opposing_color(color), Type::Pawn)) {
                 // En passant.
                 return true;
             }
@@ -482,7 +482,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
     } else if (piece.type == Type::Knight) {
         int rank_delta = abs(move.to.rank - move.from.rank);
         int file_delta = abs(move.to.file - move.from.file);
-        if (get_piece(move.to).colour != colour && max(rank_delta, file_delta) == 2 && min(rank_delta, file_delta) == 1) {
+        if (get_piece(move.to).color != color && max(rank_delta, file_delta) == 2 && min(rank_delta, file_delta) == 1) {
             return true;
         }
     } else if (piece.type == Type::Bishop) {
@@ -497,7 +497,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
                 }
             }
 
-            if (get_piece(move.to).colour != colour) {
+            if (get_piece(move.to).color != color) {
                 return true;
             }
         }
@@ -513,7 +513,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
                 }
             }
 
-            if (get_piece(move.to).colour != colour) {
+            if (get_piece(move.to).color != color) {
                 return true;
             }
         }
@@ -529,7 +529,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
                 }
             }
 
-            if (get_piece(move.to).colour != colour) {
+            if (get_piece(move.to).color != color) {
                 return true;
             }
         }
@@ -537,12 +537,12 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
         int rank_delta = move.to.rank - move.from.rank;
         int file_delta = move.to.file - move.from.file;
         if (abs(rank_delta) <= 1 && abs(file_delta) <= 1) {
-            if (get_piece(move.to).colour != colour) {
+            if (get_piece(move.to).color != color) {
                 return true;
             }
         }
 
-        if (colour == Colour::White) {
+        if (color == Color::White) {
             if ((move.to == Square("a1") || move.to == Square("c1")) && m_white_can_castle_queenside && get_piece(Square("b1")).type == Type::None && get_piece(Square("c1")).type == Type::None && get_piece(Square("d1")).type == Type::None) {
 
                 return true;
@@ -564,11 +564,11 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
     return false;
 }
 
-bool Board::in_check(Colour colour) const
+bool Board::in_check(Color color) const
 {
     Square king_square = { 50, 50 };
     Square::for_each([&](const Square& square) {
-        if (get_piece(square) == Piece(colour, Type::King)) {
+        if (get_piece(square) == Piece(color, Type::King)) {
             king_square = square;
             return IterationDecision::Break;
         }
@@ -577,7 +577,7 @@ bool Board::in_check(Colour colour) const
 
     bool check = false;
     Square::for_each([&](const Square& square) {
-        if (is_legal_no_check({ square, king_square }, opposing_colour(colour))) {
+        if (is_legal_no_check({ square, king_square }, opposing_color(color))) {
             check = true;
             return IterationDecision::Break;
         }
@@ -587,20 +587,20 @@ bool Board::in_check(Colour colour) const
     return check;
 }
 
-bool Board::apply_move(const Move& move, Colour colour)
+bool Board::apply_move(const Move& move, Color color)
 {
-    if (colour == Colour::None)
-        colour = turn();
+    if (color == Color::None)
+        color = turn();
 
-    if (!is_legal(move, colour))
+    if (!is_legal(move, color))
         return false;
 
     const_cast<Move&>(move).piece = get_piece(move.from);
 
-    return apply_illegal_move(move, colour);
+    return apply_illegal_move(move, color);
 }
 
-bool Board::apply_illegal_move(const Move& move, Colour colour)
+bool Board::apply_illegal_move(const Move& move, Color color)
 {
     Board clone = *this;
     clone.m_previous_states = {};
@@ -612,7 +612,7 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
     m_previous_states.set(clone, state_count + 1);
     m_moves.append(move);
 
-    m_turn = opposing_colour(colour);
+    m_turn = opposing_color(color);
 
     m_last_move = move;
     m_moves_since_capture++;
@@ -627,32 +627,32 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
     if (move.from == Square("h8") || move.to == Square("h8") || move.from == Square("e8"))
         m_black_can_castle_kingside = false;
 
-    if (colour == Colour::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Colour::White, Type::King)) {
+    if (color == Color::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Color::White, Type::King)) {
         if (move.to == Square("a1") || move.to == Square("c1")) {
             set_piece(Square("e1"), EmptyPiece);
             set_piece(Square("a1"), EmptyPiece);
-            set_piece(Square("c1"), { Colour::White, Type::King });
-            set_piece(Square("d1"), { Colour::White, Type::Rook });
+            set_piece(Square("c1"), { Color::White, Type::King });
+            set_piece(Square("d1"), { Color::White, Type::Rook });
             return true;
         } else if (move.to == Square("h1") || move.to == Square("g1")) {
             set_piece(Square("e1"), EmptyPiece);
             set_piece(Square("h1"), EmptyPiece);
-            set_piece(Square("g1"), { Colour::White, Type::King });
-            set_piece(Square("f1"), { Colour::White, Type::Rook });
+            set_piece(Square("g1"), { Color::White, Type::King });
+            set_piece(Square("f1"), { Color::White, Type::Rook });
             return true;
         }
-    } else if (colour == Colour::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Colour::Black, Type::King)) {
+    } else if (color == Color::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Color::Black, Type::King)) {
         if (move.to == Square("a8") || move.to == Square("c8")) {
             set_piece(Square("e8"), EmptyPiece);
             set_piece(Square("a8"), EmptyPiece);
-            set_piece(Square("c8"), { Colour::Black, Type::King });
-            set_piece(Square("d8"), { Colour::Black, Type::Rook });
+            set_piece(Square("c8"), { Color::Black, Type::King });
+            set_piece(Square("d8"), { Color::Black, Type::Rook });
             return true;
         } else if (move.to == Square("h8") || move.to == Square("g8")) {
             set_piece(Square("e8"), EmptyPiece);
             set_piece(Square("h8"), EmptyPiece);
-            set_piece(Square("g8"), { Colour::Black, Type::King });
-            set_piece(Square("f8"), { Colour::Black, Type::Rook });
+            set_piece(Square("g8"), { Color::Black, Type::King });
+            set_piece(Square("f8"), { Color::Black, Type::Rook });
             return true;
         }
     }
@@ -660,14 +660,14 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
     if (move.piece.type == Type::Pawn)
         m_moves_since_pawn_advance = 0;
 
-    if (get_piece(move.to).colour != Colour::None) {
+    if (get_piece(move.to).color != Color::None) {
         const_cast<Move&>(move).is_capture = true;
         m_moves_since_capture = 0;
     }
 
-    if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7))) {
+    if (get_piece(move.from).type == Type::Pawn && ((color == Color::Black && move.to.rank == 0) || (color == Color::White && move.to.rank == 7))) {
         // Pawn Promotion
-        set_piece(move.to, { colour, move.promote_to });
+        set_piece(move.to, { color, move.promote_to });
         set_piece(move.from, EmptyPiece);
 
         if (in_check(m_turn))
@@ -678,7 +678,7 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
 
     if (get_piece(move.from).type == Type::Pawn && move.from.file != move.to.file && get_piece(move.to).type == Type::None) {
         // En passant.
-        if (colour == Colour::White) {
+        if (color == Color::White) {
             set_piece({ move.to.rank - 1, move.to.file }, EmptyPiece);
         } else {
             set_piece({ move.to.rank + 1, move.to.file }, EmptyPiece);
@@ -689,8 +689,8 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
 
     Square::for_each([&](Square sq) {
         // Ambiguous Move
-        if (sq != move.from && get_piece(sq).type == move.piece.type && get_piece(sq).colour == move.piece.colour) {
-            if (is_legal(Move(sq, move.to), get_piece(sq).colour)) {
+        if (sq != move.from && get_piece(sq).type == move.piece.type && get_piece(sq).color == move.piece.color) {
+            if (is_legal(Move(sq, move.to), get_piece(sq).color)) {
                 m_moves.last().is_ambiguous = true;
                 m_moves.last().ambiguous = sq;
 
@@ -709,10 +709,10 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
     return true;
 }
 
-Move Board::random_move(Colour colour) const
+Move Board::random_move(Color color) const
 {
-    if (colour == Colour::None)
-        colour = turn();
+    if (color == Color::None)
+        color = turn();
 
     Move move = { { 50, 50 }, { 50, 50 } };
     int probability = 1;
@@ -728,8 +728,8 @@ Move Board::random_move(Colour colour) const
 
 Board::Result Board::game_result() const
 {
-    if (m_resigned != Colour::None)
-        return (m_resigned == Colour::White) ? Result::WhiteResign : Result::BlackResign;
+    if (m_resigned != Color::None)
+        return (m_resigned == Color::White) ? Result::WhiteResign : Result::BlackResign;
 
     bool sufficient_material = false;
     bool no_more_pieces_allowed = false;
@@ -750,7 +750,7 @@ Board::Result Board::game_result() const
 
         if (get_piece(sq).type == Type::Bishop) {
             if (bishop.has_value()) {
-                if (get_piece(sq).colour == get_piece(bishop.value()).colour) {
+                if (get_piece(sq).color == get_piece(bishop.value()).color) {
                     sufficient_material = true;
                     return IterationDecision::Break;
                 } else if (sq.is_light() != bishop.value().is_light()) {
@@ -800,22 +800,22 @@ Board::Result Board::game_result() const
     return Result::StaleMate;
 }
 
-Colour Board::game_winner() const
+Color Board::game_winner() const
 {
     if (game_result() == Result::CheckMate)
-        return opposing_colour(turn());
+        return opposing_color(turn());
 
-    return Colour::None;
+    return Color::None;
 }
 
 int Board::game_score() const
 {
     switch (game_winner()) {
-    case Colour::White:
+    case Color::White:
         return +1;
-    case Colour::Black:
+    case Color::Black:
         return -1;
-    case Colour::None:
+    case Color::None:
         return 0;
     }
     return 0;
@@ -849,7 +849,7 @@ int Board::material_imbalance() const
             break;
         }
 
-        if (get_piece(square).colour == Colour::White) {
+        if (get_piece(square).color == Color::White) {
             imbalance += value;
         } else {
             imbalance -= value;
@@ -859,12 +859,12 @@ int Board::material_imbalance() const
     return imbalance;
 }
 
-bool Board::is_promotion_move(const Move& move, Colour colour) const
+bool Board::is_promotion_move(const Move& move, Color color) const
 {
-    if (colour == Colour::None)
-        colour = turn();
+    if (color == Color::None)
+        color = turn();
 
-    unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
+    unsigned promotion_rank = (color == Color::White) ? 7 : 0;
     if (move.to.rank != promotion_rank)
         return false;
 
@@ -873,7 +873,7 @@ bool Board::is_promotion_move(const Move& move, Colour colour) const
 
     Move queen_move = move;
     queen_move.promote_to = Type::Queen;
-    if (!is_legal(queen_move, colour))
+    if (!is_legal(queen_move, color))
         return false;
 
     return true;
@@ -904,17 +904,17 @@ bool Board::operator==(const Board& other) const
     return turn() == other.turn();
 }
 
-void Board::set_resigned(Chess::Colour c)
+void Board::set_resigned(Chess::Color c)
 {
     m_resigned = c;
 }
 
-String Board::result_to_string(Result result, Colour turn)
+String Board::result_to_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Colour::None);
-        return turn == Chess::Colour::White ? "Black wins by Checkmate" : "White wins by Checkmate";
+        ASSERT(turn != Chess::Color::None);
+        return turn == Chess::Color::White ? "Black wins by Checkmate" : "White wins by Checkmate";
     case Result::WhiteResign:
         return "Black wins by Resignation";
     case Result::BlackResign:
@@ -938,12 +938,12 @@ String Board::result_to_string(Result result, Colour turn)
     }
 }
 
-String Board::result_to_points(Result result, Colour turn)
+String Board::result_to_points(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Colour::None);
-        return turn == Chess::Colour::White ? "0-1" : "1-0";
+        ASSERT(turn != Chess::Color::None);
+        return turn == Chess::Color::White ? "0-1" : "1-0";
     case Result::WhiteResign:
         return "0-1";
     case Result::BlackResign:
