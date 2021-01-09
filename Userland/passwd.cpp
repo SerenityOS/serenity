@@ -131,6 +131,11 @@ int main(int argc, char** argv)
         target_account.set_password(new_password.value().characters());
     }
 
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (!target_account.sync()) {
         perror("Core::Account::Sync");
     }
