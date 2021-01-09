@@ -153,6 +153,9 @@ protected:
     virtual void mouseup_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void drag_enter_event(DragEvent&) override;
+    virtual void drag_move_event(DragEvent&) override;
+    virtual void drag_leave_event(Event&) override;
     virtual void drop_event(DropEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void hide_event(HideEvent&) override;
@@ -180,6 +183,8 @@ protected:
     void do_search(String&&);
     bool is_highlighting_searching(const ModelIndex&) const;
 
+    ModelIndex drop_candidate_index() const { return m_drop_candidate_index; }
+
     bool m_editable { false };
     bool m_searchable { true };
     ModelIndex m_edit_index;
@@ -202,6 +207,7 @@ private:
     String m_searching;
     RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
+    ModelIndex m_drop_candidate_index;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
