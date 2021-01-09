@@ -78,6 +78,10 @@ Document::Document(const URL& url)
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
     });
+
+    m_forced_layout_timer = Core::Timer::create_single_shot(0, [this] {
+        force_layout();
+    });
 }
 
 Document::~Document()
@@ -154,6 +158,13 @@ void Document::schedule_style_update()
     if (m_style_update_timer->is_active())
         return;
     m_style_update_timer->start();
+}
+
+void Document::schedule_forced_layout()
+{
+    if (m_forced_layout_timer->is_active())
+        return;
+    m_forced_layout_timer->start();
 }
 
 bool Document::is_child_allowed(const Node& node) const
