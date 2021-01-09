@@ -913,10 +913,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             refresh_tree_view();
     };
 
-    breadcrumb_bar.on_drop = [&](size_t segment_index, const GUI::DropEvent& event) {
+    breadcrumb_bar.on_segment_drop = [&](size_t segment_index, const GUI::DropEvent& event) {
         if (!event.mime_data().has_urls())
             return;
         copy_urls_to_directory(event.mime_data().urls(), breadcrumb_bar.segment_data(segment_index));
+    };
+
+    breadcrumb_bar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
+        if (event.mime_types().contains_slow("text/uri-list"))
+            event.accept();
     };
 
     tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
