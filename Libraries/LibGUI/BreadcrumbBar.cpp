@@ -139,4 +139,10 @@ void BreadcrumbBar::set_selected_segment(Optional<size_t> index)
     segment.button->set_checked(true);
 }
 
+void BreadcrumbBar::doubleclick_event(MouseEvent& event)
+{
+    if (on_doubleclick)
+        on_doubleclick(event);
+}
+
 }
