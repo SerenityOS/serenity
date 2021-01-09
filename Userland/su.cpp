@@ -85,6 +85,11 @@ int main(int argc, char** argv)
         }
     }
 
+    if (pledge("stdio exec id", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (!account.login()) {
         perror("Core::Account::login");
         return 1;
