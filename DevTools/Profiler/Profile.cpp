@@ -32,7 +32,6 @@
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
-#include <LibCoreDump/Reader.h>
 #include <LibELF/Image.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -47,61 +46,19 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-struct CachedLibData {
-    OwnPtr<MappedFile> file;
-    ELF::Image lib_elf;
-};
-
-static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region, u32& offset)
-{
-
-    static HashMap<String, OwnPtr<CachedLibData>> cached_libs;
-
-    auto name = region->object_name();
-
-    String path;
-    if (name.contains(".so"))
-        path = String::format("/usr/lib/%s", name.characters());
-    else {
-        path = name;
-    }
-
-    struct stat st;
-    if (stat(path.characters(), &st)) {
-        return {};
-    }
-
-    if (!cached_libs.contains(path)) {
-        auto lib_file = make<MappedFile>(path);
-        if (!lib_file->is_valid())
-            return {};
-        auto image = ELF::Image((const u8*)lib_file->data(), lib_file->size());
-        cached_libs.set(path, make<CachedLibData>(move(lib_file), move(image)));
-    }
-
-    auto lib_data = cached_libs.get(path).value();
-
-    return String::format("[%s] %s", name.characters(), lib_data->lib_elf.symbolicate(eip - region->region_start, &offset).characters());
-}
-
 static String symbolicate_from_coredump(CoreDump::Reader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
 {
-    auto* region = coredump.region_containing((FlatPtr)ptr);
-    if (!region) {
-        dbgln("did not find region for eip: {:p}", ptr);
-        return "??";
-    }
-
-    auto name = symbolicate((FlatPtr)ptr, region, offset);
-    if (name.is_null()) {
+    auto library_data = coredump.library_containing(ptr);
+    if (!library_data) {
         dbgln("could not symbolicate: {:p}", ptr);
         return "??";
     }
-    return name;
+    return String::formatted("[{}] {}", library_data->name, library_data->lib_elf.symbolicate(ptr - library_data->base_address, &offset));
 }
 
-Profile::Profile(String executable_path, Vector<Event> events)
+Profile::Profile(String executable_path, NonnullOwnPtr<CoreDump::Reader>&& coredump, Vector<Event> events)
     : m_executable_path(move(executable_path))
+    , m_coredump(move(coredump))
     , m_events(move(events))
 {
     m_first_timestamp = m_events.first().timestamp;
@@ -332,7 +289,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         events.append(move(event));
     }
 
-    return adopt_own(*new Profile(executable_path, move(events)));
+    return adopt_own(*new Profile(executable_path, coredump.release_nonnull(), move(events)));
 }
 
 void ProfileNode::sort_children()
