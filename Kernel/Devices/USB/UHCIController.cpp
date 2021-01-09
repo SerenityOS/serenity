@@ -139,7 +139,6 @@ void UHCIController::reset()
     auto framelist_vmobj = ContiguousVMObject::create_with_size(PAGE_SIZE);
     m_framelist = MemoryManager::the().allocate_kernel_region_with_vmobject(*framelist_vmobj, PAGE_SIZE, "UHCI Framelist", Region::Access::Write);
     klog() << "UHCI: Allocated framelist at physical address " << m_framelist->physical_page(0)->paddr();
-    klog() << "FUCK!";
     klog() << "UHCI: Framelist is at virtual address " << m_framelist->vaddr();
     write_sofmod(64); // 1mS frame time
 
