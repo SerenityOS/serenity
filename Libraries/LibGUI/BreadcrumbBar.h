@@ -48,6 +48,7 @@ public:
     Function<void(size_t index)> on_segment_click;
     Function<void(size_t index, DropEvent&)> on_segment_drop;
     Function<void(size_t index, DragEvent&)> on_segment_drag_enter;
+    Function<void(MouseEvent& event)> on_doubleclick;
 
 private:
     BreadcrumbBar();
@@ -61,6 +62,8 @@ private:
 
     Vector<Segment> m_segments;
     Optional<size_t> m_selected_segment;
+
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
 };
 
 }
