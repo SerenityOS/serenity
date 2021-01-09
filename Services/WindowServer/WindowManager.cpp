@@ -485,6 +485,8 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
+    m_active_input_tracking_window = nullptr;
+
     window.invalidate();
 
     if (hot_area_row == 0 || hot_area_column == 0) {
