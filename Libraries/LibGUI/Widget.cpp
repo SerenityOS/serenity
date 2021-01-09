@@ -510,7 +510,9 @@ void Widget::drag_move_event(DragEvent&)
 
 void Widget::drag_enter_event(DragEvent& event)
 {
-    dbgln("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), event.data_type());
+    StringBuilder builder;
+    builder.join(',', event.mime_types());
+    dbgln("{} {:p} DRAG ENTER @ {}, {}", class_name(), this, event.position(), builder.string_view());
 }
 
 void Widget::drag_leave_event(Event&)

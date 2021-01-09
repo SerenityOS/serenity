@@ -270,10 +270,7 @@ void IconView::drag_move_event(DragEvent& event)
     auto index = index_at_event_position(event.position());
     ModelIndex new_drop_candidate_index;
     if (index.is_valid()) {
-        bool acceptable = model()->accepts_drag(index, event.data_type());
-#ifdef DRAGDROP_DEBUG
-        dbg() << "Drag of type '" << event.data_type() << "' moving over " << index << ", acceptable: " << acceptable;
-#endif
+        bool acceptable = model()->accepts_drag(index, event.mime_types());
         if (acceptable)
             new_drop_candidate_index = index;
     }
