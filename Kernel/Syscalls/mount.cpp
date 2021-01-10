@@ -57,9 +57,9 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 
     auto description = file_description(source_fd);
     if (!description.is_null())
-        dbg() << "mount " << fs_type << ": source fd " << source_fd << " @ " << target;
+        dbgln("mount {}: source fd {} @ {}", fs_type, source_fd, target);
     else
-        dbg() << "mount " << fs_type << " @ " << target;
+        dbgln("mount {} @ {}", fs_type, target);
 
     auto custody_or_error = VFS::the().resolve_path(target, current_directory());
     if (custody_or_error.is_error())
@@ -93,7 +93,7 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
             return -ENODEV;
         }
 
-        dbg() << "mount: attempting to mount " << description->absolute_path() << " on " << target;
+        dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
 
         fs = Ext2FS::create(*description);
     } else if (fs_type == "9p" || fs_type == "Plan9FS") {
@@ -114,15 +114,15 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     }
 
     if (!fs->initialize()) {
-        dbg() << "mount: failed to initialize " << fs_type << " filesystem, fd - " << source_fd;
+        dbgln("mount: failed to initialize {} filesystem, fd={}", fs_type, source_fd);
         return -ENODEV;
     }
 
     auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
     if (!description.is_null())
-        dbg() << "mount: successfully mounted " << description->absolute_path() << " on " << target;
+        dbgln("mount: successfully mounted {} on {}", description->absolute_path(), target);
     else
-        dbg() << "mount: successfully mounted " << target;
+        dbgln("mount: successfully mounted {}", target);
     return result;
 }
 

@@ -465,7 +465,7 @@ void TCPSocket::shut_down_for_writing()
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::FinWait1);
     } else {
-        dbg() << " Shutting down TCPSocket for writing but not moving to FinWait1 since state is " << to_string(state());
+        dbgln(" Shutting down TCPSocket for writing but not moving to FinWait1 since state is {}", to_string(state()));
     }
 }
 

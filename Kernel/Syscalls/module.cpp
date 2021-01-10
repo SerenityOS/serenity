@@ -86,17 +86,17 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
             switch (relocation.type()) {
             case R_386_PC32: {
                 // PC-relative relocation
-                dbg() << "PC-relative relocation: " << relocation.symbol().name();
+                dbgln("PC-relative relocation: {}", relocation.symbol().name());
                 u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
                 if (symbol_address == 0)
                     missing_symbols = true;
-                dbg() << "   Symbol address: " << (void*)symbol_address;
+                dbgln("   Symbol address: {:p}", symbol_address);
                 ptrdiff_t relative_offset = (char*)symbol_address - ((char*)&patch_ptr + 4);
                 patch_ptr = relative_offset;
                 break;
             }
             case R_386_32: // Absolute relocation
-                dbg() << "Absolute relocation: '" << relocation.symbol().name() << "' value:" << relocation.symbol().value() << ", index:" << relocation.symbol_index();
+                dbgln("Absolute relocation: '{}' value={}, index={}", relocation.symbol().name(), relocation.symbol().value(), relocation.symbol_index());
 
                 if (relocation.symbol().bind() == STB_LOCAL) {
                     auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
@@ -104,13 +104,13 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
                     u32 symbol_address = (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
                     if (symbol_address == 0)
                         missing_symbols = true;
-                    dbg() << "   Symbol address: " << (void*)symbol_address;
+                    dbgln("   Symbol address: {:p}", symbol_address);
                     patch_ptr += symbol_address;
                 } else if (relocation.symbol().bind() == STB_GLOBAL) {
                     u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
                     if (symbol_address == 0)
                         missing_symbols = true;
-                    dbg() << "   Symbol address: " << (void*)symbol_address;
+                    dbgln("   Symbol address: {:p}", symbol_address);
                     patch_ptr += symbol_address;
                 } else {
                     ASSERT_NOT_REACHED();
@@ -133,7 +133,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     }
 
     elf_image->for_each_symbol([&](const ELF::Image::Symbol& symbol) {
-        dbg() << " - " << symbol.type() << " '" << symbol.name() << "' @ " << (void*)symbol.value() << ", size=" << symbol.size();
+        dbgln(" - {} '{}' @ {:p}, size={}", symbol.type(), symbol.name(), symbol.value(), symbol.size());
         if (symbol.name() == "module_init") {
             module->module_init = (ModuleInitPtr)(text_base + symbol.value());
         } else if (symbol.name() == "module_fini") {
@@ -150,7 +150,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
         return -EINVAL;
 
     if (g_modules->contains(module->name)) {
-        dbg() << "a module with the name " << module->name << " is already loaded; please unload it first";
+        dbgln("a module with the name {} is already loaded; please unload it first", module->name);
         return -EEXIST;
     }
 
