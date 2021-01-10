@@ -80,10 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
         vm.throw_exception<TypeError>(global_object, ErrorType::FunctionArgsNotObject);
         return {};
     }
-    auto length_property = arg_array.as_object().get(vm.names.length);
-    if (vm.exception())
-        return {};
-    auto length = length_property.to_size_t(global_object);
+    auto length = length_of_array_like(global_object, arg_array.as_object());
     if (vm.exception())
         return {};
     MarkedValueList arguments(vm.heap());

@@ -152,20 +152,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
         return {};
     if (!vm.argument_count())
         return js_string(vm, String::empty());
-    auto count_value = vm.argument(0).to_number(global_object);
+    auto count = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    if (count_value.as_double() < 0) {
+    if (count < 0) {
         vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
         return {};
     }
-    if (count_value.is_infinity()) {
+    if (Value(count).is_infinity()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
         return {};
     }
-    auto count = count_value.to_size_t(global_object);
-    if (vm.exception())
-        return {};
     StringBuilder builder;
     for (size_t i = 0; i < count; ++i)
         builder.append(string);
@@ -185,12 +182,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     auto string_length = string.length();
     auto search_string_length = search_string.length();
     size_t start = 0;
-    if (vm.argument_count() > 1) {
-        auto number = vm.argument(1).to_number(global_object);
+    if (!vm.argument(1).is_undefined()) {
+        auto position = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        if (!number.is_nan())
-            start = min(number.to_size_t(global_object), string_length);
+        start = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
     }
     if (start + search_string_length > string_length)
         return Value(false);
@@ -226,10 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 
     auto end_position_value = vm.argument(1);
     if (!end_position_value.is_undefined()) {
-        auto number = end_position_value.to_number(global_object);
-        if (vm.exception())
-            return {};
-        double pos_as_double = number.to_integer_or_infinity(global_object);
+        double pos_as_double = end_position_value.to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
         pos = clamp(pos_as_double, static_cast<double>(0), static_cast<double>(string_length));
@@ -295,7 +288,7 @@ enum class PadPlacement {
 static Value pad_string(GlobalObject& global_object, const String& string, PadPlacement placement)
 {
     auto& vm = global_object.vm();
-    auto max_length = vm.argument(0).to_size_t(global_object);
+    auto max_length = vm.argument(0).to_length(global_object);
     if (vm.exception())
         return {};
     if (max_length <= string.length())
@@ -389,15 +382,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 
     // FIXME: index_start and index_end should index a UTF-16 code_point view of the string.
     auto string_length = string.length();
-    auto index_start = min(vm.argument(0).to_size_t(global_object), string_length);
+    auto start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    auto index_end = string_length;
-    if (vm.argument_count() >= 2) {
-        index_end = min(vm.argument(1).to_size_t(global_object), string_length);
+    auto end = (double)string_length;
+    if (!vm.argument(1).is_undefined()) {
+        end = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
     }
+    size_t index_start = clamp(start, static_cast<double>(0), static_cast<double>(string_length));
+    size_t index_end = clamp(end, static_cast<double>(0), static_cast<double>(string_length));
 
     if (index_start == index_end)
         return js_string(vm, String(""));
@@ -457,22 +452,19 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
     auto search_string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-
-    // FIXME: position should index a UTF-16 code_point view of the string.
-    size_t position = 0;
-    if (vm.argument_count() >= 2) {
-        position = vm.argument(1).to_size_t(global_object);
+    auto string_length = string.length();
+    // FIXME: start should index a UTF-16 code_point view of the string.
+    size_t start = 0;
+    if (!vm.argument(1).is_undefined()) {
+        auto position = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        if (position >= string.length())
-            return Value(false);
+        start = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
     }
-
-    if (position == 0)
+    if (start == 0)
         return Value(string.contains(search_string));
-
-    auto substring_length = string.length() - position;
-    auto substring_search = string.substring(position, substring_length);
+    auto substring_length = string_length - start;
+    auto substring_search = string.substring(start, substring_length);
     return Value(substring_search.contains(search_string));
 }
 
@@ -593,22 +585,22 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-
-    if (vm.argument_count() == 0)
-        return Value(-1);
-
     auto search_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto position = vm.argument(1).to_number(global_object);
     if (vm.exception())
         return {};
     if (search_string.length() > string.length())
         return Value(-1);
     auto max_index = string.length() - search_string.length();
     auto from_index = max_index;
-    if (vm.argument_count() >= 2) {
+    if (!position.is_nan()) {
         // FIXME: from_index should index a UTF-16 code_point view of the string.
-        from_index = min(vm.argument(1).to_size_t(global_object), max_index);
+        auto p = position.to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
+        from_index = clamp(p, static_cast<double>(0), static_cast<double>(max_index));
     }
 
     for (i32 i = from_index; i >= 0; --i) {
