@@ -70,7 +70,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
             state.replacer_function = &replacer.as_function();
         } else if (replacer.is_array()) {
             auto& replacer_object = replacer.as_object();
-            auto replacer_length = length_of_array_like(global_object, replacer);
+            auto replacer_length = length_of_array_like(global_object, replacer_object);
             if (vm.exception())
                 return {};
             Vector<String> list;
@@ -298,7 +298,7 @@ String JSONObject::serialize_json_array(GlobalObject& global_object, StringifySt
     state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
-    auto length = length_of_array_like(global_object, Value(&object));
+    auto length = length_of_array_like(global_object, object);
     if (vm.exception())
         return {};
     for (size_t i = 0; i < length; ++i) {
@@ -476,7 +476,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
         };
 
         if (value_object.is_array()) {
-            auto length = length_of_array_like(global_object, value);
+            auto length = length_of_array_like(global_object, value_object);
             for (size_t i = 0; i < length; ++i) {
                 process_property(i);
                 if (vm.exception())
