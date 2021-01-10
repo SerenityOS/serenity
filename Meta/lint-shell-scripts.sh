@@ -5,11 +5,6 @@ set -eo pipefail
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.."
 
-if ! command -v shellcheck &>/dev/null ; then
-    echo "shellcheck is not available. Either skip this script, or install shellcheck."
-    exit 1
-fi
-
 if [ "$#" -eq "0" ]; then
     mapfile -t files < <(
         git ls-files -- \
@@ -28,6 +23,11 @@ else
 fi
 
 if (( ${#files[@]} )); then
+    if ! command -v shellcheck &>/dev/null ; then
+        echo "shellcheck is not available, but shell files need linting! Either skip this script, or install shellcheck."
+        exit 1
+    fi
+
     shellcheck "${files[@]}"
 else
     echo "No .sh files to check."
