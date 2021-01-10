@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     } else {
         auto new_password = Core::get_password("New password: ");
         if (new_password.is_error()) {
-            warnln("{}", strerror(new_password.error()));
+            warnln("{}", new_password.error());
             return 1;
         }
 
