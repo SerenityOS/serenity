@@ -274,11 +274,11 @@ static inline u8 attribute_to_vga(const VT::Attribute& attribute)
 
     // Background color
     vga_attr &= ~0x70;
-    vga_attr |= xterm_color_to_vga(attribute.background_color) << 8;
+    vga_attr |= xterm_color_to_vga(attribute.effective_background_color()) << 8;
 
     // Foreground color
     vga_attr &= ~0x7;
-    vga_attr |= xterm_color_to_vga(attribute.foreground_color);
+    vga_attr |= xterm_color_to_vga(attribute.effective_foreground_color());
 
     return vga_attr;
 }
