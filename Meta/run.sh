@@ -138,6 +138,22 @@ elif [ "$SERENITY_RUN" = "qcmd" ]; then
         -device e1000,netdev=breh \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
+elif [ "$SERENITY_RUN" = "ci" ]; then
+    # Meta/run.sh ci: qemu in text mode
+    echo "Running QEMU in CI"
+    "$SERENITY_QEMU_BIN" \
+        $SERENITY_EXTRA_QEMU_ARGS \
+        -s -m $SERENITY_RAM_SIZE \
+        -cpu $SERENITY_QEMU_CPU \
+        -d guest_errors \
+        -smp 2 \
+        -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk \
+        -device ich9-ahci \
+        -nographic \
+        -display none \
+        -debugcon file:debug.log \
+        -kernel Kernel/Kernel \
+        -append "${SERENITY_KERNEL_CMDLINE}"
 else
     # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
