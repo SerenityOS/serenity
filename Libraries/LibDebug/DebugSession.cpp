@@ -90,12 +90,12 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
 
     if (waitpid(pid, nullptr, WSTOPPED) != pid) {
         perror("waitpid");
-        return nullptr;
+        return {};
     }
 
     if (ptrace(PT_ATTACH, pid, 0, 0) < 0) {
         perror("PT_ATTACH");
-        return nullptr;
+        return {};
     }
 
     // We want to continue until the exit from the 'execve' sycsall.
@@ -105,7 +105,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
 
     if (waitpid(pid, nullptr, WSTOPPED) != pid) {
         perror("wait_pid");
-        return nullptr;
+        return {};
     }
 
     auto debug_session = adopt_own(*new DebugSession(pid, source_root));
@@ -114,7 +114,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
     int wstatus = debug_session->continue_debuggee_and_wait();
     if (WSTOPSIG(wstatus) != SIGTRAP) {
         dbgln("expected SIGTRAP");
-        return nullptr;
+        return {};
     }
 
     // At this point, libraries should have been loaded

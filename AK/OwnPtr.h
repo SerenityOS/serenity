@@ -34,7 +34,7 @@ namespace AK {
 template<typename T>
 class OwnPtr {
 public:
-    OwnPtr() { }
+    OwnPtr() = default;
     explicit OwnPtr(T* ptr)
         : m_ptr(ptr)
     {
@@ -57,7 +57,6 @@ public:
         : m_ptr(other.leak_ptr())
     {
     }
-    OwnPtr(std::nullptr_t) {};
     ~OwnPtr()
     {
         clear();

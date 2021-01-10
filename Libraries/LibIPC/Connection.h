@@ -171,7 +171,7 @@ protected:
             if (!drain_messages_from_peer())
                 break;
         }
-        return nullptr;
+        return {};
     }
 
     bool drain_messages_from_peer()

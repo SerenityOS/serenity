@@ -69,7 +69,7 @@ KernelRng::KernelRng()
 void KernelRng::wait_for_entropy()
 {
     if (!resource().is_ready()) {
-        m_seed_queue.wait_on(nullptr, "KernelRng");
+        m_seed_queue.wait_on({}, "KernelRng");
     }
 }
 

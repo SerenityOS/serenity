@@ -90,16 +90,16 @@ OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(cons
     if (mbr_table_or_result.error() == PartitionTable::Error::MBRProtective) {
         auto gpt_table_or_result = GUIDPartitionTable::try_to_initialize(device);
         if (gpt_table_or_result.is_error())
-            return nullptr;
+            return {};
         return move(gpt_table_or_result.value());
     }
     if (mbr_table_or_result.error() == PartitionTable::Error::ConatinsEBR) {
         auto ebr_table_or_result = EBRPartitionTable::try_to_initialize(device);
         if (ebr_table_or_result.is_error())
-            return nullptr;
+            return {};
         return move(ebr_table_or_result.value());
     }
-    return nullptr;
+    return {};
 }
 
 NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions() const

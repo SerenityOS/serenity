@@ -74,7 +74,7 @@ private:
     };
 
 public:
-    DoublyLinkedList() { }
+    DoublyLinkedList() = default;
     ~DoublyLinkedList() { clear(); }
 
     bool is_empty() const { return !m_head; }

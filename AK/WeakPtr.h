@@ -37,8 +37,7 @@ class WeakPtr {
     friend class Weakable;
 
 public:
-    WeakPtr() { }
-    WeakPtr(std::nullptr_t) { }
+    WeakPtr() = default;
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
     WeakPtr(const WeakPtr<U>& other)
@@ -260,6 +259,15 @@ struct Formatter<WeakPtr<T>> : Formatter<const T*> {
 #endif
     }
 };
+
+template<typename T>
+WeakPtr<T> try_make_weak_ptr(const T* ptr)
+{
+    if (ptr) {
+        return ptr->template make_weak_ptr<T>();
+    }
+    return {};
+}
 
 }
 

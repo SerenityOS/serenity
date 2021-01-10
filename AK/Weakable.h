@@ -130,7 +130,7 @@ public:
     WeakPtr<U> make_weak_ptr() const;
 
 protected:
-    Weakable() { }
+    Weakable() = default;
 
     ~Weakable()
     {

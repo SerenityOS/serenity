@@ -338,7 +338,7 @@ static OwnPtr<Command> parse_simple_command(char* argv[])
     StringView arg = argv[optind];
 
     if (arg.is_null()) {
-        return nullptr;
+        return {};
     } else if (arg == "(") {
         optind++;
         auto command = parse_complex_command(argv);

@@ -132,7 +132,7 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
         KResult try_join_result(KSuccess);
-        auto result = current_thread->block<Thread::JoinBlocker>(nullptr, *thread, try_join_result, joinee_exit_value);
+        auto result = current_thread->block<Thread::JoinBlocker>({}, *thread, try_join_result, joinee_exit_value);
         if (result == Thread::BlockResult::NotBlocked) {
             if (try_join_result.is_error())
                 return try_join_result.error();

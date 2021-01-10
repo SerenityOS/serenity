@@ -119,7 +119,7 @@ OwnPtr<Document> Document::parse(const StringView& str)
 
         auto line = Paragraph::Line::parse(lines);
         if (!line)
-            return nullptr;
+            return {};
 
         paragraph_lines.append(line.release_nonnull());
     }

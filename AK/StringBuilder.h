@@ -39,7 +39,7 @@ public:
     using OutputType = String;
 
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
-    ~StringBuilder() { }
+    ~StringBuilder() = default;
 
     void append(const StringView&);
     void append(const Utf32View&);

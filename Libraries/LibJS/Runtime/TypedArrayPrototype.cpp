@@ -40,7 +40,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     auto& vm = this->vm();
     Object::initialize(object);
     // FIXME: This should be an accessor property
-    define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.length, length_getter, {}, Attribute::Configurable);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()

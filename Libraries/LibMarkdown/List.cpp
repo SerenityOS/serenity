@@ -122,20 +122,20 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
             if (first)
                 is_ordered = appears_ordered;
             else if (is_ordered != appears_ordered)
-                return nullptr;
+                return {};
 
             if (!flush_item_if_needed())
-                return nullptr;
+                return {};
 
             while (offset + 1 < line.length() && line[offset + 1] == ' ')
                 offset++;
 
         } else {
             if (first)
-                return nullptr;
+                return {};
             for (size_t i = 0; i < offset; i++) {
                 if (line[i] != ' ')
-                    return nullptr;
+                    return {};
             }
         }
 
@@ -149,7 +149,7 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
     }
 
     if (!flush_item_if_needed() || first)
-        return nullptr;
+        return {};
     return make<List>(move(items), is_ordered);
 }
 

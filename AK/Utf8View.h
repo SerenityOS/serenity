@@ -37,8 +37,8 @@ class Utf8CodepointIterator {
     friend class Utf8View;
 
 public:
-    Utf8CodepointIterator() { }
-    ~Utf8CodepointIterator() { }
+    Utf8CodepointIterator() = default;
+    ~Utf8CodepointIterator() = default;
 
     bool operator==(const Utf8CodepointIterator&) const;
     bool operator!=(const Utf8CodepointIterator&) const;
@@ -63,11 +63,11 @@ class Utf8View {
 public:
     using Iterator = Utf8CodepointIterator;
 
-    Utf8View() { }
+    Utf8View() = default;
     explicit Utf8View(const String&);
     explicit Utf8View(const StringView&);
     explicit Utf8View(const char*);
-    ~Utf8View() { }
+    ~Utf8View() = default;
 
     const StringView& as_string() const { return m_string; }
 

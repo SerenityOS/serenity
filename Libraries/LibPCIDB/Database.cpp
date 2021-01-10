@@ -138,10 +138,10 @@ int Database::init()
 
     ParseMode mode = ParseMode::UnknownMode;
 
-    OwnPtr<Vendor> current_vendor = nullptr;
-    OwnPtr<Device> current_device = nullptr;
-    OwnPtr<Class> current_class = nullptr;
-    OwnPtr<Subclass> current_subclass = nullptr;
+    OwnPtr<Vendor> current_vendor {};
+    OwnPtr<Device> current_device {};
+    OwnPtr<Class> current_class {};
+    OwnPtr<Subclass> current_subclass {};
 
     auto commit_device = [&]() {
         if (current_device && current_vendor) {

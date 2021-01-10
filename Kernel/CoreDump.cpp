@@ -45,12 +45,12 @@ OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& 
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate CoreDump for non-dumpable process {}", process->pid().value());
-        return nullptr;
+        return {};
     }
 
     auto fd = create_target_file(process, output_path);
     if (!fd)
-        return nullptr;
+        return {};
     return adopt_own(*new CoreDump(move(process), fd.release_nonnull()));
 }
 

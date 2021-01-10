@@ -230,7 +230,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     adapter->send({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }, request);
 
     Optional<MACAddress> addr;
-    if (!Thread::current()->block<ARPTableBlocker>(nullptr, next_hop_ip, addr).was_interrupted()) {
+    if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
 #ifdef ROUTING_DEBUG
             klog() << "Routing: Got ARP response using adapter " << adapter->name().characters() << " for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";

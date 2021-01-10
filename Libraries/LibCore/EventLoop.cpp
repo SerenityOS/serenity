@@ -503,7 +503,7 @@ bool SignalHandlers::remove(int handler_id)
         auto it = m_handlers.find(handler_id);
         if (it != m_handlers.end()) {
             // Mark pending remove
-            m_handlers_pending.set(handler_id, nullptr);
+            m_handlers_pending.set(handler_id, {});
             return true;
         }
         it = m_handlers_pending.find(handler_id);

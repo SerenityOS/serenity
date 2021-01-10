@@ -47,7 +47,7 @@ void SymbolPrototype::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Object::initialize(global_object);
-    define_native_property(vm.names.description, description_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.description, description_getter, {}, Attribute::Configurable);
     define_native_function(vm.names.toString, to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function(vm.names.valueOf, value_of, 0, Attribute::Writable | Attribute::Configurable);
 

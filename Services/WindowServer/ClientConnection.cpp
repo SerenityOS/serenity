@@ -125,7 +125,7 @@ OwnPtr<Messages::WindowServer::DestroyMenubarResponse> ClientConnection::handle(
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
         did_misbehave("DestroyMenubar: Bad menubar ID");
-        return nullptr;
+        return {};
     }
     auto& menubar = *(*it).value;
     MenuManager::the().close_menubar(menubar);
@@ -147,7 +147,7 @@ OwnPtr<Messages::WindowServer::DestroyMenuResponse> ClientConnection::handle(con
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("DestroyMenu: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     menu.close();
@@ -162,7 +162,7 @@ OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
         did_misbehave("SetApplicationMenubar: Bad menubar ID");
-        return nullptr;
+        return {};
     }
     auto& menubar = *(*it).value;
     m_app_menubar = menubar.make_weak_ptr();
@@ -178,11 +178,11 @@ OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> ClientConnection::handl
     auto jt = m_menus.find(menu_id);
     if (it == m_menubars.end()) {
         did_misbehave("AddMenuToMenubar: Bad menubar ID");
-        return nullptr;
+        return {};
     }
     if (jt == m_menus.end()) {
         did_misbehave("AddMenuToMenubar: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
@@ -197,7 +197,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         dbg() << "AddMenuItem: Bad menu ID: " << menu_id;
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     auto menu_item = make<MenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
@@ -206,7 +206,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     if (message.icon_buffer_id() != -1) {
         auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
         if (!icon_buffer)
-            return nullptr;
+            return {};
         // FIXME: Verify that the icon buffer can accommodate a 16x16 bitmap view.
         auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
@@ -224,7 +224,7 @@ OwnPtr<Messages::WindowServer::PopupMenuResponse> ClientConnection::handle(const
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("PopupMenu: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     menu.popup(position);
@@ -237,7 +237,7 @@ OwnPtr<Messages::WindowServer::DismissMenuResponse> ClientConnection::handle(con
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("DismissMenu: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     menu.close();
@@ -250,13 +250,13 @@ OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> ClientConnection::handle(
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("UpdateMenuItem: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     auto* menu_item = menu.item_with_identifier(message.identifier());
     if (!menu_item) {
         did_misbehave("UpdateMenuItem: Bad menu item identifier");
-        return nullptr;
+        return {};
     }
     menu_item->set_text(message.text());
     menu_item->set_shortcut_text(message.shortcut());
@@ -274,7 +274,7 @@ OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> ClientConnection::handl
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("AddMenuSeparator: Bad menu ID");
-        return nullptr;
+        return {};
     }
     auto& menu = *(*it).value;
     menu.add_item(make<MenuItem>(menu, MenuItem::Separator));
@@ -286,7 +286,7 @@ OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> ClientConnection::hand
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("MoveWindowToFront: Bad window ID");
-        return nullptr;
+        return {};
     }
     WindowManager::the().move_to_front_and_make_active(*(*it).value);
     return make<Messages::WindowServer::MoveWindowToFrontResponse>();
@@ -297,7 +297,7 @@ OwnPtr<Messages::WindowServer::SetFullscreenResponse> ClientConnection::handle(c
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetFullscreen: Bad window ID");
-        return nullptr;
+        return {};
     }
     it->value->set_fullscreen(message.fullscreen());
     return make<Messages::WindowServer::SetFullscreenResponse>();
@@ -308,7 +308,7 @@ OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> ClientConnection::handl
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowOpacity: Bad window ID");
-        return nullptr;
+        return {};
     }
     it->value->set_opacity(message.opacity());
     return make<Messages::WindowServer::SetWindowOpacityResponse>();
@@ -348,7 +348,7 @@ OwnPtr<Messages::WindowServer::SetWindowTitleResponse> ClientConnection::handle(
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowTitle: Bad window ID");
-        return nullptr;
+        return {};
     }
     it->value->set_title(message.title());
     return make<Messages::WindowServer::SetWindowTitleResponse>();
@@ -359,7 +359,7 @@ OwnPtr<Messages::WindowServer::GetWindowTitleResponse> ClientConnection::handle(
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("GetWindowTitle: Bad window ID");
-        return nullptr;
+        return {};
     }
     return make<Messages::WindowServer::GetWindowTitleResponse>(it->value->title());
 }
@@ -369,7 +369,7 @@ OwnPtr<Messages::WindowServer::IsMaximizedResponse> ClientConnection::handle(con
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("IsMaximized: Bad window ID");
-        return nullptr;
+        return {};
     }
     return make<Messages::WindowServer::IsMaximizedResponse>(it->value->is_maximized());
 }
@@ -379,7 +379,7 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowIconBitmap: Bad window ID");
-        return nullptr;
+        return {};
     }
     auto& window = *(*it).value;
 
@@ -400,12 +400,12 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowRect: Bad window ID");
-        return nullptr;
+        return {};
     }
     auto& window = *(*it).value;
     if (window.is_fullscreen()) {
         dbgln("ClientConnection: Ignoring SetWindowRect request for fullscreen window");
-        return nullptr;
+        return {};
     }
 
     if (message.rect().location() != window.rect().location()) {
@@ -423,7 +423,7 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetWindowRect: Bad window ID");
-        return nullptr;
+        return {};
     }
     return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
 }
@@ -434,7 +434,7 @@ OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection:
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetWindowRectInMenubar: Bad window ID");
-        return nullptr;
+        return {};
     }
     return make<Messages::WindowServer::GetWindowRectInMenubarResponse>(it->value->rect_in_menubar());
 }
@@ -454,7 +454,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         parent_window = window_from_id(message.parent_window_id());
         if (!parent_window) {
             did_misbehave("CreateWindow with bad parent_window_id");
-            return nullptr;
+            return {};
         }
     }
 
@@ -518,7 +518,7 @@ OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(c
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("DestroyWindow: Bad window ID");
-        return nullptr;
+        return {};
     }
     auto& window = *(*it).value;
     Vector<i32> destroyed_window_ids;
@@ -568,7 +568,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowBackingStore: Bad window ID");
-        return nullptr;
+        return {};
     }
     auto& window = *(*it).value;
     if (window.last_backing_store() && window.last_backing_store()->shbuf_id() == message.shbuf_id()) {
@@ -596,7 +596,7 @@ OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> ClientConnection
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetGlobalCursorTracking: Bad window ID");
-        return nullptr;
+        return {};
     }
     it->value->set_global_cursor_tracking_enabled(message.enabled());
     return make<Messages::WindowServer::SetGlobalCursorTrackingResponse>();
@@ -607,12 +607,12 @@ OwnPtr<Messages::WindowServer::SetWindowCursorResponse> ClientConnection::handle
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowCursor: Bad window ID");
-        return nullptr;
+        return {};
     }
     auto& window = *(*it).value;
     if (message.cursor_type() < 0 || message.cursor_type() >= (i32)Gfx::StandardCursor::__Count) {
         did_misbehave("SetWindowCursor: Bad cursor type");
-        return nullptr;
+        return {};
     }
     window.set_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
     Compositor::the().invalidate_cursor();
@@ -624,13 +624,13 @@ OwnPtr<Messages::WindowServer::SetWindowCustomCursorResponse> ClientConnection::
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowCustomCursor: Bad window ID");
-        return nullptr;
+        return {};
     }
 
     auto& window = *(*it).value;
     if (!message.cursor().is_valid()) {
         did_misbehave("SetWindowCustomCursor: Bad cursor");
-        return nullptr;
+        return {};
     }
 
     window.set_cursor(Cursor::create(*message.cursor().bitmap()));
@@ -643,7 +643,7 @@ OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnectio
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowHasAlphaChannel: Bad window ID");
-        return nullptr;
+        return {};
     }
     it->value->set_has_alpha_channel(message.has_alpha_channel());
     return make<Messages::WindowServer::SetWindowHasAlphaChannelResponse>();
@@ -755,7 +755,7 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
         ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(Gfx::RGBA32);
         if (size_in_bytes > shared_buffer->size()) {
             did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
-            return nullptr;
+            return {};
         }
         bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, message.bitmap_size());
     }
@@ -769,7 +769,7 @@ OwnPtr<Messages::WindowServer::SetSystemMenuResponse> ClientConnection::handle(c
     auto it = m_menus.find(message.menu_id());
     if (it == m_menus.end()) {
         did_misbehave("SetSystemMenu called with invalid menu ID");
-        return nullptr;
+        return {};
     }
 
     auto& menu = it->value;
@@ -813,7 +813,7 @@ OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> Client
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowBaseSizeAndSizeIncrementResponse: Bad window ID");
-        return nullptr;
+        return {};
     }
 
     auto& window = *it->value;
@@ -828,7 +828,7 @@ OwnPtr<Messages::WindowServer::SetWindowResizeAspectRatioResponse> ClientConnect
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         did_misbehave("SetWindowResizeAspectRatioResponse: Bad window ID");
-        return nullptr;
+        return {};
     }
 
     auto& window = *it->value;
@@ -886,7 +886,7 @@ OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> ClientConnection::h
 {
     if (message.factor() < mouse_accel_min || message.factor() > mouse_accel_max) {
         did_misbehave("SetMouseAcceleration with bad acceleration factor");
-        return nullptr;
+        return {};
     }
     WindowManager::the().set_acceleration_factor(message.factor());
     return make<Messages::WindowServer::SetMouseAccelerationResponse>();
@@ -901,7 +901,7 @@ OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> ClientConnection::hand
 {
     if (message.step_size() < scroll_step_size_min) {
         did_misbehave("SetScrollStepSize with bad scroll step size");
-        return nullptr;
+        return {};
     }
     WindowManager::the().set_scroll_step_size(message.step_size());
     return make<Messages::WindowServer::SetScrollStepSizeResponse>();

@@ -67,7 +67,7 @@ OwnPtr<Messages::LaunchServer::OpenURLResponse> ClientConnection::handle(const M
         if (!allowed) {
             // You are not on the list, go home!
             did_misbehave(String::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", request.handler_name(), request.url()).characters());
-            return nullptr;
+            return {};
         }
     }
 
@@ -94,12 +94,12 @@ OwnPtr<Messages::LaunchServer::AddAllowedURLResponse> ClientConnection::handle(c
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
-        return nullptr;
+        return {};
     }
 
     if (!request.url().is_valid()) {
         did_misbehave("Got request to allow invalid URL");
-        return nullptr;
+        return {};
     }
 
     m_allowlist.empend(String(), false, Vector<URL> { request.url() });
@@ -111,12 +111,12 @@ OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse> ClientConnec
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
-        return nullptr;
+        return {};
     }
 
     if (request.handler_name().is_empty()) {
         did_misbehave("Got request to allow empty handler name");
-        return nullptr;
+        return {};
     }
 
     m_allowlist.empend(request.handler_name(), true, Vector<URL>());
@@ -128,17 +128,17 @@ OwnPtr<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse> Cl
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
-        return nullptr;
+        return {};
     }
 
     if (request.handler_name().is_empty()) {
         did_misbehave("Got request to allow empty handler name");
-        return nullptr;
+        return {};
     }
 
     if (request.urls().is_empty()) {
         did_misbehave("Got request to allow empty URL list");
-        return nullptr;
+        return {};
     }
 
     m_allowlist.empend(request.handler_name(), false, request.urls());
@@ -150,7 +150,7 @@ OwnPtr<Messages::LaunchServer::SealAllowlistResponse> ClientConnection::handle(c
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got more than one request to seal the allowed handlers list");
-        return nullptr;
+        return {};
     }
 
     return make<Messages::LaunchServer::SealAllowlistResponse>();

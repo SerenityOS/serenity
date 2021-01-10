@@ -104,7 +104,7 @@ inline T* InlineLinkedListNode<T>::next() const
 template<typename T>
 class InlineLinkedList {
 public:
-    InlineLinkedList() { }
+    InlineLinkedList() = default;
 
     bool is_empty() const { return !m_head; }
     size_t size_slow() const;
