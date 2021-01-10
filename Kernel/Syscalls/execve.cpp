@@ -276,7 +276,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     };
 }
 
-KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, bool is_dynamic)
+KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header)
 {
     RefPtr<PageDirectory> old_page_directory;
     NonnullOwnPtrVector<Region> old_regions;
@@ -308,7 +308,7 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
         m_regions = move(old_regions);
     });
 
-    if (!is_dynamic) {
+    if (interpreter_description.is_null()) {
         auto result = load_elf_object(main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
         if (result.is_error())
             return result.error();
@@ -394,7 +394,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
-    auto load_result_or_error = load(main_program_description, interpreter_description, is_dynamic);
+    auto load_result_or_error = load(main_program_description, interpreter_description, main_program_header);
     if (load_result_or_error.is_error()) {
         dbgln("do_exec({}): Failed to load main program or interpreter", path);
         return load_result_or_error.error();
@@ -583,20 +583,12 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
     return KResult(-ENOEXEC);
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& main_program_header, int nread, size_t file_size)
 {
-    if (nread < (int)sizeof(Elf32_Ehdr))
-        return KResult(-ENOEXEC);
-
-    auto elf_header = (Elf32_Ehdr*)first_page;
-    if (!ELF::validate_elf_header(*elf_header, file_size)) {
-        dbgln("exec({}): File has invalid ELF header", path);
-        return KResult(-ENOEXEC);
-    }
 
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
-    if (!ELF::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, &interpreter_path)) {
+    if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return KResult(-ENOEXEC);
     }
@@ -621,7 +613,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         if (interp_metadata.size < (int)sizeof(Elf32_Ehdr))
             return KResult(-ENOEXEC);
 
-        memset(first_page, 0, sizeof(first_page));
+        char first_page[PAGE_SIZE] = {};
         auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
         auto nread_or_error = interpreter_description->read(first_page_buffer, sizeof(first_page));
         if (nread_or_error.is_error())
@@ -631,7 +623,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         if (nread < (int)sizeof(Elf32_Ehdr))
             return KResult(-ENOEXEC);
 
-        elf_header = (Elf32_Ehdr*)first_page;
+        auto elf_header = (Elf32_Ehdr*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
             return KResult(-ENOEXEC);
@@ -652,11 +644,11 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         return interpreter_description;
     }
 
-    if (elf_header->e_type == ET_REL) {
+    if (main_program_header.e_type == ET_REL) {
         // We can't exec an ET_REL, that's just an object file from the compiler
         return KResult(-ENOEXEC);
     }
-    if (elf_header->e_type == ET_DYN) {
+    if (main_program_header.e_type == ET_DYN) {
         // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
         // for its own relocation (i.e. it's /usr/lib/Loader.so)
         if (path != "/usr/lib/Loader.so")
@@ -715,15 +707,23 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     }
 
     // #2) ELF32 for i386
-    auto elf_result = find_elf_interpreter_for_executable(path, first_page, nread_or_error.value(), metadata.size);
+
+    if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
+        return KResult(-ENOEXEC);
+    auto main_program_header = (Elf32_Ehdr*)first_page;
+
+    if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
+        dbgln("exec({}): File has invalid ELF header", path);
+        return KResult(-ENOEXEC);
+    }
+
+    auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);
     // Assume a static ELF executable by default
     RefPtr<FileDescription> interpreter_description;
-    bool is_dynamic = false;
     // We're getting either an interpreter, an error, or KSuccess (i.e. no interpreter but file checks out)
     if (!elf_result.is_error()) {
         // It's a dynamic ELF executable, with or without an interpreter. Do not allocate TLS
         interpreter_description = elf_result.value();
-        is_dynamic = true;
     } else if (elf_result.error().is_error())
         return elf_result.error();
 
@@ -731,7 +731,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // are cleaned up by the time we yield-teleport below.
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
-    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, is_dynamic);
+    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
 
     m_exec_tid = 0;
 
