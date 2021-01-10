@@ -1222,14 +1222,15 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::False;
 }
 
-size_t length_of_array_like(GlobalObject& global_object, Value value)
+size_t length_of_array_like(GlobalObject& global_object, const Object& object)
 {
-    ASSERT(value.is_object());
+    // 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
+
     auto& vm = global_object.vm();
-    auto result = value.as_object().get(vm.names.length);
+    auto result = object.get(vm.names.length).value_or(js_undefined());
     if (vm.exception())
-        return 0;
-    return result.to_size_t(global_object);
+        return INVALID;
+    return result.to_length(global_object);
 }
 
 }
