@@ -167,13 +167,14 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 
 bool Emulator::load_elf()
 {
-    MappedFile mapped_executable(m_executable_path);
-    if (!mapped_executable.is_valid()) {
-        reportln("Unable to map {}", m_executable_path);
+    auto file_or_error = MappedFile::map(m_executable_path);
+    if (file_or_error.is_error()) {
+        reportln("Unable to map {}: {}", m_executable_path, file_or_error.error());
         return false;
     }
 
-    ELF::Image executable_elf((const u8*)mapped_executable.data(), mapped_executable.size());
+    auto elf_image_data = file_or_error.value()->bytes();
+    ELF::Image executable_elf(elf_image_data);
 
     if (!executable_elf.is_dynamic()) {
         // FIXME: Support static objects
@@ -181,7 +182,7 @@ bool Emulator::load_elf()
     }
 
     String interpreter_path;
-    if (!ELF::validate_program_headers(*(Elf32_Ehdr*)mapped_executable.data(), mapped_executable.size(), (u8*)mapped_executable.data(), mapped_executable.size(), &interpreter_path)) {
+    if (!ELF::validate_program_headers(*(const Elf32_Ehdr*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path)) {
         reportln("failed to validate ELF file");
         return false;
     }
@@ -189,9 +190,10 @@ bool Emulator::load_elf()
     ASSERT(!interpreter_path.is_null());
     dbgln("interpreter: {}", interpreter_path);
 
-    auto interpreter_file = make<MappedFile>(interpreter_path);
-    ASSERT(interpreter_file->is_valid());
-    ELF::Image interpreter_image((const u8*)interpreter_file->data(), interpreter_file->size());
+    auto interpreter_file_or_error = MappedFile::map(interpreter_path);
+    ASSERT(!interpreter_file_or_error.is_error());
+    auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
+    ELF::Image interpreter_image(interpreter_image_data);
 
     constexpr FlatPtr interpreter_load_offset = 0x08000000;
     interpreter_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
@@ -308,12 +310,12 @@ String Emulator::create_backtrace_line(FlatPtr address)
         lib_path = String::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
-        MappedFile mapped_file { lib_path };
-        if (!mapped_file.is_valid())
+        auto file_or_error = MappedFile::map(lib_path);
+        if (file_or_error.is_error())
             return minimal;
 
-        auto debug_info = make<Debug::DebugInfo>(make<ELF::Image>((const u8*)mapped_file.data(), mapped_file.size()));
-        m_dynamic_library_cache.set(lib_path, CachedELF { move(mapped_file), move(debug_info) });
+        auto debug_info = make<Debug::DebugInfo>(make<ELF::Image>(file_or_error.value()->bytes()));
+        m_dynamic_library_cache.set(lib_path, CachedELF { file_or_error.release_value(), move(debug_info) });
     }
 
     auto it = m_dynamic_library_cache.find(lib_path);
@@ -1765,11 +1767,11 @@ int Emulator::virt$beep()
 
 bool Emulator::find_malloc_symbols(const MmapRegion& libc_text)
 {
-    auto mapped_file = make<MappedFile>("/usr/lib/libc.so");
-    if (!mapped_file->is_valid())
-        return {};
+    auto file_or_error = MappedFile::map("/usr/lib/libc.so");
+    if (file_or_error.is_error())
+        return false;
 
-    ELF::Image image((const u8*)mapped_file->data(), mapped_file->size());
+    ELF::Image image(file_or_error.value()->bytes());
     auto malloc_symbol = image.find_demangled_function("malloc");
     auto free_symbol = image.find_demangled_function("free");
     auto realloc_symbol = image.find_demangled_function("realloc");

@@ -150,11 +150,13 @@ Icon FileIconProvider::icon_for_executable(const String& path)
     // If the icon for an app isn't in the cache we attempt to load the file as an ELF image and extract
     // the serenity_app_icon_* sections which should contain the icons as raw PNG data. In the future it would
     // be better if the binary signalled the image format being used or we deduced it, e.g. using magic bytes.
-    auto mapped_file = make<MappedFile>(path);
-    if (!mapped_file->is_valid()) {
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error()) {
         app_icon_cache.set(path, s_executable_icon);
         return s_executable_icon;
     }
+
+    auto& mapped_file = file_or_error.value();
 
     if (mapped_file->size() < SELFMAG) {
         app_icon_cache.set(path, s_executable_icon);

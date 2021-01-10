@@ -33,13 +33,13 @@
 namespace CoreDump {
 
 struct ELFObjectInfo {
-    ELFObjectInfo(MappedFile&& file, Debug::DebugInfo&& debug_info)
+    ELFObjectInfo(NonnullRefPtr<MappedFile> file, Debug::DebugInfo&& debug_info)
         : file(move(file))
         , debug_info(move(debug_info))
     {
     }
 
-    MappedFile file;
+    NonnullRefPtr<MappedFile> file;
     Debug::DebugInfo debug_info;
 };
 

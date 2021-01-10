@@ -230,10 +230,10 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!coredump)
         return String { "Could not open coredump" };
 
-    MappedFile kernel_elf_file("/boot/Kernel");
+    auto file_or_error = MappedFile::map("/boot/Kernel");
     OwnPtr<ELF::Image> kernel_elf;
-    if (kernel_elf_file.is_valid())
-        kernel_elf = make<ELF::Image>(static_cast<const u8*>(kernel_elf_file.data()), kernel_elf_file.size());
+    if (!file_or_error.is_error())
+        kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
 
     auto events_value = object.get("events");
     if (!events_value.is_array())

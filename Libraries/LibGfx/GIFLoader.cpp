@@ -107,10 +107,10 @@ struct GIFLoadingContext {
 
 RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
 {
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return nullptr;
-    GIFImageDecoderPlugin gif_decoder((const u8*)mapped_file.data(), mapped_file.size());
+    GIFImageDecoderPlugin gif_decoder((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
     auto bitmap = gif_decoder.bitmap();
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded GIF: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
