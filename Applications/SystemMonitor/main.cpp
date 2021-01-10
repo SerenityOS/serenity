@@ -579,17 +579,16 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
             auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
             cpu_graph.set_max(100);
-            cpu_graph.set_background_color(Color::White);
             cpu_graph.set_value_format(0, {
                                               .line_color = Color::Blue,
-                                              .background_color = Color::from_rgb(0xaaaaff),
+                                              .background_color = Color(Color::Blue).with_alpha(70),
                                               .text_formatter = [](int value) {
                                                   return String::formatted("Total: {}%", value);
                                               },
                                           });
             cpu_graph.set_value_format(1, {
                                               .line_color = Color::Red,
-                                              .background_color = Color::from_rgb(0xffaaaa),
+                                              .background_color = Color(Color::Red).with_alpha(70),
                                               .text_formatter = [](int value) {
                                                   return String::formatted("Kernel: {}%", value);
                                               },
@@ -606,25 +605,24 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
         memory_graph_group_box.set_fixed_height(120);
         auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
-        memory_graph.set_background_color(Color::White);
         memory_graph.set_stack_values(true);
         memory_graph.set_value_format(0, {
                                              .line_color = Color::from_rgb(0x619910),
-                                             .background_color = Color::from_rgb(0xbbffbb),
+                                             .background_color = Color::from_rgb(0x619910).with_alpha(70),
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Committed: {} KiB", value);
                                              },
                                          });
         memory_graph.set_value_format(1, {
                                              .line_color = Color::Blue,
-                                             .background_color = Color::from_rgb(0xaaaaff),
+                                             .background_color = Color(Color::Blue).with_alpha(70),
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Allocated: {} KiB", value);
                                              },
                                          });
         memory_graph.set_value_format(2, {
                                              .line_color = Color::Red,
-                                             .background_color = Color::from_rgb(0xffaaaa),
+                                             .background_color = Color(Color::Red).with_alpha(70),
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Kernel heap: {} KiB", value);
                                              },
