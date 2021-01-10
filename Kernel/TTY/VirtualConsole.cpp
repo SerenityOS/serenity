@@ -238,7 +238,9 @@ void VirtualConsole::on_key_pressed(KeyboardDevice::Event event)
         return;
     }
 
-    m_terminal.handle_key_press(event.key, event.code_point, event.flags);
+    Processor::deferred_call_queue([this, event]() {
+        m_terminal.handle_key_press(event.key, event.code_point, event.flags);
+    });
 }
 
 ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
