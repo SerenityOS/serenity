@@ -272,7 +272,7 @@ void IDEChannel::handle_irq(const RegisterState&)
         // trigger page faults
         Processor::deferred_call_queue([this]() {
             if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-                dbg() << "IDEChannel: Read block " << m_current_request_block_index << "/" << m_current_request->block_count();
+                dbgln("IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
                 if (ata_do_read_sector()) {
                     if (++m_current_request_block_index >= m_current_request->block_count()) {
                         complete_current_request(AsyncDeviceRequest::Success);
@@ -283,7 +283,7 @@ void IDEChannel::handle_irq(const RegisterState&)
                 }
             } else {
                 if (!m_current_request_flushing_cache) {
-                    dbg() << "IDEChannel: Wrote block " << m_current_request_block_index << "/" << m_current_request->block_count();
+                    dbgln("IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
                     if (++m_current_request_block_index >= m_current_request->block_count()) {
                         // We read the last block, flush cache
                         ASSERT(!m_current_request_flushing_cache);

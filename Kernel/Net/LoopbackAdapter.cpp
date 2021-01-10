@@ -49,7 +49,7 @@ LoopbackAdapter::~LoopbackAdapter()
 
 void LoopbackAdapter::send_raw(ReadonlyBytes payload)
 {
-    dbg() << "LoopbackAdapter: Sending " << payload.size() << " byte(s) to myself.";
+    dbgln("LoopbackAdapter: Sending {} byte(s) to myself.", payload.size());
     did_receive(payload);
 }
 
