@@ -90,7 +90,7 @@ NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(Ph
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     if (paddr.offset(size) < paddr) {
-        dbg() << "Shenanigans! create_for_physical_range(" << paddr << ", " << size << ") would wrap around";
+        dbgln("Shenanigans! create_for_physical_range({}, {}) would wrap around", paddr, size);
         return nullptr;
     }
     return adopt(*new AnonymousVMObject(paddr, size));
@@ -482,9 +482,11 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
         void* fault_at;
         if (!safe_memcpy(dest_ptr, vaddr.as_ptr(), PAGE_SIZE, fault_at)) {
             if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
-                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << vaddr << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to write to page at " << VirtualAddress(fault_at);
+                dbgln("      >> COW: error copying page {}/{} to {}/{}: failed to write to page at {}",
+                    page_slot->paddr(), vaddr, page->paddr(), VirtualAddress(dest_ptr), VirtualAddress(fault_at));
             else if ((u8*)fault_at >= vaddr.as_ptr() && (u8*)fault_at <= vaddr.as_ptr() + PAGE_SIZE)
-                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << vaddr << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to read from page at " << VirtualAddress(fault_at);
+                dbgln("      >> COW: error copying page {}/{} to {}/{}: failed to read from page at {}",
+                    page_slot->paddr(), vaddr, page->paddr(), VirtualAddress(dest_ptr), VirtualAddress(fault_at));
             else
                 ASSERT_NOT_REACHED();
         }

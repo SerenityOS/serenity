@@ -243,7 +243,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         bool did_purge = false;
         auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
         if (!page_table) {
-            dbg() << "MM: Unable to allocate page table to map " << vaddr;
+            dbgln("MM: Unable to allocate page table to map {}", vaddr);
             return nullptr;
         }
         if (did_purge) {
@@ -382,7 +382,8 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_mm_lock);
     if (Processor::current().in_irq()) {
-        dbg() << "CPU[" << Processor::current().id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
+        dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
+            Processor::current().id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
@@ -808,14 +809,14 @@ bool MemoryManager::validate_range(const Process& process, VirtualAddress base_v
     ASSERT(s_mm_lock.is_locked());
     ASSERT(size);
     if (base_vaddr > base_vaddr.offset(size)) {
-        dbg() << "Shenanigans! Asked to validate wrappy " << base_vaddr << " size=" << size;
+        dbgln("Shenanigans! Asked to validate wrappy {} size={}", base_vaddr, size);
         return false;
     }
 
     VirtualAddress vaddr = base_vaddr.page_base();
     VirtualAddress end_vaddr = base_vaddr.offset(size - 1).page_base();
     if (end_vaddr < vaddr) {
-        dbg() << "Shenanigans! Asked to validate " << base_vaddr << " size=" << size;
+        dbgln("Shenanigans! Asked to validate {} size={}", base_vaddr, size);
         return false;
     }
     const Region* region = nullptr;

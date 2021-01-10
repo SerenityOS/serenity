@@ -63,7 +63,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
     // process that called PT_PEEK
     ProcessPagingScope scope(*this);
     if (!copy_from_user(&result, address)) {
-        dbg() << "Invalid address for peek_user_data: " << address.ptr();
+        dbgln("Invalid address for peek_user_data: {}", address.ptr());
         return KResult(-EFAULT);
     }
 
