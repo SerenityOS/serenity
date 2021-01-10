@@ -129,16 +129,16 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
 {
     auto& header = *reinterpret_cast<const FontFileHeader*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
-        dbgprintf("header.magic != '!Fnt', instead it's '%c%c%c%c'\n", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
+        dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
     }
     if (header.name[sizeof(header.name) - 1] != '\0') {
-        dbgprintf("Font name not fully null-terminated\n");
+        dbgln("Font name not fully null-terminated");
         return nullptr;
     }
 
     if (header.family[sizeof(header.family) - 1] != '\0') {
-        dbgprintf("Font family not fully null-terminated\n");
+        dbgln("Font family not fully null-terminated");
         return nullptr;
     }
 

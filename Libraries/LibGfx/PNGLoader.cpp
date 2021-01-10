@@ -888,7 +888,7 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
 #ifdef PNG_DEBUG
-        dbgprintf("PNGLoader::process_IHDR: unknown interlace method: %d\n", context.interlace_method);
+        dbgln("PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
 #endif
         return false;
     }

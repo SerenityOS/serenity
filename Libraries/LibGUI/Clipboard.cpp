@@ -83,11 +83,11 @@ Clipboard::DataAndType Clipboard::data_and_type() const
         return {};
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(response->shbuf_id());
     if (!shared_buffer) {
-        dbgprintf("GUI::Clipboard::data() failed to attach to the shared buffer\n");
+        dbgln("GUI::Clipboard::data() failed to attach to the shared buffer");
         return {};
     }
     if (response->data_size() > shared_buffer->size()) {
-        dbgprintf("GUI::Clipboard::data() clipping contents size is greater than shared buffer size\n");
+        dbgln("GUI::Clipboard::data() clipping contents size is greater than shared buffer size");
         return {};
     }
     auto data = ByteBuffer::copy(shared_buffer->data<void>(), response->data_size());
@@ -100,7 +100,7 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<S
 {
     auto shared_buffer = SharedBuffer::create_with_size(data.size());
     if (!shared_buffer) {
-        dbgprintf("GUI::Clipboard::set_data() failed to create a shared buffer\n");
+        dbgln("GUI::Clipboard::set_data() failed to create a shared buffer");
         return;
     }
     if (!data.is_empty())
