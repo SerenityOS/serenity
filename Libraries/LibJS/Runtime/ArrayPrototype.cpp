@@ -107,21 +107,13 @@ static Function* callback_from_args(GlobalObject& global_object, const String& n
     return &callback.as_function();
 }
 
-static size_t get_length(VM& vm, Object& object)
-{
-    auto length_property = object.get(vm.names.length);
-    if (vm.exception())
-        return 0;
-    return length_property.to_size_t(object.global_object());
-}
-
 static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return;
 
-    auto initial_length = get_length(vm, *this_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return;
 
@@ -174,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto initial_length = get_length(vm, *this_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     auto* new_array = Array::create(global_object);
@@ -199,7 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
             array->indexed_properties().append(vm.argument(i));
         return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
     }
-    auto length = get_length(vm, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     auto argument_count = vm.argument_count();
@@ -241,7 +233,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
             return js_undefined();
         return array->indexed_properties().take_last(array).value.value_or(js_undefined());
     }
-    auto length = get_length(vm, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
+        return {};
     if (length == 0) {
         this_object->put(vm.names.length, Value(0));
         return js_undefined();
@@ -298,7 +292,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         s_array_join_seen_objects.remove(this_object);
     };
 
-    auto length = get_length(vm, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
@@ -342,7 +336,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         s_array_join_seen_objects.remove(this_object);
     };
 
-    auto length = get_length(vm, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     String separator = ",";
@@ -445,7 +439,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    i32 length = get_length(vm, *this_object);
+    i32 length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     if (length == 0)
@@ -477,7 +471,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
     if (!this_object)
         return {};
 
-    auto initial_length = get_length(vm, *this_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
@@ -530,7 +524,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
     if (!this_object)
         return {};
 
-    auto initial_length = get_length(vm, *this_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
@@ -720,7 +714,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
         return {};
     }
 
-    auto original_length = get_length(vm, *array);
+    auto original_length = length_of_array_like(global_object, *array);
     if (vm.exception())
         return {};
 
@@ -767,7 +761,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    i32 length = get_length(vm, *this_object);
+    i32 length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     if (length == 0)
@@ -798,7 +792,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    i32 length = get_length(vm, *this_object);
+    i32 length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     if (length == 0)
@@ -886,7 +880,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     if (!this_object)
         return {};
 
-    auto initial_length = get_length(vm, *this_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
@@ -991,7 +985,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     if (!this_object)
         return {};
 
-    ssize_t length = get_length(vm, *this_object);
+    ssize_t length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
