@@ -445,7 +445,7 @@ TextEditorWidget::TextEditorWidget()
 
     auto& syntax_menu = view_menu.add_submenu("Syntax");
     m_plain_text_highlight = GUI::Action::create_checkable("Plain text", [&](auto&) {
-        m_editor->set_syntax_highlighter(nullptr);
+        m_editor->set_syntax_highlighter({});
         m_editor->update();
     });
     m_plain_text_highlight->set_checked(true);

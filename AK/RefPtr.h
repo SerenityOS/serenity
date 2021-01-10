@@ -143,7 +143,7 @@ public:
         Adopt
     };
 
-    RefPtr() { }
+    RefPtr() = default;
     RefPtr(const T* ptr)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(ptr)))
     {
@@ -205,7 +205,6 @@ public:
             m_bits.store(0xe0e0e0e0, AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
-    RefPtr(std::nullptr_t) { }
 
     template<typename U>
     RefPtr(const OwnPtr<U>&) = delete;

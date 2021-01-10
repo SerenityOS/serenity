@@ -51,7 +51,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
     if (description->is_blocking()) {
         if (!description->can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, *description, unblock_flags).was_interrupted())
+            if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
                 return -EINTR;
             if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
                 return -EAGAIN;

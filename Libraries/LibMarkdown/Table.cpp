@@ -118,12 +118,12 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
     auto peek_it = lines;
     auto first_line = *peek_it;
     if (!first_line.starts_with('|'))
-        return nullptr;
+        return {};
 
     ++peek_it;
 
     if (peek_it.is_end())
-        return nullptr;
+        return {};
 
     auto header_segments = first_line.split_view('|', true);
     auto header_delimiters = peek_it->split_view('|', true);
@@ -141,10 +141,10 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
     ++peek_it;
 
     if (header_delimiters.size() != header_segments.size())
-        return nullptr;
+        return {};
 
     if (header_delimiters.is_empty())
-        return nullptr;
+        return {};
 
     size_t total_width = 0;
 
@@ -154,7 +154,7 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
     for (size_t i = 0; i < header_segments.size(); ++i) {
         auto text_option = Text::parse(header_segments[i]);
         if (!text_option.has_value())
-            return nullptr; // An invalid 'text' in the header should just fail the table parse.
+            return {}; // An invalid 'text' in the header should just fail the table parse.
 
         auto text = text_option.release_value();
         auto& column = table->m_columns[i];

@@ -38,8 +38,8 @@ class Utf32CodepointIterator {
     friend class Utf32View;
 
 public:
-    Utf32CodepointIterator() { }
-    ~Utf32CodepointIterator() { }
+    Utf32CodepointIterator() = default;
+    ~Utf32CodepointIterator() = default;
 
     bool operator==(const Utf32CodepointIterator& other) const
     {
@@ -83,7 +83,7 @@ class Utf32View {
 public:
     using Iterator = Utf32CodepointIterator;
 
-    Utf32View() { }
+    Utf32View() = default;
     Utf32View(const u32* code_points, size_t length)
         : m_code_points(code_points)
         , m_length(length)

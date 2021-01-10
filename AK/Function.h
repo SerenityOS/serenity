@@ -25,9 +25,10 @@
 
 #pragma once
 
-#include "Assertions.h"
-#include "OwnPtr.h"
-#include "StdLibExtras.h"
+#include <AK/Assertions.h>
+#include <AK/OwnPtr.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 
 namespace AK {
 
@@ -38,7 +39,6 @@ template<typename Out, typename... In>
 class Function<Out(In...)> {
 public:
     Function() = default;
-    Function(std::nullptr_t) { }
 
     template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
     Function(CallableType&& callable)
@@ -83,7 +83,7 @@ public:
 private:
     class CallableWrapperBase {
     public:
-        virtual ~CallableWrapperBase() { }
+        virtual ~CallableWrapperBase() = default;
         virtual Out call(In...) const = 0;
     };
 
@@ -98,7 +98,18 @@ private:
         CallableWrapper(const CallableWrapper&) = delete;
         CallableWrapper& operator=(const CallableWrapper&) = delete;
 
-        Out call(In... in) const final override { return m_callable(forward<In>(in)...); }
+        Out call(In... in) const final override
+        {
+            if constexpr (requires { m_callable(forward<In>(in)...); }) {
+                return m_callable(forward<In>(in)...);
+            } else if constexpr (requires { m_callable(); }) {
+                return m_callable();
+            } else if constexpr (IsSame<void, Out>::value) {
+                return;
+            } else {
+                return {};
+            }
+        }
 
     private:
         CallableType m_callable;

@@ -38,7 +38,7 @@ public:
     UUID();
     UUID(Array<u8, 16> uuid_buffer);
     UUID(const StringView&);
-    ~UUID() { }
+    ~UUID() = default;
 
     bool operator==(const UUID&) const;
     bool operator!=(const UUID& other) const { return !(*this == other); }

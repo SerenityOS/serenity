@@ -27,6 +27,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>
@@ -269,7 +270,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         executable_size,
         VirtualAddress(elf_image.program_header_table_offset()).offset(load_offset).get(),
         elf_image.program_header_count(),
-        master_tls_region ? master_tls_region->make_weak_ptr() : nullptr,
+        AK::try_make_weak_ptr(master_tls_region),
         master_tls_size,
         master_tls_alignment,
         stack_region->make_weak_ptr()

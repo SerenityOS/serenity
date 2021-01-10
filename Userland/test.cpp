@@ -345,7 +345,7 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
 {
     StringView arg = argv[optind];
     if (arg.is_null()) {
-        return nullptr;
+        return {};
     }
 
     if (arg == "(") {
@@ -403,7 +403,7 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             // '-a' and '-o' are boolean ops, which are part of a complex expression
             // so we have nothing to parse, simply return to caller.
             --optind;
-            return nullptr;
+            return {};
         case 'n':
             return make<StringCompare>("", value, StringCompare::NotEqual);
         case 'z':

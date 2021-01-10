@@ -69,7 +69,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
 
     // Note that subsequent uses of regcomp() without regfree() _will_ leak memory
     // This could've been prevented if libc provided a reginit() or similar, but it does not.
-    reg->__data = new internal_regex_t { 0, 0, nullptr, 0, ReError::REG_NOERR, {}, 0 };
+    reg->__data = new internal_regex_t { 0, 0, {}, 0, ReError::REG_NOERR, {}, 0 };
 
     auto preg = impl_from(reg);
 

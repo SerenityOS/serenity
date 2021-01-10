@@ -169,8 +169,21 @@ public:
     void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
     void start_window_resize(Window&, const MouseEvent&);
 
-    const Window* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
-    Window* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
+    const Window* active_fullscreen_window() const
+    {
+        if (m_active_window && m_active_window->is_fullscreen()) {
+            return m_active_window;
+        }
+        return nullptr;
+    };
+
+    Window* active_fullscreen_window()
+    {
+        if (m_active_window && m_active_window->is_fullscreen()) {
+            return m_active_window;
+        }
+        return nullptr;
+    }
 
     bool update_theme(String theme_path, String theme_name);
 

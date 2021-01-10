@@ -43,7 +43,7 @@ Project::~Project()
 OwnPtr<Project> Project::open_with_root_path(const String& root_path)
 {
     if (!Core::File::is_directory(root_path))
-        return nullptr;
+        return {};
     return adopt_own(*new Project(root_path));
 }
 

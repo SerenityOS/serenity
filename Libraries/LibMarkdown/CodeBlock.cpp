@@ -112,13 +112,13 @@ String CodeBlock::render_for_terminal(size_t) const
 OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return nullptr;
+        return {};
 
     constexpr auto tick_tick_tick = "```";
 
     StringView line = *lines;
     if (!line.starts_with(tick_tick_tick))
-        return nullptr;
+        return {};
 
     // Our Markdown extension: we allow
     // specifying a style and a language
@@ -134,7 +134,7 @@ OwnPtr<CodeBlock> CodeBlock::parse(Vector<StringView>::ConstIterator& lines)
     StringView style_spec = line.substring_view(3, line.length() - 3);
     auto spec = Text::parse(style_spec);
     if (!spec.has_value())
-        return nullptr;
+        return {};
 
     ++lines;
 

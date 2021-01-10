@@ -54,7 +54,7 @@ private:
     };
 
 public:
-    HashMap() { }
+    HashMap() = default;
 
 #ifndef SERENITY_LIBC_BUILD
     HashMap(std::initializer_list<Entry> list)

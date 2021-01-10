@@ -370,7 +370,7 @@ public:
         Match,
     };
 
-    StringExpression(StringOperation op, NonnullOwnPtr<Expression> string, OwnPtr<Expression> pos_or_chars = nullptr, OwnPtr<Expression> length = nullptr)
+    StringExpression(StringOperation op, NonnullOwnPtr<Expression> string, OwnPtr<Expression> pos_or_chars = {}, OwnPtr<Expression> length = {})
         : m_op(op)
         , m_str(move(string))
         , m_pos_or_chars(move(pos_or_chars))
