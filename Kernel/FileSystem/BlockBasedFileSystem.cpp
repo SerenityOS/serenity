@@ -315,7 +315,7 @@ void BlockBasedFS::flush_writes_impl()
         ++count;
     });
     cache().mark_all_clean();
-    dbg() << class_name() << ": Flushed " << count << " blocks to disk";
+    dbgln("{}: Flushed {} blocks to disk", class_name(), count);
 }
 
 void BlockBasedFS::flush_writes()

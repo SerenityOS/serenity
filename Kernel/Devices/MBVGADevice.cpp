@@ -47,7 +47,7 @@ MBVGADevice::MBVGADevice(PhysicalAddress addr, size_t pitch, size_t width, size_
     , m_framebuffer_width(width)
     , m_framebuffer_height(height)
 {
-    dbg() << "MBVGADevice address=" << addr << ", pitch=" << pitch << ", width=" << width << ", height=" << height;
+    dbgln("MBVGADevice address={}, pitch={}, width={}, height={}", addr, pitch, width, height);
     s_the = this;
 }
 
@@ -71,7 +71,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
         shared);
     if (!region)
         return KResult(-ENOMEM);
-    dbg() << "MBVGADevice: mmap with size " << region->size() << " at " << region->vaddr();
+    dbgln("MBVGADevice: mmap with size {} at {}", region->size(), region->vaddr());
     return region;
 }
 
