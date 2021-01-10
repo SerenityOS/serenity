@@ -110,8 +110,9 @@ static void prepare_devfs()
     }
 
     // FIXME: Find a better way to chown without hardcoding the gid!
+    // This will fail with ENOENT in text mode.
     rc = chown("/dev/fb0", 0, 3);
-    if (rc < 0) {
+    if (rc < 0 && errno != ENOENT) {
         ASSERT_NOT_REACHED();
     }
 
