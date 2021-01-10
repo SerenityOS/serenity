@@ -77,7 +77,11 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
     LOCKER(m_lock);
 
     auto& inode = mount_point.inode();
-    dbg() << "VFS: Mounting " << file_system.class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ") with flags " << flags;
+    dbgln("VFS: Mounting {} at {} (inode: {}) with flags {}",
+        file_system.class_name(),
+        mount_point.absolute_path(),
+        inode.identifier(),
+        flags);
     // FIXME: check that this is not already a mount point
     Mount mount { file_system, &mount_point, flags };
     m_mounts.append(move(mount));
@@ -88,7 +92,7 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
     LOCKER(m_lock);
 
-    dbg() << "VFS: Bind-mounting " << source.absolute_path() << " at " << mount_point.absolute_path();
+    dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
     // FIXME: check that this is not already a mount point
     Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
@@ -99,7 +103,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 {
     LOCKER(m_lock);
 
-    dbg() << "VFS: Remounting " << mount_point.absolute_path();
+    dbgln("VFS: Remounting {}", mount_point.absolute_path());
 
     Mount* mount = find_mount_for_guest(mount_point.inode());
     if (!mount)
@@ -112,7 +116,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 KResult VFS::unmount(Inode& guest_inode)
 {
     LOCKER(m_lock);
-    dbg() << "VFS: unmount called with inode " << guest_inode.identifier();
+    dbgln("VFS: unmount called with inode {}", guest_inode.identifier());
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {
         auto& mount = m_mounts.at(i);
@@ -122,7 +126,7 @@ KResult VFS::unmount(Inode& guest_inode)
                 dbgln("VFS: Failed to unmount!");
                 return result;
             }
-            dbg() << "VFS: found fs " << mount.guest_fs().fsid() << " at mount index " << i << "! Unmounting...";
+            dbgln("VFS: found fs {} at mount index {}! Unmounting...", mount.guest_fs().fsid(), i);
             m_mounts.unstable_take(i);
             return KSuccess;
         }
@@ -374,7 +378,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
         return KResult(-EROFS);
 
     LexicalPath p(path);
-    dbg() << "VFS::mknod: '" << p.basename() << "' mode=" << mode << " dev=" << dev << " in " << parent_inode.identifier();
+    dbgln("VFS::mknod: '{}' mode={} dev={} in {}", p.basename(), mode, dev, parent_inode.identifier());
     return parent_inode.create_child(p.basename(), mode, dev, current_process->uid(), current_process->gid()).result();
 }
 
@@ -609,10 +613,10 @@ KResult VFS::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
     if (custody.is_readonly())
         return KResult(-EROFS);
 
-    dbg() << "VFS::chown(): inode " << inode.identifier() << " <- uid:" << new_uid << " gid:" << new_gid;
+    dbgln("VFS::chown(): inode {} <- uid={} gid={}", inode.identifier(), new_uid, new_gid);
 
     if (metadata.is_setuid() || metadata.is_setgid()) {
-        dbg() << "VFS::chown(): Stripping SUID/SGID bits from " << inode.identifier();
+        dbgln("VFS::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
         auto result = inode.chmod(metadata.mode & ~(04000 | 02000));
         if (result.is_error())
             return result;
@@ -718,7 +722,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
         return KResult(-EROFS);
 
     LexicalPath p(linkpath);
-    dbg() << "VFS::symlink: '" << p.basename() << "' (-> '" << target << "') in " << parent_inode.identifier();
+    dbgln("VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
     auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->uid(), current_process->gid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
@@ -862,21 +866,21 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
 
     auto* unveiled_path = find_matching_unveiled_path(path);
     if (!unveiled_path) {
-        dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled.";
+        dbgln("Rejecting path '{}' since it hasn't been unveiled.", path);
         dump_backtrace();
         return KResult(-ENOENT);
     }
 
     if (options & O_CREAT) {
         if (!(unveiled_path->permissions() & UnveilAccess::CreateOrRemove)) {
-            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'c' permission.";
+            dbgln("Rejecting path '{}' since it hasn't been unveiled with 'c' permission.", path);
             dump_backtrace();
             return KResult(-EACCES);
         }
     }
     if (options & O_UNLINK_INTERNAL) {
         if (!(unveiled_path->permissions() & UnveilAccess::CreateOrRemove)) {
-            dbg() << "Rejecting path '" << path << "' for unlink since it hasn't been unveiled with 'c' permission.";
+            dbgln("Rejecting path '{}' for unlink since it hasn't been unveiled with 'c' permission.", path);
             dump_backtrace();
             return KResult(-EACCES);
         }
@@ -885,13 +889,13 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
     if (options & O_RDONLY) {
         if (options & O_DIRECTORY) {
             if (!(unveiled_path->permissions() & (UnveilAccess::Read | UnveilAccess::Browse))) {
-                dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' or 'b' permissions.";
+                dbgln("Rejecting path '{}' since it hasn't been unveiled with 'r' or 'b' permissions.", path);
                 dump_backtrace();
                 return KResult(-EACCES);
             }
         } else {
             if (!(unveiled_path->permissions() & UnveilAccess::Read)) {
-                dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+                dbgln("Rejecting path '{}' since it hasn't been unveiled with 'r' permission.", path);
                 dump_backtrace();
                 return KResult(-EACCES);
             }
@@ -899,14 +903,14 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
     }
     if (options & O_WRONLY) {
         if (!(unveiled_path->permissions() & UnveilAccess::Write)) {
-            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
+            dbgln("Rejecting path '{}' since it hasn't been unveiled with 'w' permission.", path);
             dump_backtrace();
             return KResult(-EACCES);
         }
     }
     if (options & O_EXEC) {
         if (!(unveiled_path->permissions() & UnveilAccess::Execute)) {
-            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
+            dbgln("Rejecting path '{}' since it hasn't been unveiled with 'x' permission.", path);
             dump_backtrace();
             return KResult(-EACCES);
         }

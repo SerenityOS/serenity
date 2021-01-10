@@ -76,3 +76,11 @@ inline const LogStream& operator<<(const LogStream& stream, const InodeIdentifie
 }
 
 }
+
+template<>
+struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::InodeIdentifier value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
+    }
+};
