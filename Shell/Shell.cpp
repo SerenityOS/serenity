@@ -1484,7 +1484,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     String eol_mark = getenv("PROMPT_EOL_MARK");
     if (eol_mark.is_null())
         eol_mark = default_mark;
-    size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_lengths.last();
+    size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_metrics.last().total_length();
     if (eol_mark_length >= ws.ws_col) {
         eol_mark = default_mark;
         eol_mark_length = 1;

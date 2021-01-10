@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020-2021, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,29 @@
 namespace Line {
 
 struct StringMetrics {
-    Vector<size_t> line_lengths;
+    struct MaskedChar {
+        size_t position { 0 };
+        size_t original_length { 0 };
+        size_t masked_length { 0 };
+    };
+    struct LineMetrics {
+        Vector<MaskedChar> masked_chars;
+        size_t length { 0 };
+
+        size_t total_length(ssize_t offset = -1) const
+        {
+            size_t length = this->length;
+            for (auto& mask : masked_chars) {
+                if (offset < 0 || mask.position <= (size_t)offset) {
+                    length -= mask.original_length;
+                    length += mask.masked_length;
+                }
+            }
+            return length;
+        }
+    };
+
+    Vector<LineMetrics> line_metrics;
     size_t total_length { 0 };
     size_t max_line_length { 0 };
 
@@ -40,10 +62,10 @@ struct StringMetrics {
     size_t offset_with_addition(const StringMetrics& offset, size_t column_width) const;
     void reset()
     {
-        line_lengths.clear();
+        line_metrics.clear();
         total_length = 0;
         max_line_length = 0;
-        line_lengths.append(0);
+        line_metrics.append({ {}, 0 });
     }
 };
 

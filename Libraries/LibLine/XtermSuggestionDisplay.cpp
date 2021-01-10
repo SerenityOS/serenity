@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020-2021, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,11 +52,11 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     VT::restore_cursor();
 
     auto spans_entire_line { false };
-    Vector<size_t> lines;
+    Vector<StringMetrics::LineMetrics> lines;
     for (size_t i = 0; i < m_prompt_lines_at_suggestion_initiation - 1; ++i)
-        lines.append(0);
-    lines.append(longest_suggestion_length);
-    auto max_line_count = StringMetrics { move(lines) }.lines_with_addition({ { 0 } }, m_num_columns);
+        lines.append({ {}, 0 });
+    lines.append({ {}, longest_suggestion_length });
+    auto max_line_count = StringMetrics { move(lines) }.lines_with_addition({ { { {}, 0 } } }, m_num_columns);
     if (longest_suggestion_length >= m_num_columns - 2) {
         spans_entire_line = true;
         // We should make enough space for the biggest entry in

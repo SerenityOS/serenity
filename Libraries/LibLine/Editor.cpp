@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -551,7 +552,7 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     reset();
     strip_styles(true);
 
-    auto prompt_lines = max(current_prompt_metrics().line_lengths.size(), 1ul) - 1;
+    auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
     for (size_t i = 0; i < prompt_lines; ++i)
         putc('\n', stderr);
 
@@ -713,8 +714,8 @@ void Editor::handle_read_event()
                 m_state = InputState::CSIExpectParameter;
                 continue;
             default: {
-                m_state = InputState::Free;
                 m_callback_machine.key_pressed(*this, { code_point, Key::Alt });
+                m_state = InputState::Free;
                 cleanup_suggestions();
                 continue;
             }
@@ -805,9 +806,24 @@ void Editor::handle_read_event()
             }
             break;
         }
+        case InputState::Verbatim:
+            m_state = InputState::Free;
+            // Verbatim mode will bypass all mechanisms and just insert the code point.
+            insert(code_point);
+            continue;
         case InputState::Free:
             if (code_point == 27) {
-                m_state = InputState::GotEscape;
+                m_callback_machine.key_pressed(*this, code_point);
+                // Note that this should also deal with explicitly registered keys
+                // that would otherwise be interpreted as escapes.
+                if (m_callback_machine.should_process_last_pressed_key())
+                    m_state = InputState::GotEscape;
+                continue;
+            }
+            if (code_point == 22) { // ^v
+                m_callback_machine.key_pressed(*this, code_point);
+                if (m_callback_machine.should_process_last_pressed_key())
+                    m_state = InputState::Verbatim;
                 continue;
             }
             break;
@@ -1124,6 +1140,9 @@ void Editor::refresh_display()
         auto anchored_ends = m_anchored_spans_ending.get(i).value_or(empty_styles);
         auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
 
+        auto c = m_buffer[i];
+        bool should_print_caret = iscntrl(c) && c != '\n';
+
         if (ends.size() || anchored_ends.size()) {
             Style style;
 
@@ -1152,9 +1171,20 @@ void Editor::refresh_display()
             // Set new styles.
             VT::apply_style(style, true);
         }
+
         builder.clear();
-        builder.append(Utf32View { &m_buffer[i], 1 });
+        if (should_print_caret)
+            builder.appendff("^{:c}", c + 64);
+        else
+            builder.append(Utf32View { &c, 1 });
+
+        if (should_print_caret)
+            fputs("\033[7m", stderr);
+
         fputs(builder.to_string().characters(), stderr);
+
+        if (should_print_caret)
+            fputs("\033[27m", stderr);
     }
 
     VT::apply_style(Style::reset_style()); // don't bleed to EOL
@@ -1404,8 +1434,8 @@ void VT::clear_to_end_of_line()
 
 StringMetrics Editor::actual_rendered_string_metrics(const StringView& string)
 {
-    size_t length { 0 };
     StringMetrics metrics;
+    StringMetrics::LineMetrics current_line;
     VTState state { Free };
     Utf8View view { string };
     auto it = view.begin();
@@ -1415,38 +1445,38 @@ StringMetrics Editor::actual_rendered_string_metrics(const StringView& string)
         auto it_copy = it;
         ++it_copy;
         auto next_c = it_copy == view.end() ? 0 : *it_copy;
-        state = actual_rendered_string_length_step(metrics, length, c, next_c, state);
+        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state);
     }
 
-    metrics.line_lengths.append(length);
+    metrics.line_metrics.append(current_line);
 
-    for (auto& line : metrics.line_lengths)
-        metrics.max_line_length = max(line, metrics.max_line_length);
+    for (auto& line : metrics.line_metrics)
+        metrics.max_line_length = max(line.total_length(), metrics.max_line_length);
 
     return metrics;
 }
 
 StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view)
 {
-    size_t length { 0 };
     StringMetrics metrics;
+    StringMetrics::LineMetrics current_line;
     VTState state { Free };
 
     for (size_t i = 0; i < view.length(); ++i) {
         auto c = view.code_points()[i];
         auto next_c = i + 1 < view.length() ? view.code_points()[i + 1] : 0;
-        state = actual_rendered_string_length_step(metrics, length, c, next_c, state);
+        state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state);
     }
 
-    metrics.line_lengths.append(length);
+    metrics.line_metrics.append(current_line);
 
-    for (auto& line : metrics.line_lengths)
-        metrics.max_line_length = max(line, metrics.max_line_length);
+    for (auto& line : metrics.line_metrics)
+        metrics.max_line_length = max(line.total_length(), metrics.max_line_length);
 
     return metrics;
 }
 
-Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t& length, u32 c, u32 next_c, VTState state)
+Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state)
 {
     switch (state) {
     case Free:
@@ -1454,18 +1484,22 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             return Escape;
         }
         if (c == '\r') { // carriage return
-            length = 0;
-            if (!metrics.line_lengths.is_empty())
-                metrics.line_lengths.last() = 0;
+            current_line.masked_chars = {};
+            current_line.length = 0;
+            if (!metrics.line_metrics.is_empty())
+                metrics.line_metrics.last() = { {}, 0 };
             return state;
         }
         if (c == '\n') { // return
-            metrics.line_lengths.append(length);
-            length = 0;
+            metrics.line_metrics.append(current_line);
+            current_line.masked_chars = {};
+            current_line.length = 0;
             return state;
         }
+        if (iscntrl(c) && c != '\n')
+            current_line.masked_chars.append({ index, 1, 2 });
         // FIXME: This will not support anything sophisticated
-        ++length;
+        ++current_line.length;
         ++metrics.total_length;
         return state;
     case Escape:
@@ -1643,26 +1677,26 @@ size_t StringMetrics::lines_with_addition(const StringMetrics& offset, size_t co
 {
     size_t lines = 0;
 
-    for (size_t i = 0; i < line_lengths.size() - 1; ++i)
-        lines += (line_lengths[i] + column_width) / column_width;
+    for (size_t i = 0; i < line_metrics.size() - 1; ++i)
+        lines += (line_metrics[i].total_length() + column_width) / column_width;
 
-    auto last = line_lengths.last();
-    last += offset.line_lengths.first();
+    auto last = line_metrics.last().total_length();
+    last += offset.line_metrics.first().total_length();
     lines += (last + column_width) / column_width;
 
-    for (size_t i = 1; i < offset.line_lengths.size(); ++i)
-        lines += (offset.line_lengths[i] + column_width) / column_width;
+    for (size_t i = 1; i < offset.line_metrics.size(); ++i)
+        lines += (offset.line_metrics[i].total_length() + column_width) / column_width;
 
     return lines;
 }
 
 size_t StringMetrics::offset_with_addition(const StringMetrics& offset, size_t column_width) const
 {
-    if (offset.line_lengths.size() > 1)
-        return offset.line_lengths.first() % column_width;
+    if (offset.line_metrics.size() > 1)
+        return offset.line_metrics.last().total_length() % column_width;
 
-    auto last = line_lengths.last();
-    last += offset.line_lengths.first();
+    auto last = line_metrics.last().total_length();
+    last += offset.line_metrics.first().total_length();
     return last % column_width;
 }
 
