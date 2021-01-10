@@ -43,7 +43,7 @@ Function<bool(Editor&)> Editor::find_internal_function(const StringView& name)
 
     ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(__ENUMERATE)
 
-    return nullptr;
+    return {};
 }
 
 void Editor::search_forwards()

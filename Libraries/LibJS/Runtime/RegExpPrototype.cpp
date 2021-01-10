@@ -50,11 +50,11 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.exec, exec, 1, attr);
 
     u8 readable_attr = Attribute::Configurable;
-    define_native_property(vm.names.flags, flags, nullptr, readable_attr);
-    define_native_property(vm.names.source, source, nullptr, readable_attr);
+    define_native_property(vm.names.flags, flags, {}, readable_attr);
+    define_native_property(vm.names.source, source, {}, readable_attr);
 
 #define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName) \
-    define_native_property(vm.names.flagName, flag_name, nullptr, readable_attr);
+    define_native_property(vm.names.flagName, flag_name, {}, readable_attr);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 }

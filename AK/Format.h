@@ -266,7 +266,7 @@ struct StandardFormatter {
 
 template<typename T>
 struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
-    Formatter() { }
+    Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
@@ -277,7 +277,7 @@ struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFor
 
 template<>
 struct Formatter<StringView> : StandardFormatter {
-    Formatter() { }
+    Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
@@ -338,7 +338,7 @@ struct Formatter<float> : StandardFormatter {
 };
 template<>
 struct Formatter<double> : StandardFormatter {
-    Formatter() { }
+    Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {

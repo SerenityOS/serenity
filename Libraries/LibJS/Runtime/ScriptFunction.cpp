@@ -73,8 +73,8 @@ void ScriptFunction::initialize(GlobalObject& global_object)
         prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
         define_property(vm.names.prototype, prototype, Attribute::Writable);
     }
-    define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
-    define_native_property(vm.names.name, name_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.length, length_getter, {}, Attribute::Configurable);
+    define_native_property(vm.names.name, name_getter, {}, Attribute::Configurable);
 }
 
 ScriptFunction::~ScriptFunction()

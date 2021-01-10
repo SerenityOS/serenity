@@ -47,19 +47,19 @@ String HorizontalRule::render_for_terminal(size_t view_width) const
 OwnPtr<HorizontalRule> HorizontalRule::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return nullptr;
+        return {};
 
     const StringView& line = *lines;
 
     if (line.length() < 3)
-        return nullptr;
+        return {};
     if (!line.starts_with('-') && !line.starts_with('_') && !line.starts_with('*'))
-        return nullptr;
+        return {};
 
     auto first_character = line.characters_without_null_termination()[0];
     for (auto ch : line) {
         if (ch != first_character)
-            return nullptr;
+            return {};
     }
 
     ++lines;

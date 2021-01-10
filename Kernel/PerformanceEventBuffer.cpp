@@ -89,7 +89,7 @@ OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& exe
 {
     KBufferBuilder builder;
     if (!to_json(builder, pid, executable_path))
-        return nullptr;
+        return {};
     return builder.build();
 }
 

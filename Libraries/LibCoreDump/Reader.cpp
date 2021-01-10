@@ -37,7 +37,7 @@ OwnPtr<Reader> Reader::create(const String& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
-        return nullptr;
+        return {};
     return adopt_own(*new Reader(file_or_error.release_value()));
 }
 

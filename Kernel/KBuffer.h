@@ -128,7 +128,7 @@ public:
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
-            return nullptr;
+            return {};
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 
@@ -136,7 +136,7 @@ public:
     {
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
-            return nullptr;
+            return {};
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 

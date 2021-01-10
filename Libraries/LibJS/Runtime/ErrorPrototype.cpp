@@ -45,7 +45,7 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_property(vm.names.name, name_getter, name_setter, attr);
-    define_native_property(vm.names.message, message_getter, nullptr, attr);
+    define_native_property(vm.names.message, message_getter, {}, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 }
 

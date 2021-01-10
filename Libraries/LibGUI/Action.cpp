@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/WeakPtr.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -39,7 +40,7 @@ namespace CommonActions {
 
 NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent)
 {
-    WeakPtr<Window> weak_parent = parent ? parent->make_weak_ptr<Window>() : nullptr;
+    auto weak_parent = AK::try_make_weak_ptr<Window>(parent);
     return Action::create(String::formatted("About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
         AboutDialog::show(app_name, app_icon.bitmap_for_size(32), weak_parent.ptr());
     });
@@ -288,7 +289,7 @@ void Action::set_checked(bool checked)
 
 void Action::set_group(Badge<ActionGroup>, ActionGroup* group)
 {
-    m_action_group = group ? group->make_weak_ptr() : nullptr;
+    m_action_group = AK::try_make_weak_ptr(group);
 }
 
 void Action::set_icon(const Gfx::Bitmap* icon)

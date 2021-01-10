@@ -32,7 +32,7 @@ namespace AK {
 
 class FlyString {
 public:
-    FlyString() { }
+    FlyString() = default;
     FlyString(const FlyString& other)
         : m_impl(other.impl())
     {

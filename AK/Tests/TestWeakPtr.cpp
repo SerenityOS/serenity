@@ -38,7 +38,7 @@
 class SimpleWeakable : public Weakable<SimpleWeakable>
     , public RefCounted<SimpleWeakable> {
 public:
-    SimpleWeakable() { }
+    SimpleWeakable() = default;
 
 private:
     int m_member { 123 };

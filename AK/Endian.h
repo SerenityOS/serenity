@@ -110,7 +110,7 @@ public:
     friend InputStream& operator>><T>(InputStream&, LittleEndian<T>&);
     friend OutputStream& operator<<<T>(OutputStream&, LittleEndian<T>);
 
-    constexpr LittleEndian() { }
+    constexpr LittleEndian() = default;
 
     constexpr LittleEndian(T value)
         : m_value(convert_between_host_and_little_endian(value))

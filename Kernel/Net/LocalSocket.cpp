@@ -192,7 +192,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     }
 
     auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-    if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description, unblock_flags).was_interrupted()) {
+    if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted()) {
         set_connect_side_role(Role::None);
         return KResult(-EINTR);
     }
@@ -329,7 +329,7 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
         }
     } else if (!can_read(description, 0)) {
         auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblock_flags).was_interrupted())
+        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
             return KResult(-EINTR);
     }
     if (!has_attached_peer(description) && socket_buffer->is_empty())

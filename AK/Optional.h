@@ -37,7 +37,7 @@ namespace AK {
 template<typename T>
 class alignas(T) [[nodiscard]] Optional {
 public:
-    Optional() { }
+    Optional() = default;
 
     Optional(const T& value)
         : m_has_value(true)

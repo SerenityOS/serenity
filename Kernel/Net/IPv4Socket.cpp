@@ -255,7 +255,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
 
         locker.unlock();
         auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblocked_flags);
+        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
         locker.lock();
 
         if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {
@@ -306,7 +306,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
 
         locker.unlock();
         auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblocked_flags);
+        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
         locker.lock();
 
         if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {

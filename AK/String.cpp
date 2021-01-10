@@ -213,7 +213,7 @@ Vector<StringView> String::split_view(const char separator, bool keep_empty) con
 ByteBuffer String::to_byte_buffer() const
 {
     if (!m_impl)
-        return nullptr;
+        return {};
     return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
 }
 

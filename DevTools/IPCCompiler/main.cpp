@@ -337,13 +337,13 @@ public:
                 parameter_generator.append(R"~~~(
         @parameter.type@ @parameter.name@ = @parameter.initial_value@;
         if (!decoder.decode(@parameter.name@))
-            return nullptr;
+            return {};
 )~~~");
 
                 if (parameter.attributes.contains_slow("UTF8")) {
                     parameter_generator.append(R"~~~(
         if (!Utf8View(@parameter.name@).validate())
-            return nullptr;
+            return {};
 )~~~");
                 }
             }
@@ -449,7 +449,7 @@ public:
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(
-            return nullptr;
+            return {};
         }
 
         if (message_endpoint_magic != @endpoint.magic@) {
@@ -460,7 +460,7 @@ public:
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(
-            return nullptr;
+            return {};
         }
 
         i32 message_id = 0;
@@ -473,7 +473,7 @@ public:
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(
-            return nullptr;
+            return {};
         }
 
         OwnPtr<IPC::Message> message;
@@ -507,7 +507,7 @@ public:
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(
-            return nullptr;
+            return {};
         }
 
         if (stream.handle_any_error()) {
@@ -518,7 +518,7 @@ public:
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(
-            return nullptr;
+            return {};
         }
 
         return message;
@@ -543,7 +543,7 @@ public:
                 } else {
                     message_generator.append(R"~~~(
             handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
-            return nullptr;
+            return {};
 )~~~");
                 }
             };
@@ -553,7 +553,7 @@ public:
         }
         endpoint_generator.append(R"~~~(
         default:
-            return nullptr;
+            return {};
         }
     }
 )~~~");

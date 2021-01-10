@@ -92,7 +92,7 @@ public:
     }
 
 protected:
-    RefCountedBase() { }
+    RefCountedBase() = default;
     ALWAYS_INLINE ~RefCountedBase()
     {
         ASSERT(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);

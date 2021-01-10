@@ -368,7 +368,7 @@ Profile::LibraryMetadata::LibraryMetadata(JsonArray regions)
 
         auto file_or_error = MappedFile::map(path);
         if (file_or_error.is_error()) {
-            m_libraries.set(name, nullptr);
+            m_libraries.set(name, {});
             continue;
         }
         auto elf = ELF::Image(file_or_error.value()->bytes());

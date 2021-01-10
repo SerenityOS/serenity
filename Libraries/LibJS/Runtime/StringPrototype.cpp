@@ -82,7 +82,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     StringObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_property(vm.names.length, length_getter, nullptr, 0);
+    define_native_property(vm.names.length, length_getter, {}, 0);
     define_native_function(vm.names.charAt, char_at, 1, attr);
     define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
     define_native_function(vm.names.repeat, repeat, 1, attr);

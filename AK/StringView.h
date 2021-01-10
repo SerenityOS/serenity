@@ -37,7 +37,7 @@ namespace AK {
 
 class StringView {
 public:
-    ALWAYS_INLINE constexpr StringView() { }
+    ALWAYS_INLINE constexpr StringView() = default;
     ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)

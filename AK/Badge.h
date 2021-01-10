@@ -31,7 +31,7 @@ namespace AK {
 template<typename T>
 class Badge {
     friend T;
-    Badge() { }
+    constexpr Badge() = default;
 
     Badge(const Badge&) = delete;
     Badge& operator=(const Badge&) = delete;

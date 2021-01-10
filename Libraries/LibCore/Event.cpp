@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/WeakPtr.h>
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>
 
@@ -32,7 +33,7 @@ namespace Core {
 ChildEvent::ChildEvent(Type type, Object& child, Object* insertion_before_child)
     : Core::Event(type)
     , m_child(child.make_weak_ptr())
-    , m_insertion_before_child(insertion_before_child ? insertion_before_child->make_weak_ptr() : nullptr)
+    , m_insertion_before_child(AK::try_make_weak_ptr(insertion_before_child))
 {
 }
 

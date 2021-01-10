@@ -41,7 +41,7 @@ OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
 {
     auto floating_pointer = find_floating_pointer();
     if (!floating_pointer.has_value())
-        return nullptr;
+        return {};
     return adopt_own(*new MultiProcessorParser(floating_pointer.value()));
 }
 

@@ -256,7 +256,7 @@ const LogStream& operator<<(const LogStream&, const Object&);
     register_property(                                           \
         property_name,                                           \
         [this] { return this->getter(); },                       \
-        nullptr);
+        {});
 
 #define REGISTER_RECT_PROPERTY(property_name, getter, setter)          \
     register_property(                                                 \

@@ -105,10 +105,7 @@ class Span : public Detail::Span<T> {
 public:
     using Detail::Span<T>::Span;
 
-    ALWAYS_INLINE constexpr Span(std::nullptr_t)
-        : Span()
-    {
-    }
+    constexpr Span() = default;
 
     ALWAYS_INLINE constexpr Span(const Span& other)
         : Span(other.m_values, other.m_size)

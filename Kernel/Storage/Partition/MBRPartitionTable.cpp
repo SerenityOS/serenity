@@ -54,7 +54,7 @@ OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(const StorageDevi
 {
     auto table = make<MBRPartitionTable>(device, start_lba);
     if (!table->is_valid())
-        return nullptr;
+        return {};
     return table;
 }
 

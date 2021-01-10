@@ -58,9 +58,9 @@ namespace AK {
 
 class String {
 public:
-    ~String() { }
+    ~String() = default;
 
-    String() { }
+    String() = default;
     String(const StringView&);
 
     String(const String& other)
@@ -153,7 +153,13 @@ public:
 
     [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
 
-    ALWAYS_INLINE ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
+    ALWAYS_INLINE ReadonlyBytes bytes() const
+    {
+        if (m_impl) {
+            return m_impl->bytes();
+        }
+        return {};
+    }
 
     ALWAYS_INLINE const char& operator[](size_t i) const
     {

@@ -65,14 +65,14 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
 #ifdef IMAGE_DECODER_DEBUG
         dbgln("Could not map encoded data buffer");
 #endif
-        return nullptr;
+        return {};
     }
 
     if (message.encoded_size() > (size_t)encoded_buffer->size()) {
 #ifdef IMAGE_DECODER_DEBUG
         dbgln("Encoded buffer is smaller than encoded size");
 #endif
-        return nullptr;
+        return {};
     }
 
 #ifdef IMAGE_DECODER_DEBUG

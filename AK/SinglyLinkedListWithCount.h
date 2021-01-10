@@ -35,8 +35,8 @@ template<typename T>
 class SinglyLinkedListWithCount : private SinglyLinkedList<T> {
 
 public:
-    SinglyLinkedListWithCount() { }
-    ~SinglyLinkedListWithCount() { }
+    SinglyLinkedListWithCount() = default;
+    ~SinglyLinkedListWithCount() = default;
 
     using List = SinglyLinkedList<T>;
 

@@ -44,7 +44,7 @@ template<typename T, typename EnableIf<IsPointer<T>::value, int>::Type = 0>
 
 class Userspace {
 public:
-    Userspace() { }
+    Userspace() = default;
 
     operator bool() const { return m_ptr; }
     operator FlatPtr() const { return (FlatPtr)m_ptr; }

@@ -316,13 +316,13 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 auto Thread::sleep(clockid_t clock_id, const timespec& duration, timespec* remaining_time) -> BlockResult
 {
     ASSERT(state() == Thread::Running);
-    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
+    return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
 auto Thread::sleep_until(clockid_t clock_id, const timespec& deadline) -> BlockResult
 {
     ASSERT(state() == Thread::Running);
-    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
+    return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
 const char* Thread::state_string() const

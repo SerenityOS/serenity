@@ -97,7 +97,7 @@ ssize_t Process::do_write(FileDescription& description, const UserOrKernelBuffer
                 return total_nwritten;
             }
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description, unblock_flags).was_interrupted()) {
+            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted()) {
                 if (total_nwritten == 0)
                     return -EINTR;
             }

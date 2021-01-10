@@ -66,7 +66,7 @@ OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> ClientConnection::ha
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
     if (!shared_buffer) {
         did_misbehave("SetClipboardData: Bad shared buffer ID");
-        return nullptr;
+        return {};
     }
     Storage::the().set_data(*shared_buffer, message.data_size(), message.mime_type(), message.metadata().entries());
     return make<Messages::ClipboardServer::SetClipboardDataResponse>();

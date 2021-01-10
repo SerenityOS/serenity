@@ -34,8 +34,8 @@ namespace AK {
 class IDAllocator {
 
 public:
-    IDAllocator() { }
-    ~IDAllocator() { }
+    IDAllocator() = default;
+    ~IDAllocator() = default;
 
     int allocate()
     {

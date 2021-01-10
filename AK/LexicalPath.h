@@ -33,7 +33,7 @@ namespace AK {
 
 class LexicalPath {
 public:
-    LexicalPath() { }
+    LexicalPath() = default;
     explicit LexicalPath(const StringView&);
 
     bool is_valid() const { return m_is_valid; }

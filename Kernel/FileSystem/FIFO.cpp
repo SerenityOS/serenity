@@ -75,7 +75,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
 
         if (m_writers == 0) {
             locker.unlock();
-            m_write_open_queue.wait_on(nullptr, "FIFO");
+            m_write_open_queue.wait_on({}, "FIFO");
             locker.lock();
         }
     }
@@ -85,7 +85,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
 
         if (m_readers == 0) {
             locker.unlock();
-            m_read_open_queue.wait_on(nullptr, "FIFO");
+            m_read_open_queue.wait_on({}, "FIFO");
             locker.lock();
         }
     }

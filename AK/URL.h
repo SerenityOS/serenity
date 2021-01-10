@@ -35,7 +35,7 @@ namespace AK {
 
 class URL {
 public:
-    URL() { }
+    URL() = default;
     URL(const StringView&);
     URL(const char* string)
         : URL(StringView(string))

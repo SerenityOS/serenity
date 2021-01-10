@@ -123,7 +123,7 @@ void Lock::lock(Mode mode)
                     ASSERT_NOT_REACHED();
                 }
                 m_lock.store(false, AK::memory_order_release);
-            } while (m_queue.wait_on(nullptr, m_name) == Thread::BlockResult::NotBlocked);
+            } while (m_queue.wait_on({}, m_name) == Thread::BlockResult::NotBlocked);
         } else {
             // I don't know *who* is using "m_lock", so just yield.
             Scheduler::yield_from_critical();

@@ -35,8 +35,8 @@ namespace AK {
 template<typename T, int segment_size = 1000>
 class Queue {
 public:
-    Queue() { }
-    ~Queue() { }
+    Queue() = default;
+    ~Queue() = default;
 
     size_t size() const { return m_size; }
     bool is_empty() const { return m_size == 0; }

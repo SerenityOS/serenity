@@ -37,7 +37,7 @@ TEST_CASE(sorts_without_copy)
         AK_MAKE_NONCOPYABLE(NoCopy);
 
     public:
-        NoCopy() { }
+        NoCopy() = default;
         NoCopy(NoCopy&&) = default;
 
         NoCopy& operator=(NoCopy&&) = default;

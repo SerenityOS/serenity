@@ -53,7 +53,7 @@ OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const St
 
     auto pipe_result = get_pipe_for_download();
     if (pipe_result.is_error())
-        return nullptr;
+        return {};
 
     auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();

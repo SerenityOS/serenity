@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Span.h>
@@ -42,6 +43,7 @@ public:
     static NonnullRefPtr<ByteBufferImpl> create_zeroed(size_t);
     static NonnullRefPtr<ByteBufferImpl> copy(const void*, size_t);
 
+    ByteBufferImpl() = delete;
     ~ByteBufferImpl() { clear(); }
 
     void clear()
@@ -92,7 +94,6 @@ public:
 private:
     explicit ByteBufferImpl(size_t);
     ByteBufferImpl(const void*, size_t);
-    ByteBufferImpl() { }
 
     u8* m_data { nullptr };
     size_t m_size { 0 };
@@ -100,8 +101,7 @@ private:
 
 class ByteBuffer {
 public:
-    ByteBuffer() { }
-    ByteBuffer(std::nullptr_t) { }
+    ByteBuffer() = default;
     ByteBuffer(const ByteBuffer& other)
         : m_impl(other.m_impl)
     {
@@ -159,11 +159,35 @@ public:
     u8* data() { return m_impl ? m_impl->data() : nullptr; }
     const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
 
-    Bytes bytes() { return m_impl ? m_impl->bytes() : nullptr; }
-    ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
+    Bytes bytes()
+    {
+        if (m_impl) {
+            return m_impl->bytes();
+        }
+        return {};
+    }
+    ReadonlyBytes bytes() const
+    {
+        if (m_impl) {
+            return m_impl->bytes();
+        }
+        return {};
+    }
 
-    Span<u8> span() { return m_impl ? m_impl->span() : nullptr; }
-    Span<const u8> span() const { return m_impl ? m_impl->span() : nullptr; }
+    Span<u8> span()
+    {
+        if (m_impl) {
+            return m_impl->span();
+        }
+        return {};
+    }
+    Span<const u8> span() const
+    {
+        if (m_impl) {
+            return m_impl->span();
+        }
+        return {};
+    }
 
     u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }

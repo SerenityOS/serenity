@@ -49,7 +49,7 @@ public:
 #endif
     {
     }
-    virtual ~LogStream() { }
+    virtual ~LogStream() = default;
 
     virtual void write(const char*, int) const = 0;
 
@@ -94,7 +94,7 @@ protected:
     bool empty() const { return m_size == 0; }
 
 public:
-    BufferedLogStream() { }
+    BufferedLogStream() = default;
 
     virtual ~BufferedLogStream() override
     {
@@ -114,7 +114,7 @@ public:
 
 class DebugLogStream final : public BufferedLogStream {
 public:
-    DebugLogStream() { }
+    DebugLogStream() = default;
     virtual ~DebugLogStream() override;
 
     // DebugLogStream only checks `enabled` and possibly generates output while the destructor runs.
@@ -128,7 +128,7 @@ private:
 #ifdef KERNEL
 class KernelLogStream final : public BufferedLogStream {
 public:
-    KernelLogStream() { }
+    KernelLogStream() = default;
     virtual ~KernelLogStream() override;
 };
 #endif

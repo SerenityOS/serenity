@@ -436,7 +436,7 @@ void Editor::set_document(GUI::TextDocument& doc)
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
         break;
     default:
-        set_syntax_highlighter(nullptr);
+        set_syntax_highlighter({});
     }
 
     if (m_language_client) {

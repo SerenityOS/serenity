@@ -531,7 +531,7 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
     while (size > 0) {
         if (!description.can_write()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description, unblock_flags).was_interrupted())
+            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted())
                 return KResult(-EINTR);
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
@@ -552,7 +552,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
     while (size > 0) {
         if (!description.can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblock_flags).was_interrupted())
+            if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
                 return KResult(-EINTR);
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
@@ -621,7 +621,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
     auto result = post_message(message, completion);
     if (result.is_error())
         return result;
-    if (Thread::current()->block<Plan9FS::Blocker>(nullptr, *this, message, completion).was_interrupted())
+    if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
         return KResult(-EINTR);
 
     if (completion->result.is_error()) {

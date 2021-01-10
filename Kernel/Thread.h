@@ -207,10 +207,6 @@ public:
             : m_infinite(true)
         {
         }
-        BlockTimeout(std::nullptr_t)
-            : m_infinite(true)
-        {
-        }
         explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
             : m_clock_id(clock_id)
             , m_infinite(!time)

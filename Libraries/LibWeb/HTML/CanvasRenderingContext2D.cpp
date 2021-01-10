@@ -142,11 +142,11 @@ void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
 OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
 {
     if (!m_element)
-        return nullptr;
+        return {};
 
     if (!m_element->bitmap()) {
         if (!m_element->create_bitmap())
-            return nullptr;
+            return {};
     }
 
     return make<Gfx::Painter>(*m_element->bitmap());
@@ -208,7 +208,7 @@ RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int hei
 {
     if (!wrapper()) {
         dbgln("Hmm! Attempted to create ImageData for wrapper-less CRC2D.");
-        return nullptr;
+        return {};
     }
     return ImageData::create_with_size(wrapper()->global_object(), width, height);
 }

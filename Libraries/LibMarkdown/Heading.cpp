@@ -62,7 +62,7 @@ String Heading::render_for_terminal(size_t) const
 OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return nullptr;
+        return {};
 
     const StringView& line = *lines;
     size_t level;
@@ -73,12 +73,12 @@ OwnPtr<Heading> Heading::parse(Vector<StringView>::ConstIterator& lines)
     }
 
     if (!level || level >= line.length() || line[level] != ' ')
-        return nullptr;
+        return {};
 
     StringView title_view = line.substring_view(level + 1, line.length() - level - 1);
     auto text = Text::parse(title_view);
     if (!text.has_value())
-        return nullptr;
+        return {};
 
     auto heading = make<Heading>(move(text.value()), level);
 

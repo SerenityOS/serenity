@@ -37,7 +37,7 @@ namespace AK {
 template<typename ListType, typename ElementType>
 class SinglyLinkedListIterator {
 public:
-    SinglyLinkedListIterator() { }
+    SinglyLinkedListIterator() = default;
     bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
@@ -78,7 +78,7 @@ private:
     };
 
 public:
-    SinglyLinkedList() { }
+    SinglyLinkedList() = default;
     ~SinglyLinkedList() { clear(); }
 
     bool is_empty() const { return !head(); }

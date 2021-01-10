@@ -61,11 +61,11 @@ String Paragraph::render_for_terminal(size_t) const
 OwnPtr<Paragraph::Line> Paragraph::Line::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
-        return nullptr;
+        return {};
 
     auto text = Text::parse(*lines++);
     if (!text.has_value())
-        return nullptr;
+        return {};
 
     return make<Paragraph::Line>(text.release_value());
 }
