@@ -180,6 +180,18 @@ static void mount_all_filesystems()
     }
 }
 
+static void create_tmp_rpc_directory()
+{
+    dbgln("Creating /tmp/rpc directory");
+    auto old_umask = umask(0);
+    auto rc = mkdir("/tmp/rpc", 01777);
+    if (rc < 0) {
+        perror("mkdir(/tmp/rpc)");
+        ASSERT_NOT_REACHED();
+    }
+    umask(old_umask);
+}
+
 int main(int, char**)
 {
     prepare_devfs();
@@ -190,6 +202,7 @@ int main(int, char**)
     }
 
     mount_all_filesystems();
+    create_tmp_rpc_directory();
     parse_boot_mode();
 
     Core::EventLoop event_loop;
