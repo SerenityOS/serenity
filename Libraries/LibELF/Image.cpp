@@ -36,12 +36,17 @@
 
 namespace ELF {
 
-Image::Image(const u8* buffer, size_t size, bool verbose_logging)
-    : m_buffer(buffer)
-    , m_size(size)
+Image::Image(ReadonlyBytes bytes, bool verbose_logging)
+    : m_buffer(bytes.data())
+    , m_size(bytes.size())
     , m_verbose_logging(verbose_logging)
 {
     parse();
+}
+
+Image::Image(const u8* buffer, size_t size, bool verbose_logging)
+    : Image(ReadonlyBytes { buffer, size }, verbose_logging)
+{
 }
 
 Image::~Image()

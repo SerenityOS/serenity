@@ -207,7 +207,7 @@ private:
     Optional<size_t> m_loader_text_size;
 
     struct CachedELF {
-        MappedFile mapped_file;
+        NonnullRefPtr<MappedFile> mapped_file;
         NonnullOwnPtr<Debug::DebugInfo> debug_info;
     };
 

@@ -284,14 +284,15 @@ int main(int argc, char** argv)
         display_symbol_table = true;
     }
 
-    MappedFile mapped_executable(path);
+    auto file_or_error = MappedFile::map(path);
 
-    if (!mapped_executable.is_valid()) {
-        fprintf(stderr, "Unable to map file %s\n", path);
+    if (file_or_error.is_error()) {
+        warnln("Unable to map file {}: {}", path, file_or_error.error());
         return -1;
     }
 
-    ELF::Image executable_elf((const u8*)mapped_executable.data(), mapped_executable.size());
+    auto elf_image_data = file_or_error.value()->bytes();
+    ELF::Image executable_elf(elf_image_data);
 
     if (!executable_elf.is_valid()) {
         fprintf(stderr, "File is not a valid ELF object\n");
@@ -300,7 +301,7 @@ int main(int argc, char** argv)
 
     String interpreter_path;
 
-    if (!ELF::validate_program_headers(*(Elf32_Ehdr*)mapped_executable.data(), mapped_executable.size(), (u8*)mapped_executable.data(), mapped_executable.size(), &interpreter_path)) {
+    if (!ELF::validate_program_headers(*(const Elf32_Ehdr*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path)) {
         fprintf(stderr, "Invalid ELF headers\n");
         return -1;
     }
@@ -309,14 +310,14 @@ int main(int argc, char** argv)
         fprintf(stderr, "Warning: Dynamic ELF object has no interpreter path\n");
     }
 
-    ELF::Image interpreter_image((const u8*)mapped_executable.data(), mapped_executable.size());
+    ELF::Image interpreter_image(elf_image_data);
 
     if (!interpreter_image.is_valid()) {
         fprintf(stderr, "ELF image is invalid\n");
         return -1;
     }
 
-    auto header = *reinterpret_cast<const Elf32_Ehdr*>(mapped_executable.data());
+    auto& header = *reinterpret_cast<const Elf32_Ehdr*>(elf_image_data.data());
 
     if (display_elf_header) {
         printf("ELF header:\n");

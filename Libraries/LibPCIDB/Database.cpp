@@ -34,7 +34,10 @@ namespace PCIDB {
 
 RefPtr<Database> Database::open(const StringView& file_name)
 {
-    auto res = adopt(*new Database(file_name));
+    auto file_or_error = MappedFile::map(file_name);
+    if (file_or_error.is_error())
+        return nullptr;
+    auto res = adopt(*new Database(file_or_error.release_value()));
     if (res->init() != 0)
         return nullptr;
     return res;
@@ -131,10 +134,7 @@ int Database::init()
     if (m_ready)
         return 0;
 
-    if (!m_file.is_valid())
-        return -1;
-
-    m_view = StringView((const char*)m_file.data(), m_file.size());
+    m_view = StringView { m_file->bytes() };
 
     ParseMode mode = ParseMode::UnknownMode;
 

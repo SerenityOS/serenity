@@ -90,7 +90,7 @@ static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
             if (section.name() != ".text")
                 return IterationDecision::Continue;
 
-            X86::SimpleInstructionStream stream((const u8*)((u32)lib.file.data() + section.offset()), section.size());
+            X86::SimpleInstructionStream stream((const u8*)((u32)lib.file->data() + section.offset()), section.size());
             X86::Disassembler disassembler(stream);
             for (;;) {
                 auto offset = stream.offset();

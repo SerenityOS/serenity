@@ -37,7 +37,9 @@ namespace ELF {
 
 class Image {
 public:
+    explicit Image(ReadonlyBytes, bool verbose_logging = true);
     explicit Image(const u8*, size_t, bool verbose_logging = true);
+
     ~Image();
     void dump() const;
     bool is_valid() const { return m_valid; }

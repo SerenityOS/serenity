@@ -128,7 +128,7 @@ private:
 
     unsigned* m_rows { nullptr };
     u8* m_glyph_widths { nullptr };
-    MappedFile m_mapped_file;
+    RefPtr<MappedFile> m_mapped_file;
 
     u8 m_glyph_width { 0 };
     u8 m_glyph_height { 0 };

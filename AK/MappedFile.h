@@ -27,37 +27,33 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <AK/StringView.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/OSError.h>
+#include <AK/RefCounted.h>
+#include <AK/Result.h>
 
 namespace AK {
 
-class MappedFile {
+class MappedFile : public RefCounted<MappedFile> {
     AK_MAKE_NONCOPYABLE(MappedFile);
+    AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    MappedFile() { }
-    explicit MappedFile(const StringView& file_name);
-    MappedFile(MappedFile&&);
+    static Result<NonnullRefPtr<MappedFile>, OSError> map(const StringView& path);
     ~MappedFile();
 
-    MappedFile& operator=(MappedFile&&);
+    void* data() { return m_data; }
+    const void* data() const { return m_data; }
 
-    bool is_valid() const { return m_map != (void*)-1; }
-    int errno_if_invalid() const
-    {
-        ASSERT(!is_valid());
-        return m_errno;
-    }
-    void unmap();
-
-    void* data() { return m_map; }
-    const void* data() const { return m_map; }
     size_t size() const { return m_size; }
 
+    ReadonlyBytes bytes() const { return { m_data, m_size }; }
+
 private:
+    explicit MappedFile(void*, size_t);
+
+    void* m_data { nullptr };
     size_t m_size { 0 };
-    void* m_map { (void*)-1 };
-    int m_errno { 0 };
 };
 
 }

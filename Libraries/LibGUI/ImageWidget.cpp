@@ -92,10 +92,11 @@ void ImageWidget::animate()
 
 void ImageWidget::load_from_file(const StringView& path)
 {
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return;
 
+    auto& mapped_file = *file_or_error.value();
     m_image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
     auto bitmap = m_image_decoder->bitmap();
     ASSERT(bitmap);

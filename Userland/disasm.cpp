@@ -48,11 +48,13 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
     args_parser.parse(argc, argv);
 
-    MappedFile file(path);
-    if (!file.is_valid()) {
-        // Already printed some error message.
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error()) {
+        warnln("Could not map file: {}", file_or_error.error().string());
         return 1;
     }
+
+    auto& file = *file_or_error.value();
 
     struct Symbol {
         size_t value;

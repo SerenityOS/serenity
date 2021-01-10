@@ -181,9 +181,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    MappedFile mapped_file { zip_file_path };
-    if (!mapped_file.is_valid())
+    auto file_or_error = MappedFile ::map(zip_file_path);
+    if (file_or_error.is_error()) {
+        warnln("Failed to open {}: {}", zip_file_path, file_or_error.error());
         return 1;
+    }
+    auto& mapped_file = *file_or_error.value();
 
     printf("Archive: %s\n", zip_file_path.characters());
 

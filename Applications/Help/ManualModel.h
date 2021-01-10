@@ -45,7 +45,7 @@ public:
 
     String page_path(const GUI::ModelIndex&) const;
     String page_and_section(const GUI::ModelIndex&) const;
-    Result<StringView, int> page_view(const String& path) const;
+    Result<StringView, OSError> page_view(const String& path) const;
 
     void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
@@ -62,5 +62,5 @@ private:
     GUI::Icon m_section_open_icon;
     GUI::Icon m_section_icon;
     GUI::Icon m_page_icon;
-    mutable HashMap<String, OwnPtr<MappedFile>> m_mapped_files;
+    mutable HashMap<String, NonnullRefPtr<MappedFile>> m_mapped_files;
 };

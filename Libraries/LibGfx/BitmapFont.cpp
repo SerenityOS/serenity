@@ -27,7 +27,6 @@
 #include "BitmapFont.h"
 #include "Bitmap.h"
 #include "Emoji.h"
-#include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
@@ -174,15 +173,15 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)
 {
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return nullptr;
 
-    auto font = load_from_memory((const u8*)mapped_file.data());
+    auto font = load_from_memory((const u8*)file_or_error.value()->data());
     if (!font)
         return nullptr;
 
-    font->m_mapped_file = move(mapped_file);
+    font->m_mapped_file = file_or_error.release_value();
     return font;
 }
 

@@ -134,11 +134,11 @@ public:
 
     struct LoadedLibrary {
         String name;
-        MappedFile file;
+        NonnullRefPtr<MappedFile> file;
         NonnullOwnPtr<DebugInfo> debug_info;
         FlatPtr base_address;
 
-        LoadedLibrary(const String& name, MappedFile&& file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
+        LoadedLibrary(const String& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
             : name(name)
             , file(move(file))
             , debug_info(move(debug_info))
@@ -174,8 +174,6 @@ private:
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
-
-    static MappedFile map_executable_for_process(pid_t);
 
     void update_loaded_libs();
 
