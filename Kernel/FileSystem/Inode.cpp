@@ -268,7 +268,7 @@ KResult Inode::prepare_to_write_data()
         return KResult(-EROFS);
     auto metadata = this->metadata();
     if (metadata.is_setuid() || metadata.is_setgid()) {
-        dbg() << "Inode::prepare_to_write_data(): Stripping SUID/SGID bits from " << identifier();
+        dbgln("Inode::prepare_to_write_data(): Stripping SUID/SGID bits from {}", identifier());
         return chmod(metadata.mode & ~(04000 | 02000));
     }
     return KSuccess;

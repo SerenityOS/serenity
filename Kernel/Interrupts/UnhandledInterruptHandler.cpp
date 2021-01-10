@@ -34,13 +34,13 @@ UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)
 
 void UnhandledInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    dbg() << "Interrupt: Unhandled vector " << interrupt_number() << " was invoked for handle_interrupt(RegisterState&).";
+    dbgln("Interrupt: Unhandled vector {} was invoked for handle_interrupt(RegisterState&).", interrupt_number());
     Processor::halt();
 }
 
 [[noreturn]] bool UnhandledInterruptHandler::eoi()
 {
-    dbg() << "Interrupt: Unhandled vector " << interrupt_number() << " was invoked for eoi().";
+    dbgln("Interrupt: Unhandled vector {} was invoked for eoi().", interrupt_number());
     Processor::halt();
 }
 

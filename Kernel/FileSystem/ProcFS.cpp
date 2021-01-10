@@ -1185,7 +1185,7 @@ void ProcFSInode::did_seek(FileDescription& description, off_t new_offset)
     auto result = refresh_data(description);
     if (result.is_error()) {
         // Subsequent calls to read will return EIO!
-        dbg() << "ProcFS: Could not refresh contents: " << result.error();
+        dbgln("ProcFS: Could not refresh contents: {}", result.error());
     }
 }
 

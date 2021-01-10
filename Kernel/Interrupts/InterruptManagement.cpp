@@ -152,9 +152,9 @@ void InterruptManagement::switch_to_pic_mode()
         ASSERT(irq_controller);
         if (irq_controller->type() == IRQControllerType::i82093AA) {
             irq_controller->hard_disable();
-            dbg() << "Interrupts: Detected " << irq_controller->model() << " - Disabled";
+            dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
         } else {
-            dbg() << "Interrupts: Detected " << irq_controller->model();
+            dbgln("Interrupts: Detected {}", irq_controller->model());
         }
     }
 }
@@ -170,7 +170,7 @@ void InterruptManagement::switch_to_ioapic_mode()
         return;
     }
 
-    dbg() << "Interrupts: MADT @ P " << m_madt.as_ptr();
+    dbgln("Interrupts: MADT @ P {}", m_madt.as_ptr());
     locate_apic_data();
     m_smp_enabled = true;
     if (m_interrupt_controllers.size() == 1) {
@@ -183,9 +183,9 @@ void InterruptManagement::switch_to_ioapic_mode()
         ASSERT(irq_controller);
         if (irq_controller->type() == IRQControllerType::i8259) {
             irq_controller->hard_disable();
-            dbg() << "Interrupts: Detected " << irq_controller->model() << " Disabled";
+            dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
         } else {
-            dbg() << "Interrupts: Detected " << irq_controller->model();
+            dbgln("Interrupts: Detected {}", irq_controller->model());
         }
     }
 
@@ -213,7 +213,7 @@ void InterruptManagement::locate_apic_data()
         size_t entry_length = madt_entry->length;
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
-            dbg() << "IOAPIC found @ MADT entry " << entry_index << ", MMIO Registers @ " << PhysicalAddress(ioapic_entry->ioapic_address);
+            dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
             m_interrupt_controllers.resize(1 + irq_controller_count);
             m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
             irq_controller_count++;
@@ -225,7 +225,11 @@ void InterruptManagement::locate_apic_data()
                 interrupt_override_entry->source,
                 interrupt_override_entry->global_system_interrupt,
                 interrupt_override_entry->flags);
-            dbg() << "Interrupts: Overriding INT 0x" << String::format("%x", interrupt_override_entry->source) << " with GSI " << interrupt_override_entry->global_system_interrupt << ", for bus 0x" << String::format("%x", interrupt_override_entry->bus);
+
+            dbgln("Interrupts: Overriding INT {:#x} with GSI {}, for bus {:#x}",
+                interrupt_override_entry->source,
+                interrupt_override_entry->global_system_interrupt,
+                interrupt_override_entry->bus);
         }
         madt_entry = (ACPI::Structures::MADTEntryHeader*)(VirtualAddress(madt_entry).offset(entry_length).get());
         entries_length -= entry_length;

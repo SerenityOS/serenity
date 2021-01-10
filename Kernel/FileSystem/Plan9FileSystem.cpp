@@ -229,7 +229,7 @@ bool Plan9FS::initialize()
     u32 msize;
     StringView remote_protocol_version;
     version_message >> msize >> remote_protocol_version;
-    dbg() << "Remote supports msize=" << msize << " and protocol version " << remote_protocol_version;
+    dbgln("Remote supports msize={} and protocol version {}", msize, remote_protocol_version);
     m_remote_protocol_version = parse_protocol_version(remote_protocol_version);
     m_max_message_size = min(m_max_message_size, (size_t)msize);
 
@@ -602,7 +602,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
         m_completions.remove(header.tag);
         m_completion_blocker.unblock_completed(header.tag);
     } else {
-        dbg() << "Received a 9p message of type " << header.type << " with an unexpected tag " << header.tag << ", dropping";
+        dbgln("Received a 9p message of type {} with an unexpected tag {}, dropping", header.type, header.tag);
     }
 
     return KSuccess;
@@ -625,7 +625,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         return KResult(-EINTR);
 
     if (completion->result.is_error()) {
-        dbg() << "Plan9FS: Message was aborted with error " << completion->result;
+        dbgln("Plan9FS: Message was aborted with error {}", completion->result.error());
         return KResult(-EIO);
     }
 
@@ -642,13 +642,12 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         // numerical errno in an unspecified encoding; we ignore those too.
         StringView error_name;
         message >> error_name;
-        dbg() << "Plan9FS: Received error name " << error_name;
+        dbgln("Plan9FS: Received error name {}", error_name);
         return KResult(-EIO);
     } else if ((u8)reply_type != (u8)request_type + 1) {
         // Other than those error messages. we only expect the matching reply
         // message type.
-        dbg() << "Plan9FS: Received unexpected message type " << (u8)reply_type
-              << " in response to " << (u8)request_type;
+        dbgln("Plan9FS: Received unexpected message type {} in response to {}", (u8)reply_type, (u8)request_type);
         return KResult(-EIO);
     } else {
         return KSuccess;
