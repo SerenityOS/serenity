@@ -35,67 +35,67 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
 {
     if (!IS_ELF(elf_header)) {
         if (verbose)
-            dbgputstr("File is not an ELF file.\n");
+            dbgln("File is not an ELF file.");
         return false;
     }
 
     if (ELFCLASS32 != elf_header.e_ident[EI_CLASS]) {
         if (verbose)
-            dbgputstr("File is not a 32 bit ELF file.\n");
+            dbgln("File is not a 32 bit ELF file.");
         return false;
     }
 
     if (ELFDATA2LSB != elf_header.e_ident[EI_DATA]) {
         if (verbose)
-            dbgputstr("File is not a little endian ELF file.\n");
+            dbgln("File is not a little endian ELF file.");
         return false;
     }
 
     if (EV_CURRENT != elf_header.e_ident[EI_VERSION]) {
         if (verbose)
-            dbgprintf("File has unrecognized ELF version (%d), expected (%d)!\n", elf_header.e_ident[EI_VERSION], EV_CURRENT);
+            dbgln("File has unrecognized ELF version ({}), expected ({})!", elf_header.e_ident[EI_VERSION], EV_CURRENT);
         return false;
     }
 
     if (ELFOSABI_SYSV != elf_header.e_ident[EI_OSABI]) {
         if (verbose)
-            dbgprintf("File has unknown OS ABI (%d), expected SYSV(0)!\n", elf_header.e_ident[EI_OSABI]);
+            dbgln("File has unknown OS ABI ({}), expected SYSV(0)!", elf_header.e_ident[EI_OSABI]);
         return false;
     }
 
     if (0 != elf_header.e_ident[EI_ABIVERSION]) {
         if (verbose)
-            dbgprintf("File has unknown SYSV ABI version (%d)!\n", elf_header.e_ident[EI_ABIVERSION]);
+            dbgln("File has unknown SYSV ABI version ({})!", elf_header.e_ident[EI_ABIVERSION]);
         return false;
     }
 
     if (EM_386 != elf_header.e_machine) {
         if (verbose)
-            dbgprintf("File has unknown machine (%d), expected i386 (3)!\n", elf_header.e_machine);
+            dbgln("File has unknown machine ({}), expected i386 (3)!", elf_header.e_machine);
         return false;
     }
 
     if (ET_EXEC != elf_header.e_type && ET_DYN != elf_header.e_type && ET_REL != elf_header.e_type && ET_CORE != elf_header.e_type) {
         if (verbose)
-            dbgprintf("File has unloadable ELF type (%d), expected REL (1), EXEC (2), DYN (3) or CORE(4)!\n", elf_header.e_type);
+            dbgln("File has unloadable ELF type ({}), expected REL (1), EXEC (2), DYN (3) or CORE(4)!", elf_header.e_type);
         return false;
     }
 
     if (EV_CURRENT != elf_header.e_version) {
         if (verbose)
-            dbgprintf("File has unrecognized ELF version (%d), expected (%d)!\n", elf_header.e_version, EV_CURRENT);
+            dbgln("File has unrecognized ELF version ({}), expected ({})!", elf_header.e_version, EV_CURRENT);
         return false;
     }
 
     if (sizeof(Elf32_Ehdr) != elf_header.e_ehsize) {
         if (verbose)
-            dbgprintf("File has incorrect ELF header size..? (%d), expected (%zu)!\n", elf_header.e_ehsize, sizeof(Elf32_Ehdr));
+            dbgln("File has incorrect ELF header size..? ({}), expected ({})!", elf_header.e_ehsize, sizeof(Elf32_Ehdr));
         return false;
     }
 
     if (elf_header.e_phoff < elf_header.e_ehsize || (elf_header.e_shnum != SHN_UNDEF && elf_header.e_shoff < elf_header.e_ehsize)) {
         if (verbose) {
-            dbgprintf("SHENANIGANS! program header offset (%d) or section header offset (%d) overlap with ELF header!\n",
+            dbgln("SHENANIGANS! program header offset ({}) or section header offset ({}) overlap with ELF header!",
                 elf_header.e_phoff, elf_header.e_shoff);
         }
         return false;
@@ -103,7 +103,7 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
 
     if (elf_header.e_phoff > file_size || elf_header.e_shoff > file_size) {
         if (verbose) {
-            dbgprintf("SHENANIGANS! program header offset (%d) or section header offset (%d) are past the end of the file!\n",
+            dbgln("SHENANIGANS! program header offset ({}) or section header offset ({}) are past the end of the file!",
                 elf_header.e_phoff, elf_header.e_shoff);
         }
         return false;
@@ -111,13 +111,13 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
 
     if (elf_header.e_phnum == 0 && elf_header.e_phoff != 0) {
         if (verbose)
-            dbgputstr("SHENANIGANS! File has no program headers, but it does have a program header offset (%d)!\n", elf_header.e_phoff);
+            dbgln("SHENANIGANS! File has no program headers, but it does have a program header offset ({})!", elf_header.e_phoff);
         return false;
     }
 
     if (elf_header.e_phnum != 0 && elf_header.e_phoff != elf_header.e_ehsize) {
         if (verbose) {
-            dbgprintf("File does not have program headers directly after the ELF header? program header offset (%d), expected (%d).\n",
+            dbgln("File does not have program headers directly after the ELF header? program header offset ({}), expected ({}).",
                 elf_header.e_phoff, elf_header.e_ehsize);
         }
         return false;
@@ -125,32 +125,32 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
 
     if (0 != elf_header.e_flags) {
         if (verbose)
-            dbgprintf("File has incorrect ELF header flags...? (%d), expected (%d).\n", elf_header.e_flags, 0);
+            dbgln("File has incorrect ELF header flags...? ({}), expected ({}).", elf_header.e_flags, 0);
         return false;
     }
 
     if (0 != elf_header.e_phnum && sizeof(Elf32_Phdr) != elf_header.e_phentsize) {
         if (verbose)
-            dbgprintf("File has incorrect program header size..? (%d), expected (%zu).\n", elf_header.e_phentsize, sizeof(Elf32_Phdr));
+            dbgln("File has incorrect program header size..? ({}), expected ({}).", elf_header.e_phentsize, sizeof(Elf32_Phdr));
         return false;
     }
 
     if (sizeof(Elf32_Shdr) != elf_header.e_shentsize) {
         if (verbose)
-            dbgprintf("File has incorrect section header size..? (%d), expected (%zu).\n", elf_header.e_shentsize, sizeof(Elf32_Shdr));
+            dbgln("File has incorrect section header size..? ({}), expected ({}).", elf_header.e_shentsize, sizeof(Elf32_Shdr));
         return false;
     }
 
     size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
     if (end_of_last_program_header > file_size) {
         if (verbose)
-            dbgprintf("SHENANIGANS! End of last program header (%zu) is past the end of the file!\n", end_of_last_program_header);
+            dbgln("SHENANIGANS! End of last program header ({}) is past the end of the file!", end_of_last_program_header);
         return false;
     }
 
     if (elf_header.e_shoff != SHN_UNDEF && elf_header.e_shoff < end_of_last_program_header) {
         if (verbose) {
-            dbgprintf("SHENANIGANS! Section header table begins at file offset %d, which is within program headers [ %d - %zu ]!\n",
+            dbgln("SHENANIGANS! Section header table begins at file offset {}, which is within program headers [ {} - {} ]!",
                 elf_header.e_shoff, elf_header.e_phoff, end_of_last_program_header);
         }
         return false;
@@ -159,13 +159,13 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
     size_t end_of_last_section_header = elf_header.e_shoff + (elf_header.e_shnum * elf_header.e_shentsize);
     if (end_of_last_section_header > file_size) {
         if (verbose)
-            dbgprintf("SHENANIGANS! End of last section header (%zu) is past the end of the file!\n", end_of_last_section_header);
+            dbgln("SHENANIGANS! End of last section header ({}) is past the end of the file!", end_of_last_section_header);
         return false;
     }
 
     if (elf_header.e_shstrndx != SHN_UNDEF && elf_header.e_shstrndx >= elf_header.e_shnum) {
         if (verbose)
-            dbgprintf("SHENANIGANS! Section header string table index (%d) is not a valid index given we have %d section headers!\n", elf_header.e_shstrndx, elf_header.e_shnum);
+            dbgln("SHENANIGANS! Section header string table index ({}) is not a valid index given we have {} section headers!", elf_header.e_shstrndx, elf_header.e_shnum);
         return false;
     }
 
@@ -178,13 +178,13 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
     size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
     if (end_of_last_program_header > buffer_size) {
         if (verbose)
-            dbgprintf("Unable to parse program headers from buffer, buffer too small! Buffer size: %zu, End of program headers %zu\n",
+            dbgln("Unable to parse program headers from buffer, buffer too small! Buffer size: {}, End of program headers {}",
                 buffer_size, end_of_last_program_header);
         return false;
     }
 
     if (file_size < buffer_size) {
-        dbgputstr("We somehow read more from a file than was in the file in the first place!\n");
+        dbgln("We somehow read more from a file than was in the file in the first place!");
         ASSERT_NOT_REACHED();
     }
 
@@ -219,7 +219,7 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
             if (program_header.p_offset + program_header.p_filesz > buffer_size) {
                 if (verbose)
-                    dbgprintf("Found PT_INTERP header (%zu), but the .interp section was not within our buffer :( Your program will not be loaded today.\n", header_index);
+                    dbgln("Found PT_INTERP header ({}), but the .interp section was not within the buffer :(", header_index);
                 return false;
             }
             if (interpreter_path)
@@ -232,32 +232,32 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
         case PT_TLS:
             if (program_header.p_offset + program_header.p_filesz > file_size) {
                 if (verbose)
-                    dbgprintf("SHENANIGANS! Program header %zu segment leaks beyond end of file!\n", header_index);
+                    dbgln("SHENANIGANS! Program header {} segment leaks beyond end of file!", header_index);
                 return false;
             }
             if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {
                 if (verbose)
-                    dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
+                    dbgln("SHENANIGANS! Program header {} segment is marked write and execute", header_index);
                 return false;
             }
             break;
         case PT_GNU_STACK:
             if (program_header.p_flags & PF_X) {
                 if (verbose)
-                    dbgprintf("Possible shenanigans! Validating an ELF with executable stack.\n");
+                    dbgln("Possible shenanigans! Validating an ELF with executable stack.");
             }
             break;
         case PT_GNU_RELRO:
             if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {
                 if (verbose)
-                    dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
+                    dbgln("SHENANIGANS! Program header {} segment is marked write and execute", header_index);
                 return false;
             }
             break;
         default:
             // Not handling other program header types in other code so... let's not surprise them
             if (verbose)
-                dbgprintf("Found program header (%zu) of unrecognized type %x!\n", header_index, program_header.p_type);
+                dbgln("Found program header ({}) of unrecognized type {}!", header_index, program_header.p_type);
             return false;
         }
     }
