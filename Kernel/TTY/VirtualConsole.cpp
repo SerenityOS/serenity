@@ -100,7 +100,7 @@ void VirtualConsole::switch_to(unsigned index)
         }
         active_console->set_active(false);
     }
-    dbg() << "VC: Switch to " << index << " (" << s_consoles[index] << ")";
+    dbgln("VC: Switch to {} ({})", index, s_consoles[index]);
     s_active_console = index;
     s_consoles[s_active_console]->set_active(true);
 }

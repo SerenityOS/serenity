@@ -437,11 +437,11 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
-            dbg() << "NP(non-readable) fault in Region{" << this << "}[" << page_index_in_region << "]";
+            dbgln("NP(non-readable) fault in Region({})[{}]", this, page_index_in_region);
             return PageFaultResponse::ShouldCrash;
         }
         if (fault.is_write() && !is_writable()) {
-            dbg() << "NP(non-writable) write fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
+            dbgln("NP(non-writable) write fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
@@ -466,7 +466,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
         return handle_zero_fault(page_index_in_region);
 #else
-        dbg() << "BUG! Unexpected NP fault at " << fault.vaddr();
+        dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
         return PageFaultResponse::ShouldCrash;
 #endif
     }
@@ -484,7 +484,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
         return handle_cow_fault(page_index_in_region);
     }
-    dbg() << "PV(error) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
+    dbgln("PV(error) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
     return PageFaultResponse::ShouldCrash;
 }
 
@@ -608,7 +608,10 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         void* fault_at;
         if (!safe_memcpy(dest_ptr, page_buffer, PAGE_SIZE, fault_at)) {
             if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
-                dbg() << "      >> inode fault: error copying data to " << vmobject_physical_page_entry->paddr() << "/" << VirtualAddress(dest_ptr) << ", failed at " << VirtualAddress(fault_at);
+                dbgln("      >> inode fault: error copying data to {}/{}, failed at {}",
+                    vmobject_physical_page_entry->paddr(),
+                    VirtualAddress(dest_ptr),
+                    VirtualAddress(fault_at));
             else
                 ASSERT_NOT_REACHED();
         }

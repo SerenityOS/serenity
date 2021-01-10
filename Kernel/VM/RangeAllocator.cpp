@@ -63,9 +63,9 @@ RangeAllocator::~RangeAllocator()
 void RangeAllocator::dump() const
 {
     ASSERT(m_lock.is_locked());
-    dbg() << "RangeAllocator{" << this << "}";
+    dbgln("RangeAllocator({})", this);
     for (auto& range : m_available_ranges) {
-        dbg() << "    " << String::format("%x", range.base().get()) << " -> " << String::format("%x", range.end().get() - 1);
+        dbgln("    {:x} -> {:x}", range.base().get(), range.end().get() - 1);
     }
 }
 
@@ -161,7 +161,7 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 #endif
         return allocated_range;
     }
-    dbg() << "VRA: Failed to allocate specific range: " << base << "(" << size << ")";
+    dbgln("VRA: Failed to allocate specific range: {}({})", base, size);
     return {};
 }
 

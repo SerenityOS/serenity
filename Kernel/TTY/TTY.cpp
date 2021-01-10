@@ -154,22 +154,22 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 {
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINFO]) {
-            dbg() << tty_name() << ": VINFO pressed!";
+            dbgln("{}: VINFO pressed!", tty_name());
             generate_signal(SIGINFO);
             return;
         }
         if (ch == m_termios.c_cc[VINTR]) {
-            dbg() << tty_name() << ": VINTR pressed!";
+            dbgln("{}: VINTR pressed!", tty_name());
             generate_signal(SIGINT);
             return;
         }
         if (ch == m_termios.c_cc[VQUIT]) {
-            dbg() << tty_name() << ": VQUIT pressed!";
+            dbgln("{}: VQUIT pressed!", tty_name());
             generate_signal(SIGQUIT);
             return;
         }
         if (ch == m_termios.c_cc[VSUSP]) {
-            dbg() << tty_name() << ": VSUSP pressed!";
+            dbgln("{}: VSUSP pressed!", tty_name());
             generate_signal(SIGTSTP);
             if (auto original_process_parent = m_original_process_parent.strong_ref()) {
                 [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
@@ -284,10 +284,10 @@ void TTY::generate_signal(int signal)
         return;
     if (should_flush_on_signal())
         flush_input();
-    dbg() << tty_name() << ": Send signal " << signal << " to everyone in pgrp " << pgid().value();
+    dbgln("{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-        dbg() << tty_name() << ": Send signal " << signal << " to " << process;
+        dbgln("{}: Send signal {} to {}", tty_name(), signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
         return IterationDecision::Continue;

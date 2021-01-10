@@ -82,10 +82,10 @@ bool RealTimeClock::try_to_set_frequency(size_t frequency)
     disable_irq();
     u8 previous_rate = CMOS::read(0x8A);
     u8 rate = quick_log2(32768 / frequency) + 1;
-    dbg() << "RTC: Set rate to " << rate;
+    dbgln("RTC: Set rate to {}", rate);
     CMOS::write(0x8A, (previous_rate & 0xF0) | rate);
     m_frequency = frequency;
-    dbg() << "RTC: Set frequency to " << frequency << " Hz";
+    dbgln("RTC: Set frequency to {} Hz", frequency);
     enable_irq();
     return true;
 }
