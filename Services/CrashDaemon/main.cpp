@@ -74,9 +74,7 @@ static void launch_crash_reporter(const String& coredump_path)
 
 int main()
 {
-    static constexpr const char* coredumps_dir = "/tmp/coredump";
-    mkdir(coredumps_dir, 0777);
-    Core::DirectoryWatcher watcher { coredumps_dir };
+    Core::DirectoryWatcher watcher { "/tmp/coredump" };
     while (true) {
         auto event = watcher.wait_for_event();
         ASSERT(event.has_value());

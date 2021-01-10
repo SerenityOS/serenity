@@ -69,23 +69,27 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
 {
     LexicalPath lexical_path(output_path);
     auto output_directory = lexical_path.dirname();
-    if (VFS::the().open_directory(output_directory, VFS::the().root_custody()).is_error()) {
-        auto res = VFS::the().mkdir(output_directory, 0777, VFS::the().root_custody());
-        if (res.is_error())
-            return nullptr;
-    }
-    auto tmp_dir = VFS::the().open_directory(output_directory, VFS::the().root_custody());
-    if (tmp_dir.is_error())
+    auto dump_directory = VFS::the().open_directory(output_directory, VFS::the().root_custody());
+    if (dump_directory.is_error()) {
+        dbgln("Can't find directory '{}' for core dump", output_directory);
         return nullptr;
+    }
+    auto dump_directory_metadata = dump_directory.value()->inode().metadata();
+    if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040755) {
+        dbgln("Refusing to put core dump in sketchy directory '{}'", output_directory);
+        return nullptr;
+    }
     auto fd_or_error = VFS::the().open(
         lexical_path.basename(),
         O_CREAT | O_WRONLY | O_EXCL,
         0, // We will enable reading from userspace when we finish generating the coredump file
-        *tmp_dir.value(),
+        *dump_directory.value(),
         UidAndGid { process.uid(), process.gid() });
 
-    if (fd_or_error.is_error())
+    if (fd_or_error.is_error()) {
+        dbgln("Failed to open core dump '{}' for writing", output_path);
         return nullptr;
+    }
 
     return fd_or_error.value();
 }
