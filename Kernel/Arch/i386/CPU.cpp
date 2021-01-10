@@ -419,7 +419,7 @@ void page_fault_handler(TrapFrame* trap)
 
     auto current_thread = Thread::current();
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
-        dbg() << "Invalid stack pointer: " << VirtualAddress(regs.userspace_esp);
+        dbgln("Invalid stack pointer: {}", VirtualAddress(regs.userspace_esp));
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }
@@ -441,11 +441,11 @@ void page_fault_handler(TrapFrame* trap)
             }
         }
 
-        dbg() << "Unrecoverable page fault, "
-              << (regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "")
-              << (regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "")
-              << (regs.exception_code & PageFaultFlags::Write ? "write to" : "read from")
-              << " address " << VirtualAddress(fault_address);
+        dbgln("Unrecoverable page fault, {}{}{} address {}",
+            regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
+            regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
+            regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
+            VirtualAddress(fault_address));
         u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
@@ -453,19 +453,19 @@ void page_fault_handler(TrapFrame* trap)
         u32 slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
         u32 slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized malloc() memory";
+            dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently free()'d memory";
+            dbgln("Note: Address {} looks like it may be recently free()'d memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (kmalloc_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized kmalloc() memory";
+            dbgln("Note: Address {} looks like it may be uninitialized kmalloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently kfree()'d memory";
+            dbgln("Note: Address {} looks like it may be recently kfree()'d memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (slab_alloc_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be uninitialized slab_alloc() memory";
+            dbgln("Note: Address {} looks like it may be uninitialized slab_alloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (slab_dealloc_scrub_pattern & 0xffff0000)) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like it may be recently slab_dealloc()'d memory";
+            dbgln("Note: Address {} looks like it may be recently slab_dealloc()'d memory", VirtualAddress(fault_address));
         } else if (fault_address < 4096) {
-            dbg() << "Note: Address " << VirtualAddress(fault_address) << " looks like a possible nullptr dereference";
+            dbgln("Note: Address {} looks like a possible nullptr dereference", VirtualAddress(fault_address));
         }
 
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
@@ -1362,7 +1362,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         // until it returns the data back to us
         smp_unicast(thread.cpu(),
             [&]() {
-                dbg() << "CPU[" << Processor::current().id() << "] getting stack for cpu #" << proc.id();
+                dbgln("CPU[{}] getting stack for cpu #{}", Processor::current().id(), proc.id());
                 ProcessPagingScope paging_scope(thread.process());
                 auto& target_proc = Processor::current();
                 ASSERT(&target_proc != &proc);
@@ -1409,7 +1409,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             break;
         }
         default:
-            dbg() << "Cannot capture stack trace for thread " << thread << " in state " << thread.state_string();
+            dbgln("Cannot capture stack trace for thread {} in state {}", thread, thread.state_string());
             break;
         }
     }
