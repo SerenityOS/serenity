@@ -314,18 +314,12 @@ EventLoop::~EventLoop()
 
 bool EventLoop::start_rpc_server()
 {
-    auto rpc_path = String::formatted("/tmp/rpc/{}", getpid());
-    auto rc = unlink(rpc_path.characters());
-    if (rc < 0 && errno != ENOENT) {
-        perror("unlink");
-        return false;
-    }
     s_rpc_server = LocalServer::construct();
     s_rpc_server->set_name("Core::EventLoop_RPC_server");
     s_rpc_server->on_ready_to_accept = [&] {
         RPCClient::construct(s_rpc_server->accept());
     };
-    return s_rpc_server->listen(rpc_path);
+    return s_rpc_server->listen(String::formatted("/tmp/rpc/{}", getpid()));
 }
 
 EventLoop& EventLoop::main()
