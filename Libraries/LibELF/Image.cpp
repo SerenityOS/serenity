@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 
+//#define ELF_IMAGE_DEBUG
+
 namespace ELF {
 
 Image::Image(const u8* buffer, size_t size, bool verbose_logging)
@@ -46,6 +48,7 @@ Image::~Image()
 {
 }
 
+#ifdef ELF_IMAGE_DEBUG
 static const char* object_file_type_to_string(Elf32_Half type)
 {
     switch (type) {
@@ -63,6 +66,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
         return "(?)";
     }
 }
+#endif
 
 StringView Image::section_index_to_string(unsigned index) const
 {
@@ -84,56 +88,56 @@ unsigned Image::symbol_count() const
 
 void Image::dump() const
 {
-    dbgprintf("Image{%p} {\n", this);
-    dbgprintf("    is_valid: %u\n", is_valid());
+#ifdef ELF_IMAGE_DEBUG
+    dbgln("ELF::Image({:p}) {{", this);
+    dbgln("    is_valid: {}", is_valid());
 
     if (!is_valid()) {
-        dbgprintf("}\n");
+        dbgln("}}");
         return;
     }
 
-    dbgprintf("    type:    %s\n", object_file_type_to_string(header().e_type));
-    dbgprintf("    machine: %u\n", header().e_machine);
-    dbgprintf("    entry:   %x\n", header().e_entry);
-    dbgprintf("    shoff:   %u\n", header().e_shoff);
-    dbgprintf("    shnum:   %u\n", header().e_shnum);
-    dbgprintf("    phoff:   %u\n", header().e_phoff);
-    dbgprintf("    phnum:   %u\n", header().e_phnum);
-    dbgprintf(" shstrndx:   %u\n", header().e_shstrndx);
+    dbgln("    type:    {}", object_file_type_to_string(header().e_type));
+    dbgln("    machine: {}", header().e_machine);
+    dbgln("    entry:   {:x}", header().e_entry);
+    dbgln("    shoff:   {}", header().e_shoff);
+    dbgln("    shnum:   {}", header().e_shnum);
+    dbgln("    phoff:   {}", header().e_phoff);
+    dbgln("    phnum:   {}", header().e_phnum);
+    dbgln(" shstrndx:   {}", header().e_shstrndx);
 
     for_each_program_header([&](const ProgramHeader& program_header) {
-        dbgprintf("    Program Header %d: {\n", program_header.index());
-        dbgprintf("        type: %x\n", program_header.type());
-        dbgprintf("      offset: %x\n", program_header.offset());
-        dbgprintf("       flags: %x\n", program_header.flags());
-        dbgprintf("        \n");
-        dbgprintf("    }\n");
+        dbgln("    Program Header {}: {{", program_header.index());
+        dbgln("        type: {:x}", program_header.type());
+        dbgln("      offset: {:x}", program_header.offset());
+        dbgln("       flags: {:x}", program_header.flags());
+        dbgln("    }}");
         return IterationDecision::Continue;
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
         auto& section = this->section(i);
-        dbgprintf("    Section %u: {\n", i);
-        dbgprintf("        name: %.*s\n", (int)section.name().length(), section.name().characters_without_null_termination());
-        dbgprintf("        type: %x\n", section.type());
-        dbgprintf("      offset: %x\n", section.offset());
-        dbgprintf("        size: %u\n", section.size());
-        dbgprintf("        \n");
-        dbgprintf("    }\n");
+        dbgln("    Section {}: {{", i);
+        dbgln("        name: {}", section.name());
+        dbgln("        type: {:x}", section.type());
+        dbgln("      offset: {:x}", section.offset());
+        dbgln("        size: {}", section.size());
+        dbgln("        ");
+        dbgln("    }}");
     }
 
-    dbgprintf("Symbol count: %u (table is %u)\n", symbol_count(), m_symbol_table_section_index);
+    dbgln("Symbol count: {} (table is {})", symbol_count(), m_symbol_table_section_index);
     for (unsigned i = 1; i < symbol_count(); ++i) {
         auto& sym = symbol(i);
-        dbgprintf("Symbol @%u:\n", i);
-        dbgprintf("    Name: %.*s\n", (int)sym.name().length(), sym.name().characters_without_null_termination());
-        StringView section_index_string = section_index_to_string(sym.section_index());
-        dbgprintf("    In section: %.*s\n", (int)section_index_string.length(), section_index_string.characters_without_null_termination());
-        dbgprintf("    Value: %x\n", sym.value());
-        dbgprintf("    Size: %u\n", sym.size());
+        dbgln("Symbol @{}:", i);
+        dbgln("    Name: {}", sym.name());
+        dbgln("    In section: {}", section_index_to_string(sym.section_index()));
+        dbgln("    Value: {}", sym.value());
+        dbgln("    Size: {}", sym.size());
     }
 
-    dbgprintf("}\n");
+    dbgln("}}");
+#endif
 }
 
 unsigned Image::section_count() const
@@ -152,13 +156,13 @@ bool Image::parse()
 {
     if (m_size < sizeof(Elf32_Ehdr) || !validate_elf_header(header(), m_size, m_verbose_logging)) {
         if (m_verbose_logging)
-            dbgputstr("Image::parse(): ELF Header not valid\n");
+            dbgln("ELF::Image::parse(): ELF Header not valid");
         return m_valid = false;
     }
 
     if (!validate_program_headers(header(), m_size, m_buffer, m_size, nullptr, m_verbose_logging)) {
         if (m_verbose_logging)
-            dbgputstr("Image::parse(): ELF Program Headers not valid\n");
+            dbgln("ELF::Image::parse(): ELF Program Headers not valid");
         return m_valid = false;
     }
 
@@ -196,7 +200,7 @@ StringView Image::table_string(unsigned table_index, unsigned offset) const
     size_t computed_offset = sh.sh_offset + offset;
     if (computed_offset >= m_size) {
         if (m_verbose_logging)
-            dbgprintf("SHENANIGANS! Image::table_string() computed offset outside image.\n");
+            dbgln("SHENANIGANS! Image::table_string() computed offset outside image.");
         return {};
     }
     size_t max_length = m_size - computed_offset;
@@ -286,8 +290,8 @@ const Image::RelocationSection Image::Section::relocations() const
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
-#ifdef Image_DEBUG
-    dbgprintf("Found relocations for %s in %s\n", name().to_string().characters(), relocation_section.name().to_string().characters());
+#ifdef ELF_IMAGE_DEBUG
+    dbgln("Found relocations for {} in {}", name(), relocation_section.name());
 #endif
     return static_cast<const RelocationSection>(relocation_section);
 }
