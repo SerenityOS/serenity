@@ -750,9 +750,15 @@ KResult VFS::rmdir(StringView path, Custody& base)
         return KResult(-EBUSY);
 
     auto& parent_inode = parent_custody->inode();
+    auto parent_metadata = parent_inode.metadata();
 
-    if (!parent_inode.metadata().may_write(*Process::current()))
+    if (!parent_metadata.may_write(*Process::current()))
         return KResult(-EACCES);
+
+    if (parent_metadata.is_sticky()) {
+        if (!Process::current()->is_superuser() && inode.metadata().uid != Process::current()->euid())
+            return KResult(-EACCES);
+    }
 
     KResultOr<size_t> dir_count_result = inode.directory_entry_count();
     if (dir_count_result.is_error())
