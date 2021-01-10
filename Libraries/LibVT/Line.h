@@ -47,6 +47,9 @@ struct Attribute {
     u32 foreground_color;
     u32 background_color;
 
+    u32 effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
+    u32 effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
+
     String href;
     String href_id;
 
