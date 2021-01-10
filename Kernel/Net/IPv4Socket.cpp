@@ -114,7 +114,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
     auto requested_local_port = ntohs(address.sin_port);
     if (!Process::current()->is_superuser()) {
         if (requested_local_port < 1024) {
-            dbg() << "UID " << Process::current()->uid() << " attempted to bind " << class_name() << " to port " << requested_local_port;
+            dbgln("UID {} attempted to bind {} to port {}", Process::current()->uid(), class_name(), requested_local_port);
             return KResult(-EACCES);
         }
     }
@@ -300,7 +300,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     }
     if (!packet.data.has_value()) {
         if (protocol_is_disconnected()) {
-            dbg() << "IPv4Socket{" << this << "} is protocol-disconnected, returning 0 in recvfrom!";
+            dbgln("IPv4Socket({}) is protocol-disconnected, returning 0 in recvfrom!", this);
             return 0;
         }
 
@@ -394,7 +394,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     if (buffer_mode() == BufferMode::Bytes) {
         size_t space_in_receive_buffer = m_receive_buffer.space_for_writing();
         if (packet_size > space_in_receive_buffer) {
-            dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since buffer is full.";
+            dbgln("IPv4Socket({}): did_receive refusing packet since buffer is full.", this);
             ASSERT(m_can_read);
             return false;
         }
@@ -408,7 +408,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         set_can_read(!m_receive_buffer.is_empty());
     } else {
         if (m_receive_queue.size() > 2000) {
-            dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since queue is full.";
+            dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
             return false;
         }
         m_receive_queue.append({ source_address, source_port, packet_timestamp, move(packet) });
