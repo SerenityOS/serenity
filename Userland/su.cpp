@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     if (getuid() != 0 && account.has_password()) {
         auto password = Core::get_password();
         if (password.is_error()) {
-            warnln("{}", strerror(password.error()));
+            warnln("{}", password.error());
             return 1;
         }
 
