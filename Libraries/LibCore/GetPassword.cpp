@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2021, Emanuele Torre <torreemanuele6@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,12 +49,19 @@ Result<String, int> get_password(const StringView& prompt)
     char* password = nullptr;
     size_t n = 0;
 
-    int ret = getline(&password, &n, stdin);
+    auto line_length = getline(&password, &n, stdin);
+    int saved_errno = errno;
+
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
     putchar('\n');
-    if (ret < 0) {
-        return errno;
-    }
+
+    if (line_length < 0)
+        return saved_errno;
+
+    ASSERT(line_length != 0);
+
+    // Remove trailing '\n' read by getline().
+    password[line_length - 1] = '\0';
 
     String s(password);
     free(password);
