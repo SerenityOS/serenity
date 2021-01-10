@@ -433,6 +433,7 @@ public:
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
     KResultOr<LoadResult> load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls);
+    KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description);
 
     bool is_superuser() const
     {
