@@ -55,13 +55,13 @@ bool BlockDevice::read_block(unsigned index, UserOrKernelBuffer& buffer)
     case AsyncDeviceRequest::Success:
         return true;
     case AsyncDeviceRequest::Failure:
-        dbg() << "BlockDevice::read_block(" << index << ") IO error";
+        dbgln("BlockDevice::read_block({}) IO error", index);
         break;
     case AsyncDeviceRequest::MemoryFault:
-        dbg() << "BlockDevice::read_block(" << index << ") EFAULT";
+        dbgln("BlockDevice::read_block({}) EFAULT", index);
         break;
     case AsyncDeviceRequest::Cancelled:
-        dbg() << "BlockDevice::read_block(" << index << ") cancelled";
+        dbgln("BlockDevice::read_block({}) cancelled", index);
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -76,13 +76,13 @@ bool BlockDevice::write_block(unsigned index, const UserOrKernelBuffer& buffer)
     case AsyncDeviceRequest::Success:
         return true;
     case AsyncDeviceRequest::Failure:
-        dbg() << "BlockDevice::write_block(" << index << ") IO error";
+        dbgln("BlockDevice::write_block({}) IO error", index);
         break;
     case AsyncDeviceRequest::MemoryFault:
-        dbg() << "BlockDevice::write_block(" << index << ") EFAULT";
+        dbgln("BlockDevice::write_block({}) EFAULT", index);
         break;
     case AsyncDeviceRequest::Cancelled:
-        dbg() << "BlockDevice::write_block(" << index << ") cancelled";
+        dbgln("BlockDevice::write_block({}) cancelled", index);
         break;
     default:
         ASSERT_NOT_REACHED();

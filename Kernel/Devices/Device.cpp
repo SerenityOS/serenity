@@ -59,7 +59,7 @@ Device::Device(unsigned major, unsigned minor)
     u32 device_id = encoded_device(major, minor);
     auto it = all_devices().find(device_id);
     if (it != all_devices().end()) {
-        dbg() << "Already registered " << major << "," << minor << ": " << it->value->class_name();
+        dbgln("Already registered {},{}: {}", major, minor, it->value->class_name());
     }
     ASSERT(!all_devices().contains(device_id));
     all_devices().set(device_id, this);
