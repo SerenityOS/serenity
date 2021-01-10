@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -261,7 +262,7 @@ private:
         Title = 9,
     };
 
-    static VTState actual_rendered_string_length_step(StringMetrics&, size_t& length, u32, u32, VTState);
+    static VTState actual_rendered_string_length_step(StringMetrics&, size_t, StringMetrics::LineMetrics& current_line, u32, u32, VTState);
 
     enum LoopExitCode {
         Exit = 0,
@@ -456,6 +457,7 @@ private:
 
     enum class InputState {
         Free,
+        Verbatim,
         GotEscape,
         CSIExpectParameter,
         CSIExpectIntermediate,
