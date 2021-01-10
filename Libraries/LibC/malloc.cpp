@@ -449,24 +449,24 @@ void __malloc_init()
 
 void serenity_dump_malloc_stats()
 {
-    dbg() << "# malloc() calls: " << g_malloc_stats.number_of_malloc_calls;
-    dbg();
-    dbg() << "big alloc hits: " << g_malloc_stats.number_of_big_allocator_hits;
-    dbg() << "big alloc hits that were purged: " << g_malloc_stats.number_of_big_allocator_purge_hits;
-    dbg() << "big allocs: " << g_malloc_stats.number_of_big_allocs;
-    dbg();
-    dbg() << "empty block hits: " << g_malloc_stats.number_of_empty_block_hits;
-    dbg() << "empty block hits that were purged: " << g_malloc_stats.number_of_empty_block_purge_hits;
-    dbg() << "block allocs: " << g_malloc_stats.number_of_block_allocs;
-    dbg() << "filled blocks: " << g_malloc_stats.number_of_blocks_full;
-    dbg();
-    dbg() << "# free() calls: " << g_malloc_stats.number_of_free_calls;
-    dbg();
-    dbg() << "big alloc keeps: " << g_malloc_stats.number_of_big_allocator_keeps;
-    dbg() << "big alloc frees: " << g_malloc_stats.number_of_big_allocator_frees;
-    dbg();
-    dbg() << "full block frees: " << g_malloc_stats.number_of_freed_full_blocks;
-    dbg() << "number of keeps: " << g_malloc_stats.number_of_keeps;
-    dbg() << "number of frees: " << g_malloc_stats.number_of_frees;
+    dbgln("# malloc() calls: {}", g_malloc_stats.number_of_malloc_calls);
+    dbgln();
+    dbgln("big alloc hits: {}", g_malloc_stats.number_of_big_allocator_hits);
+    dbgln("big alloc hits that were purged: {}", g_malloc_stats.number_of_big_allocator_purge_hits);
+    dbgln("big allocs: {}", g_malloc_stats.number_of_big_allocs);
+    dbgln();
+    dbgln("empty block hits: {}", g_malloc_stats.number_of_empty_block_hits);
+    dbgln("empty block hits that were purged: {}", g_malloc_stats.number_of_empty_block_purge_hits);
+    dbgln("block allocs: {}", g_malloc_stats.number_of_block_allocs);
+    dbgln("filled blocks: {}", g_malloc_stats.number_of_blocks_full);
+    dbgln();
+    dbgln("# free() calls: {}", g_malloc_stats.number_of_free_calls);
+    dbgln();
+    dbgln("big alloc keeps: {}", g_malloc_stats.number_of_big_allocator_keeps);
+    dbgln("big alloc frees: {}", g_malloc_stats.number_of_big_allocator_frees);
+    dbgln();
+    dbgln("full block frees: {}", g_malloc_stats.number_of_freed_full_blocks);
+    dbgln("number of keeps: {}", g_malloc_stats.number_of_keeps);
+    dbgln("number of frees: {}", g_malloc_stats.number_of_frees);
 }
 }

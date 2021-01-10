@@ -396,6 +396,7 @@ template<typename... Parameters>
 void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbgln(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln(StringView { fmtstr }, parameters...); }
+inline void dbgln() { dbgln(""); }
 
 template<typename T, typename = void>
 struct HasFormatter : TrueType {

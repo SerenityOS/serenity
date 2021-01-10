@@ -74,7 +74,7 @@ size_t InodeVMObject::amount_dirty() const
 
 void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
 {
-    dbg() << "VMObject::inode_size_changed: {" << m_inode->fsid() << ":" << m_inode->index() << "} " << old_size << " -> " << new_size;
+    dbgln("VMObject::inode_size_changed: ({}:{}) {} -> {}", m_inode->fsid(), m_inode->index(), old_size, new_size);
 
     InterruptDisabler disabler;
 
