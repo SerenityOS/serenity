@@ -203,7 +203,7 @@ u8 PS2MouseDevice::send_command(u8 command)
 {
     u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command);
     if (response != I8042_ACK)
-        dbg() << "PS2MouseDevice: Command " << (int)command << " got " << (int)response << " but expected ack: " << (int)I8042_ACK;
+        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
     return response;
 }
 
@@ -211,7 +211,7 @@ u8 PS2MouseDevice::send_command(u8 command, u8 data)
 {
     u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command, data);
     if (response != I8042_ACK)
-        dbg() << "PS2MouseDevice: Command " << (int)command << " got " << (int)response << " but expected ack: " << (int)I8042_ACK;
+        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
     return response;
 }
 

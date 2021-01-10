@@ -67,7 +67,8 @@ I8042Controller::I8042Controller()
         do_wait_then_write(I8042_BUFFER, configuration);
 
         m_is_dual_channel = (configuration & (1 << 5)) != 0;
-        dbg() << "I8042: " << (m_is_dual_channel ? "Dual" : "Single") << " channel controller";
+        dbgln("I8042: {} channel controller",
+            m_is_dual_channel ? "Dual" : "Single");
 
         // Perform controller self-test
         do_wait_then_write(I8042_STATUS, 0xaa);

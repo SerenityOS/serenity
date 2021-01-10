@@ -591,7 +591,7 @@ public:
         SplitQword end;
         read_tsc(end.lsw, end.msw);
         uint64_t diff = end.qw - m_start.qw;
-        dbg() << "Stopwatch(" << m_name << "): " << diff << " ticks";
+        dbgln("Stopwatch({}): {} ticks", m_name, diff);
     }
 
 private:
