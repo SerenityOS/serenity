@@ -57,11 +57,12 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
     if (!Core::File::exists(path.characters()))
         return nullptr;
 
-    MappedFile object_file(path);
-    if (!object_file.is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return nullptr;
 
-    auto info = make<ELFObjectInfo>(move(object_file), Debug::DebugInfo { make<ELF::Image>((const u8*)object_file.data(), object_file.size()) });
+    auto image = make<ELF::Image>(file_or_error.value()->bytes());
+    auto info = make<ELFObjectInfo>(file_or_error.release_value(), Debug::DebugInfo { move(image) });
     auto* info_ptr = info.ptr();
     s_debug_info_cache.set(path, move(info));
     return info_ptr;

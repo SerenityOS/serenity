@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
 
         auto source_result = model->page_view(path);
         if (source_result.is_error()) {
-            GUI::MessageBox::show(window, strerror(source_result.error()), "Failed to open man page", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, source_result.error().string(), "Failed to open man page", GUI::MessageBox::Type::Error);
             return;
         }
 

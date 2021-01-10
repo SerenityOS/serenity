@@ -42,13 +42,6 @@ DebugSession::DebugSession(pid_t pid, String source_root)
 {
 }
 
-MappedFile DebugSession::map_executable_for_process(pid_t pid)
-{
-    MappedFile executable(String::formatted("/proc/{}/exe", pid));
-    ASSERT(executable.is_valid());
-    return executable;
-}
-
 DebugSession::~DebugSession()
 {
     if (m_is_debuggee_dead)
@@ -373,13 +366,13 @@ void DebugSession::update_loaded_libs()
         if (m_loaded_libraries.contains(lib_name))
             return IterationDecision::Continue;
 
-        MappedFile lib_file(object_path.value());
-        if (!lib_file.is_valid())
+        auto file_or_error = MappedFile ::map(object_path.value());
+        if (file_or_error.is_error())
             return IterationDecision::Continue;
 
         FlatPtr base_address = entry.as_object().get("address").as_u32();
-        auto debug_info = make<DebugInfo>(make<ELF::Image>(reinterpret_cast<const u8*>(lib_file.data()), lib_file.size()), m_source_root, base_address);
-        auto lib = make<LoadedLibrary>(lib_name, move(lib_file), move(debug_info), base_address);
+        auto debug_info = make<DebugInfo>(make<ELF::Image>(file_or_error.value()->bytes()), m_source_root, base_address);
+        auto lib = make<LoadedLibrary>(lib_name, file_or_error.release_value(), move(debug_info), base_address);
         m_loaded_libraries.set(lib_name, move(lib));
 
         return IterationDecision::Continue;

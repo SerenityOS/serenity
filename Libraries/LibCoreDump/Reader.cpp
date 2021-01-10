@@ -35,15 +35,15 @@ namespace CoreDump {
 
 OwnPtr<Reader> Reader::create(const String& path)
 {
-    auto mapped_file = make<MappedFile>(path);
-    if (!mapped_file->is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return nullptr;
-    return make<Reader>(move(mapped_file));
+    return adopt_own(*new Reader(file_or_error.release_value()));
 }
 
-Reader::Reader(OwnPtr<MappedFile>&& coredump_file)
+Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
     : m_coredump_file(move(coredump_file))
-    , m_coredump_image((u8*)m_coredump_file->data(), m_coredump_file->size())
+    , m_coredump_image(m_coredump_file->bytes())
 {
     size_t index = 0;
     m_coredump_image.for_each_program_header([this, &index](auto pheader) {
@@ -201,11 +201,11 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
     }
 
     if (!cached_libs.contains(path)) {
-        auto lib_file = make<MappedFile>(path);
-        if (!lib_file->is_valid())
+        auto file_or_error = MappedFile::map(path);
+        if (file_or_error.is_error())
             return {};
-        auto image = ELF::Image((const u8*)lib_file->data(), lib_file->size());
-        cached_libs.set(path, make<LibraryData>(name, region->region_start, move(lib_file), move(image)));
+        auto image = ELF::Image(file_or_error.value()->bytes());
+        cached_libs.set(path, make<LibraryData>(name, region->region_start, file_or_error.release_value(), move(image)));
     }
 
     auto lib_data = cached_libs.get(path).value();

@@ -60,9 +60,10 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     FlatPtr base_address = 0;
     if (m_node.address() >= 0xc0000000) {
         if (!m_kernel_file) {
-            m_kernel_file = new MappedFile("/boot/Kernel");
-            if (!m_kernel_file->is_valid())
+            auto file_or_error = MappedFile::map("/boot/Kernel");
+            if (file_or_error.is_error())
                 return;
+            m_kernel_file = file_or_error.release_value();
         }
         kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();

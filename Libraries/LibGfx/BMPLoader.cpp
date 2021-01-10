@@ -179,10 +179,10 @@ static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
 
 RefPtr<Gfx::Bitmap> load_bmp(const StringView& path)
 {
-    MappedFile mapped_file(path);
-    if (!mapped_file.is_valid())
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
         return nullptr;
-    auto bitmap = load_bmp_impl((const u8*)mapped_file.data(), mapped_file.size());
+    auto bitmap = load_bmp_impl((const u8*)file_or_error.value()->data(), file_or_error.value()->size());
     if (bitmap)
         bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded BMP: {}", bitmap->size(), LexicalPath::canonicalized_path(path)));
     return bitmap;

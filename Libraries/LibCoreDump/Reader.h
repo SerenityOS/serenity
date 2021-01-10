@@ -38,12 +38,11 @@ namespace CoreDump {
 
 class Reader {
     AK_MAKE_NONCOPYABLE(Reader);
+    AK_MAKE_NONMOVABLE(Reader);
 
 public:
     static OwnPtr<Reader> create(const String&);
     ~Reader();
-
-    Reader(OwnPtr<MappedFile>&&);
 
     const ELF::Core::ProcessInfo& process_info() const;
 
@@ -61,7 +60,7 @@ public:
     struct LibraryData {
         String name;
         FlatPtr base_address { 0 };
-        OwnPtr<MappedFile> file;
+        NonnullRefPtr<MappedFile> file;
         ELF::Image lib_elf;
     };
     const LibraryData* library_containing(FlatPtr address) const;
@@ -70,6 +69,8 @@ public:
     const HashMap<String, String> metadata() const;
 
 private:
+    Reader(NonnullRefPtr<MappedFile>);
+
     class NotesEntryIterator {
     public:
         NotesEntryIterator(const u8* notes_data);
@@ -85,7 +86,7 @@ private:
         const u8* start { nullptr };
     };
 
-    OwnPtr<MappedFile> m_coredump_file;
+    NonnullRefPtr<MappedFile> m_coredump_file;
     ELF::Image m_coredump_image;
     ssize_t m_notes_segment_index { -1 };
 };

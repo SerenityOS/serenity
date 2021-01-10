@@ -79,22 +79,24 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
     return page->path();
 }
 
-Result<StringView, int> ManualModel::page_view(const String& path) const
+Result<StringView, OSError> ManualModel::page_view(const String& path) const
 {
     if (path.is_empty())
         return StringView {};
 
-    auto mapped_file = m_mapped_files.get(path);
-    if (mapped_file.has_value())
-        return StringView { (const char*)mapped_file.value()->data(), mapped_file.value()->size() };
+    {
+        // Check if we've got it cached already.
+        auto mapped_file = m_mapped_files.get(path);
+        if (mapped_file.has_value())
+            return StringView { mapped_file.value()->bytes() };
+    }
 
-    auto map = make<MappedFile>(path);
-    if (!map->is_valid())
-        return map->errno_if_invalid();
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
+        return file_or_error.error();
 
-    StringView view { (const char*)map->data(), map->size() };
-    m_mapped_files.set(path, move(map));
-
+    StringView view { file_or_error.value()->bytes() };
+    m_mapped_files.set(path, file_or_error.release_value());
     return view;
 }
 
