@@ -256,7 +256,7 @@ int main(int argc, char** argv)
             u8* makeshift_esp = makeshift_stack + 2048;
             asm volatile("mov %%eax, %%esp" ::"a"(makeshift_esp));
             getuid();
-            dbgprintf("Survived syscall with MAP_STACK stack\n");
+            dbgln("Survived syscall with MAP_STACK stack");
 
             u8* bad_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
             if (!bad_stack)

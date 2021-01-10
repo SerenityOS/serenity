@@ -211,7 +211,7 @@ void Service::spawn(int socket_fd)
         if (m_account.has_value()) {
             auto& account = m_account.value();
             if (setgid(account.gid()) < 0 || setgroups(account.extra_gids().size(), account.extra_gids().data()) < 0 || setuid(account.uid()) < 0) {
-                dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", account.gid(), account.uid());
+                dbgln("Failed to drop privileges (GID={}, UID={})\n", account.gid(), account.uid());
                 exit(1);
             }
             setenv("HOME", account.home_directory().characters(), true);

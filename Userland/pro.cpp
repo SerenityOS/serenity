@@ -288,7 +288,7 @@ int main(int argc, char** argv)
     auto output_stream = ConditionalOutputFileStream { [&] { return save_at_provided_name ? received_actual_headers : true; }, stdout };
     download->stream_into(output_stream);
 
-    dbgprintf("started download with id %d\n", download->id());
+    dbgln("started download with id {}", download->id());
 
     auto rc = loop.exec();
     // FIXME: This shouldn't be needed.

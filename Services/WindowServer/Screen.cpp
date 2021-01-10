@@ -134,12 +134,12 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
     if (packet.is_relative) {
         m_cursor_location.move_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
 #ifdef WSSCREEN_DEBUG
-        dbgprintf("Screen: New Relative mouse point @ X %d, Y %d\n", m_cursor_location.x(), m_cursor_location.y());
+        dbgln("Screen: New Relative mouse point @ {}", m_cursor_location);
 #endif
     } else {
         m_cursor_location = { packet.x * m_width / 0xffff, packet.y * m_height / 0xffff };
 #ifdef WSSCREEN_DEBUG
-        dbgprintf("Screen: New Absolute mouse point @ X %d, Y %d\n", m_cursor_location.x(), m_cursor_location.y());
+        dbgln("Screen: New Absolute mouse point @ {}", m_cursor_location);
 #endif
     }
 

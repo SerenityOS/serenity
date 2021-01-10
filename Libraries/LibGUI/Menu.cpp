@@ -72,7 +72,7 @@ void Menu::add_action(NonnullRefPtr<Action> action)
 {
     m_items.append(make<MenuItem>(m_menu_id, move(action)));
 #ifdef GMENU_DEBUG
-    dbgprintf("GUI::Menu::add_action(): MenuItem Menu ID: %d\n", m_menu_id);
+    dbgln("GUI::Menu::add_action(): MenuItem Menu ID: {}", m_menu_id);
 #endif
 }
 
@@ -134,7 +134,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     m_menu_id = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenu>(m_name)->menu_id();
 
 #ifdef MENU_DEBUG
-    dbgprintf("GUI::Menu::realize_menu(): New menu ID: %d\n", m_menu_id);
+    dbgln("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
 #endif
     ASSERT(m_menu_id > 0);
     for (size_t i = 0; i < m_items.size(); ++i) {

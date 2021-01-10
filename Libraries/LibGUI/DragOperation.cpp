@@ -77,7 +77,7 @@ DragOperation::Outcome DragOperation::exec()
     m_event_loop = make<Core::EventLoop>();
     auto result = m_event_loop->exec();
     m_event_loop = nullptr;
-    dbgprintf("%s: event loop returned with result %d\n", class_name(), result);
+    dbgln("{}: event loop returned with result {}", class_name(), result);
     remove_from_parent();
     s_current_drag_operation = nullptr;
     return m_outcome;

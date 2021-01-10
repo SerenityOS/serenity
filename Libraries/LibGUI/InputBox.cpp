@@ -96,7 +96,7 @@ void InputBox::build()
     m_ok_button->set_fixed_height(20);
     m_ok_button->set_text("OK");
     m_ok_button->on_click = [this](auto) {
-        dbgprintf("GUI::InputBox: OK button clicked\n");
+        dbgln("GUI::InputBox: OK button clicked");
         m_text_value = m_text_editor->text();
         done(ExecOK);
     };
@@ -105,7 +105,7 @@ void InputBox::build()
     m_cancel_button->set_fixed_height(20);
     m_cancel_button->set_text("Cancel");
     m_cancel_button->on_click = [this](auto) {
-        dbgprintf("GUI::InputBox: Cancel button clicked\n");
+        dbgln("GUI::InputBox: Cancel button clicked");
         done(ExecCancel);
     };
 

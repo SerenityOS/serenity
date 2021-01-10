@@ -233,7 +233,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowRemoved: {
 #ifdef EVENT_DEBUG
         auto& removed_event = static_cast<GUI::WMWindowRemovedEvent&>(event);
-        dbgprintf("WM_WindowRemoved: client_id=%d, window_id=%d\n",
+        dbgln("WM_WindowRemoved: client_id={}, window_id={}",
             removed_event.client_id(),
             removed_event.window_id());
 #endif
@@ -246,10 +246,10 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowRectChanged: {
 #ifdef EVENT_DEBUG
         auto& changed_event = static_cast<GUI::WMWindowRectChangedEvent&>(event);
-        dbgprintf("WM_WindowRectChanged: client_id=%d, window_id=%d, rect=%s\n",
+        dbgln("WM_WindowRectChanged: client_id={}, window_id={}, rect={}",
             changed_event.client_id(),
             changed_event.window_id(),
-            changed_event.rect().to_string().characters());
+            changed_event.rect());
 #endif
         break;
     }
@@ -257,7 +257,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowIconBitmapChanged: {
         auto& changed_event = static_cast<GUI::WMWindowIconBitmapChangedEvent&>(event);
 #ifdef EVENT_DEBUG
-        dbgprintf("WM_WindowIconBitmapChanged: client_id=%d, window_id=%d, icon_buffer_id=%d\n",
+        dbgln("WM_WindowIconBitmapChanged: client_id={}, window_id={}, icon_buffer_id={}",
             changed_event.client_id(),
             changed_event.window_id(),
             changed_event.icon_buffer_id());
@@ -274,11 +274,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GUI::WMWindowStateChangedEvent&>(event);
 #ifdef EVENT_DEBUG
-        dbgprintf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u\n",
+        dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_minimized={}",
             changed_event.client_id(),
             changed_event.window_id(),
-            changed_event.title().characters(),
-            changed_event.rect().to_string().characters(),
+            changed_event.title(),
+            changed_event.rect(),
             changed_event.is_active(),
             changed_event.is_minimized());
 #endif

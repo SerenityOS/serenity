@@ -150,7 +150,7 @@ void Object::custom_event(CustomEvent&)
 void Object::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     if (m_timer_id) {
-        dbgprintf("Object{%p} already has a timer!\n", this);
+        dbgln("{} {:p} already has a timer!", class_name(), this);
         ASSERT_NOT_REACHED();
     }
 
