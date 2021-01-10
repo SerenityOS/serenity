@@ -135,6 +135,7 @@ private:
     int virt$chmod(FlatPtr, size_t, mode_t);
     int virt$fchmod(int, mode_t);
     int virt$fchown(int, uid_t, gid_t);
+    int virt$clock_settime(uint32_t clock_id, FlatPtr user_ts);
     int virt$listen(int, int);
     int virt$kill(pid_t, int);
     int virt$fstat(int, FlatPtr);

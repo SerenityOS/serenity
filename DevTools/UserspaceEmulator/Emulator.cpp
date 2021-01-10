@@ -508,6 +508,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$gettimeofday(arg1);
     case SC_clock_gettime:
         return virt$clock_gettime(arg1, arg2);
+    case SC_clock_settime:
+        return virt$clock_settime(arg1, arg2);
     case SC_getrandom:
         return virt$getrandom(arg1, arg2, arg3);
     case SC_fork:
@@ -764,6 +766,14 @@ int Emulator::virt$clock_gettime(int clockid, FlatPtr timespec)
     if (rc < 0)
         return rc;
     mmu().copy_to_vm(timespec, &host_timespec, sizeof(host_timespec));
+    return rc;
+}
+
+int Emulator::virt$clock_settime(uint32_t clock_id, FlatPtr user_ts)
+{
+    struct timespec user_timespec;
+    mmu().copy_from_vm(&user_timespec, user_ts, sizeof(user_timespec));
+    int rc = syscall(SC_clock_settime, clock_id, &user_timespec);
     return rc;
 }
 
