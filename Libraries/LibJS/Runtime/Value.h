@@ -256,7 +256,6 @@ public:
     double to_double(GlobalObject&) const;
     i32 to_i32(GlobalObject&) const;
     u32 to_u32(GlobalObject&) const;
-    size_t to_size_t(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
     double to_integer_or_infinity(GlobalObject&) const;
