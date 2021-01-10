@@ -513,21 +513,6 @@ u32 Value::to_u32(GlobalObject& global_object) const
     return number.as_u32();
 }
 
-size_t Value::to_size_t(GlobalObject& global_object) const
-{
-    // FIXME: Replace uses of this function with to_length/to_index for correct behaviour and remove this eventually.
-    if (is_empty())
-        return 0;
-    auto number = to_number(global_object);
-    if (global_object.vm().exception())
-        return INVALID;
-    if (number.is_nan())
-        return 0;
-    if (number.as_double() <= 0)
-        return 0;
-    return number.as_size_t();
-}
-
 size_t Value::to_length(GlobalObject& global_object) const
 {
     // 7.1.20 ToLength, https://tc39.es/ecma262/#sec-tolength

@@ -63,10 +63,7 @@ static void prepare_arguments_list(GlobalObject& global_object, Value value, Mar
         return;
     }
     auto& arguments_list = value.as_object();
-    auto length_property = arguments_list.get(vm.names.length);
-    if (vm.exception())
-        return;
-    auto length = length_property.to_size_t(global_object);
+    auto length = length_of_array_like(global_object, arguments_list);
     if (vm.exception())
         return;
     for (size_t i = 0; i < length; ++i) {
