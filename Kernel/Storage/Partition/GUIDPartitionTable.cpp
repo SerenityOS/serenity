@@ -133,7 +133,7 @@ bool GUIDPartitionTable::initialize()
         Array<u8, 16> unique_guid {};
         unique_guid.span().overwrite(0, entry.unique_guid, unique_guid.size());
         String name = entry.partition_name;
-        dbg() << "Detected GPT partition (entry " << entry_index << ") , offset " << entry.first_lba << " , limit " << entry.last_lba;
+        dbgln("Detected GPT partition (entry={}), offset={}, limit={}", entry_index, entry.first_lba, entry.last_lba);
         m_partitions.append({ entry.first_lba, entry.last_lba, partition_type, unique_guid, entry.attributes, "" });
         raw_byte_index += header().partition_entry_size;
     }
