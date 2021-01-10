@@ -161,7 +161,7 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
             dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
             ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
             ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
-            dbg() << "ACPI: Bit Width - " << structure.bit_width << " bits";
+            dbgln("ACPI: Bit Width - {} bits", structure.bit_width);
             address.out(value, structure.bit_width);
             break;
         }
