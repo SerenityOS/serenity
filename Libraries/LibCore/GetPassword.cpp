@@ -32,31 +32,31 @@
 
 namespace Core {
 
-Result<String, int> get_password(const StringView& prompt)
+Result<String, OSError> get_password(const StringView& prompt)
 {
-    fwrite(prompt.characters_without_null_termination(), sizeof(char), prompt.length(), stdout);
-    fflush(stdout);
+    if (write(STDOUT_FILENO, prompt.characters_without_null_termination(), prompt.length()) < 0)
+        return OSError(errno);
 
-    struct termios original;
-    tcgetattr(STDIN_FILENO, &original);
+    termios original {};
+    if (tcgetattr(STDIN_FILENO, &original) < 0)
+        return OSError(errno);
 
-    struct termios no_echo = original;
+    termios no_echo = original;
     no_echo.c_lflag &= ~ECHO;
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &no_echo) < 0) {
-        return errno;
-    }
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &no_echo) < 0)
+        return OSError(errno);
 
     char* password = nullptr;
     size_t n = 0;
 
     auto line_length = getline(&password, &n, stdin);
-    int saved_errno = errno;
+    auto saved_errno = errno;
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
     putchar('\n');
 
     if (line_length < 0)
-        return saved_errno;
+        return OSError(saved_errno);
 
     ASSERT(line_length != 0);
 
@@ -65,7 +65,6 @@ Result<String, int> get_password(const StringView& prompt)
 
     String s(password);
     free(password);
-
     return s;
 }
 }

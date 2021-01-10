@@ -26,11 +26,12 @@
 
 #pragma once
 
+#include <AK/OSError.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 
 namespace Core {
 
-Result<String, int> get_password(const StringView& prompt = "Password: ");
+Result<String, OSError> get_password(const StringView& prompt = "Password: ");
 
 }
