@@ -31,6 +31,7 @@ set(AK_TEST_SOURCES
     TestQueue.cpp
     TestQuickSort.cpp
     TestRefPtr.cpp
+    TestSinglyLinkedList.cpp
     TestSourceGenerator.cpp
     TestSpan.cpp
     TestString.cpp
