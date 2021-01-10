@@ -736,7 +736,7 @@ void Editor::handle_read_event()
         case InputState::CSIExpectFinal: {
             m_state = InputState::Free;
             if (!(code_point >= 0x40 && code_point <= 0x7f)) {
-                dbgprintf("LibLine: Invalid CSI: %02x (%c)\r\n", code_point, code_point);
+                dbgln("LibLine: Invalid CSI: {:02x} ({:c})", code_point, code_point);
                 continue;
             }
             csi_final = code_point;
@@ -797,10 +797,10 @@ void Editor::handle_read_event()
                 }
                 // ^[[5~: page up
                 // ^[[6~: page down
-                dbgprintf("LibLine: Unhandled '~': %d\r\n", param1);
+                dbgln("LibLine: Unhandled '~': {}", param1);
                 continue;
             default:
-                dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", code_point, code_point);
+                dbgln("LibLine: Unhandled final: {:02x} ({:c})", code_point, code_point);
                 continue;
             }
             break;

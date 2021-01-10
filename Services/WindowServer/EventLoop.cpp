@@ -99,7 +99,7 @@ void EventLoop::drain_mouse()
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
 #ifdef WSMESSAGELOOP_DEBUG
-        dbgprintf("EventLoop: Mouse X %d, Y %d, Z %d, relative %d\n", packet.x, packet.y, packet.z, packet.is_relative);
+        dbgln("EventLoop: Mouse X {}, Y {}, Z {}, relative={}", packet.x, packet.y, packet.z, packet.is_relative);
 #endif
         buttons = packet.buttons;
 
@@ -117,7 +117,7 @@ void EventLoop::drain_mouse()
         if (buttons != state.buttons) {
             state.buttons = buttons;
 #ifdef WSMESSAGELOOP_DEBUG
-            dbgprintf("EventLoop: Mouse Button Event\n");
+            dbgln("EventLoop: Mouse Button Event");
 #endif
             screen.on_receive_mouse_data(state);
             if (state.is_relative) {
