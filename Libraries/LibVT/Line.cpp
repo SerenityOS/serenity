@@ -104,9 +104,9 @@ bool Line::has_only_one_background_color() const
     if (!m_length)
         return true;
     // FIXME: Cache this result?
-    auto color = m_attributes[0].background_color;
+    auto color = m_attributes[0].effective_background_color();
     for (size_t i = 1; i < m_length; ++i) {
-        if (m_attributes[i].background_color != color)
+        if (m_attributes[i].effective_background_color() != color)
             return false;
     }
     return true;

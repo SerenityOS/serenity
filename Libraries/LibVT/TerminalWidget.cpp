@@ -343,7 +343,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (visual_beep_active)
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].effective_background_color()).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
@@ -354,9 +354,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto attribute = line.attributes()[column];
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
-            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
+            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
             if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection) {
-                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
+                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()).with_alpha(m_opacity));
             }
 
             enum class UnderlineStyle {
@@ -415,7 +415,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
-            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color);
+            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
             u32 code_point = line.code_point(column);
 
             if (code_point == ' ')
@@ -440,7 +440,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].foreground_color));
+            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].effective_foreground_color()));
         }
     }
 }
