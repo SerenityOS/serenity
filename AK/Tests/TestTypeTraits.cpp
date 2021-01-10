@@ -58,7 +58,7 @@ struct Empty {
 TEST_CASE(FundamentalTypeClassification)
 {
     EXPECT_TRAIT_TRUE(IsVoid, void);
-    EXPECT_TRAIT_FALSE(IsVoid, int, Empty, nullptr_t);
+    EXPECT_TRAIT_FALSE(IsVoid, int, Empty, std::nullptr_t);
 
     EXPECT_TRAIT_TRUE(IsNullPointer, std::nullptr_t);
     EXPECT_TRAIT_FALSE(IsNullPointer, void, int, Empty, decltype(0));
