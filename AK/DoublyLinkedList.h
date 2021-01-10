@@ -65,7 +65,8 @@ private:
         explicit Node(U&& v)
             : value(forward<U>(v))
         {
-            static_assert(IsSame<T, U>::value);
+            static_assert(
+                requires { T(v); }, "Conversion operator is missing.");
         }
         T value;
         Node* next { nullptr };
@@ -113,7 +114,8 @@ public:
     template<typename U>
     void append(U&& value)
     {
-        static_assert(IsSame<T, U>::value);
+        static_assert(
+            requires { T(value); }, "Conversion operator is missing.");
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
             ASSERT(!m_tail);

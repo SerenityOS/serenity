@@ -266,7 +266,7 @@ void Track::set_note(int note, Switch switch_note)
 
 void Track::sync_roll(int note)
 {
-    auto it = m_roll_notes[note].find([&](auto& roll_note) { return roll_note.off_sample > m_time; });
+    auto it = m_roll_notes[note].find_if([&](auto& roll_note) { return roll_note.off_sample > m_time; });
     if (it.is_end())
         m_roll_iters[note] = m_roll_notes[note].begin();
     else

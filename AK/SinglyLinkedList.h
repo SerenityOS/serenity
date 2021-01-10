@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Find.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -166,38 +167,26 @@ public:
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return {}; }
 
-    template<typename Finder>
-    ConstIterator find(Finder finder) const
+    template<typename TUnaryPredicate>
+    ConstIterator find_if(TUnaryPredicate&& pred) const
     {
-        Node* prev = nullptr;
-        for (auto* node = m_head; node; node = node->next) {
-            if (finder(node->value))
-                return ConstIterator(node, prev);
-            prev = node;
-        }
-        return end();
+        return AK::find_if(begin(), end(), forward<TUnaryPredicate>(pred));
     }
 
-    template<typename Finder>
-    Iterator find(Finder finder)
+    template<typename TUnaryPredicate>
+    Iterator find_if(TUnaryPredicate&& pred)
     {
-        Node* prev = nullptr;
-        for (auto* node = m_head; node; node = node->next) {
-            if (finder(node->value))
-                return Iterator(node, prev);
-            prev = node;
-        }
-        return end();
+        return AK::find_if(begin(), end(), forward<TUnaryPredicate>(pred));
     }
 
     ConstIterator find(const T& value) const
     {
-        return find([&](auto& other) { return Traits<T>::equals(value, other); });
+        return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     Iterator find(const T& value)
     {
-        return find([&](auto& other) { return Traits<T>::equals(value, other); });
+        return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     void remove(Iterator iterator)
