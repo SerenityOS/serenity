@@ -975,8 +975,10 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     ws.ws_row = rows;
     ws.ws_col = columns;
     if (m_ptm_fd != -1) {
-        int rc = ioctl(m_ptm_fd, TIOCSWINSZ, &ws);
-        ASSERT(rc == 0);
+        if (ioctl(m_ptm_fd, TIOCSWINSZ, &ws) < 0) {
+            // This can happen if we resize just as the shell exits.
+            dbgln("Notifying the pseudo-terminal about a size change failed.");
+        }
     }
 }
 
