@@ -41,7 +41,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-//#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
 extern u8* start_of_kernel_image;
@@ -159,10 +158,6 @@ void MemoryManager::parse_memory_map()
             continue;
         }
 
-#ifdef MM_DEBUG
-        klog() << "MM: considering memory at " << String::format("%p", (void*)mmap->addr) << " - " << String::format("%p", (void*)(mmap->addr + mmap->len));
-#endif
-
         for (size_t page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
@@ -237,9 +232,6 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     auto* pd = quickmap_pd(page_directory, page_directory_table_index);
     PageDirectoryEntry& pde = pd[page_directory_index];
     if (!pde.is_present()) {
-#ifdef MM_DEBUG
-        dbg() << "MM: PDE " << page_directory_index << " not present (requested for " << vaddr << "), allocating";
-#endif
         bool did_purge = false;
         auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
         if (!page_table) {
@@ -255,9 +247,6 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 
             ASSERT(!pde.is_present()); // Should have not changed
         }
-#ifdef MM_DEBUG
-        dbg() << "MM: PD K" << &page_directory << " (" << (&page_directory == m_kernel_page_directory ? "Kernel" : "User") << ") at " << PhysicalAddress(page_directory.cr3()) << " allocated page table #" << page_directory_index << " (for " << vaddr << ") at " << page_table->paddr();
-#endif
         pde.set_page_table_base(page_table->paddr().get());
         pde.set_user_allowed(true);
         pde.set_present(true);
@@ -303,9 +292,6 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 
                 auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
                 ASSERT(result);
-#ifdef MM_DEBUG
-                dbg() << "MM: Released page table for " << VirtualAddress(vaddr.get() & ~0x1fffff);
-#endif
             }
         }
     }
@@ -314,9 +300,6 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 void MemoryManager::initialize(u32 cpu)
 {
     auto mm_data = new MemoryManagerData;
-#ifdef MM_DEBUG
-    dbg() << "MM: Processor #" << cpu << " specific data at " << VirtualAddress(mm_data);
-#endif
     Processor::current().set_mm_data(*mm_data);
 
     if (cpu == 0) {
@@ -343,9 +326,6 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
         if (region.contains(vaddr))
             return &region;
     }
-#ifdef MM_DEBUG
-    dbg() << process << " Couldn't find user region for " << vaddr;
-#endif
     return nullptr;
 }
 
@@ -588,10 +568,6 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         }
     }
 
-#ifdef MM_DEBUG
-    dbg() << "MM: allocate_user_physical_page vending " << page->paddr();
-#endif
-
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
@@ -671,10 +647,6 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
         return {};
     }
 
-#ifdef MM_DEBUG
-    dbg() << "MM: allocate_supervisor_physical_page vending " << page->paddr();
-#endif
-
     fast_u32_fill((u32*)page->paddr().offset(0xc0000000).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
     ++m_super_physical_pages_used;
     return page;
@@ -692,17 +664,11 @@ void MemoryManager::enter_process_paging_scope(Process& process)
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
-#ifdef MM_DEBUG
-    dbg() << "MM: Flush " << page_count << " pages at " << vaddr << " on CPU#" << Processor::current().id();
-#endif
     Processor::flush_tlb_local(vaddr, page_count);
 }
 
 void MemoryManager::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-#ifdef MM_DEBUG
-    dbg() << "MM: Flush " << page_count << " pages at " << vaddr;
-#endif
     Processor::flush_tlb(page_directory, vaddr, page_count);
 }
 
@@ -715,9 +681,6 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.as_ptr()) {
-#ifdef MM_DEBUG
-        dbg() << "quickmap_pd: Mapping P" << (void*)directory.m_directory_pages[pdpt_index]->paddr().as_ptr() << " at 0xffe04000 in pte @ " << &pte;
-#endif
         pte.set_physical_page_base(pd_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
@@ -743,9 +706,6 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
     auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[0];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
-#ifdef MM_DEBUG
-        dbg() << "quickmap_pt: Mapping P" << (void*)pt_paddr.as_ptr() << " at 0xffe00000 in pte @ " << &pte;
-#endif
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
@@ -777,9 +737,6 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 
     auto& pte = boot_pd3_pt1023[pte_idx];
     if (pte.physical_page_base() != physical_page.paddr().as_ptr()) {
-#ifdef MM_DEBUG
-        dbg() << "quickmap_page: Mapping P" << (void*)physical_page.paddr().as_ptr() << " at 0xffe08000 in pte @ " << &pte;
-#endif
         pte.set_physical_page_base(physical_page.paddr().get());
         pte.set_present(true);
         pte.set_writable(true);

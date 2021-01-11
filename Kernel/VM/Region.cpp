@@ -35,7 +35,6 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-//#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
 namespace Kernel {
@@ -110,9 +109,6 @@ OwnPtr<Region> Region::clone(Process& new_owner)
 
     if (m_shared) {
         ASSERT(!m_stack);
-#ifdef MM_DEBUG
-        dbg() << "Region::clone(): Sharing " << name() << " (" << vaddr() << ")";
-#endif
         if (vmobject().is_inode())
             ASSERT(vmobject().is_shared_inode());
 
@@ -132,9 +128,6 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     if (!vmobject_clone)
         return {};
 
-#ifdef MM_DEBUG
-    dbg() << "Region::clone(): CoWing " << name() << " (" << vaddr() << ")";
-#endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
     auto clone_region = Region::create_user_accessible(&new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access);
@@ -276,12 +269,8 @@ bool Region::map_individual_page_impl(size_t page_index)
     ASSERT(m_page_directory->get_lock().own_lock());
     auto page_vaddr = vaddr_from_page_index(page_index);
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
-    if (!pte) {
-#ifdef MM_DEBUG
-        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << " " << name() << " cannot create PTE for " << page_vaddr;
-#endif
+    if (!pte)
         return false;
-    }
     auto* page = physical_page(page_index);
     if (!page || (!is_readable() && !is_writable())) {
         pte->clear();
@@ -296,9 +285,6 @@ bool Region::map_individual_page_impl(size_t page_index)
         if (Processor::current().has_feature(CPUFeature::NX))
             pte->set_execute_disabled(!is_executable());
         pte->set_user_allowed(is_user_accessible());
-#ifdef MM_DEBUG
-        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte->raw() << "{" << pte << "}) " << name() << " " << page_vaddr << " => " << page->paddr() << " (@" << page << ")";
-#endif
     }
     return true;
 }
@@ -405,9 +391,6 @@ bool Region::map(PageDirectory& page_directory)
     ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(page_directory.get_lock());
     set_page_directory(page_directory);
-#ifdef MM_DEBUG
-    dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
-#endif
     size_t page_index = 0;
     while (page_index < page_count()) {
         if (!map_individual_page_impl(page_index))
@@ -575,10 +558,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto current_thread = Thread::current();
     if (current_thread)
         current_thread->did_inode_fault();
-
-#ifdef MM_DEBUG
-    dbgln("MM: page_in_from_inode ready to read from inode");
-#endif
 
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();

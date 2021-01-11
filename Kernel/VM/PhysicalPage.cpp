@@ -50,10 +50,6 @@ void PhysicalPage::return_to_freelist() const
         MM.deallocate_supervisor_physical_page(*this);
     else
         MM.deallocate_user_physical_page(*this);
-
-#ifdef MM_DEBUG
-    dbgln("MM: {} released to freelist", m_paddr);
-#endif
 }
 
 }
