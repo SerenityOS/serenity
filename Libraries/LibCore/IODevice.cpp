@@ -315,4 +315,22 @@ bool IODevice::write(const StringView& v)
     return write((const u8*)v.characters_without_null_termination(), v.length());
 }
 
+LineIterator::LineIterator(IODevice& device, bool is_end)
+    : m_device(device)
+    , m_is_end(is_end)
+{
+    ++*this;
+}
+
+bool LineIterator::at_end() const
+{
+    return m_device->eof();
+}
+
+LineIterator& LineIterator::operator++()
+{
+    m_buffer = m_device->read_line();
+    return *this;
+}
+
 }

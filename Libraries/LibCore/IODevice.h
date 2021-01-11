@@ -31,6 +31,28 @@
 
 namespace Core {
 
+// This is not necessarily a valid iterator in all contexts,
+// if we had concepts, this would be InputIterator, not Copyable, Movable.
+class LineIterator {
+    AK_MAKE_NONCOPYABLE(LineIterator);
+
+public:
+    explicit LineIterator(IODevice&, bool is_end = false);
+
+    bool operator==(const LineIterator& other) const { return &other == this || (at_end() && other.is_end()) || (other.at_end() && is_end()); }
+    bool is_end() const { return m_is_end; }
+    bool at_end() const;
+
+    LineIterator& operator++();
+
+    StringView operator*() const { return m_buffer; }
+
+private:
+    NonnullRefPtr<IODevice> m_device;
+    bool m_is_end { false };
+    String m_buffer;
+};
+
 class IODevice : public Object {
     C_OBJECT_ABSTRACT(IODevice)
 public:
@@ -83,6 +105,9 @@ public:
     virtual bool close();
 
     int printf(const char*, ...);
+
+    LineIterator line_begin() & { return LineIterator(*this); }
+    LineIterator line_end() { return LineIterator(*this, true); }
 
 protected:
     explicit IODevice(Object* parent = nullptr);
