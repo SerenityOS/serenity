@@ -286,6 +286,8 @@ void TextEditor::mousedown_event(MouseEvent& event)
 
         m_selection.set(start, end);
         set_cursor(end);
+        update();
+        did_update_selection();
         return;
     }
 
