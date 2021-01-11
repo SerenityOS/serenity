@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,11 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/MappedFile.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
-#include <LibCoreDump/Reader.h>
+#include <LibELF/Image.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -177,15 +178,36 @@ public:
     void set_show_percentages(bool);
 
     const String& executable_path() const { return m_executable_path; }
-    const CoreDump::Reader& coredump() const { return *m_coredump; }
+
+    class LibraryMetadata {
+    public:
+        LibraryMetadata(JsonArray regions);
+
+        String symbolicate(FlatPtr ptr, u32& offset) const;
+
+        struct Library {
+            FlatPtr base;
+            size_t size;
+            String name;
+            NonnullRefPtr<MappedFile> file;
+            ELF::Image elf;
+        };
+
+        const Library* library_containing(FlatPtr) const;
+
+    private:
+        mutable HashMap<String, OwnPtr<Library>> m_libraries;
+        JsonArray m_regions;
+    };
+
+    const LibraryMetadata& libraries() const { return *m_library_metadata; }
 
 private:
-    Profile(String executable_path, NonnullOwnPtr<CoreDump::Reader>&&, Vector<Event>);
+    Profile(String executable_path, Vector<Event>, NonnullOwnPtr<LibraryMetadata>);
 
     void rebuild_tree();
 
     String m_executable_path;
-    NonnullOwnPtr<CoreDump::Reader> m_coredump;
 
     RefPtr<ProfileModel> m_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
@@ -198,6 +220,8 @@ private:
     u64 m_last_timestamp { 0 };
 
     Vector<Event> m_events;
+
+    NonnullOwnPtr<LibraryMetadata> m_library_metadata;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };

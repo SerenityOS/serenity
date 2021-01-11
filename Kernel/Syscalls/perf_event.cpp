@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,7 @@ namespace Kernel {
 
 int Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
-    if (!m_perf_event_buffer)
-        m_perf_event_buffer = make<PerformanceEventBuffer>();
-    return m_perf_event_buffer->append(type, arg1, arg2);
+    return ensure_perf_events().append(type, arg1, arg2);
 }
 
 }

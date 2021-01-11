@@ -96,7 +96,6 @@ set(KERNEL_SOURCES
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
-    Profiling.cpp
     Ptrace.cpp
     RTC.cpp
     Random.cpp

@@ -63,6 +63,7 @@ enum {
     _SC_OPEN_MAX
 };
 
+#define PERF_EVENT_SAMPLE 0
 #define PERF_EVENT_MALLOC 1
 #define PERF_EVENT_FREE 2
 
