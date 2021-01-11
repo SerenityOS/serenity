@@ -50,7 +50,6 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
             ASSERT_NOT_REACHED();
             return (u8)0;
         }
-        // dbg() << "read_byte: " << String::format("%x", data[current]);
         return data[current++];
     };
 
@@ -67,7 +66,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     // Compression method
     auto method = read_byte();
     if (method != 8) {
-        dbg() << "get_gzip_payload: Wrong compression method = " << method;
+        dbgln("get_gzip_payload: Wrong compression method={}", method);
         return Optional<ByteBuffer>();
     }
 
@@ -79,7 +78,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     // FEXTRA
     if (flags & 4) {
         u16 length = read_byte() & read_byte() << 8;
-        dbg() << "get_gzip_payload: Header has FEXTRA flag set. Length = " << length;
+        dbgln("get_gzip_payload: Header has FEXTRA flag set. length={}", length);
         current += length;
     }
 
@@ -155,7 +154,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 #endif
             destination.grow(destination.size() * 2);
         } else {
-            dbg() << "Gzip::decompress: Error. puff() returned: " << puff_ret;
+            dbgln("Gzip::decompress: Error. puff() returned: {}", puff_ret);
             ASSERT_NOT_REACHED();
         }
     }

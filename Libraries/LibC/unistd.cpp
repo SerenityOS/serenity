@@ -133,7 +133,7 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
         int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
             errno_rollback.set_override_rollback_value(errno);
-            dbg() << "execvpe() failed on attempt (" << candidate << ") with " << strerror(errno);
+            dbgln("execvpe() failed on attempt ({}) with {}", candidate, strerror(errno));
             return rc;
         }
     }
@@ -146,7 +146,7 @@ int execvp(const char* filename, char* const argv[])
 {
     int rc = execvpe(filename, argv, environ);
     int saved_errno = errno;
-    dbg() << "execvp() about to return " << rc << " with errno=" << saved_errno;
+    dbgln("execvp() about to return {} with errno={}", rc, saved_errno);
     errno = saved_errno;
     return rc;
 }
@@ -708,7 +708,7 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 
 char* getpass(const char* prompt)
 {
-    dbg() << "FIXME: getpass(\"" << prompt << "\")";
+    dbgln("FIXME: getpass('{}')", prompt);
     ASSERT_NOT_REACHED();
 }
 
