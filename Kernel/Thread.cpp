@@ -805,7 +805,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         u32 ret_eflags = state.eflags;
 
 #ifdef SIGNAL_DEBUG
-        klog() << "signal: setting up user stack to return to eip: " << String::format("%p", ret_eip) << " esp: " << String::format("%p", old_esp);
+        klog() << "signal: setting up user stack to return to eip: " << String::format("%p", (void*)ret_eip) << " esp: " << String::format("%p", (void*)old_esp);
 #endif
 
         // Align the stack to 16 bytes.
