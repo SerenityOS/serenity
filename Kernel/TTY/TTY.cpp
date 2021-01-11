@@ -103,7 +103,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
 
 KResultOr<size_t> TTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
 {
-    if (Process::current()->pgid() != pgid()) {
+    if (m_termios.c_lflag & TOSTOP && Process::current()->pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTOU, nullptr);
         return KResult(-EINTR);
     }
