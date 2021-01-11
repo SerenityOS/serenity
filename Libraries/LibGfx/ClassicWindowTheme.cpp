@@ -89,7 +89,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
-    int stripe_left = titlebar_title_rect.right() + 4;
+    int stripe_left = titlebar_title_rect.right() + 5;
     int stripe_right = leftmost_button_rect.left() - 3;
     if (stripe_left && stripe_right && stripe_left < stripe_right) {
         for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
