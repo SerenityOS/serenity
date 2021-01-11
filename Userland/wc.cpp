@@ -48,13 +48,13 @@ bool g_output_word = false;
 static void wc_out(const Count& count)
 {
     if (g_output_line)
-        printf("%7i ", count.lines);
+        out("{:7} ", count.lines);
     if (g_output_word)
-        printf("%7i ", count.words);
+        out("{:7} ", count.words);
     if (g_output_byte)
-        printf("%7lu ", count.bytes);
+        out("{:7} ", count.bytes);
 
-    printf("%14s\n", count.name.characters());
+    outln("{:>14}", count.name);
 }
 
 static Count get_count(const String& file_specifier)
@@ -67,7 +67,7 @@ static Count get_count(const String& file_specifier)
     } else {
         count.name = file_specifier;
         if ((file_pointer = fopen(file_specifier.characters(), "r")) == nullptr) {
-            fprintf(stderr, "wc: unable to open %s\n", file_specifier.characters());
+            warnln("wc: unable to open {}", file_specifier);
             count.exists = false;
             return count;
         }
