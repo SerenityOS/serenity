@@ -232,7 +232,7 @@ static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t co
 {
     if (count > (8 * sizeof(size_t))) {
 #ifdef JPG_DEBUG
-        dbg() << String::format("Can't read %i bits at once!", count);
+        dbg() << String::format("Can't read %zu bits at once!", count);
 #endif
         return {};
     }

@@ -280,7 +280,7 @@ void Parser::initialize_main_system_description_table()
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
 #ifdef ACPI_DEBUG
-            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &xsdt.table_ptrs[i]) << " - P 0x" << String::format("%x", xsdt.table_ptrs[i]);
+            dbg() << "ACPI: Found new table [" << i << "], @ V " << String::format("%p", &xsdt.table_ptrs[i]) << " - P 0x" << String::format("%llx", xsdt.table_ptrs[i]);
 #endif
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
@@ -293,7 +293,7 @@ void Parser::initialize_main_system_description_table()
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
 #ifdef ACPI_DEBUG
-            dbg() << "ACPI: Found new table [" << i << "], @ V 0x" << String::format("%x", &rsdt.table_ptrs[i]) << " - P 0x" << String::format("%x", rsdt.table_ptrs[i]);
+            dbg() << "ACPI: Found new table [" << i << "], @ V " << String::format("%p", &rsdt.table_ptrs[i]) << " - P 0x" << String::format("%x", rsdt.table_ptrs[i]);
 #endif
             m_sdt_pointers.append(PhysicalAddress(rsdt.table_ptrs[i]));
         }
