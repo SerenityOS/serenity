@@ -150,9 +150,6 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 
 PageDirectory::~PageDirectory()
 {
-#ifdef MM_DEBUG
-    dbg() << "MM: ~PageDirectory K" << this;
-#endif
     ScopedSpinLock lock(s_mm_lock);
     if (m_process)
         cr3_map().remove(cr3());

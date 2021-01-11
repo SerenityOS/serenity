@@ -57,7 +57,6 @@
 
 //#define DEBUG_IO
 //#define DEBUG_POLL_SELECT
-//#define MM_DEBUG
 //#define PROCESS_DEBUG
 //#define SIGNAL_DEBUG
 
@@ -359,9 +358,6 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 #endif
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
-#ifdef MM_DEBUG
-    dbg() << "Process " << pid().value() << " ctor: PD=" << m_page_directory.ptr() << " created";
-#endif
 
     if (fork_parent) {
         // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
