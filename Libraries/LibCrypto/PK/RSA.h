@@ -131,7 +131,7 @@ public:
             p = NumberTheory::random_big_prime(bits / 2);
             q = NumberTheory::random_big_prime(bits / 2);
             lambda = NumberTheory::LCM(p.minus(1), q.minus(1));
-            dbg() << "checking combination p=" << p << ", q=" << q << ", lambda=" << lambda.length();
+            dbgln("checking combination p={}, q={}, lambda={}", p, q, lambda.length());
         } while (!(NumberTheory::GCD(e, lambda) == 1));
 
         auto n = p.multiplied_by(q);
