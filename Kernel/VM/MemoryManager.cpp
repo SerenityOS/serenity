@@ -132,7 +132,7 @@ void MemoryManager::parse_memory_map()
 
     auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
-        klog() << "MM: Multiboot mmap: base_addr = " << String::format("0x%08x", mmap->addr) << ", length = " << String::format("0x%08x", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+        klog() << "MM: Multiboot mmap: base_addr = " << String::format("0x%08llx", mmap->addr) << ", length = " << String::format("0x%08llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
 
@@ -145,7 +145,7 @@ void MemoryManager::parse_memory_map()
 
         auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
-            klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", mmap->addr) << " by " << diff << " bytes";
+            klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", (void*)mmap->addr) << " by " << diff << " bytes";
             diff = PAGE_SIZE - diff;
             mmap->addr += diff;
             mmap->len -= diff;
@@ -883,7 +883,7 @@ void MemoryManager::dump_kernel_regions()
     klog() << "BEGIN       END         SIZE        ACCESS  NAME";
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : MM.m_kernel_regions) {
-        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
+        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08zx", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
     }
 }
 

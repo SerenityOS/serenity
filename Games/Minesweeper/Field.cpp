@@ -131,7 +131,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_timer = add<Core::Timer>();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
-        m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
+        m_time_label.set_text(String::formatted("{}.{}", m_time_elapsed / 10, m_time_elapsed % 10));
     };
     m_timer->set_interval(100);
     m_mine_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png");
