@@ -102,13 +102,13 @@ static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, 
 
     if (length == 8) {
         // named EC key
-        dbg() << "Cert.algorithm: Named EC (" << *value << "), unsupported";
+        dbgln("Cert.algorithm: Named EC ({}), unsupported", *value);
         return false;
     }
 
     if (length == 5) {
         // named EC SECP key
-        dbg() << "Cert.algorithm: Named EC secp (" << *value << "), unsupported";
+        dbgln("Cert.algorithm: Named EC secp ({}), unsupported", *value);
         return false;
     }
 
@@ -142,7 +142,7 @@ static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, 
         return true;
     }
 
-    dbg() << "Unsupported RSA Signature mode " << value[8];
+    dbgln("Unsupported RSA Signature mode {}", value[8]);
     return false;
 }
 
@@ -385,7 +385,6 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
                 }
                 break;
             default:
-                // dbg() << "unused field " << type;
                 break;
             }
         }
