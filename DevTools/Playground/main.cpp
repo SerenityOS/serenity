@@ -40,10 +40,42 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Painter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <string.h>
+
+namespace {
+
+class UnregisteredWidget final : public GUI::Widget {
+    C_OBJECT(UnregisteredWidget);
+
+private:
+    UnregisteredWidget(const String& class_name);
+
+    virtual void paint_event(GUI::PaintEvent& event) override;
+
+    String m_text;
+};
+
+UnregisteredWidget::UnregisteredWidget(const String& class_name)
+{
+    StringBuilder builder;
+    builder.append(class_name);
+    builder.append("\nnot registered");
+    m_text = builder.to_string();
+}
+
+void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
+{
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.fill_rect(event.rect(), Gfx::Color::DarkRed);
+    painter.draw_text(rect(), m_text, Gfx::TextAlignment::Center, Color::White);
+}
+
+}
 
 class GMLAutocompleteProvider final : public virtual GUI::AutocompleteProvider {
 public:
@@ -292,7 +324,9 @@ int main(int argc, char** argv)
 
     editor.on_change = [&] {
         preview.remove_all_children();
-        preview.load_from_gml(editor.text());
+        preview.load_from_gml(editor.text(), [](const String& class_name) -> RefPtr<GUI::Widget> {
+            return UnregisteredWidget::construct(class_name);
+        });
     };
 
     auto menubar = GUI::MenuBar::construct();
