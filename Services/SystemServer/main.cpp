@@ -130,7 +130,7 @@ static void prepare_devfs()
 
     for (size_t index = 0; index < 4; index++) {
         // FIXME: Find a better way to chown without hardcoding the gid!
-        rc = chown(String::format("/dev/tty%d", index).characters(), 0, 2);
+        rc = chown(String::formatted("/dev/tty{}", index).characters(), 0, 2);
         if (rc < 0) {
             ASSERT_NOT_REACHED();
         }
@@ -138,7 +138,7 @@ static void prepare_devfs()
 
     for (size_t index = 0; index < 4; index++) {
         // FIXME: Find a better way to chown without hardcoding the gid!
-        rc = chown(String::format("/dev/ttyS%d", index).characters(), 0, 2);
+        rc = chown(String::formatted("/dev/ttyS{}", index).characters(), 0, 2);
         if (rc < 0) {
             ASSERT_NOT_REACHED();
         }

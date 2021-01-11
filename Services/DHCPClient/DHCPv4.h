@@ -173,7 +173,7 @@ struct ParsedDHCPv4Options {
     {
         StringBuilder builder;
         builder.append("DHCP Options (");
-        builder.appendf("%d", options.size());
+        builder.appendf("%zu", options.size());
         builder.append(" entries)\n");
         for (auto& opt : options) {
             builder.appendf("\toption %d (%d bytes):", (u8)opt.key, (u8)opt.value.length);
