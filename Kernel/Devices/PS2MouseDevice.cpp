@@ -181,8 +181,8 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
 
     packet.is_relative = true;
 #ifdef PS2MOUSE_DEBUG
-    dbg() << "PS2 Relative Mouse: Buttons " << String::format("%x", packet.buttons);
-    dbg() << "Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z;
+    dbgln("PS2 Relative Mouse: Buttons {:x}", packet.buttons);
+    dbgln("Mouse: X {}, Y {}, Z {}", packet.x, packet.y, packet.z);
 #endif
     return packet;
 }
@@ -282,8 +282,8 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
         lock.unlock();
 
 #ifdef PS2MOUSE_DEBUG
-        dbg() << "PS2 Mouse Read: Buttons " << String::format("%x", packet.buttons);
-        dbg() << "PS2 Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z << " Relative " << packet.buttons;
+        dbgln("PS2 Mouse Read: Buttons {:x}", packet.buttons);
+        dbgln("PS2 Mouse: X {}, Y {}, Z {}, Relative {}", packet.x, packet.y, packet.z, packet.buttons);
         dbgln("PS2 Mouse Read: Filter packets");
 #endif
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));

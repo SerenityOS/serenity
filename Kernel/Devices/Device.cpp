@@ -72,7 +72,7 @@ Device::~Device()
 
 String Device::absolute_path() const
 {
-    return String::format("device:%u,%u (%s)", m_major, m_minor, class_name());
+    return String::formatted("device:{},{} ({})", m_major, m_minor, class_name());
 }
 
 String Device::absolute_path(const FileDescription&) const

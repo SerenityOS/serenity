@@ -174,7 +174,7 @@ private:
 
 inline const LogStream& operator<<(const LogStream& stream, IOAddress value)
 {
-    return stream << "IO " << String::format("%x", value.get());
+    return stream << "IO " << String::formatted("{:x}", value.get());
 }
 
 template<>

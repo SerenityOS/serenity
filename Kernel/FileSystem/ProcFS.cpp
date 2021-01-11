@@ -130,9 +130,6 @@ enum ProcFileType {
 
 static inline ProcessID to_pid(const InodeIdentifier& identifier)
 {
-#ifdef PROCFS_DEBUG
-    dbg() << "to_pid, index=" << String::format("%08x", identifier.index()) << " -> " << (identifier.index() >> 16);
-#endif
     return identifier.index() >> 16u;
 }
 
@@ -800,9 +797,9 @@ static bool procfs$memstat(InodeIdentifier, KBufferBuilder& builder)
     json.add("kmalloc_call_count", stats.kmalloc_call_count);
     json.add("kfree_call_count", stats.kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
-        auto prefix = String::format("slab_%zu", slab_size);
-        json.add(String::format("%s_num_allocated", prefix.characters()), num_allocated);
-        json.add(String::format("%s_num_free", prefix.characters()), num_free);
+        auto prefix = String::formatted("slab_{}", slab_size);
+        json.add(String::formatted("{}_num_allocated", prefix), num_allocated);
+        json.add(String::formatted("{}_num_free", prefix), num_free);
     });
     json.finish();
     return true;
@@ -1264,10 +1261,6 @@ InodeMetadata ProcFSInode::metadata() const
             metadata.mode &= ~077;
         }
     }
-
-#ifdef PROCFS_DEBUG
-    dbg() << "Returning mode " << String::format("%o", metadata.mode);
-#endif
     return metadata;
 }
 

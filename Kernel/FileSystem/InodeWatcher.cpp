@@ -90,7 +90,7 @@ KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const UserOrKern
 String InodeWatcher::absolute_path(const FileDescription&) const
 {
     if (auto inode = m_inode.strong_ref())
-        return String::format("InodeWatcher:%s", inode->identifier().to_string().characters());
+        return String::formatted("InodeWatcher:{}", inode->identifier().to_string());
     return "InodeWatcher:(gone)";
 }
 
