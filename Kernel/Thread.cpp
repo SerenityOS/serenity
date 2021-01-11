@@ -1000,9 +1000,9 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
     }
     unsigned offset = symbol.address - symbol.symbol->address;
     if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
-        builder.appendf("%p\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address);
+        builder.appendf("%p\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address));
     } else {
-        builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.symbol->name).characters(), offset);
+        builder.appendf("%p  %s +%u\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), demangle(symbol.symbol->name).characters(), offset);
     }
     return true;
 }

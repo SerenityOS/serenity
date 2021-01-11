@@ -211,7 +211,7 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
 
 void Node::dump(int level) const
 {
-    print_indented(String::format("%s at %d:%d (from %d.%d to %d.%d)",
+    print_indented(String::formatted("{} at {}:{} (from {}.{} to {}.{})",
                        class_name().characters(),
                        m_position.start_offset,
                        m_position.end_offset,
@@ -1591,9 +1591,9 @@ Join::~Join()
 void MatchExpr::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("(expression)", m_expr_name.characters()), level + 1);
+    print_indented(String::formatted("(expression: {})", m_expr_name.characters()), level + 1);
     m_matched_expr->dump(level + 2);
-    print_indented(String::format("(named: %s)", m_expr_name.characters()), level + 1);
+    print_indented(String::formatted("(named: {})", m_expr_name.characters()), level + 1);
     print_indented("(entries)", level + 1);
     for (auto& entry : m_entries) {
         StringBuilder builder;
