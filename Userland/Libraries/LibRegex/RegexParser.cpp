@@ -62,7 +62,7 @@ ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
 {
     if (m_parser_state.current_token.type() != type) {
         set_error(error);
-        dbg() << "[PARSER] Error: Unexpected token " << m_parser_state.current_token.name() << ". Expected: " << Token::name(type);
+        dbgln("[PARSER] Error: Unexpected token {}. Expected: {}", m_parser_state.current_token.name(), Token::name(type));
     }
     return consume();
 }

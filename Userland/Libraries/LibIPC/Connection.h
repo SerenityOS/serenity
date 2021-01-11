@@ -99,11 +99,11 @@ public:
             if (nwritten < 0) {
                 switch (errno) {
                 case EPIPE:
-                    dbg() << *this << "::post_message: Disconnected from peer";
+                    dbgln("{}::post_message: Disconnected from peer", *this);
                     shutdown();
                     return;
                 case EAGAIN:
-                    dbg() << *this << "::post_message: Peer buffer overflowed";
+                    dbgln("{}::post_message: Peer buffer overflowed", *this);
                     shutdown();
                     return;
                 default:
@@ -231,7 +231,7 @@ protected:
             // in the next run of this function.
             auto remaining_bytes = ByteBuffer::copy(bytes.data() + index, bytes.size() - index);
             if (!m_unprocessed_bytes.is_empty()) {
-                dbg() << *this << "::drain_messages_from_peer: Already have unprocessed bytes";
+                dbgln("{}::drain_messages_from_peer: Already have unprocessed bytes", *this);
                 shutdown();
                 return false;
             }
@@ -279,3 +279,8 @@ protected:
 };
 
 }
+
+template<>
+template<typename LocalEndpoint, typename PeerEndpoint>
+struct AK::Formatter<IPC::Connection<LocalEndpoint, PeerEndpoint>> : Formatter<Core::Object> {
+};

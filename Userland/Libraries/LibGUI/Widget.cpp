@@ -992,7 +992,7 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistere
         } else if (class_name.to_string() == "GUI::HorizontalBoxLayout") {
             set_layout<GUI::HorizontalBoxLayout>();
         } else {
-            dbg() << "Unknown layout class: '" << class_name.to_string() << "'";
+            dbgln("Unknown layout class: '{}'", class_name.to_string());
             return false;
         }
 

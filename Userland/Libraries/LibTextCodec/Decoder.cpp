@@ -156,7 +156,7 @@ String get_standardized_encoding(const String& encoding)
     if (trimmed_lowercase_encoding == "x-user-defined")
         return "x-user-defined";
 
-    dbg() << "TextCodec: Unrecognized encoding: " << encoding;
+    dbgln("TextCodec: Unrecognized encoding: {}", encoding);
     return {};
 }
 
