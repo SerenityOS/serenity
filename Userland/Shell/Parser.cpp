@@ -25,6 +25,8 @@
  */
 
 #include "Parser.h"
+#include "Shell.h"
+#include <AK/AllOf.h>
 #include <AK/TemporaryChange.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -114,11 +116,6 @@ static constexpr bool is_whitespace(char c)
     return c == ' ' || c == '\t';
 }
 
-static constexpr bool is_word_character(char c)
-{
-    return (c <= '9' && c >= '0') || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a') || c == '_';
-}
-
 static constexpr bool is_digit(char c)
 {
     return c <= '9' && c >= '0';
@@ -155,6 +152,28 @@ RefPtr<AST::Node> Parser::parse()
     }
 
     return toplevel;
+}
+
+RefPtr<AST::Node> Parser::parse_as_single_expression()
+{
+    auto input = Shell::escape_token_for_double_quotes(m_input);
+    Parser parser { input };
+    return parser.parse_expression();
+}
+
+NonnullRefPtrVector<AST::Node> Parser::parse_as_multiple_expressions()
+{
+    NonnullRefPtrVector<AST::Node> nodes;
+    for (;;) {
+        consume_while(is_whitespace);
+        auto node = parse_expression();
+        if (!node)
+            node = parse_redirection();
+        if (!node)
+            return nodes;
+        nodes.append(node.release_nonnull());
+    }
+    return nodes;
 }
 
 RefPtr<AST::Node> Parser::parse_toplevel()
@@ -1053,7 +1072,7 @@ RefPtr<AST::Node> Parser::parse_expression()
     if (strchr("&|)} ;<>\n", starting_char) != nullptr)
         return nullptr;
 
-    if (m_is_in_brace_expansion_spec && starting_char == ',')
+    if (m_extra_chars_not_allowed_in_barewords.contains_slow(starting_char))
         return nullptr;
 
     if (m_is_in_brace_expansion_spec && next_is(".."))
@@ -1086,6 +1105,11 @@ RefPtr<AST::Node> Parser::parse_expression()
             return nullptr;
         }
         return read_concat(create<AST::CastToList>(move(list))); // Cast To List
+    }
+
+    if (starting_char == '!') {
+        if (auto designator = parse_history_designator())
+            return designator;
     }
 
     if (auto composite = parse_string_composite())
@@ -1329,6 +1353,126 @@ RefPtr<AST::Node> Parser::parse_evaluate()
     return inner;
 }
 
+RefPtr<AST::Node> Parser::parse_history_designator()
+{
+    auto rule_start = push_start();
+
+    ASSERT(peek() == '!');
+    consume();
+
+    // Event selector
+    AST::HistorySelector selector;
+    RefPtr<AST::Node> syntax_error;
+    selector.event.kind = AST::HistorySelector::EventKind::StartingStringLookup;
+    selector.event.text_position = { m_offset, m_offset, m_line, m_line };
+    selector.word_selector_range = {
+        { AST::HistorySelector::WordSelectorKind::Index, 0, { m_offset, m_offset, m_line, m_line } },
+        AST::HistorySelector::WordSelector {
+            AST::HistorySelector::WordSelectorKind::Last, 0, { m_offset, m_offset, m_line, m_line } },
+    };
+
+    switch (peek()) {
+    case '!':
+        consume();
+        selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
+        selector.event.index = 0;
+        selector.event.text = "!";
+        break;
+    case '?':
+        consume();
+        selector.event.kind = AST::HistorySelector::EventKind::ContainingStringLookup;
+        [[fallthrough]];
+    default: {
+        TemporaryChange chars_change { m_extra_chars_not_allowed_in_barewords, { ':' } };
+
+        auto bareword = parse_bareword();
+        if (!bareword || !bareword->is_bareword()) {
+            restore_to(*rule_start);
+            return nullptr;
+        }
+
+        selector.event.text = static_ptr_cast<AST::BarewordLiteral>(bareword)->text();
+        selector.event.text_position = (bareword ?: syntax_error)->position();
+        auto it = selector.event.text.begin();
+        bool is_negative = false;
+        if (*it == '-') {
+            ++it;
+            is_negative = true;
+        }
+        if (it != selector.event.text.end() && AK::all_of(it, selector.event.text.end(), is_digit)) {
+            if (is_negative)
+                selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
+            else
+                selector.event.kind = AST::HistorySelector::EventKind::IndexFromStart;
+            selector.event.index = abs(selector.event.text.to_int().value());
+        }
+        break;
+    }
+    }
+
+    if (peek() != ':')
+        return create<AST::HistoryEvent>(move(selector));
+
+    consume();
+
+    // Word selectors
+    auto parse_word_selector = [&]() -> Optional<AST::HistorySelector::WordSelector> {
+        auto rule_start = push_start();
+        auto c = peek();
+        if (isdigit(c)) {
+            auto num = consume_while(is_digit);
+            auto value = num.to_uint();
+            return AST::HistorySelector::WordSelector {
+                AST::HistorySelector::WordSelectorKind::Index,
+                value.value(),
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+            };
+        }
+        if (c == '^') {
+            consume();
+            return AST::HistorySelector::WordSelector {
+                AST::HistorySelector::WordSelectorKind::Index,
+                0,
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+            };
+        }
+        if (c == '$') {
+            consume();
+            return AST::HistorySelector::WordSelector {
+                AST::HistorySelector::WordSelectorKind::Last,
+                0,
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+            };
+        }
+        return {};
+    };
+
+    auto start = parse_word_selector();
+    if (!start.has_value()) {
+        syntax_error = create<AST::SyntaxError>("Expected a word selector after ':' in a history event designator", true);
+        auto node = create<AST::HistoryEvent>(move(selector));
+        node->set_is_syntax_error(syntax_error->syntax_error_node());
+        return node;
+    }
+    selector.word_selector_range.start = start.release_value();
+
+    if (peek() == '-') {
+        consume();
+        auto end = parse_word_selector();
+        if (!end.has_value()) {
+            syntax_error = create<AST::SyntaxError>("Expected a word selector after '-' in a history event designator word selector", true);
+            auto node = create<AST::HistoryEvent>(move(selector));
+            node->set_is_syntax_error(syntax_error->syntax_error_node());
+            return node;
+        }
+        selector.word_selector_range.end = move(end);
+    } else {
+        selector.word_selector_range.end.clear();
+    }
+
+    return create<AST::HistoryEvent>(move(selector));
+}
+
 RefPtr<AST::Node> Parser::parse_comment()
 {
     if (at_end())
@@ -1348,7 +1492,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
     StringBuilder builder;
     auto is_acceptable_bareword_character = [&](char c) {
         return strchr("\\\"'*$&#|(){} ?;<>\n", c) == nullptr
-            && ((m_is_in_brace_expansion_spec && c != ',') || !m_is_in_brace_expansion_spec);
+            && !m_extra_chars_not_allowed_in_barewords.contains_slow(c);
     };
     while (!at_end()) {
         char ch = peek();
@@ -1497,6 +1641,8 @@ RefPtr<AST::Node> Parser::parse_brace_expansion()
 RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
 {
     TemporaryChange is_in_brace_expansion { m_is_in_brace_expansion_spec, true };
+    TemporaryChange chars_change { m_extra_chars_not_allowed_in_barewords, { ',' } };
+
     auto rule_start = push_start();
     auto start_expr = parse_expression();
     if (start_expr) {

@@ -50,6 +50,7 @@ public:
     virtual void visit(const AST::FunctionDeclaration*);
     virtual void visit(const AST::ForLoop*);
     virtual void visit(const AST::Glob*);
+    virtual void visit(const AST::HistoryEvent*);
     virtual void visit(const AST::Execute*);
     virtual void visit(const AST::IfCond*);
     virtual void visit(const AST::Join*);

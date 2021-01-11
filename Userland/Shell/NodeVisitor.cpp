@@ -121,6 +121,10 @@ void NodeVisitor::visit(const AST::Glob*)
 {
 }
 
+void NodeVisitor::visit(const AST::HistoryEvent*)
+{
+}
+
 void NodeVisitor::visit(const AST::Execute* node)
 {
     node->command()->visit(*this);

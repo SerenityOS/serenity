@@ -1201,6 +1201,157 @@ Glob::~Glob()
 {
 }
 
+void HistoryEvent::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("Event Selector", level + 1);
+    switch (m_selector.event.kind) {
+    case HistorySelector::EventKind::IndexFromStart:
+        print_indented("IndexFromStart", level + 2);
+        break;
+    case HistorySelector::EventKind::IndexFromEnd:
+        print_indented("IndexFromEnd", level + 2);
+        break;
+    case HistorySelector::EventKind::ContainingStringLookup:
+        print_indented("ContainingStringLookup", level + 2);
+        break;
+    case HistorySelector::EventKind::StartingStringLookup:
+        print_indented("StartingStringLookup", level + 2);
+        break;
+    }
+    print_indented(String::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
+
+    print_indented("Word Selector", level + 1);
+    auto print_word_selector = [&](const HistorySelector::WordSelector& selector) {
+        switch (selector.kind) {
+        case HistorySelector::WordSelectorKind::Index:
+            print_indented(String::formatted("Index {}", selector.selector), level + 3);
+            break;
+        case HistorySelector::WordSelectorKind::Last:
+            print_indented(String::formatted("Last"), level + 3);
+            break;
+        }
+    };
+
+    if (m_selector.word_selector_range.end.has_value()) {
+        print_indented("Range Start", level + 2);
+        print_word_selector(m_selector.word_selector_range.start);
+        print_indented("Range End", level + 2);
+        print_word_selector(m_selector.word_selector_range.end.value());
+    } else {
+        print_indented("Direct Address", level + 2);
+        print_word_selector(m_selector.word_selector_range.start);
+    }
+}
+
+RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
+{
+    if (!shell)
+        return create<AST::ListValue>({});
+
+    auto editor = shell->editor();
+    if (!editor) {
+        shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "No history available!", position());
+        return create<AST::ListValue>({});
+    }
+    auto& history = editor->history();
+
+    // FIXME: Implement reverse iterators and find()?
+    auto find_reverse = [](auto it_start, auto it_end, auto finder) {
+        auto it = it_end;
+        while (it != it_start) {
+            --it;
+            if (finder(*it))
+                return it;
+        }
+        return it_end;
+    };
+    // First, resolve the event itself.
+    String resolved_history;
+    switch (m_selector.event.kind) {
+    case HistorySelector::EventKind::IndexFromStart:
+        if (m_selector.event.index >= history.size()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event index out of bounds", m_selector.event.text_position);
+            return create<AST::ListValue>({});
+        }
+        resolved_history = history[m_selector.event.index].entry;
+        break;
+    case HistorySelector::EventKind::IndexFromEnd:
+        if (m_selector.event.index >= history.size()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event index out of bounds", m_selector.event.text_position);
+            return create<AST::ListValue>({});
+        }
+        resolved_history = history[history.size() - m_selector.event.index - 1].entry;
+        break;
+    case HistorySelector::EventKind::ContainingStringLookup: {
+        auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.contains(m_selector.event.text); });
+        if (it.is_end()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
+            return create<AST::ListValue>({});
+        }
+        resolved_history = it->entry;
+        break;
+    }
+    case HistorySelector::EventKind::StartingStringLookup: {
+        auto it = find_reverse(history.begin(), history.end(), [&](auto& entry) { return entry.entry.starts_with(m_selector.event.text); });
+        if (it.is_end()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History event did not match any entry", m_selector.event.text_position);
+            return create<AST::ListValue>({});
+        }
+        resolved_history = it->entry;
+        break;
+    }
+    }
+
+    // Then, split it up to "words".
+    auto nodes = Parser { resolved_history }.parse_as_multiple_expressions();
+
+    // Now take the "words" as described by the word selectors.
+    bool is_range = m_selector.word_selector_range.end.has_value();
+    if (is_range) {
+        auto start_index = m_selector.word_selector_range.start.resolve(nodes.size());
+        auto end_index = m_selector.word_selector_range.end->resolve(nodes.size());
+        if (start_index >= nodes.size()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.start.position);
+            return create<AST::ListValue>({});
+        }
+        if (end_index >= nodes.size()) {
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.end->position);
+            return create<AST::ListValue>({});
+        }
+
+        decltype(nodes) resolved_nodes;
+        resolved_nodes.append(nodes.data() + start_index, end_index - start_index + 1);
+        NonnullRefPtr<AST::Node> list = create<AST::ListConcatenate>(position(), move(resolved_nodes));
+        return list->run(shell);
+    }
+
+    auto index = m_selector.word_selector_range.start.resolve(nodes.size());
+    if (index >= nodes.size()) {
+        shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.start.position);
+        return create<AST::ListValue>({});
+    }
+    return nodes[index].run(shell);
+}
+
+void HistoryEvent::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
+{
+    Line::Style style { Line::Style::Foreground(Line::Style::XtermColor::Green) };
+    if (metadata.is_first_in_list)
+        style.unify_with({ Line::Style::Bold });
+    editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
+}
+
+HistoryEvent::HistoryEvent(Position position, HistorySelector selector)
+    : Node(move(position))
+    , m_selector(move(selector))
+{
+}
+
+HistoryEvent::~HistoryEvent()
+{
+}
+
 void Execute::dump(int level) const
 {
     Node::dump(level);

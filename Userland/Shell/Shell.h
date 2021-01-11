@@ -109,6 +109,8 @@ public:
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
 
+    static bool has_history_event(StringView);
+
     RefPtr<AST::Value> get_argument(size_t);
     RefPtr<AST::Value> lookup_local_variable(const String&);
     String local_variable_or(const String&, const String&);
@@ -153,6 +155,7 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
+    static String escape_token_for_double_quotes(const String& token);
     static String escape_token_for_single_quotes(const String& token);
     static String escape_token(const String& token);
     static String unescape_token(const String& token);

@@ -454,7 +454,6 @@ public:
 
     enum class Kind : u32 {
         And,
-        ListConcatenate,
         Background,
         BarewordLiteral,
         BraceExpansion,
@@ -464,15 +463,18 @@ public:
         CommandLiteral,
         Comment,
         ContinuationControl,
-        DynamicEvaluate,
         DoubleQuotedString,
-        Fd2FdRedirection,
-        FunctionDeclaration,
-        ForLoop,
-        Glob,
+        DynamicEvaluate,
         Execute,
+        Fd2FdRedirection,
+        ForLoop,
+        FunctionDeclaration,
+        Glob,
+        HistoryEvent,
         IfCond,
         Join,
+        Juxtaposition,
+        ListConcatenate,
         MatchExpr,
         Or,
         Pipe,
@@ -480,12 +482,11 @@ public:
         ReadRedirection,
         ReadWriteRedirection,
         Sequence,
-        Subshell,
         SimpleVariable,
         SpecialVariable,
-        Juxtaposition,
         StringLiteral,
         StringPartCompose,
+        Subshell,
         SyntaxError,
         Tilde,
         VariableDeclarations,
@@ -879,6 +880,62 @@ private:
     virtual bool is_list() const override { return true; }
 
     String m_text;
+};
+
+struct HistorySelector {
+    enum EventKind {
+        IndexFromStart,
+        IndexFromEnd,
+        StartingStringLookup,
+        ContainingStringLookup,
+    };
+    enum WordSelectorKind {
+        Index,
+        Last,
+    };
+
+    struct {
+        EventKind kind { IndexFromStart };
+        size_t index { 0 };
+        Position text_position;
+        String text;
+    } event;
+
+    struct WordSelector {
+        WordSelectorKind kind { Index };
+        size_t selector { 0 };
+        Position position;
+
+        size_t resolve(size_t size) const
+        {
+            if (kind == Index)
+                return selector;
+            if (kind == Last)
+                return size - 1;
+            ASSERT_NOT_REACHED();
+        }
+    };
+    struct {
+        WordSelector start;
+        Optional<WordSelector> end;
+    } word_selector_range;
+};
+
+class HistoryEvent final : public Node {
+public:
+    HistoryEvent(Position, HistorySelector);
+    virtual ~HistoryEvent();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const HistorySelector& selector() const { return m_selector; }
+
+private:
+    NODE(HistoryEvent);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+
+    HistorySelector m_selector;
 };
 
 class Execute final : public Node {

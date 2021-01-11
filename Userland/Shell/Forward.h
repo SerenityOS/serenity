@@ -54,6 +54,7 @@ class Fd2FdRedirection;
 class FunctionDeclaration;
 class ForLoop;
 class Glob;
+class HistoryEvent;
 class Execute;
 class IfCond;
 class Join;
