@@ -66,6 +66,7 @@ extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
     __ENUMERATE_PLEDGE_PROMISE(inet)      \
     __ENUMERATE_PLEDGE_PROMISE(id)        \
     __ENUMERATE_PLEDGE_PROMISE(proc)      \
+    __ENUMERATE_PLEDGE_PROMISE(ptrace)    \
     __ENUMERATE_PLEDGE_PROMISE(exec)      \
     __ENUMERATE_PLEDGE_PROMISE(unix)      \
     __ENUMERATE_PLEDGE_PROMISE(recvfd)    \

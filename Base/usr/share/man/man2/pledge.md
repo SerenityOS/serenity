@@ -53,6 +53,7 @@ If the process later attempts to use any system functionality it has previously 
 * `sigaction`: Change signal handlers and dispositions (\*)
 * `sendfd`: Send file descriptors over a local socket
 * `recvfd`: Receive file descriptors over a local socket
+* `ptrace`: The [`ptrace(2)`](ptrace.md) syscall (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 

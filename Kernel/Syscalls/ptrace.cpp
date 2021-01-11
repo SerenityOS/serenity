@@ -37,7 +37,7 @@ namespace Kernel {
 
 int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
-    REQUIRE_PROMISE(proc);
+    REQUIRE_PROMISE(ptrace);
     Syscall::SC_ptrace_params params;
     if (!copy_from_user(&params, user_params))
         return -EFAULT;

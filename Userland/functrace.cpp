@@ -112,7 +112,7 @@ static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc exec rpath sigaction", nullptr) < 0) {
+    if (pledge("stdio proc exec rpath sigaction ptrace", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
