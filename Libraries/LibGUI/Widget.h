@@ -298,6 +298,7 @@ public:
     void set_override_cursor(Gfx::StandardCursor);
 
     bool load_from_gml(const StringView&);
+    bool load_from_gml(const StringView&, RefPtr<Widget> (*unregistered_child_handler)(const String&));
 
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }
@@ -350,7 +351,7 @@ private:
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
 
-    bool load_from_json(const JsonObject&);
+    bool load_from_json(const JsonObject&, RefPtr<Widget> (*unregistered_child_handler)(const String&));
 
     // HACK: These are used as property getters for the fixed_* size property aliases.
     int dummy_fixed_width() { return 0; }
