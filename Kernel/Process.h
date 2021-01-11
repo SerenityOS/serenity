@@ -527,6 +527,8 @@ private:
 
     void kill_threads_except_self();
     void kill_all_threads();
+    bool dump_core();
+    bool dump_perfcore();
 
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     ssize_t do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
