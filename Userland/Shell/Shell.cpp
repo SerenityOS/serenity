@@ -1099,18 +1099,56 @@ String Shell::get_history_path()
 
 String Shell::escape_token_for_single_quotes(const String& token)
 {
+    // `foo bar \n '` -> `'foo bar \n '"'"`
+
     StringBuilder builder;
+    builder.append("'");
+    auto started_single_quote = true;
 
     for (auto c : token) {
         switch (c) {
         case '\'':
-            builder.append("'\\'");
-            break;
+            builder.append("\"'\"");
+            started_single_quote = false;
+            continue;
         default:
+            builder.append(c);
+            if (!started_single_quote) {
+                started_single_quote = true;
+                builder.append("'");
+            }
             break;
         }
-        builder.append(c);
     }
+
+    if (started_single_quote)
+        builder.append("'");
+
+    return builder.build();
+}
+
+String Shell::escape_token_for_double_quotes(const String& token)
+{
+    // `foo bar \n $x 'blah "hello` -> `"foo bar \\n $x 'blah \"hello"`
+
+    StringBuilder builder;
+    builder.append('"');
+
+    for (auto c : token) {
+        switch (c) {
+        case '\"':
+            builder.append("\\\"");
+            continue;
+        case '\\':
+            builder.append("\\\\");
+            continue;
+        default:
+            builder.append(c);
+            break;
+        }
+    }
+
+    builder.append('"');
 
     return builder.build();
 }
@@ -1499,6 +1537,22 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     putc('\r', stderr);
 }
 
+bool Shell::has_history_event(StringView source)
+{
+    struct : public AST::NodeVisitor {
+        virtual void visit(const AST::HistoryEvent* node)
+        {
+            has_history_event = true;
+            AST::NodeVisitor::visit(node);
+        }
+
+        bool has_history_event { false };
+    } visitor;
+
+    Parser { source }.parse()->visit(visitor);
+    return visitor.has_history_event;
+}
+
 bool Shell::read_single_line()
 {
     restore_ios();
@@ -1523,7 +1577,9 @@ bool Shell::read_single_line()
 
     run_command(line);
 
-    m_editor->add_to_history(line);
+    if (!has_history_event(line))
+        m_editor->add_to_history(line);
+
     return true;
 }
 

@@ -43,6 +43,10 @@ public:
     }
 
     RefPtr<AST::Node> parse();
+    /// Parse the given string *as* an expression
+    /// that is to forefully enclose it in double-quotes.
+    RefPtr<AST::Node> parse_as_single_expression();
+    NonnullRefPtrVector<AST::Node> parse_as_multiple_expressions();
 
     struct SavedOffset {
         size_t offset;
@@ -77,6 +81,7 @@ private:
     RefPtr<AST::Node> parse_doublequoted_string_inner();
     RefPtr<AST::Node> parse_variable();
     RefPtr<AST::Node> parse_evaluate();
+    RefPtr<AST::Node> parse_history_designator();
     RefPtr<AST::Node> parse_comment();
     RefPtr<AST::Node> parse_bareword();
     RefPtr<AST::Node> parse_glob();
@@ -140,6 +145,7 @@ private:
     Vector<size_t> m_rule_start_offsets;
     Vector<AST::Position::Line> m_rule_start_lines;
 
+    Vector<char> m_extra_chars_not_allowed_in_barewords;
     bool m_is_in_brace_expansion_spec { false };
     bool m_continuation_controls_allowed { false };
 };
@@ -215,6 +221,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 expression :: evaluate expression?
             | string_composite expression?
             | comment expression?
+            | history_designator expression?
             | '(' list_expression ')' expression?
 
 evaluate :: '$' '(' pipe_sequence ')'
@@ -243,6 +250,18 @@ variable :: '$' identifier
           | ...
 
 comment :: '#' [^\n]*
+
+history_designator :: '!' event_selector (':' word_selector_composite)?
+
+event_selector :: '!'                  {== '-0'}
+                | '?' bareword '?'
+                | bareword             {number: index, otherwise: lookup}
+
+word_selector_composite :: word_selector ('-' word_selector)?
+
+word_selector :: number
+               | '^'                   {== 0}
+               | '$'                   {== end}
 
 bareword :: [^"'*$&#|()[\]{} ?;<>] bareword?
           | '\' [^"'*$&#|()[\]{} ?;<>] bareword?
