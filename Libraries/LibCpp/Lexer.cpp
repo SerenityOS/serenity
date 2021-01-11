@@ -780,7 +780,7 @@ Vector<Token> Lexer::lex()
                 commit_token(Token::Type::Identifier);
             continue;
         }
-        dbg() << "Unimplemented token character: " << ch;
+        dbgln("Unimplemented token character: {}", ch);
         emit_token(Token::Type::Unknown);
     }
     return tokens;

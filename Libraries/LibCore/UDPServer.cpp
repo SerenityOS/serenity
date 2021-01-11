@@ -86,7 +86,7 @@ ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
     socklen_t in_len = sizeof(in);
     ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len);
     if (rlen < 0) {
-        dbg() << "recvfrom: " << strerror(errno);
+        dbgln("recvfrom: {}", strerror(errno));
         return {};
     }
 

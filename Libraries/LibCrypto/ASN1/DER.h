@@ -35,14 +35,14 @@ namespace Crypto {
 static bool der_decode_integer(const u8* in, size_t length, UnsignedBigInteger& number)
 {
     if (length < 3) {
-        dbg() << "invalid header size";
+        dbgln("invalid header size");
         return false;
     }
 
     size_t x { 0 };
     // must start with 0x02
     if ((in[x++] & 0x1f) != 0x02) {
-        dbg() << "not an integer " << in[x - 1] << " (" << in[x] << " follows)";
+        dbgln("not an integer {} ({} follows)", in[x - 1], in[x]);
         return false;
     }
 
@@ -51,7 +51,7 @@ static bool der_decode_integer(const u8* in, size_t length, UnsignedBigInteger& 
     if ((x & 0x80) == 0) {
         // overflow
         if (x + z > length) {
-            dbg() << "would overflow " << z + x << " > " << length;
+            dbgln("would overflow {} > {}", z + x, length);
             return false;
         }
 
@@ -63,7 +63,7 @@ static bool der_decode_integer(const u8* in, size_t length, UnsignedBigInteger& 
 
         // overflow
         if ((x + z) > length || z > 4 || z == 0) {
-            dbg() << "would overflow " << z + x << " > " << length;
+            dbgln("would overflow {} > {}", z + x, length);
             return false;
         }
 
@@ -74,7 +74,7 @@ static bool der_decode_integer(const u8* in, size_t length, UnsignedBigInteger& 
 
         // overflow
         if (x + y > length) {
-            dbg() << "would overflow " << y + x << " > " << length;
+            dbgln("would overflow {} > {}", y + x, length);
             return false;
         }
 
@@ -84,7 +84,7 @@ static bool der_decode_integer(const u8* in, size_t length, UnsignedBigInteger& 
 
     // see if it's negative
     if (in[x] & 0x80) {
-        dbg() << "negative bigint unsupported in der_decode_integer";
+        dbgln("negative bigint unsupported in der_decode_integer");
         return false;
     }
 
@@ -243,7 +243,7 @@ constexpr static bool der_length_sequence(ASN1::List* list, size_t in_length, si
             y += x;
             break;
         default:
-            dbg() << "Unhandled Kind " << ASN1::kind_name(type);
+            dbgln("Unhandled Kind {}", ASN1::kind_name(type));
             ASSERT_NOT_REACHED();
             break;
         }
@@ -258,7 +258,7 @@ constexpr static bool der_length_sequence(ASN1::List* list, size_t in_length, si
     } else if (y < 16777216ul) {
         y += 5;
     } else {
-        dbg() << "invalid length " << y;
+        dbgln("invalid length {}", y);
         return false;
     }
     *out_length = y;
@@ -268,12 +268,12 @@ constexpr static bool der_length_sequence(ASN1::List* list, size_t in_length, si
 static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::List* list, size_t out_length, bool ordered = true)
 {
     if (in_length < 2) {
-        dbg() << "header too small";
+        dbgln("header too small");
         return false; // invalid header
     }
     size_t x { 0 };
     if (in[x++] != 0x30) {
-        dbg() << "not a sequence: " << in[x - 1];
+        dbgln("not a sequence: {}", in[x - 1]);
         return false; // not a sequence
     }
     size_t block_size { 0 };
@@ -282,14 +282,14 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
         block_size = in[x++];
     } else if (in[x] & 0x80) {
         if ((in[x] < 0x81) || (in[x] > 0x83)) {
-            dbg() << "invalid length element " << in[x];
+            dbgln("invalid length element {}", in[x]);
             return false;
         }
 
         y = in[x++] & 0x7f;
 
         if (x + y > in_length) {
-            dbg() << "would overflow " << x + y << " -> " << in_length;
+            dbgln("would overflow {} > {}", x + y, in_length);
             return false; // overflow
         }
         block_size = 0;
@@ -299,7 +299,7 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
 
     // overflow
     if (x + block_size > in_length) {
-        dbg() << "would overflow " << x + block_size << " -> " << in_length;
+        dbgln("would overflow {} > {}", x + block_size, in_length);
         return false;
     }
 
@@ -343,7 +343,7 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
             break;
         case ASN1::Kind::Sequence:
             if ((in[x] & 0x3f) != 0x30) {
-                dbg() << "Not a sequence: " << (in[x] & 0x3f);
+                dbgln("Not a sequence: {}", (in[x] & 0x3f));
                 return false;
             }
             z = in_length;
@@ -357,7 +357,7 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
             }
             break;
         default:
-            dbg() << "Unhandled ASN1 kind " << ASN1::kind_name(kind);
+            dbgln("Unhandled ASN1 kind {}", ASN1::kind_name(kind));
             ASSERT_NOT_REACHED();
             break;
         }
@@ -369,7 +369,7 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
     }
     for (size_t i = 0; i < out_length; ++i)
         if (!list[i].used) {
-            dbg() << "index " << i << " was not read";
+            dbgln("index {} was not read", i);
             return false;
         }
 

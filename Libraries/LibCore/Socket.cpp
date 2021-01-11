@@ -75,7 +75,7 @@ bool Socket::connect(const String& hostname, int port)
 {
     auto* hostent = gethostbyname(hostname.characters());
     if (!hostent) {
-        dbg() << "Socket::connect: Unable to resolve '" << hostname << "'";
+        dbgln("Socket::connect: Unable to resolve '{}'", hostname);
         return false;
     }
 
