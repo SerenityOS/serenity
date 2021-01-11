@@ -31,6 +31,8 @@
 
 namespace Kernel {
 
+class KBufferBuilder;
+
 struct [[gnu::packed]] MallocPerformanceEvent {
     size_t size;
     FlatPtr ptr;
@@ -44,12 +46,14 @@ struct [[gnu::packed]] FreePerformanceEvent {
 struct [[gnu::packed]] PerformanceEvent {
     u8 type { 0 };
     u8 stack_size { 0 };
+    u32 tid { 0 };
     u64 timestamp;
     union {
         MallocPerformanceEvent malloc;
         FreePerformanceEvent free;
     } data;
-    FlatPtr stack[32];
+    static constexpr size_t max_stack_frame_count = 32;
+    FlatPtr stack[max_stack_frame_count];
 };
 
 class PerformanceEventBuffer {
@@ -57,6 +61,11 @@ public:
     PerformanceEventBuffer();
 
     KResult append(int type, FlatPtr arg1, FlatPtr arg2);
+
+    void clear()
+    {
+        m_count = 0;
+    }
 
     size_t capacity() const
     {
@@ -71,6 +80,7 @@ public:
     }
 
     OwnPtr<KBuffer> to_json(ProcessID, const String& executable_path) const;
+    bool to_json(KBufferBuilder&, ProcessID, const String& executable_path) const;
 
 private:
     PerformanceEvent& at(size_t index);

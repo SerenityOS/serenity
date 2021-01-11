@@ -509,10 +509,14 @@ public:
 
     const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
 
+    PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
     friend class Region;
+
+    PerformanceEventBuffer& ensure_perf_events();
 
     Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();

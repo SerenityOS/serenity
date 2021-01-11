@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -477,15 +477,9 @@ void Scheduler::timer_tick(const RegisterState& regs)
     if (!is_bsp)
         return; // TODO: This prevents scheduling on other CPUs!
     if (current_thread->process().is_profiling()) {
-        SmapDisabler disabler;
-        auto backtrace = current_thread->raw_backtrace(regs.ebp, regs.eip);
-        auto& sample = Profiling::next_sample_slot();
-        sample.pid = current_thread->process().pid();
-        sample.tid = current_thread->tid();
-        sample.timestamp = TimeManagement::the().uptime_ms();
-        for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
-            sample.frames[i] = backtrace[i];
-        }
+        ASSERT(current_thread->process().perf_events());
+        auto& perf_events = *current_thread->process().perf_events();
+        [[maybe_unused]] auto rc = perf_events.append(PERF_EVENT_SAMPLE, 0, 0);
     }
 
     if (current_thread->tick((regs.cs & 3) == 0))

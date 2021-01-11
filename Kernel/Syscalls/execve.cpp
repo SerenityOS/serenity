@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,8 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/AllocationStrategy.h>
@@ -446,7 +446,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         return -ENOENT;
 
     // Disable profiling temporarily in case it's running on this process.
-    bool was_profiling = is_profiling();
     TemporaryChange profiling_disabler(m_profiling, false);
 
     // Mark this thread as the current thread that does exec
@@ -589,8 +588,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.cr3 = m_page_directory->cr3();
     tss.ss2 = m_pid.value();
 
-    if (was_profiling)
-        Profiling::did_exec(path);
+    // Throw away any recorded performance events in this process.
+    if (m_perf_event_buffer)
+        m_perf_event_buffer->clear();
 
     {
         ScopedSpinLock lock(g_scheduler_lock);

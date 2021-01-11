@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -597,16 +597,6 @@ void Process::finalize()
     dbg() << "Finalizing process " << *this;
 #endif
 
-    if (is_profiling()) {
-        auto coredump = CoreDump::create(*this, String::formatted("/tmp/profiler_coredumps/{}", pid().value()));
-        if (coredump) {
-            auto result = coredump->write();
-            if (result.is_error())
-                dbgln("Core dump generation failed: {}", result.error());
-        } else {
-            dbgln("Could not create coredump");
-        }
-    }
     if (m_should_dump_core) {
         dbgln("Generating coredump for pid: {}", m_pid.value());
 
@@ -622,7 +612,7 @@ void Process::finalize()
     }
 
     if (m_perf_event_buffer) {
-        auto description_or_error = VFS::the().open(String::format("perfcore.%d", m_pid), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+        auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", m_pid), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
         if (!description_or_error.is_error()) {
             auto& description = description_or_error.value();
             auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
@@ -920,6 +910,13 @@ void Process::tracer_trap(Thread& thread, const RegisterState& regs)
     ASSERT(m_tracer.ptr());
     m_tracer->set_regs(regs);
     thread.send_urgent_signal_to_self(SIGTRAP);
+}
+
+PerformanceEventBuffer& Process::ensure_perf_events()
+{
+    if (!m_perf_event_buffer)
+        m_perf_event_buffer = make<PerformanceEventBuffer>();
+    return *m_perf_event_buffer;
 }
 
 }

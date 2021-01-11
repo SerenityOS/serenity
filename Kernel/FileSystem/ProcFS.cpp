@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,8 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
@@ -113,6 +113,7 @@ enum ProcFileType {
     FI_PID,
 
     __FI_PID_Start,
+    FI_PID_perf_events,
     FI_PID_vm,
     FI_PID_vmobjects,
     FI_PID_stacks, // directory
@@ -460,35 +461,21 @@ static bool procfs$modules(InodeIdentifier, KBufferBuilder& builder)
     return true;
 }
 
-static bool procfs$profile(InodeIdentifier, KBufferBuilder& builder)
+static bool procfs$pid_perf_events(InodeIdentifier identifier, KBufferBuilder& builder)
 {
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
+        return false;
+
     InterruptDisabler disabler;
 
-    JsonObjectSerializer object(builder);
-    object.add("pid", Profiling::pid().value());
-    object.add("executable", Profiling::executable_path());
+    if (!process->executable())
+        return false;
 
-    auto array = object.add_array("events");
-    bool mask_kernel_addresses = !Process::current()->is_superuser();
-    Profiling::for_each_sample([&](auto& sample) {
-        auto object = array.add_object();
-        object.add("type", "sample");
-        object.add("tid", sample.tid.value());
-        object.add("timestamp", sample.timestamp);
-        auto frames_array = object.add_array("stack");
-        for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {
-            if (sample.frames[i] == 0)
-                break;
-            u32 address = (u32)sample.frames[i];
-            if (mask_kernel_addresses && !is_user_address(VirtualAddress(address)))
-                address = 0xdeadc0de;
-            frames_array.add(address);
-        }
-        frames_array.finish();
-    });
-    array.finish();
-    object.finish();
-    return true;
+    if (!process->perf_events())
+        return false;
+
+    return process->perf_events()->to_json(builder, process->pid(), process->executable()->absolute_path());
 }
 
 static bool procfs$net_adapters(InodeIdentifier, KBufferBuilder& builder)
@@ -1752,7 +1739,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
     m_entries[FI_Root_modules] = { "modules", FI_Root_modules, true, procfs$modules };
-    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, false, procfs$profile };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys, true };
     m_entries[FI_Root_net] = { "net", FI_Root_net, false };
 
@@ -1770,6 +1756,7 @@ ProcFS::ProcFS()
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
     m_entries[FI_PID_unveil] = { "unveil", FI_PID_unveil, false, procfs$pid_unveil };
     m_entries[FI_PID_root] = { "root", FI_PID_root, false, procfs$pid_root };
+    m_entries[FI_PID_perf_events] = { "perf_events", FI_PID_perf_events, false, procfs$pid_perf_events };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd, false };
 }
 

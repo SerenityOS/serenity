@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,10 @@
  */
 
 #include <Kernel/CoreDump.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 
 namespace Kernel {
 
@@ -41,7 +43,7 @@ int Process::sys$profiling_enable(pid_t pid)
         return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)
         return -EPERM;
-    Profiling::start(*process);
+    process->ensure_perf_events();
     process->set_profiling(true);
     return 0;
 }
@@ -54,20 +56,9 @@ int Process::sys$profiling_disable(pid_t pid)
         return -ESRCH;
     if (!is_superuser() && process->uid() != m_uid)
         return -EPERM;
+    if (!process->is_profiling())
+        return -EINVAL;
     process->set_profiling(false);
-    Profiling::stop();
-
-    // We explicitly unlock here because we can't hold the lock when writing the coredump VFS
-    lock.unlock();
-
-    if (auto coredump = CoreDump::create(*process, String::formatted("/tmp/profiler_coredumps/{}", pid))) {
-        auto result = coredump->write();
-        if (result.is_error())
-            return result.error();
-    } else {
-        // FIXME: Return an error maybe?
-        dbgln("Unable to create profiler coredump for PID {}", pid);
-    }
     return 0;
 }
 
