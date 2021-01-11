@@ -137,7 +137,7 @@ public:
         auto n = p.multiplied_by(q);
 
         auto d = NumberTheory::ModularInverse(e, lambda);
-        dbg() << "Your keys are Pub{n=" << n << ", e=" << e << "} and Priv{n=" << n << ", d=" << d << "}";
+        dbgln("Your keys are Pub(n={}, e={}) and Priv(n={}, d={})", n, e, n, d);
         RSAKeyPair<PublicKeyType, PrivateKeyType> keys {
             { n, e },
             { n, d, e }

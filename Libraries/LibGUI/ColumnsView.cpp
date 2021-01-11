@@ -188,7 +188,7 @@ void ColumnsView::push_column(const ModelIndex& parent_index)
         if (m_columns[i].parent_index == grandparent)
             break;
         m_columns.shrink(i);
-        dbg() << "Dropping column " << i;
+        dbgln("Dropping column {}", i);
     }
 
     // Add the new column.

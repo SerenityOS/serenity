@@ -180,7 +180,6 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 #endif
 
     if (m_dynamic_object->has_text_relocations()) {
-        // dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
         ASSERT(m_text_segment_load_address.get() != 0);
 
 #ifndef AK_OS_MACOS

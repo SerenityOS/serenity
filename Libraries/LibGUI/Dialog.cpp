@@ -58,7 +58,7 @@ int Dialog::exec()
     show();
     auto result = m_event_loop->exec();
     m_event_loop = nullptr;
-    dbg() << *this << ": Event loop returned with result " << result;
+    dbgln("{}: Event loop returned with result {}", *this, result);
     remove_from_parent();
     return result;
 }
@@ -68,7 +68,7 @@ void Dialog::done(int result)
     if (!m_event_loop)
         return;
     m_result = result;
-    dbg() << *this << ": Quit event loop with result " << result;
+    dbgln("{}: Quit event loop with result {}", *this, result);
     m_event_loop->quit(result);
 }
 

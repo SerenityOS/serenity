@@ -79,7 +79,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
             case (int)MetricRole::TitleButtonWidth:
                 return 15;
             default:
-                dbg() << "Metric " << name << " has no fallback value!";
+                dbgln("Metric {} has no fallback value!", name);
                 return 16;
             }
         }

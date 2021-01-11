@@ -71,7 +71,7 @@ bool Desktop::set_wallpaper(const StringView& path, bool save_config)
 
     if (ret_val && save_config) {
         RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("WindowManager");
-        dbg() << "Saving wallpaper path '" << path << "' to config file at " << config->file_name();
+        dbgln("Saving wallpaper path '{}' to config file at {}", path, config->file_name());
         config->write_entry("Background", "Wallpaper", path);
         config->sync();
     }

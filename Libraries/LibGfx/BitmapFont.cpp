@@ -167,7 +167,7 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
     if (type == FontTypes::LatinExtendedA)
         return 384;
 
-    dbg() << "Unknown font type:" << type;
+    dbgln("Unknown font type: {}", (int)type);
     ASSERT_NOT_REACHED();
 }
 

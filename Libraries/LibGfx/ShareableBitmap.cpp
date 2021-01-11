@@ -62,7 +62,7 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     if (shbuf_id == -1)
         return true;
 
-    dbg() << "Decoding a ShareableBitmap with shbuf_id=" << shbuf_id << ", size=" << size;
+    dbgln("Decoding a ShareableBitmap with shbuf_id={}, size={}", shbuf_id, size);
 
     auto shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
     if (!shared_buffer)

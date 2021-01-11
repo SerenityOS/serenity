@@ -51,7 +51,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
     ASN1::set(pubkey[0], ASN1::Kind::Sequence, &pubkey_hash_oid, 2);
     ASN1::set(pubkey[1], ASN1::Kind::Null, nullptr, 0);
 
-    dbg() << "we were offered " << in.size() << " bytes of input";
+    dbgln("we were offered {} bytes of input", in.size());
 
     if (der_decode_sequence(in.data(), in.size(), pubkey, 2)) {
         // yay, now we have to reassemble the bitstring to a bytestring
@@ -72,7 +72,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
                 ASN1::Kind::Integer, 1, &n,
                 ASN1::Kind::Integer, 1, &e)) {
             // something was fucked up
-            dbg() << "bad pubkey: " << e << " in " << n;
+            dbgln("bad pubkey: e={} n={}", e, n);
             return keypair;
         }
         // correct public key
@@ -97,7 +97,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
                 ASN1::Kind::Integer, 1, &n,
                 ASN1::Kind::Integer, 1, &e,
                 ASN1::Kind::Integer, 1, &d)) {
-            dbg() << "bad privkey " << n << " " << e << " " << d;
+            dbgln("bad privkey n={} e={} d={}", n, e, d);
             return keypair;
         }
         keypair.private_key.set(n, d, e);
@@ -128,7 +128,7 @@ void RSA::encrypt(ReadonlyBytes in, Bytes& out)
     auto size = exp.export_data(out);
     auto outsize = out.size();
     if (size != outsize) {
-        dbg() << "POSSIBLE RSA BUG!!! Size mismatch: " << outsize << " requested but " << size << " bytes generated";
+        dbgln("POSSIBLE RSA BUG!!! Size mismatch: {} requested but {} bytes generated", outsize, size);
         out = out.slice(outsize - size, size);
     }
 }
@@ -275,7 +275,7 @@ void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
     if (in.size() != mod_len) {
-        dbg() << "decryption error: wrong amount of data: " << in.size();
+        dbgln("decryption error: wrong amount of data: {}", in.size());
         out = out.trim(0);
         return;
     }
@@ -283,18 +283,18 @@ void RSA_PKCS1_EME::decrypt(ReadonlyBytes in, Bytes& out)
     RSA::decrypt(in, out);
 
     if (out.size() < RSA::output_size()) {
-        dbg() << "decryption error: not enough data after decryption: " << out.size();
+        dbgln("decryption error: not enough data after decryption: {}", out.size());
         out = out.trim(0);
         return;
     }
 
     if (out[0] != 0x00) {
-        dbg() << "invalid padding byte 0 : " << out[0];
+        dbgln("invalid padding byte 0 : {}", out[0]);
         return;
     }
 
     if (out[1] != 0x02) {
-        dbg() << "invalid padding byte 1" << out[1];
+        dbgln("invalid padding byte 1 : {}", out[1]);
         return;
     }
 
