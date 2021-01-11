@@ -269,7 +269,7 @@ int main(int argc, char** argv)
             Optional<Debug::DebugSession::DebugDecision> decision;
 
             if (command.is_empty() && !editor->history().is_empty()) {
-                command = editor->history().last();
+                command = editor->history().last().entry;
             }
             if (command == "cont") {
                 decision = Debug::DebugSession::DebugDecision::Continue;
@@ -300,7 +300,7 @@ int main(int argc, char** argv)
 
             if (success && !command.is_empty()) {
                 // Don't add repeated commands to history
-                if (editor->history().is_empty() || editor->history().last() != command)
+                if (editor->history().is_empty() || editor->history().last().entry != command)
                     editor->add_to_history(command);
             }
             if (!success) {

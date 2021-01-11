@@ -425,7 +425,7 @@ void Editor::insert_last_words()
 {
     if (!m_history.is_empty()) {
         // FIXME: This isn't quite right: if the last arg was `"foo bar"` or `foo\ bar` (but not `foo\\ bar`), we should insert that whole arg as last token.
-        if (auto last_words = m_history.last().split_view(' '); !last_words.is_empty())
+        if (auto last_words = m_history.last().entry.split_view(' '); !last_words.is_empty())
             insert(last_words.last());
     }
 }

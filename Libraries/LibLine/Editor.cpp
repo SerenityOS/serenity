@@ -212,13 +212,15 @@ void Editor::add_to_history(const String& line)
     String histcontrol = getenv("HISTCONTROL");
     auto ignoredups = histcontrol == "ignoredups" || histcontrol == "ignoreboth";
     auto ignorespace = histcontrol == "ignorespace" || histcontrol == "ignoreboth";
-    if (ignoredups && !m_history.is_empty() && line == m_history.last())
+    if (ignoredups && !m_history.is_empty() && line == m_history.last().entry)
         return;
     if (ignorespace && line.starts_with(' '))
         return;
     if ((m_history.size() + 1) > m_history_capacity)
         m_history.take_first();
-    m_history.append(line);
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    m_history.append({ line, tv.tv_sec });
 }
 
 bool Editor::load_history(const String& path)
@@ -226,22 +228,86 @@ bool Editor::load_history(const String& path)
     auto history_file = Core::File::construct(path);
     if (!history_file->open(Core::IODevice::ReadOnly))
         return false;
-    while (history_file->can_read_line()) {
-        add_to_history(history_file->read_line());
+    auto data = history_file->read_all();
+    auto hist = StringView { data.data(), data.size() };
+    for (auto& str : hist.split_view("\n\n")) {
+        auto it = str.find_first_of("::").value_or(0);
+        auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
+        auto string = str.substring_view(it == 0 ? it : it + 2);
+        m_history.append({ string, time });
     }
     return true;
 }
 
+template<typename It0, typename It1, typename OutputT, typename MapperT, typename LessThan>
+static void merge(It0&& begin0, const It0& end0, It1&& begin1, const It1& end1, OutputT& output, MapperT left_mapper, LessThan less_than)
+{
+    for (;;) {
+        if (begin0 == end0 && begin1 == end1)
+            return;
+
+        if (begin0 == end0) {
+            auto&& right = *begin1;
+            if (output.last().entry != right.entry)
+                output.append(right);
+            ++begin1;
+            continue;
+        }
+
+        auto&& left = left_mapper(*begin0);
+        if (left.entry.is_whitespace()) {
+            ++begin0;
+            continue;
+        }
+        if (begin1 == end1) {
+            if (output.last().entry != left.entry)
+                output.append(left);
+            ++begin0;
+            continue;
+        }
+
+        auto&& right = *begin1;
+        if (less_than(left, right)) {
+            if (output.last().entry != left.entry)
+                output.append(left);
+            ++begin0;
+        } else {
+            if (output.last().entry != right.entry)
+                output.append(right);
+            ++begin1;
+            if (right.entry == left.entry)
+                ++begin0;
+        }
+    }
+}
+
 bool Editor::save_history(const String& path)
 {
+    Vector<HistoryEntry> final_history { { "", 0 } };
+    {
+        auto file_or_error = Core::File::open(path, Core::IODevice::ReadWrite, 0600);
+        if (file_or_error.is_error())
+            return false;
+        auto file = file_or_error.release_value();
+        merge(
+            file->line_begin(), file->line_end(), m_history.begin(), m_history.end(), final_history,
+            [](StringView str) {
+                auto it = str.find_first_of("::").value_or(0);
+                auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
+                auto string = str.substring_view(it == 0 ? it : it + 2);
+                return HistoryEntry { string, time };
+            },
+            [](const HistoryEntry& left, const HistoryEntry& right) { return left.timestamp < right.timestamp; });
+    }
+
     auto file_or_error = Core::File::open(path, Core::IODevice::WriteOnly, 0600);
     if (file_or_error.is_error())
         return false;
-    auto& file = *file_or_error.value();
-    for (const auto& line : m_history) {
-        file.write(line);
-        file.write("\n");
-    }
+    auto file = file_or_error.release_value();
+    final_history.take_first();
+    for (const auto& entry : final_history)
+        file->write(String::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
+
     return true;
 }
 
@@ -1002,7 +1068,7 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
         size_t search_offset = m_search_offset;
         for (size_t i = m_history_cursor; i > 0; --i) {
             auto& entry = m_history[i - 1];
-            auto contains = from_beginning ? entry.starts_with(phrase) : entry.contains(phrase);
+            auto contains = from_beginning ? entry.entry.starts_with(phrase) : entry.entry.contains(phrase);
             if (contains) {
                 last_matching_offset = i - 1;
                 if (search_offset == 0) {
@@ -1022,7 +1088,7 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
     if (found) {
         m_buffer.clear();
         m_cursor = 0;
-        insert(m_history[last_matching_offset]);
+        insert(m_history[last_matching_offset].entry);
         // Always needed, as we have cleared the buffer above.
         m_refresh_needed = true;
     }

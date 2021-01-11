@@ -154,7 +154,7 @@ public:
     void add_to_history(const String& line);
     bool load_history(const String& path);
     bool save_history(const String& path);
-    const Vector<String>& history() const { return m_history; }
+    const auto& history() const { return m_history; }
 
     void register_key_input_callback(const KeyBinding&);
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
@@ -451,9 +451,13 @@ private:
     bool m_was_resized { false };
 
     // FIXME: This should be something more take_first()-friendly.
-    Vector<String> m_history;
+    struct HistoryEntry {
+        String entry;
+        time_t timestamp;
+    };
+    Vector<HistoryEntry> m_history;
     size_t m_history_cursor { 0 };
-    size_t m_history_capacity { 100 };
+    size_t m_history_capacity { 1024 };
 
     enum class InputState {
         Free,
