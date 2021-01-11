@@ -184,6 +184,12 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_up(event);
                 switch_to_insert_mode();
                 break;
+            case (KeyCode::Key_LeftBrace):
+                move_to_previous_empty_lines_block();
+                break;
+            case (KeyCode::Key_RightBrace):
+                move_to_next_empty_lines_block();
+                break;
             default:
                 break;
             }
@@ -518,5 +524,45 @@ void VimEditingEngine::put(const GUI::KeyEvent& event)
         move_one_left(event);
     }
 }
+
+void VimEditingEngine::move_to_previous_empty_lines_block()
+{
+    VERIFY(!m_editor.is_null());
+    size_t line_idx = m_editor->cursor().line();
+    bool skipping_initial_empty_lines = true;
+    while (line_idx > 0) {
+        if (m_editor->document().line(line_idx).is_empty()) {
+            if (!skipping_initial_empty_lines)
+                break;
+        } else {
+            skipping_initial_empty_lines = false;
+        }
+        line_idx--;
+    }
+
+    TextPosition new_cursor = { line_idx, 0 };
+
+    m_editor->set_cursor(new_cursor);
+};
+
+void VimEditingEngine::move_to_next_empty_lines_block()
+{
+    VERIFY(!m_editor.is_null());
+    size_t line_idx = m_editor->cursor().line();
+    bool skipping_initial_empty_lines = true;
+    while (line_idx < m_editor->line_count() - 1) {
+        if (m_editor->document().line(line_idx).is_empty()) {
+            if (!skipping_initial_empty_lines)
+                break;
+        } else {
+            skipping_initial_empty_lines = false;
+        }
+        line_idx++;
+    }
+
+    TextPosition new_cursor = { line_idx, 0 };
+
+    m_editor->set_cursor(new_cursor);
+};
 
 }
