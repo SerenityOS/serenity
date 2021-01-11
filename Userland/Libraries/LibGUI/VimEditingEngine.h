@@ -47,6 +47,8 @@ private:
     void switch_to_visual_mode();
     void move_half_page_up(const KeyEvent& event);
     void move_half_page_down(const KeyEvent& event);
+    void move_to_previous_empty_lines_block();
+    void move_to_next_empty_lines_block();
 
     bool on_key_in_insert_mode(const KeyEvent& event);
     bool on_key_in_normal_mode(const KeyEvent& event);
