@@ -64,7 +64,7 @@ public:
         for (;;) {
             auto* opcode = bytecode.get_opcode(state);
             if (!opcode) {
-                dbg() << "Wrong opcode... failed!";
+                dbgln("Wrong opcode... failed!");
                 return;
             }
 

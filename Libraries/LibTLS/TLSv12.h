@@ -274,7 +274,7 @@ public:
     void set_sni(const StringView& sni)
     {
         if (m_context.is_server || m_context.critical_error || m_context.connection_status != ConnectionStatus::Disconnected) {
-            dbg() << "invalid state for set_sni";
+            dbgln("invalid state for set_sni");
             return;
         }
         m_context.SNI = sni;
