@@ -74,6 +74,11 @@ static void launch_crash_reporter(const String& coredump_path)
 
 int main()
 {
+    if (pledge("stdio rpath proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Core::DirectoryWatcher watcher { "/tmp/coredump" };
     while (true) {
         auto event = watcher.wait_for_event();
