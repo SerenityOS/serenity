@@ -60,7 +60,7 @@ public:
         AK::fill_with_random(salt, SaltLength);
 
         if (em_length < hash_length + SaltLength + 2) {
-            dbg() << "Ooops...encoding error";
+            dbgln("Ooops...encoding error");
             return;
         }
 

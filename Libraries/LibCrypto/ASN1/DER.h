@@ -321,11 +321,11 @@ static inline bool der_decode_sequence(const u8* in, size_t in_length, ASN1::Lis
         case ASN1::Kind::Integer:
             z = in_length;
             if (!der_decode_integer(in + x, z, *(UnsignedBigInteger*)data)) {
-                dbg() << "could not decode an integer";
+                dbgln("could not decode an integer");
                 return false;
             }
             if (!der_length_integer((UnsignedBigInteger*)data, &z)) {
-                dbg() << "could not figure out the length";
+                dbgln("could not figure out the length");
                 return false;
             }
             break;
