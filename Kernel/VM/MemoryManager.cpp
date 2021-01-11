@@ -160,7 +160,7 @@ void MemoryManager::parse_memory_map()
         }
 
 #ifdef MM_DEBUG
-        klog() << "MM: considering memory at " << String::format("%p", (FlatPtr)mmap->addr) << " - " << String::format("%p", (FlatPtr)(mmap->addr + mmap->len));
+        klog() << "MM: considering memory at " << String::format("%p", (void*)mmap->addr) << " - " << String::format("%p", (void*)(mmap->addr + mmap->len));
 #endif
 
         for (size_t page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
