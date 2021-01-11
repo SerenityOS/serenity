@@ -590,6 +590,35 @@ KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgume
     return get_syscall_path_argument(path.characters, path.length);
 }
 
+bool Process::dump_core()
+{
+    ASSERT(is_dumpable());
+    ASSERT(should_core_dump());
+    dbgln("Generating coredump for pid: {}", m_pid.value());
+    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
+    auto coredump = CoreDump::create(*this, coredump_path);
+    if (!coredump)
+        return false;
+    return !coredump->write().is_error();
+}
+
+bool Process::dump_perfcore()
+{
+    ASSERT(is_dumpable());
+    ASSERT(m_perf_event_buffer);
+    dbgln("Generating perfcore for pid: {}", m_pid.value());
+    auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", m_pid.value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+    if (description_or_error.is_error())
+        return false;
+    auto& description = description_or_error.value();
+    auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
+    if (!json)
+        return false;
+
+    auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
+    return !description->write(json_buffer, json->size()).is_error();
+}
+
 void Process::finalize()
 {
     ASSERT(Thread::current() == g_finalizer);
@@ -597,35 +626,11 @@ void Process::finalize()
     dbg() << "Finalizing process " << *this;
 #endif
 
-    if (m_should_dump_core) {
-        dbgln("Generating coredump for pid: {}", m_pid.value());
-
-        auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
-        auto coredump = CoreDump::create(*this, coredump_path);
-        if (coredump) {
-            auto result = coredump->write();
-            if (result.is_error())
-                dbgln("Core dump generation failed: {}", result.error());
-        } else {
-            dbgln("Could not create coredump");
-        }
-    }
-
-    if (m_perf_event_buffer) {
-        auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", m_pid.value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
-        if (!description_or_error.is_error()) {
-            auto& description = description_or_error.value();
-            auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
-            if (!json) {
-                dbgln("Error generating perfcore JSON");
-            } else {
-                auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
-                auto result = description->write(json_buffer, json->size());
-                if (result.is_error()) {
-                    dbgln("Error while writing perfcore file: {}", result.error().error());
-                }
-            }
-        }
+    if (is_dumpable()) {
+        if (m_should_dump_core)
+            dump_core();
+        if (m_perf_event_buffer)
+            dump_perfcore();
     }
 
     if (m_alarm_timer)
@@ -918,5 +923,4 @@ PerformanceEventBuffer& Process::ensure_perf_events()
         m_perf_event_buffer = make<PerformanceEventBuffer>();
     return *m_perf_event_buffer;
 }
-
 }
