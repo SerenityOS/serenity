@@ -32,9 +32,9 @@ namespace Markdown {
 String Heading::render_to_html() const
 {
     StringBuilder builder;
-    builder.appendf("<h%d>", m_level);
+    builder.appendf("<h%zu>", m_level);
     builder.append(m_text.render_to_html());
-    builder.appendf("</h%d>\n", m_level);
+    builder.appendf("</h%zu>\n", m_level);
     return builder.build();
 }
 
