@@ -87,7 +87,6 @@ enum ProcFileType {
     FI_Root_all,
     FI_Root_memstat,
     FI_Root_cpuinfo,
-    FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_interrupts,
     FI_Root_keymap,
@@ -892,16 +891,6 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
     for (auto& process : processes)
         build_process(process);
     array.finish();
-    return true;
-}
-
-static bool procfs$inodes(InodeIdentifier, KBufferBuilder& builder)
-{
-    InterruptDisabler disabler;
-    ScopedSpinLock all_inodes_lock(Inode::all_inodes_lock());
-    for (auto& inode : Inode::all_with_lock()) {
-        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", &inode, inode.fsid(), inode.index(), inode.ref_count());
-    }
     return true;
 }
 
@@ -1722,7 +1711,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_all] = { "all", FI_Root_all, false, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, false, procfs$memstat };
     m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, false, procfs$cpuinfo };
-    m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, true, procfs$inodes };
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, true, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
