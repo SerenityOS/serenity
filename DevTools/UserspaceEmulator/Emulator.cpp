@@ -534,6 +534,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$allocate_tls(arg1);
     case SC_beep:
         return virt$beep();
+    case SC_ftruncate:
+        return virt$ftruncate(arg1, arg2);
+    case SC_umask:
+        return virt$umask(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -706,6 +710,16 @@ int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
     mmu().copy_to_vm(base, &b, sizeof(b));
     mmu().copy_to_vm(size, &s, sizeof(s));
     return 0;
+}
+
+int Emulator::virt$ftruncate(int fd, off_t length)
+{
+    return syscall(SC_ftruncate, fd, length);
+}
+
+mode_t Emulator::virt$umask(mode_t mask)
+{
+    return syscall(SC_umask, mask);
 }
 
 int Emulator::virt$accept(int sockfd, FlatPtr address, FlatPtr address_length)
