@@ -244,7 +244,7 @@ public:
         return String((const char*)buffer.data(), buffer.size(), should_chomp);
     }
 
-    static String format(const char*, ...);
+    static String format(const char*, ...) __attribute__((format(printf, 1, 2)));
 
     static String vformatted(StringView fmtstr, TypeErasedFormatParams);
 
