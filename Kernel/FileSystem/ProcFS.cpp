@@ -82,7 +82,6 @@ enum ProcFileType {
 
     __FI_Root_Start,
     FI_Root_mm,
-    FI_Root_mounts,
     FI_Root_df,
     FI_Root_all,
     FI_Root_memstat,
@@ -695,24 +694,6 @@ static bool procfs$dmesg(InodeIdentifier, KBufferBuilder& builder)
     InterruptDisabler disabler;
     for (char ch : Console::the().logbuffer())
         builder.append(ch);
-    return true;
-}
-
-static bool procfs$mounts(InodeIdentifier, KBufferBuilder& builder)
-{
-    // FIXME: This is obviously racy against the VFS mounts changing.
-    VFS::the().for_each_mount([&builder](auto& mount) {
-        auto& fs = mount.guest_fs();
-        builder.appendf("%s @ ", fs.class_name());
-        if (mount.host() == nullptr)
-            builder.appendf("/");
-        else {
-            builder.appendf("%u:%u", mount.host()->fsid(), mount.host()->index());
-            builder.append(' ');
-            builder.append(mount.absolute_path());
-        }
-        builder.append('\n');
-    });
     return true;
 }
 
@@ -1706,7 +1687,6 @@ ProcFS::ProcFS()
     m_root_inode = adopt(*new ProcFSInode(*this, 1));
     m_entries.resize(FI_MaxStaticFileIndex);
     m_entries[FI_Root_mm] = { "mm", FI_Root_mm, true, procfs$mm };
-    m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, false, procfs$mounts };
     m_entries[FI_Root_df] = { "df", FI_Root_df, false, procfs$df };
     m_entries[FI_Root_all] = { "all", FI_Root_all, false, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, false, procfs$memstat };
