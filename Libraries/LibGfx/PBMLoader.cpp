@@ -101,6 +101,12 @@ static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
         }
     }
 
+    size_t context_size = (u32)context.width * (u32)context.height;
+    if (context_size != color_data.size()) {
+        dbgln("Not enough color data in image.");
+        return false;
+    }
+
     if (!create_bitmap(context)) {
         return false;
     }
