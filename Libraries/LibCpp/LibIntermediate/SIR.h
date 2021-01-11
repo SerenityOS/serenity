@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -136,8 +136,16 @@ class BinaryExpression : public Expression {
 public:
     enum class Kind {
         Addition,
+        And,
+        Division,
+        LeftShift,
+        Modulo,
         Multiplication,
-        Subtraction
+        NotEqual,
+        Or,
+        RightShift,
+        Subtraction,
+        Xor
     };
     BinaryExpression(Kind kind, NonnullRefPtr<ASTNode> left, NonnullRefPtr<ASTNode> right, NonnullRefPtr<Variable> result)
         : Expression(move(result))

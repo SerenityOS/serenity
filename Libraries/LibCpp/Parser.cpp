@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -341,18 +341,23 @@ NonnullRefPtr<Expression> Parser::parse_pm_expression()
 // multiplicative-expression:
 //      - pm-expression
 //      - multiplicative-expression * pm-expression
+//      - multiplicative-expression / pm-expression
+//      - multiplicative-expression % pm-expression
 NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
 {
     SCOPE_LOGGER();
     auto left = parse_pm_expression();
-    if (peek().m_type == Token::Type::Asterisk) {
+    auto next_token_type = peek().m_type;
+    if (next_token_type == Token::Type::Asterisk || next_token_type == Token::Type::Slash || next_token_type == Token::Type::Percent) {
+        auto operation = next_token_type == Token::Type::Asterisk ? BinaryExpression::Kind::Multiplication : next_token_type == Token::Type::Slash ? BinaryExpression::Kind::Division
+                                                                                                                                                   : BinaryExpression::Kind::Modulo;
         consume();
         auto right = parse_multiplicative_expression();
         auto result_var = create_unnamed_var(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(BinaryExpression::Kind::Multiplication, move(left), move(right), move(result_var));
-        return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Multiplication);
+        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
+        return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Multiplication, BinaryExpression::Kind::Division, BinaryExpression::Kind::Modulo);
     }
     return left;
 }
@@ -372,7 +377,7 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
         auto result_var = create_unnamed_var(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(operation, move(left), move(right), move(result_var));
+        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
 
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Subtraction, BinaryExpression::Kind::Addition);
     }
@@ -381,10 +386,24 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
 
 // shift-expression:
 //      - additive-expression
+//      - shift-expression << additive-expression
+//      - shift-expression >> additive-expression
 NonnullRefPtr<Expression> Parser::parse_shift_expression()
 {
     SCOPE_LOGGER();
-    return parse_additive_expression();
+    auto left = parse_additive_expression();
+    if (peek().m_type == Token::Type::LessLess || peek().m_type == Token::Type::GreaterGreater) {
+        auto operation = peek().m_type == Token::Type::LessLess ? BinaryExpression::Kind::LeftShift : BinaryExpression::Kind::RightShift;
+        consume();
+        auto right = parse_additive_expression();
+        auto result_var = create_unnamed_var(left->result()->node_type());
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
+
+        return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::LeftShift, BinaryExpression::Kind::RightShift);
+    }
+    return left;
 }
 
 // compare-expression:
@@ -416,7 +435,17 @@ NonnullRefPtr<Expression> Parser::parse_equality_expression()
 NonnullRefPtr<Expression> Parser::parse_and_expression()
 {
     SCOPE_LOGGER();
-    return parse_equality_expression();
+    auto left = parse_equality_expression();
+
+    if (peek().m_type == Token::Type::And) {
+        consume();
+        auto right = parse_equality_expression();
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::And, left, right, result_var);
+    }
+    return left;
 }
 
 // exclusive-or-expression
@@ -424,7 +453,17 @@ NonnullRefPtr<Expression> Parser::parse_and_expression()
 NonnullRefPtr<Expression> Parser::parse_exclusive_or_operation()
 {
     SCOPE_LOGGER();
-    return parse_and_expression();
+    auto left = parse_and_expression();
+
+    if (peek().m_type == Token::Type::Caret) {
+        consume();
+        auto right = parse_and_expression();
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Xor, left, right, result_var);
+    }
+    return left;
 }
 
 // inclusive-or-expression:
@@ -432,7 +471,17 @@ NonnullRefPtr<Expression> Parser::parse_exclusive_or_operation()
 NonnullRefPtr<Expression> Parser::parse_inclusive_or_expression()
 {
     SCOPE_LOGGER();
-    return parse_exclusive_or_operation();
+    auto left = parse_exclusive_or_operation();
+
+    if (peek().m_type == Token::Type::Pipe) {
+        consume();
+        auto right = parse_exclusive_or_operation();
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
+
+        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Or, left, right, result_var);
+    }
+    return left;
 }
 
 // logical-and-expression:

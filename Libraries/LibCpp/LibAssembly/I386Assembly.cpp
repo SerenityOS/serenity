@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,8 +79,34 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
             case SIR::BinaryExpression::Kind::Subtraction:
                 generator.append("\tsubl\t{right_operand.index}, %eax\n");
                 break;
+            case SIR::BinaryExpression::Kind::And:
+                generator.append("\tandl\t{right_operand.index}, %eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::Xor:
+                generator.append("\txorl\t{right_operand.index}, %eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::Or:
+                generator.append("\torl\t{right_operand.index}, %eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::Division:
+                generator.append("\tcltd\n");
+                generator.append("\tidivl\t{right_operand.index}\n");
+                break;
+            case SIR::BinaryExpression::Kind::Modulo:
+                generator.append("\tcltd\n");
+                generator.append("\tidivl\t{right_operand.index}\n");
+                generator.append("\tmovl\t%edx, %eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::LeftShift:
+                generator.append("\tmovl\t{right_operand.index}, %ecx\n");
+                generator.append("\tshll\t%cl, %eax\n");
+                break;
+            case SIR::BinaryExpression::Kind::RightShift:
+                generator.append("\tmovl\t{right_operand.index}, %ecx\n");
+                generator.append("\tsarl\t%cl, %eax\n");
+                break;
             }
-            //TODO: clear other var in eax
+            //TODO: clear other var in eax, and check that there are no var in ecx and edx
             variables_already_seen.set(binop.result()->name(), "%eax");
             var_in_eax = binop.result();
         } else if (operation.is_return_statement()) {
