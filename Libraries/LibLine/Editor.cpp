@@ -1356,7 +1356,7 @@ String Style::to_string() const
         if (m_foreground.m_is_rgb) {
             builder.join(", ", m_foreground.m_rgb_color);
         } else {
-            builder.appendf("(XtermColor) %d", m_foreground.m_xterm_color);
+            builder.appendf("(XtermColor) %d", (int)m_foreground.m_xterm_color);
         }
         builder.append("), ");
     }
@@ -1366,7 +1366,7 @@ String Style::to_string() const
         if (m_background.m_is_rgb) {
             builder.join(' ', m_background.m_rgb_color);
         } else {
-            builder.appendf("(XtermColor) %d", m_background.m_xterm_color);
+            builder.appendf("(XtermColor) %d", (int)m_background.m_xterm_color);
         }
         builder.append("), ");
     }

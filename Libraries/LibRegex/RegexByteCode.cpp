@@ -714,16 +714,16 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
         } else if (compare_type == CharacterCompareType::NamedReference) {
             auto ptr = (const char*)m_bytecode->at(offset++);
             auto length = m_bytecode->at(offset++);
-            result.empend(String::format("name='%.*s'", length, ptr));
+            result.empend(String::format("name='%.*s'", (int)length, ptr));
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
-            result.empend(String::format("number=%lu", ref));
+            result.empend(String::formatted("number={}", ref));
         } else if (compare_type == CharacterCompareType::String) {
             auto& length = m_bytecode->at(offset++);
             StringBuilder str_builder;
             for (size_t i = 0; i < length; ++i)
                 str_builder.append(m_bytecode->at(offset++));
-            result.empend(String::format("value=\"%.*s\"", length, str_builder.string_view().characters_without_null_termination()));
+            result.empend(String::format("value=\"%.*s\"", (int)length, str_builder.string_view().characters_without_null_termination()));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::format(
                     "compare against: \"%s\"",

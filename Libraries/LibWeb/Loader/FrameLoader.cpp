@@ -219,6 +219,9 @@ void FrameLoader::load_html(const StringView& html, const URL& url)
     frame().set_document(&parser.document());
 }
 
+// FIXME: Use an actual templating engine (our own one when it's built, preferably
+// with a way to check these usages at compile time)
+
 void FrameLoader::load_error_page(const URL& failed_url, const String& error)
 {
     auto error_page_url = "file:///res/html/error.html";
@@ -226,10 +229,12 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
         error_page_url,
         [this, failed_url, error](auto data, auto&) {
             ASSERT(!data.is_null());
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
             auto html = String::format(
                 String::copy(data).characters(),
                 escape_html_entities(failed_url.to_string()).characters(),
                 escape_html_entities(error).characters());
+#pragma GCC diagnostic pop
             auto document = HTML::parse_html_document(html, failed_url, "utf-8");
             ASSERT(document);
             frame().set_document(document);
