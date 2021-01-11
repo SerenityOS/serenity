@@ -170,8 +170,13 @@ static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual
     unsigned expected_size_max = round_up_to_power_of_two(expected_size_min, PAGE_SIZE);
     if (expected_size_min > actual_size || actual_size > expected_size_max) {
         // Getting here is most likely an error.
-        dbg() << "Constructing a shared bitmap for format " << (int)format << " and size " << size << ", which demands " << expected_size_min << " bytes, which rounds up to at most " << expected_size_max << ".";
-        dbg() << "However, we were given " << actual_size << " bytes, which is outside this range?! Refusing cowardly.";
+        dbgln("Constructing a shared bitmap for format {} and size {}, which demands {} bytes, which rounds up to at most {}.",
+            static_cast<int>(format),
+            size,
+            expected_size_min,
+            expected_size_max);
+
+        dbgln("However, we were given {} bytes, which is outside this range?! Refusing cowardly.", actual_size);
         return false;
     }
     return true;

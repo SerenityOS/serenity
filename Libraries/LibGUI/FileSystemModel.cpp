@@ -145,7 +145,7 @@ void FileSystemModel::Node::traverse_if_needed()
         return;
     }
     fcntl(m_watch_fd, F_SETFD, FD_CLOEXEC);
-    dbg() << "Watching " << full_path << " for changes, m_watch_fd = " << m_watch_fd;
+    dbgln("Watching {} for changes, m_watch_fd={}", full_path, m_watch_fd);
     m_notifier = Core::Notifier::construct(m_watch_fd, Core::Notifier::Event::Read);
     m_notifier->on_ready_to_read = [this] {
         char buffer[32];

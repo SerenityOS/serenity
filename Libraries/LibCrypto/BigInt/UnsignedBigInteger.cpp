@@ -731,3 +731,15 @@ ALWAYS_INLINE u32 UnsignedBigInteger::shift_left_get_one_word(
     return result;
 }
 }
+
+void AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)
+{
+    if (value.is_invalid())
+        return Formatter<StringView>::format(fmtbuilder, "invalid");
+
+    StringBuilder builder;
+    for (int i = value.length() - 1; i >= 0; --i)
+        builder.appendff("{}|", value.words()[i]);
+
+    return Formatter<StringView>::format(fmtbuilder, builder.string_view());
+}

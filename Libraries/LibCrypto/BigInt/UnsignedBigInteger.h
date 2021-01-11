@@ -144,6 +144,11 @@ operator<<(const LogStream& stream, const Crypto::UnsignedBigInteger& value)
     return stream;
 }
 
+template<>
+struct AK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
+    void format(FormatBuilder&, const Crypto::UnsignedBigInteger&);
+};
+
 inline Crypto::UnsignedBigInteger
 operator""_bigint(const char* string, size_t length)
 {

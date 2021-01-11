@@ -80,7 +80,7 @@ String Control::render_to_html() const
     case Kind::UnorderedListEnd:
         return "</ul>";
     default:
-        dbg() << "Unknown control kind _" << m_kind << "_";
+        dbgln("Unknown control kind _{}_", (int)m_kind);
         ASSERT_NOT_REACHED();
         return "";
     }
