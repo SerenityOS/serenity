@@ -85,6 +85,10 @@ static Count get_count(const String& file_specifier)
             count.words++;
         }
     }
+
+    if (file_pointer != stdin)
+        fclose(file_pointer);
+
     return count;
 }
 
