@@ -32,7 +32,6 @@ namespace Markdown {
 String Table::render_for_terminal(size_t view_width) const
 {
     auto unit_width_length = view_width == 0 ? 4 : ((float)(view_width - m_columns.size()) / (float)m_total_width);
-    StringBuilder format_builder;
     StringBuilder builder;
 
     auto write_aligned = [&](const auto& text, auto width, auto alignment) {
@@ -40,17 +39,13 @@ String Table::render_for_terminal(size_t view_width) const
         for (auto& span : text.spans())
             original_length += span.text.length();
         auto string = text.render_for_terminal();
-        format_builder.clear();
         if (alignment == Alignment::Center) {
             auto padding_length = (width - original_length) / 2;
-            builder.appendf("%*s%s%*s", padding_length, "", string.characters(), padding_length, "");
+            builder.appendf("%*s%s%*s", (int)padding_length, "", string.characters(), (int)padding_length, "");
             if ((width - original_length) % 2)
                 builder.append(' ');
         } else {
-            format_builder.appendf("%%%s%zus", alignment == Alignment::Left ? "-" : "", width + (string.length() - original_length));
-            builder.appendf(
-                format_builder.to_string().characters(),
-                string.characters());
+            builder.appendf(alignment == Alignment::Left ? "%-*s" : "%*s", (int)(width + (string.length() - original_length)), string.characters());
         }
     };
 
