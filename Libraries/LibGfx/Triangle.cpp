@@ -31,7 +31,7 @@ namespace Gfx {
 
 String Triangle::to_string() const
 {
-    return String::format("({},{},{})", m_a, m_b, m_c);
+    return String::formatted("({},{},{})", m_a, m_b, m_c);
 }
 
 const LogStream& operator<<(const LogStream& stream, const Triangle& value)

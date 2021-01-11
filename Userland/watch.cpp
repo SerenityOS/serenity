@@ -45,7 +45,7 @@ static volatile pid_t child_pid = -1;
 static String build_header_string(const Vector<const char*>& command, const struct timeval& interval)
 {
     StringBuilder builder;
-    builder.appendf("Every %d", interval.tv_sec);
+    builder.appendff("Every {}", interval.tv_sec);
     builder.appendf(".%ds: \x1b[1m", interval.tv_usec / 100000);
     builder.join(' ', command);
     builder.append("\x1b[0m");
