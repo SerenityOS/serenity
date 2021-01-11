@@ -68,13 +68,13 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();
     } else {
-        auto library_data = profile.coredump().library_containing(node.address());
+        auto library_data = profile.libraries().library_containing(node.address());
         if (!library_data) {
             dbgln("no library data");
             return;
         }
-        elf = &library_data->lib_elf;
-        base_address = library_data->base_address;
+        elf = &library_data->elf;
+        base_address = library_data->base;
     }
 
     ASSERT(elf != nullptr);

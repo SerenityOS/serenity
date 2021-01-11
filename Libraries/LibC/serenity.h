@@ -65,6 +65,7 @@ int futex(int32_t* userspace_address, int futex_op, int32_t value, const struct 
 
 int purge(int mode);
 
+#define PERF_EVENT_SAMPLE 0
 #define PERF_EVENT_MALLOC 1
 #define PERF_EVENT_FREE 2
 

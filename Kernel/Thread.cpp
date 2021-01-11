@@ -31,8 +31,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
-#include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
@@ -1036,7 +1036,7 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     InterruptDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    Vector<FlatPtr, Profiling::max_stack_frame_count> backtrace;
+    Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
     backtrace.append(eip);
     FlatPtr stack_ptr_copy;
     FlatPtr stack_ptr = (FlatPtr)ebp;
@@ -1048,7 +1048,7 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
         if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
             break;
         backtrace.append(retaddr);
-        if (backtrace.size() == Profiling::max_stack_frame_count)
+        if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
             break;
         stack_ptr = stack_ptr_copy;
     }

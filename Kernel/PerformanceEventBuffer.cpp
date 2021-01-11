@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,11 +29,12 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/Process.h>
 
 namespace Kernel {
 
 PerformanceEventBuffer::PerformanceEventBuffer()
-    : m_buffer(KBuffer::try_create_with_size(4 * MiB))
+    : m_buffer(KBuffer::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write, "Performance events", AllocationStrategy::AllocateNow))
 {
 }
 
@@ -46,18 +47,14 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
     event.type = type;
 
     switch (type) {
+    case PERF_EVENT_SAMPLE:
+        break;
     case PERF_EVENT_MALLOC:
         event.data.malloc.size = arg1;
         event.data.malloc.ptr = arg2;
-#ifdef VERY_DEBUG
-        dbg() << "PERF_EVENT_MALLOC: " << (void*)event.data.malloc.ptr << " (" << event.data.malloc.size << ")";
-#endif
         break;
     case PERF_EVENT_FREE:
         event.data.free.ptr = arg1;
-#ifdef VERY_DEBUG
-        dbg() << "PERF_EVENT_FREE: " << (void*)event.data.free.ptr;
-#endif
         break;
     default:
         return KResult(-EINVAL);
@@ -76,11 +73,6 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 
-#ifdef VERY_DEBUG
-    for (size_t i = 0; i < event.stack_size; ++i)
-        dbg() << "    " << (void*)event.stack[i];
-#endif
-
     event.timestamp = TimeManagement::the().uptime_ms();
     at(m_count++) = event;
     return KSuccess;
@@ -96,16 +88,40 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& executable_path) const
 {
     KBufferBuilder builder;
+    if (!to_json(builder, pid, executable_path))
+        return nullptr;
+    return builder.build();
+}
+
+bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, const String& executable_path) const
+{
+    auto process = Process::from_pid(pid);
+    ASSERT(process);
+    ScopedSpinLock locker(process->get_lock());
 
     JsonObjectSerializer object(builder);
     object.add("pid", pid.value());
     object.add("executable", executable_path);
+
+    {
+        auto region_array = object.add_array("regions");
+        for (const auto& region : process->regions()) {
+            auto region_object = region_array.add_object();
+            region_object.add("base", region.vaddr().get());
+            region_object.add("size", region.size());
+            region_object.add("name", region.name());
+        }
+        region_array.finish();
+    }
 
     auto array = object.add_array("events");
     for (size_t i = 0; i < m_count; ++i) {
         auto& event = at(i);
         auto event_object = array.add_object();
         switch (event.type) {
+        case PERF_EVENT_SAMPLE:
+            event_object.add("type", "sample");
+            break;
         case PERF_EVENT_MALLOC:
             event_object.add("type", "malloc");
             event_object.add("ptr", static_cast<u64>(event.data.malloc.ptr));
@@ -116,6 +132,7 @@ OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& exe
             event_object.add("ptr", static_cast<u64>(event.data.free.ptr));
             break;
         }
+        event_object.add("tid", event.tid);
         event_object.add("timestamp", event.timestamp);
         auto stack_array = event_object.add_array("stack");
         for (size_t j = 0; j < event.stack_size; ++j) {
@@ -126,7 +143,7 @@ OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& exe
     }
     array.finish();
     object.finish();
-    return builder.build();
+    return true;
 }
 
 }

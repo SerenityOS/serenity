@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,20 +46,10 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-static String symbolicate_from_coredump(CoreDump::Reader& coredump, u32 ptr, [[maybe_unused]] u32& offset)
-{
-    auto library_data = coredump.library_containing(ptr);
-    if (!library_data) {
-        dbgln("could not symbolicate: {:p}", ptr);
-        return "??";
-    }
-    return String::formatted("[{}] {}", library_data->name, library_data->lib_elf.symbolicate(ptr - library_data->base_address, &offset));
-}
-
-Profile::Profile(String executable_path, NonnullOwnPtr<CoreDump::Reader>&& coredump, Vector<Event> events)
+Profile::Profile(String executable_path, Vector<Event> events, NonnullOwnPtr<LibraryMetadata> library_metadata)
     : m_executable_path(move(executable_path))
-    , m_coredump(move(coredump))
     , m_events(move(events))
+    , m_library_metadata(move(library_metadata))
 {
     m_first_timestamp = m_events.first().timestamp;
     m_last_timestamp = m_events.last().timestamp;
@@ -226,10 +216,6 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!pid.is_u32())
         return String { "Invalid perfcore format (no process ID)" };
 
-    auto coredump = CoreDump::Reader::create(String::formatted("/tmp/profiler_coredumps/{}", pid.as_u32()));
-    if (!coredump)
-        return String { "Could not open coredump" };
-
     auto file_or_error = MappedFile::map("/boot/Kernel");
     OwnPtr<ELF::Image> kernel_elf;
     if (!file_or_error.is_error())
@@ -239,9 +225,15 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!events_value.is_array())
         return String { "Malformed profile (events is not an array)" };
 
+    auto regions_value = object.get("regions");
+    if (!regions_value.is_array() || regions_value.as_array().is_empty())
+        return String { "Malformed profile (regions is not an array, or it is empty)" };
+
     auto& perf_events = events_value.as_array();
     if (perf_events.is_empty())
         return String { "No events captured (targeted process was never on CPU)" };
+
+    auto library_metadata = make<LibraryMetadata>(regions_value.as_array());
 
     Vector<Event> events;
 
@@ -274,7 +266,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                     symbol = "??";
                 }
             } else {
-                symbol = symbolicate_from_coredump(*coredump, ptr, offset);
+                symbol = library_metadata->symbolicate(ptr, offset);
             }
 
             event.frames.append({ symbol, ptr, offset });
@@ -289,7 +281,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         events.append(move(event));
     }
 
-    return adopt_own(*new Profile(executable_path, coredump.release_nonnull(), move(events)));
+    return adopt_own(*new Profile(executable_path, move(events), move(library_metadata)));
 }
 
 void ProfileNode::sort_children()
@@ -352,4 +344,56 @@ void Profile::set_disassembly_index(const GUI::ModelIndex& index)
 GUI::Model* Profile::disassembly_model()
 {
     return m_disassembly_model;
+}
+
+Profile::LibraryMetadata::LibraryMetadata(JsonArray regions)
+    : m_regions(move(regions))
+{
+    for (auto& region_value : m_regions.values()) {
+        auto& region = region_value.as_object();
+        auto base = region.get("base").as_u32();
+        auto size = region.get("size").as_u32();
+        auto name = region.get("name").as_string();
+
+        String path;
+        if (name.contains("Loader.so"))
+            path = "Loader.so";
+        else if (!name.contains(":"))
+            continue;
+        else
+            path = name.substring(0, name.view().find_first_of(":").value());
+
+        if (name.contains(".so"))
+            path = String::formatted("/usr/lib/{}", path);
+
+        auto file_or_error = MappedFile::map(path);
+        if (file_or_error.is_error()) {
+            m_libraries.set(name, nullptr);
+            continue;
+        }
+        auto elf = ELF::Image(file_or_error.value()->bytes());
+        if (!elf.is_valid())
+            continue;
+        auto library = make<Library>(base, size, name, file_or_error.release_value(), move(elf));
+        m_libraries.set(name, move(library));
+    }
+}
+
+const Profile::LibraryMetadata::Library* Profile::LibraryMetadata::library_containing(FlatPtr ptr) const
+{
+    for (auto& it : m_libraries) {
+        if (!it.value)
+            continue;
+        auto& library = *it.value;
+        if (ptr >= library.base && ptr < (library.base + library.size))
+            return &library;
+    }
+    return nullptr;
+}
+
+String Profile::LibraryMetadata::symbolicate(FlatPtr ptr, u32& offset) const
+{
+    if (auto* library = library_containing(ptr))
+        return String::formatted("[{}] {}", library->name, library->elf.symbolicate(ptr - library->base, &offset));
+    return "??";
 }

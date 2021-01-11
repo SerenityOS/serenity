@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool generate_profile(pid_t specified_pid);
+static bool generate_profile(pid_t& pid);
 
 int main(int argc, char** argv)
 {
@@ -62,11 +62,11 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-profiler");
 
-    const char* path = nullptr;
+    String path;
     if (argc != 2) {
         if (!generate_profile(pid))
             return 0;
-        path = "/proc/profile";
+        path = String::formatted("/proc/{}/perf_events", pid);
     } else {
         path = argv[1];
     }
@@ -182,7 +182,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     return GUI::Application::the()->exec() == 0;
 }
 
-bool generate_profile(pid_t pid)
+bool generate_profile(pid_t& pid)
 {
     if (!pid) {
         auto process_chooser = GUI::ProcessChooser::construct("Profiler", "Profile", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));

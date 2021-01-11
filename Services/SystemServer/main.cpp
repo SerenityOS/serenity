@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -205,18 +205,6 @@ static void create_tmp_coredump_directory()
     umask(old_umask);
 }
 
-static void create_tmp_profiler_coredumps_directory()
-{
-    dbgln("Creating /tmp/profiler_coredumps directory");
-    auto old_umask = umask(0);
-    auto rc = mkdir("/tmp/profiler_coredumps", 0755);
-    if (rc < 0) {
-        perror("mkdir(/tmp/profiler_coredumps)");
-        ASSERT_NOT_REACHED();
-    }
-    umask(old_umask);
-}
-
 int main(int, char**)
 {
     prepare_devfs();
@@ -229,7 +217,6 @@ int main(int, char**)
     mount_all_filesystems();
     create_tmp_rpc_directory();
     create_tmp_coredump_directory();
-    create_tmp_profiler_coredumps_directory();
     parse_boot_mode();
 
     Core::EventLoop event_loop;
