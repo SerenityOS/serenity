@@ -954,13 +954,21 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
 
 bool Widget::load_from_gml(const StringView& gml_string)
 {
+    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Widget> {
+        dbgln("Class '{}' not registered", class_name);
+        return nullptr;
+    });
+}
+
+bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Widget> (*unregistered_child_handler)(const String&))
+{
     auto value = parse_gml(gml_string);
     if (!value.is_object())
         return false;
-    return load_from_json(value.as_object());
+    return load_from_json(value.as_object(), unregistered_child_handler);
 }
 
-bool Widget::load_from_json(const JsonObject& json)
+bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistered_child_handler)(const String&))
 {
     json.for_each_member([&](auto& key, auto& value) {
         set_property(key, value);
@@ -1004,15 +1012,17 @@ bool Widget::load_from_json(const JsonObject& json)
                 dbgln("No class name in entry");
                 return false;
             }
-            auto* registration = WidgetClassRegistration::find(class_name.as_string());
-            if (!registration) {
-                dbg() << "Class '" << class_name.as_string() << "' not registered";
-                return false;
-            }
 
-            auto child_widget = registration->construct();
+            RefPtr<Widget> child_widget;
+            if (auto* registration = WidgetClassRegistration::find(class_name.as_string())) {
+                child_widget = registration->construct();
+            } else {
+                child_widget = unregistered_child_handler(class_name.as_string());
+                if (!child_widget)
+                    return false;
+            }
             add_child(*child_widget);
-            child_widget->load_from_json(child_json);
+            child_widget->load_from_json(child_json, unregistered_child_handler);
         }
     }
 
