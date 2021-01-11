@@ -170,6 +170,8 @@ template Optional<u8> convert_to_uint(const StringView& str);
 template Optional<u16> convert_to_uint(const StringView& str);
 template Optional<u32> convert_to_uint(const StringView& str);
 template Optional<u64> convert_to_uint(const StringView& str);
+template Optional<long> convert_to_uint(const StringView& str);
+template Optional<long long> convert_to_uint(const StringView& str);
 
 template<typename T>
 Optional<T> convert_to_uint_from_hex(const StringView& str)

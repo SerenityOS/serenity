@@ -243,6 +243,8 @@ template Optional<u8> StringView::to_uint() const;
 template Optional<u16> StringView::to_uint() const;
 template Optional<u32> StringView::to_uint() const;
 template Optional<u64> StringView::to_uint() const;
+template Optional<long> StringView::to_uint() const;
+template Optional<long long> StringView::to_uint() const;
 
 unsigned StringView::hash() const
 {
