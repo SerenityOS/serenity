@@ -41,7 +41,7 @@ MasterPTY::MasterPTY(unsigned index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
-    m_pts_name = String::format("/dev/pts/%u", m_index);
+    m_pts_name = String::formatted("/dev/pts/{}", m_index);
     auto process = Process::current();
     set_uid(process->uid());
     set_gid(process->gid());
@@ -143,7 +143,7 @@ int MasterPTY::ioctl(FileDescription& description, unsigned request, FlatPtr arg
 
 String MasterPTY::absolute_path(const FileDescription&) const
 {
-    return String::format("ptm:%s", m_pts_name.characters());
+    return String::formatted("ptm:{}", m_pts_name);
 }
 
 }

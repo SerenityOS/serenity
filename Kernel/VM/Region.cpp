@@ -382,10 +382,6 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
         MM.release_pte(*m_page_directory, vaddr, i == count - 1);
-#ifdef MM_DEBUG
-        auto* page = physical_page(i);
-        dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", (void*)(page ? page->paddr().get() : 0)) << " <<";
-#endif
     }
     MM.flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes) {

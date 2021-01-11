@@ -394,8 +394,8 @@ String DevFSDeviceInode::determine_name() const
 
         case 4:
             if (m_attached_device->minor() >= 64)
-                return String::format("ttyS%d", m_attached_device->minor() - 64);
-            return String::format("tty%d", m_attached_device->minor());
+                return String::formatted("ttyS{}", m_attached_device->minor() - 64);
+            return String::formatted("tty{}", m_attached_device->minor());
 
         default:
             ASSERT_NOT_REACHED();
@@ -403,7 +403,7 @@ String DevFSDeviceInode::determine_name() const
     } else {
         switch (m_attached_device->major()) {
         case 29:
-            return String::format("fb%d", m_attached_device->minor());
+            return String::formatted("fb{}", m_attached_device->minor());
         case 3: {
             size_t drive_index = (u8)'a' + m_attached_device->minor();
             char drive_letter = (u8)drive_index;
@@ -414,7 +414,7 @@ String DevFSDeviceInode::determine_name() const
             // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
             size_t drive_index = (u8)'a' + (m_attached_device->minor() / 16);
             char drive_letter = (u8)drive_index;
-            return String::format("hd%c%d", drive_letter, m_attached_device->minor() + 1);
+            return String::formatted("hd{:c}{}", drive_letter, m_attached_device->minor() + 1);
         }
     }
 

@@ -62,7 +62,7 @@ public:
         return m_fsid != other.m_fsid || m_index != other.m_index;
     }
 
-    String to_string() const { return String::format("%u:%u", m_fsid, m_index); }
+    String to_string() const { return String::formatted("{}:{}", m_fsid, m_index); }
 
 private:
     u32 m_fsid { 0 };

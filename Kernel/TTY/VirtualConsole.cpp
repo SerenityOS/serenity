@@ -70,7 +70,7 @@ VirtualConsole::VirtualConsole(const unsigned index)
 {
     ASSERT(index < s_max_virtual_consoles);
 
-    m_tty_name = String::format("/dev/tty%u", m_index);
+    m_tty_name = String::formatted("/dev/tty{}", m_index);
     m_terminal.set_size(80, 25);
 
     s_consoles[index] = this;

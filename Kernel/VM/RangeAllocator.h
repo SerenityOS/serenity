@@ -107,7 +107,7 @@ private:
 
 inline const LogStream& operator<<(const LogStream& stream, const Range& value)
 {
-    return stream << String::format("Range(%x-%x)", value.base().get(), value.end().get() - 1);
+    return stream << String::formatted("Range({:08x}-{:08x})", value.base().get(), value.end().get() - 1);
 }
 
 }
