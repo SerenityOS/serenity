@@ -173,6 +173,8 @@ private:
     u32 virt$allocate_tls(size_t);
     int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$beep();
+    int virt$ftruncate(int fd, off_t);
+    mode_t virt$umask(mode_t);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);
