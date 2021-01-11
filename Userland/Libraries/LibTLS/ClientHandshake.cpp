@@ -64,7 +64,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
     size_t following_bytes = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
     res += 3;
     if (buffer.size() - res < following_bytes) {
-        dbg() << "not enough data after header: " << buffer.size() - res << " < " << following_bytes;
+        dbgln("not enough data after header: {} < {}", buffer.size() - res, following_bytes);
         return (i8)Error::NeedMoreData;
     }
 
@@ -160,13 +160,13 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
             if (extension_type == HandshakeExtension::ServerName) {
                 u16 sni_host_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res + 3));
                 if (buffer.size() - res - 5 < sni_host_length) {
-                    dbg() << "Not enough data for sni " << (buffer.size() - res - 5) << " < " << sni_host_length;
+                    dbgln("Not enough data for sni {} < {}", (buffer.size() - res - 5), sni_host_length);
                     return (i8)Error::NeedMoreData;
                 }
 
                 if (sni_host_length) {
                     m_context.SNI = String { (const char*)buffer.offset_pointer(res + 5), sni_host_length };
-                    dbg() << "server name indicator: " << m_context.SNI;
+                    dbgln("server name indicator: {}", m_context.SNI);
                 }
             } else if (extension_type == HandshakeExtension::ApplicationLayerProtocolNegotiation && m_context.alpn.size()) {
                 if (buffer.size() - res > 2) {
@@ -181,7 +181,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
                             String alpn_str { (const char*)alpn + alpn_position, alpn_length };
                             if (alpn_size && m_context.alpn.contains_slow(alpn_str)) {
                                 m_context.negotiated_alpn = alpn_str;
-                                dbg() << "negotiated alpn: " << alpn_str;
+                                dbgln("negotiated alpn: {}", alpn_str);
                                 break;
                             }
                             alpn_position += alpn_length;
@@ -523,7 +523,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             }
             break;
         default:
-            dbg() << "message type not understood: " << type;
+            dbgln("message type not understood: {}", type);
             return (i8)Error::NotUnderstood;
         }
 
@@ -588,7 +588,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 // Ignore this, as it's not an "error"
                 break;
             default:
-                dbg() << "Unknown TLS::Error with value " << payload_res;
+                dbgln("Unknown TLS::Error with value {}", payload_res);
                 ASSERT_NOT_REACHED();
                 break;
             }

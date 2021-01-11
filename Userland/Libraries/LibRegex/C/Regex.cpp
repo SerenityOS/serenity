@@ -87,7 +87,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
         preg->re_pat_err = (ReError)parser_result.error;
         preg->re_pat = pattern;
 
-        dbg() << "Have Error: " << (ReError)parser_result.error;
+        dbgln("Have Error: {}", (int)parser_result.error);
 
         return (ReError)parser_result.error;
     }

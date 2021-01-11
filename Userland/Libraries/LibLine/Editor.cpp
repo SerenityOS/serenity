@@ -367,7 +367,7 @@ void Editor::register_key_input_callback(const KeyBinding& binding)
     if (binding.kind == KeyBinding::Kind::InternalFunction) {
         auto internal_function = find_internal_function(binding.binding);
         if (!internal_function) {
-            dbg() << "LibLine: Unknown internal function '" << binding.binding << "'";
+            dbgln("LibLine: Unknown internal function '{}'", binding.binding);
             return;
         }
         return register_key_input_callback(binding.keys, move(internal_function));
@@ -1644,7 +1644,7 @@ Vector<size_t, 2> Editor::vt_dsr()
                 // ????
                 continue;
             }
-            dbg() << "Error while reading DSR: " << strerror(errno);
+            dbgln("Error while reading DSR: {}", strerror(errno));
             m_input_error = Error::ReadFailure;
             finish();
             return { 1, 1 };

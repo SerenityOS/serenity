@@ -45,7 +45,7 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
     auto file = Core::File::construct(path);
     file->open(Core::IODevice::ReadOnly);
     if (!file->is_open()) {
-        dbg() << "Failed to open " << file_name << ":" << file->error_string();
+        dbgln("Failed to open {}: {}", file_name, file->error_string());
         return {};
     }
 
