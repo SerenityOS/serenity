@@ -54,13 +54,13 @@ public:
 
     void did_misbehave()
     {
-        dbg() << *this << " (id=" << m_client_id << ", pid=" << client_pid() << ") misbehaved, disconnecting.";
+        dbgln("{} (id={}, pid={}) misbehaved, disconnecting.", *this, m_client_id, client_pid());
         this->shutdown();
     }
 
     void did_misbehave(const char* message)
     {
-        dbg() << *this << " (id=" << m_client_id << ", pid=" << client_pid() << ") misbehaved (" << message << "), disconnecting.";
+        dbgln("{} (id={}, pid={}) misbehaved ({}), disconnecting.", *this, m_client_id, client_pid(), message);
         this->shutdown();
     }
 
@@ -76,3 +76,8 @@ private:
 };
 
 }
+
+template<>
+template<typename ClientEndpoint, typename ServerEndpoint>
+struct AK::Formatter<IPC::ClientConnection<ClientEndpoint, ServerEndpoint>> : Formatter<Core::Object> {
+};

@@ -78,7 +78,7 @@ RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
 
     auto decoded_buffer = SharedBuffer::create_from_shbuf_id(response->decoded_shbuf_id());
     if (!decoded_buffer) {
-        dbg() << "Could not map decoded image shbuf_id=" << response->decoded_shbuf_id();
+        dbgln("Could not map decoded image shbuf_id={}", response->decoded_shbuf_id());
         return nullptr;
     }
 

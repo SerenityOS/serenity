@@ -331,7 +331,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 tag);
 
             if (consistency != Crypto::VerificationConsistency::Consistent) {
-                dbg() << "integrity check failed (tag length " << tag.size() << ")";
+                dbgln("integrity check failed (tag length {})", tag.size());
                 auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
                 write_packet(packet);
 
@@ -373,7 +373,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
             auto message_mac = ReadonlyBytes { message_hmac, mac_size };
             if (hmac != message_mac) {
-                dbg() << "integrity check failed (mac length " << mac_size << ")";
+                dbgln("integrity check failed (mac length {})", mac_size);
                 dbgln("mac received:");
                 print_buffer(message_mac);
                 dbgln("mac computed:");
@@ -433,7 +433,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto level = plain[0];
             auto code = plain[1];
             if (level == (u8)AlertLevel::Critical) {
-                dbg() << "We were alerted of a critical error: " << code << " (" << alert_name((AlertDescription)code) << ")";
+                dbgln("We were alerted of a critical error: {} ({})", code, alert_name((AlertDescription)code));
                 m_context.critical_error = code;
                 try_disambiguate_error();
                 res = (i8)Error::UnknownError;

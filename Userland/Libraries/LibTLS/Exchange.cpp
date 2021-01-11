@@ -156,7 +156,7 @@ bool TLSv12::compute_master_secret(size_t length)
 {
     if (m_context.premaster_key.size() == 0 || length < 48) {
         dbgln("there's no way I can make a master secret like this");
-        dbg() << "I'd like to talk to your manager about this length of " << length;
+        dbgln("I'd like to talk to your manager about this length of {}", length);
         return false;
     }
 
