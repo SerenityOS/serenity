@@ -57,6 +57,9 @@ private:
     virtual mode_t required_mode() const override { return 0666; }
 
     virtual bool handle_device_config_change() override;
+
+    OwnPtr<Region> m_receive_region;
+    OwnPtr<Region> m_transmit_region;
 };
 
 }

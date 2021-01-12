@@ -33,9 +33,6 @@ set(KERNEL_SOURCES
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
     Devices/UHCIController.cpp
-    VirtIO/VirtIO.cpp
-    VirtIO/VirtIOQueue.cpp
-    VirtIO/VirtIOConsole.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Storage/Partition/DiskPartition.cpp
@@ -194,6 +191,9 @@ set(KERNEL_SOURCES
     Time/TimeManagement.cpp
     TimerQueue.cpp
     UserOrKernelBuffer.cpp
+    VirtIO/VirtIO.cpp
+    VirtIO/VirtIOConsole.cpp
+    VirtIO/VirtIOQueue.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp

@@ -226,6 +226,10 @@ bool VirtIODevice::accept_device_features(u64 device_features, u64 accepted_feat
         accepted_features &= ~(VIRTIO_F_RING_PACKED);
     }
 
+    if (is_feature_set(device_features, VIRTIO_F_IN_ORDER)) {
+        accepted_features |= VIRTIO_F_IN_ORDER;
+    }
+
 #ifdef VIRTIO_DEBUG
     klog() << m_class_name << ": Device features: " << device_features;
     klog() << m_class_name << ": Accepted features: " << accepted_features;
@@ -367,7 +371,7 @@ bool VirtIODevice::finish_init()
 void VirtIODevice::supply_buffer_and_notify(u16 queue_index, const u8* buffer, u32 len, BufferType buffer_type)
 {
     ASSERT(queue_index < m_queue_count);
-    if (get_queue(queue_index).supply_buffer(buffer, len, buffer_type))
+    if (get_queue(queue_index).supply_buffer({}, buffer, len, buffer_type))
         notify_queue(queue_index);
 }
 
@@ -381,9 +385,6 @@ u8 VirtIODevice::isr_status()
 void VirtIODevice::handle_irq(const RegisterState&)
 {
     u8 isr_type = isr_status();
-#ifdef VIRTIO_DEBUG
-    klog() << m_class_name << ": Handling interrupt with status: " << isr_type;
-#endif
     if (isr_type & DEVICE_CONFIG_INTERRUPT) {
         if (!handle_device_config_change()) {
             set_status_bit(DEVICE_STATUS_FAILED);
@@ -396,6 +397,8 @@ void VirtIODevice::handle_irq(const RegisterState&)
                 return;
         }
     }
+    if (isr_type & ~(QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT))
+        klog() << m_class_name << ": Handling interrupt with unknown type: " << isr_type;
 }
 
 }
