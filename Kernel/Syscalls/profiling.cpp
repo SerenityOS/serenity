@@ -41,7 +41,7 @@ int Process::sys$profiling_enable(pid_t pid)
         return -ESRCH;
     if (process->is_dead())
         return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
+    if (!is_superuser() && process->uid() != m_euid)
         return -EPERM;
     process->ensure_perf_events();
     process->set_profiling(true);
@@ -54,7 +54,7 @@ int Process::sys$profiling_disable(pid_t pid)
     auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
-    if (!is_superuser() && process->uid() != m_uid)
+    if (!is_superuser() && process->uid() != m_euid)
         return -EPERM;
     if (!process->is_profiling())
         return -EINVAL;
