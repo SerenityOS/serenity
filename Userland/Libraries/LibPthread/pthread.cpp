@@ -656,4 +656,14 @@ int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+int pthread_setcancelstate([[maybe_unused]] int state, [[maybe_unused]] int* oldstate)
+{
+    TODO();
+}
+
+int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldtype)
+{
+    TODO();
+}
+
 } // extern "C"

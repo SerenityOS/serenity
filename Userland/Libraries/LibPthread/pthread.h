@@ -99,10 +99,15 @@ int pthread_cond_wait(pthread_cond_t*, pthread_mutex_t*);
 int pthread_condattr_init(pthread_condattr_t*);
 int pthread_condattr_setclock(pthread_condattr_t*, clockid_t);
 int pthread_condattr_destroy(pthread_condattr_t*);
-int pthread_cancel(pthread_t);
 int pthread_cond_destroy(pthread_cond_t*);
 int pthread_cond_timedwait(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
 
+#define PTHREAD_CANCEL_ENABLE 1
+#define PTHREAD_CANCEL_DISABLE 2
+
+int pthread_cancel(pthread_t);
+int pthread_setcancelstate(int state, int* oldstate);
+int pthread_setcanceltype(int type, int* oldtype);
 void pthread_testcancel(void);
 
 int pthread_spin_destroy(pthread_spinlock_t*);
