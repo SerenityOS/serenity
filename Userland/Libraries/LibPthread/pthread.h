@@ -125,4 +125,6 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t*);
 int pthread_setname_np(pthread_t, const char*);
 int pthread_getname_np(pthread_t, char*, size_t);
 
+int pthread_equal(pthread_t t1, pthread_t t2);
+
 __END_DECLS
