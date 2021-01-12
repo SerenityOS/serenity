@@ -86,14 +86,14 @@ Vector<StringView> StringView::split_view(const StringView& separator, bool keep
 
     Vector<StringView> parts;
 
-    auto maybe_separator_index = find_first_of(separator);
+    auto maybe_separator_index = find(separator);
     while (maybe_separator_index.has_value()) {
         auto separator_index = maybe_separator_index.value();
         auto part_with_separator = view.substring_view(0, separator_index + separator.length());
         if (keep_empty || separator_index > 0)
             parts.append(part_with_separator.substring_view(0, separator_index));
         view = view.substring_view_starting_after_substring(part_with_separator);
-        maybe_separator_index = view.find_first_of(separator);
+        maybe_separator_index = view.find(separator);
     }
     if (keep_empty || !view.is_empty())
         parts.append(view);
