@@ -1,5 +1,6 @@
 add_subdirectory(Demos)
 add_subdirectory(DynamicLoader)
+add_subdirectory(MenuApplets)
 add_subdirectory(Shell)
 add_subdirectory(Tests)
 add_subdirectory(Utilities)
