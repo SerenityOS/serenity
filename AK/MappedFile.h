@@ -39,7 +39,7 @@ class MappedFile : public RefCounted<MappedFile> {
     AK_MAKE_NONMOVABLE(MappedFile);
 
 public:
-    static Result<NonnullRefPtr<MappedFile>, OSError> map(const StringView& path);
+    static Result<NonnullRefPtr<MappedFile>, OSError> map(const String& path);
     ~MappedFile();
 
     void* data() { return m_data; }

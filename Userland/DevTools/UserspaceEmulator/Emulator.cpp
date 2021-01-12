@@ -988,10 +988,14 @@ u32 Emulator::virt$open(u32 params_addr)
 
     auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
 
-    int fd = openat_with_path_length(params.dirfd, (const char*)path.data(), path.size(), params.options, params.mode);
-    if (fd < 0)
-        return -errno;
-    return fd;
+    Syscall::SC_open_params host_params {};
+    host_params.dirfd = params.dirfd;
+    host_params.mode = params.mode;
+    host_params.options = params.options;
+    host_params.path.characters = (const char*)path.data();
+    host_params.path.length = path.size();
+
+    return syscall(SC_open, &host_params);
 }
 
 int Emulator::virt$pipe(FlatPtr vm_pipefd, int flags)

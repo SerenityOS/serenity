@@ -33,16 +33,16 @@
 #include <AK/Types.h>
 #include <stdarg.h>
 
-namespace PrintfImplementation {
-
-static constexpr const char* printf_hex_digits_lower = "0123456789abcdef";
-static constexpr const char* printf_hex_digits_upper = "0123456789ABCDEF";
-
 #ifdef __serenity__
 extern "C" size_t strlen(const char*);
 #else
 #    include <string.h>
 #endif
+
+namespace PrintfImplementation {
+
+static constexpr const char* printf_hex_digits_lower = "0123456789abcdef";
+static constexpr const char* printf_hex_digits_upper = "0123456789ABCDEF";
 
 template<typename PutChFunc, typename T>
 ALWAYS_INLINE int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zero_pad, u8 field_width)

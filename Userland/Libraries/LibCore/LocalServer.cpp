@@ -27,6 +27,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/stat.h>

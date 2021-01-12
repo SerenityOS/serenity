@@ -121,7 +121,7 @@ public:
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
     void insert_at_cursor_or_replace_selection(const StringView&);
-    bool write_to_file(const StringView& path);
+    bool write_to_file(const String& path);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const TextRange&);

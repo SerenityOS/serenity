@@ -35,9 +35,9 @@
 
 namespace AK {
 
-Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const StringView& path)
+Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const String& path)
 {
-    int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_RDONLY | O_CLOEXEC, 0);
+    int fd = open(path.characters(), O_RDONLY | O_CLOEXEC, 0);
     if (fd < 0)
         return OSError(errno);
 

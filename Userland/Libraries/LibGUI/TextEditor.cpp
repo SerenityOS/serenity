@@ -1050,9 +1050,9 @@ void TextEditor::timer_event(Core::TimerEvent&)
         update_cursor();
 }
 
-bool TextEditor::write_to_file(const StringView& path)
+bool TextEditor::write_to_file(const String& path)
 {
-    int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         perror("open");
         return false;

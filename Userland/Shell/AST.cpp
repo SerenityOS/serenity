@@ -33,6 +33,7 @@
 #include <AK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <fcntl.h>
 #include <signal.h>
 
 //#define EXECUTE_DEBUG
