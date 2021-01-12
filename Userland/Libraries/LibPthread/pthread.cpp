@@ -666,4 +666,9 @@ int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldty
     TODO();
 }
 
+int pthread_equal(pthread_t t1, pthread_t t2)
+{
+    return t1 == t2;
+}
+
 } // extern "C"
