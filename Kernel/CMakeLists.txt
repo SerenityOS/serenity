@@ -230,26 +230,26 @@ set(AK_SOURCES
 )
 
 set(ELF_SOURCES
-    ../Libraries/LibELF/Image.cpp
-    ../Libraries/LibELF/Validation.cpp
+    ../Userland/Libraries/LibELF/Image.cpp
+    ../Userland/Libraries/LibELF/Validation.cpp
 )
 
 set(VT_SOURCES
-    ../Libraries/LibVT/Terminal.cpp
-    ../Libraries/LibVT/Line.cpp
+    ../Userland/Libraries/LibVT/Terminal.cpp
+    ../Userland/Libraries/LibVT/Line.cpp
 )
 
 set(KEYBOARD_SOURCES
-    ../Libraries/LibKeyboard/CharacterMap.cpp
+    ../Userland/Libraries/LibKeyboard/CharacterMap.cpp
 )
 
 set(CRYPTO_SOURCES
-    ../Libraries/LibCrypto/Cipher/AES.cpp
-    ../Libraries/LibCrypto/Hash/SHA2.cpp
+    ../Userland/Libraries/LibCrypto/Cipher/AES.cpp
+    ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
 set(C_SOURCES
-    ../Libraries/LibC/ctype.cpp
+    ../Userland/Libraries/LibC/ctype.cpp
 )
 
 set(SOURCES

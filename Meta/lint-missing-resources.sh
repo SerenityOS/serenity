@@ -7,7 +7,7 @@ cd "$script_path/.."
 
 # The dollar symbol in sed's argument is for "end of line", not any shell variable.
 # shellcheck disable=SC2016
-grep -Pirh '(?<!file://)(?<!\.)(?<!})(?<!\()/(etc|res|usr|www)/' AK/ Applications/ Base Demos/ DevTools/ Documentation/ Games/ Kernel/ Libraries/ MenuApplets/ Services/ Userland/ | \
+grep -Pirh '(?<!file://)(?<!\.)(?<!})(?<!\()/(etc|res|usr|www)/' AK/ Base DevTools/ Documentation/ Kernel/ Services/ Userland/ | \
 sed -re 's,^.*["= `]/([^"%`: ]+[^"%`: /.])/?(["%`: .].*)?$,\1,' | \
 sort -u | \
 while read -r referenced_resource

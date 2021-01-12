@@ -41,10 +41,10 @@ done < <(git ls-files -- \
     '*.h' \
     ':!:Base' \
     ':!:Kernel/FileSystem/ext2_fs.h' \
-    ':!:Libraries/LibC/getopt.cpp' \
-    ':!:Libraries/LibCore/puff.h' \
-    ':!:Libraries/LibCore/puff.cpp' \
-    ':!:Libraries/LibELF/exec_elf.h' \
+    ':!:Userland/Libraries/LibC/getopt.cpp' \
+    ':!:Userland/Libraries/LibCore/puff.h' \
+    ':!:Userland/Libraries/LibCore/puff.cpp' \
+    ':!:Userland/Libraries/LibELF/exec_elf.h' \
 )
 
 exit_status=0
