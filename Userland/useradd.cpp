@@ -39,6 +39,11 @@ constexpr const char* DEFAULT_SHELL = "/bin/Shell";
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio wpath rpath cpath chown", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     const char* home_path = nullptr;
     int uid = 0;
     int gid = USERS_GID;
