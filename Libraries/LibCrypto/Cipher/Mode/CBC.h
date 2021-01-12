@@ -78,7 +78,7 @@ public:
             m_cipher_block.apply_initialization_vector(iv);
             cipher.encrypt_block(m_cipher_block, m_cipher_block);
             ASSERT(offset + block_size <= out.size());
-            __builtin_memcpy(out.offset(offset), m_cipher_block.get().data(), block_size);
+            __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), block_size);
             iv = out.offset(offset);
             length -= block_size;
             offset += block_size;
@@ -89,7 +89,7 @@ public:
             m_cipher_block.apply_initialization_vector(iv);
             cipher.encrypt_block(m_cipher_block, m_cipher_block);
             ASSERT(offset + block_size <= out.size());
-            __builtin_memcpy(out.offset(offset), m_cipher_block.get().data(), block_size);
+            __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), block_size);
             iv = out.offset(offset);
         }
 
@@ -122,7 +122,7 @@ public:
             m_cipher_block.overwrite(slice, block_size);
             cipher.decrypt_block(m_cipher_block, m_cipher_block);
             m_cipher_block.apply_initialization_vector(iv);
-            auto decrypted = m_cipher_block.get();
+            auto decrypted = m_cipher_block.bytes();
             ASSERT(offset + decrypted.size() <= out.size());
             __builtin_memcpy(out.offset(offset), decrypted.data(), decrypted.size());
             iv = slice;

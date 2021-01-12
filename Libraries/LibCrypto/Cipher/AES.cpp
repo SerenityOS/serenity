@@ -222,10 +222,10 @@ void AESCipher::encrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
     const auto& dec_key = key();
     const auto* round_keys = dec_key.round_keys();
 
-    s0 = get_key(in.data().offset_pointer(0)) ^ round_keys[0];
-    s1 = get_key(in.data().offset_pointer(4)) ^ round_keys[1];
-    s2 = get_key(in.data().offset_pointer(8)) ^ round_keys[2];
-    s3 = get_key(in.data().offset_pointer(12)) ^ round_keys[3];
+    s0 = get_key(in.bytes().offset_pointer(0)) ^ round_keys[0];
+    s1 = get_key(in.bytes().offset_pointer(4)) ^ round_keys[1];
+    s2 = get_key(in.bytes().offset_pointer(8)) ^ round_keys[2];
+    s3 = get_key(in.bytes().offset_pointer(12)) ^ round_keys[3];
 
     r = dec_key.rounds() >> 1;
 
@@ -315,10 +315,10 @@ void AESCipher::decrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
     const auto& dec_key = key();
     const auto* round_keys = dec_key.round_keys();
 
-    s0 = get_key(in.data().offset_pointer(0)) ^ round_keys[0];
-    s1 = get_key(in.data().offset_pointer(4)) ^ round_keys[1];
-    s2 = get_key(in.data().offset_pointer(8)) ^ round_keys[2];
-    s3 = get_key(in.data().offset_pointer(12)) ^ round_keys[3];
+    s0 = get_key(in.bytes().offset_pointer(0)) ^ round_keys[0];
+    s1 = get_key(in.bytes().offset_pointer(4)) ^ round_keys[1];
+    s2 = get_key(in.bytes().offset_pointer(8)) ^ round_keys[2];
+    s3 = get_key(in.bytes().offset_pointer(12)) ^ round_keys[3];
 
     r = dec_key.rounds() >> 1;
 
@@ -401,21 +401,21 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
     auto data = bytes.data();
     auto length = bytes.size();
 
-    ASSERT(length <= m_data.size());
-    m_data.overwrite(0, data, length);
-    if (length < m_data.size()) {
+    ASSERT(length <= this->data_size());
+    this->bytes().overwrite(0, data, length);
+    if (length < this->data_size()) {
         switch (padding_mode()) {
         case PaddingMode::Null:
             // fill with zeros
-            __builtin_memset(m_data.data() + length, 0, m_data.size() - length);
+            __builtin_memset(m_data + length, 0, this->data_size() - length);
             break;
         case PaddingMode::CMS:
             // fill with the length of the padding bytes
-            __builtin_memset(m_data.data() + length, m_data.size() - length, m_data.size() - length);
+            __builtin_memset(m_data + length, this->data_size() - length, this->data_size() - length);
             break;
         case PaddingMode::RFC5246:
             // fill with the length of the padding bytes minus one
-            __builtin_memset(m_data.data() + length, m_data.size() - length - 1, m_data.size() - length);
+            __builtin_memset(m_data + length, this->data_size() - length - 1, this->data_size() - length);
             break;
         default:
             // FIXME: We should handle the rest of the common padding modes

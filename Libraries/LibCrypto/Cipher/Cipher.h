@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
+#include <AK/Span.h>
 #include <AK/Types.h>
 
 namespace Crypto {
@@ -61,11 +61,9 @@ public:
 
     static size_t block_size() { ASSERT_NOT_REACHED(); }
 
-    virtual ByteBuffer get() const = 0;
-    virtual const ByteBuffer& data() const = 0;
+    virtual ReadonlyBytes bytes() const = 0;
 
     virtual void overwrite(ReadonlyBytes) = 0;
-    virtual void overwrite(const ByteBuffer& buffer) { overwrite(buffer.bytes()); }
     virtual void overwrite(const u8* data, size_t size) { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(const u8* ivec) = 0;
@@ -76,8 +74,8 @@ public:
     template<typename T>
     void put(size_t offset, T value)
     {
-        ASSERT(offset + sizeof(T) <= data().size());
-        auto* ptr = data().data() + offset;
+        ASSERT(offset + sizeof(T) <= bytes().size());
+        auto* ptr = bytes().offset_pointer(offset);
         auto index { 0 };
 
         ASSERT(sizeof(T) <= 4);
@@ -95,12 +93,12 @@ public:
     }
 
 private:
-    virtual ByteBuffer& data() = 0;
+    virtual Bytes bytes() = 0;
     PaddingMode m_padding_mode;
 };
 
 struct CipherKey {
-    virtual ByteBuffer data() const = 0;
+    virtual ReadonlyBytes bytes() const = 0;
     static bool is_valid_key_size(size_t) { return false; };
 
     virtual ~CipherKey() { }

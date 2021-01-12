@@ -193,7 +193,7 @@ protected:
             auto write_size = min(block_size, length);
 
             ASSERT(offset + write_size <= out.size());
-            __builtin_memcpy(out.offset(offset), m_cipher_block.get().data(), write_size);
+            __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), write_size);
 
             increment(iv);
             length -= write_size;

@@ -42,7 +42,6 @@ public:
     explicit AESCipherBlock(PaddingMode mode = PaddingMode::CMS)
         : CipherBlock(mode)
     {
-        m_data = ByteBuffer::create_zeroed(BlockSizeInBits / 8);
     }
     AESCipherBlock(const u8* data, size_t length, PaddingMode mode = PaddingMode::CMS)
         : AESCipherBlock(mode)
@@ -52,12 +51,10 @@ public:
 
     static size_t block_size() { return BlockSizeInBits / 8; };
 
-    virtual ByteBuffer get() const override { return m_data; };
-    virtual const ByteBuffer& data() const override { return m_data; };
-    ReadonlyBytes bytes() const { return m_data; }
+    virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_data, sizeof(m_data) }; }
+    virtual Bytes bytes() override { return Bytes { m_data, sizeof(m_data) }; }
 
     virtual void overwrite(ReadonlyBytes) override;
-    virtual void overwrite(const ByteBuffer& buffer) override { overwrite(buffer.bytes()); }
     virtual void overwrite(const u8* data, size_t size) override { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(const u8* ivec) override
@@ -69,12 +66,13 @@ public:
     String to_string() const;
 
 private:
-    virtual ByteBuffer& data() override { return m_data; };
-    ByteBuffer m_data;
+    size_t data_size() const { return sizeof(m_data); }
+
+    u8 m_data[BlockSizeInBits / 8] {};
 };
 
 struct AESCipherKey : public CipherKey {
-    virtual ByteBuffer data() const override { return ByteBuffer::copy(m_rd_keys, sizeof(m_rd_keys)); };
+    virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_rd_keys, sizeof(m_rd_keys) }; };
     virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override;
     virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override;
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
