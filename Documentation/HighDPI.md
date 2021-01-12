@@ -34,4 +34,4 @@ The plan is to have all applications use highdpi backbuffers eventually. It'll t
 3. Let apps opt in to high-res window framebuffers, and convert all apps one-by-one
 4. Remove high-res window framebuffer opt-in since all apps have it now.
 
-We're currently before point 0.
+We're currently before point 1.
