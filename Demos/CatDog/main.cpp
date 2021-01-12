@@ -194,6 +194,11 @@ private:
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath shared_buffer accept unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-catdog");
 
@@ -203,6 +208,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
     }
