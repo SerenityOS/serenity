@@ -292,7 +292,7 @@ bool Editor::save_history(const String& path)
         merge(
             file->line_begin(), file->line_end(), m_history.begin(), m_history.end(), final_history,
             [](StringView str) {
-                auto it = str.find_first_of("::").value_or(0);
+                auto it = str.find("::").value_or(0);
                 auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
                 auto string = str.substring_view(it == 0 ? it : it + 2);
                 return HistoryEntry { string, time };
