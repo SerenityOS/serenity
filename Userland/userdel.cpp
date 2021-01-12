@@ -43,6 +43,23 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio wpath rpath cpath fattr proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/etc/", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/rm", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     const char* username = nullptr;
     bool remove_home = false;
 
@@ -50,6 +67,13 @@ int main(int argc, char** argv)
     args_parser.add_option(remove_home, "Remove home directory", "remove", 'r');
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
     args_parser.parse(argc, argv);
+
+    if (!remove_home) {
+        if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
+            perror("pledge");
+            return 1;
+        }
+    }
 
     char temp_filename[] = "/etc/passwd.XXXXXX";
     auto fd = mkstemp(temp_filename);
