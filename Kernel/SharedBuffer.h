@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -52,16 +53,12 @@ public:
         : m_shbuf_id(id)
         , m_vmobject(move(vmobject))
     {
-#ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Created shared buffer " << m_shbuf_id << " of size " << m_vmobject->size();
-#endif
+        dbgln<debug_shared_buffer>("Created shared buffer {} of size {}", m_shbuf_id, size());
     }
 
     ~SharedBuffer()
     {
-#ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Destroyed shared buffer " << m_shbuf_id << " of size " << size();
-#endif
+        dbgln<debug_shared_buffer>("Destroyed shared buffer {} of size {}", m_shbuf_id, size());
     }
 
     void sanity_check(const char* what);

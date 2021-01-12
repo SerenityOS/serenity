@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Demangle.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
@@ -355,9 +356,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_ppid(ppid)
     , m_wait_block_condition(*this)
 {
-#ifdef PROCESS_DEBUG
-    dbg() << "Created new process " << m_name << "(" << m_pid.value() << ")";
-#endif
+    dbgln<debug_process>("Created new process {}({})", m_name, m_pid.value());
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 
@@ -620,9 +619,8 @@ bool Process::dump_perfcore()
 void Process::finalize()
 {
     ASSERT(Thread::current() == g_finalizer);
-#ifdef PROCESS_DEBUG
-    dbg() << "Finalizing process " << *this;
-#endif
+
+    dbgln<debug_process>("Finalizing process {}", *this);
 
     if (is_dumpable()) {
         if (m_should_dump_core)
