@@ -298,4 +298,16 @@ TEST_CASE(is_whitespace)
     EXPECT(!AK::StringUtils::is_whitespace("a\t"));
 }
 
+TEST_CASE(find)
+{
+    String test_string = "1234567";
+    EXPECT_EQ(AK::StringUtils::find(test_string, "1").value_or(1), 0u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "2").value_or(2), 1u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "3").value_or(3), 2u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "4").value_or(4), 3u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "5").value_or(5), 4u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "34").value_or(3), 2u);
+    EXPECT_EQ(AK::StringUtils::find(test_string, "78").has_value(), false);
+}
+
 TEST_MAIN(StringUtils)

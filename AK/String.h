@@ -138,6 +138,10 @@ public:
 
     Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     Vector<String> split(char separator, bool keep_empty = false) const;
+
+    Optional<size_t> find(char) const;
+    Optional<size_t> find(const StringView&) const;
+
     String substring(size_t start) const;
     String substring(size_t start, size_t length) const;
 

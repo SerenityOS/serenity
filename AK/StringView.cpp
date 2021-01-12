@@ -310,6 +310,16 @@ Optional<size_t> StringView::find_last_of(const StringView& view) const
     return {};
 }
 
+Optional<size_t> StringView::find(char c) const
+{
+    return find(StringView { &c, 1 });
+}
+
+Optional<size_t> StringView::find(const StringView& view) const
+{
+    return StringUtils::find(*this, view);
+}
+
 String StringView::to_string() const { return String { *this }; }
 
 }

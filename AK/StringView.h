@@ -100,6 +100,9 @@ public:
     Optional<size_t> find_last_of(char) const;
     Optional<size_t> find_last_of(const StringView&) const;
 
+    Optional<size_t> find(const StringView&) const;
+    Optional<size_t> find(char c) const;
+
     StringView substring_view(size_t start, size_t length) const;
     StringView substring_view(size_t start) const;
     Vector<StringView> split_view(char, bool keep_empty = false) const;
