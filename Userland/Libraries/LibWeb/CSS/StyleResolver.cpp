@@ -492,7 +492,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 }
                 return;
             }
-            dbg() << "Unsure what to do with CSS margin value '" << value.to_string() << "'";
+            dbgln("Unsure what to do with CSS margin value '{}'", value.to_string());
             return;
         }
         return;
@@ -544,7 +544,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 }
                 return;
             }
-            dbg() << "Unsure what to do with CSS padding value '" << value.to_string() << "'";
+            dbgln("Unsure what to do with CSS padding value '{}'", value.to_string());
             return;
         }
         return;

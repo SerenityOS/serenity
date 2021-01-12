@@ -73,13 +73,13 @@ void XMLHttpRequest::open(const String& method, const String& url)
 void XMLHttpRequest::send()
 {
     URL request_url = m_window->document().complete_url(m_url);
-    dbg() << "XHR send from " << m_window->document().url() << " to " << request_url;
+    dbgln("XHR send from {} to {}", m_window->document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
     Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port());
 
     if (!m_window->document().origin().is_same(request_url_origin)) {
-        dbg() << "XHR failed to load: Same-Origin Policy violation: " << m_window->document().url() << " may not load " << request_url;
+        dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->document().url(), request_url);
         auto weak_this = make_weak_ptr();
         if (!weak_this)
             return;
@@ -102,7 +102,7 @@ void XMLHttpRequest::send()
         [weak_this = make_weak_ptr()](auto& error) {
             if (!weak_this)
                 return;
-            dbg() << "XHR failed to load: " << error;
+            dbgln("XHR failed to load: {}", error);
             const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
             const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
         });

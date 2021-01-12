@@ -893,7 +893,7 @@ void Terminal::on_input(u8 ch)
             m_parser_state = Normal;
             return;
         } else {
-            dbg() << "Unexpected character in GotEscape '" << (char)ch << "'";
+            dbgln("Unexpected character in GotEscape '{}'", (char)ch);
             m_parser_state = Normal;
         }
         return;
@@ -919,7 +919,7 @@ void Terminal::on_input(u8 ch)
         if (ch == '\\')
             execute_xterm_command();
         else
-            dbg() << "Unexpected string terminator: " << String::format("%02x", ch);
+            dbgln("Unexpected string terminator: {:#02x}", ch);
         m_parser_state = Normal;
         return;
     case ExpectParameter:
@@ -1216,7 +1216,7 @@ void Terminal::execute_hashtag(u8 hashtag)
         }
         break;
     default:
-        dbg() << "Unknown hashtag: '" << hashtag << "'";
+        dbgln("Unknown hashtag: '{}'", (char)hashtag);
     }
 }
 
