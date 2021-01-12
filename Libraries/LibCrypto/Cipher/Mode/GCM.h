@@ -105,7 +105,7 @@ public:
 
         auto auth_tag = m_ghash->process(aad, out);
         block0.apply_initialization_vector(auth_tag.data);
-        block0.get().bytes().copy_to(tag);
+        block0.bytes().copy_to(tag);
     }
 
     VerificationConsistency decrypt(ReadonlyBytes in, Bytes out, ReadonlyBytes iv_in, ReadonlyBytes aad, ReadonlyBytes tag)
