@@ -339,7 +339,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
 
     auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("breadcrumb_toolbar");
-    breadcrumb_toolbar.layout()->set_margins({});
+    breadcrumb_toolbar.layout()->set_margins({ 6, 0, 6, 0 });
     auto& breadcrumb_bar = *widget.find_descendant_of_type_named<GUI::BreadcrumbBar>("breadcrumb_bar");
 
     location_textbox.on_focusout = [&] {
