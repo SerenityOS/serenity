@@ -237,9 +237,9 @@ pushd "$DIR/Build/$ARCH"
         pushd "$BUILD"
             mkdir -p Root/usr/include/
             SRC_ROOT=$(realpath "$DIR"/..)
-            FILES=$(find "$SRC_ROOT"/Libraries/LibC "$SRC_ROOT"/Libraries/LibM -name '*.h' -print)
+            FILES=$(find "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
             for header in $FILES; do
-                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Libraries/LibC@@" -e "s@$SRC_ROOT/Libraries/LibM@@")
+                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@")
                 $INSTALL -D "$header" "Root/usr/include/$target"
             done
             unset SRC_ROOT

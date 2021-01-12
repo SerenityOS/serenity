@@ -703,7 +703,7 @@ int main(int argc, char** argv)
         printf("test-web requires the SERENITY_ROOT environment variable to be set");
         return 1;
     }
-    TestRunner(String::format("%s/Libraries/LibWeb/Tests", serenity_root), String::format("%s/Libraries/LibJS/Tests", serenity_root), view, print_times).run();
+    TestRunner(String::format("%s/Userland/Libraries/LibWeb/Tests", serenity_root), String::format("%s/Userland/Libraries/LibJS/Tests", serenity_root), view, print_times).run();
 #endif
     return 0;
 }

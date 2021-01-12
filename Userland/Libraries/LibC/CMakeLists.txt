@@ -48,7 +48,7 @@ set(LIBC_SOURCES
     wchar.cpp
 )
 
-file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
+file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 

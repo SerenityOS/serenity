@@ -744,7 +744,7 @@ int main(int argc, char** argv)
             warnln("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
             return 1;
         }
-        test_root = String::formatted("{}/Libraries/LibJS/Tests", serenity_root);
+        test_root = String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_root);
 #endif
     }
     if (!Core::File::is_directory(test_root)) {
