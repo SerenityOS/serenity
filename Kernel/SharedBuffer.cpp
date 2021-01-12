@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
@@ -155,13 +156,9 @@ void SharedBuffer::deref_for_process(Process& process)
             ASSERT(m_total_refs > 0);
             m_total_refs--;
             if (ref.count == 0) {
-#ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
-#endif
+                dbgln<debug_shared_buffer>("Releasing shared buffer reference on {} of size {} by PID {}", m_shbuf_id, size(), process.pid().value());
                 process.deallocate_region(*ref.region.unsafe_ptr()); // TODO: Region needs to be RefCounted!
-#ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
-#endif
+                dbgln<debug_shared_buffer>("Released shared buffer reference on {} of size {} by PID {}", m_shbuf_id, size(), process.pid().value());
                 sanity_check("deref_for_process");
                 destroy_if_unused();
                 return;
@@ -179,15 +176,11 @@ bool SharedBuffer::disown(ProcessID pid)
     for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
-#ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
-#endif
+            dbgln<debug_shared_buffer>("Disowning shared buffer {} of size {} by PID {}", m_shbuf_id, size(), pid.value());
             ASSERT(m_total_refs >= ref.count);
             m_total_refs -= ref.count;
             m_refs.unstable_take(i);
-#ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
-#endif
+            dbgln<debug_shared_buffer>("Disowned shared buffer {} of size {} by PID {}", m_shbuf_id, size(), pid.value());
             destroy_if_unused();
             break;
         }
@@ -201,9 +194,7 @@ void SharedBuffer::destroy_if_unused()
     LOCKER(shared_buffers().lock());
     sanity_check("destroy_if_unused");
     if (m_total_refs == 0) {
-#ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Destroying unused SharedBuffer{" << this << "} id: " << m_shbuf_id;
-#endif
+        dbgln<debug_shared_buffer>("Destroying unused SharedBuffer({}) id={}", this, m_shbuf_id);
         auto count_before = shared_buffers().resource().size();
         shared_buffers().resource().remove(m_shbuf_id);
         ASSERT(count_before != shared_buffers().resource().size());
