@@ -116,12 +116,10 @@ public:
 
     void add_clip_rect(const IntRect& rect);
     void clear_clip_rect();
-    IntRect clip_rect() const { return state().clip_rect; }
 
-    void translate(int dx, int dy) { state().translation.move_by(dx, dy); }
-    void translate(const IntPoint& delta) { state().translation.move_by(delta); }
-
-    IntPoint translation() const { return state().translation; }
+    void translate(int dx, int dy) { translate({ dx, dy }); }
+    void translate(const IntPoint& delta) { state().translation.move_by(delta * state().scale); }
+    void scale(int s) { state().scale *= s; }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
@@ -133,22 +131,30 @@ public:
     }
 
 protected:
+    IntPoint translation() const { return state().translation; }
+    IntRect to_physical(const IntRect& r) const { return (r * scale()).translated(translation()); }
+    IntPoint to_physical(const IntPoint& p) const { return (p * scale()).translated(translation()); }
+    int scale() const { return state().scale; }
     void set_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_scanline_with_draw_op(int y, int x, int width, const Color& color);
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_alpha(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity);
-    void draw_pixel(const IntPoint&, Color, int thickness = 1);
+    void draw_physical_pixel(const IntPoint&, Color, int thickness = 1);
+    IntRect clip_rect() const { return state().clip_rect; }
 
     struct State {
         const Font* font;
         IntPoint translation;
-        IntRect clip_rect;
+        int scale = 1;
+        IntRect clip_rect; // In physical coordinates.
         DrawOp draw_op;
     };
 
     State& state() { return m_state_stack.last(); }
     const State& state() const { return m_state_stack.last(); }
+
+    void fill_physical_rect(const IntRect&, Color);
 
     IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;
