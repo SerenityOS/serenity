@@ -120,28 +120,39 @@ static inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const
     return {};
 }
 
-static inline const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+static inline Optional<size_t> memmem_optional(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
     if (needle_length == 0)
-        return haystack;
+        return 0;
 
     if (haystack_length < needle_length)
-        return nullptr;
+        return {};
 
-    if (haystack_length == needle_length)
-        return __builtin_memcmp(haystack, needle, haystack_length) == 0 ? haystack : nullptr;
+    if (haystack_length == needle_length) {
+        if (__builtin_memcmp(haystack, needle, haystack_length) == 0)
+            return 0;
+        return {};
+    }
 
-    if (needle_length < 32)
-        return bitap_bitwise(haystack, haystack_length, needle, needle_length);
+    if (needle_length < 32) {
+        auto ptr = bitap_bitwise(haystack, haystack_length, needle, needle_length);
+        if (ptr)
+            return static_cast<size_t>((FlatPtr)ptr - (FlatPtr)haystack);
+        return {};
+    }
 
     // Fallback to KMP.
     Array<Span<const u8>, 1> spans { Span<const u8> { (const u8*)haystack, haystack_length } };
-    auto result = memmem(spans.begin(), spans.end(), { (const u8*)needle, needle_length });
+    return memmem(spans.begin(), spans.end(), { (const u8*)needle, needle_length });
+}
 
-    if (result.has_value())
-        return (const u8*)haystack + result.value();
+static inline const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+{
+    auto offset = memmem_optional(haystack, haystack_length, needle, needle_length);
+    if (offset.has_value())
+        return ((const u8*)haystack) + offset.value();
 
-    return {};
+    return nullptr;
 }
 
 }

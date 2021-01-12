@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/MemMem.h>
 #include <AK/Memory.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -341,6 +342,13 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
     }
 
     return str.substring_view(substring_start, substring_length);
+}
+
+Optional<size_t> find(const StringView& haystack, const StringView& needle)
+{
+    return AK::memmem_optional(
+        haystack.characters_without_null_termination(), haystack.length(),
+        needle.characters_without_null_termination(), needle.length());
 }
 }
 
