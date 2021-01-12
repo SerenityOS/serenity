@@ -266,9 +266,10 @@ Vector<String> Shell::expand_globs(Vector<StringView> path_segments, const Strin
 {
     if (path_segments.is_empty()) {
         String base_str = base;
-        if (access(base_str.characters(), F_OK) == 0)
-            return { move(base_str) };
-        return {};
+        struct stat statbuf;
+        if (lstat(base_str.characters(), &statbuf) < 0)
+            return {};
+        return { move(base_str) };
     }
 
     auto first_segment = path_segments.take_first();
