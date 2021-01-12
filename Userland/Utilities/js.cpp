@@ -55,6 +55,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 
@@ -422,9 +423,9 @@ static StringView strip_shebang(AK::ByteBuffer file_contents)
     return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
 }
 
-static bool write_to_file(const StringView& path)
+static bool write_to_file(const String& path)
 {
-    int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     for (size_t i = 0; i < repl_statements.size(); i++) {
         auto line = repl_statements[i];
         if (line.length() && i != repl_statements.size() - 1) {

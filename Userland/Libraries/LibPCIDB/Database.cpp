@@ -32,7 +32,7 @@
 
 namespace PCIDB {
 
-RefPtr<Database> Database::open(const StringView& file_name)
+RefPtr<Database> Database::open(const String& file_name)
 {
     auto file_or_error = MappedFile::map(file_name);
     if (file_or_error.is_error())

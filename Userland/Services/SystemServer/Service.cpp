@@ -174,7 +174,7 @@ void Service::spawn(int socket_fd)
 
         if (!m_stdio_file_path.is_null()) {
             close(STDIN_FILENO);
-            int fd = open_with_path_length(m_stdio_file_path.characters(), m_stdio_file_path.length(), O_RDWR, 0);
+            int fd = open(m_stdio_file_path.characters(), O_RDWR, 0);
             ASSERT(fd <= 0);
             if (fd < 0) {
                 perror("open");

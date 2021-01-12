@@ -29,6 +29,7 @@
 #include <AK/Base64.h>
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
+#include <string.h>
 
 TEST_CASE(test_decode)
 {

@@ -67,22 +67,6 @@
 
 #ifndef __serenity__
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
-
-#    include <errno.h>
-#    include <fcntl.h>
-#    include <stdlib.h>
-#    include <string.h>
-inline int open_with_path_length(const char* path, size_t path_length, int options, mode_t mode)
-{
-    auto* tmp = (char*)malloc(path_length + 1);
-    memcpy(tmp, path, path_length);
-    tmp[path_length] = '\0';
-    int fd = open(tmp, options, mode);
-    int saved_errno = errno;
-    free(tmp);
-    errno = saved_errno;
-    return fd;
-}
 #endif
 
 ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)

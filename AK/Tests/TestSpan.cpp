@@ -29,6 +29,7 @@
 #include <AK/Checked.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
+#include <string.h>
 
 TEST_CASE(constexpr_default_constructor_is_empty)
 {

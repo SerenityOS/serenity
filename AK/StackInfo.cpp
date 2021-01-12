@@ -27,6 +27,7 @@
 #include <AK/Assertions.h>
 #include <AK/StackInfo.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef __serenity__
 #    include <serenity.h>

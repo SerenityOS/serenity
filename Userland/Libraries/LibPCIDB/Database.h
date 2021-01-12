@@ -31,6 +31,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace PCIDB {
@@ -72,7 +73,7 @@ struct Class {
 
 class Database : public RefCounted<Database> {
 public:
-    static RefPtr<Database> open(const StringView& file_name);
+    static RefPtr<Database> open(const String& file_name);
     static RefPtr<Database> open() { return open("/res/pci.ids"); };
 
     const StringView get_vendor(u16 vendor_id) const;
