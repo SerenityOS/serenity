@@ -48,5 +48,6 @@ target_link_libraries(tt LibPthread)
 target_link_libraries(grep LibRegex)
 target_link_libraries(gunzip LibCompress)
 
-add_subdirectory(Tests)
 add_subdirectory(DynamicLoader)
+add_subdirectory(Shell)
+add_subdirectory(Tests)
