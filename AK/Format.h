@@ -392,11 +392,16 @@ inline void warnln() { outln(stderr); }
 
 void vdbgln(StringView fmtstr, TypeErasedFormatParams);
 
-template<typename... Parameters>
-void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbgln(fmtstr, VariadicFormatParams { parameters... }); }
-template<typename... Parameters>
-void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln(StringView { fmtstr }, parameters...); }
-inline void dbgln() { dbgln(""); }
+template<bool enabled = true, typename... Parameters>
+void dbgln(StringView fmtstr, const Parameters&... parameters)
+{
+    if constexpr (enabled)
+        vdbgln(fmtstr, VariadicFormatParams { parameters... });
+}
+template<bool enabled = true, typename... Parameters>
+void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln<enabled>(StringView { fmtstr }, parameters...); }
+template<bool enabled = true>
+void dbgln() { dbgln<enabled>(""); }
 
 template<typename T, typename = void>
 struct HasFormatter : TrueType {
