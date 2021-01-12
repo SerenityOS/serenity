@@ -34,11 +34,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PARSE_ASSERT(x)                                                   \
-    if (!(x)) {                                                           \
-        dbg() << "CSS PARSER ASSERTION FAILED: " << #x;                   \
-        dbg() << "At character# " << index << " in CSS: _" << css << "_"; \
-        ASSERT_NOT_REACHED();                                             \
+#define PARSE_ASSERT(x)                                     \
+    if (!(x)) {                                             \
+        dbgln("CSS PARSER ASSERTION FAILED: {}", #x);       \
+        dbgln("At character# {} in CSS: _{}_", index, css); \
+        ASSERT_NOT_REACHED();                               \
     }
 
 #define PARSE_ERROR()             \
@@ -764,7 +764,7 @@ public:
 
         auto property_id = CSS::property_id_from_string(property_name);
         if (property_id == CSS::PropertyID::Invalid) {
-            dbg() << "CSSParser: Unrecognized property '" << property_name << "'";
+            dbgln("CSSParser: Unrecognized property '{}'", property_name);
         }
         auto value = parse_css_value(m_context, property_value, property_id);
         if (!value)

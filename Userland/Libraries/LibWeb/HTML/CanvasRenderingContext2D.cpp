@@ -113,19 +113,19 @@ void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element,
 
 void CanvasRenderingContext2D::scale(float sx, float sy)
 {
-    dbg() << "CanvasRenderingContext2D::scale(): " << sx << ", " << sy;
+    dbgln("CanvasRenderingContext2D::scale({}, {})", sx, sy);
     m_transform.scale(sx, sy);
 }
 
 void CanvasRenderingContext2D::translate(float tx, float ty)
 {
-    dbg() << "CanvasRenderingContext2D::translate(): " << tx << ", " << ty;
+    dbgln("CanvasRenderingContext2D::translate({}, {})", tx, ty);
     m_transform.translate(tx, ty);
 }
 
 void CanvasRenderingContext2D::rotate(float radians)
 {
-    dbg() << "CanvasRenderingContext2D::rotate(): " << radians;
+    dbgln("CanvasRenderingContext2D::rotate({})", radians);
     m_transform.rotate_radians(radians);
 }
 

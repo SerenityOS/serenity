@@ -199,7 +199,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
 {
     auto file_or_error = Core::File::open(String(path), Core::IODevice::ReadOnly);
     if (file_or_error.is_error()) {
-        dbg() << "Could not open file: " << file_or_error.error();
+        dbgln("Could not open file: {}", file_or_error.error());
         return nullptr;
     }
     auto file = file_or_error.value();
