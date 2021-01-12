@@ -149,15 +149,16 @@ public:
         : m_socket(move(socket))
         , m_client_id(s_id_allocator->allocate())
     {
+#ifdef __serenity__
         s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
             u32 length;
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
-#ifdef EVENTLOOP_DEBUG
+#    ifdef EVENTLOOP_DEBUG
                 dbgln("RPC client disconnected");
-#endif
+#    endif
                 shutdown();
                 return;
             }
@@ -173,6 +174,9 @@ public:
 
             handle_request(request_json.value().as_object());
         };
+#else
+        warnln("RPC Client constructed outside serenity, this is very likely a bug!");
+#endif
     }
     virtual ~RPCClient() override
     {
@@ -297,10 +301,12 @@ EventLoop::EventLoop()
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
 
+#ifdef __serenity__
         if (!s_rpc_server) {
             if (!start_rpc_server())
                 dbgln("Core::EventLoop: Failed to start an RPC server");
         }
+#endif
     }
 
 #ifdef EVENTLOOP_DEBUG
@@ -314,12 +320,16 @@ EventLoop::~EventLoop()
 
 bool EventLoop::start_rpc_server()
 {
+#ifdef __serenity__
     s_rpc_server = LocalServer::construct();
     s_rpc_server->set_name("Core::EventLoop_RPC_server");
     s_rpc_server->on_ready_to_accept = [&] {
         RPCClient::construct(s_rpc_server->accept());
     };
     return s_rpc_server->listen(String::formatted("/tmp/rpc/{}", getpid()));
+#else
+    ASSERT_NOT_REACHED();
+#endif
 }
 
 EventLoop& EventLoop::main()
@@ -597,8 +607,10 @@ void EventLoop::notify_forked(ForkEvent event)
             info->next_signal_id = 0;
         }
         s_pid = 0;
+#ifdef __serenity__
         s_rpc_server = nullptr;
         s_rpc_clients.clear();
+#endif
         return;
     }
 
