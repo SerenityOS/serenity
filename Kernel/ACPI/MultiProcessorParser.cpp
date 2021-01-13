@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/PC/BIOS.h>
@@ -68,9 +69,7 @@ void MultiProcessorParser::parse_configuration_table()
     size_t entry_count = config_table->entry_count;
     auto* entry = config_table->entries;
     while (entry_count > 0) {
-#ifdef MULTIPROCESSOR_DEBUG
-        dbg() << "MultiProcessor: Entry Type " << entry->entry_type << " detected.";
-#endif
+        dbgln<debug_multiprocessor>("MultiProcessor: Entry Type {} detected.", entry->entry_type);
         switch (entry->entry_type) {
         case ((u8)MultiProcessor::ConfigurationTableEntryType::Processor):
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::ProcessorEntry);
