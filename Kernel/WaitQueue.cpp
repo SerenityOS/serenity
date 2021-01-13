@@ -24,10 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Thread.h>
 #include <Kernel/WaitQueue.h>
-
-//#define WAITQUEUE_DEBUG
 
 namespace Kernel {
 
@@ -38,30 +37,22 @@ bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
     ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
     if (m_wake_requested) {
         m_wake_requested = false;
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue @ " << this << ": do not block thread " << *static_cast<Thread*>(data) << ", wake was pending";
-#endif
+        dbgln<debug_waitqueue>("WaitQueue @ {}: do not block thread {}, wake was pending", this, data);
         return false;
     }
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue @ " << this << ": should block thread " << *static_cast<Thread*>(data);
-#endif
+    dbgln<debug_waitqueue>("WaitQueue @ {}: should block thread {}", this, data);
     return true;
 }
 
 void WaitQueue::wake_one()
 {
     ScopedSpinLock lock(m_lock);
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue @ " << this << ": wake_one";
-#endif
+    dbgln<debug_waitqueue>("WaitQueue @ {}: wake_one", this);
     bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue @ " << this << ": wake_one unblocking " << *static_cast<Thread*>(data);
-#endif
+        dbgln<debug_waitqueue>("WaitQueue @ {}: wake_one unblocking {}", this, data);
         if (blocker.unblock()) {
             stop_iterating = true;
             return true;
@@ -76,17 +67,14 @@ u32 WaitQueue::wake_n(u32 wake_count)
     if (wake_count == 0)
         return 0; // should we assert instead?
     ScopedSpinLock lock(m_lock);
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue @ " << this << ": wake_n(" << wake_count << ")";
-#endif
+    dbgln<debug_waitqueue>("WaitQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
+
     bool did_unblock_some = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue @ " << this << ": wake_n unblocking " << *static_cast<Thread*>(data);
-#endif
+        dbgln<debug_waitqueue>("WaitQueue @ {}: wake_n unblocking {}", this, data);
         ASSERT(did_wake < wake_count);
         if (blocker.unblock()) {
             if (++did_wake >= wake_count)
@@ -102,17 +90,17 @@ u32 WaitQueue::wake_n(u32 wake_count)
 u32 WaitQueue::wake_all()
 {
     ScopedSpinLock lock(m_lock);
-#ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue @ " << this << ": wake_all";
-#endif
+
+    dbgln<debug_waitqueue>("WaitQueue @ {}: wake_all", this);
     u32 did_wake = 0;
+
     bool did_unblock_any = do_unblock([&](Thread::Blocker& b, void* data, bool&) {
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue @ " << this << ": wake_all unblocking " << *static_cast<Thread*>(data);
-#endif
+
+        dbgln<debug_waitqueue>("WaitQueue @ {}: wake_all unblocking {}", this, data);
+
         if (blocker.unblock()) {
             did_wake++;
             return true;

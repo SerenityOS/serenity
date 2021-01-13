@@ -69,3 +69,27 @@ constexpr bool debug_bmp = true;
 #else
 constexpr bool debug_bmp = false;
 #endif
+
+#ifdef WAITBLOCK_DEBUG
+constexpr bool debug_waitblock = true;
+#else
+constexpr bool debug_waitblock = false;
+#endif
+
+#ifdef WAITQUEUE_DEBUG
+constexpr bool debug_waitqueue = true;
+#else
+constexpr bool debug_waitqueue = false;
+#endif
+
+#ifdef MULTIPROCESSOR_DEBUG
+constexpr bool debug_multiprocessor = true;
+#else
+constexpr bool debug_multiprocessor = false;
+#endif
+
+#ifdef ACPI_DEBUG
+constexpr bool debug_acpi = true;
+#else
+constexpr bool debug_acpi = false;
+#endif
