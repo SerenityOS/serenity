@@ -93,3 +93,21 @@ constexpr bool debug_acpi = true;
 #else
 constexpr bool debug_acpi = false;
 #endif
+
+#ifdef PAGE_FAULT_DEBUG
+constexpr bool debug_page_fault = true;
+#else
+constexpr bool debug_page_fault = false;
+#endif
+
+#ifdef CONTEXT_SWITCH_DEBUG
+constexpr bool debug_context_switch = true;
+#else
+constexpr bool debug_context_switch = false;
+#endif
+
+#ifdef SMP_DEBUG
+constexpr bool debug_smp = true;
+#else
+constexpr bool debug_smp = false;
+#endif
