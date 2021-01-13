@@ -1081,17 +1081,16 @@ ProcFSInode::~ProcFSInode()
 
 KResult ProcFSInode::refresh_data(FileDescription& description) const
 {
+    if (Kernel::is_directory(identifier()))
+        return KSuccess;
+
     auto& cached_data = description.data();
     auto* directory_entry = fs().get_directory_entry(identifier());
 
     bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr;
     if (directory_entry) {
-        if (directory_entry->proc_file_type > (unsigned)FI_Root) {
-            read_callback = directory_entry->read_callback;
-            ASSERT(read_callback);
-        } else {
-            return KSuccess;
-        }
+        read_callback = directory_entry->read_callback;
+        ASSERT(read_callback);
     } else {
         switch (to_proc_parent_directory(identifier())) {
         case PDI_PID_fd:
