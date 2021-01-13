@@ -129,3 +129,33 @@ constexpr bool debug_vmware_backdoor = true;
 #else
 constexpr bool debug_vmware_backdoor = false;
 #endif
+
+#ifdef FILEDESCRIPTION_DEBUG
+constexpr bool debug_file_description = true;
+#else
+constexpr bool debug_file_description = false;
+#endif
+
+#ifdef PROCFS_DEBUG
+constexpr bool debug_procfs = true;
+#else
+constexpr bool debug_procfs = false;
+#endif
+
+#ifdef VFS_DEBUG
+constexpr bool debug_vfs = true;
+#else
+constexpr bool debug_vfs = false;
+#endif
+
+#ifdef IOAPIC_DEBUG
+constexpr bool debug_ioapic = true;
+#else
+constexpr bool debug_ioapic = false;
+#endif
+
+#ifdef IRQ_DEBUG
+constexpr bool debug_irq = true;
+#else
+constexpr bool debug_irq = false;
+#endif

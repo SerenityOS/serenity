@@ -177,3 +177,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Kernel::KResult> : Formatter<int> {
+    void format(FormatBuilder& builder, Kernel::KResult value)
+    {
+        return Formatter<int>::format(builder, value);
+    }
+};

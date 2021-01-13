@@ -124,7 +124,7 @@ struct alignas(16) TransferDescriptor final {
 
     void print()
     {
-        // FIXME: Use dbg() or klog() when we have something working.
+        // FIXME: Use dbgln() or klog() when we have something working.
         // We're using kprintf() for now because the output stands out from the rest of the text in the log
         kprintf("UHCI: TD(%p) @ 0x%08x: link_ptr=0x%08x, status=0x%08x, token=0x%08x, buffer_ptr=0x%08x\n", this, m_paddr, m_link_ptr, m_control_status, m_token, m_buffer_ptr);
 

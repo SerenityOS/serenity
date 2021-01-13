@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/CharacterDevice.h>
@@ -40,8 +41,6 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-//#define FILEDESCRIPTION_DEBUG
-
 namespace Kernel {
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custody)
@@ -50,9 +49,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
     description->m_custody = custody;
     auto result = description->attach();
     if (result.is_error()) {
-#ifdef FILEDESCRIPTION_DEBUG
-        dbg() << "Failed to create file description for custody: " << result;
-#endif
+        dbgln<debug_file_description>("Failed to create file description for custody: {}", result);
         return result;
     }
     return description;
@@ -63,9 +60,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
     auto description = adopt(*new FileDescription(file));
     auto result = description->attach();
     if (result.is_error()) {
-#ifdef FILEDESCRIPTION_DEBUG
-        dbg() << "Failed to create file description for file: " << result;
-#endif
+        dbgln<debug_file_description>("Failed to create file description for file: {}", result);
         return result;
     }
     return description;
