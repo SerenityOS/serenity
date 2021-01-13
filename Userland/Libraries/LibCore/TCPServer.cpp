@@ -33,6 +33,7 @@
 #include <sys/socket.h>
 
 #ifndef SOCK_NONBLOCK
+#    include <fcntl.h>
 #    include <sys/ioctl.h>
 #endif
 namespace Core {
