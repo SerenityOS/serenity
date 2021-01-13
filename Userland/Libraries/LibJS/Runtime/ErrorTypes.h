@@ -111,9 +111,9 @@
                                             "a non-configurable property")                                                              \
     M(ProxyGetOwnDescriptorReturn, "Proxy handler's getOwnPropertyDescriptor trap violates "                                            \
                                    "invariant: must return an object or undefined")                                                     \
-    M(ProxyGetOwnDescriptorUndefReturn, "Proxy handler's getOwnPropertyDescriptor trap "                                                \
-                                        "violates invariant: cannot report a property as being undefined if it exists as an "           \
-                                        "own property of the target and the target is non-extensible")                                  \
+    M(ProxyGetOwnDescriptorUndefinedReturn, "Proxy handler's getOwnPropertyDescriptor trap "                                            \
+                                            "violates invariant: cannot report a property as being undefined if it exists as an "       \
+                                            "own property of the target and the target is non-extensible")                              \
     M(ProxyGetPrototypeOfNonExtensible, "Proxy handler's getPrototypeOf trap violates "                                                 \
                                         "invariant: cannot return a different prototype object for a non-extensible target")            \
     M(ProxyGetPrototypeOfReturn, "Proxy handler's getPrototypeOf trap violates invariant: "                                             \

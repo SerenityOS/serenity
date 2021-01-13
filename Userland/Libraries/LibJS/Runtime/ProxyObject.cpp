@@ -248,7 +248,7 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const Prop
         }
         if (!m_target.is_extensible()) {
             if (!vm.exception())
-                vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyGetOwnDescriptorUndefReturn);
+                vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyGetOwnDescriptorUndefinedReturn);
             return {};
         }
         return {};
