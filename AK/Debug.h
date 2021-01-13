@@ -111,3 +111,21 @@ constexpr bool debug_smp = true;
 #else
 constexpr bool debug_smp = false;
 #endif
+
+#ifdef BXVGA_DEBUG
+constexpr bool debug_bxvga = true;
+#else
+constexpr bool debug_bxvga = false;
+#endif
+
+#ifdef PS2MOUSE_DEBUG
+constexpr bool debug_ps2mouse = true;
+#else
+constexpr bool debug_ps2mouse = false;
+#endif
+
+#ifdef VMWAREBACKDOOR_DEBUG
+constexpr bool debug_vmware_backdoor = true;
+#else
+constexpr bool debug_vmware_backdoor = false;
+#endif
