@@ -202,6 +202,16 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     }
 
     system_menu->add_separator();
+    system_menu->add_action(GUI::Action::create("Run...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"), [](auto&) {
+        pid_t child_pid;
+        const char* argv[] = { "/bin/Run", nullptr };
+        if ((errno = posix_spawn(&child_pid, "/bin/Run", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
+    }));
     system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
         pid_t child_pid;
         const char* argv[] = { "/bin/About", nullptr };
