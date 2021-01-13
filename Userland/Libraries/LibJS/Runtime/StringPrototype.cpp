@@ -616,7 +616,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = vm.this_value(global_object);
     if (this_object.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
+        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
         return {};
     }
 
