@@ -69,13 +69,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     auto file = Core::File::construct("/proc/net/adapters");
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", file->error_string());
+        warnln("Error: {}", file->error_string());
         return 1;
     }
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+
+    if (!json.has_value() || !json.value().is_array()) {
+        warnln("Error: No network adapters available");
+        return 1;
+    }
+
     Vector<InterfaceDescriptor> ifnames;
     json.value().as_array().for_each([&ifnames](auto& value) {
         auto if_object = value.as_object();
