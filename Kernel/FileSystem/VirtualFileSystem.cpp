@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
@@ -132,7 +133,7 @@ KResult VFS::unmount(Inode& guest_inode)
         }
     }
 
-    dbg() << "VFS: Nothing mounted on inode " << guest_inode.identifier();
+    dbgln("VFS: Nothing mounted on inode {}", guest_inode.identifier());
     return ENODEV;
 }
 
@@ -401,9 +402,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
         return EROFS;
 
     LexicalPath p(path);
-#ifdef VFS_DEBUG
-    dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
-#endif
+    dbgln<debug_vfs>("VFS::create: '{}' in {}", p.basename(), parent_inode.identifier());
     uid_t uid = owner.has_value() ? owner.value().uid : current_process->euid();
     gid_t gid = owner.has_value() ? owner.value().gid : current_process->egid();
     auto inode_or_error = parent_inode.create_child(p.basename(), mode, 0, uid, gid);
@@ -445,9 +444,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
         return EROFS;
 
     LexicalPath p(path);
-#ifdef VFS_DEBUG
-    dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
-#endif
+    dbgln<debug_vfs>("VFS::mkdir: '{}' in {}", p.basename(), parent_inode.identifier());
     return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, current_process->euid(), current_process->egid()).result();
 }
 
