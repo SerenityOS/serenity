@@ -58,21 +58,8 @@
         }
     }
 
-    @GUI::Widget {
-        fixed_height: 18
-
-        layout: @GUI::HorizontalBoxLayout {
-        }
-
-        @GUI::Label {
-            text: "Backtrace:"
-            text_alignment: "CenterLeft"
-        }
-    }
-
-    @GUI::TextEditor {
-        name: "backtrace_text_editor"
-        mode: "ReadOnly"
+    @GUI::TabWidget {
+        name: "tab_widget"
     }
 
     @GUI::Widget {

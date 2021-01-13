@@ -43,6 +43,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/LinkLabel.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <string.h>
@@ -163,7 +164,10 @@ int main(int argc, char** argv)
         Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
     };
 
-    auto& backtrace_text_editor = *widget.find_descendant_of_type_named<GUI::TextEditor>("backtrace_text_editor");
+    auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+
+    auto& backtrace_text_editor = tab_widget.add_tab<GUI::TextEditor>("Backtrace");
+    backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
     backtrace_text_editor.set_text(backtrace);
     backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
 
