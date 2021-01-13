@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -45,9 +46,7 @@ IRQHandler::~IRQHandler()
 
 bool IRQHandler::eoi()
 {
-#ifdef IRQ_DEBUG
-    dbg() << "EOI IRQ " << interrupt_number();
-#endif
+    dbgln<debug_irq>("EOI IRQ {}", interrupt_number());
     if (!m_shared_with_others) {
         ASSERT(!m_responsible_irq_controller.is_null());
         m_responsible_irq_controller->eoi(*this);
@@ -58,9 +57,7 @@ bool IRQHandler::eoi()
 
 void IRQHandler::enable_irq()
 {
-#ifdef IRQ_DEBUG
-    dbg() << "Enable IRQ " << interrupt_number();
-#endif
+    dbgln<debug_irq>("Enable IRQ {}", interrupt_number());
     m_enabled = true;
     if (!m_shared_with_others)
         m_responsible_irq_controller->enable(*this);
@@ -68,9 +65,7 @@ void IRQHandler::enable_irq()
 
 void IRQHandler::disable_irq()
 {
-#ifdef IRQ_DEBUG
-    dbg() << "Disable IRQ " << interrupt_number();
-#endif
+    dbgln<debug_irq>("Disable IRQ {}", interrupt_number());
     m_enabled = false;
     if (!m_shared_with_others)
         m_responsible_irq_controller->disable(*this);
