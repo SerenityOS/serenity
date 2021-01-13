@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
@@ -100,9 +101,12 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 
     auto commit_packet = [&] {
         m_data_state = 0;
-#ifdef PS2MOUSE_DEBUG
-        dbg() << "PS2Mouse: " << m_data.bytes[1] << ", " << m_data.bytes[2] << " " << ((m_data.bytes[0] & 1) ? "Left" : "") << " " << ((m_data.bytes[0] & 2) ? "Right" : "");
-#endif
+        dbgln<debug_ps2mouse>("PS2Mouse: {}, {} {} {}",
+            m_data.bytes[1],
+            m_data.bytes[2],
+            (m_data.bytes[0] & 1) ? "Left" : "",
+            (m_data.bytes[0] & 2) ? "Right" : "");
+
         m_entropy_source.add_random_event(m_data.dword);
 
         {
@@ -281,11 +285,12 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
         auto packet = m_queue.dequeue();
         lock.unlock();
 
-#ifdef PS2MOUSE_DEBUG
-        dbgln("PS2 Mouse Read: Buttons {:x}", packet.buttons);
-        dbgln("PS2 Mouse: X {}, Y {}, Z {}, Relative {}", packet.x, packet.y, packet.z, packet.buttons);
-        dbgln("PS2 Mouse Read: Filter packets");
-#endif
+        if constexpr (debug_ps2mouse) {
+            dbgln("PS2 Mouse Read: Buttons {:x}", packet.buttons);
+            dbgln("PS2 Mouse: X {}, Y {}, Z {}, Relative {}", packet.x, packet.y, packet.z, packet.buttons);
+            dbgln("PS2 Mouse Read: Filter packets");
+        }
+
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
         if (!buffer.write(&packet, nread, bytes_read_from_packet))
             return EFAULT;
