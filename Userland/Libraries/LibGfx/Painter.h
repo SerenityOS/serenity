@@ -135,8 +135,8 @@ protected:
     IntRect to_physical(const IntRect& r) const { return (r * scale()).translated(translation()); }
     IntPoint to_physical(const IntPoint& p) const { return (p * scale()).translated(translation()); }
     int scale() const { return state().scale; }
-    void set_pixel_with_draw_op(u32& pixel, const Color&);
-    void fill_scanline_with_draw_op(int y, int x, int width, const Color& color);
+    void set_physical_pixel_with_draw_op(u32& pixel, const Color&);
+    void fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color);
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_alpha(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity);
