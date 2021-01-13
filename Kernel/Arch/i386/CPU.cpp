@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -49,10 +50,6 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/mallocdefs.h>
-
-//#define PAGE_FAULT_DEBUG
-//#define CONTEXT_SWITCH_DEBUG
-//#define SMP_DEBUG
 
 namespace Kernel {
 
@@ -229,19 +226,19 @@ void page_fault_handler(TrapFrame* trap)
     asm("movl %%cr2, %%eax"
         : "=a"(fault_address));
 
-#ifdef PAGE_FAULT_DEBUG
-    u32 fault_page_directory = read_cr3();
-    dbg() << "CPU #" << (Processor::is_initialized() ? Processor::current().id() : 0) << " ring " << (regs.cs & 3)
-          << " " << (regs.exception_code & 1 ? "PV" : "NP")
-          << " page fault in PD=" << String::format("%x", fault_page_directory) << ", "
-          << (regs.exception_code & 8 ? "reserved-bit " : "")
-          << (regs.exception_code & 2 ? "write" : "read")
-          << " " << VirtualAddress(fault_address);
-#endif
+    if constexpr (debug_page_fault) {
+        u32 fault_page_directory = read_cr3();
+        dbgln("CPU #{} ring {} {} page fault in PD={:#x}, {}{} {}",
+            Processor::is_initialized() ? Processor::current().id() : 0,
+            regs.cs & 3,
+            regs.exception_code & 1 ? "PV" : "NP",
+            fault_page_directory,
+            regs.exception_code & 8 ? "reserved-bit " : "",
+            regs.exception_code & 2 ? "write" : "read",
+            VirtualAddress(fault_address));
 
-#ifdef PAGE_FAULT_DEBUG
-    dump(regs);
-#endif
+        dump(regs);
+    }
 
     bool faulted_in_kernel = !(regs.cs & 3);
 
@@ -1305,9 +1302,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     ASSERT(!in_irq());
     ASSERT(m_in_critical == 1);
     ASSERT(is_kernel_mode());
-#ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context --> switching out of: " << VirtualAddress(from_thread) << " " << *from_thread;
-#endif
+
+    dbgln<debug_context_switch>("switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
 
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
@@ -1348,9 +1344,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
           [from_thread] "d" (from_thread),
           [to_thread] "a" (to_thread)
     );
-#ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread;
-#endif
+
+    dbgln<debug_context_switch>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
@@ -1358,9 +1353,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     ASSERT(!are_interrupts_enabled());
     ASSERT(is_kernel_mode());
 
-#ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread << " (context_first_init)";
-#endif
+    dbgln<debug_context_switch>("switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     ASSERT(to_thread == Thread::current());
 
@@ -1468,12 +1461,25 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     stack_top -= sizeof(u32); // pointer to TrapFrame
     *reinterpret_cast<u32*>(stack_top) = stack_top + 4;
 
-#ifdef CONTEXT_SWITCH_DEBUG
-    if (return_to_user)
-        dbg() << "init_context " << thread << " (" << VirtualAddress(&thread) << ") set up to execute at eip: " << String::format("%02x:%08x", iretframe.cs, (u32)tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top) << " user esp: " << String::format("%02x:%08x", iretframe.userspace_ss, (u32)iretframe.userspace_esp);
-    else
-        dbg() << "init_context " << thread << " (" << VirtualAddress(&thread) << ") set up to execute at eip: " << String::format("%02x:%08x", iretframe.cs, (u32)tss.eip) << " esp: " << VirtualAddress(tss.esp) << " stack top: " << VirtualAddress(stack_top);
-#endif
+    if constexpr (debug_context_switch) {
+        if (return_to_user) {
+            dbgln("init_context {} ({}) set up to execute at eip={}:{}, esp={}, stack_top={}, user_top={}:{}",
+                thread,
+                VirtualAddress(&thread),
+                iretframe.cs, tss.eip,
+                VirtualAddress(tss.esp),
+                VirtualAddress(stack_top),
+                iretframe.userspace_ss,
+                iretframe.userspace_esp);
+        } else {
+            dbgln("init_context {} ({}) set up to execute at eip={}:{}, esp={}, stack_top={}",
+                thread,
+                VirtualAddress(&thread),
+                iretframe.cs, tss.eip,
+                VirtualAddress(tss.esp),
+                VirtualAddress(stack_top));
+        }
+    }
 
     // make switch_context() always first return to thread_context_first_enter()
     // in kernel mode, so set up these values so that we end up popping iretframe
@@ -1522,9 +1528,8 @@ asm(
 
 void Processor::assume_context(Thread& thread, u32 flags)
 {
-#ifdef CONTEXT_SWITCH_DEBUG
-    dbg() << "Assume context for thread " << VirtualAddress(&thread) << " " << thread;
-#endif
+    dbgln<debug_context_switch>("Assume context for thread {} {}", VirtualAddress(&thread), thread);
+
     ASSERT_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
@@ -1747,9 +1752,7 @@ bool Processor::smp_process_pending_messages()
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
 
-#ifdef SMP_DEBUG
-            dbg() << "SMP[" << id() << "]: Processing message " << VirtualAddress(msg);
-#endif
+            dbgln<debug_smp>("SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
@@ -1763,10 +1766,8 @@ bool Processor::smp_process_pending_messages()
 					// We assume that we don't cross into kernel land!
 					ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
 					if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
-						//This processor isn't using this page directory right now, we can ignore this request
-#ifdef SMP_DEBUG
-						dbg() << "SMP[" << id() << "]: No need to flush " << msg->flush_tlb.page_count << " pages at " << VirtualAddress(msg->flush_tlb.ptr);
-#endif
+						// This processor isn't using this page directory right now, we can ignore this request
+                        dbgln<debug_smp>("SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
 						break;
 					}
 				}
@@ -1815,9 +1816,9 @@ bool Processor::smp_queue_message(ProcessorMessage& msg)
 void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
-#ifdef SMP_DEBUG
-    dbg() << "SMP[" << cur_proc.id() << "]: Broadcast message " << VirtualAddress(&msg) << " to cpus: " << (count()) << " proc: " << VirtualAddress(&cur_proc);
-#endif
+
+    dbgln<debug_smp>("SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
+
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
     ASSERT(msg.refs > 0);
     bool need_broadcast = false;
@@ -1884,9 +1885,9 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     ASSERT(cpu != cur_proc.id());
     auto& target_proc = processors()[cpu];
     msg.async = async;
-#ifdef SMP_DEBUG
-    dbg() << "SMP[" << cur_proc.id() << "]: Send message " << VirtualAddress(&msg) << " to cpu #" << cpu << " proc: " << VirtualAddress(&target_proc);
-#endif
+
+    dbgln<debug_smp>("SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
+
     atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
     if (target_proc->smp_queue_message(msg)) {
         APIC::the().send_ipi(cpu);
