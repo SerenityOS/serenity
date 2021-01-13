@@ -95,7 +95,7 @@ void Painter::fill_rect_with_draw_op(const IntRect& a_rect, Color color)
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
-            set_pixel_with_draw_op(dst[j], color);
+            set_physical_pixel_with_draw_op(dst[j], color);
         dst += dst_skip;
     }
 }
@@ -319,9 +319,7 @@ void Painter::draw_focus_rect(const IntRect& rect, Color color)
 
 void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
-    IntRect rect = a_rect.translated(translation());
+    IntRect rect = to_physical(a_rect);
     auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
@@ -329,17 +327,27 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
     int min_y = clipped_rect.top();
     int max_y = clipped_rect.bottom();
 
+    // Don't use rect.bottom() / right() when dealing with physical rects: They will be off by scale()-1 physical pixels.
+    // (It's fine to use them when comparing bottom() / right() to other physical rects, since then both rects are off by the same amount.
+    // But don't use them for pixel access.)
+    int max_y_rounded_to_logical_increment = clipped_rect.top() + clipped_rect.height() - scale();
+    int max_x_rounded_to_logical_increment = clipped_rect.left() + clipped_rect.width() - scale();
+
     if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
-        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
-        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fill_scanline_with_draw_op(rect.top(), start_x, width, color);
-        ++min_y;
+        int start_x = rough ? max(rect.x() + scale(), clipped_rect.x()) : clipped_rect.x();
+        int width = rough ? min(rect.width() - 2 * scale(), clipped_rect.width()) : clipped_rect.width();
+        for (int i = 0; i < scale(); ++i) {
+            fill_physical_scanline_with_draw_op(rect.top() + i, start_x, width, color);
+            ++min_y;
+        }
     }
     if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
-        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
-        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fill_scanline_with_draw_op(rect.bottom(), start_x, width, color);
-        --max_y;
+        int start_x = rough ? max(rect.x() + scale(), clipped_rect.x()) : clipped_rect.x();
+        int width = rough ? min(rect.width() - 2 * scale(), clipped_rect.width()) : clipped_rect.width();
+        for (int i = 0; i < scale(); ++i) {
+            fill_physical_scanline_with_draw_op(max_y_rounded_to_logical_increment + i, start_x, width, color);
+            --max_y;
+        }
     }
 
     bool draw_left_side = rect.left() >= clipped_rect.left();
@@ -349,16 +357,20 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
         // Specialized loop when drawing both sides.
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
-            set_pixel_with_draw_op(bits[rect.left()], color);
-            set_pixel_with_draw_op(bits[rect.right()], color);
+            for (int i = 0; i < scale(); ++i)
+                set_physical_pixel_with_draw_op(bits[rect.left() + i], color);
+            for (int i = 0; i < scale(); ++i)
+                set_physical_pixel_with_draw_op(bits[max_x_rounded_to_logical_increment + i], color);
         }
     } else {
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
             if (draw_left_side)
-                set_pixel_with_draw_op(bits[rect.left()], color);
+                for (int i = 0; i < scale(); ++i)
+                    set_physical_pixel_with_draw_op(bits[rect.left() + i], color);
             if (draw_right_side)
-                set_pixel_with_draw_op(bits[rect.right()], color);
+                for (int i = 0; i < scale(); ++i)
+                    set_physical_pixel_with_draw_op(bits[max_x_rounded_to_logical_increment + i], color);
         }
     }
 }
@@ -1169,9 +1181,10 @@ void Painter::set_pixel(const IntPoint& p, Color color)
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
-ALWAYS_INLINE void Painter::set_pixel_with_draw_op(u32& pixel, const Color& color)
+ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, const Color& color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    // This always sets a single physical pixel, independent of scale().
+    // This should only be called by routines that already handle scale.
 
     switch (draw_op()) {
     case DrawOp::Copy:
@@ -1186,9 +1199,10 @@ ALWAYS_INLINE void Painter::set_pixel_with_draw_op(u32& pixel, const Color& colo
     }
 }
 
-ALWAYS_INLINE void Painter::fill_scanline_with_draw_op(int y, int x, int width, const Color& color)
+ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    // This always draws a single physical scanline, independent of scale().
+    // This should only be called by routines that already handle scale.
 
     switch (draw_op()) {
     case DrawOp::Copy:
@@ -1224,7 +1238,7 @@ void Painter::draw_physical_pixel(const IntPoint& position, Color color, int thi
 
     if (thickness == 1) { // Implies scale() == 1.
         auto& pixel = m_target->scanline(position.y())[position.x()];
-        return set_pixel_with_draw_op(pixel, Color::from_rgba(pixel).blend(color));
+        return set_physical_pixel_with_draw_op(pixel, Color::from_rgba(pixel).blend(color));
     }
 
     IntRect rect { position, { thickness, thickness } };
