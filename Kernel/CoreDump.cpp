@@ -219,15 +219,15 @@ ByteBuffer CoreDump::create_notes_process_data() const
 
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
-    info.pid = m_process->pid().value();
-    info.termination_signal = m_process->termination_signal();
-
     process_data.append((void*)&info, sizeof(info));
 
-    auto executable_path = String::empty();
-    if (auto executable = m_process->executable())
-        executable_path = executable->absolute_path();
-    process_data.append(executable_path.characters(), executable_path.length() + 1);
+    JsonObject process_obj;
+    process_obj.set("pid", m_process->pid().value());
+    process_obj.set("termination_signal", m_process->termination_signal());
+    process_obj.set("executable_path", m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
+
+    auto json_data = process_obj.to_string();
+    process_data.append(json_data.characters(), json_data.length() + 1);
 
     return process_data;
 }

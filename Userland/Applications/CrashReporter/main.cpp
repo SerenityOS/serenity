@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,11 +96,10 @@ int main(int argc, char** argv)
             warnln("Could not open coredump '{}'", coredump_path);
             return 1;
         }
-        auto& process_info = coredump->process_info();
         backtrace = build_backtrace(*coredump);
-        executable_path = String(process_info.executable_path);
-        pid = process_info.pid;
-        termination_signal = process_info.termination_signal;
+        executable_path = coredump->process_executable_path();
+        pid = coredump->process_pid();
+        termination_signal = coredump->process_termination_signal();
     }
 
     auto app = GUI::Application::construct(argc, argv);

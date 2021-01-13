@@ -50,9 +50,14 @@ struct [[gnu::packed]] NotesEntry {
 
 struct [[gnu::packed]] ProcessInfo {
     NotesEntryHeader header;
-    int pid;
-    u8 termination_signal;
-    char executable_path[]; // Null terminated
+    // Information is stored as JSON blob to allow arbitrary
+    // number and length of strings/objects/arrays.
+    //
+    // Keys:
+    // - "pid" (int)
+    // - "termination_signal" (u8)
+    // - "executable_path" (String)
+    char json_data[]; // Null terminated
 };
 
 struct [[gnu::packed]] ThreadInfo {
@@ -81,6 +86,11 @@ struct [[gnu::packed]] MemoryRegionInfo {
 
 struct [[gnu::packed]] Metadata {
     NotesEntryHeader header;
+    // Arbitrary metadata, set via SC_set_coredump_metadata.
+    // Limited to 16 entries and 16 KiB keys/values by the kernel.
+    //
+    // Well-known keys:
+    // - "assertion": Used by LibC's __assertion_failed() to store assertion info
     char json_data[]; // Null terminated
 };
 

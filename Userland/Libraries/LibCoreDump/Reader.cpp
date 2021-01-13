@@ -28,6 +28,7 @@
 #include <AK/JsonValue.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
+#include <signal_numbers.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -88,7 +89,7 @@ void Reader::NotesEntryIterator::next()
     switch (type()) {
     case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
-        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->executable_path + strlen(current->executable_path) + 1);
+        m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
     case ELF::Core::NotesEntryHeader::Type::ThreadInfo: {
@@ -127,14 +128,24 @@ Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
     return *(const uint32_t*)(&region_data[offset_in_region]);
 }
 
-const ELF::Core::ProcessInfo& Reader::process_info() const
+const JsonObject Reader::process_info() const
 {
+    const ELF::Core::ProcessInfo* process_info_notes_entry = nullptr;
     for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ProcessInfo)
             continue;
-        return reinterpret_cast<const ELF::Core::ProcessInfo&>(*it.current());
+        process_info_notes_entry = reinterpret_cast<const ELF::Core::ProcessInfo*>(it.current());
+        break;
     }
-    ASSERT_NOT_REACHED();
+    if (!process_info_notes_entry)
+        return {};
+    auto process_info_json_value = JsonValue::from_string(process_info_notes_entry->json_data);
+    if (!process_info_json_value.has_value())
+        return {};
+    if (!process_info_json_value.value().is_object())
+        return {};
+    return process_info_json_value.value().as_object();
+    // FIXME: Maybe just cache this on the Reader instance after first access.
 }
 
 const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const
@@ -153,6 +164,30 @@ const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) co
 const Backtrace Reader::backtrace() const
 {
     return Backtrace(*this);
+}
+
+int Reader::process_pid() const
+{
+    auto process_info = this->process_info();
+    auto pid = process_info.get("pid");
+    return pid.to_number<int>();
+}
+
+u8 Reader::process_termination_signal() const
+{
+    auto process_info = this->process_info();
+    auto termination_signal = process_info.get("termination_signal");
+    auto signal_number = termination_signal.to_number<int>();
+    if (signal_number <= SIGINVAL || signal_number >= NSIG)
+        return SIGINVAL;
+    return (u8)signal_number;
+}
+
+String Reader::process_executable_path() const
+{
+    auto process_info = this->process_info();
+    auto executable_path = process_info.get("executable_path");
+    return executable_path.as_string_or({});
 }
 
 const HashMap<String, String> Reader::metadata() const

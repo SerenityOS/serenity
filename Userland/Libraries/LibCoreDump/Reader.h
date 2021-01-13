@@ -44,8 +44,6 @@ public:
     static OwnPtr<Reader> create(const String&);
     ~Reader();
 
-    const ELF::Core::ProcessInfo& process_info() const;
-
     template<typename Func>
     void for_each_memory_region_info(Func func) const;
 
@@ -66,6 +64,10 @@ public:
     const LibraryData* library_containing(FlatPtr address) const;
 
     const Backtrace backtrace() const;
+
+    int process_pid() const;
+    u8 process_termination_signal() const;
+    String process_executable_path() const;
     const HashMap<String, String> metadata() const;
 
 private:
@@ -85,6 +87,11 @@ private:
         const ELF::Core::NotesEntry* m_current { nullptr };
         const u8* start { nullptr };
     };
+
+    // Private as we don't need anyone poking around in this JsonObject
+    // manually - we know very well what should be included and expose that
+    // as getters with the appropriate (non-JsonValue) types.
+    const JsonObject process_info() const;
 
     NonnullRefPtr<MappedFile> m_coredump_file;
     ELF::Image m_coredump_image;
