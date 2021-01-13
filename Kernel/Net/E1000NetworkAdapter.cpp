@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/MACAddress.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
@@ -363,9 +364,7 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
 
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: OUT8 0x" << String::format("%02x", data) << " @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: OUT8 {:#02x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -376,9 +375,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: OUT16 0x" << String::format("%04x", data) << " @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: OUT16 {:#04x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -389,9 +386,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: OUT32 0x" << String::format("%08x", data) << " @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: OUT32 {:#08x} @ {:#04x}", data, address);
     if (m_use_mmio) {
         auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -402,9 +397,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 
 u8 E1000NetworkAdapter::in8(u16 address)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: IN8 @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: IN8 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u8>();
@@ -412,9 +405,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 
 u16 E1000NetworkAdapter::in16(u16 address)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: IN16 @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: IN16 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u16>();
@@ -422,9 +413,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 
 u32 E1000NetworkAdapter::in32(u16 address)
 {
-#ifdef E1000_DEBUG
-    dbg() << "E1000: IN32 @ 0x" << String::format("%04x", address);
-#endif
+    dbgln<debug_e1000>("E1000: IN32 @ {:#04x}", address);
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u32>();
