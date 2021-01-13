@@ -355,7 +355,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     switch (m_type) {
     case Type::Undefined:
     case Type::Null:
-        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);

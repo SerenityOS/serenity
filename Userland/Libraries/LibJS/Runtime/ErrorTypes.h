@@ -155,7 +155,7 @@
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
-    M(ToObjectNullOrUndef, "ToObject on null or undefined")                                                                             \
+    M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \
     M(TypedArrayInvalidBufferLength, "Invalid buffer length for {}: must be a multiple of {}, got {}")                                  \
     M(TypedArrayInvalidByteOffset, "Invalid byte offset for {}: must be a multiple of {}, got {}")                                      \
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
