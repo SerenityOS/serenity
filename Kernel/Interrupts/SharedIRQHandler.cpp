@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -59,9 +60,7 @@ void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 
 bool SharedIRQHandler::eoi()
 {
-#ifdef INTERRUPT_DEBUG
-    dbg() << "EOI IRQ " << interrupt_number();
-#endif
+    dbgln<debug_interrupt>("EOI IRQ {}", interrupt_number());
     m_responsible_irq_controller->eoi(*this);
     return true;
 }
@@ -87,21 +86,19 @@ SharedIRQHandler::~SharedIRQHandler()
 void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
-#ifdef INTERRUPT_DEBUG
-    dbg() << "Interrupt @ " << interrupt_number();
-    dbg() << "Interrupt Handlers registered - " << m_handlers.size();
-#endif
+
+    if constexpr (debug_interrupt) {
+        dbgln("Interrupt @ {}", interrupt_number());
+        dbgln("Interrupt Handlers registered - {}", m_handlers.size());
+    }
+
     int i = 0;
     for (auto* handler : m_handlers) {
-#ifdef INTERRUPT_DEBUG
-        dbg() << "Going for Interrupt Handling @ " << i << ", Shared Interrupt " << interrupt_number();
-#endif
+        dbgln<debug_interrupt>("Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
         ASSERT(handler != nullptr);
         handler->increment_invoking_counter();
         handler->handle_interrupt(regs);
-#ifdef INTERRUPT_DEBUG
-        dbg() << "Going for Interrupt Handling @ " << i << ", Shared Interrupt " << interrupt_number() << " - End";
-#endif
+        dbgln<debug_interrupt>("Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());
         i++;
     }
 }

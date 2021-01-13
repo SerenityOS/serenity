@@ -159,3 +159,22 @@ constexpr bool debug_irq = true;
 #else
 constexpr bool debug_irq = false;
 #endif
+
+#ifdef INTERRUPT_DEBUG
+constexpr bool debug_interrupt = true;
+#else
+constexpr bool debug_interrupt = false;
+#endif
+
+#ifdef E1000_DEBUG
+constexpr bool debug_e1000 = true;
+#else
+constexpr bool debug_e1000 = false;
+#endif
+
+#ifdef IPV4_SOCKET_DEBUG
+constexpr bool debug_ipv4_socket = true;
+#else
+constexpr bool debug_ipv4_socket = false;
+#endif
+
