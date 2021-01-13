@@ -35,6 +35,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/SystemTheme.h>
 #include <LibGfx/WindowTheme.h>
 
 const int WIDTH = 300;
@@ -86,6 +87,9 @@ void Canvas::draw(Gfx::Painter& painter)
 {
     auto active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
     Gfx::WindowTheme::current().paint_normal_frame(painter, Gfx::WindowTheme::WindowState::Active, { 4, 18, WIDTH - 8, HEIGHT - 29 }, "Well hello friends", *active_window_icon, palette(), { WIDTH - 20, 6, 16, 16 });
+
+    painter.draw_rect({ 20, 34, WIDTH - 40, HEIGHT - 45 }, palette().color(Gfx::ColorRole::Selection), true);
+    painter.draw_rect({ 24, 38, WIDTH - 48, HEIGHT - 53 }, palette().color(Gfx::ColorRole::Selection));
 }
 
 int main(int argc, char** argv)
