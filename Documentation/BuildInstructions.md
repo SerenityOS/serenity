@@ -3,31 +3,31 @@
 ### Prerequisites
 
 #### Linux prerequisites
-Make sure you have all the dependencies installed:
+Make sure you have all the dependencies installed (`ninja` is optional, but is faster in practice):
 
 **Debian / Ubuntu**
 ```bash
-sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils
 ```
 
 **Fedora**
 ```bash
-sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Development Tools and Libraries" @Virtualization
+sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build @"C Development Tools and Libraries" @Virtualization
 ```
 
 **openSUSE**
 ```bash
-sudo zypper install curl cmake mpfr-devel mpc-devel gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ patterns-devel-C-C++-devel_C_C++
+sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ patterns-devel-C-C++-devel_C_C++
 ```
 
 **Arch Linux / Manjaro**
 ```bash
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra
 ```
 
 **ALT Linux**
 ```bash
-apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch gcc
+apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-build patch gcc
 ```
 
 Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
@@ -60,7 +60,7 @@ Ensure your CMake version is >= 3.16 with `cmake --version`. If your system does
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash
-brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10
+brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10 ninja
 brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
 ```
@@ -77,18 +77,20 @@ Notes:
 
 #### OpenBSD prerequisites
 ```
-pkg_add bash gmp gcc git gmake sudo
+$ pkg_add bash gcc git gmake gmp ninja sudo
 ```
 
 #### FreeBSD prerequisites
 ```
-$ pkg add coreutils gmake bash sudo git
+$ pkg add bash coreutils git gmake ninja sudo
 ```
 
 #### Windows
 For Windows, you will require Windows Subsystem for Linux 2 (WSL2). [Follow the WSL2 instructions here.](https://github.com/SerenityOS/serenity/blob/master/Documentation/NotesOnWSL.md)
 Do note the ```Hardware acceleration``` and ```Note on filesystems``` sections, otherwise performance will be terrible.
 Once you have installed a distro for WSL2, follow the Linux prerequisites above for the distro you installed, then continue as normal.
+
+You may also want to install [ninja](https://github.com/ninja-build/ninja/releases)
 
 ### Build
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script:
@@ -97,23 +99,23 @@ $ cd Toolchain
 $ ./BuildIt.sh
 ```
 
-Building the toolchain will also automatically create a `Build/` directory for the build to live in, and build cmake inside that directory.
+Building the toolchain will also automatically create a `Build/` directory for the build to live in.
 
-Once the toolchain and cmake have been built, go into the `Build/` directory and run the `make` and `make install` commands:
+Once the toolchain has been built, go into the `Build/` directory and run the commands. Note that while `ninja` seems to be faster, you can also just use GNU make, by omitting `-G Ninja` and calling `make` instead of `ninja`:
 ```bash
 $ cd ..
 $ cd Build
-$ cmake ..
-$ make
-$ make install
+$ cmake .. -G Ninja
+$ ninja
+$ ninja install
 ```
 
-This will compile all of SerenityOS and install the built files into `Root/` inside the build tree. `make install` actually pulls in the regular `make` (`make all`) automatically, so there isn't really a need to run it explicitly. You may also want ask `make` to build things in parallel by using `-j`, optionally specifying the maximum number of jobs to run.
+This will compile all of SerenityOS and install the built files into `Root/` inside the build tree. `ninja install` actually pulls in the regular `ninja` (`ninja all`) automatically, so there isn't really a need to run it explicitly. `ninja` will automatically build as many jobs in parallel as it detects processors; `make` builds only one job in parallel. (Use the `-j` option with an argument if you want to change this.)
 
-Now to build a disk image, run `make image`, and if nothing breaks too much, take it for a spin by using `make run`.
+Now to build a disk image, run `ninja image`, and take it for a spin by using `ninja run`.
 ```bash
-$ make image
-$ make run
+$ ninja image
+$ ninja run
 ```
 
 Note that the `anon` user is able to become `root` without password by default, as a development convenience.
@@ -125,20 +127,7 @@ Bare curious users may even consider sourcing suitable hardware to [install Sere
 
 Outside of QEMU, Serenity will run on VirtualBox. If you're curious, see how to [install Serenity on VirtualBox.](https://github.com/SerenityOS/serenity/blob/master/Documentation/VirtualBox.md)
 
-Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
-
-#### Faster than make: "Ninja"
-
-You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits, like reduced double-building of headers.
-Most of the process stays the same:
-- Go to an empty directory at the root (e.g. `Build/`) and call `cmake .. -G Ninja` inside that directory
-- You might either create a new directory or reuse the existing `Build` directory after cleaning it.
-- `make` becomes `ninja`
-- `make install` becomes `ninja install`
-- `make image` becomes `ninja image`
-- `make run` becomes `ninja run`
-
-Note that ninja automatically chooses a sane value for `-j` automatically, and if something goes wrong it will print the full compiler invocation. Otherwise, `ninja` behaves just like `make`. (And is a tad faster.)
+Later on, when you `git pull` to get the latest changes, there's (usually) no need to rebuild the toolchain. You can simply run `ninja install`, `ninja image`, and `ninja run` again. CMake will only rebuild those parts that have been updated.
 
 #### Ports
 To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **make image** from the `Build/` directory to update the disk image. The next time you start Serenity with **make run**, `curl` will be available.
