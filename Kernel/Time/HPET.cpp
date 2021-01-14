@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -207,9 +208,10 @@ void HPET::update_periodic_comparator_value()
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             u64 value = frequency() / comparator.ticks_per_second();
-#ifdef HPET_DEBUG
-            dbg() << "HPET: Update periodic comparator " << comparator.comparator_number() << " comparator value to " << value << " main value was: " << previous_main_value;
-#endif
+            dbgln<debug_hpet>("HPET: Update periodic comparator {} comparator value to {} main value was: {}",
+                comparator.comparator_number(),
+                value,
+                previous_main_value);
             timer.comparator_value.low = (u32)value;
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             timer.comparator_value.high = (u32)(value >> 32);
@@ -217,9 +219,11 @@ void HPET::update_periodic_comparator_value()
             // Set the new target comparator value to the delta to the remaining ticks
             u64 current_value = (u64)timer.comparator_value.low | ((u64)timer.comparator_value.high << 32);
             u64 value = current_value - previous_main_value;
-#ifdef HPET_DEBUG
-            dbg() << "HPET: Update non-periodic comparator " << comparator.comparator_number() << " comparator value from " << current_value << " to " << value << " main value was: " << previous_main_value;
-#endif
+            dbgln<debug_hpet>("HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
+                comparator.comparator_number(),
+                current_value,
+                value,
+                previous_main_value);
             timer.comparator_value.low = (u32)value;
             timer.comparator_value.high = (u32)(value >> 32);
         }

@@ -24,9 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Process.h>
-
-//#define PROCESS_DEBUG
 
 namespace Kernel {
 
@@ -56,9 +55,7 @@ pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_param
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
-#ifdef PROCESS_DEBUG
-    dbg() << "sys$waitid(" << params.idtype << ", " << params.id << ", " << params.infop << ", " << params.options << ")";
-#endif
+    dbgln<debug_process>("sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
     auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);
     if (siginfo_or_error.is_error())

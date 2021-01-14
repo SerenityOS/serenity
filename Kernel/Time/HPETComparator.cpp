@@ -24,11 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/TimeManagement.h>
-
-//#define HPET_COMPARATOR_DEBUG
 
 namespace Kernel {
 
@@ -110,9 +109,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     m_frequency = frequency;
     m_enabled = true;
 
-#ifdef HPET_COMPARATOR_DEBUG
-    dbg() << "HPET Comparator: Max frequency " << hpet_frequency << " Hz, want to set " << frequency << " Hz, periodic: " << is_periodic();
-#endif
+    dbgln<debug_hpet_comperator>("HPET Comparator: Max frequency {} Hz, want to set {} Hz, periodic: {}", hpet_frequency, frequency, is_periodic());
 
     if (is_periodic()) {
         HPET::the().update_periodic_comparator_value();
