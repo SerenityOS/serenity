@@ -59,7 +59,7 @@ RefPtr<Download> Client::start_download(const String& method, const String& url,
     auto download_id = response->download_id();
     if (download_id < 0 || !response->response_fd().has_value())
         return nullptr;
-    auto response_fd = response->response_fd().value().fd();
+    auto response_fd = response->response_fd().value().take_fd();
     auto download = Download::create_from_id({}, *this, download_id);
     download->set_download_fd({}, response_fd);
     m_downloads.set(download_id, download);

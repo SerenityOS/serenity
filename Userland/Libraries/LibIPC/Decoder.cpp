@@ -174,7 +174,7 @@ bool Decoder::decode([[maybe_unused]] File& file)
         dbgln("recvfd: {}", strerror(errno));
         return false;
     }
-    file = File(fd);
+    file = File(fd, File::ConstructWithReceivedFileDescriptor);
     return true;
 #else
     [[maybe_unused]] auto fd = m_sockfd;
