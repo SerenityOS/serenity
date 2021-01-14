@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/NonnullOwnPtr.h>
 #include <LibCore/Forward.h>
 #include <LibHTTP/Forward.h>
 #include <ProtocolServer/Download.h>
@@ -36,7 +37,7 @@ namespace ProtocolServer {
 class HttpDownload final : public Download {
 public:
     virtual ~HttpDownload() override;
-    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
+    static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
 private:
     explicit HttpDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);

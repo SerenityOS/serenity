@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Badge.h>
+#pragma once
+
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
-#include <AK/URL.h>
-#include <LibHTTP/HttpJob.h>
+#include <LibHTTP/HttpRequest.h>
 #include <ProtocolServer/ClientConnection.h>
 #include <ProtocolServer/Download.h>
-#include <ProtocolServer/HttpCommon.h>
-#include <ProtocolServer/HttpDownload.h>
-#include <ProtocolServer/HttpProtocol.h>
 
-namespace ProtocolServer {
+namespace ProtocolServer::Detail {
 
-HttpProtocol::HttpProtocol()
-    : Protocol("http")
+template<typename TBadgedProtocol, typename TPipeResult>
+OwnPtr<Download> start_download(TBadgedProtocol&& protocol, ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
 {
-}
+    using TJob = TBadgedProtocol::Type::JobType;
+    using TDownload = TBadgedProtocol::Type::DownloadType;
 
-OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
-{
-    return Detail::start_download(AK::Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_download());
+    if (pipe_result.is_error()) {
+        return {};
+    }
+
+    HTTP::HttpRequest request;
+    if (method.equals_ignoring_case("post"))
+        request.set_method(HTTP::HttpRequest::Method::POST);
+    else
+        request.set_method(HTTP::HttpRequest::Method::GET);
+    request.set_url(url);
+    request.set_headers(headers);
+    request.set_body(body);
+
+    auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
+    output_stream->make_unbuffered();
+    auto job = TJob::construct(request, *output_stream);
+    auto download = TDownload::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
+    download->set_download_fd(pipe_result.value().read_fd);
+    job->start();
+    return download;
 }
 
 }

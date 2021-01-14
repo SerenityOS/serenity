@@ -24,8 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibHTTP/HttpRequest.h>
+#include <AK/Badge.h>
+#include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
+#include <AK/String.h>
+#include <AK/URL.h>
 #include <LibHTTP/HttpsJob.h>
+#include <ProtocolServer/ClientConnection.h>
+#include <ProtocolServer/Download.h>
+#include <ProtocolServer/HttpCommon.h>
 #include <ProtocolServer/HttpsDownload.h>
 #include <ProtocolServer/HttpsProtocol.h>
 
@@ -36,32 +44,9 @@ HttpsProtocol::HttpsProtocol()
 {
 }
 
-HttpsProtocol::~HttpsProtocol()
-{
-}
-
 OwnPtr<Download> HttpsProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
 {
-    HTTP::HttpRequest request;
-    if (method.equals_ignoring_case("post"))
-        request.set_method(HTTP::HttpRequest::Method::POST);
-    else
-        request.set_method(HTTP::HttpRequest::Method::GET);
-    request.set_url(url);
-    request.set_headers(headers);
-    request.set_body(body);
-
-    auto pipe_result = get_pipe_for_download();
-    if (pipe_result.is_error())
-        return {};
-
-    auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
-    output_stream->make_unbuffered();
-    auto job = HTTP::HttpsJob::construct(request, *output_stream);
-    auto download = HttpsDownload::create_with_job({}, client, (HTTP::HttpsJob&)*job, move(output_stream));
-    download->set_download_fd(pipe_result.value().read_fd);
-    job->start();
-    return download;
+    return Detail::start_download(AK::Badge<HttpsProtocol> {}, client, method, url, headers, body, get_pipe_for_download());
 }
 
 }
