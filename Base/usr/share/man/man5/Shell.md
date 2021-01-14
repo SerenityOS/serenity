@@ -28,6 +28,10 @@ String of characters that are not _Special_ or _Syntactic Elements_
 ##### Glob
 String of characters containing at least one of `*?` in _bareword_ position
 
+##### History Events
+A _designator_ starting with `!` in _bareword_ position that describes a word or a range of words from a previously entered command.
+Please look at the section named 'History Event Designators' for a more thorough explanation. Only allowed in interactive mode.
+
 ##### Single Quoted String
 Any sequence of characters between two single quotes (`'`)
 
@@ -36,6 +40,7 @@ Any sequence of _Double Quoted String Part_ tokens:
 * Barewords
 * Single Quotes
 * Variable References
+* History Events
 * Evaluate expressions
 * Escaped sequences
 
@@ -309,6 +314,25 @@ match "$(make_some_value)" {
 }
 ```
 
+### History Event Designators
+History expansion may be utilised to reuse previously typed words or commands.
+Such expressions are of the general form `!<event_designator>(:<word_designator>)`, where `event_designator` would select an entry in the shell history, and `word_designator` would select a word (or a range of words) from that entry.
+
+| Event designator | effect                      |
+| :-               | :-----                      |
+| `!`              | Select the immediately preceding command |
+| _n_              | Select the _n_'th entry in the history   |
+| -_n_             | Select the last _n_'th entry in the history |
+| _str_            | Select the most recent entry starting with _str_ |
+| ?_str_           | Select the most recent entry containing _str_ |
+
+| Word designator  | effect                      |
+| :--              | :-----                      |
+| _n_              | The _n_'th word, starting with 0 as the command |
+| `^`              | The first word (index 0) |
+| `$`              | The last word |
+| _x_-_y_          | The range of words starting at _x_ and ending at _y_ (inclusive) |
+
 ## Formal Grammar
 
 ### Shell Grammar
@@ -382,6 +406,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 expression :: evaluate expression?
             | string_composite expression?
             | comment expression?
+            | history_designator expression?
             | '(' list_expression ')' expression?
 
 evaluate :: '$' '(' pipe_sequence ')'
@@ -391,7 +416,7 @@ string_composite :: string string_composite?
                   | variable string_composite?
                   | bareword string_composite?
                   | glob string_composite?
-                  | brace string_composite?
+                  | brace_expansion string_composite?
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"
@@ -410,6 +435,18 @@ variable :: '$' identifier
           | ...
 
 comment :: '#' [^\n]*
+
+history_designator :: '!' event_selector (':' word_selector_composite)?
+
+event_selector :: '!'                  {== '-0'}
+                | '?' bareword '?'
+                | bareword             {number: index, otherwise: lookup}
+
+word_selector_composite :: word_selector ('-' word_selector)?
+
+word_selector :: number
+               | '^'                   {== 0}
+               | '$'                   {== end}
 
 bareword :: [^"'*$&#|()[\]{} ?;<>] bareword?
           | '\' [^"'*$&#|()[\]{} ?;<>] bareword?
