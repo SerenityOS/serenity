@@ -26,10 +26,9 @@
 
 #include "SlavePTY.h"
 #include "MasterPTY.h"
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
-
-//#define SLAVEPTY_DEBUG
 
 namespace Kernel {
 
@@ -48,9 +47,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 
 SlavePTY::~SlavePTY()
 {
-#ifdef SLAVEPTY_DEBUG
-    dbg() << "~SlavePTY(" << m_index << ")";
-#endif
+    dbgln<debug_slavepty>("~SlavePTY({})", m_index);
     DevPtsFS::unregister_slave_pty(*this);
 }
 
