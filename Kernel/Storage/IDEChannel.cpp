@@ -178,9 +178,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
     Processor::deferred_call_queue([this, result]() {
-#ifdef PATA_DEBUG
-        dbg() << "IDEChannel::complete_current_request result: " << result;
-#endif
+        dbgln<debug_pata>("IDEChannel::complete_current_request result: {}", (int)result);
         ASSERT(m_current_request);
         auto& request = *m_current_request;
         m_current_request = nullptr;
@@ -368,9 +366,7 @@ void IDEChannel::ata_read_sectors_with_dma(bool slave_request)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
-#ifdef PATA_DEBUG
-    dbg() << "IDEChannel::ata_read_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
-#endif
+    dbgln<debug_pata>("IDEChannel::ata_read_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * request.block_count();
@@ -489,9 +485,7 @@ void IDEChannel::ata_write_sectors_with_dma(bool slave_request)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
-#ifdef PATA_DEBUG
-    dbg() << "IDEChannel::ata_write_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
-#endif
+    dbgln<debug_pata>("IDEChannel::ata_write_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * request.block_count();

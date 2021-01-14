@@ -201,3 +201,15 @@ constexpr bool debug_pci = true;
 #else
 constexpr bool debug_pci = false;
 #endif
+
+#ifdef PATA_DEBUG
+constexpr bool debug_pata = true;
+#else
+constexpr bool debug_pata = false;
+#endif
+
+#ifdef DEBUG_IO
+constexpr bool debug_io = true;
+#else
+constexpr bool debug_io = false;
+#endif
