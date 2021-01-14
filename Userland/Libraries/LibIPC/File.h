@@ -48,8 +48,10 @@ public:
     }
 
     // Tagged constructor for fd's that should be closed on destruction unless take_fd() is called.
+    // Note that the tags are the same, this is intentional to allow expressive invocation.
     enum Tag {
         ConstructWithReceivedFileDescriptor = 1,
+        CloseAfterSending = 1,
     };
     File(int fd, Tag)
         : m_fd(fd)

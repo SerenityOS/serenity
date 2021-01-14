@@ -34,8 +34,6 @@ Message::Message()
 
 Message::~Message()
 {
-    if (on_destruction)
-        on_destruction();
 }
 
 }
