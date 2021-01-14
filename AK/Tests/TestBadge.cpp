@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/TestSuite.h>
 
-namespace AK {
+#include <AK/Badge.h>
 
-template<typename T>
-class Badge {
-public:
-    using Type = T;
-
-private:
-    friend T;
-    constexpr Badge() = default;
-
-    Badge(const Badge&) = delete;
-    Badge& operator=(const Badge&) = delete;
-
-    Badge(Badge&&) = delete;
-    Badge& operator=(Badge&&) = delete;
-};
-
+TEST_CASE(should_provide_underlying_type)
+{
+    static_assert(AK::IsSame<int, Badge<int>::Type>::value);
 }
 
-using AK::Badge;
+TEST_MAIN(Badge)
