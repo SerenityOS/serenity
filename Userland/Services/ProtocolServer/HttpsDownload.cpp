@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/HttpsJob.h>
+#include <ProtocolServer/HttpCommon.h>
 #include <ProtocolServer/HttpsDownload.h>
 #include <ProtocolServer/HttpsProtocol.h>
 
@@ -35,32 +35,7 @@ HttpsDownload::HttpsDownload(ClientConnection& client, NonnullRefPtr<HTTP::Https
     : Download(client, move(output_stream))
     , m_job(job)
 {
-    m_job->on_headers_received = [this](auto& headers, auto response_code) {
-        if (response_code.has_value())
-            set_status_code(response_code.value());
-        set_response_headers(headers);
-    };
-
-    m_job->on_finish = [this](bool success) {
-        if (auto* response = m_job->response()) {
-            set_status_code(response->code());
-            set_response_headers(response->headers());
-            set_downloaded_size(this->output_stream().size());
-        }
-
-        // if we didn't know the total size, pretend that the download finished successfully
-        // and set the total size to the downloaded size
-        if (!total_size().has_value())
-            did_progress(downloaded_size(), downloaded_size());
-
-        did_finish(success);
-    };
-    m_job->on_progress = [this](Optional<u32> total, u32 current) {
-        did_progress(total, current);
-    };
-    m_job->on_certificate_requested = [this](auto&) {
-        did_request_certificates();
-    };
+    Detail::init(this, job);
 }
 
 void HttpsDownload::set_certificate(String certificate, String key)
