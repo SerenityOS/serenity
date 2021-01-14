@@ -369,6 +369,62 @@ void Formatter::visit(const AST::Glob* node)
     visited(node);
 }
 
+void Formatter::visit(const AST::HistoryEvent* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+
+    current_builder().append('!');
+    switch (node->selector().event.kind) {
+    case AST::HistorySelector::EventKind::ContainingStringLookup:
+        current_builder().append('?');
+        current_builder().append(node->selector().event.text);
+        break;
+    case AST::HistorySelector::EventKind::StartingStringLookup:
+        current_builder().append(node->selector().event.text);
+        break;
+    case AST::HistorySelector::EventKind::IndexFromStart:
+        current_builder().append(node->selector().event.text);
+        break;
+    case AST::HistorySelector::EventKind::IndexFromEnd:
+        if (node->selector().event.index == 0)
+            current_builder().append('!');
+        else
+            current_builder().append(node->selector().event.text);
+        break;
+    }
+
+    auto& range = node->selector().word_selector_range;
+    if (!range.end.has_value()
+        || range.end.value().kind != AST::HistorySelector::WordSelectorKind::Last
+        || range.start.kind != AST::HistorySelector::WordSelectorKind::Index || range.start.selector != 0) {
+
+        auto append_word = [this](auto& selector) {
+            switch (selector.kind) {
+            case AST::HistorySelector::WordSelectorKind::Index:
+                if (selector.selector == 0)
+                    current_builder().append('^');
+                else
+                    current_builder().appendff("{}", selector.selector);
+                break;
+            case AST::HistorySelector::WordSelectorKind::Last:
+                current_builder().append('$');
+                break;
+            }
+        };
+
+        current_builder().append(':');
+        append_word(range.start);
+
+        if (range.end.has_value()) {
+            current_builder().append('-');
+            append_word(range.end.value());
+        }
+    }
+
+    visited(node);
+}
+
 void Formatter::visit(const AST::Execute* node)
 {
     will_visit(node);
