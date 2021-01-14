@@ -2,6 +2,7 @@ set(AK_TEST_SOURCES
     TestAllOf.cpp
     TestArray.cpp
     TestAtomic.cpp
+    TestBadge.cpp
     TestBase64.cpp
     TestBinarySearch.cpp
     TestBitmap.cpp
@@ -17,8 +18,8 @@ set(AK_TEST_SOURCES
     TestFormat.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp
-    TestIndexSequence.cpp
     TestIPv4Address.cpp
+    TestIndexSequence.cpp
     TestJSON.cpp
     TestLexicalPath.cpp
     TestMACAddress.cpp
@@ -38,8 +39,8 @@ set(AK_TEST_SOURCES
     TestStringUtils.cpp
     TestStringView.cpp
     TestTrie.cpp
-    TestTypedTransfer.cpp
     TestTypeTraits.cpp
+    TestTypedTransfer.cpp
     TestURL.cpp
     TestUtf8.cpp
     TestVector.cpp
