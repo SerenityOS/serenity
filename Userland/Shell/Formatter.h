@@ -71,6 +71,7 @@ private:
     virtual void visit(const AST::FunctionDeclaration*) override;
     virtual void visit(const AST::ForLoop*) override;
     virtual void visit(const AST::Glob*) override;
+    virtual void visit(const AST::HistoryEvent*) override;
     virtual void visit(const AST::Execute*) override;
     virtual void visit(const AST::IfCond*) override;
     virtual void visit(const AST::Join*) override;
