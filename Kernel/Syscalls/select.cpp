@@ -24,13 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Time.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
-
-//#define DEBUG_IO
-//#define DEBUG_POLL_SELECT
 
 namespace Kernel {
 
@@ -97,14 +95,11 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
         fds.append(fd);
     }
 
-#if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << "selecting on " << fds_info.size() << " fds, timeout=" << params.timeout;
-#endif
+    if constexpr (debug_io || debug_poll_select)
+        dbgln("selecting on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted()) {
-#ifdef DEBUG_POLL_SELECT
-        dbgln("select was interrupted");
-#endif
+        dbgln<debug_poll_select>("select was interrupted");
         return -EINTR;
     }
 
@@ -203,9 +198,8 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
             current_thread->update_signal_mask(previous_signal_mask);
     });
 
-#if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << "polling on " << fds_info.size() << " fds, timeout=" << params.timeout;
-#endif
+    if constexpr (debug_io || debug_poll_select)
+        dbgln("polling on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted())
         return -EINTR;

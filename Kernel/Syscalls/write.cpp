@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/NumericLimits.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -124,9 +125,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     if (size == 0)
         return 0;
 
-#ifdef DEBUG_IO
-    dbg() << "sys$write(" << fd << ", " << (const void*)(data) << ", " << size << ")";
-#endif
+    dbgln<debug_io>("sys$write({}, {}, {})", fd, data, size);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;

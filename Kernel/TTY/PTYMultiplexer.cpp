@@ -26,12 +26,11 @@
 
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
-
-//#define PTMX_DEBUG
 
 namespace Kernel {
 
@@ -62,9 +61,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
         return EBUSY;
     auto master_index = m_freelist.take_last();
     auto master = adopt(*new MasterPTY(master_index));
-#ifdef PTMX_DEBUG
-    dbg() << "PTYMultiplexer::open: Vending master " << master->index();
-#endif
+    dbgln<debug_ptmx>("PTYMultiplexer::open: Vending master {}", master->index());
     auto description = FileDescription::create(move(master));
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
@@ -77,9 +74,7 @@ void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
     LOCKER(m_lock);
     m_freelist.append(index);
-#ifdef PTMX_DEBUG
-    dbg() << "PTYMultiplexer: " << index << " added to freelist";
-#endif
+    dbgln<debug_ptmx>("PTYMultiplexer: {} added to freelist", index);
 }
 
 }

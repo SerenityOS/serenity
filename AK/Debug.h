@@ -213,3 +213,45 @@ constexpr bool debug_io = true;
 #else
 constexpr bool debug_io = false;
 #endif
+
+#ifdef FORK_DEBUG
+constexpr bool debug_fork = true;
+#else
+constexpr bool debug_fork = false;
+#endif
+
+#ifdef DEBUG_POLL_SELECT
+constexpr bool debug_poll_select = true;
+#else
+constexpr bool debug_poll_select = false;
+#endif
+
+#ifdef HPET_DEBUG
+constexpr bool debug_hpet = true;
+#else
+constexpr bool debug_hpet = false;
+#endif
+
+#ifdef HPET_COMPARATOR_DEBUG
+constexpr bool debug_hpet_comperator = true;
+#else
+constexpr bool debug_hpet_comperator = false;
+#endif
+
+#ifdef MASTERPTY_DEBUG
+constexpr bool debug_masterpty = true;
+#else
+constexpr bool debug_masterpty = false;
+#endif
+
+#ifdef SLAVEPTY_DEBUG
+constexpr bool debug_slavepty = true;
+#else
+constexpr bool debug_slavepty = false;
+#endif
+
+#ifdef PTMX_DEBUG
+constexpr bool debug_ptmx = true;
+#else
+constexpr bool debug_ptmx = false;
+#endif

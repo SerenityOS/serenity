@@ -24,10 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
-
-//#define DEBUG_IO
 
 namespace Kernel {
 
@@ -38,9 +37,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         return -EINVAL;
     if (size == 0)
         return 0;
-#ifdef DEBUG_IO
-    dbg() << "sys$read(" << fd << ", " << (const void*)buffer.ptr() << ", " << size << ")";
-#endif
+    dbgln<debug_io>("sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;

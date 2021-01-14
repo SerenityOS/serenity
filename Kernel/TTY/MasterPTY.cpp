@@ -27,12 +27,11 @@
 #include "MasterPTY.h"
 #include "PTYMultiplexer.h"
 #include "SlavePTY.h"
+#include <AK/Debug.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
-
-//#define MASTERPTY_DEBUG
 
 namespace Kernel {
 
@@ -54,9 +53,7 @@ MasterPTY::MasterPTY(unsigned index)
 
 MasterPTY::~MasterPTY()
 {
-#ifdef MASTERPTY_DEBUG
-    dbg() << "~MasterPTY(" << m_index << ")";
-#endif
+    dbgln<debug_masterpty>("~MasterPTY({})", m_index);
     PTYMultiplexer::the().notify_master_destroyed({}, m_index);
 }
 
@@ -94,9 +91,7 @@ bool MasterPTY::can_write(const FileDescription&, size_t) const
 
 void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
 {
-#ifdef MASTERPTY_DEBUG
-    dbg() << "MasterPTY(" << m_index << "): slave closed, my retains: " << ref_count() << ", slave retains: " << m_slave->ref_count();
-#endif
+    dbgln<debug_masterpty>("MasterPTY({}): slave closed, my retains: {}, slave retains: {}", m_index, ref_count(), m_slave->ref_count());
     // +1 ref for my MasterPTY::m_slave
     // +1 ref for FileDescription::m_device
     if (m_slave->ref_count() == 2)
