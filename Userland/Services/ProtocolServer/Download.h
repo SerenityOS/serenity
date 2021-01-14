@@ -55,9 +55,6 @@ public:
     void set_download_fd(int fd) { m_download_fd = fd; }
     int download_fd() const { return m_download_fd; }
 
-protected:
-    explicit Download(ClientConnection&, NonnullOwnPtr<OutputFileStream>&&);
-
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_status_code(u32 status_code) { m_status_code = status_code; }
@@ -65,6 +62,9 @@ protected:
     void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
     void set_downloaded_size(size_t size) { m_downloaded_size = size; }
     const OutputFileStream& output_stream() const { return *m_output_stream; }
+
+protected:
+    explicit Download(ClientConnection&, NonnullOwnPtr<OutputFileStream>&&);
 
 private:
     ClientConnection& m_client;
