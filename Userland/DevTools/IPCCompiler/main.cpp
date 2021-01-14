@@ -271,9 +271,8 @@ enum class MessageID : i32 {
             builder.append('(');
             for (size_t i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
-                builder.append("const ");
                 builder.append(parameter.type);
-                builder.append("& ");
+                builder.append(" ");
                 builder.append(parameter.name);
                 if (i != parameters.size() - 1)
                     builder.append(", ");
@@ -283,9 +282,9 @@ enum class MessageID : i32 {
                 auto& parameter = parameters[i];
                 builder.append("m_");
                 builder.append(parameter.name);
-                builder.append("(");
+                builder.append("(move(");
                 builder.append(parameter.name);
-                builder.append(")");
+                builder.append("))");
                 if (i != parameters.size() - 1)
                     builder.append(", ");
             }
@@ -351,7 +350,9 @@ public:
             StringBuilder builder;
             for (size_t i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
+                builder.append("move(");
                 builder.append(parameter.name);
+                builder.append(")");
                 if (i != parameters.size() - 1)
                     builder.append(", ");
             }
