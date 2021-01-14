@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
@@ -195,11 +196,10 @@ public:
         , m_id(id)
         , m_capabilities(capabilities)
     {
-#ifdef PCI_DEBUG
-        for (auto capability : capabilities) {
-            dbg() << address << " has capbility " << capability.m_id;
+        if constexpr (debug_pci) {
+            for (auto capability : capabilities)
+                dbgln("{} has capability {}", address, capability.m_id);
         }
-#endif
     }
 
     Vector<Capability> capabilities() const { return m_capabilities; }

@@ -178,3 +178,26 @@ constexpr bool debug_ipv4_socket = true;
 constexpr bool debug_ipv4_socket = false;
 #endif
 
+#ifdef DEBUG_LOCAL_SOCKET
+constexpr bool debug_local_socket = true;
+#else
+constexpr bool debug_local_socket = false;
+#endif
+
+#ifdef DEBUG_SOCKET
+constexpr bool debug_socket = true;
+#else
+constexpr bool debug_socket = false;
+#endif
+
+#ifdef TCP_SOCKET_DEBUG
+constexpr bool debug_tcp_socket = true;
+#else
+constexpr bool debug_tcp_socket = false;
+#endif
+
+#ifdef PCI_DEBUG
+constexpr bool debug_pci = true;
+#else
+constexpr bool debug_pci = false;
+#endif
