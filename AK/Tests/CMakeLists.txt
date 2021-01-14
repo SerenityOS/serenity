@@ -1,5 +1,6 @@
 set(AK_TEST_SOURCES
     TestAllOf.cpp
+    TestAnyOf.cpp
     TestArray.cpp
     TestAtomic.cpp
     TestBase64.cpp
