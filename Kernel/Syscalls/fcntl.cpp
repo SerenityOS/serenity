@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
@@ -32,9 +33,7 @@ namespace Kernel {
 int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
-#ifdef DEBUG_IO
-    dbg() << "sys$fcntl: fd=" << fd << ", cmd=" << cmd << ", arg=" << arg;
-#endif
+    dbgln<debug_io>("sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -68,4 +67,5 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     }
     return 0;
 }
+
 }
