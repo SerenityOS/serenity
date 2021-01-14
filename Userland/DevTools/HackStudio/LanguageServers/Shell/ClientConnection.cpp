@@ -78,7 +78,7 @@ static DefaultDocumentClient s_default_document_client;
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
     auto file = Core::File::construct(this);
-    if (!file->open(message.file().fd(), Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
+    if (!file->open(message.file().take_fd(), Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
         errno = file->error();
         perror("open");
         dbgln("Failed to open project file");

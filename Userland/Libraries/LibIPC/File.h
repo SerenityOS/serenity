@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +27,15 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
+#include <AK/StdLibExtras.h>
+#include <unistd.h>
+
 namespace IPC {
 
 class File {
+    AK_MAKE_NONCOPYABLE(File);
+
 public:
     // Must have a default constructor, because LibIPC
     // default-constructs arguments prior to decoding them.
@@ -40,10 +47,48 @@ public:
     {
     }
 
+    // Tagged constructor for fd's that should be closed on destruction unless take_fd() is called.
+    enum Tag {
+        ConstructWithReceivedFileDescriptor = 1,
+    };
+    File(int fd, Tag)
+        : m_fd(fd)
+        , m_close_on_destruction(true)
+    {
+    }
+
+    File(File&& other)
+        : m_fd(exchange(other.m_fd, -1))
+        , m_close_on_destruction(exchange(other.m_close_on_destruction, false))
+    {
+    }
+
+    File& operator=(File&& other)
+    {
+        if (this != &other) {
+            m_fd = exchange(other.m_fd, -1);
+            m_close_on_destruction = exchange(other.m_close_on_destruction, false);
+        }
+        return *this;
+    }
+
+    ~File()
+    {
+        if (m_close_on_destruction && m_fd != -1)
+            close(m_fd);
+    }
+
     int fd() const { return m_fd; }
 
+    // NOTE: This is 'const' since generated IPC messages expose all parameters by const reference.
+    [[nodiscard]] int take_fd() const
+    {
+        return exchange(m_fd, -1);
+    }
+
 private:
-    int m_fd { -1 };
+    mutable int m_fd { -1 };
+    bool m_close_on_destruction { false };
 };
 
 }
