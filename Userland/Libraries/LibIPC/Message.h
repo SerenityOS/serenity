@@ -45,8 +45,6 @@ public:
     virtual const char* message_name() const = 0;
     virtual MessageBuffer encode() const = 0;
 
-    Function<void()> on_destruction;
-
 protected:
     Message();
 };
