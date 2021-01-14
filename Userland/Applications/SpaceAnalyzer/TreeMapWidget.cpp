@@ -84,7 +84,7 @@ Gfx::IntRect TreeMapWidget::inner_rect_for_frame(const Gfx::IntRect& rect) const
     Gfx::IntRect tmp_rect = rect;
     tmp_rect.shrink(2, 2); // border
     tmp_rect.shrink(2, 2); // shading
-    if (rect_can_contain_label(rect)) {
+    if (rect_can_contain_label(tmp_rect)) {
         tmp_rect.set_y(tmp_rect.y() + font().presentation_size() + margin);
         tmp_rect.set_height(tmp_rect.height() - (font().presentation_size() + margin * 2));
         tmp_rect.set_x(tmp_rect.x() + margin);
