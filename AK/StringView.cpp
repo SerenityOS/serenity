@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/AnyOf.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Find.h>
 #include <AK/FlyString.h>
 #include <AK/Memory.h>
 #include <AK/String.h>
@@ -270,21 +272,23 @@ bool StringView::operator==(const String& string) const
 
 Optional<size_t> StringView::find_first_of(char c) const
 {
-    for (size_t pos = 0; pos < m_length; ++pos) {
-        if (m_characters[pos] == c)
-            return pos;
+    if (const auto location = AK::find(begin(), end(), c); location != end()) {
+        return location.index();
     }
     return {};
 }
 
 Optional<size_t> StringView::find_first_of(const StringView& view) const
 {
-    for (size_t pos = 0; pos < m_length; ++pos) {
-        char c = m_characters[pos];
-        for (char view_char : view) {
-            if (c == view_char)
-                return pos;
-        }
+    if (const auto location = AK::find_if(begin(), end(),
+            [&](const auto c) {
+                return AK::any_of(view.begin(), view.end(),
+                    [&](const auto view_char) {
+                        return c == view_char;
+                    });
+            });
+        location != end()) {
+        return location.index();
     }
     return {};
 }
