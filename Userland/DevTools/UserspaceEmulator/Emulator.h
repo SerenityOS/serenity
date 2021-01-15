@@ -175,6 +175,9 @@ private:
     int virt$beep();
     int virt$ftruncate(int fd, off_t);
     mode_t virt$umask(mode_t);
+    int virt$anon_create(size_t, int);
+    int virt$recvfd(int);
+    int virt$sendfd(int, int);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);
