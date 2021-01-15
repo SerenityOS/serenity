@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -225,6 +227,8 @@ ByteBuffer CoreDump::create_notes_process_data() const
     process_obj.set("pid", m_process->pid().value());
     process_obj.set("termination_signal", m_process->termination_signal());
     process_obj.set("executable_path", m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
+    process_obj.set("arguments", JsonArray(m_process->arguments()));
+    process_obj.set("environment", JsonArray(m_process->environment()));
 
     auto json_data = process_obj.to_string();
     process_data.append(json_data.characters(), json_data.length() + 1);

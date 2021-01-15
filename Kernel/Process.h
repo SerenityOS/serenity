@@ -400,6 +400,9 @@ public:
     Custody* executable() { return m_executable.ptr(); }
     const Custody* executable() const { return m_executable.ptr(); }
 
+    const Vector<String>& arguments() const { return m_arguments; };
+    const Vector<String>& environment() const { return m_environment; };
+
     int number_of_open_file_descriptors() const;
     int max_open_file_descriptors() const
     {
@@ -613,6 +616,9 @@ private:
     RefPtr<Custody> m_cwd;
     RefPtr<Custody> m_root_directory;
     RefPtr<Custody> m_root_directory_relative_to_global_root;
+
+    Vector<String> m_arguments;
+    Vector<String> m_environment;
 
     RefPtr<TTY> m_tty;
 
