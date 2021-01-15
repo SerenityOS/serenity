@@ -49,12 +49,12 @@ int Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_par
     auto& custody = custody_or_error.value();
     auto absolute_path = custody->absolute_path();
 
-    if (absolute_path.length() + 1 > params.buffer.size)
-        return -ENAMETOOLONG;
-
-    if (!copy_to_user(params.buffer.data, absolute_path.characters(), absolute_path.length() + 1))
+    size_t ideal_size = absolute_path.length() + 1;
+    auto size_to_copy = min(ideal_size, params.buffer.size);
+    if (!copy_to_user(params.buffer.data, absolute_path.characters(), size_to_copy))
         return -EFAULT;
-    return 0;
+    // Note: we return the whole size here, not the copied size.
+    return ideal_size;
 };
 
 }
