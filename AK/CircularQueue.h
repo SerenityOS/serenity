@@ -60,22 +60,18 @@ public:
 
     size_t capacity() const { return Capacity; }
 
-    void enqueue(T&& value)
+    template<typename U = T>
+    void enqueue(U&& value)
     {
         auto& slot = elements()[(m_head + m_size) % Capacity];
         if (m_size == Capacity)
             slot.~T();
 
-        new (&slot) T(move(value));
+        new (&slot) T(forward<U>(value));
         if (m_size == Capacity)
             m_head = (m_head + 1) % Capacity;
         else
             ++m_size;
-    }
-
-    void enqueue(const T& value)
-    {
-        enqueue(T(value));
     }
 
     T dequeue()
