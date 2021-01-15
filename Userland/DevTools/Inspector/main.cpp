@@ -49,7 +49,7 @@ using namespace Inspector;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer rpath accept unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer rpath accept unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     window->show();
     remote_process.update();
 
-    if (pledge("stdio shared_buffer rpath accept unix", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer rpath accept unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

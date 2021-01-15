@@ -194,7 +194,7 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath wpath cpath shared_buffer accept unix fattr", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath sendfd shared_buffer accept unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

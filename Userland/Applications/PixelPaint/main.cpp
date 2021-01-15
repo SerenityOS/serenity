@@ -53,14 +53,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread shared_buffer accept rpath unix wpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio thread sendfd shared_buffer accept rpath unix wpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread shared_buffer accept rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio thread sendfd shared_buffer accept rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

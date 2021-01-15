@@ -32,12 +32,12 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     Core::EventLoop event_loop;
-    if (pledge("stdio shared_buffer unix accept", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer unix accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -50,7 +50,7 @@ int main(int, char**)
     bool ok = server->take_over_from_system_server();
     ASSERT(ok);
 
-    if (pledge("stdio shared_buffer accept", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
