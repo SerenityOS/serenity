@@ -57,7 +57,7 @@ public:
     void invalidate_screen();
     void invalidate_screen(const Gfx::IntRect&);
 
-    bool set_resolution(int desired_width, int desired_height);
+    bool set_resolution(int desired_width, int desired_height, int scale_factor);
 
     bool set_background_color(const String& background_color);
 
