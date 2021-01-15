@@ -38,7 +38,7 @@ int Process::sys$anon_create(size_t size, int options)
 
     int new_fd = alloc_fd();
     if (new_fd < 0)
-        return -new_fd;
+        return new_fd;
 
     auto vmobject = AnonymousVMObject::create_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
