@@ -39,6 +39,7 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,10 +49,13 @@
 
 namespace GUI {
 
+static i32 s_next_backing_store_serial;
+
 class WindowBackingStore {
 public:
     WindowBackingStore(NonnullRefPtr<Gfx::Bitmap> bitmap)
         : m_bitmap(bitmap)
+        , m_serial(++s_next_backing_store_serial)
     {
     }
 
@@ -60,8 +64,11 @@ public:
 
     Gfx::IntSize size() const { return m_bitmap->size(); }
 
+    i32 serial() const { return m_serial; }
+
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
+    const i32 m_serial;
 };
 
 static NeverDestroyed<HashTable<Window*>> all_windows;
@@ -351,7 +358,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         m_back_store = create_backing_store(event.window_size());
         ASSERT(m_back_store);
     } else if (m_double_buffering_enabled) {
-        bool still_has_pixels = m_back_store->bitmap().shared_buffer()->set_nonvolatile();
+        bool still_has_pixels = m_back_store->bitmap().set_nonvolatile();
         if (!still_has_pixels) {
             m_back_store = create_backing_store(event.window_size());
             ASSERT(m_back_store);
@@ -678,7 +685,7 @@ void Window::set_hovered_widget(Widget* widget)
 void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
 {
     auto& bitmap = backing_store.bitmap();
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shbuf_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.anon_fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
@@ -691,7 +698,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
         m_back_store = create_backing_store(m_front_store->size());
         ASSERT(m_back_store);
         memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
-        m_back_store->bitmap().shared_buffer()->set_volatile();
+        m_back_store->bitmap().set_volatile();
         return;
     }
 
@@ -700,7 +707,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
     for (auto& dirty_rect : dirty_rects)
         painter.blit(dirty_rect.location(), m_front_store->bitmap(), dirty_rect);
 
-    m_back_store->bitmap().shared_buffer()->set_volatile();
+    m_back_store->bitmap().set_volatile();
 }
 
 RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::IntSize& size)
@@ -718,7 +725,18 @@ RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const
 OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
-    auto bitmap = create_shared_bitmap(format, size);
+
+    ASSERT(!size.is_empty());
+    size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
+    size_t size_in_bytes = size.height() * pitch;
+
+    auto anon_fd = anon_create(round_up_to_power_of_two(size_in_bytes, PAGE_SIZE), O_CLOEXEC);
+    if (anon_fd < 0) {
+        perror("anon_create");
+        return {};
+    }
+
+    auto bitmap = Gfx::Bitmap::create_with_anon_fd(format, anon_fd, size, Gfx::Bitmap::ShouldCloseAnonymousFile::No);
     if (!bitmap)
         return {};
     return make<WindowBackingStore>(bitmap.release_nonnull());
@@ -870,9 +888,9 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
     if (!store)
         return;
     if (minimized || occluded) {
-        store->bitmap().shared_buffer()->set_volatile();
+        store->bitmap().set_volatile();
     } else {
-        if (!store->bitmap().shared_buffer()->set_nonvolatile()) {
+        if (!store->bitmap().set_nonvolatile()) {
             store = nullptr;
             update();
         }

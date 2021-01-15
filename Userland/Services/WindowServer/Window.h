@@ -190,18 +190,23 @@ public:
     const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
 
-    void set_backing_store(RefPtr<Gfx::Bitmap>&& backing_store)
+    void set_backing_store(RefPtr<Gfx::Bitmap> backing_store, i32 serial)
     {
         m_last_backing_store = move(m_backing_store);
         m_backing_store = move(backing_store);
+
+        m_last_backing_store_serial = m_backing_store_serial;
+        m_backing_store_serial = serial;
     }
 
     void swap_backing_stores()
     {
         swap(m_backing_store, m_last_backing_store);
+        swap(m_backing_store_serial, m_last_backing_store_serial);
     }
 
     Gfx::Bitmap* last_backing_store() { return m_last_backing_store.ptr(); }
+    i32 last_backing_store_serial() const { return m_last_backing_store_serial; }
 
     void set_global_cursor_tracking_enabled(bool);
     void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
@@ -340,6 +345,8 @@ private:
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
+    i32 m_backing_store_serial { -1 };
+    i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
