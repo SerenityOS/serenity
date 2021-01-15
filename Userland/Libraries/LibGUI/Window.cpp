@@ -777,13 +777,8 @@ void Window::apply_icon()
     if (!is_visible())
         return;
 
-    int rc = shbuf_seal(m_icon->shbuf_id());
-    ASSERT(rc == 0);
-
-    rc = shbuf_allow_all(m_icon->shbuf_id());
-    ASSERT(rc == 0);
-
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
+    auto icon = m_icon->to_shareable_bitmap();
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, icon);
 }
 
 void Window::start_wm_resize()
@@ -977,7 +972,7 @@ void Window::update_cursor()
     m_effective_cursor = new_cursor;
 
     if (m_custom_cursor)
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap());
     else
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)m_effective_cursor);
 }

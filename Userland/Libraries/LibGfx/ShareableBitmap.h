@@ -39,7 +39,7 @@ public:
 
     bool is_valid() const { return m_bitmap; }
 
-    i32 shbuf_id() const { return m_bitmap ? m_bitmap->shbuf_id() : -1; }
+    int anon_fd() const { return m_bitmap ? m_bitmap->anon_fd() : -1; }
 
     const Bitmap* bitmap() const { return m_bitmap; }
     Bitmap* bitmap() { return m_bitmap; }
