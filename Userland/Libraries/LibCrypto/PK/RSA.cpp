@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Random.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -115,9 +116,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
 
 void RSA::encrypt(ReadonlyBytes in, Bytes& out)
 {
-#ifdef CRYPTO_DEBUG
-    dbg() << "in size: " << in.size();
-#endif
+    dbgln<debug_crypto>("in size: {}", in.size());
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
         dbgln("value too large for key");
@@ -231,9 +230,7 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
 void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
-#ifdef CRYPTO_DEBUG
-    dbg() << "key size: " << mod_len;
-#endif
+    dbgln<debug_crypto>("key size: {}", mod_len);
     if (in.size() > mod_len - 11) {
         dbgln("message too long :(");
         out = out.trim(0);
@@ -265,9 +262,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     out.overwrite(3 + ps_length, in.data(), in.size());
     out = out.trim(3 + ps_length + in.size()); // should be a single block
 
-#ifdef CRYPTO_DEBUG
-    dbg() << "padded output size: " << 3 + ps_length + in.size() << " buffer size: " << out.size();
-#endif
+    dbgln<debug_crypto>("padded output size: {} buffer size: {}", 3 + ps_length + in.size(), out.size());
 
     RSA::encrypt(out, out);
 }

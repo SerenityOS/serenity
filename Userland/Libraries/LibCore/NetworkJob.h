@@ -81,3 +81,7 @@ private:
 const char* to_string(NetworkJob::Error);
 
 }
+
+template<>
+struct AK::Formatter<Core::NetworkJob> : Formatter<Core::Object> {
+};

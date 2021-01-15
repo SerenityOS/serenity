@@ -24,12 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <stdio.h>
 #include <unistd.h>
-
-//#define JOB_DEBUG
 
 namespace Gemini {
 
@@ -67,10 +66,11 @@ void Job::on_socket_connected()
             return;
         m_sent_data = true;
         auto raw_request = m_request.to_raw_request();
-#ifdef JOB_DEBUG
-        dbgln("Job: raw_request:");
-        dbg() << String::copy(raw_request).characters();
-#endif
+
+        if constexpr (debug_job) {
+            dbgln("Job: raw_request:");
+            dbgln("{}", String::copy(raw_request));
+        }
         bool success = write(raw_request);
         if (!success)
             deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });

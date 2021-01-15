@@ -24,11 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCore/NetworkJob.h>
 #include <LibCore/NetworkResponse.h>
 #include <stdio.h>
-
-//#define CNETWORKJOB_DEBUG
 
 namespace Core {
 
@@ -56,9 +55,7 @@ void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_response = move(response);
-#ifdef CNETWORKJOB_DEBUG
-    dbg() << *this << " job did_finish!";
-#endif
+    dbgln<debug_cnetworkjob>("{} job did_finish", *this);
     ASSERT(on_finish);
     on_finish(true);
     shutdown();

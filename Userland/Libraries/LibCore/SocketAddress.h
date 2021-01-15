@@ -113,3 +113,11 @@ private:
 const LogStream& operator<<(const LogStream&, const SocketAddress&);
 
 }
+
+template<>
+struct AK::Formatter<Core::SocketAddress> : Formatter<String> {
+    void format(FormatBuilder& builder, const Core::SocketAddress& value)
+    {
+        return Formatter<String>::format(builder, value.to_string());
+    }
+};

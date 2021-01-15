@@ -25,8 +25,7 @@
  */
 
 #include "Hunks.h"
-
-// #define DEBUG_HUNKS
+#include <AK/Debug.h>
 
 namespace Diff {
 Vector<Hunk> parse_hunks(const String& diff)
@@ -78,21 +77,19 @@ Vector<Hunk> parse_hunks(const String& diff)
         hunks.append(hunk);
     }
 
-#ifdef DEBUG_HUNKS
-    for (const auto& hunk : hunks) {
-        dbgln("Hunk location:");
-        dbg() << "orig: " << hunk.original_start_line;
-        dbg() << "target: " << hunk.target_start_line;
-        dbgln("removed:");
-        for (const auto& line : hunk.removed_lines) {
-            dbg() << "- " << line;
-        }
-        dbgln("added:");
-        for (const auto& line : hunk.added_lines) {
-            dbg() << "+ " << line;
+    if constexpr (debug_hunks) {
+        for (const auto& hunk : hunks) {
+            dbgln("Hunk location:");
+            dbgln("  orig: {}", hunk.original_start_line);
+            dbgln("  target: {}", hunk.target_start_line);
+            dbgln("  removed:");
+            for (const auto& line : hunk.removed_lines)
+                dbgln("- {}", line);
+            dbgln("  added:");
+            for (const auto& line : hunk.added_lines)
+                dbgln("+ {}", line);
         }
     }
-#endif
 
     return hunks;
 }
