@@ -58,6 +58,24 @@
         }
     }
 
+    @GUI::Widget {
+        fixed_height: 18
+
+        layout: @GUI::HorizontalBoxLayout {
+        }
+
+        @GUI::Label {
+            text: "Arguments:"
+            text_alignment: "CenterLeft"
+            fixed_width: 90
+        }
+
+        @GUI::Label {
+            name: "arguments_label"
+            text_alignment: "CenterLeft"
+        }
+    }
+
     @GUI::TabWidget {
         name: "tab_widget"
     }
