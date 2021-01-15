@@ -41,17 +41,13 @@ public:
     size_t size() const { return m_size; }
     bool is_empty() const { return m_size == 0; }
 
-    void enqueue(T&& value)
+    template<typename U = T>
+    void enqueue(U&& value)
     {
         if (m_segments.is_empty() || m_segments.last()->size() >= segment_size)
             m_segments.append(make<Vector<T, segment_size>>());
-        m_segments.last()->append(move(value));
+        m_segments.last()->append(forward<U>(value));
         ++m_size;
-    }
-
-    void enqueue(const T& value)
-    {
-        enqueue(T(value));
     }
 
     T dequeue()
