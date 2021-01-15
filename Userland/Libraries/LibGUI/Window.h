@@ -40,6 +40,8 @@
 
 namespace GUI {
 
+class WindowBackingStore;
+
 class Window : public Core::Object {
     C_OBJECT(Window)
 public:
@@ -157,8 +159,7 @@ public:
     const Widget* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(Widget*);
 
-    Gfx::Bitmap* front_bitmap() { return m_front_bitmap.ptr(); }
-    Gfx::Bitmap* back_bitmap() { return m_back_bitmap.ptr(); }
+    Gfx::Bitmap* back_bitmap();
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::IntSize&);
@@ -221,14 +222,15 @@ private:
 
     void server_did_destroy();
 
-    RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::IntSize&);
+    OwnPtr<WindowBackingStore> create_backing_store(const Gfx::IntSize&);
     RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::IntSize&);
-    void set_current_backing_bitmap(Gfx::Bitmap&, bool flush_immediately = false);
+    void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
     void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
     void force_update();
 
-    RefPtr<Gfx::Bitmap> m_front_bitmap;
-    RefPtr<Gfx::Bitmap> m_back_bitmap;
+    OwnPtr<WindowBackingStore> m_front_store;
+    OwnPtr<WindowBackingStore> m_back_store;
+
     RefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Gfx::Bitmap> m_custom_cursor;
     int m_window_id { 0 };
