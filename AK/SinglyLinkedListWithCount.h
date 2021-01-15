@@ -80,16 +80,11 @@ public:
         return List::take_first();
     }
 
-    void append(const T& value)
+    template<typename U = T>
+    void append(U&& value)
     {
         m_count++;
-        return SinglyLinkedList<T>::append(value);
-    }
-
-    void append(T&& value)
-    {
-        m_count++;
-        return List::append(move(value));
+        return List::append(forward<T>(value));
     }
 
     bool contains_slow(const T& value) const
@@ -135,28 +130,18 @@ public:
         return List::remove(iterator);
     }
 
-    void insert_before(Iterator iterator, const T& value)
+    template<typename U = T>
+    void insert_before(Iterator iterator, U&& value)
     {
         m_count++;
-        List::insert_before(iterator, value);
+        List::insert_before(iterator, forward<T>(value));
     }
 
-    void insert_before(Iterator iterator, T&& value)
+    template<typename U = T>
+    void insert_after(Iterator iterator, U&& value)
     {
         m_count++;
-        List::insert_before(iterator, move(value));
-    }
-
-    void insert_after(Iterator iterator, const T& value)
-    {
-        m_count++;
-        List::insert_after(iterator, value);
-    }
-
-    void insert_after(Iterator iterator, T&& value)
-    {
-        m_count++;
-        List::insert_after(iterator, move(value));
+        List::insert_after(iterator, forward<T>(value));
     }
 
 private:
