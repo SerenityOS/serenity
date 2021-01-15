@@ -1051,6 +1051,8 @@ char* realpath(const char* pathname, char* buffer)
     size_t size = PATH_MAX;
     bool self_allocated = false;
     if (buffer == nullptr) {
+        // Since we self-allocate, try to sneakily use a smaller buffer instead, in an attempt to use less memory.
+        size = 64;
         buffer = (char*)malloc(size);
         self_allocated = true;
     }
@@ -1061,6 +1063,29 @@ char* realpath(const char* pathname, char* buffer)
             free(buffer);
         errno = -rc;
         return nullptr;
+    }
+    if (self_allocated && static_cast<size_t>(rc) > size) {
+        // There was silent truncation, *and* we can simply retry without the caller noticing.
+        free(buffer);
+        size = static_cast<size_t>(rc);
+        buffer = (char*)malloc(size);
+        params.buffer = { buffer, size };
+        rc = syscall(SC_realpath, &params);
+        if (rc < 0) {
+            // Can only happen if we lose a race. Let's pretend we lost the race in the first place.
+            free(buffer);
+            errno = -rc;
+            return nullptr;
+        }
+        size_t new_size = static_cast<size_t>(rc);
+        if (new_size < size) {
+            // If we're here, the symlink has become longer while we were looking at it.
+            // There's not much we can do, unless we want to loop endlessly
+            // in this case. Let's leave it up to the caller whether to loop.
+            free(buffer);
+            errno = EAGAIN;
+            return nullptr;
+        }
     }
     errno = 0;
     return buffer;
