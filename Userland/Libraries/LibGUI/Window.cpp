@@ -777,8 +777,7 @@ void Window::apply_icon()
     if (!is_visible())
         return;
 
-    auto icon = m_icon->to_shareable_bitmap();
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, icon);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->to_shareable_bitmap());
 }
 
 void Window::start_wm_resize()

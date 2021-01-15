@@ -32,6 +32,7 @@
 #include <LibCore/Event.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/WindowType.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 
@@ -172,19 +173,16 @@ private:
 
 class WMWindowIconBitmapChangedEvent : public WMEvent {
 public:
-    WMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Gfx::IntSize& icon_size)
+    WMWindowIconBitmapChangedEvent(int client_id, int window_id, const Gfx::Bitmap* bitmap)
         : WMEvent(Event::Type::WM_WindowIconBitmapChanged, client_id, window_id)
-        , m_icon_buffer_id(icon_buffer_id)
-        , m_icon_size(icon_size)
+        , m_bitmap(move(bitmap))
     {
     }
 
-    int icon_buffer_id() const { return m_icon_buffer_id; }
-    const Gfx::IntSize& icon_size() const { return m_icon_size; }
+    const Gfx::Bitmap* bitmap() const { return m_bitmap; }
 
 private:
-    int m_icon_buffer_id;
-    Gfx::IntSize m_icon_size;
+    RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
 class MultiPaintEvent final : public Event {

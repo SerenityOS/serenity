@@ -60,7 +60,7 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     if (!decoder.decode(size))
         return false;
 
-    auto bitmap = Gfx::Bitmap::create_with_anon_fd(Gfx::BitmapFormat::RGBA32, anon_file.fd(), size, Gfx::Bitmap::ShouldCloseAnonymousFile::No);
+    auto bitmap = Gfx::Bitmap::create_with_anon_fd(Gfx::BitmapFormat::RGBA32, anon_file.take_fd(), size, Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
     shareable_bitmap = bitmap->to_shareable_bitmap();
     return true;
 }

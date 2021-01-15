@@ -256,17 +256,9 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
 
     case GUI::Event::WM_WindowIconBitmapChanged: {
         auto& changed_event = static_cast<GUI::WMWindowIconBitmapChangedEvent&>(event);
-#ifdef EVENT_DEBUG
-        dbgln("WM_WindowIconBitmapChanged: client_id={}, window_id={}, icon_buffer_id={}",
-            changed_event.client_id(),
-            changed_event.window_id(),
-            changed_event.icon_buffer_id());
-#endif
         if (auto* window = WindowList::the().window(identifier)) {
-            auto buffer = SharedBuffer::create_from_shbuf_id(changed_event.icon_buffer_id());
-            ASSERT(buffer);
             if (window->button())
-                window->button()->set_icon(Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *buffer, changed_event.icon_size()));
+                window->button()->set_icon(changed_event.bitmap());
         }
         break;
     }
