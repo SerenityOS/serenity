@@ -35,7 +35,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath wpath cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept rpath wpath cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

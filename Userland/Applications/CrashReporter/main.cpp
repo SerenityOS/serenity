@@ -73,7 +73,7 @@ static String build_backtrace(const CoreDump::Reader& coredump)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept cpath rpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept cpath rpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

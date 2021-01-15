@@ -42,14 +42,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio cpath rpath shared_buffer unix fattr", nullptr) < 0) {
+    if (pledge("stdio cpath rpath sendfd shared_buffer unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio cpath rpath shared_buffer", nullptr) < 0) {
+    if (pledge("stdio cpath rpath sendfd shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

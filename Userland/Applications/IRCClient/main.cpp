@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio inet dns unix shared_buffer cpath rpath fattr wpath cpath", nullptr) < 0) {
+    if (pledge("stdio inet dns unix sendfd shared_buffer cpath rpath fattr wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio inet dns unix shared_buffer rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio inet dns unix sendfd shared_buffer rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

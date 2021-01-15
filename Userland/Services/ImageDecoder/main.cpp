@@ -32,7 +32,7 @@
 int main(int, char**)
 {
     Core::EventLoop event_loop;
-    if (pledge("stdio shared_buffer unix", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -43,7 +43,7 @@ int main(int, char**)
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     IPC::new_client_connection<ImageDecoder::ClientConnection>(socket.release_nonnull(), 1);
-    if (pledge("stdio shared_buffer", nullptr) < 0) {
+    if (pledge("stdio sendfd shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

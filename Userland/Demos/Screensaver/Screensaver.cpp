@@ -124,14 +124,14 @@ void Screensaver::draw()
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath wpath cpath shared_buffer cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath sendfd shared_buffer cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
+    if (pledge("stdio rpath sendfd shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

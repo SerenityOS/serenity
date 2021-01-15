@@ -105,14 +105,14 @@ static bool can_access_pid(pid_t pid)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc shared_buffer accept rpath exec unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio proc sendfd shared_buffer accept rpath exec unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio proc shared_buffer accept rpath exec", nullptr) < 0) {
+    if (pledge("stdio proc sendfd shared_buffer accept rpath exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

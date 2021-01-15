@@ -303,7 +303,7 @@ static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio tty rpath accept cpath wpath sendfd shared_buffer proc exec unix fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio tty rpath accept cpath wpath shared_buffer proc exec unix", nullptr) < 0) {
+    if (pledge("stdio tty rpath accept cpath wpath sendfd shared_buffer proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
