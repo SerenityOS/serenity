@@ -25,12 +25,12 @@
  */
 
 #include <AK/BinarySearch.h>
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>
 
-//#define VRA_DEBUG
 #define VM_GUARD_PAGES
 
 namespace Kernel {
@@ -78,11 +78,18 @@ Vector<Range, 2> Range::carve(const Range& taken)
         parts.append({ base(), taken.base().get() - base().get() });
     if (taken.end() < end())
         parts.append({ taken.end(), end().get() - taken.end().get() });
-#ifdef VRA_DEBUG
-    dbg() << "VRA: carve: take " << String::format("%x", taken.base().get()) << "-" << String::format("%x", taken.end().get() - 1) << " from " << String::format("%x", base().get()) << "-" << String::format("%x", end().get() - 1);
-    for (size_t i = 0; i < parts.size(); ++i)
-        dbg() << "        " << String::format("%x", parts[i].base().get()) << "-" << String::format("%x", parts[i].end().get() - 1);
-#endif
+
+    if constexpr (debug_vra) {
+        dbgln("VRA: carve: take {:x}-{:x} from {:x}-{:x}",
+            taken.base().get(),
+            taken.end().get() - 1,
+            base().get(),
+            end().get() - 1);
+
+        for (size_t i = 0; i < parts.size(); ++i)
+            dbgln("        {:x}-{:x}", parts[i].base().get(), parts[i].end().get() - 1);
+    }
+
     return parts;
 }
 
@@ -122,17 +129,15 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 
         Range allocated_range(VirtualAddress(aligned_base), size);
         if (available_range == allocated_range) {
-#ifdef VRA_DEBUG
-            dbg() << "VRA: Allocated perfect-fit anywhere(" << String::format("%zu", size) << ", " << String::format("%zu", alignment) << "): " << String::format("%x", allocated_range.base().get());
-#endif
+            dbgln<debug_vra>("VRA: Allocated perfect-fit anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
             m_available_ranges.remove(i);
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
-#ifdef VRA_DEBUG
-        dbg() << "VRA: Allocated anywhere(" << String::format("%zu", size) << ", " << String::format("%zu", alignment) << "): " << String::format("%x", allocated_range.base().get());
-        dump();
-#endif
+        if constexpr (debug_vra) {
+            dbgln<debug_vra>("VRA: Allocated anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
+            dump();
+        }
         return allocated_range;
     }
     klog() << "VRA: Failed to allocate anywhere: " << size << ", " << alignment;
@@ -155,10 +160,12 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
-#ifdef VRA_DEBUG
-        dbg() << "VRA: Allocated specific(" << size << "): " << String::format("%x", available_range.base().get());
-        dump();
-#endif
+
+        if constexpr (debug_vra) {
+            dbgln("VRA: Allocated specific({}): {}", size, available_range.base().get());
+            dump();
+        }
+
         return allocated_range;
     }
     dbgln("VRA: Failed to allocate specific range: {}({})", base, size);
@@ -172,10 +179,10 @@ void RangeAllocator::deallocate(Range range)
     ASSERT(range.size());
     ASSERT(range.base() < range.end());
 
-#ifdef VRA_DEBUG
-    dbg() << "VRA: Deallocate: " << String::format("%x", range.base().get()) << "(" << range.size() << ")";
-    dump();
-#endif
+    if constexpr (debug_vra) {
+        dbgln("VRA: Deallocate: {}({})", range.base().get(), range.size());
+        dump();
+    }
 
     ASSERT(!m_available_ranges.is_empty());
 

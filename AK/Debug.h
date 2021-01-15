@@ -255,3 +255,45 @@ constexpr bool debug_ptmx = true;
 #else
 constexpr bool debug_ptmx = false;
 #endif
+
+#ifdef TTY_DEBUG
+constexpr bool debug_tty = true;
+#else
+constexpr bool debug_tty = false;
+#endif
+
+#ifdef CONTIGUOUS_VMOBJECT_DEBUG
+constexpr bool debug_contiguous_vmobject = true;
+#else
+constexpr bool debug_contiguous_vmobject = false;
+#endif
+
+#ifdef VRA_DEBUG
+constexpr bool debug_vra = true;
+#else
+constexpr bool debug_vra = false;
+#endif
+
+#ifdef COPY_DEBUG
+constexpr bool debug_copy = true;
+#else
+constexpr bool debug_copy = false;
+#endif
+
+#ifdef DEBUG_CURSOR_TOOL
+constexpr bool debug_cursor_tool = true;
+#else
+constexpr bool debug_cursor_tool = false;
+#endif
+
+#ifdef DEBUG_FILE_CONTENT
+constexpr bool debug_file_content = true;
+#else
+constexpr bool debug_file_content = false;
+#endif
+
+#ifdef DEBUG_GZIP
+constexpr bool debug_gzip = true;
+#else
+constexpr bool debug_gzip = false;
+#endif

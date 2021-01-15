@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -34,8 +35,6 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-
-//#define PAGE_FAULT_DEBUG
 
 namespace Kernel {
 
@@ -411,9 +410,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
-#ifdef PAGE_FAULT_DEBUG
-            dbg() << "NP(inode) fault in Region{" << this << "}[" << page_index_in_region << "]";
-#endif
+            dbgln<debug_page_fault>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
             return handle_inode_fault(page_index_in_region);
         }
 
@@ -438,14 +435,10 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
-#ifdef PAGE_FAULT_DEBUG
-        dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
-#endif
+        dbgln<debug_page_fault>("PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-#ifdef PAGE_FAULT_DEBUG
-            dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
-#endif
+            dbgln<debug_page_fault>("NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_zero_fault(page_index_in_region);
         }
         return handle_cow_fault(page_index_in_region);
@@ -479,18 +472,14 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (page_slot->is_lazy_committed_page()) {
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
-#ifdef PAGE_FAULT_DEBUG
-        dbg() << "      >> ALLOCATED COMMITTED " << page_slot->paddr();
-#endif
+        dbgln<debug_page_fault>("      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_slot.is_null()) {
             klog() << "MM: handle_zero_fault was unable to allocate a physical page";
             return PageFaultResponse::OutOfMemory;
         }
-#ifdef PAGE_FAULT_DEBUG
-        dbg() << "      >> ALLOCATED " << page_slot->paddr();
-#endif
+        dbgln<debug_page_fault>("      >> ALLOCATED {}", page_slot->paddr());
     }
 
     if (!remap_vmobject_page(page_index_in_vmobject)) {
@@ -529,14 +518,10 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "Inode fault in " << name() << " page index: " << page_index_in_region;
-#endif
+    dbgln<debug_page_fault>("Inode fault in {} page index: {}", name(), page_index_in_region);
 
     if (!vmobject_physical_page_entry.is_null()) {
-#ifdef PAGE_FAULT_DEBUG
-        dbg() << ("MM: page_in_from_inode() but page already present. Fine with me!");
-#endif
+        dbgln<debug_page_fault>("MM: page_in_from_inode() but page already present. Fine with me!");
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
