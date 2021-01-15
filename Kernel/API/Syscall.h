@@ -234,12 +234,6 @@ struct MutableBufferArgument {
     SizeType size { 0 };
 };
 
-template<typename DataType, typename SizeType>
-struct ImmutableBufferArgument {
-    const DataType* data { nullptr };
-    SizeType size { 0 };
-};
-
 struct StringListArgument {
     StringArgument* strings {};
     size_t length { 0 };
