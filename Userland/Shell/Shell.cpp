@@ -886,10 +886,12 @@ void Shell::execute_process(Vector<const char*>&& argv)
         struct stat st;
         if (stat(argv[0], &st)) {
             fprintf(stderr, "stat(%s): %s\n", argv[0], strerror(errno));
-            _exit(126);
+            // Return code 127 on command not found.
+            _exit(127);
         }
         if (!(st.st_mode & S_IXUSR)) {
             fprintf(stderr, "%s: Not executable\n", argv[0]);
+            // Return code 126 when file is not executable.
             _exit(126);
         }
         if (saved_errno == ENOENT) {
