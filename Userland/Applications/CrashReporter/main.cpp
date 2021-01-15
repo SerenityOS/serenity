@@ -105,6 +105,8 @@ int main(int argc, char** argv)
     Vector<TitleAndText> thread_backtraces;
 
     String executable_path;
+    Vector<String> arguments;
+    Vector<String> environment;
     int pid { 0 };
     u8 termination_signal { 0 };
 
@@ -123,6 +125,8 @@ int main(int argc, char** argv)
         });
 
         executable_path = coredump->process_executable_path();
+        arguments = coredump->process_arguments();
+        environment = coredump->process_environment();
         pid = coredump->process_pid();
         termination_signal = coredump->process_termination_signal();
     }
@@ -188,6 +192,9 @@ int main(int argc, char** argv)
         Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
     };
 
+    auto& arguments_label = *widget.find_descendant_of_type_named<GUI::Label>("arguments_label");
+    arguments_label.set_text(String::join(" ", arguments));
+
     auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto& backtrace_tab = tab_widget.add_tab<GUI::Widget>("Backtrace");
@@ -208,6 +215,15 @@ int main(int argc, char** argv)
         backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
     }
+
+    auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment");
+    environment_tab.set_layout<GUI::VerticalBoxLayout>();
+    environment_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& environment_text_editor = environment_tab.add<GUI::TextEditor>();
+    environment_text_editor.set_text(String::join("\n", environment));
+    environment_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+    environment_text_editor.set_should_hide_unnecessary_scrollbars(true);
 
     auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {
