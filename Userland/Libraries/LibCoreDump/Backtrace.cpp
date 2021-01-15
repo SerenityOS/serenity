@@ -68,29 +68,27 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
     return info_ptr;
 }
 
-Backtrace::Backtrace(const Reader& coredump)
+Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info)
+    : m_thread_info(move(thread_info))
 {
-    coredump.for_each_thread_info([this, &coredump](const ELF::Core::ThreadInfo& thread_info) {
-        uint32_t* ebp = (uint32_t*)thread_info.regs.ebp;
-        uint32_t* eip = (uint32_t*)thread_info.regs.eip;
-        while (ebp && eip) {
-            add_backtrace_entry(coredump, (FlatPtr)eip);
-            auto next_eip = coredump.peek_memory((FlatPtr)(ebp + 1));
-            auto next_ebp = coredump.peek_memory((FlatPtr)(ebp));
-            if (!next_eip.has_value() || !next_ebp.has_value())
-                break;
-            eip = (uint32_t*)next_eip.value();
-            ebp = (uint32_t*)next_ebp.value();
-        }
-        return IterationDecision::Continue;
-    });
+    uint32_t* ebp = (uint32_t*)m_thread_info.regs.ebp;
+    uint32_t* eip = (uint32_t*)m_thread_info.regs.eip;
+    while (ebp && eip) {
+        add_entry(coredump, (FlatPtr)eip);
+        auto next_eip = coredump.peek_memory((FlatPtr)(ebp + 1));
+        auto next_ebp = coredump.peek_memory((FlatPtr)(ebp));
+        if (!next_eip.has_value() || !next_ebp.has_value())
+            break;
+        eip = (uint32_t*)next_eip.value();
+        ebp = (uint32_t*)next_ebp.value();
+    }
 }
 
 Backtrace::~Backtrace()
 {
 }
 
-void Backtrace::add_backtrace_entry(const Reader& coredump, FlatPtr eip)
+void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
 {
     auto* region = coredump.region_containing((FlatPtr)eip);
     if (!region) {
