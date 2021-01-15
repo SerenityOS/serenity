@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-solitaire");
 
-    if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
+    if (pledge("stdio sendfd rpath shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
