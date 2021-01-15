@@ -26,7 +26,6 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
@@ -159,11 +158,6 @@ const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) co
         return IterationDecision::Continue;
     });
     return ret;
-}
-
-const Backtrace Reader::backtrace() const
-{
-    return Backtrace(*this);
 }
 
 int Reader::process_pid() const
