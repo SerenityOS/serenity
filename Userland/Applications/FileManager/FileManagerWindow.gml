@@ -25,6 +25,11 @@
         @GUI::ToolBar {
             name: "breadcrumb_toolbar"
 
+            @GUI::Label {
+                text: "Location: "
+                autosize: true
+            }
+
             @GUI::BreadcrumbBar {
                 name: "breadcrumb_bar"
             }
