@@ -1071,12 +1071,12 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    auto* region = process().allocate_region({}, thread_specific_region_size(), "Thread-specific", PROT_READ | PROT_WRITE);
-    if (!region)
-        return KResult(-ENOMEM);
+    auto region_or_error = process().allocate_region({}, thread_specific_region_size(), "Thread-specific", PROT_READ | PROT_WRITE);
+    if (region_or_error.is_error())
+        return region_or_error.error();
 
     SmapDisabler disabler;
-    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
+    auto* thread_specific_data = (ThreadSpecificData*)region_or_error.value()->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;

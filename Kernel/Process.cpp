@@ -142,54 +142,56 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
     return region;
 }
 
-Region* Process::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
+KResultOr<Region*> Process::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
 {
     ASSERT(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
     if (!vmobject)
-        return nullptr;
+        return KResult(-ENOMEM);
     auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot));
     if (!region->map(page_directory()))
-        return nullptr;
+        return KResult(-ENOMEM);
     return &add_region(move(region));
 }
 
-Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, AllocationStrategy strategy)
+KResultOr<Region*> Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, AllocationStrategy strategy)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
-        return nullptr;
+        return KResult(-ENOMEM);
     return allocate_region(range, name, prot, strategy);
 }
 
-Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
+KResultOr<Region*> Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
 {
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject <= offset_in_vmobject) {
         dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
-        return nullptr;
+        return KResult(-EINVAL);
     }
     if (offset_in_vmobject >= vmobject->size()) {
         dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.");
-        return nullptr;
+        return KResult(-EINVAL);
     }
     if (end_in_vmobject > vmobject->size()) {
         dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.");
-        return nullptr;
+        return KResult(-EINVAL);
     }
     offset_in_vmobject &= PAGE_MASK;
     auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot), true, shared));
-    if (!region.map(page_directory()))
-        return nullptr;
+    if (!region.map(page_directory())) {
+        // FIXME: What is an appropriate error code here, really?
+        return KResult(-ENOMEM);
+    }
     return &region;
 }
 
-Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
+KResultOr<Region*> Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
-        return nullptr;
+        return KResult(-ENOMEM);
     return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, shared);
 }
 
