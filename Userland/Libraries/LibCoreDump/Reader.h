@@ -65,7 +65,9 @@ public:
     int process_pid() const;
     u8 process_termination_signal() const;
     String process_executable_path() const;
-    const HashMap<String, String> metadata() const;
+    Vector<String> process_arguments() const;
+    Vector<String> process_environment() const;
+    HashMap<String, String> metadata() const;
 
 private:
     Reader(NonnullRefPtr<MappedFile>);

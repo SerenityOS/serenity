@@ -184,7 +184,35 @@ String Reader::process_executable_path() const
     return executable_path.as_string_or({});
 }
 
-const HashMap<String, String> Reader::metadata() const
+Vector<String> Reader::process_arguments() const
+{
+    auto process_info = this->process_info();
+    auto arguments = process_info.get("arguments");
+    if (!arguments.is_array())
+        return {};
+    Vector<String> vector;
+    arguments.as_array().for_each([&](auto& value) {
+        if (value.is_string())
+            vector.append(value.as_string());
+    });
+    return vector;
+}
+
+Vector<String> Reader::process_environment() const
+{
+    auto process_info = this->process_info();
+    auto environment = process_info.get("environment");
+    if (!environment.is_array())
+        return {};
+    Vector<String> vector;
+    environment.as_array().for_each([&](auto& value) {
+        if (value.is_string())
+            vector.append(value.as_string());
+    });
+    return vector;
+}
+
+HashMap<String, String> Reader::metadata() const
 {
     const ELF::Core::Metadata* metadata_notes_entry = nullptr;
     for (NotesEntryIterator it((const u8*)m_coredump_image.program_header(m_notes_segment_index).raw_data()); !it.at_end(); it.next()) {
