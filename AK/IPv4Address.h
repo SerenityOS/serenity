@@ -148,6 +148,14 @@ inline const LogStream& operator<<(const LogStream& stream, const IPv4Address& v
     return stream << value.to_string();
 }
 
+template<>
+struct Formatter<IPv4Address> : Formatter<String> {
+    void format(FormatBuilder& builder, IPv4Address value)
+    {
+        return Formatter<String>::format(builder, value.to_string());
+    }
+};
+
 }
 
 using AK::IPv4Address;

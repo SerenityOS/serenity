@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -88,21 +89,18 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
     auto high = [](u64 value) -> u32 { return value >> 32; };
     auto low = [](u64 value) -> u32 { return value & 0xffffffff; };
 
-#ifdef GHASH_PROCESS_DEBUG
-    dbg() << "AAD bits: " << high(aad_bits) << " : " << low(aad_bits);
-    dbg() << "Cipher bits: " << high(cipher_bits) << " : " << low(cipher_bits);
-
-    dbg() << "Tag bits: " << tag[0] << " : " << tag[1] << " : " << tag[2] << " : " << tag[3];
-#endif
+    if constexpr (debug_ghash_process) {
+        dbgln("AAD bits: {} : {}", high(aad_bits), low(aad_bits));
+        dbgln("Cipher bits: {} : {}", high(cipher_bits), low(cipher_bits));
+        dbgln("Tag bits: {} : {} : {} : {}", tag[0], tag[1], tag[2], tag[3]);
+    }
 
     tag[0] ^= high(aad_bits);
     tag[1] ^= low(aad_bits);
     tag[2] ^= high(cipher_bits);
     tag[3] ^= low(cipher_bits);
 
-#ifdef GHASH_PROCESS_DEBUG
-    dbg() << "Tag bits: " << tag[0] << " : " << tag[1] << " : " << tag[2] << " : " << tag[3];
-#endif
+    dbgln<debug_ghash_process>("Tag bits: {} : {} : {} : {}", tag[0], tag[1], tag[2], tag[3]);
 
     galois_multiply(tag, m_key, tag);
 

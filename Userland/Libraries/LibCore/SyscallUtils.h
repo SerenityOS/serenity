@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <errno.h>
@@ -41,10 +42,11 @@ inline int safe_syscall(Syscall syscall, Args&&... args)
     for (;;) {
         int sysret = syscall(forward<Args>(args)...);
         if (sysret == -1) {
-#ifdef SAFE_SYSCALL_DEBUG
-            int saved_errno = errno;
-            dbg() << "Core::safe_syscall: " << sysret << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
-#endif
+            if constexpr (debug_safe_syscall) {
+                int saved_errno = errno;
+                dbgln<debug_safe_syscall>("Core::safe_syscall: {} ({}: {})", sysret, saved_errno, strerror(saved_errno));
+            }
+
             if (errno == EINTR)
                 continue;
             ASSERT_NOT_REACHED();

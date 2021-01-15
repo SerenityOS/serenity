@@ -297,3 +297,57 @@ constexpr bool debug_gzip = true;
 #else
 constexpr bool debug_gzip = false;
 #endif
+
+#ifdef CNETWORKJOB_DEBUG
+constexpr bool debug_cnetworkjob = true;
+#else
+constexpr bool debug_cnetworkjob = false;
+#endif
+
+#ifdef CSOCKET_DEBUG
+constexpr bool debug_csocket = true;
+#else
+constexpr bool debug_csocket = false;
+#endif
+
+#ifdef SAFE_SYSCALL_DEBUG
+constexpr bool debug_safe_syscall = true;
+#else
+constexpr bool debug_safe_syscall = false;
+#endif
+
+#ifdef GHASH_PROCESS_DEBUG
+constexpr bool debug_ghash_process = true;
+#else
+constexpr bool debug_ghash_process = false;
+#endif
+
+#ifdef NT_DEBUG
+constexpr bool debug_nt = true;
+#else
+constexpr bool debug_nt = false;
+#endif
+
+#ifdef CRYPTO_DEBUG
+constexpr bool debug_crypto = true;
+#else
+constexpr bool debug_crypto = false;
+#endif
+
+#ifdef DWARF_DEBUG
+constexpr bool debug_dwarf = true;
+#else
+constexpr bool debug_dwarf = false;
+#endif
+
+#ifdef DEBUG_HUNKS
+constexpr bool debug_hunks = true;
+#else
+constexpr bool debug_hunks = false;
+#endif
+
+#ifdef JOB_DEBUG
+constexpr bool debug_job = true;
+#else
+constexpr bool debug_job = false;
+#endif
