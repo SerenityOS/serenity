@@ -135,14 +135,10 @@ public:
         return value;
     }
 
-    void append(const T& value)
+    template<typename U = T>
+    void append(U&& value)
     {
-        append(T(value));
-    }
-
-    void append(T&& value)
-    {
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         if (!m_head) {
             m_head = node;
             m_tail = node;
@@ -201,14 +197,10 @@ public:
         delete iterator.m_node;
     }
 
-    void insert_before(Iterator iterator, const T& value)
+    template<typename U = T>
+    void insert_before(Iterator iterator, U&& value)
     {
-        insert_before(iterator, T(value));
-    }
-
-    void insert_before(Iterator iterator, T&& value)
-    {
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         node->next = iterator.m_node;
         if (m_head == iterator.m_node)
             m_head = node;
@@ -216,19 +208,15 @@ public:
             iterator.m_prev->next = node;
     }
 
-    void insert_after(Iterator iterator, const T& value)
-    {
-        insert_after(iterator, T(value));
-    }
-
-    void insert_after(Iterator iterator, T&& value)
+    template<typename U = T>
+    void insert_after(Iterator iterator, U&& value)
     {
         if (iterator.is_end()) {
             append(value);
             return;
         }
 
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         node->next = iterator.m_node->next;
 
         iterator.m_node->next = node;
