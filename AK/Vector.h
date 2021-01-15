@@ -278,11 +278,12 @@ public:
         m_size -= count;
     }
 
-    void insert(size_t index, T&& value)
+    template<typename U = T>
+    void insert(size_t index, U&& value)
     {
         ASSERT(index <= size());
         if (index == size())
-            return append(move(value));
+            return append(forward<U>(value));
         grow_capacity(size() + 1);
         ++m_size;
         if constexpr (Traits<T>::is_trivial()) {
@@ -293,26 +294,21 @@ public:
                 at(i - 1).~T();
             }
         }
-        new (slot(index)) T(move(value));
+        new (slot(index)) T(forward<U>(value));
     }
 
-    void insert(size_t index, const T& value)
-    {
-        insert(index, T(value));
-    }
-
-    template<typename C>
-    void insert_before_matching(T&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr)
+    template<typename C, typename U = T>
+    void insert_before_matching(U&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr)
     {
         for (size_t i = first_index; i < size(); ++i) {
             if (callback(at(i))) {
-                insert(i, move(value));
+                insert(i, forward<U>(value));
                 if (inserted_index)
                     *inserted_index = i;
                 return;
             }
         }
-        append(move(value));
+        append(forward<U>(value));
         if (inserted_index)
             *inserted_index = size() - 1;
     }
@@ -404,16 +400,12 @@ public:
         }
     }
 
-    ALWAYS_INLINE void unchecked_append(T&& value)
+    template<typename U = T>
+    ALWAYS_INLINE void unchecked_append(U&& value)
     {
         ASSERT((size() + 1) <= capacity());
-        new (slot(m_size)) T(move(value));
+        new (slot(m_size)) T(forward<U>(value));
         ++m_size;
-    }
-
-    ALWAYS_INLINE void unchecked_append(const T& value)
-    {
-        unchecked_append(T(value));
     }
 
     template<class... Args>
@@ -436,14 +428,10 @@ public:
         append(T(value));
     }
 
-    void prepend(T&& value)
+    template<typename U = T>
+    void prepend(U&& value)
     {
-        insert(0, move(value));
-    }
-
-    void prepend(const T& value)
-    {
-        insert(0, value);
+        insert(0, forward<U>(value));
     }
 
     void prepend(Vector&& other)
