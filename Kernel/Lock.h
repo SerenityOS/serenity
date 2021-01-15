@@ -110,12 +110,27 @@ public:
     {
         m_lock.lock(mode);
     }
-    ALWAYS_INLINE ~Locker() { unlock(); }
-    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
-    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive) { m_lock.lock(mode); }
+    ALWAYS_INLINE ~Locker()
+    {
+        if (m_locked)
+            unlock();
+    }
+    ALWAYS_INLINE void unlock()
+    {
+        ASSERT(m_locked);
+        m_locked = false;
+        m_lock.unlock();
+    }
+    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive)
+    {
+        ASSERT(!m_locked);
+        m_locked = true;
+        m_lock.lock(mode);
+    }
 
 private:
     Lock& m_lock;
+    bool m_locked { true };
 };
 
 #ifdef LOCK_DEBUG
