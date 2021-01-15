@@ -1049,11 +1049,16 @@ char* realpath(const char* pathname, char* buffer)
         return nullptr;
     }
     size_t size = PATH_MAX;
-    if (buffer == nullptr)
+    bool self_allocated = false;
+    if (buffer == nullptr) {
         buffer = (char*)malloc(size);
+        self_allocated = true;
+    }
     Syscall::SC_realpath_params params { { pathname, strlen(pathname) }, { buffer, size } };
     int rc = syscall(SC_realpath, &params);
     if (rc < 0) {
+        if (self_allocated)
+            free(buffer);
         errno = -rc;
         return nullptr;
     }
