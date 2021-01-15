@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
@@ -304,19 +305,19 @@ void TTY::flush_input()
 void TTY::set_termios(const termios& t)
 {
     m_termios = t;
-#ifdef TTY_DEBUG
-    dbg() << tty_name() << " set_termios: "
-          << "ECHO=" << should_echo_input()
-          << ", ISIG=" << should_generate_signals()
-          << ", ICANON=" << in_canonical_mode()
-          << ", ECHOE=" << ((m_termios.c_lflag & ECHOE) != 0)
-          << ", ECHOK=" << ((m_termios.c_lflag & ECHOK) != 0)
-          << ", ECHONL=" << ((m_termios.c_lflag & ECHONL) != 0)
-          << ", ISTRIP=" << ((m_termios.c_iflag & ISTRIP) != 0)
-          << ", ICRNL=" << ((m_termios.c_iflag & ICRNL) != 0)
-          << ", INLCR=" << ((m_termios.c_iflag & INLCR) != 0)
-          << ", IGNCR=" << ((m_termios.c_iflag & IGNCR) != 0);
-#endif
+
+    dbgln<debug_tty>("{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}",
+        tty_name(),
+        should_echo_input(),
+        should_generate_signals(),
+        in_canonical_mode(),
+        ((m_termios.c_lflag & ECHOE) != 0),
+        ((m_termios.c_lflag & ECHOK) != 0),
+        ((m_termios.c_lflag & ECHONL) != 0),
+        ((m_termios.c_iflag & ISTRIP) != 0),
+        ((m_termios.c_iflag & ICRNL) != 0),
+        ((m_termios.c_iflag & INLCR) != 0),
+        ((m_termios.c_iflag & IGNCR) != 0));
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)

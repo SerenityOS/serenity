@@ -24,13 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
-
-//#define COMMIT_DEBUG
-//#define PAGE_FAULT_DEBUG
 
 namespace Kernel {
 
@@ -474,9 +472,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     }
 
     u8* dest_ptr = MM.quickmap_page(*page);
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW " << page->paddr() << " <- " << page_slot->paddr();
-#endif
+    dbgln<debug_page_fault>("      >> COW {} <- {}", page->paddr(), page_slot->paddr());
     {
         SmapDisabler disabler;
         void* fault_at;

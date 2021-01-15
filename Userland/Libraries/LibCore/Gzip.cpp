@@ -25,13 +25,12 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <LibCore/Gzip.h>
 #include <LibCore/puff.h>
 #include <limits.h>
 #include <stddef.h>
-
-//#define DEBUG_GZIP
 
 namespace Core {
 
@@ -103,9 +102,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     }
 
     auto new_size = data.size() - current;
-#ifdef DEBUG_GZIP
-    dbg() << "get_gzip_payload: Returning slice from " << current << " with size " << new_size;
-#endif
+    dbgln<debug_gzip>("get_gzip_payload: Returning slice from {} with size {}", current, new_size);
     return data.slice(current, new_size);
 }
 
@@ -113,9 +110,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 {
     ASSERT(is_compressed(data));
 
-#ifdef DEBUG_GZIP
-    dbg() << "Gzip::decompress: Decompressing gzip compressed data. Size = " << data.size();
-#endif
+    dbgln<debug_gzip>("Gzip::decompress: Decompressing gzip compressed data. size={}", data.size());
     auto optional_payload = get_gzip_payload(data);
     if (!optional_payload.has_value()) {
         return Optional<ByteBuffer>();
@@ -127,13 +122,13 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
     while (true) {
         unsigned long destination_len = destination.size();
 
-#ifdef DEBUG_GZIP
-        dbg() << "Gzip::decompress: Calling puff()\n"
-              << "  destination_data = " << destination.data() << "\n"
-              << "  destination_len = " << destination_len << "\n"
-              << "  source_data = " << source.data() << "\n"
-              << "  source_len = " << source_len;
-#endif
+        if constexpr (debug_gzip) {
+            dbgln("Gzip::decompress: Calling puff()");
+            dbgln("  destination_data = {}", destination.data());
+            dbgln("  destination_len = {}", destination_len);
+            dbgln("  source_data = {}", source.data());
+            dbgln("  source_len = {}", source_len);
+        }
 
         auto puff_ret = puff(
             destination.data(), &destination_len,
