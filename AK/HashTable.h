@@ -203,15 +203,16 @@ public:
         *this = HashTable();
     }
 
-    HashSetResult set(T&& value)
+    template<typename U = T>
+    HashSetResult set(U&& value)
     {
         auto& bucket = lookup_for_writing(value);
         if (bucket.used) {
-            (*bucket.slot()) = move(value);
+            (*bucket.slot()) = forward<U>(value);
             return HashSetResult::ReplacedExistingEntry;
         }
 
-        new (bucket.slot()) T(move(value));
+        new (bucket.slot()) T(forward<U>(value));
         bucket.used = true;
         if (bucket.deleted) {
             bucket.deleted = false;
@@ -219,11 +220,6 @@ public:
         }
         ++m_size;
         return HashSetResult::InsertedNewEntry;
-    }
-
-    HashSetResult set(const T& value)
-    {
-        return set(T(value));
     }
 
     template<typename Finder>
