@@ -48,6 +48,22 @@
 
 namespace GUI {
 
+class WindowBackingStore {
+public:
+    WindowBackingStore(NonnullRefPtr<Gfx::Bitmap> bitmap)
+        : m_bitmap(bitmap)
+    {
+    }
+
+    Gfx::Bitmap& bitmap() { return *m_bitmap; }
+    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
+
+    Gfx::IntSize size() const { return m_bitmap->size(); }
+
+private:
+    NonnullRefPtr<Gfx::Bitmap> m_bitmap;
+};
+
 static NeverDestroyed<HashTable<Window*>> all_windows;
 static NeverDestroyed<HashMap<int, Window*>> reified_windows;
 
@@ -156,8 +172,8 @@ void Window::server_did_destroy()
     m_window_id = 0;
     m_visible = false;
     m_pending_paint_event_rects.clear();
-    m_back_bitmap = nullptr;
-    m_front_bitmap = nullptr;
+    m_back_store = nullptr;
+    m_front_store = nullptr;
     m_cursor = Gfx::StandardCursor::None;
 }
 
@@ -226,10 +242,10 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
         return;
     }
     auto window_rect = WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowRect>(m_window_id, a_rect)->rect();
-    if (m_back_bitmap && m_back_bitmap->size() != window_rect.size())
-        m_back_bitmap = nullptr;
-    if (m_front_bitmap && m_front_bitmap->size() != window_rect.size())
-        m_front_bitmap = nullptr;
+    if (m_back_store && m_back_store->size() != window_rect.size())
+        m_back_store = nullptr;
+    if (m_front_store && m_front_store->size() != window_rect.size())
+        m_front_store = nullptr;
     if (m_main_widget)
         m_main_widget->resize(window_rect.size());
 }
@@ -324,21 +340,21 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         return;
     auto rects = event.rects();
     ASSERT(!rects.is_empty());
-    if (m_back_bitmap && m_back_bitmap->size() != event.window_size()) {
+    if (m_back_store && m_back_store->size() != event.window_size()) {
         // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
         // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
         // effort on painting into an undersized bitmap that will be thrown away anyway.
-        m_back_bitmap = nullptr;
+        m_back_store = nullptr;
     }
-    bool created_new_backing_store = !m_back_bitmap;
-    if (!m_back_bitmap) {
-        m_back_bitmap = create_backing_bitmap(event.window_size());
-        ASSERT(m_back_bitmap);
+    bool created_new_backing_store = !m_back_store;
+    if (!m_back_store) {
+        m_back_store = create_backing_store(event.window_size());
+        ASSERT(m_back_store);
     } else if (m_double_buffering_enabled) {
-        bool still_has_pixels = m_back_bitmap->shared_buffer()->set_nonvolatile();
+        bool still_has_pixels = m_back_store->bitmap().shared_buffer()->set_nonvolatile();
         if (!still_has_pixels) {
-            m_back_bitmap = create_backing_bitmap(event.window_size());
-            ASSERT(m_back_bitmap);
+            m_back_store = create_backing_store(event.window_size());
+            ASSERT(m_back_store);
             created_new_backing_store = true;
         }
     }
@@ -357,7 +373,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     if (m_double_buffering_enabled)
         flip(rects);
     else if (created_new_backing_store)
-        set_current_backing_bitmap(*m_back_bitmap, true);
+        set_current_backing_store(*m_back_store, true);
 
     if (is_visible()) {
         Vector<Gfx::IntRect> rects_to_send;
@@ -383,8 +399,8 @@ void Window::handle_key_event(KeyEvent& event)
 void Window::handle_resize_event(ResizeEvent& event)
 {
     auto new_size = event.size();
-    if (m_back_bitmap && m_back_bitmap->size() != new_size)
-        m_back_bitmap = nullptr;
+    if (m_back_store && m_back_store->size() != new_size)
+        m_back_store = nullptr;
     if (!m_pending_paint_event_rects.is_empty()) {
         m_pending_paint_event_rects.clear_with_capacity();
         m_pending_paint_event_rects.append({ {}, new_size });
@@ -624,8 +640,8 @@ void Window::set_has_alpha_channel(bool value)
         return;
 
     m_pending_paint_event_rects.clear();
-    m_back_bitmap = nullptr;
-    m_front_bitmap = nullptr;
+    m_back_store = nullptr;
+    m_front_store = nullptr;
 
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
     update();
@@ -659,31 +675,32 @@ void Window::set_hovered_widget(Widget* widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Enter));
 }
 
-void Window::set_current_backing_bitmap(Gfx::Bitmap& bitmap, bool flush_immediately)
+void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
 {
+    auto& bitmap = backing_store.bitmap();
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shbuf_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
 {
-    swap(m_front_bitmap, m_back_bitmap);
+    swap(m_front_store, m_back_store);
 
-    set_current_backing_bitmap(*m_front_bitmap);
+    set_current_backing_store(*m_front_store);
 
-    if (!m_back_bitmap || m_back_bitmap->size() != m_front_bitmap->size()) {
-        m_back_bitmap = create_backing_bitmap(m_front_bitmap->size());
-        ASSERT(m_back_bitmap);
-        memcpy(m_back_bitmap->scanline(0), m_front_bitmap->scanline(0), m_front_bitmap->size_in_bytes());
-        m_back_bitmap->shared_buffer()->set_volatile();
+    if (!m_back_store || m_back_store->size() != m_front_store->size()) {
+        m_back_store = create_backing_store(m_front_store->size());
+        ASSERT(m_back_store);
+        memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
+        m_back_store->bitmap().shared_buffer()->set_volatile();
         return;
     }
 
     // Copy whatever was painted from the front to the back.
-    Painter painter(*m_back_bitmap);
+    Painter painter(m_back_store->bitmap());
     for (auto& dirty_rect : dirty_rects)
-        painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
+        painter.blit(dirty_rect.location(), m_front_store->bitmap(), dirty_rect);
 
-    m_back_bitmap->shared_buffer()->set_volatile();
+    m_back_store->bitmap().shared_buffer()->set_volatile();
 }
 
 RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::IntSize& size)
@@ -698,10 +715,13 @@ RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const
     return Gfx::Bitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
-RefPtr<Gfx::Bitmap> Window::create_backing_bitmap(const Gfx::IntSize& size)
+OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
-    return create_shared_bitmap(format, size);
+    auto bitmap = create_shared_bitmap(format, size);
+    if (!bitmap)
+        return {};
+    return make<WindowBackingStore>(bitmap.release_nonnull());
 }
 
 void Window::set_modal(bool modal)
@@ -846,14 +866,14 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
 
     // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
     // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
-    RefPtr<Gfx::Bitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;
-    if (!bitmap)
+    auto& store = m_double_buffering_enabled ? m_front_store : m_back_store;
+    if (!store)
         return;
     if (minimized || occluded) {
-        bitmap->shared_buffer()->set_volatile();
+        store->bitmap().shared_buffer()->set_volatile();
     } else {
-        if (!bitmap->shared_buffer()->set_nonvolatile()) {
-            bitmap = nullptr;
+        if (!store->bitmap().shared_buffer()->set_nonvolatile()) {
+            store = nullptr;
             update();
         }
     }
@@ -960,6 +980,11 @@ bool Window::is_active() const
 {
     ASSERT(Application::the());
     return this == Application::the()->active_window();
+}
+
+Gfx::Bitmap* Window::back_bitmap()
+{
+    return m_back_store ? &m_back_store->bitmap() : nullptr;
 }
 
 }
