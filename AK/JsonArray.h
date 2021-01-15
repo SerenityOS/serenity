@@ -47,6 +47,13 @@ public:
     {
     }
 
+    template<typename T>
+    JsonArray(const Vector<T>& vector)
+    {
+        for (auto& value : vector)
+            m_values.append(move(value));
+    }
+
     JsonArray& operator=(const JsonArray& other)
     {
         if (this != &other)
