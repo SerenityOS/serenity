@@ -5,7 +5,8 @@ workdir=MilkyTracker-$version
 useconfigure=true
 files="https://github.com/milkytracker/MilkyTracker/archive/v$version.tar.gz MilkyTracker-$version.tar.gz"
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
-makeopts="-j$(nproc)"
+makeopts="-I../../SDL2/SDL-master-serenity/include/ -lSDL2 -j$(nproc)"
+installopts=""
 depends="SDL2"
 
 configure() {
