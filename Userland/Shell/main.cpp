@@ -176,8 +176,7 @@ int main(int argc, char** argv)
 
     if (command_to_run) {
         dbgln("sh -c '{}'\n", command_to_run);
-        shell->run_command(command_to_run);
-        return 0;
+        return shell->run_command(command_to_run);
     }
 
     if (file_to_read_from && StringView { "-" } != file_to_read_from) {
