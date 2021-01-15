@@ -368,6 +368,7 @@ public:
     int sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     int sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
     void sys$abort();
+    int sys$anon_create(size_t, int options);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

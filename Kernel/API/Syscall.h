@@ -198,7 +198,8 @@ namespace Kernel {
     S(prctl)                  \
     S(mremap)                 \
     S(set_coredump_metadata)  \
-    S(abort)
+    S(abort)                  \
+    S(anon_create)
 
 namespace Syscall {
 

@@ -47,6 +47,7 @@ set(KERNEL_SOURCES
     Storage/PATADiskDevice.cpp
     Storage/StorageManagement.cpp
     DoubleBuffer.cpp
+    FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
     FileSystem/DevFS.cpp
@@ -103,6 +104,7 @@ set(KERNEL_SOURCES
     SharedBuffer.cpp
     StdLib.cpp
     Syscall.cpp
+    Syscalls/anon_create.cpp
     Syscalls/abort.cpp
     Syscalls/access.cpp
     Syscalls/alarm.cpp

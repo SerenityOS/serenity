@@ -136,4 +136,10 @@ int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size)
     int rc = syscall(SC_get_stack_bounds, user_stack_base, user_stack_size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int anon_create(size_t size, int options)
+{
+    int rc = syscall(SC_anon_create, size, options);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }
