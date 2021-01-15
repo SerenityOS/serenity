@@ -105,9 +105,9 @@ void OpacitySlider::paint_event(PaintEvent& event)
     //       We adjust the hairline's x position so it lines up with the shadow/highlight of the notches.
     u8 h = ((float)value() / (float)max()) * 255.0f;
     if (h < 128)
-        painter.draw_line({ notch_x, notch_y_top }, { notch_x, notch_y_bottom }, Color(h, h, h, h));
+        painter.draw_line({ notch_x, notch_y_top }, { notch_x, notch_y_bottom }, Color(h, h, h, 255));
     else
-        painter.draw_line({ notch_x - 1, notch_y_top }, { notch_x - 1, notch_y_bottom }, Color(h, h, h, h));
+        painter.draw_line({ notch_x - 1, notch_y_top }, { notch_x - 1, notch_y_bottom }, Color(h, h, h, 255));
 
     // Text label
     auto percent_text = String::formatted("{}%", (int)((float)value() / (float)max() * 100.0f));
