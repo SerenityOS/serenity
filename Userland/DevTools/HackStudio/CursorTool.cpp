@@ -28,10 +28,9 @@
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
 #include "WidgetTreeModel.h"
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <LibGfx/Palette.h>
-
-//#define DEBUG_CURSOR_TOOL
 
 namespace HackStudio {
 
@@ -49,9 +48,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
                 m_editor.selection().toggle(*result.widget);
             } else if (!event.modifiers()) {
                 if (!m_editor.selection().contains(*result.widget)) {
-#ifdef DEBUG_CURSOR_TOOL
-                    dbg() << "Selection didn't contain " << *result.widget << ", making it the only selected one";
-#endif
+                    dbgln<debug_cursor_tool>("Selection didn't contain {}, making it the only selected one", *result.widget);
                     m_editor.selection().set(*result.widget);
                 }
 

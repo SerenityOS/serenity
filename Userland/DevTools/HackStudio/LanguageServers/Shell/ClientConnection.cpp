@@ -26,12 +26,10 @@
 
 #include "ClientConnection.h"
 #include "AutoComplete.h"
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibCore/File.h>
 #include <LibGUI/TextDocument.h>
-
-// #define DEBUG_SH_LANGUAGE_SERVER
-// #define DEBUG_FILE_CONTENT
 
 namespace LanguageServers::Shell {
 
@@ -89,9 +87,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
     auto document = GUI::TextDocument::create(&s_default_document_client);
     document->set_text(content_view);
     m_open_files.set(message.file_name(), document);
-#ifdef DEBUG_FILE_CONTENT
-    dbg() << document->text();
-#endif
+    dbgln<debug_file_content>("{}", document->text());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
@@ -133,9 +129,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
     };
 
     document->remove(range);
-#ifdef DEBUG_FILE_CONTENT
-    dbg() << document->text();
-#endif
+    dbgln<debug_file_content>("{}", document->text());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
