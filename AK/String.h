@@ -30,6 +30,7 @@
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/Stream.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
 #include <AK/Traits.h>
@@ -111,6 +112,15 @@ public:
     String(const FlyString&);
 
     static String repeated(char, size_t count);
+
+    template<class SeparatorType, class CollectionType>
+    static String join(const SeparatorType& separator, const CollectionType& collection)
+    {
+        StringBuilder builder;
+        builder.join(separator, collection);
+        return builder.build();
+    }
+
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
