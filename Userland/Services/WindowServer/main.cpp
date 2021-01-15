@@ -89,8 +89,8 @@ int main(int, char**)
         return 1;
     }
 
-    WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024),
-        wm_config->read_num_entry("Screen", "Height", 768));
+    int scale = wm_config->read_num_entry("Screen", "ScaleFactor", 1);
+    WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024 / scale), wm_config->read_num_entry("Screen", "Height", 768 / scale), scale);
     screen.set_acceleration_factor(atof(wm_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters()));
     screen.set_scroll_step_size(wm_config->read_num_entry("Mouse", "ScrollStepSize", 4));
     WindowServer::Compositor::the();

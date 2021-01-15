@@ -92,20 +92,22 @@ Compositor::Compositor()
 void Compositor::init_bitmaps()
 {
     auto& screen = Screen::the();
-    auto size = screen.size();
+    auto physical_size = screen.physical_size();
 
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, physical_size, screen.pitch(), screen.scanline(0));
+    m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
+    m_front_painter->scale(screen.scale_factor());
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.pitch(), screen.scanline(size.height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, physical_size, screen.pitch(), screen.scanline(physical_size.height()));
     else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
-
-    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
-
-    m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, physical_size);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
+    m_back_painter->scale(screen.scale_factor());
+
+    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, physical_size);
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
+    m_temp_painter->scale(screen.scale_factor());
 
     m_buffers_are_flipped = false;
 
@@ -451,8 +453,14 @@ void Compositor::compose()
         }());
 
         // Copy anything rendered to the temporary buffer to the back buffer
-        for (auto& rect : flush_transparent_rects.rects())
-            back_painter.blit(rect.location(), *m_temp_bitmap, rect);
+        {
+            // FIXME: Give Bitmap an intrinsic scale factor and make Painter::blit() do the right thing if both it and the passed bitmap have scale factors:
+            // If a 2x scaled bitmap is blitted on a 2x scaled painter, it should be blitted without scale.
+            Gfx::Painter unscaled_back_painter(*m_back_bitmap);
+            auto scale = Screen::the().scale_factor();
+            for (auto& rect : flush_transparent_rects.rects())
+                unscaled_back_painter.blit(rect.location() * scale, *m_temp_bitmap, rect * scale);
+        }
 
         Gfx::IntRect geometry_label_damage_rect;
         if (draw_geometry_label(geometry_label_damage_rect))
@@ -530,6 +538,10 @@ void Compositor::flush(const Gfx::IntRect& a_rect)
 {
     auto rect = Gfx::IntRect::intersection(a_rect, Screen::the().rect());
 
+    // Almost everything in Compositor is in logical coordintes, with the painters having
+    // a scale applied. But this routine accesses the backbuffer pixels directly, so it
+    // must work in physical coordinates.
+    rect = rect * Screen::the().scale_factor();
     Gfx::RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     Gfx::RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
@@ -709,7 +721,8 @@ bool Compositor::set_resolution(int desired_width, int desired_height)
         dbg() << "Compositor: Tried to set invalid resolution: " << desired_width << "x" << desired_height;
         return false;
     }
-    bool success = Screen::the().set_resolution(desired_width, desired_height);
+
+    bool success = Screen::the().set_resolution(desired_width, desired_height, 1);
     init_bitmaps();
     invalidate_occlusions();
     compose();
@@ -790,14 +803,16 @@ void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
     auto& wm = WindowManager::the();
 
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size());
+        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size() * Screen::the().scale_factor());
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
     auto& current_cursor = m_current_cursor ? *m_current_cursor : wm.active_cursor();
-    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(Screen::the().rect()));
-    auto& back_painter = *m_back_painter;
-    back_painter.blit(cursor_rect.location(), current_cursor.bitmap(), current_cursor.source_rect(m_current_cursor_frame));
+    // FIXME: Give Bitmap an intrinsic scale factor and make Painter::blit() do the right thing if both it and the passed bitmap have scale factors:
+    // If a 2x scaled bitmap is blitted on a 2x scaled painter, it should be blitted without scale.
+    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, (current_cursor.rect().translated(cursor_rect.location()) * Screen::the().scale_factor()).intersected(Screen::the().physical_rect()));
+
+    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(), current_cursor.source_rect(m_current_cursor_frame));
 
     m_last_cursor_rect = cursor_rect;
 }
@@ -807,7 +822,11 @@ void Compositor::restore_cursor_back()
     if (!m_cursor_back_bitmap)
         return;
 
-    m_back_painter->blit(m_last_cursor_rect.location().constrained(Screen::the().rect()), *m_cursor_back_bitmap, { { 0, 0 }, m_last_cursor_rect.intersected(Screen::the().rect()).size() });
+    // FIXME: Give Bitmap an intrinsic scale factor and make Painter::blit() do the right thing if both it and the passed bitmap have scale factors:
+    // If a 2x scaled bitmap is blitted on a 2x scaled painter, it should be blitted without scale.
+    Gfx::Painter unscaled_back_painter(*m_back_bitmap);
+    auto last_physical_cursor_rect = (m_last_cursor_rect * Screen::the().scale_factor()).intersected(Screen::the().physical_rect());
+    unscaled_back_painter.blit(last_physical_cursor_rect.location(), *m_cursor_back_bitmap, { { 0, 0 }, last_physical_cursor_rect.size() });
 }
 
 void Compositor::notify_display_links()
