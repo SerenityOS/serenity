@@ -710,19 +710,19 @@ void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
     });
 }
 
-bool Compositor::set_resolution(int desired_width, int desired_height)
+bool Compositor::set_resolution(int desired_width, int desired_height, int scale_factor)
 {
     auto screen_rect = Screen::the().rect();
-    if (screen_rect.width() == desired_width && screen_rect.height() == desired_height)
+    if (screen_rect.width() == desired_width && screen_rect.height() == desired_height && Screen::the().scale_factor() == scale_factor)
         return true;
 
     // Make sure it's impossible to set an invalid resolution
-    if (!(desired_width >= 640 && desired_height >= 480)) {
-        dbg() << "Compositor: Tried to set invalid resolution: " << desired_width << "x" << desired_height;
+    if (!(desired_width >= 640 && desired_height >= 480 && scale_factor >= 1)) {
+        dbg() << "Compositor: Tried to set invalid resolution: " << desired_width << "x" << desired_height << " @ " << scale_factor << "x";
         return false;
     }
 
-    bool success = Screen::the().set_resolution(desired_width, desired_height, 1);
+    bool success = Screen::the().set_resolution(desired_width, desired_height, scale_factor);
     init_bitmaps();
     invalidate_occlusions();
     compose();

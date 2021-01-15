@@ -124,9 +124,9 @@ const Gfx::Font& WindowManager::window_title_font() const
     return Gfx::FontDatabase::default_bold_font();
 }
 
-bool WindowManager::set_resolution(int width, int height)
+bool WindowManager::set_resolution(int width, int height, int scale)
 {
-    bool success = Compositor::the().set_resolution(width, height);
+    bool success = Compositor::the().set_resolution(width, height, scale);
     MenuManager::the().set_needs_window_resize();
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.notify_about_new_screen_rect(Screen::the().rect());
@@ -139,14 +139,16 @@ bool WindowManager::set_resolution(int width, int height)
     }
     if (m_config) {
         if (success) {
-            dbg() << "Saving resolution: " << Gfx::IntSize(width, height) << " to config file at " << m_config->file_name();
+            dbg() << "Saving resolution: " << Gfx::IntSize(width, height) << " @ " << scale << "x to config file at " << m_config->file_name();
             m_config->write_num_entry("Screen", "Width", width);
             m_config->write_num_entry("Screen", "Height", height);
+            m_config->write_num_entry("Screen", "ScaleFactor", scale);
             m_config->sync();
         } else {
-            dbg() << "Saving fallback resolution: " << resolution() << " to config file at " << m_config->file_name();
+            dbg() << "Saving fallback resolution: " << resolution() << " @ 1x to config file at " << m_config->file_name();
             m_config->write_num_entry("Screen", "Width", resolution().width());
             m_config->write_num_entry("Screen", "Height", resolution().height());
+            m_config->write_num_entry("Screen", "ScaleFactor", 1);
             m_config->sync();
         }
     }
@@ -172,6 +174,11 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->file_name());
     m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
     m_config->sync();
+}
+
+int WindowManager::scale_factor() const
+{
+    return Screen::the().scale_factor();
 }
 
 void WindowManager::add_window(Window& window)

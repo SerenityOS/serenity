@@ -246,7 +246,8 @@ void DisplaySettingsWidget::load_current_settings()
 
 void DisplaySettingsWidget::send_settings_to_window_server()
 {
-    auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution());
+    // FIXME: Add UI for changing the scale factor.
+    auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), 1);
     if (!result->success()) {
         GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{}", result->resolution().width(), result->resolution().height()),
             "Unable to set resolution", GUI::MessageBox::Type::Error);

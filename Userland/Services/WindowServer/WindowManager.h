@@ -142,8 +142,9 @@ public:
     const Gfx::Font& font() const;
     const Gfx::Font& window_title_font() const;
 
-    bool set_resolution(int width, int height);
+    bool set_resolution(int width, int height, int scale);
     Gfx::IntSize resolution() const;
+    int scale_factor() const;
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
