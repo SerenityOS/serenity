@@ -118,9 +118,10 @@ public:
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     RefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
+    RefPtr<Bitmap> to_bitmap_backed_by_anon_fd() const;
     ByteBuffer serialize_to_byte_buffer() const;
 
-    ShareableBitmap to_shareable_bitmap(pid_t peer_pid = -1) const;
+    ShareableBitmap to_shareable_bitmap() const;
 
     ~Bitmap();
 

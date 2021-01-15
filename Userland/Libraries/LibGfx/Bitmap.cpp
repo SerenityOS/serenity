@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
+
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
 
 namespace Gfx {
 
@@ -408,6 +412,22 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
     return bitmap;
 }
 
+#ifdef __serenity__
+RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
+{
+    if (m_anon_fd != -1)
+        return *this;
+    auto anon_fd = anon_create(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE), O_CLOEXEC);
+    if (anon_fd < 0)
+        return nullptr;
+    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, m_size, ShouldCloseAnonymousFile::No);
+    if (!bitmap)
+        return nullptr;
+    memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
+    return bitmap;
+}
+#endif
+
 Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
@@ -477,13 +497,11 @@ int Bitmap::shbuf_id() const
     return m_shared_buffer ? m_shared_buffer->shbuf_id() : -1;
 }
 
-ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
+ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
-    auto bitmap = to_bitmap_backed_by_shared_buffer();
+    auto bitmap = to_bitmap_backed_by_anon_fd();
     if (!bitmap)
         return {};
-    if (peer_pid > 0)
-        bitmap->shared_buffer()->share_with(peer_pid);
     return ShareableBitmap(*bitmap);
 }
 

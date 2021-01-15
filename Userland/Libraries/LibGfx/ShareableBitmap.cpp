@@ -30,11 +30,12 @@
 #include <LibGfx/Size.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
+#include <LibIPC/File.h>
 
 namespace Gfx {
 
 ShareableBitmap::ShareableBitmap(const Bitmap& bitmap)
-    : m_bitmap(bitmap.to_bitmap_backed_by_shared_buffer())
+    : m_bitmap(bitmap.to_bitmap_backed_by_anon_fd())
 {
 }
 
@@ -44,7 +45,7 @@ namespace IPC {
 
 bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
 {
-    encoder << shareable_bitmap.shbuf_id();
+    encoder << IPC::File(shareable_bitmap.anon_fd());
     encoder << shareable_bitmap.width();
     encoder << shareable_bitmap.height();
     return true;
@@ -52,23 +53,14 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
 
 bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
 {
-    i32 shbuf_id = 0;
+    IPC::File anon_file;
     Gfx::IntSize size;
-    if (!decoder.decode(shbuf_id))
+    if (!decoder.decode(anon_file))
         return false;
     if (!decoder.decode(size))
         return false;
 
-    if (shbuf_id == -1)
-        return true;
-
-    dbgln("Decoding a ShareableBitmap with shbuf_id={}, size={}", shbuf_id, size);
-
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
-    if (!shared_buffer)
-        return false;
-
-    auto bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, shared_buffer.release_nonnull(), size);
+    auto bitmap = Gfx::Bitmap::create_with_anon_fd(Gfx::BitmapFormat::RGBA32, anon_file.fd(), size, Gfx::Bitmap::ShouldCloseAnonymousFile::No);
     shareable_bitmap = bitmap->to_shareable_bitmap();
     return true;
 }
