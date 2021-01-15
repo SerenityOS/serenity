@@ -36,40 +36,56 @@
 #include <LibDesktop/Launcher.h>
 #include <LibELF/CoreDump.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Layout.h>
 #include <LibGUI/LinkLabel.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <string.h>
 
-static String build_backtrace(const CoreDump::Reader& coredump)
+struct TitleAndText {
+    String title;
+    String text;
+};
+
+static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
 {
+    CoreDump::Backtrace backtrace(coredump, thread_info);
+
     StringBuilder builder;
 
-    auto assertion = coredump.metadata().get("assertion");
-    if (assertion.has_value() && !assertion.value().is_empty()) {
+    auto prepend_assertion = [&] {
+        auto assertion = coredump.metadata().get("assertion");
+        if (!assertion.has_value() || assertion.value().is_empty())
+            return;
         builder.append("ASSERTION FAILED: ");
         builder.append(assertion.value().characters());
         builder.append('\n');
         builder.append('\n');
-    }
+    };
 
-    auto first = true;
-    for (auto& entry : coredump.backtrace().entries()) {
-        if (first)
-            first = false;
-        else
+    auto first_entry = true;
+    for (auto& entry : backtrace.entries()) {
+        if (first_entry) {
+            if (entry.function_name.starts_with("__assertion_failed"))
+                prepend_assertion();
+            first_entry = false;
+        } else {
             builder.append('\n');
+        }
         builder.append(entry.to_string());
     }
 
-    return builder.build();
+    return {
+        String::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
+        builder.build()
+    };
 }
 
 int main(int argc, char** argv)
@@ -86,7 +102,8 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
     args_parser.parse(argc, argv);
 
-    String backtrace;
+    Vector<TitleAndText> thread_backtraces;
+
     String executable_path;
     int pid { 0 };
     u8 termination_signal { 0 };
@@ -97,7 +114,14 @@ int main(int argc, char** argv)
             warnln("Could not open coredump '{}'", coredump_path);
             return 1;
         }
-        backtrace = build_backtrace(*coredump);
+
+        size_t thread_index = 0;
+        coredump->for_each_thread_info([&](auto& thread_info) {
+            thread_backtraces.append(build_backtrace(*coredump, thread_info, thread_index));
+            ++thread_index;
+            return IterationDecision::Continue;
+        });
+
         executable_path = coredump->process_executable_path();
         pid = coredump->process_pid();
         termination_signal = coredump->process_termination_signal();
@@ -166,10 +190,24 @@ int main(int argc, char** argv)
 
     auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
-    auto& backtrace_text_editor = tab_widget.add_tab<GUI::TextEditor>("Backtrace");
-    backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
-    backtrace_text_editor.set_text(backtrace);
-    backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
+    auto& backtrace_tab = tab_widget.add_tab<GUI::Widget>("Backtrace");
+    backtrace_tab.set_layout<GUI::VerticalBoxLayout>();
+    backtrace_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& backtrace_label = backtrace_tab.add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:");
+    backtrace_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    backtrace_label.set_fixed_height(16);
+
+    auto& backtrace_tab_widget = backtrace_tab.add<GUI::TabWidget>();
+    backtrace_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    for (auto& backtrace : thread_backtraces) {
+        auto& backtrace_text_editor = backtrace_tab_widget.add_tab<GUI::TextEditor>(backtrace.title);
+        backtrace_text_editor.set_layout<GUI::VerticalBoxLayout>();
+        backtrace_text_editor.layout()->set_margins({ 4, 4, 4, 4 });
+        backtrace_text_editor.set_text(backtrace.text);
+        backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+        backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
+    }
 
     auto& close_button = *widget.find_descendant_of_type_named<GUI::Button>("close_button");
     close_button.on_click = [&](auto) {

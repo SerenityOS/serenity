@@ -29,6 +29,7 @@
 #include <AK/Types.h>
 #include <LibCoreDump/Reader.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibELF/CoreDump.h>
 
 namespace CoreDump {
 
@@ -54,14 +55,16 @@ public:
         String to_string(bool color = false) const;
     };
 
-    Backtrace(const Reader&);
+    Backtrace(const Reader&, const ELF::Core::ThreadInfo&);
     ~Backtrace();
 
+    const ELF::Core::ThreadInfo thread_info() const { return m_thread_info; }
     const Vector<Entry> entries() const { return m_entries; }
 
 private:
-    void add_backtrace_entry(const Reader&, FlatPtr eip);
+    void add_entry(const Reader&, FlatPtr eip);
 
+    ELF::Core::ThreadInfo m_thread_info;
     Vector<Entry> m_entries;
 };
 

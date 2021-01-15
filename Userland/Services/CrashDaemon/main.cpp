@@ -56,8 +56,18 @@ static void print_backtrace(const String& coredump_path)
         dbgln("Could not open coredump '{}'", coredump_path);
         return;
     }
-    for (auto& entry : coredump->backtrace().entries())
-        dbgln("{}", entry.to_string(true));
+
+    size_t thread_index = 0;
+    coredump->for_each_thread_info([&](auto& thread_info) {
+        CoreDump::Backtrace backtrace(*coredump, thread_info);
+        if (thread_index > 0)
+            dbgln();
+        dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);
+        for (auto& entry : backtrace.entries())
+            dbgln("{}", entry.to_string(true));
+        ++thread_index;
+        return IterationDecision::Continue;
+    });
 }
 
 static void launch_crash_reporter(const String& coredump_path)

@@ -30,7 +30,6 @@
 #include <AK/MappedFile.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
-#include <LibCoreDump/Forward.h>
 #include <LibELF/CoreDump.h>
 #include <LibELF/Image.h>
 
@@ -62,8 +61,6 @@ public:
         ELF::Image lib_elf;
     };
     const LibraryData* library_containing(FlatPtr address) const;
-
-    const Backtrace backtrace() const;
 
     int process_pid() const;
     u8 process_termination_signal() const;
