@@ -340,7 +340,7 @@ OwnPtr<Messages::WindowServer::GetWallpaperResponse> ClientConnection::handle(co
 
 OwnPtr<Messages::WindowServer::SetResolutionResponse> ClientConnection::handle(const Messages::WindowServer::SetResolution& message)
 {
-    return make<Messages::WindowServer::SetResolutionResponse>(WindowManager::the().set_resolution(message.resolution().width(), message.resolution().height()), WindowManager::the().resolution());
+    return make<Messages::WindowServer::SetResolutionResponse>(WindowManager::the().set_resolution(message.resolution().width(), message.resolution().height(), message.scale_factor()), WindowManager::the().resolution(), WindowManager::the().scale_factor());
 }
 
 OwnPtr<Messages::WindowServer::SetWindowTitleResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowTitle& message)

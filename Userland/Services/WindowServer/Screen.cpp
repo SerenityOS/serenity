@@ -69,43 +69,53 @@ Screen::~Screen()
     close(m_framebuffer_fd);
 }
 
-bool Screen::set_resolution(int width, int height, int scale_factor)
+bool Screen::set_resolution(int width, int height, int new_scale_factor)
 {
-    FBResolution physical_resolution { 0, (unsigned)(width * scale_factor), (unsigned)(height * scale_factor) };
+    int new_physical_width = width * new_scale_factor;
+    int new_physical_height = height * new_scale_factor;
+    if (physical_width() == new_physical_width && physical_height() == new_physical_height) {
+        assert(scale_factor() != new_scale_factor);
+        on_change_resolution(m_pitch, physical_width(), physical_height(), new_scale_factor);
+        return true;
+    }
+
+    FBResolution physical_resolution { 0, (unsigned)new_physical_width, (unsigned)new_physical_height };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
 #ifdef WSSCREEN_DEBUG
     dbg() << "fb_set_resolution() - return code " << rc;
 #endif
     if (rc == 0) {
-        on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, scale_factor);
+        on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);
         return true;
     }
     if (rc == -1) {
         dbg() << "Invalid resolution " << width << "x" << height;
-        on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, scale_factor);
+        on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);
         return false;
     }
     ASSERT_NOT_REACHED();
 }
 
-void Screen::on_change_resolution(int pitch, int physical_width, int physical_height, int scale_factor)
+void Screen::on_change_resolution(int pitch, int new_physical_width, int new_physical_height, int new_scale_factor)
 {
-    if (m_framebuffer) {
-        size_t previous_size_in_bytes = m_size_in_bytes;
-        int rc = munmap(m_framebuffer, previous_size_in_bytes);
+    if (physical_width() != new_physical_width || physical_height() != new_physical_height) {
+        if (m_framebuffer) {
+            size_t previous_size_in_bytes = m_size_in_bytes;
+            int rc = munmap(m_framebuffer, previous_size_in_bytes);
+            ASSERT(rc == 0);
+        }
+
+        int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
         ASSERT(rc == 0);
+
+        m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+        ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
     }
 
-    int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
-    ASSERT(rc == 0);
-
-    m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
-    ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
-
     m_pitch = pitch;
-    m_width = physical_width / scale_factor;
-    m_height = physical_height / scale_factor;
-    m_scale_factor = scale_factor;
+    m_width = new_physical_width / new_scale_factor;
+    m_height = new_physical_height / new_scale_factor;
+    m_scale_factor = new_scale_factor;
 
     m_physical_cursor_location.constrain(physical_rect());
 }
