@@ -88,6 +88,24 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
     };
 }
 
+static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
+{
+    auto& regs = thread_info.regs;
+
+    StringBuilder builder;
+
+    builder.appendff("eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    builder.append('\n');
+    builder.appendff("ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
+    builder.append('\n');
+    builder.appendff("eip={:08x} eflags={:08x}", regs.eip, regs.eflags);
+
+    return {
+        String::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
+        builder.build()
+    };
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio sendfd shared_buffer accept cpath rpath unix fattr", nullptr) < 0) {
@@ -103,6 +121,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     Vector<TitleAndText> thread_backtraces;
+    Vector<TitleAndText> thread_cpu_registers;
 
     String executable_path;
     Vector<String> arguments;
@@ -120,6 +139,7 @@ int main(int argc, char** argv)
         size_t thread_index = 0;
         coredump->for_each_thread_info([&](auto& thread_info) {
             thread_backtraces.append(build_backtrace(*coredump, thread_info, thread_index));
+            thread_cpu_registers.append(build_cpu_registers(thread_info, thread_index));
             ++thread_index;
             return IterationDecision::Continue;
         });
@@ -214,6 +234,25 @@ int main(int argc, char** argv)
         backtrace_text_editor.set_text(backtrace.text);
         backtrace_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
         backtrace_text_editor.set_should_hide_unnecessary_scrollbars(true);
+    }
+
+    auto& cpu_registers_tab = tab_widget.add_tab<GUI::Widget>("CPU Registers");
+    cpu_registers_tab.set_layout<GUI::VerticalBoxLayout>();
+    cpu_registers_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& cpu_registers_label = cpu_registers_tab.add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:");
+    cpu_registers_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    cpu_registers_label.set_fixed_height(16);
+
+    auto& cpu_registers_tab_widget = cpu_registers_tab.add<GUI::TabWidget>();
+    cpu_registers_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    for (auto& cpu_registers : thread_cpu_registers) {
+        auto& cpu_registers_text_editor = cpu_registers_tab_widget.add_tab<GUI::TextEditor>(cpu_registers.title);
+        cpu_registers_text_editor.set_layout<GUI::VerticalBoxLayout>();
+        cpu_registers_text_editor.layout()->set_margins({ 4, 4, 4, 4 });
+        cpu_registers_text_editor.set_text(cpu_registers.text);
+        cpu_registers_text_editor.set_mode(GUI::TextEditor::Mode::ReadOnly);
+        cpu_registers_text_editor.set_should_hide_unnecessary_scrollbars(true);
     }
 
     auto& environment_tab = tab_widget.add_tab<GUI::Widget>("Environment");
