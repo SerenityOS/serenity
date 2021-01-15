@@ -88,11 +88,17 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
+    enum class ShouldCloseAnonymousFile {
+        No,
+        Yes,
+    };
+
     static RefPtr<Bitmap> create(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, void*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
+    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
@@ -224,6 +230,8 @@ public:
     void set_volatile();
     [[nodiscard]] bool set_nonvolatile();
 
+    int anon_fd() const { return m_anon_fd; }
+
 private:
     enum class Purgeable {
         No,
@@ -232,6 +240,7 @@ private:
     Bitmap(BitmapFormat, const IntSize&, Purgeable, const BackingStore&);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, void*);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
+    Bitmap(BitmapFormat, int anon_fd, const IntSize&, void*);
 
     static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, Purgeable);
 
@@ -246,6 +255,7 @@ private:
     bool m_purgeable { false };
     bool m_volatile { false };
     RefPtr<SharedBuffer> m_shared_buffer;
+    int m_anon_fd { -1 };
 };
 
 inline u8* Bitmap::scanline_u8(int y)

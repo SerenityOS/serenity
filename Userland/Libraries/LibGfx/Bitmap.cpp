@@ -182,6 +182,29 @@ static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual
     return true;
 }
 
+RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, ShouldCloseAnonymousFile should_close_anon_fd)
+{
+    if (size_would_overflow(format, size))
+        return nullptr;
+
+    const auto pitch = minimum_pitch(size.width(), format);
+    const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
+
+    auto* data = mmap(nullptr, round_up_to_power_of_two(data_size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, anon_fd, 0);
+    if (data == MAP_FAILED) {
+        perror("mmap");
+        return nullptr;
+    }
+
+    if (should_close_anon_fd == ShouldCloseAnonymousFile::Yes) {
+        int rc = close(anon_fd);
+        ASSERT(rc == 0);
+        anon_fd = -1;
+    }
+
+    return adopt(*new Bitmap(format, anon_fd, size, data));
+}
+
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
 {
     if (size_would_overflow(format, size))
@@ -293,6 +316,19 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
         allocate_palette_from_format(m_format, palette);
 }
 
+Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data)
+    : m_size(size)
+    , m_data(data)
+    , m_pitch(minimum_pitch(size.width(), format))
+    , m_format(format)
+    , m_needs_munmap(true)
+    , m_purgeable(true)
+    , m_anon_fd(anon_fd)
+{
+    ASSERT(!is_indexed());
+    ASSERT(!size_would_overflow(format, size));
+}
+
 RefPtr<Gfx::Bitmap> Bitmap::clone() const
 {
     RefPtr<Gfx::Bitmap> new_bitmap {};
@@ -376,6 +412,10 @@ Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
         int rc = munmap(m_data, size_in_bytes());
+        ASSERT(rc == 0);
+    }
+    if (m_anon_fd != -1) {
+        int rc = close(m_anon_fd);
         ASSERT(rc == 0);
     }
     m_data = nullptr;
