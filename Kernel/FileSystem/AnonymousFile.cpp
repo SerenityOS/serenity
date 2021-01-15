@@ -47,11 +47,7 @@ KResultOr<Region*> AnonymousFile::mmap(Process& process, FileDescription&, Virtu
     if (size != m_vmobject->size())
         return KResult(-EINVAL);
 
-    auto* region = process.allocate_region_with_vmobject(preferred_vaddr, size, m_vmobject, offset, {}, prot, shared);
-    if (!region)
-        return KResult(-ENOMEM);
-
-    return region;
+    return process.allocate_region_with_vmobject(preferred_vaddr, size, m_vmobject, offset, {}, prot, shared);
 }
 
 }

@@ -79,10 +79,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
         vmobject = PrivateInodeVMObject::create_with_inode(inode());
     if (!vmobject)
         return KResult(-ENOMEM);
-    auto* region = process.allocate_region_with_vmobject(preferred_vaddr, size, *vmobject, offset, description.absolute_path(), prot, shared);
-    if (!region)
-        return KResult(-ENOMEM);
-    return region;
+    return process.allocate_region_with_vmobject(preferred_vaddr, size, *vmobject, offset, description.absolute_path(), prot, shared);
 }
 
 String InodeFile::absolute_path(const FileDescription& description) const

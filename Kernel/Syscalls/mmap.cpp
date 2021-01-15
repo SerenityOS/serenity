@@ -142,9 +142,12 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
-        if (!region && (!map_fixed && addr != 0))
-            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
+        auto region_or_error = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
+        if (region_or_error.is_error() && (!map_fixed && addr != 0))
+            region_or_error = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
+        if (region_or_error.is_error())
+            return (void*)region_or_error.error().error();
+        region = region_or_error.value();
     } else {
         if (offset < 0)
             return (void*)-EINVAL;
@@ -170,11 +173,11 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         if (region_or_error.is_error()) {
             // Fail if MAP_FIXED or address is 0, retry otherwise
             if (map_fixed || addr == 0)
-                return (void*)(int)region_or_error.error();
+                return (void*)region_or_error.error().error();
             region_or_error = description->mmap(*this, {}, static_cast<size_t>(offset), size, prot, map_shared);
         }
         if (region_or_error.is_error())
-            return (void*)(int)region_or_error.error();
+            return (void*)region_or_error.error().error();
         region = region_or_error.value();
     }
 
@@ -438,13 +441,12 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
         deallocate_region(*old_region);
 
         auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
-        auto* new_region = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot, false);
-        new_region->set_mmap(true);
-
-        if (!new_region)
-            return (void*)-ENOMEM;
-
-        return new_region->vaddr().as_ptr();
+        auto new_region_or_error = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot, false);
+        if (new_region_or_error.is_error())
+            return (void*)new_region_or_error.error().error();
+        auto& new_region = *new_region_or_error.value();
+        new_region.set_mmap(true);
+        return new_region.vaddr().as_ptr();
     }
 
     dbgln("sys$mremap: Unimplemented remap request (flags={})", params.flags);
@@ -471,11 +473,11 @@ void* Process::sys$allocate_tls(size_t size)
     });
     ASSERT(main_thread);
 
-    auto tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
-    if (!tls_region)
-        return (void*)-EFAULT;
+    auto region_or_error = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+    if (region_or_error.is_error())
+        return (void*)region_or_error.error().error();
 
-    m_master_tls_region = tls_region->make_weak_ptr();
+    m_master_tls_region = region_or_error.value()->make_weak_ptr();
     m_master_tls_size = size;
     m_master_tls_alignment = PAGE_SIZE;
 

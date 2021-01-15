@@ -185,7 +185,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     if (!vmobject)
         return KResult(-ENOMEM);
-    auto* region = process.allocate_region_with_vmobject(
+    return process.allocate_region_with_vmobject(
         preferred_vaddr,
         framebuffer_size_in_bytes(),
         vmobject.release_nonnull(),
@@ -193,10 +193,6 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
         "BXVGA Framebuffer",
         prot,
         shared);
-    if (!region)
-        return KResult(-ENOMEM);
-    dbgln("BXVGADevice: mmap with size {} at {}", region->size(), region->vaddr());
-    return region;
 }
 
 int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)

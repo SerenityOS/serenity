@@ -142,13 +142,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
     size_t executable_size = inode.size();
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF loading", Region::Access::Read);
-    if (!region) {
+    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF loading", Region::Access::Read);
+    if (!executable_region) {
         dbgln("Could not allocate memory for ELF loading");
         return KResult(-ENOMEM);
     }
 
-    auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
+    auto elf_image = ELF::Image(executable_region->vaddr().as_ptr(), executable_size);
 
     if (!elf_image.is_valid())
         return KResult(-ENOEXEC);
@@ -173,11 +173,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
                 return IterationDecision::Break;
             }
 
-            master_tls_region = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
-            if (!master_tls_region) {
-                ph_load_result = KResult(-ENOMEM);
+            auto region_or_error = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+            if (region_or_error.is_error()) {
+                ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
             }
+            master_tls_region = region_or_error.value();
             master_tls_size = program_header.size_in_memory();
             master_tls_alignment = program_header.alignment();
 
@@ -207,9 +208,9 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             if (program_header.is_writable())
                 prot |= PROT_WRITE;
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
-            auto* region = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot, AllocationStrategy::Reserve);
-            if (!region) {
-                ph_load_result = KResult(-ENOMEM);
+            auto region_or_error = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot, AllocationStrategy::Reserve);
+            if (region_or_error.is_error()) {
+                ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
             }
 
@@ -222,7 +223,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             //     Accessing it would definitely be a bug.
             auto page_offset = program_header.vaddr();
             page_offset.mask(~PAGE_MASK);
-            if (!copy_to_user((u8*)region->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
+            if (!copy_to_user((u8*)region_or_error.value()->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
                 ph_load_result = KResult(-EFAULT);
                 return IterationDecision::Break;
             }
@@ -239,13 +240,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             prot |= PROT_WRITE;
         if (program_header.is_executable())
             prot |= PROT_EXEC;
-        auto* region = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot, true);
-        if (!region) {
-            ph_load_result = KResult(-ENOMEM);
+        auto region_or_error = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot, true);
+        if (region_or_error.is_error()) {
+            ph_load_result = region_or_error.error();
             return IterationDecision::Break;
         }
         if (program_header.offset() == 0)
-            load_base_address = (FlatPtr)region->vaddr().as_ptr();
+            load_base_address = (FlatPtr)region_or_error.value()->vaddr().as_ptr();
         return IterationDecision::Continue;
     });
 
@@ -259,10 +260,11 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return KResult(-ENOEXEC);
     }
 
-    auto* stack_region = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
-    if (!stack_region)
-        return KResult(-ENOMEM);
-    stack_region->set_stack(true);
+    auto stack_region_or_error = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+    if (stack_region_or_error.is_error())
+        return stack_region_or_error.error();
+    auto& stack_region = *stack_region_or_error.value();
+    stack_region.set_stack(true);
 
     return LoadResult {
         load_base_address,
@@ -273,7 +275,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         AK::try_make_weak_ptr(master_tls_region),
         master_tls_size,
         master_tls_alignment,
-        stack_region->make_weak_ptr()
+        stack_region.make_weak_ptr()
     };
 }
 
