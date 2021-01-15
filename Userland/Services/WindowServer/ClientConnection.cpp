@@ -571,17 +571,15 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
         return {};
     }
     auto& window = *(*it).value;
-    if (window.last_backing_store() && window.last_backing_store()->shbuf_id() == message.shbuf_id()) {
+    if (window.last_backing_store() && window.last_backing_store_serial() == message.serial()) {
         window.swap_backing_stores();
     } else {
-        auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
-        if (!shared_buffer)
-            return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
-        auto backing_store = Gfx::Bitmap::create_with_shared_buffer(
+        auto backing_store = Gfx::Bitmap::create_with_anon_fd(
             message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
-            *shared_buffer,
-            message.size());
-        window.set_backing_store(move(backing_store));
+            message.anon_file().take_fd(),
+            message.size(),
+            Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
+        window.set_backing_store(move(backing_store), message.serial());
     }
 
     if (message.flush_immediately())

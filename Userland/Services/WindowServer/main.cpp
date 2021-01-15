@@ -39,7 +39,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio video thread recvfd shared_buffer accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -84,7 +84,7 @@ int main(int, char**)
 
     WindowServer::EventLoop loop;
 
-    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath proc", nullptr) < 0) {
+    if (pledge("stdio video thread recvfd shared_buffer accept rpath wpath cpath proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
