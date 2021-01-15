@@ -37,6 +37,12 @@ static void test_fontdatabase_get_by_name()
     assert(!font_database.get_by_name(name)->name().is_null());
 }
 
+static void test_fontdatabase_get()
+{
+    auto& font_database = Gfx::FontDatabase::the();
+    assert(!font_database.get("Liza", 10, 400)->name().is_null());
+}
+
 static void test_fontdatabase_for_each_font()
 {
     auto& font_database = Gfx::FontDatabase::the();
@@ -55,17 +61,17 @@ static void test_default_font()
 
 static void test_default_fixed_width_font()
 {
-    assert(!Gfx::FontDatabase::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_fixed_width_font().name().is_null());
 }
 
 static void test_default_bold_fixed_width_font()
 {
-    assert(!Gfx::FontDatabase::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_bold_fixed_width_font().name().is_null());
 }
 
 static void test_default_bold_font()
 {
-    assert(!Gfx::FontDatabase::default_font().name().is_null());
+    assert(!Gfx::FontDatabase::default_bold_font().name().is_null());
 }
 
 static void test_clone()
@@ -90,8 +96,44 @@ static void test_set_name()
     const char* name = "my newly created font";
     font->set_name(name);
 
-    assert(!font->qualified_name().is_null());
-    assert(!font->qualified_name().contains(name));
+    assert(!font->name().is_null());
+    assert(font->name().contains(name));
+}
+
+static void test_set_family()
+{
+    u8 glyph_height = 1;
+    u8 glyph_width = 1;
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+
+    const char* family = "my newly created font family";
+    font->set_family(family);
+
+    assert(!font->family().is_null());
+    assert(font->family().contains(family));
+}
+
+static void test_set_glyph_width()
+{
+    u8 glyph_height = 1;
+    u8 glyph_width = 1;
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+
+    size_t ch = 123;
+    font->set_glyph_width(ch, glyph_width);
+
+    assert(font->glyph_width(ch) == glyph_width);
+}
+static void test_set_glyph_spacing()
+{
+    u8 glyph_height = 1;
+    u8 glyph_width = 1;
+    auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
+
+    u8 glyph_spacing = 8;
+    font->set_glyph_spacing(glyph_spacing);
+
+    assert(font->glyph_spacing() == glyph_spacing);
 }
 
 static void test_set_type()
@@ -151,6 +193,7 @@ int main(int, char**)
         x();                            \
         printf("Success!\n");           \
     }
+    RUNTEST(test_fontdatabase_get);
     RUNTEST(test_fontdatabase_get_by_name);
     RUNTEST(test_fontdatabase_for_each_font);
     RUNTEST(test_default_font);
@@ -159,7 +202,10 @@ int main(int, char**)
     RUNTEST(test_default_bold_font);
     RUNTEST(test_clone);
     RUNTEST(test_set_name);
+    RUNTEST(test_set_family);
     RUNTEST(test_set_type);
+    RUNTEST(test_set_glyph_width);
+    RUNTEST(test_set_glyph_spacing);
     RUNTEST(test_width);
     RUNTEST(test_glyph_or_emoji_width);
     RUNTEST(test_load_from_file);
