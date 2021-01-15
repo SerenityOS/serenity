@@ -802,8 +802,9 @@ void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
 {
     auto& wm = WindowManager::the();
 
-    if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size() * Screen::the().scale_factor());
+    auto physical_cursor_size = cursor_rect.size() * Screen::the().scale_factor();
+    if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != physical_cursor_size) {
+        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, physical_cursor_size);
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
