@@ -82,7 +82,7 @@ public:
     Palette palette() const { return Palette(*m_palette); }
 
     RefPtr<Core::ConfigFile> config() const { return m_config; }
-    void reload_config(bool);
+    void reload_config();
 
     void add_window(Window&);
     void remove_window(Window&);
