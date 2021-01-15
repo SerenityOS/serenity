@@ -663,6 +663,8 @@ private:
     Thread::WaitBlockCondition m_wait_block_condition;
 
     HashMap<String, String> m_coredump_metadata;
+
+    Vector<RefPtr<Thread>> m_threads_for_coredump;
 };
 
 extern InlineLinkedList<Process>* g_processes;

@@ -631,6 +631,8 @@ void Process::finalize()
             dump_perfcore();
     }
 
+    m_threads_for_coredump.clear();
+
     if (m_alarm_timer)
         TimerQueue::the().cancel_timer(m_alarm_timer.release_nonnull());
     m_fds.clear();
@@ -694,6 +696,11 @@ void Process::die()
     // If the master PTY owner relies on an EOF to know when to wait() on a
     // slave owner, we have to allow the PTY pair to be torn down.
     m_tty = nullptr;
+
+    for_each_thread([&](auto& thread) {
+        m_threads_for_coredump.append(&thread);
+        return IterationDecision::Continue;
+    });
 
     kill_all_threads();
 }
