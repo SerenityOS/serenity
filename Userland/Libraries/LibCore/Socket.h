@@ -87,3 +87,7 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Core::Socket> : Formatter<Core::Object> {
+};

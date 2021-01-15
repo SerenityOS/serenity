@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
 #include <arpa/inet.h>
@@ -36,8 +37,6 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-//#define CSOCKET_DEBUG
 
 namespace Core {
 
@@ -80,9 +79,7 @@ bool Socket::connect(const String& hostname, int port)
     }
 
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
-#ifdef CSOCKET_DEBUG
-    dbg() << "Socket::connect: Resolved '" << hostname << "' to " << host_address;
-#endif
+    dbgln<debug_csocket>("Socket::connect: Resolved '{}' to {}", hostname, host_address);
     return connect(host_address, port);
 }
 
@@ -101,9 +98,7 @@ bool Socket::connect(const SocketAddress& address, int port)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == SocketAddress::Type::IPv4);
-#ifdef CSOCKET_DEBUG
-    dbg() << *this << " connecting to " << address << "...";
-#endif
+    dbgln<debug_csocket>("{} connecting to {}...", *this, address);
 
     ASSERT(port > 0 && port <= 65535);
 
@@ -124,9 +119,7 @@ bool Socket::connect(const SocketAddress& address)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == SocketAddress::Type::Local);
-#ifdef CSOCKET_DEBUG
-    dbg() << *this << " connecting to " << address << "...";
-#endif
+    dbgln<debug_csocket>("{} connecting to {}...", *this, address);
 
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
@@ -145,9 +138,7 @@ bool Socket::connect(const SocketAddress& address)
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
     auto connected = [this] {
-#ifdef CSOCKET_DEBUG
-        dbg() << *this << " connected!";
-#endif
+        dbgln<debug_csocket>("{} connected!", *this);
         if (!m_connected) {
             m_connected = true;
             ensure_read_notifier();
@@ -162,9 +153,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
-#ifdef CSOCKET_DEBUG
-            dbg() << *this << " connection in progress (EINPROGRESS)";
-#endif
+            dbgln<debug_csocket>("{} connection in progress (EINPROGRESS)", *this);
             m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
             m_notifier->on_ready_to_write = move(connected);
             return true;
@@ -174,9 +163,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         errno = saved_errno;
         return false;
     }
-#ifdef CSOCKET_DEBUG
-    dbg() << *this << " connected ok!";
-#endif
+    dbgln<debug_csocket>("{} connected ok!", *this);
     connected();
     return true;
 }
