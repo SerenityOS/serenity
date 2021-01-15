@@ -223,7 +223,6 @@ private:
     void server_did_destroy();
 
     OwnPtr<WindowBackingStore> create_backing_store(const Gfx::IntSize&);
-    RefPtr<Gfx::Bitmap> create_shared_bitmap(Gfx::BitmapFormat, const Gfx::IntSize&);
     void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
     void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
     void force_update();

@@ -710,18 +710,6 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
     m_back_store->bitmap().set_volatile();
 }
 
-RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const Gfx::IntSize& size)
-{
-    ASSERT(WindowServerConnection::the().server_pid());
-    ASSERT(!size.is_empty());
-    size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
-    size_t size_in_bytes = size.height() * pitch;
-    auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
-    ASSERT(shared_buffer);
-    shared_buffer->share_with(WindowServerConnection::the().server_pid());
-    return Gfx::Bitmap::create_with_shared_buffer(format, *shared_buffer, size);
-}
-
 OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
@@ -759,7 +747,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
 
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
-    m_icon = create_shared_bitmap(Gfx::BitmapFormat::RGBA32, icon_size);
+    m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, icon_size);
     ASSERT(m_icon);
     if (icon) {
         Painter painter(*m_icon);
