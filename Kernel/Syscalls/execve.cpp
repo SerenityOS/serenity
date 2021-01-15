@@ -507,6 +507,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 #endif
 
     m_executable = main_program_description->custody();
+    m_arguments = arguments;
+    m_environment = environment;
 
     m_promises = m_execpromises;
 
