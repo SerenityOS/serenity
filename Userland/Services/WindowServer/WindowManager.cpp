@@ -72,7 +72,7 @@ WindowManager::WindowManager(const Gfx::PaletteImpl& palette)
 {
     s_the = this;
 
-    reload_config(false);
+    reload_config();
 
     Compositor::the().did_construct_window_manager({});
 }
@@ -91,16 +91,11 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
     return Cursor::create(*Gfx::Bitmap::load_from_file(s_default_cursor_path), s_default_cursor_path);
 }
 
-void WindowManager::reload_config(bool set_screen)
+void WindowManager::reload_config()
 {
     m_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-
-    if (set_screen) {
-        set_resolution(m_config->read_num_entry("Screen", "Width", 1920), m_config->read_num_entry("Screen", "Height", 1080));
-    }
-
     m_hidden_cursor = get_cursor("Hidden");
     m_arrow_cursor = get_cursor("Arrow");
     m_hand_cursor = get_cursor("Hand");
