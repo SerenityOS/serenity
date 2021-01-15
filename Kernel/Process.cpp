@@ -641,6 +641,8 @@ void Process::finalize()
     m_cwd = nullptr;
     m_root_directory = nullptr;
     m_root_directory_relative_to_global_root = nullptr;
+    m_arguments.clear();
+    m_environment.clear();
 
     m_dead = true;
 
