@@ -65,8 +65,6 @@ void SharedBuffer::sanity_check(const char* what)
 bool SharedBuffer::is_shared_with(ProcessID peer_pid) const
 {
     LOCKER(shared_buffers().lock(), Lock::Mode::Shared);
-    if (m_global)
-        return true;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
             return true;
@@ -80,18 +78,6 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 {
     LOCKER(shared_buffers().lock());
     ASSERT(is_shared_with(process.pid()));
-    if (m_global) {
-        bool found = false;
-        for (auto& ref : m_refs) {
-            if (ref.pid == process.pid()) {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-            m_refs.append(Reference(process.pid()));
-    }
-
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
             if (!ref.region) {
@@ -112,8 +98,6 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 void SharedBuffer::share_with(ProcessID peer_pid)
 {
     LOCKER(shared_buffers().lock());
-    if (m_global)
-        return;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
             // don't increment the reference count yet; let them shbuf_get it first.

@@ -37,7 +37,6 @@ public:
     static RefPtr<SharedBuffer> create_from_shbuf_id(int);
     ~SharedBuffer();
 
-    bool share_globally();
     bool share_with(pid_t);
     int shbuf_id() const { return m_shbuf_id; }
     void seal();

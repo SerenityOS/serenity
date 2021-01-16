@@ -336,7 +336,6 @@ public:
     int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
-    int sys$shbuf_allow_all(int);
     void* sys$shbuf_get(int shbuf_id, Userspace<size_t*> size);
     int sys$shbuf_release(int shbuf_id);
     int sys$shbuf_seal(int shbuf_id);

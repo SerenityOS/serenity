@@ -96,20 +96,6 @@ int Process::sys$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
     return 0;
 }
 
-int Process::sys$shbuf_allow_all(int shbuf_id)
-{
-    REQUIRE_PROMISE(shared_buffer);
-    LOCKER(shared_buffers().lock());
-    auto it = shared_buffers().resource().find(shbuf_id);
-    if (it == shared_buffers().resource().end())
-        return -EINVAL;
-    auto& shared_buffer = *(*it).value;
-    if (!shared_buffer.is_shared_with(m_pid))
-        return -EPERM;
-    shared_buffer.share_globally();
-    return 0;
-}
-
 int Process::sys$shbuf_release(int shbuf_id)
 {
     REQUIRE_PROMISE(shared_buffer);

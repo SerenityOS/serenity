@@ -104,11 +104,6 @@ void SharedBufferRegion::write64(u32 offset, ValueWithShadow<u64> value)
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }
 
-int SharedBufferRegion::allow_all()
-{
-    return syscall(SC_shbuf_allow_all, m_shbuf_id);
-}
-
 int SharedBufferRegion::allow_pid(pid_t pid)
 {
     return syscall(SC_shbuf_allow_pid, m_shbuf_id, pid);

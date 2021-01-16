@@ -98,18 +98,6 @@ bool SharedBuffer::share_with([[maybe_unused]] pid_t peer)
     return true;
 }
 
-bool SharedBuffer::share_globally()
-{
-#if defined(__serenity__)
-    int ret = shbuf_allow_all(shbuf_id());
-    if (ret < 0) {
-        perror("shbuf_allow_all");
-        return false;
-    }
-#endif
-    return true;
-}
-
 RefPtr<SharedBuffer> SharedBuffer::create_from_shbuf_id(int shbuf_id)
 {
 #if defined(__serenity__)
