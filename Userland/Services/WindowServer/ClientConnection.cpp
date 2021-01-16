@@ -713,7 +713,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimize
 
 OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
 {
-    return make<Messages::WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer_id());
+    return make<Messages::WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer());
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)
@@ -836,7 +836,7 @@ void ClientConnection::handle(const Messages::WindowServer::SetWindowProgress& m
 void ClientConnection::handle(const Messages::WindowServer::RefreshSystemTheme&)
 {
     // Post the client an UpdateSystemTheme message to refresh its theme.
-    post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+    post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
 }
 
 void ClientConnection::handle(const Messages::WindowServer::Pong&)

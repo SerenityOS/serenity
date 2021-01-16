@@ -33,7 +33,7 @@ namespace Gfx {
 
 static SystemTheme dummy_theme;
 static const SystemTheme* theme_page = &dummy_theme;
-static RefPtr<SharedBuffer> theme_buffer;
+static Core::AnonymousBuffer theme_buffer;
 
 const SystemTheme& current_system_theme()
 {
@@ -41,24 +41,24 @@ const SystemTheme& current_system_theme()
     return *theme_page;
 }
 
-int current_system_theme_buffer_id()
+Core::AnonymousBuffer& current_system_theme_buffer()
 {
-    ASSERT(theme_buffer);
-    return theme_buffer->shbuf_id();
+    ASSERT(theme_buffer.is_valid());
+    return theme_buffer;
 }
 
-void set_system_theme(SharedBuffer& buffer)
+void set_system_theme(Core::AnonymousBuffer buffer)
 {
-    theme_buffer = buffer;
-    theme_page = theme_buffer->data<SystemTheme>();
+    theme_buffer = move(buffer);
+    theme_page = theme_buffer.data<SystemTheme>();
 }
 
-RefPtr<SharedBuffer> load_system_theme(const String& path)
+Core::AnonymousBuffer load_system_theme(const String& path)
 {
     auto file = Core::ConfigFile::open(path);
-    auto buffer = SharedBuffer::create_with_size(sizeof(SystemTheme));
+    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(SystemTheme));
 
-    auto* data = buffer->data<SystemTheme>();
+    auto* data = buffer.data<SystemTheme>();
 
     auto get_color = [&](auto& name) {
         auto color_string = file->read_entry("Colors", name);
@@ -120,9 +120,6 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     } while (0)
 
     DO_PATH(TitleButtonIcons);
-
-    buffer->seal();
-    buffer->share_globally();
 
     return buffer;
 }

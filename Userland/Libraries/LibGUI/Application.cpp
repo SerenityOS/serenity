@@ -189,10 +189,10 @@ void Application::did_delete_last_window(Badge<Window>)
         m_event_loop->quit(0);
 }
 
-void Application::set_system_palette(SharedBuffer& buffer)
+void Application::set_system_palette(Core::AnonymousBuffer& buffer)
 {
     if (!m_system_palette)
-        m_system_palette = Gfx::PaletteImpl::create_with_shared_buffer(buffer);
+        m_system_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(buffer);
     else
         m_system_palette->replace_internal_buffer({}, buffer);
 

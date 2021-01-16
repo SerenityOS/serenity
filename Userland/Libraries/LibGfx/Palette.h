@@ -41,7 +41,7 @@ class PaletteImpl : public RefCounted<PaletteImpl> {
 
 public:
     ~PaletteImpl();
-    static NonnullRefPtr<PaletteImpl> create_with_shared_buffer(SharedBuffer&);
+    static NonnullRefPtr<PaletteImpl> create_with_anonymous_buffer(Core::AnonymousBuffer);
     NonnullRefPtr<PaletteImpl> clone() const;
 
     Color color(ColorRole) const;
@@ -49,12 +49,12 @@ public:
     String path(PathRole) const;
     const SystemTheme& theme() const;
 
-    void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
+    void replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer);
 
 private:
-    explicit PaletteImpl(SharedBuffer&);
+    explicit PaletteImpl(Core::AnonymousBuffer);
 
-    RefPtr<SharedBuffer> m_theme_buffer;
+    Core::AnonymousBuffer m_theme_buffer;
 };
 
 class Palette {

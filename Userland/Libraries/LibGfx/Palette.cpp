@@ -31,13 +31,13 @@
 
 namespace Gfx {
 
-NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_shared_buffer(SharedBuffer& buffer)
+NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_anonymous_buffer(Core::AnonymousBuffer buffer)
 {
-    return adopt(*new PaletteImpl(buffer));
+    return adopt(*new PaletteImpl(move(buffer)));
 }
 
-PaletteImpl::PaletteImpl(SharedBuffer& buffer)
-    : m_theme_buffer(buffer)
+PaletteImpl::PaletteImpl(Core::AnonymousBuffer buffer)
+    : m_theme_buffer(move(buffer))
 {
 }
 
@@ -52,7 +52,7 @@ Palette::~Palette()
 
 const SystemTheme& PaletteImpl::theme() const
 {
-    return *m_theme_buffer->data<SystemTheme>();
+    return *m_theme_buffer.data<SystemTheme>();
 }
 
 Color PaletteImpl::color(ColorRole role) const
@@ -75,9 +75,9 @@ String PaletteImpl::path(PathRole role) const
 
 NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
-    auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
-    memcpy(new_theme_buffer->data<SystemTheme>(), &theme(), m_theme_buffer->size());
-    return adopt(*new PaletteImpl(*new_theme_buffer));
+    auto new_theme_buffer = Core::AnonymousBuffer::create_with_size(m_theme_buffer.size());
+    memcpy(new_theme_buffer.data<SystemTheme>(), &theme(), m_theme_buffer.size());
+    return adopt(*new PaletteImpl(move(new_theme_buffer)));
 }
 
 void Palette::set_color(ColorRole role, Color color)
@@ -109,9 +109,9 @@ PaletteImpl::~PaletteImpl()
 {
 }
 
-void PaletteImpl::replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer)
+void PaletteImpl::replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer)
 {
-    m_theme_buffer = buffer;
+    m_theme_buffer = move(buffer);
 }
 
 }

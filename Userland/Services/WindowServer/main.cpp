@@ -39,7 +39,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread sendfd recvfd shared_buffer accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -78,13 +78,13 @@ int main(int, char**)
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));
-    ASSERT(theme);
-    Gfx::set_system_theme(*theme);
-    auto palette = Gfx::PaletteImpl::create_with_shared_buffer(*theme);
+    ASSERT(theme.is_valid());
+    Gfx::set_system_theme(theme);
+    auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 
     WindowServer::EventLoop loop;
 
-    if (pledge("stdio video thread sendfd recvfd shared_buffer accept rpath wpath cpath proc", nullptr) < 0) {
+    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

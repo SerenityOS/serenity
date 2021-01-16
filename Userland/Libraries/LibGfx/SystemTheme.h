@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
 
 namespace Gfx {
@@ -153,9 +154,9 @@ struct SystemTheme {
 };
 
 const SystemTheme& current_system_theme();
-int current_system_theme_buffer_id();
-void set_system_theme(SharedBuffer&);
-RefPtr<SharedBuffer> load_system_theme(const String& path);
+Core::AnonymousBuffer& current_system_theme_buffer();
+void set_system_theme(Core::AnonymousBuffer);
+Core::AnonymousBuffer load_system_theme(const String& path);
 
 }
 

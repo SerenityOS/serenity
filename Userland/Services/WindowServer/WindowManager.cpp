@@ -1404,17 +1404,16 @@ Gfx::IntRect WindowManager::dnd_rect() const
 bool WindowManager::update_theme(String theme_path, String theme_name)
 {
     auto new_theme = Gfx::load_system_theme(theme_path);
-    if (!new_theme)
+    if (!new_theme.is_valid())
         return false;
-    ASSERT(new_theme);
-    Gfx::set_system_theme(*new_theme);
-    m_palette = Gfx::PaletteImpl::create_with_shared_buffer(*new_theme);
+    Gfx::set_system_theme(new_theme);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     Compositor::the().set_background_color(palette().desktop_background().to_string());
     HashTable<ClientConnection*> notified_clients;
     for_each_window([&](Window& window) {
         if (window.client()) {
             if (!notified_clients.contains(window.client())) {
-                window.client()->post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+                window.client()->post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
                 notified_clients.set(window.client());
             }
         }
