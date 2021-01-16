@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
@@ -42,8 +43,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
-
-//#define KEYBOARD_SHORTCUTS_DEBUG
 
 namespace GUI {
 
@@ -142,32 +141,25 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)message.key(), message.modifiers(), message.code_point(), message.scancode());
     Action* action = nullptr;
 
-#ifdef KEYBOARD_SHORTCUTS_DEBUG
-    dbg() << "Looking up action for " << key_event->to_string();
-#endif
+    dbgln<debug_keyboard_shortcuts>("Looking up action for {}", key_event->to_string());
 
     if (auto* focused_widget = window->focused_widget()) {
         for (auto* widget = focused_widget; widget && !action; widget = widget->parent_widget()) {
             action = widget->action_for_key_event(*key_event);
-#ifdef KEYBOARD_SHORTCUTS_DEBUG
-            dbg() << "  > Focused widget " << *widget << " gave action: " << action;
-#endif
+
+            dbgln<debug_keyboard_shortcuts>("  > Focused widget {} gave action: {}", *widget, action);
         }
     }
 
     if (!action) {
         action = window->action_for_key_event(*key_event);
-#ifdef KEYBOARD_SHORTCUTS_DEBUG
-        dbg() << "  > Asked window " << *window << ", got action: " << action;
-#endif
+        dbgln<debug_keyboard_shortcuts>("  > Asked window {}, got action: {}", *window, action);
     }
 
     // NOTE: Application-global shortcuts are ignored while a modal window is up.
     if (!action && !window->is_modal()) {
         action = Application::the()->action_for_key_event(*key_event);
-#ifdef KEYBOARD_SHORTCUTS_DEBUG
-        dbg() << "  > Asked application, got action: " << action;
-#endif
+        dbgln<debug_keyboard_shortcuts>("  > Asked application, got action: {}", action);
     }
 
     if (action) {

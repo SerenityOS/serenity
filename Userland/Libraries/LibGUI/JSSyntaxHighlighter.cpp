@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
@@ -107,11 +108,12 @@ void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         spans.append(span);
         advance_position(str[str.length() - 1]);
 
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
-        dbg() << token.name() << (is_trivia ? " (trivia) @ \"" : " @ \"") << token.value() << "\" "
-              << span.range.start().line() << ":" << span.range.start().column() << " - "
-              << span.range.end().line() << ":" << span.range.end().column();
-#endif
+        dbgln<debug_syntax_highlighting>("{}{} @ '{}' {}:{} - {}:{}",
+            token.name(),
+            is_trivia ? " (trivia)" : "",
+            token.value(),
+            span.range.start().line(), span.range.start().column(),
+            span.range.end().line(), span.range.end().column());
     };
 
     bool was_eof = false;

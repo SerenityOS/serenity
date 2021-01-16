@@ -31,6 +31,7 @@
 #include "FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/QuickSort.h>
@@ -915,9 +916,7 @@ void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const F
     // Perhaps it's an emoji?
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
-#ifdef EMOJI_DEBUG
-        dbg() << "Failed to find an emoji for code_point " << code_point;
-#endif
+        dbgln<debug_emoji>("Failed to find an emoji for code_point {}", code_point);
         draw_glyph(point, '?', font, color);
         return;
     }
@@ -1632,9 +1631,8 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                     if (is_inside_shape(winding_number)) {
                         // The points between this segment and the previous are
                         // inside the shape
-#ifdef FILL_PATH_DEBUG
-                        dbg() << "y=" << scanline << ": " << winding_number << " at " << i << ": " << from << " -- " << to;
-#endif
+
+                        dbgln<debug_fill_path>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
                         draw_line(from, to, color, 1);
                     }
 

@@ -28,6 +28,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -40,8 +41,6 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/Streamer.h>
-
-//#define PORTABLE_IMAGE_LOADER_DEBUG
 
 namespace Gfx {
 
@@ -105,18 +104,14 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 
     if (!context.data || context.data_size < 2) {
         context.state = TContext::State::Error;
-#ifdef PORTABLE_IMAGE_LOADER_DEBUG
-        dbg() << "There is no enough data for " << TContext::image_type;
-#endif
+        dbgln<debug_portable_image_loader>("There is no enough data for {}", TContext::image_type);
         return false;
     }
 
     u8 magic_number[2] {};
     if (!streamer.read_bytes(magic_number, 2)) {
         context.state = TContext::State::Error;
-#ifdef PORTABLE_IMAGE_LOADER_DEBUG
-        dbg() << "We can't read magic number for " << TContext::image_type;
-#endif
+        dbgln<debug_portable_image_loader>("We can't read magic number for {}", TContext::image_type);
         return false;
     }
 
@@ -133,10 +128,7 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
     }
 
     context.state = TContext::State::Error;
-#ifdef PORTABLE_IMAGE_LOADER_DEBUG
-    dbg() << "Magic number is not valid for "
-          << magic_number[0] << magic_number[1] << TContext::image_type;
-#endif
+    dbgln<debug_portable_image_loader>("Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::image_type);
     return false;
 }
 
@@ -194,9 +186,7 @@ static bool read_max_val(TContext& context, Streamer& streamer)
     }
 
     if (context.max_val > 255) {
-#ifdef PORTABLE_IMAGE_LOADER_DEBUG
-        dbg() << "We can't parse 2 byte color for " << TContext::image_type;
-#endif
+        dbgln<debug_portable_image_loader>("We can't parse 2 byte color for {}", TContext::image_type);
         context.state = TContext::Error;
         return false;
     }

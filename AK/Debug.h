@@ -363,3 +363,39 @@ constexpr bool debug_jpg = true;
 #else
 constexpr bool debug_jpg = false;
 #endif
+
+#ifdef EMOJI_DEBUG
+constexpr bool debug_emoji = true;
+#else
+constexpr bool debug_emoji = false;
+#endif
+
+#ifdef FILL_PATH_DEBUG
+constexpr bool debug_fill_path = true;
+#else
+constexpr bool debug_fill_path = false;
+#endif
+
+#ifdef PNG_DEBUG
+constexpr bool debug_png = true;
+#else
+constexpr bool debug_png = false;
+#endif
+
+#ifdef PORTABLE_IMAGE_LOADER_DEBUG
+constexpr bool debug_portable_image_loader = true;
+#else
+constexpr bool debug_portable_image_loader = false;
+#endif
+
+#ifdef DEBUG_SYNTAX_HIGHLIGHTING
+constexpr bool debug_syntax_highlighting = true;
+#else
+constexpr bool debug_syntax_highlighting = false;
+#endif
+
+#ifdef KEYBOARD_SHORTCUTS_DEBUG
+constexpr bool debug_keyboard_shortcuts = true;
+#else
+constexpr bool debug_keyboard_shortcuts = false;
+#endif

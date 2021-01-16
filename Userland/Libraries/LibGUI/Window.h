@@ -267,3 +267,7 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<GUI::Window> : Formatter<Core::Object> {
+};
