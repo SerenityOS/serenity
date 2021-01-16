@@ -631,10 +631,17 @@ void Formatter::visit(const AST::Sequence* node)
     test_and_update_output_cursor(node);
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
-    node->left()->visit(*this);
-    insert_separator();
 
-    node->right()->visit(*this);
+    bool first = true;
+    for (auto& entry : node->entries()) {
+        if (first)
+            first = false;
+        else
+            insert_separator();
+
+        entry.visit(*this);
+    }
+
     visited(node);
 }
 

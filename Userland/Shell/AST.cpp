@@ -2302,32 +2302,37 @@ ReadWriteRedirection::~ReadWriteRedirection()
 void Sequence::dump(int level) const
 {
     Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    for (auto& entry : m_entries)
+        entry.dump(level + 1);
 }
 
 RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->to_lazy_evaluated_commands(shell);
-    // This could happen if a comment is next to a command.
-    if (left.size() == 1) {
-        auto& command = left.first();
-        if (command.argv.is_empty() && command.redirections.is_empty() && command.next_chain.is_empty())
-            return m_right->run(shell);
+    Vector<Command> all_commands;
+    Command* last_command_in_sequence = nullptr;
+    for (auto& entry : m_entries) {
+        if (!last_command_in_sequence) {
+            auto commands = entry.to_lazy_evaluated_commands(shell);
+            all_commands.append(move(commands));
+            last_command_in_sequence = &all_commands.last();
+            continue;
+        }
+
+        if (last_command_in_sequence->should_wait) {
+            last_command_in_sequence->next_chain.append(NodeWithAction { entry, NodeWithAction::Sequence });
+        } else {
+            all_commands.append(entry.to_lazy_evaluated_commands(shell));
+            last_command_in_sequence = &all_commands.last();
+        }
     }
 
-    if (left.last().should_wait)
-        left.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::Sequence });
-    else
-        left.append(m_right->to_lazy_evaluated_commands(shell));
-
-    return create<CommandSequenceValue>(move(left));
+    return create<CommandSequenceValue>(move(all_commands));
 }
 
 void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
-    m_left->highlight_in_editor(editor, shell, metadata);
-    m_right->highlight_in_editor(editor, shell, metadata);
+    for (auto& entry : m_entries)
+        entry.highlight_in_editor(editor, shell, metadata);
 }
 
 HitTestResult Sequence::hit_test_position(size_t offset)
@@ -2335,29 +2340,29 @@ HitTestResult Sequence::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    auto result = m_left->hit_test_position(offset);
-    if (result.matching_node) {
-        if (!result.closest_command_node)
-            result.closest_command_node = m_right;
-        return result;
+    for (auto& entry : m_entries) {
+        auto result = entry.hit_test_position(offset);
+        if (result.matching_node) {
+            if (!result.closest_command_node)
+                result.closest_command_node = entry;
+            return result;
+        }
     }
 
-    result = m_right->hit_test_position(offset);
-    if (!result.closest_command_node)
-        result.closest_command_node = m_right;
-    return result;
+    return {};
 }
 
-Sequence::Sequence(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Position separator_position)
+Sequence::Sequence(Position position, NonnullRefPtrVector<Node> entries, Vector<Position> separator_positions)
     : Node(move(position))
-    , m_left(move(left))
-    , m_right(move(right))
-    , m_separator_position(separator_position)
+    , m_entries(move(entries))
+    , m_separator_positions(separator_positions)
 {
-    if (m_left->is_syntax_error())
-        set_is_syntax_error(m_left->syntax_error_node());
-    else if (m_right->is_syntax_error())
-        set_is_syntax_error(m_right->syntax_error_node());
+    for (auto& entry : m_entries) {
+        if (entry.is_syntax_error()) {
+            set_is_syntax_error(entry.syntax_error_node());
+            break;
+        }
+    }
 }
 
 Sequence::~Sequence()

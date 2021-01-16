@@ -1139,14 +1139,13 @@ private:
 
 class Sequence final : public Node {
 public:
-    Sequence(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>, Position separator_position);
+    Sequence(Position, NonnullRefPtrVector<Node>, Vector<Position> separator_positions);
     virtual ~Sequence();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    const NonnullRefPtr<Node>& left() const { return m_left; }
-    const NonnullRefPtr<Node>& right() const { return m_right; }
+    const NonnullRefPtrVector<Node>& entries() const { return m_entries; }
 
-    const Position& separator_position() const { return m_separator_position; }
+    const Vector<Position>& separator_positions() const { return m_separator_positions; }
 
 private:
     NODE(Sequence);
@@ -1157,9 +1156,8 @@ private:
     virtual bool is_list() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
-    NonnullRefPtr<Node> m_left;
-    NonnullRefPtr<Node> m_right;
-    Position m_separator_position;
+    NonnullRefPtrVector<Node> m_entries;
+    Vector<Position> m_separator_positions;
 };
 
 class Subshell final : public Node {

@@ -111,6 +111,11 @@ NonnullRefPtr<A> Parser::create(Args... args)
     return make<ScopedOffset>(m_rule_start_offsets, m_rule_start_lines, m_offset, m_line.line_number, m_line.line_column);
 }
 
+Parser::Offset Parser::current_position()
+{
+    return Offset { m_offset, { m_line.line_number, m_line.line_column } };
+}
+
 static constexpr bool is_whitespace(char c)
 {
     return c == ' ' || c == '\t';
@@ -180,58 +185,70 @@ RefPtr<AST::Node> Parser::parse_toplevel()
 {
     auto rule_start = push_start();
 
-    if (auto sequence = parse_sequence())
-        return create<AST::Execute>(sequence.release_nonnull());
+    SequenceParseResult result;
+    NonnullRefPtrVector<AST::Node> sequence;
+    Vector<AST::Position> positions;
+    do {
+        result = parse_sequence();
+        if (result.entries.is_empty())
+            break;
 
-    return nullptr;
+        sequence.append(move(result.entries));
+        positions.append(move(result.separator_positions));
+    } while (result.decision == ShouldReadMoreSequences::Yes);
+
+    if (sequence.is_empty())
+        return nullptr;
+
+    return create<AST::Execute>(
+        create<AST::Sequence>(move(sequence), move(positions)));
 }
 
-RefPtr<AST::Node> Parser::parse_sequence()
+Parser::SequenceParseResult Parser::parse_sequence()
 {
     consume_while(is_any_of(" \t\n;")); // ignore whitespaces or terminators without effect.
 
+    NonnullRefPtrVector<AST::Node> left;
+
     auto rule_start = push_start();
-    auto var_decls = parse_variable_decls();
+    {
+        auto var_decls = parse_variable_decls();
+        if (var_decls)
+            left.append(var_decls.release_nonnull());
+    }
 
     auto pos_before_seps = save_offset();
 
     switch (peek()) {
     case '}':
-        return var_decls;
+        return { move(left), {}, ShouldReadMoreSequences::No };
     case ';':
     case '\n': {
-        if (!var_decls)
+        if (left.is_empty())
             break;
 
         consume_while(is_any_of("\n;"));
-
         auto pos_after_seps = save_offset();
+        AST::Position separator_position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line };
 
-        auto rest = parse_sequence();
-        if (rest)
-            return create<AST::Sequence>(
-                var_decls.release_nonnull(),
-                rest.release_nonnull(),
-                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line });
-        return var_decls;
+        return { move(left), { move(separator_position) }, ShouldReadMoreSequences::Yes };
     }
     default:
         break;
     }
 
-    auto first = parse_function_decl();
+    auto first_entry = parse_function_decl();
 
-    if (!first)
-        first = parse_or_logical_sequence();
+    Vector<AST::Position> separator_positions;
 
-    if (!first)
-        return var_decls;
+    if (!first_entry)
+        first_entry = parse_or_logical_sequence();
 
-    if (var_decls)
-        first = create<AST::Sequence>(
-            var_decls.release_nonnull(),
-            first.release_nonnull(),
-            AST::Position { pos_before_seps.offset, pos_before_seps.offset, pos_before_seps.line, pos_before_seps.line });
+    if (!first_entry)
+        return { move(left), {}, ShouldReadMoreSequences::No };
+
+    left.append(first_entry.release_nonnull());
+    separator_positions.empend(pos_before_seps.offset, pos_before_seps.offset, pos_before_seps.line, pos_before_seps.line);
 
     consume_while(is_whitespace);
 
@@ -241,29 +258,19 @@ RefPtr<AST::Node> Parser::parse_sequence()
     case '\n': {
         consume_while(is_any_of("\n;"));
         auto pos_after_seps = save_offset();
-
-        if (auto expr = parse_sequence()) {
-            return create<AST::Sequence>(
-                first.release_nonnull(),
-                expr.release_nonnull(),
-                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line }); // Sequence
-        }
-        return first;
+        separator_positions.empend(pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line);
+        return { move(left), move(separator_positions), ShouldReadMoreSequences::Yes };
     }
     case '&': {
         consume();
         auto pos_after_seps = save_offset();
-        auto bg = create<AST::Background>(first.release_nonnull()); // Execute Background
-        if (auto rest = parse_sequence())
-            return create<AST::Sequence>(
-                move(bg),
-                rest.release_nonnull(),
-                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_before_seps.line }); // Sequence Background Sequence
-
-        return bg;
+        auto bg = create<AST::Background>(left.take_last()); // Execute Background
+        left.append(move(bg));
+        separator_positions.empend(pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line);
+        return { move(left), move(separator_positions), ShouldReadMoreSequences::Yes };
     }
     default:
-        return first;
+        return { move(left), move(separator_positions), ShouldReadMoreSequences::No };
     }
 }
 

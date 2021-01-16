@@ -186,8 +186,8 @@ void NodeVisitor::visit(const AST::ReadWriteRedirection* node)
 
 void NodeVisitor::visit(const AST::Sequence* node)
 {
-    node->left()->visit(*this);
-    node->right()->visit(*this);
+    for (auto& entry : node->entries())
+        entry.visit(*this);
 }
 
 void NodeVisitor::visit(const AST::Subshell* node)
