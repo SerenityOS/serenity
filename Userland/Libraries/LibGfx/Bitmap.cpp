@@ -497,6 +497,7 @@ int Bitmap::shbuf_id() const
     return m_shared_buffer ? m_shared_buffer->shbuf_id() : -1;
 }
 
+#ifdef __serenity__
 ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
     auto bitmap = to_bitmap_backed_by_anon_fd();
@@ -504,6 +505,7 @@ ShareableBitmap Bitmap::to_shareable_bitmap() const
         return {};
     return ShareableBitmap(*bitmap);
 }
+#endif
 
 Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, [[maybe_unused]] Purgeable purgeable)
 {
