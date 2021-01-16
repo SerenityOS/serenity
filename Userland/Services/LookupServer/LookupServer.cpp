@@ -160,7 +160,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
         return;
     }
     for (auto& response : responses) {
-        auto line = String::format("%s\n", response.characters());
+        auto line = String::formatted("{}\n", response);
         int nsent = socket->write(line);
         if (nsent < 0) {
             perror("write");

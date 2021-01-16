@@ -76,7 +76,7 @@ int main(int argc, char** argv)
         const char* new_path = original_new_path;
         if (rc == 0 && S_ISDIR(st.st_mode)) {
             auto old_basename = LexicalPath(old_path).basename();
-            combined_new_path = String::format("%s/%s", original_new_path, old_basename.characters());
+            combined_new_path = String::formatted("{}/{}", original_new_path, old_basename);
             new_path = combined_new_path.characters();
         }
 

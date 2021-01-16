@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     args_parser.parse(argc, argv);
 
     auto make_path = [name](const char* section) {
-        return String::format("/usr/share/man/man%s/%s.md", section, name);
+        return String::formatted("/usr/share/man/man{}/{}.md", section, name);
     };
     if (!section) {
         const char* sections[] = {

@@ -120,7 +120,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     if (default_launcher) {
         launch(url, *default_launcher);
     } else {
-        auto error_message = String::format("Could not open %s", path.characters());
+        auto error_message = String::formatted("Could not open {}", path);
         GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
     }
 }

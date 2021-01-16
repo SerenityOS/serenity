@@ -276,7 +276,7 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     ASSERT(config.has_group(name));
 
     set_name(name);
-    m_executable_path = config.read_entry(name, "Executable", String::format("/bin/%s", this->name().characters()));
+    m_executable_path = config.read_entry(name, "Executable", String::formatted("/bin/{}", this->name()));
     m_extra_arguments = config.read_entry(name, "Arguments", "").split(' ');
     m_stdio_file_path = config.read_entry(name, "StdIO");
 

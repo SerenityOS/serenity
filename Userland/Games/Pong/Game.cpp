@@ -136,7 +136,7 @@ void Game::reset_ball(int serve_to_player)
 
 void Game::game_over(int winner)
 {
-    GUI::MessageBox::show(window(), String::format("Player %d wins!", winner), "Pong", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OK);
+    GUI::MessageBox::show(window(), String::formatted("Player {} wins!", winner), "Pong", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OK);
 }
 
 void Game::round_over(int winner)

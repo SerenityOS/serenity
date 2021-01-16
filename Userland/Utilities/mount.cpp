@@ -75,7 +75,7 @@ static int get_source_fd(const char* source)
         fd = open(source, O_RDONLY);
     if (fd < 0) {
         int saved_errno = errno;
-        auto message = String::format("Failed to open: %s\n", source);
+        auto message = String::formatted("Failed to open: {}\n", source);
         errno = saved_errno;
         perror(message.characters());
     }

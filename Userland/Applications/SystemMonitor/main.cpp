@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
-                auto pid_string = String::format("%d", pid);
+                auto pid_string = String::number(pid);
                 pid_t child;
                 const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
                 if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
-                auto pid_string = String::format("%d", pid);
+                auto pid_string = String::number(pid);
                 pid_t child;
                 const char* argv[] = { "/bin/Inspector", pid_string.characters(), nullptr };
                 if ((errno = posix_spawn(&child, "/bin/Inspector", nullptr, nullptr, const_cast<char**>(argv), environ))) {

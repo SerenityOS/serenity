@@ -172,7 +172,7 @@ void DevicesModel::update()
         Core::DirIterator dir_iter { dir, Core::DirIterator::Flags::SkipDots };
         while (dir_iter.has_next()) {
             auto name = dir_iter.next_path();
-            auto path = String::format("%s/%s", dir.characters(), name.characters());
+            auto path = String::formatted("{}/{}", dir, name);
             struct stat statbuf;
             if (lstat(path.characters(), &statbuf) != 0) {
                 ASSERT_NOT_REACHED();

@@ -44,7 +44,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
     auto region = adopt_own(*new MmapRegion(base, size, prot));
     region->m_file_backed = true;
     if (!name.is_empty()) {
-        name = String::format("%s (Emulated)", name.characters());
+        name = String::formatted("{} (Emulated)", name);
         region->m_name = name;
     }
     region->m_data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
