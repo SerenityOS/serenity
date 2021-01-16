@@ -39,6 +39,8 @@ public:
     virtual ~HttpDownload() override;
     static NonnullOwnPtr<HttpDownload> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
+    HTTP::HttpJob& job() { return m_job; }
+
 private:
     explicit HttpDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpJob>, NonnullOwnPtr<OutputFileStream>&&);
 
