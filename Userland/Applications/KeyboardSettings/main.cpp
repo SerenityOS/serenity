@@ -45,7 +45,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath accept cpath wpath sendfd shared_buffer unix fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath accept cpath wpath recvfd sendfd unix fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     // If there is no command line parameter go for GUI.
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio rpath accept sendfd shared_buffer proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath accept recvfd sendfd proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

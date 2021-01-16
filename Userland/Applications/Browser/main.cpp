@@ -70,7 +70,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio sendfd shared_buffer accept unix cpath rpath wpath fattr sendfd recvfd", nullptr) < 0) {
+    if (pledge("stdio shared_buffer recvfd sendfd accept unix cpath rpath wpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio sendfd shared_buffer accept unix cpath rpath wpath sendfd recvfd", nullptr) < 0) {
+    if (pledge("stdio shared_buffer recvfd sendfd accept unix cpath rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

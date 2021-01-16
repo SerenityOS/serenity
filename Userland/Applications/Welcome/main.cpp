@@ -113,14 +113,14 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio sendfd shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio sendfd shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

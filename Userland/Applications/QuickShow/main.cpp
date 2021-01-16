@@ -51,14 +51,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio sendfd shared_buffer accept cpath rpath wpath unix cpath fattr proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix cpath fattr proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio sendfd shared_buffer accept cpath rpath wpath proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept cpath rpath wpath proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

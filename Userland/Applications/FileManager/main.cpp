@@ -80,7 +80,7 @@ static void show_properties(const String& container_dir_path, const String& path
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread sendfd shared_buffer accept unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd accept unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread sendfd shared_buffer accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
