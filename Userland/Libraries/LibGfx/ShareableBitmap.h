@@ -39,8 +39,6 @@ public:
 
     bool is_valid() const { return m_bitmap; }
 
-    int anon_fd() const { return m_bitmap ? m_bitmap->anon_fd() : -1; }
-
     const Bitmap* bitmap() const { return m_bitmap; }
     Bitmap* bitmap() { return m_bitmap; }
 

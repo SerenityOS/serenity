@@ -47,7 +47,7 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
     encoder << shareable_bitmap.is_valid();
     if (!shareable_bitmap.is_valid())
         return true;
-    encoder << IPC::File(shareable_bitmap.anon_fd());
+    encoder << IPC::File(shareable_bitmap.bitmap()->anon_fd());
     encoder << shareable_bitmap.width();
     encoder << shareable_bitmap.height();
     return true;
