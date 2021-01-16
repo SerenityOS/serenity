@@ -203,14 +203,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     auto menu_item = make<MenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
     if (message.is_default())
         menu_item->set_default(true);
-    if (message.icon_buffer_id() != -1) {
-        auto icon_buffer = SharedBuffer::create_from_shbuf_id(message.icon_buffer_id());
-        if (!icon_buffer)
-            return {};
-        // FIXME: Verify that the icon buffer can accommodate a 16x16 bitmap view.
-        auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
-        menu_item->set_icon(shared_icon);
-    }
+    menu_item->set_icon(message.icon().bitmap());
     menu_item->set_submenu_id(message.submenu_id());
     menu_item->set_exclusive(message.exclusive());
     menu.add_item(move(menu_item));
