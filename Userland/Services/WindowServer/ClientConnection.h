@@ -143,6 +143,7 @@ private:
     virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::SetWindowProgress&) override;
+    virtual void handle(const Messages::WindowServer::RefreshSystemTheme&) override;
     virtual void handle(const Messages::WindowServer::Pong&) override;
     virtual OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> handle(const Messages::WindowServer::GetGlobalCursorPosition&) override;
     virtual OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> handle(const Messages::WindowServer::SetMouseAcceleration&) override;

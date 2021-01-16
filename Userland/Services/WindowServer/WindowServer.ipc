@@ -98,6 +98,7 @@ endpoint WindowServer = 2
 
     SetSystemTheme(String theme_path, [UTF8] String theme_name) => (bool success)
     GetSystemTheme() => ([UTF8] String theme_name)
+    RefreshSystemTheme() =|
 
     SetWindowBaseSizeAndSizeIncrement(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment) => ()
     SetWindowResizeAspectRatio(i32 window_id, Optional<Gfx::IntSize> resize_aspect_ratio) => ()

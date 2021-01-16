@@ -181,6 +181,8 @@ public:
 
     void schedule_relayout();
 
+    void refresh_system_theme();
+
     static void for_each_window(Badge<WindowServerConnection>, Function<void(Window&)>);
     static void update_all_windows(Badge<WindowServerConnection>);
     void notify_state_changed(Badge<WindowServerConnection>, bool minimized, bool occluded);

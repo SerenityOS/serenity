@@ -845,6 +845,11 @@ void Window::schedule_relayout()
     });
 }
 
+void Window::refresh_system_theme()
+{
+    WindowServerConnection::the().post_message(Messages::WindowServer::RefreshSystemTheme());
+}
+
 void Window::for_each_window(Badge<WindowServerConnection>, Function<void(Window&)> callback)
 {
     for (auto& e : *reified_windows) {
