@@ -142,7 +142,7 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_good_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-good.png");
     m_bad_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
     for (int i = 0; i < 8; ++i)
-        m_number_bitmap[i] = Gfx::Bitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
+        m_number_bitmap[i] = Gfx::Bitmap::load_from_file(String::formatted("/res/icons/minesweeper/{}.png", i + 1));
 
     set_fill_with_background_color(true);
     reset();

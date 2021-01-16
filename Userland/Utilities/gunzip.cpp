@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     for (String filename : filenames) {
         if (!filename.ends_with(".gz"))
-            filename = String::format("%s.gz", filename.characters());
+            filename = String::formatted("{}.gz", filename);
 
         const auto input_filename = filename;
         const auto output_filename = filename.substring_view(0, filename.length() - 3);

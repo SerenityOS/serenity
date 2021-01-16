@@ -265,7 +265,7 @@ int main(int argc, char** argv)
                 do {
                     output_name = url.host();
                     if (i > -1)
-                        output_name = String::format("%s.%d", output_name.characters(), i);
+                        output_name = String::formatted("{}.{}", output_name, i);
                     ++i;
                 } while (Core::File::exists(output_name));
             }

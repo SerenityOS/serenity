@@ -172,7 +172,7 @@ void Fire::timer_event(Core::TimerEvent&)
 
     if ((cycles % 50) == 0) {
         dbgln("{} total cycles. finished 50 in {} ms, avg {} ms", cycles, timeAvg, timeAvg / 50);
-        stats->set_text(String::format("%d ms", timeAvg / 50));
+        stats->set_text(String::formatted("{} ms", timeAvg / 50));
         timeAvg = 0;
     }
 

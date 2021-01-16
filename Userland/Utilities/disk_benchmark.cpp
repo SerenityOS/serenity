@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
     umask(0644);
 
-    auto filename = String::format("%s/disk_benchmark.tmp", directory);
+    auto filename = String::formatted("{}/disk_benchmark.tmp", directory);
 
     for (auto file_size : file_sizes) {
         for (auto block_size : block_sizes) {

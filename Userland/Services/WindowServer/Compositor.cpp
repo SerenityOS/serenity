@@ -761,7 +761,7 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_damage_rect)
     if (!window_being_moved_or_resized->size_increment().is_null()) {
         int width_steps = (window_being_moved_or_resized->width() - window_being_moved_or_resized->base_size().width()) / window_being_moved_or_resized->size_increment().width();
         int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
-        geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
+        geometry_string = String::formatted("{} ({}x{})", geometry_string, width_steps, height_steps);
     }
     auto geometry_label_rect = Gfx::IntRect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());

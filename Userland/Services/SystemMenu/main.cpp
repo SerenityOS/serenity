@@ -176,7 +176,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
         while (dt.has_next()) {
             auto theme_name = dt.next_path();
-            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
+            auto theme_path = String::formatted("/res/themes/{}", theme_name);
             g_themes.append({ LexicalPath(theme_name).title(), theme_path });
         }
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });

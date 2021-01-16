@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     }
 
     auto hash_name = program_name.substring_view(0, program_name.length() - 3).to_string().to_uppercase();
-    auto paths_help_string = String::format("File(s) to print %s checksum of", hash_name.characters());
+    auto paths_help_string = String::formatted("File(s) to print {} checksum of", hash_name);
 
     Vector<const char*> paths;
 

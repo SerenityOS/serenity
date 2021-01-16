@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
-    auto file = Core::File::construct(String::format("/proc/%s/vm", pid));
+    auto file = Core::File::construct(String::formatted("/proc/{}/vm", pid));
     if (!file->open(Core::IODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", file->error_string());
         return 1;

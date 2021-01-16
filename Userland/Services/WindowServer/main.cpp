@@ -77,7 +77,7 @@ int main(int, char**)
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
-    auto theme = Gfx::load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
+    auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));
     ASSERT(theme);
     Gfx::set_system_theme(*theme);
     auto palette = Gfx::PaletteImpl::create_with_shared_buffer(*theme);
