@@ -64,13 +64,17 @@ void DisplaySettingsWidget::create_resolution_list()
     m_resolutions.append({ 1024, 768 });
     m_resolutions.append({ 1280, 720 });
     m_resolutions.append({ 1280, 768 });
+    m_resolutions.append({ 1280, 960 });
     m_resolutions.append({ 1280, 1024 });
     m_resolutions.append({ 1360, 768 });
     m_resolutions.append({ 1368, 768 });
     m_resolutions.append({ 1440, 900 });
     m_resolutions.append({ 1600, 900 });
+    m_resolutions.append({ 1600, 1200 });
     m_resolutions.append({ 1920, 1080 });
+    m_resolutions.append({ 2048, 1152 });
     m_resolutions.append({ 2560, 1080 });
+    m_resolutions.append({ 2560, 1440 });
 }
 
 void DisplaySettingsWidget::create_wallpaper_list()
