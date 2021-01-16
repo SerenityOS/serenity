@@ -51,22 +51,17 @@ DragOperation::Outcome DragOperation::exec()
     ASSERT(!m_event_loop);
     ASSERT(m_mime_data);
 
-    int bitmap_id = -1;
-    Gfx::IntSize bitmap_size;
-    RefPtr<Gfx::Bitmap> shared_bitmap;
+    Gfx::ShareableBitmap drag_bitmap;
     if (m_mime_data->has_format("image/x-raw-bitmap")) {
         auto data = m_mime_data->data("image/x-raw-bitmap");
         auto bitmap = Gfx::Bitmap::create_from_serialized_byte_buffer(move(data));
-        shared_bitmap = bitmap->to_bitmap_backed_by_shared_buffer();
-        shared_bitmap->shared_buffer()->share_with(WindowServerConnection::the().server_pid());
-        bitmap_id = shared_bitmap->shbuf_id();
-        bitmap_size = shared_bitmap->size();
+        drag_bitmap = bitmap->to_shareable_bitmap();
     }
 
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::StartDrag>(
         m_mime_data->text(),
         m_mime_data->all_data(),
-        bitmap_id, bitmap_size);
+        drag_bitmap);
 
     if (!response->started()) {
         m_outcome = Outcome::Cancelled;
