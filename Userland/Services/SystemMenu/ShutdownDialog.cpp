@@ -68,6 +68,9 @@ ShutdownDialog::ShutdownDialog()
     set_title("SerenityOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));
 
+    // Request WindowServer to re-update us on the current theme as we might've not been alive for the last notification.
+    refresh_system_theme();
+
     auto& main = set_main_widget<GUI::Widget>();
     main.set_layout<GUI::VerticalBoxLayout>();
     main.layout()->set_margins({ 8, 8, 8, 8 });
