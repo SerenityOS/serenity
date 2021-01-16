@@ -28,6 +28,7 @@
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
+#include <AK/ScopeGuard.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/BMPLoader.h>
@@ -188,22 +189,28 @@ static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual
 
 RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, ShouldCloseAnonymousFile should_close_anon_fd)
 {
-    if (size_would_overflow(format, size))
-        return nullptr;
+    void* data = nullptr;
+    {
+        // If ShouldCloseAnonymousFile::Yes, it's our responsibility to close 'anon_fd' no matter what.
+        ScopeGuard close_guard = [&] {
+            if (should_close_anon_fd == ShouldCloseAnonymousFile::Yes) {
+                int rc = close(anon_fd);
+                ASSERT(rc == 0);
+                anon_fd = -1;
+            }
+        };
 
-    const auto pitch = minimum_pitch(size.width(), format);
-    const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
+        if (size_would_overflow(format, size))
+            return nullptr;
 
-    auto* data = mmap(nullptr, round_up_to_power_of_two(data_size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, anon_fd, 0);
-    if (data == MAP_FAILED) {
-        perror("mmap");
-        return nullptr;
-    }
+        const auto pitch = minimum_pitch(size.width(), format);
+        const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
 
-    if (should_close_anon_fd == ShouldCloseAnonymousFile::Yes) {
-        int rc = close(anon_fd);
-        ASSERT(rc == 0);
-        anon_fd = -1;
+        data = mmap(nullptr, round_up_to_power_of_two(data_size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, anon_fd, 0);
+        if (data == MAP_FAILED) {
+            perror("mmap");
+            return nullptr;
+        }
     }
 
     return adopt(*new Bitmap(format, anon_fd, size, data));
