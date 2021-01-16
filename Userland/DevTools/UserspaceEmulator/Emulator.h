@@ -93,7 +93,6 @@ private:
     int virt$gethostname(FlatPtr, ssize_t);
     int virt$shbuf_create(int size, FlatPtr buffer);
     int virt$shbuf_allow_pid(int, pid_t peer_pid);
-    int virt$shbuf_allow_all(int);
     FlatPtr virt$shbuf_get(int shbuf_id, FlatPtr size);
     int virt$shbuf_release(int shbuf_id);
     int virt$shbuf_seal(int shbuf_id);

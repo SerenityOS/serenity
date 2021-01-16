@@ -389,8 +389,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shbuf_create(arg1, arg2);
     case SC_shbuf_allow_pid:
         return virt$shbuf_allow_pid(arg1, arg2);
-    case SC_shbuf_allow_all:
-        return virt$shbuf_allow_all(arg1);
     case SC_shbuf_get:
         return virt$shbuf_get(arg1, arg2);
     case SC_shbuf_release:
@@ -595,13 +593,6 @@ int Emulator::virt$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
     auto* region = m_mmu.shbuf_region(shbuf_id);
     ASSERT(region);
     return region->allow_pid(peer_pid);
-}
-
-int Emulator::virt$shbuf_allow_all(int shbuf_id)
-{
-    auto* region = m_mmu.shbuf_region(shbuf_id);
-    ASSERT(region);
-    return region->allow_all();
 }
 
 int Emulator::virt$shbuf_release(int shbuf_id)

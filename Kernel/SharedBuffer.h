@@ -65,7 +65,6 @@ public:
     bool is_shared_with(ProcessID peer_pid) const;
     void* ref_for_process_and_get_address(Process& process);
     void share_with(ProcessID peer_pid);
-    void share_globally() { m_global = true; }
     void deref_for_process(Process& process);
     bool disown(ProcessID pid);
     static void share_all_shared_buffers(Process& from_process, Process& with_process);
@@ -86,7 +85,6 @@ public:
 private:
     int m_shbuf_id { -1 };
     bool m_writable { true };
-    bool m_global { false };
     NonnullRefPtr<AnonymousVMObject> m_vmobject;
     Vector<Reference, 2> m_refs;
     unsigned m_total_refs { 0 };
