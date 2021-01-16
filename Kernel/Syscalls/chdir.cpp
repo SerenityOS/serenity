@@ -61,17 +61,18 @@ int Process::sys$fchdir(int fd)
     return 0;
 }
 
-int Process::sys$getcwd(Userspace<char*> buffer, ssize_t size)
+int Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(rpath);
-    if (size < 0)
-        return -EINVAL;
+
     auto path = current_directory().absolute_path();
-    if ((size_t)size < path.length() + 1)
-        return -ERANGE;
-    if (!copy_to_user(buffer, path.characters(), path.length() + 1))
+
+    size_t ideal_size = path.length() + 1;
+    auto size_to_copy = min(ideal_size, size);
+    if (!copy_to_user(buffer, path.characters(), size_to_copy))
         return -EFAULT;
-    return 0;
+    // Note: we return the whole size here, not the copied size.
+    return ideal_size;
 }
 
 }

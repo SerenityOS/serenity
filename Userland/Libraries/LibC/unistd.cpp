@@ -322,22 +322,79 @@ int fchdir(int fd)
 
 char* getcwd(char* buffer, size_t size)
 {
+    if (buffer && size == 0) {
+        // POSIX requires that we set errno to EINVAL here, but in our syscall it makes sense to
+        // allow "probing" the Kernel with a zero-sized buffer, and it does not return -EINVAL.
+        // So we have to inject EINVAL here.
+        errno = EINVAL;
+        return nullptr;
+    }
+
     bool self_allocated = false;
     if (!buffer) {
-        size = size ? size : PATH_MAX;
+        size = size ? size : 64;
         buffer = (char*)malloc(size);
         self_allocated = true;
     }
+
     int rc = syscall(SC_getcwd, buffer, size);
-    if (rc < 0 && self_allocated) {
-        free(buffer);
+    if (rc < 0) {
+        if (self_allocated)
+            free(buffer);
+        errno = -rc;
+        return nullptr;
     }
-    __RETURN_WITH_ERRNO(rc, buffer, nullptr);
+
+    size_t actual_size = static_cast<size_t>(rc);
+    if (actual_size <= size) {
+        return buffer;
+    }
+
+    // If we get here, the current directory path was silently truncated.
+
+    if (!self_allocated) {
+        // In this case, POSIX causes information loss: the caller cannot learn about the ideal
+        // buffer size. This is the reason we went with silently truncation instead.
+        errno = ERANGE;
+        return nullptr;
+    }
+
+    // Try again.
+    free(buffer);
+    size = actual_size;
+    buffer = (char*)malloc(size);
+    rc = syscall(SC_getcwd, buffer, size);
+    if (rc < 0) {
+        // Can only happen if we lose a race. Let's pretend we lost the race in the first place.
+        free(buffer);
+        errno = -rc;
+        return nullptr;
+    }
+
+    actual_size = static_cast<size_t>(rc);
+    if (actual_size < size) {
+        // If we're here, then cwd has become longer while we were looking at it. (Race with another thread?)
+        // There's not much we can do, unless we want to loop endlessly
+        // in this case. Let's leave it up to the caller whether to loop.
+        free(buffer);
+        errno = EAGAIN;
+        return nullptr;
+    }
+
+    return buffer;
 }
 
 char* getwd(char* buf)
 {
+    if (buf == nullptr) {
+        errno = EINVAL;
+        return nullptr;
+    }
     auto* p = getcwd(buf, PATH_MAX);
+    if (errno == ERANGE) {
+        // POSIX quirk
+        errno = ENAMETOOLONG;
+    }
     return p;
 }
 

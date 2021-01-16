@@ -263,7 +263,7 @@ public:
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(Userspace<const Syscall::SC_poll_params*>);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
-    int sys$getcwd(Userspace<char*>, ssize_t);
+    int sys$getcwd(Userspace<char*>, size_t);
     int sys$chdir(Userspace<const char*>, size_t);
     int sys$fchdir(int fd);
     int sys$sleep(unsigned seconds);
