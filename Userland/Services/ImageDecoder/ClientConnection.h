@@ -49,8 +49,6 @@ public:
 private:
     virtual OwnPtr<Messages::ImageDecoderServer::GreetResponse> handle(const Messages::ImageDecoderServer::Greet&) override;
     virtual OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> handle(const Messages::ImageDecoderServer::DecodeImage&) override;
-
-    RefPtr<Gfx::Bitmap> m_shareable_bitmap;
 };
 
 }
