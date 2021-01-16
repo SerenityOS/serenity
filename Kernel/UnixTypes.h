@@ -104,8 +104,6 @@ enum {
 #define MADV_SET_NONVOLATILE 0x200
 #define MADV_GET_VOLATILE 0x400
 
-#define MAP_INHERIT_ZERO 1
-
 #define F_DUPFD 0
 #define F_GETFD 1
 #define F_SETFD 2

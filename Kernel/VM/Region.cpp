@@ -93,19 +93,6 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     ASSERT(Process::current());
 
     ScopedSpinLock lock(s_mm_lock);
-    if (m_inherit_mode == InheritMode::ZeroedOnFork) {
-        ASSERT(m_mmap);
-        ASSERT(!m_shared);
-        ASSERT(vmobject().is_anonymous());
-        auto new_vmobject = AnonymousVMObject::create_with_size(size(), AllocationStrategy::Reserve); // TODO: inherit committed non-volatile areas?
-        if (!new_vmobject)
-            return {};
-        auto zeroed_region = Region::create_user_accessible(&new_owner, m_range, new_vmobject.release_nonnull(), 0, m_name, m_access);
-        zeroed_region->copy_purgeable_page_ranges(*this);
-        zeroed_region->set_mmap(m_mmap);
-        zeroed_region->set_inherit_mode(m_inherit_mode);
-        return zeroed_region;
-    }
 
     if (m_shared) {
         ASSERT(!m_stack);

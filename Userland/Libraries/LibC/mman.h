@@ -49,8 +49,6 @@
 #define MADV_SET_NONVOLATILE 0x200
 #define MADV_GET_VOLATILE 0x400
 
-#define MAP_INHERIT_ZERO 1
-
 __BEGIN_DECLS
 
 void* mmap(void* addr, size_t, int prot, int flags, int fd, off_t);
@@ -61,7 +59,6 @@ int munmap(void*, size_t);
 int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
 int madvise(void*, size_t, int advice);
-int minherit(void*, size_t, int inherit);
 void* allocate_tls(size_t);
 
 __END_DECLS
