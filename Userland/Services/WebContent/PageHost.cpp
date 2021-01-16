@@ -49,11 +49,11 @@ PageHost::~PageHost()
 void PageHost::setup_palette()
 {
     // FIXME: Get the proper palette from our peer somehow
-    auto buffer = SharedBuffer::create_with_size(sizeof(Gfx::SystemTheme));
-    auto* theme = buffer->data<Gfx::SystemTheme>();
+    auto buffer = Core::AnonymousBuffer::create_with_size(sizeof(Gfx::SystemTheme));
+    auto* theme = buffer.data<Gfx::SystemTheme>();
     theme->color[(int)Gfx::ColorRole::Window] = Color::Magenta;
     theme->color[(int)Gfx::ColorRole::WindowText] = Color::Cyan;
-    m_palette_impl = Gfx::PaletteImpl::create_with_shared_buffer(*buffer);
+    m_palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(buffer);
 }
 
 Gfx::Palette PageHost::palette() const

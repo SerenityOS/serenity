@@ -73,13 +73,8 @@ OwnPtr<Messages::WebContentServer::GreetResponse> ClientConnection::handle(const
 
 void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemTheme& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
-    if (!shared_buffer) {
-        dbgln("WebContentServer::UpdateSystemTheme: SharedBuffer already gone! Ignoring :^)");
-        return;
-    }
-    Gfx::set_system_theme(*shared_buffer);
-    auto impl = Gfx::PaletteImpl::create_with_shared_buffer(*shared_buffer);
+    Gfx::set_system_theme(message.theme_buffer());
+    auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(message.theme_buffer());
     m_page_host->set_palette_impl(*impl);
 }
 
