@@ -138,7 +138,7 @@ public:
         return m_error;
     }
 
-    KResult result() const { return m_is_error ? KSuccess : m_error; }
+    KResult result() const { return m_is_error ? m_error : KSuccess; }
 
     ALWAYS_INLINE T& value()
     {
