@@ -57,9 +57,6 @@ public:
         return (const T*)m_data;
     }
 
-    void set_volatile();
-    [[nodiscard]] bool set_nonvolatile();
-
 private:
     SharedBuffer(int shbuf_id, int size, void*);
 

@@ -124,9 +124,4 @@ int SharedBufferRegion::release()
     return syscall(SC_shbuf_release, m_shbuf_id);
 }
 
-int SharedBufferRegion::set_volatile(bool is_volatile)
-{
-    return syscall(SC_shbuf_set_volatile, m_shbuf_id, is_volatile);
-}
-
 }

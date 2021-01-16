@@ -165,41 +165,4 @@ int Process::sys$shbuf_seal(int shbuf_id)
     return 0;
 }
 
-int Process::sys$shbuf_set_volatile(int shbuf_id, bool state)
-{
-    REQUIRE_PROMISE(shared_buffer);
-    LOCKER(shared_buffers().lock());
-    auto it = shared_buffers().resource().find(shbuf_id);
-    if (it == shared_buffers().resource().end())
-        return -EINVAL;
-    auto& shared_buffer = *(*it).value;
-    if (!shared_buffer.is_shared_with(m_pid))
-        return -EPERM;
-#ifdef SHARED_BUFFER_DEBUG
-    klog() << "Set shared buffer " << shbuf_id << " volatile: " << state;
-#endif
-
-    bool was_purged = false;
-    auto set_volatile = [&]() -> int {
-        switch (shared_buffer.set_volatile_all(state, was_purged)) {
-        case SharedBuffer::SetVolatileError::Success:
-            break;
-        case SharedBuffer::SetVolatileError::NotPurgeable:
-            return -EPERM;
-        case SharedBuffer::SetVolatileError::OutOfMemory:
-            return -ENOMEM;
-        case SharedBuffer::SetVolatileError::NotMapped:
-            return -EINVAL;
-        }
-        return 0;
-    };
-
-    if (!state) {
-        if (int err = set_volatile())
-            return err;
-        return was_purged ? 1 : 0;
-    }
-    return set_volatile();
-}
-
 }

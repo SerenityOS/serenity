@@ -55,7 +55,6 @@ public:
     int allow_pid(pid_t);
     int seal();
     int release();
-    int set_volatile(bool);
 
 private:
     SharedBufferRegion(u32 base, u32 size, int shbuf_id, u8* shbuf_data);
