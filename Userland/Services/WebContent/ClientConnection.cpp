@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <WebContent/ClientConnection.h>

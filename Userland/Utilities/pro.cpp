@@ -28,7 +28,6 @@
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/SharedBuffer.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>

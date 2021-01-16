@@ -33,7 +33,6 @@
 #include "Screen.h"
 #include "Window.h"
 #include <AK/LogStream.h>
-#include <AK/SharedBuffer.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibGfx/CharacterBitmap.h>
