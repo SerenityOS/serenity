@@ -93,9 +93,9 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
             // Hide cursor command, but doesn't need to be run (for now, because
             // we don't do inverse control codes anyways)
             if (should_set)
-                dbgprintf("Terminal: Hide Cursor escapecode received. Not needed: ignored.\n");
+                dbgln("Terminal: Hide Cursor escapecode received. Not needed: ignored.");
             else
-                dbgprintf("Terminal: Show Cursor escapecode received. Not needed: ignored.\n");
+                dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
             break;
         default:
             break;
@@ -226,7 +226,7 @@ void Terminal::SGR(const ParamVector& params)
             m_current_attribute.background_color = Attribute::default_background_color;
             break;
         default:
-            dbgprintf("FIXME: SGR: p: %u\n", param);
+            dbgln("FIXME: SGR: p: {}", param);
         }
     }
 }
@@ -246,7 +246,7 @@ void Terminal::escape$t(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
-    dbgprintf("FIXME: escape$t: Ps: %u (param count: %zu)\n", params[0], params.size());
+    dbgln("FIXME: escape$t: Ps: {} (param count: {})", params[0], params.size());
 }
 
 void Terminal::DECSTBM(const ParamVector& params)
@@ -259,7 +259,7 @@ void Terminal::DECSTBM(const ParamVector& params)
     if (params.size() >= 2)
         bottom = params[1];
     if ((bottom - top) < 2 || bottom > m_rows) {
-        dbgprintf("Error: DECSTBM: scrolling region invalid: %u-%u\n", top, bottom);
+        dbgln("Error: DECSTBM: scrolling region invalid: {}-{}", top, bottom);
         return;
     }
     m_scroll_region_top = top - 1;
@@ -616,15 +616,6 @@ void Terminal::execute_escape_sequence(u8 final)
         params.append(value.value());
     }
 
-#if defined(TERMINAL_DEBUG)
-    dbgprintf("Terminal::execute_escape_sequence: Handled final '%c'\n", final);
-    dbgprintf("Params: ");
-    for (auto& p : params) {
-        dbgprintf("%d ", p);
-    }
-    dbgprintf("\b\n");
-#endif
-
     switch (final) {
     case 'A':
         CUU(params);
@@ -708,24 +699,9 @@ void Terminal::execute_escape_sequence(u8 final)
         ICH(params);
         break;
     default:
-        dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
+        dbgln("Terminal::execute_escape_sequence: Unhandled final '{:c}'", final);
         break;
     }
-
-#if defined(TERMINAL_DEBUG)
-    dbgprintf("\n");
-    for (auto& line : m_lines) {
-        dbgprintf("Terminal: Line: ");
-        for (int i = 0; i < line.length(); i++) {
-            u32 codepoint = line.code_point(i);
-            if (codepoint < 128)
-                dbgprintf("%c", (char)codepoint);
-            else
-                dbgprintf("<U+%04x>", codepoint);
-        }
-        dbgprintf("\n");
-    }
-#endif
 
     m_parameters.clear_with_capacity();
     m_intermediates.clear_with_capacity();
@@ -1164,10 +1140,6 @@ void Terminal::set_size(u16 columns, u16 rows)
 
     if (columns == m_columns && rows == m_rows)
         return;
-
-#if defined(TERMINAL_DEBUG)
-    dbgprintf("Terminal: RESIZE to: %d rows\n", rows);
-#endif
 
     if (rows > m_rows) {
         while (m_lines.size() < rows)
