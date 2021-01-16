@@ -488,6 +488,9 @@ TextEditorWidget::TextEditorWidget()
     syntax_menu.add_action(*m_shell_highlight);
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
 
     GUI::Application::the()->set_menubar(move(menubar));
