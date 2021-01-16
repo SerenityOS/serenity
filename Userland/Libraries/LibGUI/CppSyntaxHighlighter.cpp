@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCpp/Lexer.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
@@ -83,9 +84,7 @@ void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 
     Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens) {
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
-        dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
-#endif
+        dbgln<debug_syntax_highlighting>("{} @ {}:{} - {}:{}", token.to_string(), token.m_start.line, token.m_start.column, token.m_end.line, token.m_end.column);
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });

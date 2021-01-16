@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibGUI/JsonArrayModel.h>
@@ -34,7 +35,7 @@ void JsonArrayModel::update()
 {
     auto file = Core::File::construct(m_json_path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        dbg() << "Unable to open " << file->filename();
+        dbgln("Unable to open {}", file->filename());
         m_array.clear();
         did_update();
         return;
@@ -53,7 +54,7 @@ bool JsonArrayModel::store()
 {
     auto file = Core::File::construct(m_json_path);
     if (!file->open(Core::IODevice::WriteOnly)) {
-        dbg() << "Unable to open " << file->filename();
+        dbgln("Unable to open {}", file->filename());
         return false;
     }
 
