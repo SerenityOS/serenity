@@ -31,8 +31,8 @@ The plan is to have all applications use highdpi backbuffers eventually. It'll t
 0. Add some scaling support to Painter. Make it do 2x nearest neighbor scaling of everything at paint time for now.
 1. Add scale factor concept to WindowServer. WindowServer has a scaled framebuffer/backbuffer. All other bitmaps (both other bitmaps in WindowServer, as well as everything WindowServer-client-side) are always stored at 1x and scaled up when they're painted to the framebuffer. Things will look fine at 2x, but pixely (but window gradients will be smooth already).
 2. Let DisplaySettings toggle it WindowServer scale. Now it's possible to switch to and from HighDPI dynamically, using UI.
-2. Come up with a system to have scale-dependent bitmap and font resources. Use that to use a high-res cursor bitmaps and high-res menu bar text painting in window server. Menu text and cursor will look less pixely. (And window frames too, I suppose.)
-3. Let apps opt in to high-res window framebuffers, and convert all apps one-by-one
-4. Remove high-res window framebuffer opt-in since all apps have it now.
+3. Come up with a system to have scale-dependent bitmap and font resources. Use that to use a high-res cursor bitmaps and high-res menu bar text painting in window server. Menu text and cursor will look less pixely. (And window frames too, I suppose.)
+4. Let apps opt in to high-res window framebuffers, and convert all apps one-by-one
+5. Remove high-res window framebuffer opt-in since all apps have it now.
 
-We're currently before point 2.
+We're currently before point 3.
