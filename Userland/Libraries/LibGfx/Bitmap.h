@@ -56,6 +56,21 @@ enum class BitmapFormat {
     RGBA32,
 };
 
+inline bool is_valid_bitmap_format(unsigned format)
+{
+    switch (format) {
+    case (unsigned)BitmapFormat::Invalid:
+    case (unsigned)BitmapFormat::Indexed1:
+    case (unsigned)BitmapFormat::Indexed2:
+    case (unsigned)BitmapFormat::Indexed4:
+    case (unsigned)BitmapFormat::Indexed8:
+    case (unsigned)BitmapFormat::RGB32:
+    case (unsigned)BitmapFormat::RGBA32:
+        return true;
+    }
+    return false;
+}
+
 enum class StorageFormat {
     Indexed8,
     RGB32,
@@ -98,7 +113,7 @@ public:
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, void*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
-    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, ShouldCloseAnonymousFile);
+    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
@@ -241,7 +256,7 @@ private:
     Bitmap(BitmapFormat, const IntSize&, Purgeable, const BackingStore&);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, void*);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
-    Bitmap(BitmapFormat, int anon_fd, const IntSize&, void*);
+    Bitmap(BitmapFormat, int anon_fd, const IntSize&, void*, const Vector<RGBA32>& palette);
 
     static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, Purgeable);
 

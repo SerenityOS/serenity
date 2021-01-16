@@ -115,7 +115,7 @@ RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size
     auto anon_fd = anon_create(round_up_to_power_of_two(data_size, PAGE_SIZE), O_CLOEXEC);
     if (anon_fd < 0)
         return nullptr;
-    return Bitmap::create_with_anon_fd(format, anon_fd, size, ShouldCloseAnonymousFile::No);
+    return Bitmap::create_with_anon_fd(format, anon_fd, size, {}, ShouldCloseAnonymousFile::No);
 }
 #endif
 
@@ -190,7 +190,7 @@ static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, ShouldCloseAnonymousFile should_close_anon_fd)
+RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile should_close_anon_fd)
 {
     void* data = nullptr;
     {
@@ -216,7 +216,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
         }
     }
 
-    return adopt(*new Bitmap(format, anon_fd, size, data));
+    return adopt(*new Bitmap(format, anon_fd, size, data, palette));
 }
 
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
@@ -330,7 +330,7 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
         allocate_palette_from_format(m_format, palette);
 }
 
-Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data)
+Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data, const Vector<RGBA32>& palette)
     : m_size(size)
     , m_data(data)
     , m_pitch(minimum_pitch(size.width(), format))
@@ -339,8 +339,11 @@ Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data
     , m_purgeable(true)
     , m_anon_fd(anon_fd)
 {
-    ASSERT(!is_indexed());
+    ASSERT(!is_indexed() || !palette.is_empty());
     ASSERT(!size_would_overflow(format, size));
+
+    if (is_indexed(m_format))
+        allocate_palette_from_format(m_format, palette);
 }
 
 RefPtr<Gfx::Bitmap> Bitmap::clone() const
@@ -430,7 +433,7 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
     auto anon_fd = anon_create(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE), O_CLOEXEC);
     if (anon_fd < 0)
         return nullptr;
-    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, m_size, ShouldCloseAnonymousFile::No);
+    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, m_size, palette_to_vector(), ShouldCloseAnonymousFile::No);
     if (!bitmap)
         return nullptr;
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
