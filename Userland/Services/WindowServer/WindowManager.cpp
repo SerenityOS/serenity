@@ -1383,7 +1383,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     return rect;
 }
 
-void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
+void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, const Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
 {
     ASSERT(!m_dnd_client);
     m_dnd_client = client;

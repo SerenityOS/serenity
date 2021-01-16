@@ -747,18 +747,7 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
     if (wm.dnd_client())
         return make<Messages::WindowServer::StartDragResponse>(false);
 
-    RefPtr<Gfx::Bitmap> bitmap;
-    if (message.bitmap_id() != -1) {
-        auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.bitmap_id());
-        ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(Gfx::RGBA32);
-        if (size_in_bytes > shared_buffer->size()) {
-            did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
-            return {};
-        }
-        bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, message.bitmap_size());
-    }
-
-    wm.start_dnd_drag(*this, message.text(), bitmap, Core::MimeData::construct(message.mime_data()));
+    wm.start_dnd_drag(*this, message.text(), message.drag_bitmap().bitmap(), Core::MimeData::construct(message.mime_data()));
     return make<Messages::WindowServer::StartDragResponse>(true);
 }
 

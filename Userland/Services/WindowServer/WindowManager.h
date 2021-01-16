@@ -104,7 +104,7 @@ public:
     const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
     Gfx::IntRect dnd_rect() const;
 
-    void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const Core::MimeData&);
+    void start_dnd_drag(ClientConnection&, const String& text, const Gfx::Bitmap*, const Core::MimeData&);
     void end_dnd_drag();
 
     Window* active_window() { return m_active_window.ptr(); }
