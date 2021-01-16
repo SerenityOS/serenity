@@ -60,6 +60,8 @@ private:
     virtual void handle(const Messages::WebContentServer::MouseMove&) override;
     virtual void handle(const Messages::WebContentServer::MouseUp&) override;
     virtual void handle(const Messages::WebContentServer::KeyDown&) override;
+    virtual void handle(const Messages::WebContentServer::AddBackingStore&) override;
+    virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
 
     void flush_pending_paint_requests();
 
@@ -68,9 +70,12 @@ private:
     struct PaintRequest {
         Gfx::IntRect content_rect;
         NonnullRefPtr<Gfx::Bitmap> bitmap;
+        i32 bitmap_id { -1 };
     };
     Vector<PaintRequest> m_pending_paint_requests;
     RefPtr<Core::Timer> m_paint_flush_timer;
+
+    HashMap<i32, NonnullRefPtr<Gfx::Bitmap>> m_backing_stores;
 };
 
 }
