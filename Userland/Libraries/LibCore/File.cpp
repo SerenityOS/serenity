@@ -209,7 +209,7 @@ String File::read_link(const StringView& link_path)
         return { large_buffer_ptr, new_size };
     // Otherwise, here's not much we can do, unless we want to loop endlessly
     // in this case. Let's leave it up to the caller whether to loop.
-    errno = -EAGAIN;
+    errno = EAGAIN;
     return {};
 }
 
