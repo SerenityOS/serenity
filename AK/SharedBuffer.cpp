@@ -188,23 +188,4 @@ void SharedBuffer::seal()
 #endif
 }
 
-void SharedBuffer::set_volatile()
-{
-#if defined(__serenity__)
-    u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, true);
-    ASSERT(rc == 0);
-#endif
-}
-
-bool SharedBuffer::set_nonvolatile()
-{
-#if defined(__serenity__)
-    u32 rc = syscall(SC_shbuf_set_volatile, m_shbuf_id, false);
-    if (rc == 0)
-        return true;
-    ASSERT(rc == 1);
-#endif
-    return false;
-}
-
 }

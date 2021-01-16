@@ -341,7 +341,6 @@ public:
     void* sys$shbuf_get(int shbuf_id, Userspace<size_t*> size);
     int sys$shbuf_release(int shbuf_id);
     int sys$shbuf_seal(int shbuf_id);
-    int sys$shbuf_set_volatile(int shbuf_id, bool);
     int sys$halt();
     int sys$reboot();
     int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);

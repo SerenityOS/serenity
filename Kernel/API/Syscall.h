@@ -174,7 +174,6 @@ namespace Kernel {
     S(get_thread_name)        \
     S(madvise)                \
     S(purge)                  \
-    S(shbuf_set_volatile)     \
     S(profiling_enable)       \
     S(profiling_disable)      \
     S(futex)                  \
