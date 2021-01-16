@@ -28,8 +28,8 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/SharedBuffer.h>
 #include <AK/String.h>
+#include <LibCore/AnonymousBuffer.h>
 
 namespace Clipboard {
 
@@ -38,7 +38,7 @@ public:
     static Storage& the();
     ~Storage();
 
-    bool has_data() const { return m_shared_buffer; }
+    bool has_data() const { return m_buffer.is_valid(); }
 
     const String& mime_type() const { return m_mime_type; }
     const HashMap<String, String>& metadata() const { return m_metadata; }
@@ -47,7 +47,7 @@ public:
     {
         if (!has_data())
             return nullptr;
-        return m_shared_buffer->data<u8>();
+        return m_buffer.data<u8>();
     }
 
     size_t data_size() const
@@ -57,15 +57,17 @@ public:
         return 0;
     }
 
-    void set_data(NonnullRefPtr<SharedBuffer>, size_t data_size, const String& mime_type, const HashMap<String, String>& metadata);
+    void set_data(Core::AnonymousBuffer, const String& mime_type, const HashMap<String, String>& metadata);
 
     Function<void()> on_content_change;
+
+    const Core::AnonymousBuffer& buffer() const { return m_buffer; }
 
 private:
     Storage();
 
     String m_mime_type;
-    RefPtr<SharedBuffer> m_shared_buffer;
+    Core::AnonymousBuffer m_buffer;
     size_t m_data_size { 0 };
     HashMap<String, String> m_metadata;
 };
