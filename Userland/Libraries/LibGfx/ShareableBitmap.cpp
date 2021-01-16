@@ -38,6 +38,11 @@ ShareableBitmap::ShareableBitmap(const Bitmap& bitmap)
 {
 }
 
+ShareableBitmap::ShareableBitmap(NonnullRefPtr<Bitmap> bitmap, Tag)
+    : m_bitmap(move(bitmap))
+{
+}
+
 }
 
 namespace IPC {
@@ -70,7 +75,9 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
         return false;
 
     auto bitmap = Gfx::Bitmap::create_with_anon_fd(Gfx::BitmapFormat::RGBA32, anon_file.take_fd(), size, Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
-    shareable_bitmap = bitmap->to_shareable_bitmap();
+    if (!bitmap)
+        return false;
+    shareable_bitmap = Gfx::ShareableBitmap { bitmap.release_nonnull(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
     return true;
 }
 

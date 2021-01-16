@@ -37,6 +37,9 @@ public:
     ShareableBitmap() { }
     explicit ShareableBitmap(const Gfx::Bitmap&);
 
+    enum Tag { ConstructWithKnownGoodBitmap };
+    ShareableBitmap(NonnullRefPtr<Gfx::Bitmap>, Tag);
+
     bool is_valid() const { return m_bitmap; }
 
     const Bitmap* bitmap() const { return m_bitmap; }
