@@ -27,6 +27,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
@@ -490,6 +491,10 @@ void Window::handle_left_event()
 
 void Window::event(Core::Event& event)
 {
+    ScopeGuard guard([&] {
+        // Accept the event so it doesn't bubble up to parent windows!
+        event.accept();
+    });
     if (event.type() == Event::Drop)
         return handle_drop_event(static_cast<DropEvent&>(event));
 
