@@ -571,6 +571,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
             message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
             message.anon_file().take_fd(),
             message.size(),
+            {},
             Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
         window.set_backing_store(move(backing_store), message.serial());
     }
