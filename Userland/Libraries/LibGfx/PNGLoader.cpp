@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -40,8 +41,6 @@
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
-
-//#define PNG_DEBUG
 
 namespace Gfx {
 
@@ -614,9 +613,7 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
 
         if (filter > 4) {
-#ifdef PNG_DEBUG
-            dbg() << "Invalid PNG filter: " << filter;
-#endif
+            dbgln<debug_png>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -718,9 +715,7 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
         }
 
         if (filter > 4) {
-#ifdef PNG_DEBUG
-            dbg() << "Invalid PNG filter: " << filter;
-#endif
+            dbgln<debug_png>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
