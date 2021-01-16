@@ -209,6 +209,7 @@ int main(int argc, char** argv)
 #include <AK/OwnPtr.h>
 #include <AK/URL.h>
 #include <AK/Utf8View.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/ShareableBitmap.h>

@@ -169,14 +169,14 @@ private:
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio sendfd shared_buffer accept rpath unix cpath fattr unix proc exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath unix cpath fattr unix proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio sendfd shared_buffer accept rpath unix proc exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath unix proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -43,7 +43,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath wpath cpath sendfd shared_buffer accept cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath recvfd sendfd accept cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 
     config->sync();
 
-    if (pledge("stdio rpath sendfd shared_buffer wpath cpath accept", nullptr) < 0) {
+    if (pledge("stdio rpath recvfd sendfd wpath cpath accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd shared_buffer accept proc exec rpath unix cpath fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept proc exec rpath unix cpath fattr sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
             ;
     });
 
-    if (pledge("stdio recvfd sendfd shared_buffer accept proc exec rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

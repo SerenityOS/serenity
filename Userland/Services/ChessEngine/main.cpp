@@ -30,12 +30,12 @@
 
 int main()
 {
-    if (pledge("stdio sendfd shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept unix rpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     Core::EventLoop loop;
-    if (pledge("stdio sendfd shared_buffer unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
