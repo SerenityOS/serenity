@@ -1,5 +1,6 @@
 set(SOURCES
     Account.cpp
+    AnonymousBuffer.cpp
     ArgsParser.cpp
     ConfigFile.cpp
     Command.cpp

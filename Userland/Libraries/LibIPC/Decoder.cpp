@@ -26,6 +26,7 @@
 
 #include <AK/MemoryStream.h>
 #include <AK/URL.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
@@ -181,6 +182,26 @@ bool Decoder::decode([[maybe_unused]] File& file)
     warnln("fd passing is not supported on this platform, sorry :(");
     return false;
 #endif
+}
+
+bool decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
+{
+    bool valid = false;
+    if (!decoder.decode(valid))
+        return false;
+    if (!valid) {
+        buffer = {};
+        return true;
+    }
+    u32 size;
+    if (!decoder.decode(size))
+        return false;
+    IPC::File anon_file;
+    if (!decoder.decode(anon_file))
+        return false;
+
+    buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
+    return buffer.is_valid();
 }
 
 }

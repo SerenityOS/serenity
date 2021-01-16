@@ -27,6 +27,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/URL.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
@@ -170,4 +171,13 @@ Encoder& Encoder::operator<<(const File& file)
     return *this;
 }
 
+bool encode(Encoder& encoder, const Core::AnonymousBuffer& buffer)
+{
+    encoder << buffer.is_valid();
+    if (buffer.is_valid()) {
+        encoder << (u32)buffer.size();
+        encoder << IPC::File(buffer.fd());
+    }
+    return true;
+}
 }

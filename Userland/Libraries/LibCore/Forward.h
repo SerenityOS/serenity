@@ -28,6 +28,7 @@
 
 namespace Core {
 
+class AnonymousBuffer;
 class ArgsParser;
 class ChildEvent;
 class ConfigFile;
