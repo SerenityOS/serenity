@@ -29,7 +29,6 @@
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/ScopeGuard.h>
-#include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
@@ -165,11 +164,6 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, void* dat
     allocate_palette_from_format(format, {});
 }
 
-RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
-{
-    return create_with_shared_buffer(format, move(shared_buffer), size, {});
-}
-
 static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual_size)
 {
 
@@ -217,17 +211,6 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
     }
 
     return adopt(*new Bitmap(format, anon_fd, size, data, palette));
-}
-
-RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
-{
-    if (size_would_overflow(format, size))
-        return nullptr;
-
-    if (!check_size(size, format, shared_buffer->size()))
-        return {};
-
-    return adopt(*new Bitmap(format, move(shared_buffer), size, palette));
 }
 
 /// Read a bitmap as described by:
@@ -315,21 +298,6 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     return buffer;
 }
 
-Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
-    : m_size(size)
-    , m_data(shared_buffer->data<void>())
-    , m_pitch(minimum_pitch(size.width(), format))
-    , m_format(format)
-    , m_shared_buffer(move(shared_buffer))
-{
-    ASSERT(!is_indexed() || !palette.is_empty());
-    ASSERT(!size_would_overflow(format, size));
-    ASSERT(size_in_bytes() <= static_cast<size_t>(m_shared_buffer->size()));
-
-    if (is_indexed(m_format))
-        allocate_palette_from_format(m_format, palette);
-}
-
 Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data, const Vector<RGBA32>& palette)
     : m_size(size)
     , m_data(data)
@@ -411,20 +379,6 @@ RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
     return new_bitmap;
 }
 
-RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
-{
-    if (m_shared_buffer)
-        return *this;
-    auto buffer = SharedBuffer::create_with_size(size_in_bytes());
-    if (!buffer)
-        return nullptr;
-    auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size, palette_to_vector());
-    if (!bitmap)
-        return nullptr;
-    memcpy(buffer->data<void>(), scanline(0), size_in_bytes());
-    return bitmap;
-}
-
 #ifdef __serenity__
 RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
 {
@@ -503,11 +457,6 @@ void Bitmap::set_volatile()
 #endif
     m_volatile = false;
     return rc == 0;
-}
-
-int Bitmap::shbuf_id() const
-{
-    return m_shared_buffer ? m_shared_buffer->shbuf_id() : -1;
 }
 
 #ifdef __serenity__
