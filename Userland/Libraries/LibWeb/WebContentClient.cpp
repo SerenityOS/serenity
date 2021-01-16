@@ -26,7 +26,6 @@
 
 #include "WebContentClient.h"
 #include "OutOfProcessWebView.h"
-#include <AK/SharedBuffer.h>
 
 namespace Web {
 

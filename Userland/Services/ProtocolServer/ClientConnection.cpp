@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <ProtocolServer/ClientConnection.h>
 #include <ProtocolServer/Download.h>
 #include <ProtocolServer/Protocol.h>
