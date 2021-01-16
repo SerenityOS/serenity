@@ -185,17 +185,4 @@ void SharedBuffer::destroy_if_unused()
     }
 }
 
-void SharedBuffer::seal()
-{
-    LOCKER(shared_buffers().lock());
-    m_writable = false;
-    for (auto& ref : m_refs) {
-        // TODO: Region needs to be RefCounted!
-        if (auto* region = ref.region.unsafe_ptr()) {
-            region->set_writable(false);
-            region->remap();
-        }
-    }
-}
-
 }

@@ -165,15 +165,4 @@ SharedBuffer::~SharedBuffer()
     }
 }
 
-void SharedBuffer::seal()
-{
-#if defined(__serenity__)
-    int rc = shbuf_seal(m_shbuf_id);
-    if (rc < 0) {
-        perror("shbuf_seal");
-        ASSERT_NOT_REACHED();
-    }
-#endif
-}
-
 }

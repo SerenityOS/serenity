@@ -39,7 +39,6 @@ public:
 
     bool share_with(pid_t);
     int shbuf_id() const { return m_shbuf_id; }
-    void seal();
     int size() const { return m_size; }
 
     template<typename T>

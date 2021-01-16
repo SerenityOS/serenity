@@ -109,11 +109,6 @@ int SharedBufferRegion::allow_pid(pid_t pid)
     return syscall(SC_shbuf_allow_pid, m_shbuf_id, pid);
 }
 
-int SharedBufferRegion::seal()
-{
-    return syscall(SC_shbuf_seal, m_shbuf_id);
-}
-
 int SharedBufferRegion::release()
 {
     return syscall(SC_shbuf_release, m_shbuf_id);

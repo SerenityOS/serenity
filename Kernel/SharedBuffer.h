@@ -70,7 +70,6 @@ public:
     static void share_all_shared_buffers(Process& from_process, Process& with_process);
     size_t size() const { return m_vmobject->size(); }
     void destroy_if_unused();
-    void seal();
     AnonymousVMObject& vmobject() { return m_vmobject; }
     const AnonymousVMObject& vmobject() const { return m_vmobject; }
     int id() const { return m_shbuf_id; }

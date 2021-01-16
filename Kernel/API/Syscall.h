@@ -129,7 +129,6 @@ namespace Kernel {
     S(chown)                  \
     S(fchmod)                 \
     S(symlink)                \
-    S(shbuf_seal)             \
     S(sendmsg)                \
     S(recvmsg)                \
     S(getsockopt)             \

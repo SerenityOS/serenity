@@ -134,21 +134,4 @@ void* Process::sys$shbuf_get(int shbuf_id, Userspace<size_t*> user_size)
     return shared_buffer.ref_for_process_and_get_address(*this);
 }
 
-int Process::sys$shbuf_seal(int shbuf_id)
-{
-    REQUIRE_PROMISE(shared_buffer);
-    LOCKER(shared_buffers().lock());
-    auto it = shared_buffers().resource().find(shbuf_id);
-    if (it == shared_buffers().resource().end())
-        return -EINVAL;
-    auto& shared_buffer = *(*it).value;
-    if (!shared_buffer.is_shared_with(m_pid))
-        return -EPERM;
-#ifdef SHARED_BUFFER_DEBUG
-    klog() << "Sealing shared buffer " << shbuf_id;
-#endif
-    shared_buffer.seal();
-    return 0;
-}
-
 }
