@@ -12,7 +12,7 @@ sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2
 
 **Fedora**
 ```bash
-sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build @"C Development Tools and Libraries" @Virtualization
+sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch @"C Development Tools and Libraries" @Virtualization
 ```
 
 **openSUSE**
