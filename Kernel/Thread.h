@@ -102,9 +102,6 @@ public:
     void set_priority(u32 p) { m_priority = p; }
     u32 priority() const { return m_priority; }
 
-    void set_priority_boost(u32 boost) { m_priority_boost = boost; }
-    u32 priority_boost() const { return m_priority_boost; }
-
     u32 effective_priority() const;
 
     void detach()
@@ -1199,7 +1196,6 @@ private:
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
     u32 m_extra_priority { 0 };
-    u32 m_priority_boost { 0 };
 
     State m_stop_state { Invalid };
 
