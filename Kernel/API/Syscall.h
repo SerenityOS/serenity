@@ -177,8 +177,6 @@ namespace Kernel {
     S(profiling_enable)       \
     S(profiling_disable)      \
     S(futex)                  \
-    S(set_thread_boost)       \
-    S(set_process_boost)      \
     S(chroot)                 \
     S(pledge)                 \
     S(unveil)                 \

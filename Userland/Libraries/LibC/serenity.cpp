@@ -60,18 +60,6 @@ int profiling_disable(pid_t pid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int set_thread_boost(pid_t tid, int amount)
-{
-    int rc = syscall(SC_set_thread_boost, tid, amount);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int set_process_boost(pid_t tid, int amount)
-{
-    int rc = syscall(SC_set_process_boost, tid, amount);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int futex(int32_t* userspace_address, int futex_op, int32_t value, const struct timespec* timeout)
 {
     Syscall::SC_futex_params params { userspace_address, futex_op, value, timeout };

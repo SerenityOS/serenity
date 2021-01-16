@@ -350,8 +350,6 @@ public:
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
     int sys$futex(Userspace<const Syscall::SC_futex_params*>);
-    int sys$set_thread_boost(pid_t tid, int amount);
-    int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(Userspace<const char*> path, size_t path_length, int mount_flags);
     int sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
     int sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
@@ -465,11 +463,6 @@ public:
     Lock& big_lock()
     {
         return m_big_lock;
-    }
-
-    u32 priority_boost() const
-    {
-        return m_priority_boost;
     }
 
     Custody& root_directory();
@@ -646,8 +639,6 @@ private:
 
     RefPtr<Timer> m_alarm_timer;
 
-    u32 m_priority_boost { 0 };
-
     u32 m_promises { 0 };
     u32 m_execpromises { 0 };
 
@@ -771,7 +762,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
 
 inline u32 Thread::effective_priority() const
 {
-    return m_priority + m_process->priority_boost() + m_priority_boost + m_extra_priority;
+    return m_priority + m_extra_priority;
 }
 
 #define REQUIRE_NO_PROMISES                        \

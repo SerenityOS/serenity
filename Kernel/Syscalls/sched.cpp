@@ -104,36 +104,4 @@ int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_p
     return 0;
 }
 
-int Process::sys$set_thread_boost(pid_t tid, int amount)
-{
-    REQUIRE_PROMISE(proc);
-    if (amount < 0 || amount > 20)
-        return -EINVAL;
-    ScopedSpinLock lock(g_scheduler_lock);
-    auto thread = Thread::from_tid(tid);
-    if (!thread)
-        return -ESRCH;
-    if (thread->state() == Thread::State::Dead || thread->state() == Thread::State::Dying)
-        return -ESRCH;
-    if (!is_superuser() && thread->process().uid() != euid())
-        return -EPERM;
-    thread->set_priority_boost(amount);
-    return 0;
-}
-
-int Process::sys$set_process_boost(pid_t pid, int amount)
-{
-    REQUIRE_PROMISE(proc);
-    if (amount < 0 || amount > 20)
-        return -EINVAL;
-    ScopedSpinLock lock(g_processes_lock);
-    auto process = Process::from_pid(pid);
-    if (!process || process->is_dead())
-        return -ESRCH;
-    if (!is_superuser() && process->uid() != euid())
-        return -EPERM;
-    process->m_priority_boost = amount;
-    return 0;
-}
-
 }

@@ -54,9 +54,6 @@ public:
 
     bool is_unresponsive() const { return m_unresponsive; }
 
-    void boost();
-    void deboost();
-
     static ClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(ClientConnection&)>);
 

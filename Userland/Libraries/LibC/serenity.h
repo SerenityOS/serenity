@@ -52,9 +52,6 @@ int profiling_disable(pid_t);
 #define THREAD_PRIORITY_HIGH 50
 #define THREAD_PRIORITY_MAX 99
 
-int set_thread_boost(pid_t tid, int amount);
-int set_process_boost(pid_t, int amount);
-
 #define FUTEX_WAIT 1
 #define FUTEX_WAKE 2
 

@@ -1239,11 +1239,7 @@ void WindowManager::set_active_window(Window* window, bool make_input)
 
     auto* previously_active_window = m_active_window.ptr();
 
-    ClientConnection* previously_active_client = nullptr;
-    ClientConnection* active_client = nullptr;
-
     if (previously_active_window) {
-        previously_active_client = previously_active_window->client();
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
         previously_active_window->invalidate();
         m_active_window = nullptr;
@@ -1253,7 +1249,6 @@ void WindowManager::set_active_window(Window* window, bool make_input)
 
     if (window) {
         m_active_window = *window;
-        active_client = m_active_window->client();
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate();
         if (auto* client = window->client()) {
@@ -1264,13 +1259,6 @@ void WindowManager::set_active_window(Window* window, bool make_input)
         tell_wm_listeners_window_state_changed(*m_active_window);
     } else {
         MenuManager::the().set_current_menubar(nullptr);
-    }
-
-    if (active_client != previously_active_client) {
-        if (previously_active_client)
-            previously_active_client->deboost();
-        if (active_client)
-            active_client->boost();
     }
 }
 
