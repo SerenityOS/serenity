@@ -55,9 +55,19 @@ public:
     SavedOffset save_offset() const;
 
 private:
+    enum class ShouldReadMoreSequences {
+        Yes,
+        No,
+    };
+    struct SequenceParseResult {
+        NonnullRefPtrVector<AST::Node> entries;
+        Vector<AST::Position, 1> separator_positions;
+        ShouldReadMoreSequences decision;
+    };
+
     constexpr static size_t max_allowed_nested_rule_depth = 2048;
     RefPtr<AST::Node> parse_toplevel();
-    RefPtr<AST::Node> parse_sequence();
+    SequenceParseResult parse_sequence();
     RefPtr<AST::Node> parse_function_decl();
     RefPtr<AST::Node> parse_and_logical_sequence();
     RefPtr<AST::Node> parse_or_logical_sequence();
@@ -108,6 +118,10 @@ private:
 
     StringView consume_while(Function<bool(char)>);
 
+    struct Offset {
+        size_t offset;
+        AST::Position::Line line;
+    };
     struct ScopedOffset {
         ScopedOffset(Vector<size_t>& offsets, Vector<AST::Position::Line>& lines, size_t offset, size_t lineno, size_t linecol)
             : offsets(offsets)
@@ -136,6 +150,7 @@ private:
     void restore_to(const ScopedOffset& offset) { restore_to(offset.offset, offset.line); }
 
     OwnPtr<ScopedOffset> push_start();
+    Offset current_position();
 
     StringView m_input;
     size_t m_offset { 0 };

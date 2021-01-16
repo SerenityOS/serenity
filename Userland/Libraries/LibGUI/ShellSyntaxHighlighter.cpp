@@ -380,21 +380,19 @@ private:
     }
     virtual void visit(const AST::Sequence* node) override
     {
-        {
+        for (auto& entry : node->entries()) {
             ScopedValueRollback first_in_command { m_is_first_in_command };
-            node->left()->visit(*this);
-        }
-        {
-            ScopedValueRollback first_in_command { m_is_first_in_command };
-            node->right()->visit(*this);
+            entry.visit(*this);
         }
 
-        auto& span = span_for_node(node);
-        span.range.set_start({ node->separator_position().start_line.line_number, node->separator_position().start_line.line_column });
-        set_offset_range_end(span.range, node->separator_position().end_line);
-        span.attributes.color = m_palette.syntax_punctuation();
-        span.attributes.bold = true;
-        span.is_skippable = true;
+        for (auto& position : node->separator_positions()) {
+            auto& span = span_for_node(node);
+            span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
+            set_offset_range_end(span.range, position.end_line);
+            span.attributes.color = m_palette.syntax_punctuation();
+            span.attributes.bold = true;
+            span.is_skippable = true;
+        }
     }
     virtual void visit(const AST::Subshell* node) override
     {
