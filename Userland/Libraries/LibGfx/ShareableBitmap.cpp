@@ -44,6 +44,9 @@ namespace IPC {
 
 bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
 {
+    encoder << shareable_bitmap.is_valid();
+    if (!shareable_bitmap.is_valid())
+        return true;
     encoder << IPC::File(shareable_bitmap.anon_fd());
     encoder << shareable_bitmap.width();
     encoder << shareable_bitmap.height();
@@ -52,6 +55,13 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
 
 bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
 {
+    bool valid = false;
+    if (!decoder.decode(valid))
+        return false;
+    if (!valid) {
+        shareable_bitmap = {};
+        return true;
+    }
     IPC::File anon_file;
     Gfx::IntSize size;
     if (!decoder.decode(anon_file))
