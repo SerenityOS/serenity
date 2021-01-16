@@ -114,8 +114,6 @@ public:
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, void*);
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
-    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
-    static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
     {
@@ -132,7 +130,6 @@ public:
 
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
-    RefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
     RefPtr<Bitmap> to_bitmap_backed_by_anon_fd() const;
     ByteBuffer serialize_to_byte_buffer() const;
 
@@ -150,10 +147,6 @@ public:
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
-    int shbuf_id() const;
-
-    SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
-    const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }
 
     ALWAYS_INLINE bool is_indexed() const
     {
@@ -255,7 +248,6 @@ private:
     };
     Bitmap(BitmapFormat, const IntSize&, Purgeable, const BackingStore&);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, void*);
-    Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
     Bitmap(BitmapFormat, int anon_fd, const IntSize&, void*, const Vector<RGBA32>& palette);
 
     static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, Purgeable);
@@ -270,7 +262,6 @@ private:
     bool m_needs_munmap { false };
     bool m_purgeable { false };
     bool m_volatile { false };
-    RefPtr<SharedBuffer> m_shared_buffer;
     int m_anon_fd { -1 };
 };
 
