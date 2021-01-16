@@ -53,8 +53,6 @@ private:
     virtual OwnPtr<Messages::ClipboardServer::GreetResponse> handle(const Messages::ClipboardServer::Greet&) override;
     virtual OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> handle(const Messages::ClipboardServer::GetClipboardData&) override;
     virtual OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> handle(const Messages::ClipboardServer::SetClipboardData&) override;
-
-    RefPtr<SharedBuffer> m_last_sent_buffer;
 };
 
 }

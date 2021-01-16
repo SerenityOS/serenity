@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <Clipboard/ClientConnection.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/Storage.h>
@@ -63,36 +62,14 @@ OwnPtr<Messages::ClipboardServer::GreetResponse> ClientConnection::handle(const 
 
 OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
-    if (!shared_buffer) {
-        did_misbehave("SetClipboardData: Bad shared buffer ID");
-        return {};
-    }
-    Storage::the().set_data(*shared_buffer, message.data_size(), message.mime_type(), message.metadata().entries());
+    Storage::the().set_data(message.data(), message.mime_type(), message.metadata().entries());
     return make<Messages::ClipboardServer::SetClipboardDataResponse>();
 }
 
 OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> ClientConnection::handle(const Messages::ClipboardServer::GetClipboardData&)
 {
     auto& storage = Storage::the();
-
-    i32 shbuf_id = -1;
-    if (storage.data_size()) {
-        // FIXME: Optimize case where an app is copy/pasting within itself.
-        //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
-        //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
-        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(storage.data_size());
-        ASSERT(shared_buffer);
-        memcpy(shared_buffer->data<void>(), storage.data(), storage.data_size());
-        shared_buffer->seal();
-        shared_buffer->share_with(client_pid());
-        shbuf_id = shared_buffer->shbuf_id();
-
-        // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
-        //        After we respond to GetClipboardData, we have to wait for the client to ref the buffer on his side.
-        m_last_sent_buffer = move(shared_buffer);
-    }
-    return make<Messages::ClipboardServer::GetClipboardDataResponse>(shbuf_id, storage.data_size(), storage.mime_type(), storage.metadata());
+    return make<Messages::ClipboardServer::GetClipboardDataResponse>(storage.buffer(), storage.mime_type(), storage.metadata());
 }
 
 void ClientConnection::notify_about_clipboard_change()

@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGUI/Clipboard.h>
@@ -79,18 +78,9 @@ Clipboard::Clipboard()
 Clipboard::DataAndType Clipboard::data_and_type() const
 {
     auto response = connection().send_sync<Messages::ClipboardServer::GetClipboardData>();
-    if (response->shbuf_id() < 0)
+    if (!response->data().is_valid())
         return {};
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(response->shbuf_id());
-    if (!shared_buffer) {
-        dbgln("GUI::Clipboard::data() failed to attach to the shared buffer");
-        return {};
-    }
-    if (response->data_size() > shared_buffer->size()) {
-        dbgln("GUI::Clipboard::data() clipping contents size is greater than shared buffer size");
-        return {};
-    }
-    auto data = ByteBuffer::copy(shared_buffer->data<void>(), response->data_size());
+    auto data = ByteBuffer::copy(response->data().data<void>(), response->data().size());
     auto type = response->mime_type();
     auto metadata = response->metadata().entries();
     return { data, type, metadata };
@@ -98,17 +88,15 @@ Clipboard::DataAndType Clipboard::data_and_type() const
 
 void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<String, String>& metadata)
 {
-    auto shared_buffer = SharedBuffer::create_with_size(data.size());
-    if (!shared_buffer) {
-        dbgln("GUI::Clipboard::set_data() failed to create a shared buffer");
+    auto buffer = Core::AnonymousBuffer::create_with_size(data.size());
+    if (!buffer.is_valid()) {
+        dbgln("GUI::Clipboard::set_data() failed to create a buffer");
         return;
     }
     if (!data.is_empty())
-        memcpy(shared_buffer->data<void>(), data.data(), data.size());
-    shared_buffer->seal();
-    shared_buffer->share_with(connection().server_pid());
+        memcpy(buffer.data<void>(), data.data(), data.size());
 
-    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(shared_buffer->shbuf_id(), data.size(), type, metadata);
+    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(move(buffer), type, metadata);
 }
 
 void ClipboardServerConnection::handle(const Messages::ClipboardClient::ClipboardDataChanged& message)
