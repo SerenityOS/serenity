@@ -7,7 +7,10 @@ endpoint WebContentServer = 89
     LoadURL(URL url) =|
     LoadHTML(String html, URL url) =|
 
-    Paint(Gfx::IntRect content_rect, i32 shbuf_id) =|
+    AddBackingStore(i32 backing_store_id, Gfx::ShareableBitmap bitmap) =|
+    RemoveBackingStore(i32 backing_store_id) =|
+
+    Paint(Gfx::IntRect content_rect, i32 backing_store_id) =|
     SetViewportRect(Gfx::IntRect rect) =|
 
     MouseDown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|

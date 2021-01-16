@@ -102,33 +102,33 @@ void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect&
     m_page_host->set_viewport_rect(message.rect());
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::AddBackingStore& message)
+{
+    m_backing_stores.set(message.backing_store_id(), *message.bitmap().bitmap());
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::RemoveBackingStore& message)
+{
+    m_backing_stores.remove(message.backing_store_id());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentServer::Paint: content_rect=" << message.content_rect() << ", shbuf_id=" << message.shbuf_id();
-#endif
-
     for (auto& pending_paint : m_pending_paint_requests) {
-        if (pending_paint.bitmap->shbuf_id() == message.shbuf_id()) {
+        if (pending_paint.bitmap_id == message.backing_store_id()) {
             pending_paint.content_rect = message.content_rect();
             return;
         }
     }
 
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.shbuf_id());
-    if (!shared_buffer) {
-#ifdef DEBUG_SPAM
-        dbgln("WebContentServer::Paint: SharedBuffer already gone! Ignoring :^)");
-#endif
-        return;
-    }
-    auto shared_bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGB32, shared_buffer.release_nonnull(), message.content_rect().size());
-    if (!shared_bitmap) {
-        did_misbehave("WebContentServer::Paint: Cannot create Gfx::Bitmap wrapper around SharedBuffer");
+    auto it = m_backing_stores.find(message.backing_store_id());
+    if (it == m_backing_stores.end()) {
+        did_misbehave("Client requested paint with backing store ID");
         return;
     }
 
-    m_pending_paint_requests.append({ message.content_rect(), shared_bitmap.release_nonnull() });
+    auto& bitmap = *it->value;
+    m_pending_paint_requests.append({ message.content_rect(), bitmap, message.backing_store_id() });
     m_paint_flush_timer->start();
 }
 
@@ -136,7 +136,7 @@ void ClientConnection::flush_pending_paint_requests()
 {
     for (auto& pending_paint : m_pending_paint_requests) {
         m_page_host->paint(pending_paint.content_rect, *pending_paint.bitmap);
-        post_message(Messages::WebContentClient::DidPaint(pending_paint.content_rect, pending_paint.bitmap->shbuf_id()));
+        post_message(Messages::WebContentClient::DidPaint(pending_paint.content_rect, pending_paint.bitmap_id));
     }
     m_pending_paint_requests.clear();
 }

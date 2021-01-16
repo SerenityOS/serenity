@@ -45,10 +45,7 @@ void WebContentClient::handshake()
 
 void WebContentClient::handle(const Messages::WebContentClient::DidPaint& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidPaint! content_rect=" << message.content_rect() << ", shbuf_id=" << message.shbuf_id();
-#endif
-    m_view.notify_server_did_paint({}, message.shbuf_id());
+    m_view.notify_server_did_paint({}, message.bitmap_id());
 }
 
 void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient::DidFinishLoading& message)

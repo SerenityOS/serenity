@@ -2,7 +2,7 @@ endpoint WebContentClient = 90
 {
     DidStartLoading(URL url) =|
     DidFinishLoading(URL url) =|
-    DidPaint(Gfx::IntRect content_rect, i32 shbuf_id) =|
+    DidPaint(Gfx::IntRect content_rect, i32 bitmap_id) =|
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
     DidLayout(Gfx::IntSize content_size) =|

@@ -97,21 +97,33 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 
     client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
 
-    m_front_bitmap = nullptr;
-    m_back_bitmap = nullptr;
+    if (m_front_bitmap) {
+        m_front_bitmap = nullptr;
+        client().post_message(Messages::WebContentServer::RemoveBackingStore(m_front_bitmap_id));
+    }
+
+    if (m_back_bitmap) {
+        m_back_bitmap = nullptr;
+        client().post_message(Messages::WebContentServer::RemoveBackingStore(m_back_bitmap_id));
+    }
+
+    m_front_bitmap_id = -1;
+    m_back_bitmap_id = -1;
     m_has_usable_bitmap = false;
 
     if (available_size().is_empty())
         return;
 
     if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
-        new_bitmap->shared_buffer()->share_with(client().server_pid());
         m_front_bitmap = move(new_bitmap);
+        m_front_bitmap_id = m_next_bitmap_id++;
+        client().post_message(Messages::WebContentServer::AddBackingStore(m_front_bitmap_id, m_front_bitmap->to_shareable_bitmap()));
     }
 
     if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
-        new_bitmap->shared_buffer()->share_with(client().server_pid());
         m_back_bitmap = move(new_bitmap);
+        m_back_bitmap_id = m_next_bitmap_id++;
+        client().post_message(Messages::WebContentServer::AddBackingStore(m_back_bitmap_id, m_back_bitmap->to_shareable_bitmap()));
     }
 
     request_repaint();
@@ -144,11 +156,12 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
     request_repaint();
 }
 
-void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
+void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
 {
-    if (m_back_bitmap->shbuf_id() == shbuf_id) {
+    if (m_back_bitmap_id == bitmap_id) {
         m_has_usable_bitmap = true;
         swap(m_back_bitmap, m_front_bitmap);
+        swap(m_back_bitmap_id, m_front_bitmap_id);
         update();
     }
 }
@@ -246,7 +259,7 @@ void OutOfProcessWebView::request_repaint()
     // it won't have a back bitmap yet, so we can just skip repaint requests.
     if (!m_back_bitmap)
         return;
-    client().post_message(Messages::WebContentServer::Paint(m_back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_back_bitmap->shbuf_id()));
+    client().post_message(Messages::WebContentServer::Paint(m_back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_back_bitmap_id));
 }
 
 WebContentClient& OutOfProcessWebView::client()
