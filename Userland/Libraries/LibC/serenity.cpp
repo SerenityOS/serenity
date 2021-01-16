@@ -95,12 +95,6 @@ int shbuf_release(int shbuf_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int shbuf_seal(int shbuf_id)
-{
-    int rc = syscall(SC_shbuf_seal, shbuf_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int shbuf_create(int size, void** buffer)
 {
     int rc = syscall(SC_shbuf_create, size, buffer);

@@ -52,7 +52,6 @@ public:
     int shbuf_id() const { return m_shbuf_id; }
 
     int allow_pid(pid_t);
-    int seal();
     int release();
 
 private:

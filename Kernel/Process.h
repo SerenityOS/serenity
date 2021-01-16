@@ -338,7 +338,6 @@ public:
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
     void* sys$shbuf_get(int shbuf_id, Userspace<size_t*> size);
     int sys$shbuf_release(int shbuf_id);
-    int sys$shbuf_seal(int shbuf_id);
     int sys$halt();
     int sys$reboot();
     int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);

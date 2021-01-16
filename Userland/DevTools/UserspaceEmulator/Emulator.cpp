@@ -393,8 +393,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shbuf_get(arg1, arg2);
     case SC_shbuf_release:
         return virt$shbuf_release(arg1);
-    case SC_shbuf_seal:
-        return virt$shbuf_seal(arg1);
     case SC_profiling_enable:
         return virt$profiling_enable(arg1);
     case SC_profiling_disable:
@@ -602,13 +600,6 @@ int Emulator::virt$shbuf_release(int shbuf_id)
     auto rc = region->release();
     m_mmu.remove_region(*region);
     return rc;
-}
-
-int Emulator::virt$shbuf_seal(int shbuf_id)
-{
-    auto* region = m_mmu.shbuf_region(shbuf_id);
-    ASSERT(region);
-    return region->seal();
 }
 
 int Emulator::virt$profiling_enable(pid_t pid)
