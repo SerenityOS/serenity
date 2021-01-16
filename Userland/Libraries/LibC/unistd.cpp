@@ -322,11 +322,16 @@ int fchdir(int fd)
 
 char* getcwd(char* buffer, size_t size)
 {
+    bool self_allocated = false;
     if (!buffer) {
         size = size ? size : PATH_MAX;
         buffer = (char*)malloc(size);
+        self_allocated = true;
     }
     int rc = syscall(SC_getcwd, buffer, size);
+    if (rc < 0 && self_allocated) {
+        free(buffer);
+    }
     __RETURN_WITH_ERRNO(rc, buffer, nullptr);
 }
 
