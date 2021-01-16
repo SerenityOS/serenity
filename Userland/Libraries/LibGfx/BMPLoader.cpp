@@ -474,7 +474,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
 
     u16 header = streamer.read_u16();
     if (header != 0x4d42) {
-        dbgln<debug_bmp>("BMP has invalid magic header number: {:04x}", header);
+        dbgln<debug_bmp>("BMP has invalid magic header number: {:#04x}", header);
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -490,8 +490,10 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     streamer.drop_bytes(4);
     context.data_offset = streamer.read_u32();
 
-    dbgln<debug_bmp>("BMP file size: {}", context.file_size);
-    dbgln<debug_bmp>("BMP data offset: {}", context.data_offset);
+    if constexpr (debug_bmp) {
+        dbgln("BMP file size: {}", context.file_size);
+        dbgln("BMP data offset: {}", context.data_offset);
+    }
 
     if (context.data_offset >= context.file_size) {
         dbgln<debug_bmp>("BMP data offset is beyond file end?!");
@@ -547,9 +549,11 @@ static bool decode_bmp_core_dib(BMPLoadingContext& context, Streamer& streamer)
         return false;
     }
 
-    dbgln<debug_bmp>("BMP width: {}", core.width);
-    dbgln<debug_bmp>("BMP height: {}", core.height);
-    dbgln<debug_bmp>("BMP bpp: {}", core.bpp);
+    if constexpr (debug_bmp) {
+        dbgln("BMP width: {}", core.width);
+        dbgln("BMP height: {}", core.height);
+        dbgln("BMP bits_per_pixel: {}", core.bpp);
+    }
 
     return true;
 }
@@ -594,9 +598,11 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
         return false;
     }
 
-    dbgln<debug_bmp>("BMP width: {}", core.width);
-    dbgln<debug_bmp>("BMP height: {}", core.height);
-    dbgln<debug_bmp>("BMP bpp: {}", core.bpp);
+    if constexpr (debug_bmp) {
+        dbgln("BMP width: {}", core.width);
+        dbgln("BMP height: {}", core.height);
+        dbgln("BMP bits_per_pixel: {}", core.bpp);
+    }
 
     if (short_variant)
         return true;
@@ -632,12 +638,14 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     // ColorEncoding (4) + Identifier (4)
     streamer.drop_bytes(8);
 
-    dbgln<debug_bmp>("BMP compression: {}", info.compression);
-    dbgln<debug_bmp>("BMP image size: {}", info.image_size);
-    dbgln<debug_bmp>("BMP horizontal res: {}", info.horizontal_resolution);
-    dbgln<debug_bmp>("BMP vertical res: {}", info.vertical_resolution);
-    dbgln<debug_bmp>("BMP colors: {}", info.number_of_palette_colors);
-    dbgln<debug_bmp>("BMP important colors: {}", info.number_of_important_palette_colors);
+    if constexpr (debug_bmp) {
+        dbgln("BMP compression: {}", info.compression);
+        dbgln("BMP image size: {}", info.image_size);
+        dbgln("BMP horizontal res: {}", info.horizontal_resolution);
+        dbgln("BMP vertical res: {}", info.vertical_resolution);
+        dbgln("BMP colors: {}", info.number_of_palette_colors);
+        dbgln("BMP important colors: {}", info.number_of_important_palette_colors);
+    }
 
     return true;
 }
@@ -670,12 +678,14 @@ static bool decode_bmp_info_dib(BMPLoadingContext& context, Streamer& streamer)
     if (info.number_of_important_palette_colors == 0)
         info.number_of_important_palette_colors = info.number_of_palette_colors;
 
-    dbgln<debug_bmp>("BMP compression: {}", info.compression);
-    dbgln<debug_bmp>("BMP image size: {}", info.image_size);
-    dbgln<debug_bmp>("BMP horizontal resolution: {}", info.horizontal_resolution);
-    dbgln<debug_bmp>("BMP vertical resolution: {}", info.vertical_resolution);
-    dbgln<debug_bmp>("BMP palette colors: {}", info.number_of_palette_colors);
-    dbgln<debug_bmp>("BMP important palette colors: {}", info.number_of_important_palette_colors);
+    if constexpr (debug_bmp) {
+        dbgln("BMP compression: {}", info.compression);
+        dbgln("BMP image size: {}", info.image_size);
+        dbgln("BMP horizontal res: {}", info.horizontal_resolution);
+        dbgln("BMP vertical res: {}", info.vertical_resolution);
+        dbgln("BMP colors: {}", info.number_of_palette_colors);
+        dbgln("BMP important colors: {}", info.number_of_important_palette_colors);
+    }
 
     return true;
 }
@@ -689,9 +699,11 @@ static bool decode_bmp_v2_dib(BMPLoadingContext& context, Streamer& streamer)
     context.dib.info.masks.append(streamer.read_u32());
     context.dib.info.masks.append(streamer.read_u32());
 
-    dbgln<debug_bmp>("BMP red mask: {:08x}", context.dib.info.masks[0]);
-    dbgln<debug_bmp>("BMP green mask: {:08x}", context.dib.info.masks[1]);
-    dbgln<debug_bmp>("BMP blue mask: {:08x}", context.dib.info.masks[2]);
+    if constexpr (debug_bmp) {
+        dbgln("BMP red mask: {:#08x}", context.dib.info.masks[0]);
+        dbgln("BMP green mask: {:#08x}", context.dib.info.masks[1]);
+        dbgln("BMP blue mask: {:#08x}", context.dib.info.masks[2]);
+    }
 
     return true;
 }
@@ -707,12 +719,12 @@ static bool decode_bmp_v3_dib(BMPLoadingContext& context, Streamer& streamer)
     // suite results.
     if (context.dib.info.compression == Compression::ALPHABITFIELDS) {
         context.dib.info.masks.append(streamer.read_u32());
-        dbgln<debug_bmp>("BMP alpha mask: {:08x}", context.dib.info.masks[3]);
+        dbgln<debug_bmp>("BMP alpha mask: {:#08x}", context.dib.info.masks[3]);
     } else if (context.dib_size() >= 56 && context.dib.core.bpp >= 16) {
         auto mask = streamer.read_u32();
         if ((context.dib.core.bpp == 32 && mask != 0) || context.dib.core.bpp == 16) {
             context.dib.info.masks.append(mask);
-            dbgln<debug_bmp>("BMP alpha mask: {:08x}", mask);
+            dbgln<debug_bmp>("BMP alpha mask: {:#08x}", mask);
         }
     } else {
         streamer.drop_bytes(4);
@@ -733,11 +745,13 @@ static bool decode_bmp_v4_dib(BMPLoadingContext& context, Streamer& streamer)
     v4.blue_endpoint = { streamer.read_i32(), streamer.read_i32(), streamer.read_i32() };
     v4.gamma_endpoint = { streamer.read_u32(), streamer.read_u32(), streamer.read_u32() };
 
-    dbgln<debug_bmp>("BMP color space: {}", v4.color_space);
-    dbgln<debug_bmp>("BMP red endpoint: {}", v4.red_endpoint);
-    dbgln<debug_bmp>("BMP green endpoint: {}", v4.green_endpoint);
-    dbgln<debug_bmp>("BMP blue endpoint: {}", v4.blue_endpoint);
-    dbgln<debug_bmp>("BMP gamma endpoint: {}", v4.gamma_endpoint);
+    if constexpr (debug_bmp) {
+        dbgln("BMP color space: {}", v4.color_space);
+        dbgln("BMP red endpoint: {}", v4.red_endpoint);
+        dbgln("BMP green endpoint: {}", v4.green_endpoint);
+        dbgln("BMP blue endpoint: {}", v4.blue_endpoint);
+        dbgln("BMP gamma endpoint: {}", v4.gamma_endpoint);
+    }
 
     return true;
 }
@@ -752,9 +766,11 @@ static bool decode_bmp_v5_dib(BMPLoadingContext& context, Streamer& streamer)
     v5.profile_data = streamer.read_u32();
     v5.profile_size = streamer.read_u32();
 
-    dbgln<debug_bmp>("BMP intent: {}", v5.intent);
-    dbgln<debug_bmp>("BMP profile data: {}", v5.profile_data);
-    dbgln<debug_bmp>("BMP profile size: {}", v5.profile_size);
+    if constexpr (debug_bmp) {
+        dbgln("BMP intent: {}", v5.intent);
+        dbgln("BMP profile data: {}", v5.profile_data);
+        dbgln("BMP profile size: {}", v5.profile_size);
+    }
 
     return true;
 }
@@ -915,7 +931,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
 {
     // RLE-compressed images cannot be stored top-down
     if (context.dib.core.height < 0) {
-        dbgln("BMP is top-down and RLE compressed");
+        dbgln<debug_bmp>("BMP is top-down and RLE compressed");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
