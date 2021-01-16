@@ -39,6 +39,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/RadioButton.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
@@ -148,6 +149,21 @@ void DisplaySettingsWidget::create_frame()
         m_monitor_widget->update();
     };
 
+    m_display_scale_radio_1x = *find_descendant_of_type_named<GUI::RadioButton>("scale_1x");
+    m_display_scale_radio_1x->on_checked = [this](bool checked) {
+        if (checked) {
+            m_monitor_widget->set_desktop_scale_factor(1);
+            m_monitor_widget->update();
+        }
+    };
+    m_display_scale_radio_2x = *find_descendant_of_type_named<GUI::RadioButton>("scale_2x");
+    m_display_scale_radio_2x->on_checked = [this](bool checked) {
+        if (checked) {
+            m_monitor_widget->set_desktop_scale_factor(2);
+            m_monitor_widget->update();
+        }
+    };
+
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_color_picker_title("Select color for desktop");
@@ -215,13 +231,19 @@ void DisplaySettingsWidget::load_current_settings()
     index = m_modes.find_first_index(mode).value();
     m_mode_combo->set_selected_index(index);
 
-    /// Resolution ////////////////////////////////////////////////////////////////////////////////
-    Gfx::IntSize find_size;
+    /// Resolution and scale factor ///////////////////////////////////////////////////////////////
+    int scale_factor = ws_config->read_num_entry("Screen", "ScaleFactor", 1);
+    if (scale_factor != 1 && scale_factor != 2) {
+        dbgln("unexpected ScaleFactor {}, setting to 1", scale_factor);
+        scale_factor = 1;
+    }
+    (scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true);
+    m_monitor_widget->set_desktop_scale_factor(scale_factor);
 
     // Let's attempt to find the current resolution and select it!
+    Gfx::IntSize find_size;
     find_size.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
     find_size.set_height(ws_config->read_num_entry("Screen", "Height", 768));
-
     index = m_resolutions.find_first_index(find_size).value_or(0);
     Gfx::IntSize m_current_resolution = m_resolutions.at(index);
     m_monitor_widget->set_desktop_resolution(m_current_resolution);
@@ -246,10 +268,9 @@ void DisplaySettingsWidget::load_current_settings()
 
 void DisplaySettingsWidget::send_settings_to_window_server()
 {
-    // FIXME: Add UI for changing the scale factor.
-    auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), 1);
+    auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
     if (!result->success()) {
-        GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{}", result->resolution().width(), result->resolution().height()),
+        GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
             "Unable to set resolution", GUI::MessageBox::Type::Error);
     }
 

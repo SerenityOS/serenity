@@ -64,6 +64,26 @@
 
         @GUI::ComboBox {
             name: "resolution_combo"
+            fixed_width: 90
+        }
+
+        @GUI::Widget {
+        }
+
+        @GUI::Label {
+            text: "Display scale:"
+            text_alignment: "CenterLeft"
+            fixed_width: 75
+        }
+
+        @GUI::RadioButton {
+            name: "scale_1x"
+            text: "100%"
+        }
+
+        @GUI::RadioButton {
+            name: "scale_2x"
+            text: "200%"
         }
     }
 
