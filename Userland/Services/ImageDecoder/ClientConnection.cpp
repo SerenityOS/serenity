@@ -60,43 +60,25 @@ OwnPtr<Messages::ImageDecoderServer::GreetResponse> ClientConnection::handle(con
 
 OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
 {
-    auto encoded_buffer = SharedBuffer::create_from_shbuf_id(message.encoded_shbuf_id());
-    if (!encoded_buffer) {
+    auto encoded_buffer = message.data();
+    if (!encoded_buffer.is_valid()) {
 #ifdef IMAGE_DECODER_DEBUG
-        dbgln("Could not map encoded data buffer");
+        dbgln("Encoded data is invalid");
 #endif
         return {};
     }
 
-    if (message.encoded_size() > (size_t)encoded_buffer->size()) {
-#ifdef IMAGE_DECODER_DEBUG
-        dbgln("Encoded buffer is smaller than encoded size");
-#endif
-        return {};
-    }
-
-#ifdef IMAGE_DECODER_DEBUG
-    dbg() << "Trying to decode " << message.encoded_size() << " bytes of image(?) data in shbuf_id=" << message.encoded_shbuf_id() << " (shbuf size: " << encoded_buffer->size() << ")";
-#endif
-
-    auto decoder = Gfx::ImageDecoder::create(encoded_buffer->data<u8>(), message.encoded_size());
+    auto decoder = Gfx::ImageDecoder::create(encoded_buffer.data<u8>(), encoded_buffer.size());
     auto bitmap = decoder->bitmap();
 
     if (!bitmap) {
 #ifdef IMAGE_DECODER_DEBUG
         dbgln("Could not decode image from encoded data");
 #endif
-        return make<Messages::ImageDecoderServer::DecodeImageResponse>(-1, Gfx::IntSize(), (i32)Gfx::BitmapFormat::Invalid, Vector<u32>());
+        return make<Messages::ImageDecoderServer::DecodeImageResponse>(Gfx::ShareableBitmap());
     }
 
-    // FIXME: We should fix ShareableBitmap so you can send it in responses as well as requests..
-    m_shareable_bitmap = bitmap->to_bitmap_backed_by_shared_buffer();
-    m_shareable_bitmap->shared_buffer()->share_with(client_pid());
-    Vector<u32> palette;
-    if (m_shareable_bitmap->is_indexed()) {
-        palette = m_shareable_bitmap->palette_to_vector();
-    }
-    return make<Messages::ImageDecoderServer::DecodeImageResponse>(m_shareable_bitmap->shbuf_id(), m_shareable_bitmap->size(), (i32)m_shareable_bitmap->format(), palette);
+    return make<Messages::ImageDecoderServer::DecodeImageResponse>(bitmap->to_shareable_bitmap());
 }
 
 }

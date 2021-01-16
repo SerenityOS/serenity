@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/SharedBuffer.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace ImageDecoderClient {
@@ -51,38 +51,15 @@ RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
     if (encoded_data.is_empty())
         return nullptr;
 
-    auto encoded_buffer = SharedBuffer::create_with_size(encoded_data.size());
-    if (!encoded_buffer) {
-        dbgln("Could not allocate encoded shbuf");
+    auto encoded_buffer = Core::AnonymousBuffer::create_with_size(encoded_data.size());
+    if (!encoded_buffer.is_valid()) {
+        dbgln("Could not allocate encoded buffer");
         return nullptr;
     }
 
-    memcpy(encoded_buffer->data<void>(), encoded_data.data(), encoded_data.size());
-
-    encoded_buffer->seal();
-    encoded_buffer->share_with(server_pid());
-
-    auto response = send_sync<Messages::ImageDecoderServer::DecodeImage>(encoded_buffer->shbuf_id(), encoded_data.size());
-    auto bitmap_format = (Gfx::BitmapFormat)response->bitmap_format();
-    if (bitmap_format == Gfx::BitmapFormat::Invalid) {
-#ifdef IMAGE_DECODER_CLIENT_DEBUG
-        dbgln("Response image was invalid");
-#endif
-        return nullptr;
-    }
-
-    if (response->size().is_empty()) {
-        dbgln("Response image was empty");
-        return nullptr;
-    }
-
-    auto decoded_buffer = SharedBuffer::create_from_shbuf_id(response->decoded_shbuf_id());
-    if (!decoded_buffer) {
-        dbgln("Could not map decoded image shbuf_id={}", response->decoded_shbuf_id());
-        return nullptr;
-    }
-
-    return Gfx::Bitmap::create_with_shared_buffer(bitmap_format, decoded_buffer.release_nonnull(), response->size(), response->palette());
+    memcpy(encoded_buffer.data<void>(), encoded_data.data(), encoded_data.size());
+    auto response = send_sync<Messages::ImageDecoderServer::DecodeImage>(move(encoded_buffer));
+    return response->bitmap().bitmap();
 }
 
 }
