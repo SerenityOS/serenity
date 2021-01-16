@@ -23,7 +23,7 @@ endpoint WindowServer = 2
         bool checked,
         bool is_default,
         [UTF8] String shortcut,
-        i32 icon_buffer_id,
+        Gfx::ShareableBitmap icon,
         bool exclusive) => ()
 
     AddMenuSeparator(i32 menu_id) => ()

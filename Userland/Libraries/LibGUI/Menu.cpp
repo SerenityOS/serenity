@@ -25,7 +25,6 @@
  */
 
 #include <AK/HashMap.h>
-#include <AK/SharedBuffer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>
@@ -107,27 +106,6 @@ void Menu::dismiss()
     WindowServerConnection::the().post_message(Messages::WindowServer::DismissMenu(m_menu_id));
 }
 
-template<typename IconContainerType>
-static int ensure_realized_icon(IconContainerType& container)
-{
-    int icon_buffer_id = -1;
-    if (container.icon()) {
-        ASSERT(container.icon()->format() == Gfx::BitmapFormat::RGBA32);
-        ASSERT(container.icon()->size() == Gfx::IntSize(16, 16));
-        if (container.icon()->shbuf_id() == -1) {
-            auto shared_buffer = SharedBuffer::create_with_size(container.icon()->size_in_bytes());
-            ASSERT(shared_buffer);
-            auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, container.icon()->size());
-            memcpy(shared_buffer->template data<u8>(), container.icon()->scanline_u8(0), container.icon()->size_in_bytes());
-            shared_buffer->seal();
-            shared_buffer->share_with(WindowServerConnection::the().server_pid());
-            container.set_icon(shared_icon);
-        }
-        icon_buffer_id = container.icon()->shbuf_id();
-    }
-    return icon_buffer_id;
-}
-
 int Menu::realize_menu(RefPtr<Action> default_action)
 {
     unrealize_menu();
@@ -148,17 +126,17 @@ int Menu::realize_menu(RefPtr<Action> default_action)
         if (item.type() == MenuItem::Type::Submenu) {
             auto& submenu = *item.submenu();
             submenu.realize_if_needed(default_action);
-            int icon_buffer_id = ensure_realized_icon(submenu);
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon_buffer_id, false);
+            auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
+            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon, false);
             continue;
         }
         if (item.type() == MenuItem::Type::Action) {
             auto& action = *item.action();
-            int icon_buffer_id = ensure_realized_icon(action);
             auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
             bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
             bool is_default = (default_action.ptr() == &action);
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon_buffer_id, exclusive);
+            auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
+            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
         }
     }
     all_menus().set(m_menu_id, this);
