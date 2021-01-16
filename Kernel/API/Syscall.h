@@ -186,7 +186,6 @@ namespace Kernel {
     S(shutdown)               \
     S(get_stack_bounds)       \
     S(ptrace)                 \
-    S(minherit)               \
     S(sendfd)                 \
     S(recvfd)                 \
     S(sysconf)                \

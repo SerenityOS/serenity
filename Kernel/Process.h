@@ -259,7 +259,6 @@ public:
     int sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
-    int sys$minherit(void*, size_t, int inherit);
     int sys$purge(int mode);
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(Userspace<const Syscall::SC_poll_params*>);

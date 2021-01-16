@@ -56,11 +56,6 @@ public:
         Execute = 4,
     };
 
-    enum class InheritMode {
-        Default,
-        ZeroedOnFork,
-    };
-
     static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true, bool shared = false);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
@@ -227,8 +222,6 @@ public:
     // NOTE: These are public so we can make<> them.
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable, bool kernel, bool shared);
 
-    void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
-
     bool remap_vmobject_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
@@ -270,7 +263,6 @@ private:
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };
-    InheritMode m_inherit_mode : 3 { InheritMode::Default };
     bool m_shared : 1 { false };
     bool m_user_accessible : 1 { false };
     bool m_cacheable : 1 { false };
