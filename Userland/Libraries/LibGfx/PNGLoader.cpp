@@ -592,8 +592,9 @@ static bool decode_png_chunks(PNGLoadingContext& context)
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
         if (!process_chunk(streamer, context)) {
-            context.state = PNGLoadingContext::State::Error;
-            return false;
+            // Ignore failed chunk and just consider chunk decoding being done.
+            // decode_png_bitmap() will check whether we got all required ones anyway.
+            break;
         }
     }
 
