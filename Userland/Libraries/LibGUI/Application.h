@@ -71,7 +71,7 @@ public:
     Gfx::Palette palette() const;
     void set_palette(const Gfx::Palette&);
 
-    void set_system_palette(SharedBuffer&);
+    void set_system_palette(Core::AnonymousBuffer&);
 
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
     bool dnd_debugging_enabled() const { return m_dnd_debugging_enabled; }

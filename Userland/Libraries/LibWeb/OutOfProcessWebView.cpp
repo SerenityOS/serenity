@@ -43,7 +43,7 @@ OutOfProcessWebView::OutOfProcessWebView()
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     m_client = WebContentClient::construct(*this);
-    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
 }
 
 OutOfProcessWebView::~OutOfProcessWebView()
@@ -140,7 +140,7 @@ void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     GUI::ScrollableWidget::theme_change_event(event);
-    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
     request_repaint();
 }
 
