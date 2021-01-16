@@ -222,6 +222,11 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
                     dbgln("Found PT_INTERP header ({}), but the .interp section was not within the buffer :(", header_index);
                 return false;
             }
+            if (program_header.p_filesz <= 1) {
+                if (verbose)
+                    dbgln("Found PT_INTERP header ({}), but p_filesz is invalid ({})", header_index, program_header.p_filesz);
+                return false;
+            }
             if (interpreter_path)
                 *interpreter_path = String((const char*)&buffer[program_header.p_offset], program_header.p_filesz - 1);
             break;
