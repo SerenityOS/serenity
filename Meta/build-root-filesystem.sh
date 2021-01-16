@@ -39,7 +39,6 @@ $CP -PdR Root/* mnt/
 # file permissions in Base/ are too restrictive. Restore
 # the permissions needed in the image.
 chmod -R g+rX,o+rX "$SERENITY_ROOT"/Base/* mnt/
-chmod 400 mnt/res/kernel.map
 
 chmod 660 mnt/etc/WindowServer/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
@@ -63,7 +62,6 @@ chmod 4750 mnt/bin/keymap
 chown 0:$utmp_gid mnt/bin/utmpupdate
 chmod 2755 mnt/bin/utmpupdate
 chmod 600 mnt/etc/shadow
-
 echo "done"
 
 printf "creating initial filesystem structure... "
@@ -83,6 +81,7 @@ echo "done"
 
 printf "setting up device nodes folder... "
 mkdir -p mnt/dev
+echo "done"
 
 printf "writing version file... "
 GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | head -c 7) || true )
