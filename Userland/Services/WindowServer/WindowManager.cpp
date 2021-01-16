@@ -126,7 +126,7 @@ bool WindowManager::set_resolution(int width, int height, int scale)
     bool success = Compositor::the().set_resolution(width, height, scale);
     MenuManager::the().set_needs_window_resize();
     ClientConnection::for_each_client([&](ClientConnection& client) {
-        client.notify_about_new_screen_rect(Screen::the().rect());
+        client.notify_about_new_screen_rects(Screen::rects(), Screen::primary_index());
     });
     if (success) {
         for_each_window([](Window& window) {

@@ -45,13 +45,15 @@ Desktop::Desktop()
 {
 }
 
-void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect& rect)
+void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect>& rects, u32 primary_screen)
 {
-    if (m_rect == rect)
+    if (m_rects == rects && primary_screen == m_primary_screen)
         return;
-    m_rect = rect;
-    if (on_rect_change)
-        on_rect_change(rect);
+    ASSERT(primary_screen < rects.size());
+    m_rects = rects;
+    m_primary_screen = primary_screen;
+    if (on_rects_change)
+        on_rects_change(rects, primary_screen);
 }
 
 void Desktop::set_background_color(const StringView& background_color)

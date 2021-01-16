@@ -47,6 +47,11 @@ Screen& Screen::the()
     return *s_the;
 }
 
+Vector<Gfx::IntRect, 1> Screen::rects()
+{
+    return { the().rect() };
+}
+
 Screen::Screen(unsigned desired_width, unsigned desired_height, int scale_factor)
 {
     ASSERT(!s_the);

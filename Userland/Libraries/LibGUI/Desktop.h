@@ -45,17 +45,20 @@ public:
     String wallpaper() const;
     bool set_wallpaper(const StringView& path, bool save_config = true);
 
-    Gfx::IntRect rect() const { return m_rect; }
+    u32 primary_screen() const { return m_primary_screen; }
+    const Vector<Gfx::IntRect, 1>& rects() const { return m_rects; }
+    Gfx::IntRect rect() const { return !m_rects.is_empty() ? m_rects[m_primary_screen] : Gfx::IntRect {}; }
 
     int taskbar_height() const { return 28; }
     int menubar_height() const { return 19; }
 
-    void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect&);
+    void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect>&, u32);
 
-    Function<void(const Gfx::IntRect&)> on_rect_change;
+    Function<void(const Vector<Gfx::IntRect>&, u32)> on_rects_change;
 
 private:
-    Gfx::IntRect m_rect;
+    Vector<Gfx::IntRect, 1> m_rects;
+    u32 m_primary_screen { 0 };
 };
 
 }

@@ -64,7 +64,7 @@ private:
     virtual void handle(const Messages::WindowClient::WindowCloseRequest&) override;
     virtual void handle(const Messages::WindowClient::WindowResized&) override;
     virtual void handle(const Messages::WindowClient::MenuItemActivated&) override;
-    virtual void handle(const Messages::WindowClient::ScreenRectChanged&) override;
+    virtual void handle(const Messages::WindowClient::ScreenRectsChanged&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowRemoved&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowStateChanged&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowIconBitmapChanged&) override;

@@ -65,6 +65,8 @@ public:
 
     Gfx::IntSize size() const { return { width(), height() }; }
     Gfx::IntRect rect() const { return { { 0, 0 }, size() }; }
+    static Vector<Gfx::IntRect, 1> rects();
+    static u32 primary_index() { return 0; }
 
     Gfx::IntPoint cursor_location() const { return m_physical_cursor_location / m_scale_factor; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }

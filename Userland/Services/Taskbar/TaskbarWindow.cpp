@@ -75,7 +75,7 @@ TaskbarWindow::TaskbarWindow()
 
     on_screen_rect_change(GUI::Desktop::the().rect());
 
-    GUI::Desktop::the().on_rect_change = [this](const Gfx::IntRect& rect) { on_screen_rect_change(rect); };
+    GUI::Desktop::the().on_rects_change = [this](const Vector<Gfx::IntRect>& rects, u32 primary_screen) { on_screen_rect_change(rects[primary_screen]); };
 
     auto& widget = set_main_widget<TaskbarWidget>();
     widget.set_layout<GUI::HorizontalBoxLayout>();

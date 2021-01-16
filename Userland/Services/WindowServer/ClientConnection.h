@@ -60,7 +60,7 @@ public:
 
     MenuBar* app_menubar() { return m_app_menubar.ptr(); }
 
-    void notify_about_new_screen_rect(const Gfx::IntRect&);
+    void notify_about_new_screen_rects(const Vector<Gfx::IntRect>&, u32);
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)

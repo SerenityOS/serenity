@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI::Desktop::the().on_rect_change = [](auto&) { NotificationServer::update_notification_window_locations(); };
+    GUI::Desktop::the().on_rects_change = [](auto&) { NotificationServer::update_notification_window_locations(); };
 
     return app->exec();
 }

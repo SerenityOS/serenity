@@ -64,7 +64,7 @@ void WindowServerConnection::handshake()
 {
     auto response = send_sync<Messages::WindowServer::Greet>();
     set_system_theme_from_anonymous_buffer(response->theme_buffer());
-    Desktop::the().did_receive_screen_rect({}, response->screen_rect());
+    Desktop::the().did_receive_screen_rects({}, response->screen_rects(), response->primary_screen());
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::UpdateSystemTheme& message)
@@ -288,9 +288,9 @@ void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRemov
         Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(message.client_id(), message.window_id()));
 }
 
-void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectChanged& message)
+void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectsChanged& message)
 {
-    Desktop::the().did_receive_screen_rect({}, message.rect());
+    Desktop::the().did_receive_screen_rects({}, message.rects(), message.primary_screen());
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::AsyncSetWallpaperFinished&)

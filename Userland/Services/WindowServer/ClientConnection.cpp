@@ -96,9 +96,9 @@ void ClientConnection::die()
     });
 }
 
-void ClientConnection::notify_about_new_screen_rect(const Gfx::IntRect& rect)
+void ClientConnection::notify_about_new_screen_rects(const Vector<Gfx::IntRect>& rects, u32 primary_screen)
 {
-    post_message(Messages::WindowClient::ScreenRectChanged(rect));
+    post_message(Messages::WindowClient::ScreenRectsChanged(rects, primary_screen));
 }
 
 OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
@@ -722,7 +722,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimize
 
 OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
 {
-    return make<Messages::WindowServer::GreetResponse>(Screen::the().rect(), Gfx::current_system_theme_buffer());
+    return make<Messages::WindowServer::GreetResponse>(Screen::rects(), Screen::primary_index(), Gfx::current_system_theme_buffer());
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)
