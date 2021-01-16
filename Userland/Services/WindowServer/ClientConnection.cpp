@@ -869,6 +869,12 @@ void ClientConnection::handle(const Messages::WindowServer::SetWindowProgress& m
     it->value->set_progress(message.progress());
 }
 
+void ClientConnection::handle(const Messages::WindowServer::RefreshSystemTheme&)
+{
+    // Post the client an UpdateSystemTheme message to refresh its theme.
+    post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+}
+
 void ClientConnection::handle(const Messages::WindowServer::Pong&)
 {
     m_ping_timer = nullptr;
