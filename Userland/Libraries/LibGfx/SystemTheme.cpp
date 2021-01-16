@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/SystemTheme.h>
 #include <string.h>

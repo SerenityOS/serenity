@@ -26,7 +26,6 @@
 
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
-#include <AK/SharedBuffer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>

@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
 

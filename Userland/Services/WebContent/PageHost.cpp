@@ -26,7 +26,6 @@
 
 #include "PageHost.h"
 #include "ClientConnection.h"
-#include <AK/SharedBuffer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>

@@ -29,7 +29,6 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
-#include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
