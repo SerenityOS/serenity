@@ -26,6 +26,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -35,8 +36,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/JPGLoader.h>
 #include <math.h>
-
-//#define JPG_DEBUG
 
 #define JPG_INVALID 0X0000
 
@@ -231,17 +230,13 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
 static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
 {
     if (count > (8 * sizeof(size_t))) {
-#ifdef JPG_DEBUG
-        dbg() << String::format("Can't read %zu bits at once!", count);
-#endif
+        dbgln<debug_jpg>("Can't read {} bits at once!", count);
         return {};
     }
     size_t value = 0;
     while (count--) {
         if (hstream.byte_offset >= hstream.stream.size()) {
-#ifdef JPG_DEBUG
-            dbg() << String::format("Huffman stream exhausted. This could be an error!");
-#endif
+            dbgln<debug_jpg>("Huffman stream exhausted. This could be an error!");
             return {};
         }
         u8 current_byte = hstream.stream[hstream.byte_offset];
@@ -318,9 +313,7 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
                 // For DC coefficients, symbol encodes the length of the coefficient.
                 auto dc_length = symbol_or_error.release_value();
                 if (dc_length > 11) {
-#ifdef JPG_DEBUG
-                    dbg() << String::format("DC coefficient too long: %i!", dc_length);
-#endif
+                    dbgln<debug_jpg>("DC coefficient too long: {}!", dc_length);
                     return false;
                 }
 
@@ -357,17 +350,13 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
                     j += run_length;
 
                     if (j >= 64) {
-#ifdef JPG_DEBUG
-                        dbg() << String::format("Run-length exceeded boundaries. Cursor: %i, Skipping: %i!", j, run_length);
-#endif
+                        dbgln<debug_jpg>("Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
                         return false;
                     }
 
                     u8 coeff_length = ac_symbol & 0x0F;
                     if (coeff_length > 10) {
-#ifdef JPG_DEBUG
-                        dbg() << String::format("AC coefficient too long: %i!", coeff_length);
-#endif
+                        dbgln<debug_jpg>("AC coefficient too long: {}!", coeff_length);
                         return false;
                     }
 
@@ -394,13 +383,13 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
     Vector<Macroblock> macroblocks;
     macroblocks.resize(context.mblock_meta.padded_total);
 
-#ifdef JPG_DEBUG
-    dbg() << "Image width: " << context.frame.width;
-    dbg() << "Image height: " << context.frame.height;
-    dbg() << "Macroblocks in a row: " << context.mblock_meta.hpadded_count;
-    dbg() << "Macroblocks in a column: " << context.mblock_meta.vpadded_count;
-    dbg() << "Macroblock meta padded total: " << context.mblock_meta.padded_total;
-#endif
+    if constexpr (debug_jpg) {
+        dbgln("Image width: {}", context.frame.width);
+        dbgln("Image height: {}", context.frame.height);
+        dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
+        dbgln("Macroblocks in a column: {}", context.mblock_meta.vpadded_count);
+        dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
+    }
 
     // Compute huffman codes for DC and AC tables.
     for (auto it = context.dc_tables.begin(); it != context.dc_tables.end(); ++it)
@@ -433,11 +422,11 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
             }
 
             if (!build_macroblocks(context, macroblocks, hcursor, vcursor)) {
-#ifdef JPG_DEBUG
-                dbg() << "Failed to build Macroblock " << i;
-                dbg() << "Huffman stream byte offset " << context.huffman_stream.byte_offset;
-                dbg() << "Huffman stream bit offset " << context.huffman_stream.bit_offset;
-#endif
+                if constexpr (debug_jpg) {
+                    dbgln("Failed to build Macroblock {}", i);
+                    dbgln("Huffman stream byte offset {}", context.huffman_stream.byte_offset);
+                    dbgln("Huffman stream bit offset {}", context.huffman_stream.bit_offset);
+                }
                 return {};
             }
         }
@@ -454,10 +443,9 @@ static inline bool bounds_okay(const size_t cursor, const size_t delta, const si
 static inline bool is_valid_marker(const Marker marker)
 {
     if (marker >= JPG_APPN0 && marker <= JPG_APPNF) {
-#ifdef JPG_DEBUG
+
         if (marker != JPG_APPN0)
-            dbg() << String::format("%04x not supported yet. The decoder may fail!", marker);
-#endif
+            dbgln<debug_jpg>("{:#04x} not supported yet. The decoder may fail!", marker);
         return true;
     }
     if (marker >= JPG_RESERVED1 && marker <= JPG_RESERVEDD)
@@ -479,9 +467,7 @@ static inline bool is_valid_marker(const Marker marker)
 
     if (marker >= 0xFFC0 && marker <= 0xFFCF) {
         if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
-#ifdef JPG_DEBUG
-            dbg() << "Decoding this frame-type (SOF" << (marker & 0xf) << ") is not currently supported. Decoder will fail!";
-#endif
+            dbgln<debug_jpg>("Decoding this frame-type (SOF{}) is not currently supported. Decoder will fail!", marker & 0xf);
             return false;
         }
     }
@@ -518,9 +504,7 @@ static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
 static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": SOS found before reading a SOF!";
-#endif
+        dbgln<debug_jpg>("{}: SOS found before reading a SOF!", stream.offset());
         return false;
     }
 
@@ -535,10 +519,7 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
     if (stream.handle_any_error())
         return false;
     if (component_count != context.component_count) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset()
-              << String::format(": Unsupported number of components: %i!", component_count);
-#endif
+        dbgln<debug_jpg>("{}: Unsupported number of components: {}!", stream.offset(), component_count);
         return false;
     }
 
@@ -557,9 +538,7 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
                 return false;
             }
         } else {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << String::format(": Unsupported component id: %i!", component_id);
-#endif
+            dbgln<debug_jpg>("{}: Unsupported component id: {}!", stream.offset(), component_id);
             return false;
         }
 
@@ -572,23 +551,17 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
         component->ac_destination_id = table_ids & 0x0F;
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << ": DC & AC table count mismatch!";
-#endif
+            dbgln<debug_jpg>("{}: DC & AC table count mismatch!", stream.offset());
             return false;
         }
 
         if (!context.dc_tables.contains(component->dc_destination_id)) {
-#ifdef JPG_DEBUG
-            dbgln("DC table (id: {}) does not exist!", component->dc_destination_id);
-#endif
+            dbgln<debug_jpg>("DC table (id: {}) does not exist!", component->dc_destination_id);
             return false;
         }
 
         if (!context.ac_tables.contains(component->ac_destination_id)) {
-#ifdef JPG_DEBUG
-            dbgln("AC table (id: {}) does not exist!", component->ac_destination_id);
-#endif
+            dbgln<debug_jpg>("AC table (id: {}) does not exist!", component->ac_destination_id);
             return false;
         }
     }
@@ -607,11 +580,11 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
         return false;
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": ERROR! Start of Selection: " << spectral_selection_start
-              << ", End of Selection: " << spectral_selection_end
-              << ", Successive Approximation: " << successive_approximation << "!";
-#endif
+        dbgln<debug_jpg>("{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
+            stream.offset(),
+            spectral_selection_start,
+            spectral_selection_end,
+            successive_approximation);
         return false;
     }
     return true;
@@ -624,9 +597,7 @@ static bool read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& cont
         return false;
     bytes_to_read -= 2;
     if (bytes_to_read != 2) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": Malformed reset marker found!";
-#endif
+        dbgln<debug_jpg>("{}: Malformed reset marker found!", stream.offset());
         return false;
     }
     context.dc_reset_interval = read_be_word(stream);
@@ -652,16 +623,11 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << String::format(": Unrecognized huffman table: %i!", table_type);
-#endif
+            dbgln<debug_jpg>("{}: Unrecognized huffman table: {}!", stream.offset(), table_type);
             return false;
         }
         if (table_destination_id > 1) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset()
-                  << String::format(": Invalid huffman table destination id: %i!", table_destination_id);
-#endif
+            dbgln<debug_jpg>("{}: Invalid huffman table destination id: {}!", stream.offset(), table_destination_id);
             return false;
         }
 
@@ -701,9 +667,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
     }
 
     if (bytes_to_read != 0) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": Extra bytes detected in huffman header!";
-#endif
+        dbgln<debug_jpg>("{}: Extra bytes detected in huffman header!", stream.offset());
         return false;
     }
     return true;
@@ -718,10 +682,12 @@ static inline bool validate_luma_and_modify_context(const ComponentSpec& luma, J
         // For easy reference to relevant sample factors.
         context.hsample_factor = luma.hsample_factor;
         context.vsample_factor = luma.vsample_factor;
-#ifdef JPG_DEBUG
-        dbg() << String::format("Horizontal Subsampling Factor: %i", luma.hsample_factor);
-        dbg() << String::format("Vertical Subsampling Factor: %i", luma.vsample_factor);
-#endif
+
+        if constexpr (debug_jpg) {
+            dbgln("Horizontal Subsampling Factor: {}", luma.hsample_factor);
+            dbgln("Vertical Subsampling Factor: {}", luma.vsample_factor);
+        }
+
         return true;
     }
     return false;
@@ -739,9 +705,7 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
 static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": SOF repeated!";
-#endif
+        dbgln<debug_jpg>("{}: SOF repeated!", stream.offset());
         return false;
     }
 
@@ -757,9 +721,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
     if (stream.handle_any_error())
         return false;
     if (context.frame.precision != 8) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": SOF precision != 8!";
-#endif
+        dbgln<debug_jpg>("{}: SOF precision != 8!", stream.offset());
         return false;
     }
 
@@ -770,10 +732,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
     if (stream.handle_any_error())
         return false;
     if (!context.frame.width || !context.frame.height) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": ERROR! Image height: " << context.frame.height << ", Image width: "
-              << context.frame.width << "!";
-#endif
+        dbgln<debug_jpg>("{}: ERROR! Image height: {}, Image width: {}!", stream.offset(), context.frame.height, context.frame.width);
         return false;
     }
 
@@ -788,10 +747,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
     if (stream.handle_any_error())
         return false;
     if (context.component_count != 1 && context.component_count != 3) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": Unsupported number of components in SOF: "
-              << context.component_count << "!";
-#endif
+        dbgln<debug_jpg>("{}: Unsupported number of components in SOF: {}!", stream.offset(), context.component_count);
         return false;
     }
 
@@ -814,18 +770,18 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
-#ifdef JPG_DEBUG
-                dbg() << stream.offset() << ": Unsupported luma subsampling factors: "
-                      << "horizontal: " << component.hsample_factor << ", vertical: " << component.vsample_factor;
-#endif
+                dbgln<debug_jpg>("{}: Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
+                    stream.offset(),
+                    component.hsample_factor,
+                    component.vsample_factor);
                 return false;
             }
         } else {
             if (component.hsample_factor != 1 || component.vsample_factor != 1) {
-#ifdef JPG_DEBUG
-                dbg() << stream.offset() << ": Unsupported chroma subsampling factors: "
-                      << "horizontal: " << component.hsample_factor << ", vertical: " << component.vsample_factor;
-#endif
+                dbgln<debug_jpg>("{}: Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
+                    stream.offset(),
+                    component.hsample_factor,
+                    component.vsample_factor);
                 return false;
             }
         }
@@ -834,10 +790,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         if (stream.handle_any_error())
             return false;
         if (component.qtable_id > 1) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << ": Unsupported quantization table id: "
-                  << component.qtable_id << "!";
-#endif
+            dbgln<debug_jpg>("{}: Unsupported quantization table id: {}!", stream.offset(), component.qtable_id);
             return false;
         }
 
@@ -862,17 +815,12 @@ static bool read_quantization_table(InputMemoryStream& stream, JPGLoadingContext
             return false;
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset()
-                  << String::format(": Unsupported unit hint in quantization table: %i!", element_unit_hint);
-#endif
+            dbgln<debug_jpg>("{}: Unsupported unit hint in quantization table: {}!", stream.offset(), element_unit_hint);
             return false;
         }
         u8 table_id = info_byte & 0x0F;
         if (table_id > 1) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << String::format(": Unsupported quantization table id: %i!", table_id);
-#endif
+            dbgln<debug_jpg>("{}: Unsupported quantization table id: {}!", stream.offset(), table_id);
             return false;
         }
         u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
@@ -895,9 +843,7 @@ static bool read_quantization_table(InputMemoryStream& stream, JPGLoadingContext
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
     }
     if (bytes_to_read != 0) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": Invalid length for one or more quantization tables!";
-#endif
+        dbgln<debug_jpg>("{}: Invalid length for one or more quantization tables!", stream.offset());
         return false;
     }
 
@@ -1163,9 +1109,7 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
     if (stream.handle_any_error())
         return false;
     if (marker != JPG_SOI) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << String::format(": SOI not found: %x!", marker);
-#endif
+        dbgln<debug_jpg>("{}: SOI not found: {:x}!", stream.offset(), marker);
         return false;
     }
     for (;;) {
@@ -1193,9 +1137,7 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
         case JPG_RST7:
         case JPG_SOI:
         case JPG_EOI:
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << String::format(": Unexpected marker %x!", marker);
-#endif
+            dbgln<debug_jpg>("{}: Unexpected marker {:x}!", stream.offset(), marker);
             return false;
         case JPG_SOF0:
             if (!read_start_of_frame(stream, context))
@@ -1218,9 +1160,7 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
             return read_start_of_scan(stream, context);
         default:
             if (!skip_marker_with_length(stream)) {
-#ifdef JPG_DEBUG
-                dbg() << stream.offset() << String::format(": Error skipping marker: %x!", marker);
-#endif
+                dbgln<debug_jpg>("{}: Error skipping marker: {:x}!", stream.offset(), marker);
                 return false;
             }
             break;
@@ -1242,9 +1182,7 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
         last_byte = current_byte;
         stream >> current_byte;
         if (stream.handle_any_error()) {
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << ": EOI not found!";
-#endif
+            dbgln<debug_jpg>("{}: EOI not found!", stream.offset());
             return false;
         }
 
@@ -1268,9 +1206,7 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
                     return false;
                 continue;
             }
-#ifdef JPG_DEBUG
-            dbg() << stream.offset() << String::format(": Invalid marker: %x!", marker);
-#endif
+            dbgln<debug_jpg>("{}: Invalid marker: {:x}!", stream.offset(), marker);
             return false;
         } else {
             context.huffman_stream.stream.append(last_byte);
@@ -1291,9 +1227,7 @@ static bool decode_jpg(JPGLoadingContext& context)
 
     auto result = decode_huffman_stream(context);
     if (!result.has_value()) {
-#ifdef JPG_DEBUG
-        dbg() << stream.offset() << ": Failed to decode Macroblocks!";
-#endif
+        dbgln<debug_jpg>("{}: Failed to decode Macroblocks!", stream.offset());
         return false;
     }
 
