@@ -27,7 +27,6 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
-#include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>

@@ -26,7 +26,6 @@
 
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>
-#include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>

@@ -29,7 +29,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/SharedBuffer.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>

@@ -25,7 +25,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/DragOperation.h>

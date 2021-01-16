@@ -25,7 +25,6 @@
  */
 
 #include <AK/FileStream.h>
-#include <AK/SharedBuffer.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 

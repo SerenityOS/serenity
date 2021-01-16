@@ -26,7 +26,6 @@
 
 #include "DownloadWidget.h"
 #include <AK/NumberFormat.h>
-#include <AK/SharedBuffer.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>

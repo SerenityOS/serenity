@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/SharedBuffer.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 
