@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
@@ -61,11 +62,11 @@ void HTMLLinkElement::resource_did_load()
     if (!resource()->has_encoded_data())
         return;
 
-    dbg() << "HTMLLinkElement: Resource did load, looks good! " << href();
+    dbgln("HTMLLinkElement: Resource did load, looks good! {}", href());
 
     auto sheet = parse_css(CSS::ParsingContext(document()), resource()->encoded_data());
     if (!sheet) {
-        dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
+        dbgln("HTMLLinkElement: Failed to parse stylesheet: {}", href());
         return;
     }
 

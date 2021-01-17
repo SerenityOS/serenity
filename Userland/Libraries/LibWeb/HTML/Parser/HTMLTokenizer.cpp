@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/Parser/Entities.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
@@ -35,12 +36,10 @@ namespace Web::HTML {
 
 #pragma GCC diagnostic ignored "-Wunused-label"
 
-//#define TOKENIZER_TRACE
-
 #ifdef TOKENIZER_TRACE
-#    define PARSE_ERROR()                                                                      \
-        do {                                                                                   \
-            dbg() << "Parse error (tokenization)" << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
+#    define PARSE_ERROR()                                                              \
+        do {                                                                           \
+            dbgln("Parse error (tokenization) {} @ {}", __PRETTY_FUNCTION__, __LINE__) \
         } while (0)
 #else
 #    define PARSE_ERROR()
@@ -222,9 +221,7 @@ Optional<u32> HTMLTokenizer::next_code_point()
         return {};
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
-#ifdef TOKENIZER_TRACE
-    dbg() << "(Tokenizer) Next code_point: " << (char)*m_prev_utf8_iterator;
-#endif
+    dbgln<debug_trace_tokenizer>("(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
@@ -2621,23 +2618,17 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 {
-#ifdef TOKENIZER_TRACE
-    dbg() << "[" << state_name(m_state) << "] Switch to " << state_name(new_state);
-#endif
+    dbgln<debug_trace_tokenizer>("[{}] Switch to {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 {
-#ifdef TOKENIZER_TRACE
-    dbg() << "[" << state_name(m_state) << "] Reconsume in " << state_name(new_state);
-#endif
+    dbgln<debug_trace_tokenizer>("[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::switch_to(Badge<HTMLDocumentParser>, State new_state)
 {
-#ifdef TOKENIZER_TRACE
-    dbg() << "[" << state_name(m_state) << "] Parser switches tokenizer state to " << state_name(new_state);
-#endif
+    dbgln<debug_trace_tokenizer>("[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
     m_state = new_state;
 }
 
