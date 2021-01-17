@@ -565,6 +565,38 @@ using MakeIntegerSequence = decltype(make_integer_sequence_impl<T, N>());
 template<unsigned N>
 using MakeIndexSequence = MakeIntegerSequence<unsigned, N>;
 
+template<unsigned long N>
+struct StringLiteral {
+    constexpr StringLiteral(const char (&in)[N])
+        : data {}
+        , size { N }
+    {
+        for (unsigned long i = 0; i < N; ++i)
+            data[i] = in[i];
+    }
+
+    template<unsigned long Nx>
+    constexpr StringLiteral& operator=(const StringLiteral<Nx>& other)
+    {
+        static_assert(Nx <= N, "Storing a string literal in a smaller one");
+        for (unsigned long i = 0; i < Nx; ++i)
+            data[i] = other[i];
+        return *this;
+    }
+
+    template<unsigned long Nx>
+    constexpr StringLiteral& operator=(const char (&other)[Nx])
+    {
+        static_assert(Nx <= N, "Storing a string literal in a smaller one");
+        for (unsigned long i = 0; i < Nx; ++i)
+            data[i] = other[i];
+        return *this;
+    }
+
+    char data[N];
+    unsigned long size;
+};
+
 }
 
 using AK::AddConst;
@@ -597,5 +629,6 @@ using AK::max;
 using AK::min;
 using AK::move;
 using AK::RemoveConst;
+using AK::StringLiteral;
 using AK::swap;
 using AK::Void;
