@@ -112,7 +112,6 @@ enum ProcFileType {
     __FI_PID_Start,
     FI_PID_perf_events,
     FI_PID_vm,
-    FI_PID_vmobjects,
     FI_PID_stacks, // directory
     FI_PID_fds,
     FI_PID_unveil,
@@ -559,40 +558,6 @@ static bool procfs$net_local(InodeIdentifier, KBufferBuilder& builder)
         obj.add("acceptor_gid", socket.acceptor_gid());
     });
     array.finish();
-    return true;
-}
-
-static bool procfs$pid_vmobjects(InodeIdentifier identifier, KBufferBuilder& builder)
-{
-    auto process = Process::from_pid(to_pid(identifier));
-    if (!process)
-        return false;
-    builder.appendf("BEGIN       END         SIZE        NAME\n");
-    {
-        ScopedSpinLock lock(process->get_lock());
-        for (auto& region : process->regions()) {
-            builder.appendf("%x -- %x    %x    %s\n",
-                region.vaddr().get(),
-                region.vaddr().offset(region.size() - 1).get(),
-                region.size(),
-                region.name().characters());
-            builder.appendf("VMO: %s @ %x(%u)\n",
-                region.vmobject().is_anonymous() ? "anonymous" : "file-backed",
-                &region.vmobject(),
-                region.vmobject().ref_count());
-            for (size_t i = 0; i < region.vmobject().page_count(); ++i) {
-                auto& physical_page = region.vmobject().physical_pages()[i];
-                bool should_cow = false;
-                if (i >= region.first_page_index() && i <= region.last_page_index())
-                    should_cow = region.should_cow(i - region.first_page_index());
-                builder.appendf("P%x%s(%u) ",
-                    physical_page ? physical_page->paddr().get() : 0,
-                    should_cow ? "!" : "",
-                    physical_page ? physical_page->ref_count() : 0);
-            }
-            builder.appendf("\n");
-        }
-    }
     return true;
 }
 
@@ -1688,7 +1653,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, false, procfs$net_local };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, false, procfs$pid_vm };
-    m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, true, procfs$pid_vmobjects };
     m_entries[FI_PID_stacks] = { "stacks", FI_PID_stacks, false };
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
