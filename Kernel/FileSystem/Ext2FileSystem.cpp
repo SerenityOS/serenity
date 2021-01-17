@@ -531,28 +531,29 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     dbgln("Ext2FS: Inode {} has no more links, time to delete!", inode.index());
 #endif
 
+    // Mark all blocks used by this inode as free.
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
-
     for (auto block_index : block_list) {
         ASSERT(block_index <= super_block().s_blocks_count);
         if (block_index)
             set_block_allocation_state(block_index, false);
     }
 
-    struct timeval now;
-    kgettimeofday(now);
-    memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
-    inode.m_raw_inode.i_dtime = now.tv_sec;
-    write_ext2_inode(inode.index(), inode.m_raw_inode);
-
-    set_inode_allocation_state(inode.index(), false);
-
+    // If the inode being freed is a directory, update block group directory counter.
     if (inode.is_directory()) {
         auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode.index())));
         --bgd.bg_used_dirs_count;
         dbgln("Ext2FS: Decremented bg_used_dirs_count to {}", bgd.bg_used_dirs_count);
         m_block_group_descriptors_dirty = true;
     }
+
+    // NOTE: After this point, the inode metadata is wiped.
+    memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
+    inode.m_raw_inode.i_dtime = kgettimeofday().tv_sec;
+    write_ext2_inode(inode.index(), inode.m_raw_inode);
+
+    // Mark the inode as free.
+    set_inode_allocation_state(inode.index(), false);
 }
 
 void Ext2FS::flush_block_group_descriptor_table()
