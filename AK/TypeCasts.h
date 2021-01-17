@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in input and binary forms, with or without
@@ -26,24 +26,28 @@
 
 #pragma once
 
+#include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
 namespace AK {
 
 template<typename OutputType, typename InputType>
-inline bool is(InputType& input)
+ALWAYS_INLINE bool is(InputType& input)
 {
+    if constexpr (requires { input.template fast_is<OutputType>(); }) {
+        return input.template fast_is<OutputType>();
+    }
     return dynamic_cast<CopyConst<InputType, OutputType>*>(&input);
 }
 
 template<typename OutputType, typename InputType>
-inline bool is(InputType* input)
+ALWAYS_INLINE bool is(InputType* input)
 {
     return input && is<OutputType>(*input);
 }
 
 template<typename OutputType, typename InputType>
-inline CopyConst<InputType, OutputType>* downcast(InputType* input)
+ALWAYS_INLINE CopyConst<InputType, OutputType>* downcast(InputType* input)
 {
     static_assert(IsBaseOf<InputType, OutputType>::value);
     ASSERT(!input || is<OutputType>(*input));
@@ -51,7 +55,7 @@ inline CopyConst<InputType, OutputType>* downcast(InputType* input)
 }
 
 template<typename OutputType, typename InputType>
-inline CopyConst<InputType, OutputType>& downcast(InputType& input)
+ALWAYS_INLINE CopyConst<InputType, OutputType>& downcast(InputType& input)
 {
     static_assert(IsBaseOf<InputType, OutputType>::value);
     ASSERT(is<OutputType>(input));
