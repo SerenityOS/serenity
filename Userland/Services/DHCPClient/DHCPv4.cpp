@@ -25,8 +25,7 @@
  */
 
 #include "DHCPv4.h"
-
-//#define DHCPV4_DEBUG
+#include <AK/Debug.h>
 
 ParsedDHCPv4Options DHCPv4Packet::parse_options() const
 {
@@ -42,12 +41,10 @@ ParsedDHCPv4Options DHCPv4Packet::parse_options() const
             ++index;
             auto length = m_options[index];
             if ((size_t)length > DHCPV4_OPTION_FIELD_MAX_LENGTH - index) {
-                dbg() << "Bogus option length " << length << " assuming forgotten END";
+                dbgln("Bogus option length {} assuming forgotten END", length);
                 break;
             }
-#ifdef DHCPV4_DEBUG
-            dbg() << "DHCP Option " << (u8)opt_name << " with length " << length;
-#endif
+            dbgln<debug_dhcpv4>("DHCP Option {} with length {}", (u8)opt_name, length);
             ++index;
             options.options.set(opt_name, { length, &m_options[index] });
             index += length - 1;

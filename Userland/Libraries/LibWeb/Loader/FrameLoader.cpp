@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
@@ -38,8 +39,6 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
-
-//#define GEMINI_DEBUG 1
 
 namespace Web {
 
@@ -180,14 +179,14 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
         ResourceLoader::the().load(
             favicon_url,
             [this, favicon_url](auto data, auto&) {
-                dbg() << "Favicon downloaded, " << data.size() << " bytes from " << favicon_url;
+                dbgln("Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
                 auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
                 auto bitmap = decoder->bitmap();
                 if (!bitmap) {
-                    dbg() << "Could not decode favicon " << favicon_url;
+                    dbgln("Could not decode favicon {}", favicon_url);
                     return;
                 }
-                dbg() << "Decoded favicon, " << bitmap->size();
+                dbgln("Decoded favicon, {}", bitmap->size());
                 if (auto* page = frame().page())
                     page->client().page_did_change_favicon(*bitmap);
             });
@@ -198,7 +197,7 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 
 bool FrameLoader::load(const URL& url, Type type)
 {
-    dbg() << "FrameLoader::load: " << url;
+    dbgln("FrameLoader::load: {}", url);
 
     if (!url.is_valid()) {
         load_error_page(url, "Invalid URL");
@@ -240,7 +239,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             frame().set_document(document);
         },
         [](auto error) {
-            dbg() << "Failed to load error page: " << error;
+            dbgln("Failed to load error page: {}", error);
             ASSERT_NOT_REACHED();
         });
 }

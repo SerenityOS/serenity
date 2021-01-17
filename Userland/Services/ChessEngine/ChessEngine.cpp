@@ -26,6 +26,7 @@
 
 #include "ChessEngine.h"
 #include "MCTSTree.h"
+#include <AK/Debug.h>
 #include <LibCore/ElapsedTimer.h>
 
 using namespace Chess::UCI;
@@ -68,9 +69,9 @@ void ChessEngine::handle_go(const GoCommand& command)
         mcts.do_round();
         ++rounds;
     }
-    dbg() << "MCTS finished " << rounds << " rounds.";
-    dbg() << "MCTS evaluation " << mcts.expected_value();
+    dbgln("MCTS finished {} rounds.", rounds);
+    dbgln("MCTS evaluation {}", mcts.expected_value());
     auto best_move = mcts.best_move();
-    dbg() << "MCTS best move " << best_move.to_long_algebraic();
+    dbgln("MCTS best move {}", best_move.to_long_algebraic());
     send_command(BestMoveCommand(best_move));
 }

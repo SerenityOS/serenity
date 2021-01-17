@@ -25,6 +25,7 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -34,8 +35,6 @@
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-
-//#define CACHE_DEBUG
 
 namespace Web {
 
@@ -82,11 +81,9 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     auto it = s_resource_cache.find(request);
     if (it != s_resource_cache.end()) {
         if (it->value->type() != type) {
-            dbg() << "FIXME: Not using cached resource for " << request.url() << " since there's a type mismatch.";
+            dbgln("FIXME: Not using cached resource for {} since there's a type mismatch.", request.url());
         } else {
-#ifdef CACHE_DEBUG
-            dbg() << "Reusing cached resource for: " << request.url();
-#endif
+            dbgln<debug_cache>("Reusing cached resource for: {}", request.url());
             return it->value;
         }
     }
@@ -112,7 +109,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     auto& url = request.url();
 
     if (is_port_blocked(url.port())) {
-        dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
+        dbgln("ResourceLoader::load: Error: blocked port {} from URL {}", url.port(), url);
         return;
     }
 
@@ -123,7 +120,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (url.protocol() == "about") {
-        dbg() << "Loading about: URL " << url;
+        dbgln("Loading about: URL {}", url);
         deferred_invoke([success_callback = move(success_callback)](auto&) {
             success_callback(String::empty().to_byte_buffer(), {});
         });
@@ -131,7 +128,10 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (url.protocol() == "data") {
-        dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.data_mime_type() << "', base64=" << url.data_payload_is_base64() << ", payload='" << url.data_payload() << "'";
+        dbgln("ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
+            url.data_mime_type(),
+            url.data_payload_is_base64(),
+            url.data_payload());
 
         ByteBuffer data;
         if (url.data_payload_is_base64())
@@ -149,7 +149,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         auto f = Core::File::construct();
         f->set_filename(url.path());
         if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
-            dbg() << "ResourceLoader::load: Error: " << f->error_string();
+            dbgln("ResourceLoader::load: Error: {}", f->error_string());
             if (error_callback)
                 error_callback(f->error_string());
             return;

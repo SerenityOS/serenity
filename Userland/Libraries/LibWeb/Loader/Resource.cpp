@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibCore/MimeData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -99,9 +100,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
-#ifdef RESOURCE_DEBUG
-        dbg() << "This is a data URL with mime-type _" << url().data_mime_type() << "_";
-#endif
+        dbgln<debug_resource>("This is a data URL with mime-type _{}_", url().data_mime_type());
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {

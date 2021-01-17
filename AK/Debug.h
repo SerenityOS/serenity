@@ -442,3 +442,32 @@ constexpr bool debug_trace_tokenizer = true;
 constexpr bool debug_trace_tokenizer = false;
 #endif
 
+#ifdef IMAGE_LOADER_DEBUG
+constexpr bool debug_image_loader = true;
+#else
+constexpr bool debug_image_loader = false;
+#endif
+
+#ifdef RESOURCE_DEBUG
+constexpr bool debug_resource = true;
+#else
+constexpr bool debug_resource = false;
+#endif
+
+#ifdef CACHE_DEBUG
+constexpr bool debug_cache = true;
+#else
+constexpr bool debug_cache = false;
+#endif
+
+#ifdef DHCPV4_DEBUG
+constexpr bool debug_dhcpv4 = true;
+#else
+constexpr bool debug_dhcpv4 = false;
+#endif
+
+#ifdef DHCPV4CLIENT_DEBUG
+constexpr bool debug_dhcpv4_client = true;
+#else
+constexpr bool debug_dhcpv4_client = false;
+#endif
