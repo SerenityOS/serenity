@@ -60,11 +60,10 @@ Canvas::Canvas()
     m_bitmap_1x = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
     m_bitmap_2x = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH * 2, HEIGHT * 2 });
 
-    Gfx::Painter painter_1x(*m_bitmap_1x);
+    Gfx::Painter painter_1x(*m_bitmap_1x, 1);
     draw(painter_1x);
 
-    Gfx::Painter painter_2x(*m_bitmap_2x);
-    painter_2x.scale(2);
+    Gfx::Painter painter_2x(*m_bitmap_2x, 2);
     draw(painter_2x);
 
     update();

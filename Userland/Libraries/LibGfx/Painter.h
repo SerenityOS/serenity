@@ -41,7 +41,7 @@ namespace Gfx {
 
 class Painter {
 public:
-    explicit Painter(Gfx::Bitmap&);
+    explicit Painter(Gfx::Bitmap&, int scale = 1);
     ~Painter();
 
     enum class LineStyle {
@@ -119,7 +119,6 @@ public:
 
     void translate(int dx, int dy) { translate({ dx, dy }); }
     void translate(const IntPoint& delta) { state().translation.move_by(delta * state().scale); }
-    void scale(int s) { state().scale *= s; }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 

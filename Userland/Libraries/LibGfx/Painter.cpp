@@ -68,13 +68,16 @@ ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
     return bitmap.get_pixel(x, y);
 }
 
-Painter::Painter(Gfx::Bitmap& bitmap)
+Painter::Painter(Gfx::Bitmap& bitmap, int scale)
     : m_target(bitmap)
 {
     ASSERT(bitmap.format() == Gfx::BitmapFormat::RGB32 || bitmap.format() == Gfx::BitmapFormat::RGBA32);
+    ASSERT(bitmap.width() % scale == 0);
+    ASSERT(bitmap.height() % scale == 0);
     m_state_stack.append(State());
     state().font = &FontDatabase::default_font();
     state().clip_rect = { { 0, 0 }, bitmap.size() };
+    state().scale = scale;
     m_clip_origin = state().clip_rect;
 }
 
