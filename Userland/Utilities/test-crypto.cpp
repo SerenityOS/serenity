@@ -1832,7 +1832,7 @@ static void rsa_test_encrypt()
         if (memcmp(buf.data(), "hellohellohellohellohellohellohellohellohello123-", 49))
             FAIL(Invalid encryption);
         else {
-            dbg() << "out size " << buf.size() << " values: " << StringView { (char*)buf.data(), buf.size() };
+            dbgln("out size {} values {}", buf.size(), StringView { (char*)buf.data(), buf.size() });
 
             PASS;
         }
@@ -1999,7 +1999,8 @@ static void rsa_test_encrypt_decrypt()
         "9527497237087650398000977129550904920919162360737979403539302312977329868395261515707123424679295515888026193056908173564681660256268221509339074678416049"_bigint,
         "39542231845947188736992321577701849924317746648774438832456325878966594812143638244746284968851807975097653255909707366086606867657273809465195392910913"_bigint,
         "65537"_bigint);
-    dbg() << "Output size: " << rsa.output_size();
+
+    dbgln("Output size: {}", rsa.output_size());
 
     u8 enc_buffer[rsa.output_size()];
     u8 dec_buffer[rsa.output_size()];
@@ -2012,7 +2013,7 @@ static void rsa_test_encrypt_decrypt()
     rsa.encrypt(enc, dec);
     rsa.decrypt(dec, enc);
 
-    dbg() << "enc size " << enc.size() << " dec size " << dec.size();
+    dbgln("enc size {} dec size {}", enc.size(), dec.size());
 
     if (memcmp(enc.data(), "WellHelloFriendsWellHelloFriendsWellHelloFriendsWellHelloFriends", 64) != 0) {
         FAIL(Could not encrypt then decrypt);
