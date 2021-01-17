@@ -433,7 +433,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
         dbgln<DYNAMIC_LOAD_DEBUG>("Load address relocation at offset {:#08x}", relocation.offset());
-        dbgln<DYNAMIC_LOAD_DEBUG>("    patch ptr == %p, adding load base address ({:p}) to it and storing {:p}", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
+        dbgln<DYNAMIC_LOAD_DEBUG>("    patch ptr == {:p}, adding load base address ({:p}) to it and storing {:p}", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
         *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
         break;
     }

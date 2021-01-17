@@ -133,7 +133,7 @@ u32 FutexQueue::wake_all(bool& is_empty)
         ASSERT(data);
         ASSERT(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
-        dbgln<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_all unblocking", this, *static_cast<Thread*>(data));
+        dbgln<FUTEXQUEUE_DEBUG>("FutexQueue @ {}: wake_all unblocking {}", this, *static_cast<Thread*>(data));
         if (blocker.unblock(true)) {
             did_wake++;
             return true;
