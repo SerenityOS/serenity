@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
@@ -36,8 +37,6 @@
 #ifndef SOCK_NONBLOCK
 #    include <sys/ioctl.h>
 #endif
-
-//#define TLS_DEBUG
 
 namespace {
 struct OIDChain {
@@ -407,9 +406,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
             hash.initialize(Crypto::Hash::HashKind::SHA512);
             break;
         default:
-#ifdef TLS_DEBUG
-            dbg() << "Unsupported hash mode " << (u32)cert.key_algorithm;
-#endif
+            dbgln<debug_tls>("Unsupported hash mode {}", (u32)cert.key_algorithm);
             // fallback to md5, it will fail later
             hash.initialize(Crypto::Hash::HashKind::MD5);
             break;
@@ -439,9 +436,7 @@ Optional<Certificate> TLSv12::parse_asn1(ReadonlyBytes buffer, bool) const
 
     _parse_asn1(m_context, cert, buffer.data(), buffer.size(), 1, fields, nullptr, 0, nullptr, nullptr);
 
-#ifdef TLS_DEBUG
-    dbg() << "Certificate issued for " << cert.subject << " by " << cert.issuer_subject;
-#endif
+    dbgln<debug_tls>("Certificate issued for {} by {}", cert.subject, cert.issuer_subject);
 
     return cert;
 }
@@ -459,9 +454,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
     u32 certificate_total_length = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
 
-#ifdef TLS_DEBUG
-    dbg() << "total length: " << certificate_total_length;
-#endif
+    dbgln<debug_tls>("total length: {}", certificate_total_length);
 
     if (certificate_total_length <= 4)
         return 3 * certificate_total_length;
@@ -508,7 +501,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
             }
             ++certificates_in_chain;
             if (buffer.size() < (size_t)res_cert + 3) {
-                dbg() << "not enough data to read cert size (" << buffer.size() << " < " << res_cert + 3 << ")";
+                dbgln("not enough data to read cert size ({} < {})", buffer.size(), res_cert + 3);
                 break;
             }
             size_t certificate_size_specific = buffer[res_cert] * 0x10000 + buffer[res_cert + 1] * 0x100 + buffer[res_cert + 2];
@@ -516,7 +509,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
             remaining -= 3;
 
             if (certificate_size_specific > remaining) {
-                dbg() << "invalid certificate size (expected " << remaining << " but got " << certificate_size_specific << ")";
+                dbgln("invalid certificate size (expected {} but got {})", remaining, certificate_size_specific);
                 break;
             }
             remaining -= certificate_size_specific;
@@ -531,7 +524,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
             res_cert += certificate_size_specific;
         } while (remaining > 0);
         if (remaining) {
-            dbg() << "extraneous " << remaining << " bytes left over after parsing certificates";
+            dbgln("extraneous {} bytes left over after parsing certificates", remaining);
         }
         size -= certificate_size + 3;
         res += certificate_size;
@@ -540,7 +533,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
         return (i8)Error::UnsupportedCertificate;
 
     if ((size_t)res != buffer.size())
-        dbg() << "some data left unread: " << (size_t)res << " bytes out of " << buffer.size();
+        dbgln("some data left unread: {} bytes out of {}", res, buffer.size());
 
     return res;
 }
@@ -548,7 +541,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 void TLSv12::consume(ReadonlyBytes record)
 {
     if (m_context.critical_error) {
-        dbg() << "There has been a critical error (" << (i8)m_context.critical_error << "), refusing to continue";
+        dbgln("There has been a critical error ({}), refusing to continue", (i8)m_context.critical_error);
         return;
     }
 
@@ -556,9 +549,7 @@ void TLSv12::consume(ReadonlyBytes record)
         return;
     }
 
-#ifdef TLS_DEBUG
-    dbg() << "Consuming " << record.size() << " bytes";
-#endif
+    dbgln<debug_tls>("Consuming {} bytes", record.size());
 
     m_context.message_buffer.append(record.data(), record.size());
 
@@ -567,29 +558,27 @@ void TLSv12::consume(ReadonlyBytes record)
 
     size_t size_offset { 3 }; // read the common record header
     size_t header_size { 5 };
-#ifdef TLS_DEBUG
-    dbg() << "message buffer length " << buffer_length;
-#endif
+
+    dbgln<debug_tls>("message buffer length {}", buffer_length);
+
     while (buffer_length >= 5) {
         auto length = AK::convert_between_host_and_network_endian(*(u16*)m_context.message_buffer.offset_pointer(index + size_offset)) + header_size;
         if (length > buffer_length) {
-#ifdef TLS_DEBUG
-            dbg() << "Need more data: " << length << " | " << buffer_length;
-#endif
+            dbgln<debug_tls>("Need more data: {} > {}", length, buffer_length);
             break;
         }
         auto consumed = handle_message(m_context.message_buffer.bytes().slice(index, length));
 
-#ifdef TLS_DEBUG
-        if (consumed > 0)
-            dbg() << "consumed " << (size_t)consumed << " bytes";
-        else
-            dbg() << "error: " << (int)consumed;
-#endif
+        if constexpr (debug_tls) {
+            if (consumed > 0)
+                dbgln("consumed {} bytes", consumed);
+            else
+                dbgln("error: {}", consumed);
+        }
 
         if (consumed != (i8)Error::NeedMoreData) {
             if (consumed < 0) {
-                dbg() << "Consumed an error: " << (int)consumed;
+                dbgln("Consumed an error: {}", consumed);
                 if (!m_context.critical_error)
                     m_context.critical_error = (i8)consumed;
                 m_context.error_code = (Error)consumed;
@@ -608,7 +597,7 @@ void TLSv12::consume(ReadonlyBytes record)
         }
     }
     if (m_context.error_code != Error::NoError && m_context.error_code != Error::NeedMoreData) {
-        dbg() << "consume error: " << (i8)m_context.error_code;
+        dbgln("consume error: {}", (i8)m_context.error_code);
         m_context.message_buffer.clear();
         return;
     }
@@ -639,7 +628,7 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
         hash_kind = Crypto::Hash::HashKind::SHA512;
         break;
     default:
-        dbg() << "Failed to find a suitable hash for size " << digest_size;
+        dbgln("Failed to find a suitable hash for size {}", digest_size);
         break;
     }
 
@@ -656,14 +645,14 @@ bool Certificate::is_valid() const
 
     if (!not_before.is_empty()) {
         if (now.is_before(not_before)) {
-            dbg() << "certificate expired (not yet valid, signed for " << not_before << ")";
+            dbgln("certificate expired (not yet valid, signed for {})", not_before);
             return false;
         }
     }
 
     if (!not_after.is_empty()) {
         if (!now.is_before(not_after)) {
-            dbg() << "certificate expired (expiry date " << not_after << ")";
+            dbgln("certificate expired (expiry date {})", not_after);
             return false;
         }
     }
@@ -677,13 +666,13 @@ void TLSv12::try_disambiguate_error() const
     switch ((AlertDescription)m_context.critical_error) {
     case AlertDescription::HandshakeFailure:
         if (!m_context.cipher_spec_set) {
-            dbg() << "- No cipher suite in common with " << m_context.SNI;
+            dbgln("- No cipher suite in common with {}", m_context.SNI);
         } else {
             dbgln("- Unknown internal issue");
         }
         break;
     case AlertDescription::InsufficientSecurity:
-        dbg() << "- No cipher suite in common with " << m_context.SNI << " (the server is oh so secure)";
+        dbgln("- No cipher suite in common with {} (the server is oh so secure)", m_context.SNI);
         break;
     case AlertDescription::ProtocolVersion:
         dbgln("- The server refused to negotiate with TLS 1.2 :(");
@@ -739,7 +728,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 
     for (auto& cert : certificates) {
         if (!cert.is_valid())
-            dbg() << "Certificate for " << cert.subject << " by " << cert.issuer_subject << " is invalid, things may or may not work!";
+            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject, cert.issuer_subject);
         // FIXME: Figure out what we should do when our root certs are invalid.
     }
     m_context.root_ceritificates = move(certificates);
@@ -774,18 +763,18 @@ bool Context::verify_chain() const
     for (auto& it : chain) {
         if (it.key == it.value) { // Allow self-signed certificates.
             if (!roots.contains(it.key))
-                dbg() << "Self-signed warning: Certificate for " << it.key << " is self-signed";
+                dbgln("Self-signed warning: Certificate for {} is self-signed", it.key);
             continue;
         }
 
         auto ref = chain.get(it.value);
         if (!ref.has_value()) {
-            dbg() << "Certificate for " << it.key << " is not signed by anyone we trust (" << it.value << ")";
+            dbgln("Certificate for {} is not signed by anyone we trust ({})", it.key, it.value);
             return false;
         }
 
         if (ref.value() == it.key) // Allow (but warn about) mutually recursively signed cert A <-> B.
-            dbg() << "Co-dependency warning: Certificate for " << ref.value() << " is issued by " << it.key << ", which itself is issued by " << ref.value();
+            dbgln("Co-dependency warning: Certificate for {} is issued by {}, which itself is issued by {}", ref.value(), it.key, ref.value());
     }
 
     return true;

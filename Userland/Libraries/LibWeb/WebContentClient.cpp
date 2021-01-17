@@ -26,6 +26,7 @@
 
 #include "WebContentClient.h"
 #include "OutOfProcessWebView.h"
+#include <AK/Debug.h>
 
 namespace Web {
 
@@ -55,9 +56,7 @@ void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient:
 
 void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateContentRect& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidInvalidateContentRect! content_rect=" << message.content_rect();
-#endif
+    dbgln<debug_spam>("handle: WebContentClient::DidInvalidateContentRect! content_rect={}", message.content_rect());
 
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
     m_view.notify_server_did_invalidate_content_rect({}, message.content_rect());
@@ -73,33 +72,25 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelecti
 
 void WebContentClient::handle(const Messages::WebContentClient::DidLayout& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidLayout! content_size=" << message.content_size();
-#endif
+    dbgln<debug_spam>("handle: WebContentClient::DidLayout! content_size={}", message.content_size());
     m_view.notify_server_did_layout({}, message.content_size());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidChangeTitle& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidChangeTitle! title=" << message.title();
-#endif
+    dbgln<debug_spam>("handle: WebContentClient::DidChangeTitle! title={}", message.title());
     m_view.notify_server_did_change_title({}, message.title());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidRequestScrollIntoView& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidRequestScrollIntoView! rect=" << message.rect();
-#endif
+    dbgln<debug_spam>("handle: WebContentClient::DidRequestScrollIntoView! rect={}", message.rect());
     m_view.notify_server_did_request_scroll_into_view({}, message.rect());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidHoverLink& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentClient::DidHoverLink! url=" << message.url();
-#endif
+    dbgln<debug_spam>("handle: WebContentClient::DidHoverLink! url={}", message.url());
     m_view.notify_server_did_hover_link({}, message.url());
 }
 

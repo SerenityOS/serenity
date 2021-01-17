@@ -26,6 +26,7 @@
 
 //#define PARSER_DEBUG
 
+#include <AK/Debug.h>
 #include <AK/Utf32View.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Comment.h>
@@ -47,9 +48,9 @@
 
 namespace Web::HTML {
 
-#define PARSE_ERROR()                                                         \
-    do {                                                                      \
-        dbg() << "Parse error! " << __PRETTY_FUNCTION__ << " @ " << __LINE__; \
+#define PARSE_ERROR()                                                 \
+    do {                                                              \
+        dbgln("Parse error! {} @ {}", __PRETTY_FUNCTION__, __LINE__); \
     } while (0)
 
 static Vector<FlyString> s_quirks_public_ids = {
@@ -142,9 +143,8 @@ void HTMLDocumentParser::run(const URL& url)
             break;
         auto& token = optional_token.value();
 
-#ifdef PARSER_DEBUG
-        dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
-#endif
+        dbgln<debug_parser>("[{}] {}", insertion_mode_name(), token.to_string());
+
         // FIXME: If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
         // FIXME: If the adjusted current node is a MathML text integration point and the token is a character token
         // FIXME: If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
@@ -159,9 +159,7 @@ void HTMLDocumentParser::run(const URL& url)
         }
 
         if (m_stop_parsing) {
-#ifdef PARSER_DEBUG
-            dbg() << "Stop parsing" << (m_parsing_fragment ? " fragment" : "") << "! :^)";
-#endif
+            dbgln<debug_parser>("Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
             break;
         }
     }
@@ -1407,7 +1405,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         generate_implied_end_tags(HTML::TagNames::li);
         if (current_node().local_name() != HTML::TagNames::li) {
             PARSE_ERROR();
-            dbg() << "Expected <li> current node, but had <" << current_node().local_name() << ">";
+            dbgln("Expected <li> current node, but had <{}>", current_node().local_name());
         }
         m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::li);
         return;

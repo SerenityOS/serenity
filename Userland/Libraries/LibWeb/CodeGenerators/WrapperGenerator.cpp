@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
@@ -373,23 +374,30 @@ int main(int argc, char** argv)
         interface->fully_qualified_name = interface->name;
     }
 
-#if 0
-    dbgln("Attributes:");
-    for (auto& attribute : interface->attributes) {
-        dbg() << "  " << (attribute.readonly ? "Readonly " : "")
-              << attribute.type.name << (attribute.type.nullable ? "?" : "")
-              << " " << attribute.name;
-    }
+    if constexpr (debug_wrapper_generator) {
+        dbgln("Attributes:");
+        for (auto& attribute : interface->attributes) {
+            dbgln("  {}{}{} {}",
+                attribute.readonly ? "readonly " : "",
+                attribute.type.name,
+                attribute.type.nullable ? "?" : "",
+                attribute.name);
+        }
 
-    dbgln("Functions:");
-    for (auto& function : interface->functions) {
-        dbg() << "  " << function.return_type.name << (function.return_type.nullable ? "?" : "")
-              << " " << function.name;
-        for (auto& parameter : function.parameters) {
-            dbg() << "    " << parameter.type.name << (parameter.type.nullable ? "?" : "") << " " << parameter.name;
+        dbgln("Functions:");
+        for (auto& function : interface->functions) {
+            dbgln("  {}{} {}",
+                function.return_type.name,
+                function.return_type.nullable ? "?" : "",
+                function.name);
+            for (auto& parameter : function.parameters) {
+                dbgln("    {}{} {}",
+                    parameter.type.name,
+                    parameter.type.nullable ? "?" : "",
+                    parameter.name);
+            }
         }
     }
-#endif
 
     if (header_mode)
         generate_header(*interface);
