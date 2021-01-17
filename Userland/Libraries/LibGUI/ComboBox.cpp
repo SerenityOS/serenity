@@ -216,8 +216,6 @@ void ComboBox::open()
     if (!model())
         return;
 
-    auto my_screen_rect = screen_relative_rect();
-
     int longest_item_width = 0;
     for (int i = 0; i < model()->row_count(); ++i) {
         auto index = model()->index(i);
@@ -229,14 +227,6 @@ void ComboBox::open()
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
-    auto taskbar_height = GUI::Desktop::the().taskbar_height();
-    auto menubar_height = GUI::Desktop::the().menubar_height();
-    // NOTE: This is so the combobox bottom edge exactly fits the taskbar's
-    //       top edge - the value was found through trial and error though.
-    auto offset = 8;
-    Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
-    list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height + menubar_height + offset));
-
     m_editor->set_has_visible_list(true);
     m_editor->set_focus(true);
     if (m_selected_index.has_value()) {
@@ -244,7 +234,11 @@ void ComboBox::open()
         // change the list view's selected item without triggering a change to it.
         m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
     }
-    m_list_window->set_rect(list_window_rect);
+
+    auto my_screen_rect = screen_relative_rect();
+    auto ideal_rect = Desktop::the().calculate_ideal_visible_rect(size, my_screen_rect, { { Gfx::IntRect::Side::Bottom, Desktop::RectAlignment::LeftOrTop }, { Gfx::IntRect::Side::Top, Desktop::RectAlignment::LeftOrTop } }, true);
+    m_list_window->set_rect(ideal_rect);
+    dbgln("calculate visible for size {} excluding rect {} -> {}", size, my_screen_rect, ideal_rect);
     m_list_window->show();
 }
 

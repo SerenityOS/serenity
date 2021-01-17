@@ -45,6 +45,17 @@ public:
     String wallpaper() const;
     bool set_wallpaper(const StringView& path, bool save_config = true);
 
+    enum class RectAlignment {
+        Center = 0,
+        LeftOrTop,
+        RightOrBottom
+    };
+    struct SideWithAlignment {
+        Gfx::IntRect::Side side { Gfx::IntRect::Side::None };
+        RectAlignment alignment { RectAlignment::Center };
+    };
+    Gfx::IntRect calculate_ideal_visible_rect(const Gfx::IntSize&, const Gfx::IntRect&, const Vector<SideWithAlignment>& = {}, bool = true) const;
+
     u32 primary_screen() const { return m_primary_screen; }
     const Vector<Gfx::IntRect, 1>& rects() const { return m_rects; }
     Gfx::IntRect rect() const { return !m_rects.is_empty() ? m_rects[m_primary_screen] : Gfx::IntRect {}; }
@@ -57,6 +68,10 @@ public:
     Function<void(const Vector<Gfx::IntRect>&, u32)> on_rects_change;
 
 private:
+    Gfx::IntRect get_screen_rect(size_t) const;
+    int calculate_screen_area(size_t, const Gfx::IntRect&, bool) const;
+    size_t find_best_screen(const Gfx::IntRect&, bool) const;
+
     Vector<Gfx::IntRect, 1> m_rects;
     u32 m_primary_screen { 0 };
 };
