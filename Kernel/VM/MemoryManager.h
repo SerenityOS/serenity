@@ -87,7 +87,6 @@ class MemoryManager {
     friend class AnonymousVMObject;
     friend class Region;
     friend class VMObject;
-    friend OwnPtr<KBuffer> procfs$mm(InodeIdentifier);
     friend OwnPtr<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:

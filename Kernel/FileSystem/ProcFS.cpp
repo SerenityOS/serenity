@@ -81,7 +81,6 @@ enum ProcFileType {
     FI_Root = 1, // directory
 
     __FI_Root_Start,
-    FI_Root_mm,
     FI_Root_df,
     FI_Root_all,
     FI_Root_memstat,
@@ -667,25 +666,6 @@ static bool procfs$pid_root(InodeIdentifier identifier, KBufferBuilder& builder)
 static bool procfs$self(InodeIdentifier, KBufferBuilder& builder)
 {
     builder.appendf("%d", Process::current()->pid().value());
-    return true;
-}
-
-static bool procfs$mm(InodeIdentifier, KBufferBuilder& builder)
-{
-    InterruptDisabler disabler;
-    u32 vmobject_count = 0;
-    MemoryManager::for_each_vmobject([&](auto& vmobject) {
-        ++vmobject_count;
-        builder.appendf("VMObject: %p %s(%u): p:%4u\n",
-            &vmobject,
-            vmobject.is_anonymous() ? "anon" : "file",
-            vmobject.ref_count(),
-            vmobject.page_count());
-        return IterationDecision::Continue;
-    });
-    builder.appendf("VMO count: %u\n", vmobject_count);
-    builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());
-    builder.appendf("Free supervisor physical pages: %u\n", MM.super_physical_pages() - MM.super_physical_pages_used());
     return true;
 }
 
@@ -1685,7 +1665,6 @@ ProcFS::ProcFS()
 {
     m_root_inode = adopt(*new ProcFSInode(*this, 1));
     m_entries.resize(FI_MaxStaticFileIndex);
-    m_entries[FI_Root_mm] = { "mm", FI_Root_mm, true, procfs$mm };
     m_entries[FI_Root_df] = { "df", FI_Root_df, false, procfs$df };
     m_entries[FI_Root_all] = { "all", FI_Root_all, false, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, false, procfs$memstat };
