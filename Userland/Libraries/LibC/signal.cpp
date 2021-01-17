@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -184,8 +184,8 @@ void siglongjmp(jmp_buf env, int val)
 
 int sigsuspend(const sigset_t*)
 {
-    dbgprintf("FIXME: Implement sigsuspend()\n");
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement sigsuspend()");
+    TODO();
 }
 
 static const char* signal_names[] = {

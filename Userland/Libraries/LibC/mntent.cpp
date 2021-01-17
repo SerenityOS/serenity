@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <assert.h>
 #include <mntent.h>
 
@@ -31,7 +32,8 @@ extern "C" {
 
 struct mntent* getmntent(FILE*)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement getmntent()");
+    TODO();
     return nullptr;
 }
 }

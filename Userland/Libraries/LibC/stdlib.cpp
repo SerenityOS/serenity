@@ -801,7 +801,8 @@ ldiv_t ldiv(long numerator, long denominator)
 
 size_t mbstowcs(wchar_t*, const char*, size_t)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement mbstowcs()");
+    TODO();
 }
 
 int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
@@ -821,7 +822,8 @@ int mbtowc(wchar_t* wch, const char* data, [[maybe_unused]] size_t data_size)
 
 int wctomb(char*, wchar_t)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement wctomb()");
+    TODO();
 }
 
 size_t wcstombs(char* dest, const wchar_t* src, size_t max)

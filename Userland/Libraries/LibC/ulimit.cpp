@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <assert.h>
 #include <sys/resource.h>
 #include <ulimit.h>
@@ -33,13 +33,14 @@ extern "C" {
 
 long ulimit([[maybe_unused]] int cmd, [[maybe_unused]] long newlimit)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement getrusage()");
+    TODO();
     return -1;
 }
 
 int getrusage([[maybe_unused]] int who, [[maybe_unused]] struct rusage* usage)
 {
-    dbgln("LibC: getrusage is not implemented");
+    dbgln("FIXME: Implement getrusage()");
     return -1;
 }
 }

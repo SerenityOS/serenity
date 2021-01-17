@@ -67,7 +67,7 @@ void* dlopen(const char* filename, int flags)
         // FIXME: Return the handle for "the main executable"
         //     The Serenity Kernel will keep a mapping of the main elf binary resident in memory,
         //     But a future dynamic loader might have a different idea/way of letting us access this information
-        ASSERT_NOT_REACHED();
+        TODO();
     }
 
     auto basename = LexicalPath(filename).basename();
