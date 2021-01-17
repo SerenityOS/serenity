@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/Debug.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <WebContent/ClientConnection.h>
@@ -79,25 +80,19 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentServer::LoadURL: url=" << message.url();
-#endif
+    dbgln<debug_spam>("handle: WebContentServer::LoadURL: url={}", message.url());
     page().load(message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentServer::LoadHTML: html=" << message.html() << ", url=" << message.url();
-#endif
+    dbgln<debug_spam>("handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
     page().load_html(message.html(), message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
-#ifdef DEBUG_SPAM
-    dbg() << "handle: WebContentServer::SetViewportRect: rect=" << message.rect();
-#endif
+    dbgln<debug_spam>("handle: WebContentServer::SetViewportRect: rect={}", message.rect());
     m_page_host->set_viewport_rect(message.rect());
 }
 

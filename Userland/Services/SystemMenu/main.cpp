@@ -25,6 +25,7 @@
  */
 
 #include "ShutdownDialog.h"
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
@@ -41,8 +42,6 @@
 #include <LibGfx/Bitmap.h>
 #include <serenity.h>
 #include <spawn.h>
-
-//#define SYSTEM_MENU_DEBUG
 
 struct AppMetadata {
     String executable;
@@ -143,14 +142,14 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     for (const auto& app : g_apps) {
         auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
 
-#ifdef SYSTEM_MENU_DEBUG
-        if (icon)
-            dbg() << "App " << app.name << " has icon with size " << icon->size();
-#endif
+        if constexpr (debug_system_menu) {
+            if (icon)
+                dbgln("App {} has icon with size {}", app.name, icon->size());
+        }
 
         auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
         parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
-            dbg() << "Activated app with ID " << app_identifier;
+            dbgln("Activated app with ID {}", app_identifier);
             const auto& bin = g_apps[app_identifier].executable;
             pid_t child_pid;
             const char* argv[] = { bin.characters(), nullptr };
@@ -189,7 +188,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         for (auto& theme : g_themes) {
             auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
-                dbg() << "Theme switched to " << theme.name << " at path " << theme.path;
+                dbgln("Theme switched to {} at path {}", theme.name, theme.path);
                 auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
                 ASSERT(response->success());
             });

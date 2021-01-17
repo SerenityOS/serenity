@@ -195,7 +195,7 @@ OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(con
     unsigned identifier = message.identifier();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        dbg() << "AddMenuItem: Bad menu ID: " << menu_id;
+        dbgln("AddMenuItem: Bad menu ID: {}", menu_id);
         return {};
     }
     auto& menu = *(*it).value;
