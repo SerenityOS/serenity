@@ -52,16 +52,28 @@ static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, 
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
-    size_t total_blob_size = 0;
-    for (auto& a : arguments)
-        total_blob_size += a.length() + 1;
-    for (auto& e : environment)
-        total_blob_size += e.length() + 1;
+    size_t total_arguments_size = 0;
+    size_t total_environment_size = 0;
 
-    size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
+    for (auto& a : arguments)
+        total_arguments_size += a.length() + 1;
+    for (auto& e : environment)
+        total_environment_size += e.length() + 1;
+
+    total_arguments_size += sizeof(char*) * (arguments.size() + 1);
+    total_environment_size += sizeof(char*) * (environment.size() + 1);
+
+    static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
+    static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
+
+    if (total_arguments_size > max_arguments_size)
+        return false;
+
+    if (total_environment_size > max_environment_size)
+        return false;
 
     // FIXME: This doesn't account for the size of the auxiliary vector
-    return (total_blob_size + total_meta_size) < Thread::default_userspace_stack_size;
+    return true;
 }
 
 static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, Vector<String> arguments, Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
