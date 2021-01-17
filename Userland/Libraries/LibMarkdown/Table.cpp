@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Table.h>
 
@@ -181,9 +182,7 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
         size_t relative_width = delimiter.length();
         for (auto ch : delimiter) {
             if (ch != '-') {
-#ifdef DEBUG_MARKDOWN
-                dbg() << "Invalid character _" << ch << "_ in table heading delimiter (ignored)";
-#endif
+                dbgln<debug_markdown>("Invalid character _{}_ in table heading delimiter (ignored)", ch);
                 --relative_width;
             }
         }
