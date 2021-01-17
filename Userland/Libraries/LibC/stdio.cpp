@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
@@ -1071,7 +1071,8 @@ int dbgputstr(const char* characters, ssize_t length)
 
 char* tmpnam(char*)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement tmpnam()");
+    TODO();
 }
 
 FILE* popen(const char* command, const char* type)
