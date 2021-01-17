@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
@@ -71,13 +72,13 @@ void ImageLoader::resource_did_load()
 
     m_loading_state = LoadingState::Loaded;
 
-#ifdef IMAGE_LOADER_DEBUG
-    if (!resource()->has_encoded_data()) {
-        dbg() << "ImageLoader: Resource did load, no encoded data. URL: " << resource()->url();
-    } else {
-        dbg() << "ImageLoader: Resource did load, has encoded data. URL: " << resource()->url();
+    if constexpr (debug_image_loader) {
+        if (!resource()->has_encoded_data()) {
+            dbgln("ImageLoader: Resource did load, no encoded data. URL: {}", resource()->url());
+        } else {
+            dbgln("ImageLoader: Resource did load, has encoded data. URL: {}", resource()->url());
+        }
     }
-#endif
 
     if (resource()->should_decode_in_process()) {
         auto& decoder = resource()->ensure_decoder();
@@ -121,7 +122,7 @@ void ImageLoader::animate()
 
 void ImageLoader::resource_did_fail()
 {
-    dbg() << "ImageLoader: Resource did fail. URL: " << resource()->url();
+    dbgln("ImageLoader: Resource did fail. URL: {}", resource()->url());
     m_loading_state = LoadingState::Failed;
     if (on_fail)
         on_fail();

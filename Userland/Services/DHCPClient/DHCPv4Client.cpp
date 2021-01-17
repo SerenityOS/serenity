@@ -26,24 +26,23 @@
 
 #include "DHCPv4Client.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Function.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
 
-//#define DHCPV4CLIENT_DEBUG
-
 static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, Core::Object*)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
-        dbg() << "ERROR: socket :: " << strerror(errno);
+        dbgln("ERROR: socket :: {}", strerror(errno));
         return;
     }
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.m_ifname.characters(), IFNAMSIZ) < 0) {
-        dbg() << "ERROR: setsockopt(SO_BINDTODEVICE) :: " << strerror(errno);
+        dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
         return;
     }
 
@@ -56,7 +55,7 @@ static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
 
     auto rc = sendto(fd, &packet, sizeof(packet), 0, (sockaddr*)&dst, sizeof(dst));
     if (rc < 0) {
-        dbg() << "sendto failed with " << strerror(errno);
+        dbgln("sendto failed with {}", strerror(errno));
         // FIXME: what do we do here?
     }
 }
@@ -65,7 +64,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (fd < 0) {
-        dbg() << "ERROR: socket :: " << strerror(errno);
+        dbgln("ERROR: socket :: {}", strerror(errno));
         return;
     }
 
@@ -83,14 +82,14 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = ipv4_addr.to_in_addr_t();
 
     if (ioctl(fd, SIOCSIFADDR, &ifr) < 0) {
-        dbg() << "ERROR: ioctl(SIOCSIFADDR) :: " << strerror(errno);
+        dbgln("ERROR: ioctl(SIOCSIFADDR) :: {}", strerror(errno));
     }
 
     // set the network mask
     ((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr = netmask.to_in_addr_t();
 
     if (ioctl(fd, SIOCSIFNETMASK, &ifr) < 0) {
-        dbg() << "ERROR: ioctl(SIOCSIFNETMASK) :: " << strerror(errno);
+        dbgln("ERROR: ioctl(SIOCSIFNETMASK) :: {}", strerror(errno));
     }
 
     // set the default gateway
@@ -103,7 +102,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     rt.rt_flags = RTF_UP | RTF_GATEWAY;
 
     if (ioctl(fd, SIOCADDRT, &rt) < 0) {
-        dbg() << "Error: ioctl(SIOCADDRT) :: " << strerror(errno);
+        dbgln("Error: ioctl(SIOCADDRT) :: {}", strerror(errno));
     }
 }
 
@@ -113,9 +112,9 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
         auto buffer = m_server->receive(sizeof(DHCPv4Packet));
-        dbg() << "Received " << buffer.size() << " bytes";
+        dbgln("Received {} bytes", buffer.size());
         if (buffer.size() != sizeof(DHCPv4Packet)) {
-            dbg() << "we expected " << sizeof(DHCPv4Packet) << " bytes, this is a bad packet";
+            dbgln("we expected {} bytes, this is a bad packet", sizeof(DHCPv4Packet));
             return;
         }
         auto& packet = *(DHCPv4Packet*)buffer.data();
@@ -137,10 +136,10 @@ DHCPv4Client::~DHCPv4Client()
 
 void DHCPv4Client::handle_offer(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
 {
-    dbg() << "We were offered " << packet.yiaddr().to_string() << " for " << options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(0);
+    dbgln("We were offered {} for {}", packet.yiaddr().to_string(), options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(0));
     auto* transaction = const_cast<DHCPv4Transaction*>(m_ongoing_transactions.get(packet.xid()).value_or(nullptr));
     if (!transaction) {
-        dbg() << "we're not looking for " << packet.xid();
+        dbgln("we're not looking for {}", packet.xid());
         return;
     }
     if (transaction->has_ip)
@@ -157,13 +156,14 @@ void DHCPv4Client::handle_offer(const DHCPv4Packet& packet, const ParsedDHCPv4Op
 
 void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
 {
-#ifdef DHCPV4CLIENT_DEBUG
-    dbg() << "The DHCP server handed us " << packet.yiaddr().to_string();
-    dbg() << "Here are the options: " << options.to_string();
-#endif
+    if constexpr (debug_dhcpv4_client) {
+        dbgln("The DHCP server handed us {}", packet.yiaddr().to_string());
+        dbgln("Here are the options: {}", options.to_string());
+    }
+
     auto* transaction = const_cast<DHCPv4Transaction*>(m_ongoing_transactions.get(packet.xid()).value_or(nullptr));
     if (!transaction) {
-        dbg() << "we're not looking for " << packet.xid();
+        dbgln("we're not looking for {}", packet.xid());
         return;
     }
     transaction->has_ip = true;
@@ -184,12 +184,12 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
 
 void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Options& options)
 {
-    dbg() << "The DHCP server told us to go chase our own tail about " << packet.yiaddr().to_string();
-    dbg() << "Here are the options: " << options.to_string();
+    dbgln("The DHCP server told us to go chase our own tail about {}", packet.yiaddr().to_string());
+    dbgln("Here are the options: {}", options.to_string());
     // make another request a bit later :shrug:
     auto* transaction = const_cast<DHCPv4Transaction*>(m_ongoing_transactions.get(packet.xid()).value_or(nullptr));
     if (!transaction) {
-        dbg() << "we're not looking for " << packet.xid();
+        dbgln("we're not looking for {}", packet.xid());
         return;
     }
     transaction->accepted_offer = false;
@@ -206,9 +206,9 @@ void DHCPv4Client::handle_nak(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
 void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 {
     auto options = packet.parse_options();
-#ifdef DHCPV4CLIENT_DEBUG
-    dbg() << "Here are the options: " << options.to_string();
-#endif
+
+    dbgln<debug_dhcpv4_client>("Here are the options: {}", options.to_string());
+
     auto value = options.get<DHCPMessageType>(DHCPOption::DHCPMessageType).value();
     switch (value) {
     case DHCPMessageType::DHCPOffer:
@@ -229,7 +229,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
         break;
     case DHCPMessageType::DHCPDecline:
     default:
-        dbg() << "I dunno what to do with this " << (u8)value;
+        dbgln("I dunno what to do with this {}", (u8)value);
         ASSERT_NOT_REACHED();
         break;
     }
@@ -238,11 +238,13 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface, IPv4Address previous)
 {
     auto transaction_id = rand();
-#ifdef DHCPV4CLIENT_DEBUG
-    dbg() << "Trying to lease an IP for " << iface.m_ifname << " with ID " << transaction_id;
-    if (!previous.is_zero())
-        dbg() << "going to request the server to hand us " << previous.to_string();
-#endif
+
+    if constexpr (debug_dhcpv4_client) {
+        dbgln("Trying to lease an IP for {} with ID {}", iface.m_ifname, transaction_id);
+        if (!previous.is_zero())
+            dbgln("going to request the server to hand us {}", previous.to_string());
+    }
+
     DHCPv4PacketBuilder builder;
 
     DHCPv4Packet& packet = builder.peek();
@@ -267,7 +269,7 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface, IPv4Address p
 void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& offer)
 {
     auto& iface = transaction.interface;
-    dbg() << "Leasing the IP " << offer.yiaddr().to_string() << " for adapter " << iface.m_ifname;
+    dbgln("Leasing the IP {} for adapter {}", offer.yiaddr().to_string(), iface.m_ifname);
     DHCPv4PacketBuilder builder;
 
     DHCPv4Packet& packet = builder.peek();
