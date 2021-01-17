@@ -143,6 +143,9 @@ public:
 
     virtual EventTarget* get_parent(const Event&) override;
 
+    template<typename T>
+    bool fast_is() const = delete;
+
 protected:
     Node(Document&, NodeType);
 

@@ -52,7 +52,13 @@ public:
     void for_each_fragment(Callback) const;
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
+
+private:
+    virtual bool is_block_box() const final { return true; }
 };
+
+template<>
+inline bool Node::fast_is<BlockBox>() const { return is_block_box(); }
 
 template<typename Callback>
 void BlockBox::for_each_fragment(Callback callback)

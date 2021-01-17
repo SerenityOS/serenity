@@ -67,7 +67,7 @@ const BlockBox* Node::containing_block() const
         auto* ancestor = parent();
         while (ancestor && !is<BlockBox>(*ancestor))
             ancestor = ancestor->parent();
-        return downcast<BlockBox>(ancestor);
+        return static_cast<const BlockBox*>(ancestor);
     };
 
     if (is<TextNode>(*this))
@@ -79,9 +79,9 @@ const BlockBox* Node::containing_block() const
         auto* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
-        while (ancestor && (!is<BlockBox>(ancestor) || ancestor->is_anonymous()))
+        while (ancestor && (!is<BlockBox>(*ancestor) || ancestor->is_anonymous()))
             ancestor = ancestor->containing_block();
-        return downcast<BlockBox>(ancestor);
+        return static_cast<const BlockBox*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)

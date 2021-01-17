@@ -47,6 +47,7 @@ public:
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
 private:
+    virtual bool is_text_node() const final { return true; }
     void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
 
@@ -55,5 +56,8 @@ private:
 
     String m_text_for_rendering;
 };
+
+template<>
+inline bool Node::fast_is<TextNode>() const { return is_text_node(); }
 
 }
