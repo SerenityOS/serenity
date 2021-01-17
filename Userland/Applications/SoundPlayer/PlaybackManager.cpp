@@ -108,14 +108,14 @@ void PlaybackManager::remove_dead_buffers()
     int id = m_connection->get_playing_buffer();
     int current_id = -1;
     if (m_current_buffer)
-        current_id = m_current_buffer->shbuf_id();
+        current_id = m_current_buffer->id();
 
     if (id >= 0 && id != current_id) {
         while (!m_buffers.is_empty()) {
             --m_next_ptr;
             auto buffer = m_buffers.take_first();
 
-            if (buffer->shbuf_id() == id) {
+            if (buffer->id() == id) {
                 m_current_buffer = buffer;
                 break;
             }

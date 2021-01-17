@@ -10,7 +10,7 @@ endpoint AudioServer = 85
     SetMainMixVolume(i32 volume) => ()
 
     // Buffer playback
-    EnqueueBuffer(i32 buffer_id, int sample_count) => (bool success)
+    EnqueueBuffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count) => (bool success)
     SetPaused(bool paused) => ()
     ClearBuffer(bool paused) => ()
 

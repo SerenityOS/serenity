@@ -24,9 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Atomic.h>
 #include <LibAudio/Buffer.h>
 
 namespace Audio {
+
+i32 Buffer::allocate_id()
+{
+    static Atomic<i32> next_id;
+    return next_id++;
+}
 
 template<typename SampleReader>
 static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)

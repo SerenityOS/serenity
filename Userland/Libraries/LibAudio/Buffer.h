@@ -28,9 +28,9 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/MemoryStream.h>
-#include <AK/SharedBuffer.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <string.h>
 
 namespace Audio {
@@ -115,33 +115,38 @@ public:
     {
         return adopt(*new Buffer(move(samples)));
     }
-    static NonnullRefPtr<Buffer> create_with_shared_buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
+    static NonnullRefPtr<Buffer> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
     {
-        return adopt(*new Buffer(move(buffer), sample_count));
+        return adopt(*new Buffer(move(buffer), buffer_id, sample_count));
     }
 
     const Sample* samples() const { return (const Sample*)data(); }
     int sample_count() const { return m_sample_count; }
-    const void* data() const { return m_buffer->data<void>(); }
+    const void* data() const { return m_buffer.data<void>(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
-    int shbuf_id() const { return m_buffer->shbuf_id(); }
-    SharedBuffer& shared_buffer() { return *m_buffer; }
+    int id() const { return m_id; }
+    const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }
 
 private:
-    explicit Buffer(Vector<Sample>&& samples)
-        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(Sample)))
+    explicit Buffer(const Vector<Sample> samples)
+        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Sample)))
+        , m_id(allocate_id())
         , m_sample_count(samples.size())
     {
-        memcpy(m_buffer->data<void>(), samples.data(), samples.size() * sizeof(Sample));
+        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Sample));
     }
 
-    explicit Buffer(NonnullRefPtr<SharedBuffer>&& buffer, int sample_count)
+    explicit Buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
         : m_buffer(move(buffer))
+        , m_id(buffer_id)
         , m_sample_count(sample_count)
     {
     }
 
-    NonnullRefPtr<SharedBuffer> m_buffer;
+    static i32 allocate_id();
+
+    Core::AnonymousBuffer m_buffer;
+    const i32 m_id;
     const int m_sample_count;
 };
 
