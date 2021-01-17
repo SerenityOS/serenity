@@ -506,8 +506,6 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(inet);
 
-    SmapDisabler disabler;
-
     auto ioctl_route = [request, arg]() {
         rtentry route;
         if (!copy_from_user(&route, (rtentry*)arg))

@@ -48,7 +48,6 @@ int Process::sys$dbgputstr(Userspace<const u8*> characters, int length)
     if (length <= 0)
         return 0;
 
-    SmapDisabler disabler;
     auto buffer = UserOrKernelBuffer::for_user_buffer(characters, length);
     if (!buffer.has_value())
         return -EFAULT;

@@ -39,7 +39,6 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     REQUIRE_PROMISE(stdio);
     Syscall::SC_select_params params;
 
-    SmapDisabler disabler;
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
@@ -152,8 +151,6 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
     Syscall::SC_poll_params params;
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
-
-    SmapDisabler disabler;
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {

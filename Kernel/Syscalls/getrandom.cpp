@@ -39,7 +39,6 @@ ssize_t Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[ma
     if (buffer_size <= 0)
         return -EINVAL;
 
-    SmapDisabler disabler;
     auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
     if (!data_buffer.has_value())
         return -EFAULT;
