@@ -134,13 +134,7 @@ private:
     OwnPtr<StackingContext> m_stacking_context;
 };
 
-}
-
-namespace AK {
 template<>
-inline bool is<Web::Layout::Box>(const Web::Layout::Node& input)
-{
-    return input.is_box();
-}
+inline bool Node::fast_is<Box>() const { return is_box(); }
 
 }

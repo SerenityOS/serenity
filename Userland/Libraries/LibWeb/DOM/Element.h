@@ -115,13 +115,7 @@ private:
     Vector<FlyString> m_classes;
 };
 
-}
-
-namespace AK {
 template<>
-inline bool is<Web::DOM::Element>(const Web::DOM::Node& input)
-{
-    return input.is_element();
-}
+inline bool Node::fast_is<Element>() const { return is_element(); }
 
 }

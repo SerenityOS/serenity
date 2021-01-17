@@ -115,7 +115,13 @@ public:
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) {};
 
+    // These are used to optimize hot is<T> variants for some classes where dynamic_cast is too slow.
     virtual bool is_box() const { return false; }
+    virtual bool is_block_box() const { return false; }
+    virtual bool is_text_node() const { return false; }
+
+    template<typename T>
+    bool fast_is() const = delete;
 
     bool is_floating() const;
     bool is_positioned() const;
