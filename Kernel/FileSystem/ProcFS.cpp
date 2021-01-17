@@ -661,7 +661,7 @@ static bool procfs$pid_root(InodeIdentifier identifier, KBufferBuilder& builder)
     if (!process)
         return false;
     builder.append_bytes(process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
-    return false;
+    return true;
 }
 
 static bool procfs$self(InodeIdentifier, KBufferBuilder& builder)
