@@ -903,7 +903,7 @@ public:
             }
             if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
                 block_lock2.unlock();
-                dbgln("Thread should not be unblocking, current state: ", state_string());
+                dbgln("Thread should not be unblocking, current state: {}", state_string());
                 set_state(Thread::Blocked);
                 continue;
             }
