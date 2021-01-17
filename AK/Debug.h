@@ -513,3 +513,45 @@ constexpr bool debug_occlusions = true;
 #else
 constexpr bool debug_occlusions = false;
 #endif
+
+#ifdef DEBUG_MENUS
+constexpr bool debug_menus = true;
+#else
+constexpr bool debug_menus = false;
+#endif
+
+#ifdef WSSCREEN_DEBUG
+constexpr bool debug_wsscreen = true;
+#else
+constexpr bool debug_wsscreen = false;
+#endif
+
+#ifdef WINDOWMANAGER_DEBUG
+constexpr bool debug_window_manager = true;
+#else
+constexpr bool debug_window_manager = false;
+#endif
+
+#ifdef RESIZE_DEBUG
+constexpr bool debug_resize = true;
+#else
+constexpr bool debug_resize = false;
+#endif
+
+#ifdef MOVE_DEBUG
+constexpr bool debug_move = true;
+#else
+constexpr bool debug_move = false;
+#endif
+
+#ifdef DOUBLECLICK_DEBUG
+constexpr bool debug_double_click = true;
+#else
+constexpr bool debug_double_click = false;
+#endif
+
+#ifdef DISASM_DUMP
+constexpr bool debug_disasm_dump = true;
+#else
+constexpr bool debug_disasm_dump = false;
+#endif

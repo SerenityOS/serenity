@@ -67,7 +67,7 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
             return parsed_number.value();
         }();
         if (!value.has_value()) {
-            dbg() << "Failed to parse value for property '" << property << "' from parsed cursor path: " << cursor_path;
+            dbgln("Failed to parse value for property '{}' from parsed cursor path: {}", property, cursor_path);
             return { default_hotspot };
         }
         switch (property) {
@@ -93,7 +93,7 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
             in_display_scale_part = true;
             break;
         default:
-            dbg() << "Ignore unknown property '" << property << "' with value " << value.value() << " parsed from cursor path: " << cursor_path;
+            dbgln("Ignore unknown property '{}' with value {} parsed from cursor path: {}", property, value.value(), cursor_path);
             return { default_hotspot };
         }
     }
@@ -108,7 +108,7 @@ CursorParams CursorParams::constrained(const Gfx::Bitmap& bitmap) const
         if (rect.width() % params.m_frames == 0) {
             rect.set_width(rect.width() / (int)params.m_frames);
         } else {
-            dbg() << "Cannot divide cursor dimensions " << rect << " into " << params.m_frames << " frames";
+            dbgln("Cannot divide cursor dimensions {} into {} frames", rect, params.m_frames);
             params.m_frames = 1;
         }
     }

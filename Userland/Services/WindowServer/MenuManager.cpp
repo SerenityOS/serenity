@@ -26,6 +26,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
@@ -35,8 +36,6 @@
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 #include <unistd.h>
-
-//#define DEBUG_MENUS
 
 namespace WindowServer {
 
@@ -459,9 +458,9 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
         m_current_menubar = *menubar;
     else
         m_current_menubar = nullptr;
-#ifdef DEBUG_MENUS
-    dbg() << "[WM] Current menubar is now " << menubar;
-#endif
+
+    dbgln<debug_menus>("[WM] Current menubar is now {}", menubar);
+
     Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&](Menu& menu) {
         int text_width = menu.title_font().width(menu.name());

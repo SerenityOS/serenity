@@ -55,7 +55,7 @@ public:
         if (m_active) {
             auto elapsed = m_command_timer.elapsed();
             // Don't mistake this for the command!
-            dbg() << "Job entry \"" << m_cmd << "\" deleted in " << elapsed << " ms";
+            dbgln("Job entry '{}' deleted in {} ms", m_cmd, elapsed);
         }
 #endif
     }

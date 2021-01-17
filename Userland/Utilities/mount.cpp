@@ -121,8 +121,8 @@ static bool mount_all()
 
         int fd = get_source_fd(filename);
 
-        dbg() << "Mounting " << filename << "(" << fstype << ")"
-              << " on " << mountpoint;
+        dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
+
         int rc = mount(fd, mountpoint, fstype, flags);
         if (rc != 0) {
             fprintf(stderr, "Failed to mount %s (FD: %d) (%s) on %s: %s\n", filename, fd, fstype, mountpoint, strerror(errno));
