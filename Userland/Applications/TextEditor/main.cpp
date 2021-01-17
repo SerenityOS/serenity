@@ -31,14 +31,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer recvfd sendfd thread rpath accept cpath wpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread rpath accept cpath wpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer recvfd sendfd thread rpath accept cpath wpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread rpath accept cpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
