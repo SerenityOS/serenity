@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Random.h>
 
@@ -111,9 +112,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
         return (i8)Error::NoCommonCipher;
     }
     m_context.cipher = cipher;
-#ifdef TLS_DEBUG
-    dbg() << "Cipher: " << (u16)cipher;
-#endif
+    dbgln<debug_tls>("Cipher: {}", (u16)cipher);
 
     // The handshake hash function is _always_ SHA256
     m_context.handshake_hash.initialize(Crypto::Hash::HashKind::SHA256);
@@ -147,9 +146,8 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
         u16 extension_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
         res += 2;
 
-#ifdef TLS_DEBUG
-        dbg() << "extension " << (u16)extension_type << " with length " << extension_length;
-#endif
+        dbgln<debug_tls>("extension {} with length {}", (u16)extension_type, extension_length);
+
         if (extension_length) {
             if (buffer.size() - res < extension_length) {
                 dbgln("not enough data for extension");
@@ -220,16 +218,12 @@ ssize_t TLSv12::handle_finished(ReadonlyBytes buffer, WritePacketStage& write_pa
     u32 size = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
 
     if (size < 12) {
-#ifdef TLS_DEBUG
-        dbg() << "finished packet smaller than minimum size: " << size;
-#endif
+        dbgln<debug_tls>("finished packet smaller than minimum size: {}", size);
         return (i8)Error::BrokenPacket;
     }
 
     if (size < buffer.size() - index) {
-#ifdef TLS_DEBUG
-        dbg() << "not enough data after length: " << size << " > " << buffer.size() - index;
-#endif
+        dbgln<debug_tls>("not enough data after length: {} > {}", size, buffer.size() - index);
         return (i8)Error::NeedMoreData;
     }
 
@@ -330,9 +324,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         auto type = buffer[0];
         auto write_packets { WritePacketStage::Initial };
         size_t payload_size = buffer[1] * 0x10000 + buffer[2] * 0x100 + buffer[3] + 3;
-#ifdef TLS_DEBUG
-        dbg() << "payload size: " << payload_size << " buffer length: " << buffer_length;
-#endif
+        dbgln<debug_tls>("payload size: {} buffer length: {}", payload_size, buffer_length);
         if (payload_size + 1 > buffer_length)
             return (i8)Error::NeedMoreData;
 

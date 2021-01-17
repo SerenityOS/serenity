@@ -27,6 +27,7 @@
 #include "RegexMatcher.h"
 #include "RegexDebug.h"
 #include "RegexParser.h"
+#include <AK/Debug.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -147,9 +148,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     for (auto& view : views) {
         input.view = view;
-#ifdef REGEX_DEBUG
-        dbg() << "[match] Starting match with view (" << view.length() << "): _" << view.to_string() << "_";
-#endif
+        dbgln<debug_regex>("[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
@@ -215,10 +214,11 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     continue;
                 }
 
-#ifdef REGEX_DEBUG
-                dbg() << "state.string_position: " << state.string_position << " view_index: " << view_index;
-                dbg() << "[match] Found a match (length = " << state.string_position - view_index << "): " << input.view.substring_view(view_index, state.string_position - view_index).to_string();
-#endif
+                if constexpr (debug_regex) {
+                    dbgln("state.string_position={}, view_index={}", state.string_position, view_index);
+                    dbgln("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
+                }
+
                 ++match_count;
 
                 if (continue_search) {
