@@ -41,7 +41,7 @@ TEST_CASE(works_like_a_queue)
     }
 
     for (size_t idx = 0; idx < capacity; ++idx) {
-        u8 byte;
+        u8 byte = 0;
         stream >> byte;
 
         EXPECT_EQ(queue.dequeue(), byte);
@@ -70,7 +70,7 @@ TEST_CASE(overwritting_is_well_defined)
         stream << static_cast<u8>(idx % 256);
 
     for (size_t idx = 0; idx < capacity; ++idx) {
-        u8 byte;
+        u8 byte = 0;
         stream >> byte;
 
         if (idx < half_capacity)
