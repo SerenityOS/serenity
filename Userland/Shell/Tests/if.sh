@@ -16,6 +16,14 @@ if test 1 -eq 1 {
     } else {
     }
 
+    # Can we put `else` on a new line?
+    if false {
+        echo "if false runs true branch"
+        exit 2
+    }
+    else {
+    }
+
     # Basic 'if' structure, without 'else'
     if false {
         echo "Fail: 'if false' runs the branch"
