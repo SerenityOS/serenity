@@ -61,6 +61,7 @@ public:
     PerformanceEventBuffer();
 
     KResult append(int type, FlatPtr arg1, FlatPtr arg2);
+    KResult append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2);
 
     void clear()
     {

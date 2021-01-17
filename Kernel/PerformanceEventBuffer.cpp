@@ -40,6 +40,16 @@ PerformanceEventBuffer::PerformanceEventBuffer()
 
 KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
 {
+    FlatPtr ebp;
+    asm volatile("movl %%ebp, %%eax"
+                 : "=a"(ebp));
+    auto current_thread = Thread::current();
+    auto eip = current_thread->get_register_dump_from_stack().eip;
+    return append_with_eip_and_ebp(eip, ebp, type, arg1, arg2);
+}
+
+KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2)
+{
     if (count() >= capacity())
         return KResult(-ENOBUFS);
 
@@ -60,11 +70,7 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
         return KResult(-EINVAL);
     }
 
-    FlatPtr ebp;
-    asm volatile("movl %%ebp, %%eax"
-                 : "=a"(ebp));
     auto current_thread = Thread::current();
-    auto eip = current_thread->get_register_dump_from_stack().eip;
     Vector<FlatPtr> backtrace;
     {
         SmapDisabler disabler;

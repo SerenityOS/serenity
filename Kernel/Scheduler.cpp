@@ -495,7 +495,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     if (current_thread->process().is_profiling()) {
         ASSERT(current_thread->process().perf_events());
         auto& perf_events = *current_thread->process().perf_events();
-        [[maybe_unused]] auto rc = perf_events.append(PERF_EVENT_SAMPLE, 0, 0);
+        [[maybe_unused]] auto rc = perf_events.append_with_eip_and_ebp(regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0);
     }
 
     if (current_thread->tick((regs.cs & 3) == 0))
