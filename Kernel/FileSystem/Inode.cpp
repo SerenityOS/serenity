@@ -230,6 +230,12 @@ NonnullRefPtr<FIFO> Inode::fifo()
 void Inode::set_metadata_dirty(bool metadata_dirty)
 {
     LOCKER(m_lock);
+
+    if (metadata_dirty) {
+        // Sanity check.
+        ASSERT(!fs().is_readonly());
+    }
+
     if (m_metadata_dirty == metadata_dirty)
         return;
 
