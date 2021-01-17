@@ -138,7 +138,7 @@ fetch() {
 func_defined patch_internal || patch_internal() {
     # patch if it was not yet patched (applying patches multiple times doesn't work!)
     if [ -d patches ]; then
-        for filepath in patches/*; do
+        for filepath in patches/*.patch; do
             filename=$(basename $filepath)
             if [ ! -f "$workdir"/.${filename}_applied ]; then
                 run patch -p"$patchlevel" < "$filepath"
