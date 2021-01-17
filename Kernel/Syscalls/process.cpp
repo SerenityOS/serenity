@@ -26,7 +26,6 @@
 
 #include <AK/Types.h>
 #include <Kernel/Process.h>
-#include <Kernel/SharedBuffer.h>
 
 namespace Kernel {
 

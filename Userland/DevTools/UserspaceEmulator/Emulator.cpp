@@ -26,7 +26,6 @@
 
 #include "Emulator.h"
 #include "MmapRegion.h"
-#include "SharedBufferRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/Format.h>
@@ -385,14 +384,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$ioctl(arg1, arg2, arg3);
     case SC_get_dir_entries:
         return virt$get_dir_entries(arg1, arg2, arg3);
-    case SC_shbuf_create:
-        return virt$shbuf_create(arg1, arg2);
-    case SC_shbuf_allow_pid:
-        return virt$shbuf_allow_pid(arg1, arg2);
-    case SC_shbuf_get:
-        return virt$shbuf_get(arg1, arg2);
-    case SC_shbuf_release:
-        return virt$shbuf_release(arg1);
     case SC_profiling_enable:
         return virt$profiling_enable(arg1);
     case SC_profiling_disable:
@@ -558,48 +549,6 @@ int Emulator::virt$sendfd(int socket, int fd)
 int Emulator::virt$recvfd(int socket)
 {
     return syscall(SC_recvfd, socket);
-}
-
-int Emulator::virt$shbuf_create(int size, FlatPtr buffer)
-{
-    u8* host_data = nullptr;
-    int shbuf_id = syscall(SC_shbuf_create, size, &host_data);
-    if (shbuf_id < 0)
-        return shbuf_id;
-    FlatPtr address = allocate_vm(size, PAGE_SIZE);
-    auto region = SharedBufferRegion::create_with_shbuf_id(address, size, shbuf_id, host_data);
-    m_mmu.add_region(move(region));
-    m_mmu.copy_to_vm(buffer, &address, sizeof(address));
-    return shbuf_id;
-}
-
-FlatPtr Emulator::virt$shbuf_get(int shbuf_id, FlatPtr size_ptr)
-{
-    size_t host_size = 0;
-    void* host_data = (void*)syscall(SC_shbuf_get, shbuf_id, &host_size);
-    if (host_data == (void*)-1)
-        return (FlatPtr)host_data;
-    FlatPtr address = allocate_vm(host_size, PAGE_SIZE);
-    auto region = SharedBufferRegion::create_with_shbuf_id(address, host_size, shbuf_id, (u8*)host_data);
-    m_mmu.add_region(move(region));
-    m_mmu.copy_to_vm(size_ptr, &host_size, sizeof(host_size));
-    return address;
-}
-
-int Emulator::virt$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
-{
-    auto* region = m_mmu.shbuf_region(shbuf_id);
-    ASSERT(region);
-    return region->allow_pid(peer_pid);
-}
-
-int Emulator::virt$shbuf_release(int shbuf_id)
-{
-    auto* region = m_mmu.shbuf_region(shbuf_id);
-    ASSERT(region);
-    auto rc = region->release();
-    m_mmu.remove_region(*region);
-    return rc;
 }
 
 int Emulator::virt$profiling_enable(pid_t pid)

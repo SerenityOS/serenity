@@ -121,10 +121,6 @@ namespace Kernel {
     S(accept)                 \
     S(listen)                 \
     S(connect)                \
-    S(shbuf_create)           \
-    S(shbuf_allow_pid)        \
-    S(shbuf_get)              \
-    S(shbuf_release)          \
     S(link)                   \
     S(chown)                  \
     S(fchmod)                 \

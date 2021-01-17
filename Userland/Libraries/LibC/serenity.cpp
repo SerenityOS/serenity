@@ -79,34 +79,6 @@ int perf_event(int type, uintptr_t arg1, FlatPtr arg2)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* shbuf_get(int shbuf_id, size_t* size)
-{
-    ssize_t rc = syscall(SC_shbuf_get, shbuf_id, size);
-    if (rc < 0 && -rc < EMAXERRNO) {
-        errno = -rc;
-        return (void*)-1;
-    }
-    return (void*)rc;
-}
-
-int shbuf_release(int shbuf_id)
-{
-    int rc = syscall(SC_shbuf_release, shbuf_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int shbuf_create(int size, void** buffer)
-{
-    int rc = syscall(SC_shbuf_create, size, buffer);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
-{
-    int rc = syscall(SC_shbuf_allow_pid, shbuf_id, peer_pid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size)
 {
     int rc = syscall(SC_get_stack_bounds, user_stack_base, user_stack_size);

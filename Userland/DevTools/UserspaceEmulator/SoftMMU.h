@@ -37,7 +37,6 @@
 namespace UserspaceEmulator {
 
 class Emulator;
-class SharedBufferRegion;
 
 class SoftMMU {
 public:
@@ -74,8 +73,6 @@ public:
     void copy_from_vm(void* destination, const FlatPtr source, size_t);
     ByteBuffer copy_buffer_from_vm(const FlatPtr source, size_t);
 
-    SharedBufferRegion* shbuf_region(int shbuf_id);
-
     template<typename Callback>
     void for_each_region(Callback callback)
     {
@@ -96,7 +93,6 @@ private:
 
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
-    HashMap<int, Region*> m_shbuf_regions;
 };
 
 }

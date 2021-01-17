@@ -46,12 +46,6 @@ constexpr bool debug_scheduler_runnable = true;
 constexpr bool debug_scheduler_runnable = false;
 #endif
 
-#ifdef SHARED_BUFFER_DEBUG
-constexpr bool debug_shared_buffer = true;
-#else
-constexpr bool debug_shared_buffer = false;
-#endif
-
 #ifdef THREAD_DEBUG
 constexpr bool debug_thread = true;
 #else

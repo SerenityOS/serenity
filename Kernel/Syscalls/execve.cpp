@@ -522,8 +522,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_region_lookup_cache = {};
 
-    disown_all_shared_buffers();
-
     set_dumpable(!executable_is_setid);
 
     for (size_t i = 0; i < m_fds.size(); ++i) {

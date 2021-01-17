@@ -3,7 +3,6 @@ set(SOURCES
     MallocTracer.cpp
     MmapRegion.cpp
     Region.cpp
-    SharedBufferRegion.cpp
     SimpleRegion.cpp
     SoftCPU.cpp
     SoftMMU.cpp
