@@ -366,7 +366,8 @@ int nanosleep(const struct timespec* requested_sleep, struct timespec* remaining
 
 int clock_getres(clockid_t, struct timespec*)
 {
-    ASSERT_NOT_REACHED();
+    dbgln("FIXME: Implement clock_getres()");
+    TODO();
 }
 
 double difftime(time_t t1, time_t t0)

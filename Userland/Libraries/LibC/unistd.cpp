@@ -771,7 +771,7 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 char* getpass(const char* prompt)
 {
     dbgln("FIXME: getpass('{}')", prompt);
-    ASSERT_NOT_REACHED();
+    TODO();
 }
 
 long sysconf(int name)
