@@ -63,3 +63,9 @@ constexpr bool debug_signal = true;
 #else
 constexpr bool debug_signal = false;
 #endif
+
+#ifdef BMP_DEBUG
+constexpr bool debug_bmp = true;
+#else
+constexpr bool debug_bmp = false;
+#endif
