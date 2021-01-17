@@ -231,7 +231,7 @@ bool Scheduler::pick_next()
     }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
-        dbgln("Scheduler thread list:", Processor::id());
+        dbgln("Scheduler thread list for processor {}:", Processor::id());
         Thread::for_each([&](Thread& thread) -> IterationDecision {
             switch (thread.state()) {
             case Thread::Dying:
