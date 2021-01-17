@@ -32,7 +32,7 @@
 int main(int, char**)
 {
     Core::EventLoop event_loop;
-    if (pledge("stdio shared_buffer recvfd sendfd accept unix rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept unix rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

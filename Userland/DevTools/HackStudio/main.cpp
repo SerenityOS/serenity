@@ -57,14 +57,14 @@ static void update_path_environment_variable();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer recvfd sendfd tty accept rpath cpath wpath proc exec unix fattr thread unix ptrace", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd tty accept rpath cpath wpath proc exec unix fattr thread unix ptrace", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer recvfd sendfd tty accept rpath cpath wpath proc exec fattr thread unix ptrace", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd tty accept rpath cpath wpath proc exec fattr thread unix ptrace", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
