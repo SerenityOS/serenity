@@ -129,35 +129,22 @@ TEST_CASE(extremes_4byte)
     EXPECT_EQ(human_readable_size(0xffffffff), "3.9 GiB");
 }
 
-template<int>
-void actual_extremes_8byte();
-
-template<>
-void actual_extremes_8byte<4>()
-{
-    warnln("(Skipping 8-byte-size_t test)");
-}
-
-template<>
-void actual_extremes_8byte<8>()
-{
-    warnln("(Running true 8-byte-size_t test)");
-    // Your editor might show "implicit conversion" warnings here.
-    // This is because your editor thinks the world is 32-bit, but it isn't.
-    EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
-    EXPECT_EQ(human_readable_size(0x100000001ULL), "4.0 GiB");
-    EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
-    EXPECT_EQ(human_readable_size(0x10000000000ULL), "1024.0 GiB");
-
-    // Oh yeah! These are *correct*!
-    EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "8589934591.9 GiB");
-    EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8589934592.0 GiB");
-    EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "17179869183.9 GiB");
-}
-
 TEST_CASE(extremes_8byte)
 {
-    actual_extremes_8byte<sizeof(size_t)>();
+    if constexpr (sizeof(size_t) == 8) {
+        warnln("(Running 8-byte-size_t test)");
+        EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
+        EXPECT_EQ(human_readable_size(0x100000001ULL), "4.0 GiB");
+        EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
+        EXPECT_EQ(human_readable_size(0x10000000000ULL), "1024.0 GiB");
+
+        // Oh yeah! These are *correct*!
+        EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "8589934591.9 GiB");
+        EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8589934592.0 GiB");
+        EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "17179869183.9 GiB");
+    } else {
+        warnln("(Skipping 8-byte-size_t test on 32-bit platform)");
+    }
 }
 
 TEST_MAIN(NumberFormat)

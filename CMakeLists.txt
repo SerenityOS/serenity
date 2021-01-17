@@ -99,8 +99,6 @@ include_directories(${CMAKE_BINARY_DIR})
 add_subdirectory(Meta/Lagom)
 add_subdirectory(Userland/DevTools/IPCCompiler)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
-add_subdirectory(AK/Tests)
-add_subdirectory(Userland/Libraries/LibRegex/Tests)
 
 set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
