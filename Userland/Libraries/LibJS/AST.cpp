@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Demangle.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
@@ -50,6 +51,12 @@
 #include <LibJS/Runtime/WithScope.h>
 
 namespace JS {
+
+String ASTNode::class_name() const
+{
+    // NOTE: We strip the "JS::" prefix.
+    return demangle(typeid(*this).name()).substring(4);
+}
 
 static void update_function_name(Value value, const FlyString& name, HashTable<JS::Cell*>& visited)
 {
@@ -1155,7 +1162,7 @@ void NullLiteral::dump(int indent) const
     outln("null");
 }
 
-void FunctionNode::dump(int indent, const char* class_name) const
+void FunctionNode::dump(int indent, const String& class_name) const
 {
     print_indent(indent);
     outln("{} '{}'", class_name, name());
