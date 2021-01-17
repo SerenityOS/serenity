@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
 if (NOT ENABLE_OSS_FUZZ)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wno-literal-suffix -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -fPIC -g -Wno-deprecated-copy")
 endif()
@@ -42,8 +42,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
+file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../AK/Tests/*.cpp")
 file(GLOB LIBREGEX_LIBC_SOURCES "../../Userland/Libraries/LibRegex/C/Regex.cpp")
 file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
+file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/Tests/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
 # There's no way we can reliably make this cross platform
@@ -89,6 +91,7 @@ if (BUILD_LAGOM)
     add_library(Lagom $<TARGET_OBJECTS:LagomCore> ${LAGOM_MORE_SOURCES})
 
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+        enable_testing()
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp Lagom)
         target_link_libraries(TestApp stdc++)
@@ -159,6 +162,43 @@ if (BUILD_LAGOM)
                 TIMEOUT 10
                 FAIL_REGULAR_EXPRESSION "FAIL"
                 PASS_REGULAR_EXPRESSION "PASS"
+            )
+        endforeach()
+
+        foreach(source ${AK_TEST_SOURCES})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source})
+            target_link_libraries(${name}_lagom LagomCore)
+            add_test(
+                NAME ${name}_lagom
+                COMMAND ${name}_lagom
+                # FIXME: Only TestJSON needs this property
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../AK/Tests
+            )
+
+            set_tests_properties(
+                ${name}_lagom
+                PROPERTIES
+                    FAIL_REGULAR_EXPRESSION
+                    "FAIL"
+            )
+        endforeach()
+
+        foreach(source ${LIBREGEX_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LAGOM_REGEX_SOURCES})
+            target_link_libraries(${name}_lagom LagomCore)
+            add_test(
+                NAME ${name}_lagom
+                COMMAND ${name}_lagom
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+
+            set_tests_properties(
+                ${name}_lagom
+                PROPERTIES
+                    FAIL_REGULAR_EXPRESSION
+                    "FAIL"
             )
         endforeach()
     endif()

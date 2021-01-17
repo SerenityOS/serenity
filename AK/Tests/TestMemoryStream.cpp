@@ -101,7 +101,7 @@ TEST_CASE(seeking_slicing_offset)
     const Array<u8, 4> expected1 { 4, 5, 6, 7 };
     const Array<u8, 4> expected2 { 1, 2, 3, 4 };
 
-    Array<u8, 4> actual0, actual1, actual2;
+    Array<u8, 4> actual0 {}, actual1 {}, actual2 {};
 
     InputMemoryStream stream { input };
 
