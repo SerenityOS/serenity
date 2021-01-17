@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -173,9 +174,8 @@ void TLSv12::read_from_socket()
 
 void TLSv12::write_into_socket()
 {
-#ifdef TLS_DEBUG
-    dbg() << "Flushing cached records: " << m_context.tls_buffer.size() << " established? " << is_established();
-#endif
+    dbgln<debug_tls>("Flushing cached records: {} established? {}", m_context.tls_buffer.size(), is_established());
+
     m_has_scheduled_write_flush = false;
     if (!check_connection_state(false))
         return;
@@ -199,9 +199,8 @@ bool TLSv12::check_connection_state(bool read)
         m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
-#ifdef TLS_DEBUG
-        dbg() << "CRITICAL ERROR " << m_context.critical_error << " :(";
-#endif
+        dbgln<debug_tls>("CRITICAL ERROR {} :(", m_context.critical_error);
+
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
         return false;
@@ -212,9 +211,9 @@ bool TLSv12::check_connection_state(bool read)
                 on_tls_finished();
         }
         if (m_context.tls_buffer.size()) {
-#ifdef TLS_DEBUG
-            dbg() << "connection closed without finishing data transfer, " << m_context.tls_buffer.size() << " bytes still in buffer & " << m_context.application_buffer.size() << " bytes in application buffer";
-#endif
+            dbgln<debug_tls>("connection closed without finishing data transfer, {} bytes still in buffer and {} bytes in application buffer",
+                m_context.tls_buffer.size(),
+                m_context.application_buffer.size());
         } else {
             m_context.connection_finished = false;
 #ifdef TLS_DEBUG
@@ -248,9 +247,7 @@ bool TLSv12::flush()
     }
     if (m_context.send_retries++ == 10) {
         // drop the records, we can't send
-#ifdef TLS_DEBUG
-        dbg() << "Dropping " << write_buffer().size() << " bytes worth of TLS records as max retries has been reached";
-#endif
+        dbgln<debug_tls>("Dropping {} bytes worth of TLS records as max retries has been reached", write_buffer().size());
         write_buffer().clear();
         m_context.send_retries = 0;
     }

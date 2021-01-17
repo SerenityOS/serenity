@@ -399,3 +399,21 @@ constexpr bool debug_keyboard_shortcuts = true;
 #else
 constexpr bool debug_keyboard_shortcuts = false;
 #endif
+
+#ifdef DEBUG_MARKDOWN
+constexpr bool debug_markdown = true;
+#else
+constexpr bool debug_markdown = false;
+#endif
+
+#ifdef REGEX_DEBUG
+constexpr bool debug_regex = true;
+#else
+constexpr bool debug_regex = false;
+#endif
+
+#ifdef TLS_DEBUG
+constexpr bool debug_tls = true;
+#else
+constexpr bool debug_tls = false;
+#endif

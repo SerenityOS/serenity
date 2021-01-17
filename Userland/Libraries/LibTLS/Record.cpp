@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
-
 #include <AK/MemoryStream.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -39,16 +39,12 @@ void TLSv12::write_packet(ByteBuffer& packet)
     m_context.tls_buffer.append(packet.data(), packet.size());
     if (m_context.connection_status > ConnectionStatus::Disconnected) {
         if (!m_has_scheduled_write_flush) {
-#ifdef TLS_DEBUG
-            dbg() << "Scheduling write of " << m_context.tls_buffer.size();
-#endif
+            dbgln<debug_tls>("Scheduling write of {}", m_context.tls_buffer.size());
             deferred_invoke([this](auto&) { write_into_socket(); });
             m_has_scheduled_write_flush = true;
         } else {
             // multiple packet are available, let's flush some out
-#ifdef TLS_DEBUG
-            dbg() << "Flushing scheduled write of " << m_context.tls_buffer.size();
-#endif
+            dbgln<debug_tls>("Flushing scheduled write of {}", m_context.tls_buffer.size());
             write_into_socket();
             // the deferred invoke is still in place
             m_has_scheduled_write_flush = true;
@@ -219,10 +215,12 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     }
     auto digest = hmac.digest();
     auto mac = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
-#ifdef TLS_DEBUG
-    dbg() << "HMAC of the block for sequence number " << sequence_number;
-    print_buffer(mac);
-#endif
+
+    if constexpr (debug_tls) {
+        dbgln("HMAC of the block for sequence number {}", sequence_number);
+        print_buffer(mac);
+    }
+
     return mac;
 }
 
@@ -232,9 +230,8 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     size_t header_size = res;
     ssize_t payload_res = 0;
 
-#ifdef TLS_DEBUG
-    dbg() << "buffer size: " << buffer.size();
-#endif
+    dbgln<debug_tls>("buffer size: {}", buffer.size());
+
     if (buffer.size() < 5) {
         return (i8)Error::NeedMoreData;
     }
@@ -243,37 +240,33 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     size_t buffer_position { 1 };
 
     // FIXME: Read the version and verify it
-#ifdef TLS_DEBUG
-    auto version = (Version) * (const u16*)buffer.offset_pointer(buffer_position);
-    dbg() << "type: " << (u8)type << " version: " << (u16)version;
-#endif
+
+    if constexpr (debug_tls) {
+        auto version = (Version) * (const u16*)buffer.offset_pointer(buffer_position);
+        dbgln("type={}, version={}", (u8)type, (u16)version);
+    }
+
     buffer_position += 2;
 
     auto length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(buffer_position));
-#ifdef TLS_DEBUG
-    dbg() << "record length: " << length << " at offset: " << buffer_position;
-#endif
+    dbgln<debug_tls>("record length: {} at offset: {}", length, buffer_position);
     buffer_position += 2;
 
     if (buffer_position + length > buffer.size()) {
-#ifdef TLS_DEBUG
-        dbg() << "record length more than what we have: " << buffer.size();
-#endif
+        dbgln<debug_tls>("record length more than what we have: {}", buffer.size());
         return (i8)Error::NeedMoreData;
     }
 
-#ifdef TLS_DEBUG
-    dbg() << "message type: " << (u8)type << ", length: " << length;
-#endif
+    dbgln<debug_tls>("message type: {}, length: {}", (u8)type, length);
     auto plain = buffer.slice(buffer_position, buffer.size() - buffer_position);
 
     ByteBuffer decrypted;
 
     if (m_context.cipher_spec_set && type != MessageType::ChangeCipher) {
-#ifdef TLS_DEBUG
-        dbgln("Encrypted: ");
-        print_buffer(buffer.slice(header_size, length));
-#endif
+        if constexpr (debug_tls) {
+            dbgln("Encrypted: ");
+            print_buffer(buffer.slice(header_size, length));
+        }
 
         if (is_aead()) {
             ASSERT(m_aes_remote.gcm);
@@ -396,9 +389,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             write_packet(packet);
         } else {
-#ifdef TLS_DEBUG
-            dbg() << "application data message of size " << plain.size();
-#endif
+            dbgln<debug_tls>("application data message of size {}", plain.size());
 
             m_context.application_buffer.append(plain.data(), plain.size());
         }
@@ -423,13 +414,11 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     case MessageType::Alert:
-#ifdef TLS_DEBUG
-        dbg() << "alert message of length " << length;
-#endif
+        dbgln<debug_tls>("alert message of length {}", length);
         if (length >= 2) {
-#ifdef TLS_DEBUG
-            print_buffer(plain);
-#endif
+            if constexpr (debug_tls)
+                print_buffer(plain);
+
             auto level = plain[0];
             auto code = plain[1];
             if (level == (u8)AlertLevel::Critical) {
@@ -438,7 +427,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 try_disambiguate_error();
                 res = (i8)Error::UnknownError;
             } else {
-                dbg() << "Alert: " << code;
+                dbgln("Alert: {}", code);
             }
             if (code == 0) {
                 // close notify

@@ -27,6 +27,7 @@
 #include "RegexByteCode.h"
 #include "AK/StringBuilder.h"
 #include "RegexDebug.h"
+#include <AK/Debug.h>
 
 #include <ctype.h>
 
@@ -369,10 +370,10 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const M
 
         auto& map = output.named_capture_group_matches.at(input.match_index);
 
-#ifdef REGEX_DEBUG
-        ASSERT(start_position + length <= input.view.length());
-        dbg() << "Save named capture group with name=" << capture_group_name << " and content: " << input.view.substring_view(start_position, length).to_string();
-#endif
+        if constexpr (debug_regex) {
+            ASSERT(start_position + length <= input.view.length());
+            dbgln("Save named capture group with name={} and content='{}'", capture_group_name, input.view.substring_view(start_position, length));
+        }
 
         ASSERT(start_position + length <= input.view.length());
         auto view = input.view.substring_view(start_position, length);

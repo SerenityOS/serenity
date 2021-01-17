@@ -289,3 +289,11 @@ struct MatchOutput {
 }
 
 using regex::RegexStringView;
+
+template<>
+struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const regex::RegexStringView& value)
+    {
+        return Formatter<StringView>::format(builder, { value.characters_without_null_termination(), value.length() });
+    }
+};
