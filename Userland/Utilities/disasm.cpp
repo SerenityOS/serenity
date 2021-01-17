@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
@@ -34,8 +35,6 @@
 #include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 #include <string.h>
-
-//#define DISASM_DUMP
 
 int main(int argc, char** argv)
 {
@@ -100,10 +99,10 @@ int main(int argc, char** argv)
                     return a.size < b.size;
                 return a.name < b.name;
             });
-#ifdef DISASM_DUMP
-            for (size_t i = 0; i < symbols.size(); ++i)
-                dbg() << symbols[i].name << ": " << (void*)(uintptr_t)symbols[i].value << ", " << symbols[i].size;
-#endif
+            if constexpr (debug_disasm_dump) {
+                for (size_t i = 0; i < symbols.size(); ++i)
+                    dbgln("{}: {:p}, {}", symbols[i].name, symbols[i].value, symbols[i].size);
+            }
         }
     }
 
