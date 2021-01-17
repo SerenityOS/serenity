@@ -25,6 +25,7 @@
  */
 
 #include "Service.h"
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
@@ -83,7 +84,7 @@ void Service::setup_socket()
     auto socket_address = Core::SocketAddress::local(m_socket_path);
     auto un_optional = socket_address.to_sockaddr_un();
     if (!un_optional.has_value()) {
-        dbg() << "Socket name " << m_socket_path << " is too long. BUG! This should have failed earlier!";
+        dbgln("Socket name {} is too long. BUG! This should have failed earlier!", m_socket_path);
         ASSERT_NOT_REACHED();
     }
     auto un = un_optional.value();
@@ -114,9 +115,8 @@ void Service::setup_notifier()
 
 void Service::handle_socket_connection()
 {
-#ifdef SERVICE_DEBUG
-    dbg() << "Ready to read on behalf of " << name();
-#endif
+    dbgln<debug_service>("Ready to read on behalf of {}", name());
+
     if (m_accept_socket_connections) {
         int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
         if (accepted_fd < 0) {
@@ -144,16 +144,14 @@ void Service::activate()
 
 void Service::spawn(int socket_fd)
 {
-#ifdef SERVICE_DEBUG
-    dbg() << "Spawning " << name();
-#endif
+    dbgln<debug_service>("Spawning {}", name());
 
     m_run_timer.start();
     pid_t pid = fork();
 
     if (pid < 0) {
         perror("fork");
-        dbg() << "Failed to spawn " << name() << ". Sucks, dude :(";
+        dbgln("Failed to spawn {}. Sucks, dude :(", name());
     } else if (pid == 0) {
         // We are the child.
 
@@ -241,7 +239,7 @@ void Service::did_exit(int exit_code)
     ASSERT(m_pid > 0);
     ASSERT(!m_multi_instance);
 
-    dbg() << "Service " << name() << " has exited with exit code " << exit_code;
+    dbgln("Service {} has exited with exit code {}", name(), exit_code);
 
     s_service_map.remove(m_pid);
     m_pid = -1;
@@ -261,7 +259,7 @@ void Service::did_exit(int exit_code)
             dbgln("Third time's a charm?");
             break;
         default:
-            dbg() << "Giving up on " << name() << ". Good luck!";
+            dbgln("Giving up on {}. Good luck!", name());
             return;
         }
         m_restart_attempts++;
