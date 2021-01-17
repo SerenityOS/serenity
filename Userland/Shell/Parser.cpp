@@ -718,19 +718,23 @@ RefPtr<AST::Node> Parser::parse_if_expr()
         return body;
     };
 
-    consume_while(is_whitespace);
+    consume_while(is_any_of(" \t\n"));
     auto true_branch = parse_braced_toplevel();
 
-    consume_while(is_whitespace);
+    auto end_before_else = m_offset;
+    auto line_before_else = line();
+    consume_while(is_any_of(" \t\n"));
     Optional<AST::Position> else_position;
     {
         auto else_start = push_start();
         if (expect("else"))
             else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
+        else
+            restore_to(end_before_else, line_before_else);
     }
 
     if (else_position.has_value()) {
-        consume_while(is_whitespace);
+        consume_while(is_any_of(" \t\n"));
         if (peek() == '{') {
             auto false_branch = parse_braced_toplevel();
             return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
