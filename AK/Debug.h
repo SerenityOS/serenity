@@ -471,3 +471,45 @@ constexpr bool debug_dhcpv4_client = true;
 #else
 constexpr bool debug_dhcpv4_client = false;
 #endif
+
+#ifdef IMAGE_DECODER_DEBUG
+constexpr bool debug_image_decoder = true;
+#else
+constexpr bool debug_image_decoder = false;
+#endif
+
+#ifdef SYSTEM_MENU_DEBUG
+constexpr bool debug_system_menu = true;
+#else
+constexpr bool debug_system_menu = false;
+#endif
+
+#ifdef SYSTEMSERVER_DEBUG
+constexpr bool debug_system_server = true;
+#else
+constexpr bool debug_system_server = false;
+#endif
+
+#ifdef SERVICE_DEBUG
+constexpr bool debug_service = true;
+#else
+constexpr bool debug_service = false;
+#endif
+
+#ifdef COMPOSE_DEBUG
+constexpr bool debug_compose = true;
+#else
+constexpr bool debug_compose = false;
+#endif
+
+#ifdef MINIMIZE_ANIMATION_DEBUG
+constexpr bool debug_minimize_animation = true;
+#else
+constexpr bool debug_minimize_animation = false;
+#endif
+
+#ifdef OCCLUSIONS_DEBUG
+constexpr bool debug_occlusions = true;
+#else
+constexpr bool debug_occlusions = false;
+#endif

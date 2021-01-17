@@ -27,6 +27,7 @@
 #include "Service.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -53,9 +54,7 @@ static void sigchld_handler(int)
         if (pid == 0)
             break;
 
-#ifdef SYSTEMSERVER_DEBUG
-        dbg() << "Reaped child with pid " << pid << ", exit status " << status;
-#endif
+        dbgln<debug_system_server>("Reaped child with pid {}, exit status {}", pid, status);
 
         Service* service = Service::find_by_pid(pid);
         if (service == nullptr) {
@@ -71,18 +70,18 @@ static void parse_boot_mode()
 {
     auto f = Core::File::construct("/proc/cmdline");
     if (!f->open(Core::IODevice::ReadOnly)) {
-        dbg() << "Failed to read command line: " << f->error_string();
+        dbgln("Failed to read command line: {}", f->error_string());
         return;
     }
     const String cmdline = String::copy(f->read_all(), Chomp);
-    dbg() << "Read command line: " << cmdline;
+    dbgln("Read command line: {}", cmdline);
 
     for (auto& part : cmdline.split_view(' ')) {
         auto pair = part.split_view('=', 2);
         if (pair.size() == 2 && pair[0] == "boot_mode")
             g_boot_mode = pair[1];
     }
-    dbg() << "Booting in " << g_boot_mode << " mode";
+    dbgln("Booting in {} mode", g_boot_mode);
 }
 
 static void prepare_devfs()
@@ -234,7 +233,7 @@ int main(int, char**)
     }
 
     // After we've set them all up, activate them!
-    dbg() << "Activating " << services.size() << " services...";
+    dbgln("Activating {} services...", services.size());
     for (auto& service : services)
         service.activate();
 
