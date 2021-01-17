@@ -239,15 +239,6 @@ loop {
 }
 ```
 
-###### Examples
-```sh
-# Iterate over every non-hidden file in the current directory, and prepend '1-' to its name.
-$ for * { mv $it 1-$it }
-
-# Iterate over a sequence and write each element to a file
-$ for i in $(seq 1 100) { echo $i >> foo }
-```
-
 ##### Subshells
 Subshells evaluate a given block in a new instance (fork) of the current shell process. to create a subshell, any valid shell code can be enclosed in braces.
 
