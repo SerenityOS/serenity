@@ -30,7 +30,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio thread shared_buffer accept rpath wpath cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd thread accept rpath wpath cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -52,7 +52,7 @@ int main(int, char**)
         IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, mixer);
     };
 
-    if (pledge("stdio thread shared_buffer accept", nullptr) < 0) {
+    if (pledge("stdio recvfd thread accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

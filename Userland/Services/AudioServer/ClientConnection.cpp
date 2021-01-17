@@ -26,7 +26,6 @@
 
 #include "ClientConnection.h"
 #include "Mixer.h"
-#include <AK/SharedBuffer.h>
 #include <AudioServer/AudioClientEndpoint.h>
 #include <LibAudio/Buffer.h>
 #include <errno.h>
@@ -98,20 +97,13 @@ OwnPtr<Messages::AudioServer::SetMainMixVolumeResponse> ClientConnection::handle
 
 OwnPtr<Messages::AudioServer::EnqueueBufferResponse> ClientConnection::handle(const Messages::AudioServer::EnqueueBuffer& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shbuf_id(message.buffer_id());
-    if (!shared_buffer) {
-        // FIXME: The shared buffer should have been retrieved for us already.
-        //        We don't want to do IPC error checking at this layer.
-        ASSERT_NOT_REACHED();
-    }
-
     if (!m_queue)
         m_queue = m_mixer.create_queue(*this);
 
     if (m_queue->is_full())
         return make<Messages::AudioServer::EnqueueBufferResponse>(false);
 
-    m_queue->enqueue(Audio::Buffer::create_with_shared_buffer(*shared_buffer, message.sample_count()));
+    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(message.buffer(), message.buffer_id(), message.sample_count()));
     return make<Messages::AudioServer::EnqueueBufferResponse>(true);
 }
 
