@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
@@ -32,8 +33,6 @@
 #include <LibWeb/Layout/SVGPathBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <ctype.h>
-
-//#define PATH_DEBUG
 
 namespace Web::SVG {
 
@@ -136,7 +135,7 @@ void PathDataParser::parse_drawto()
     } else if (match('A') || match('a')) {
         parse_elliptical_arc();
     } else {
-        dbg() << "PathDataParser::parse_drawto failed to match: '" << ch() << "'";
+        dbgln("PathDataParser::parse_drawto failed to match: '{}'", ch());
         TODO();
     }
 }
