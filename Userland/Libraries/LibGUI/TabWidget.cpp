@@ -219,6 +219,8 @@ void TabWidget::paint_event(PaintEvent& event)
     };
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
+        if (!m_tabs[i].visible)
+            continue;
         if (m_tabs[i].widget == m_active_widget)
             continue;
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
@@ -236,6 +238,8 @@ void TabWidget::paint_event(PaintEvent& event)
     }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
+        if (!m_tabs[i].visible)
+            continue;
         if (m_tabs[i].widget != m_active_widget)
             continue;
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
@@ -307,7 +311,7 @@ Gfx::IntRect TabWidget::button_rect(int index) const
 
 int TabWidget::TabData::width(const Gfx::Font& font) const
 {
-    return 16 + font.width(title) + (icon ? (16 + 4) : 0);
+    return visible ? 16 + font.width(title) + (icon ? (16 + 4) : 0) : 0;
 }
 
 void TabWidget::mousedown_event(MouseEvent& event)
@@ -402,6 +406,27 @@ void TabWidget::set_tab_icon(Widget& tab, const Gfx::Bitmap* icon)
             return;
         }
     }
+}
+
+void TabWidget::set_tab_visible(Widget& tab, bool tab_visible) 
+{
+    for (auto& t : m_tabs) {
+        if (t.widget == &tab) {
+            t.visible = tab_visible;
+            update();
+            return;
+        }
+    }
+}
+
+bool TabWidget::is_tab_visible(Widget& tab) 
+{
+    for (auto& t : m_tabs) {
+        if (t.widget == &tab)
+            return t.visible;
+    }
+
+    return false;
 }
 
 void TabWidget::activate_next_tab()

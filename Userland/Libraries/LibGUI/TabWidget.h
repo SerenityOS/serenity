@@ -69,7 +69,10 @@ public:
     void remove_tab(Widget& tab) { remove_widget(tab); }
 
     void set_tab_title(Widget& tab, const StringView& title);
-    void set_tab_icon(Widget& tab, const Gfx::Bitmap*);
+    void set_tab_icon(Widget& tab, const Gfx::Bitmap*);    
+    void set_tab_visible(Widget& tab, bool tab_visible);
+    
+    bool is_tab_visible(Widget& tab);
 
     void activate_next_tab();
     void activate_previous_tab();
@@ -115,6 +118,7 @@ private:
         String title;
         RefPtr<Gfx::Bitmap> icon;
         Widget* widget { nullptr };
+        bool visible { true };
     };
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
