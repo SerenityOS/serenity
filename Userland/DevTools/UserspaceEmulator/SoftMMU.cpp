@@ -28,7 +28,6 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include "Report.h"
-#include "SharedBufferRegion.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Memory.h>
 
@@ -42,10 +41,6 @@ SoftMMU::SoftMMU(Emulator& emulator)
 void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
     ASSERT(!find_region({ 0x23, region->base() }));
-
-    // FIXME: More sanity checks pls
-    if (is<SharedBufferRegion>(*region))
-        m_shbuf_regions.set(static_cast<SharedBufferRegion*>(region.ptr())->shbuf_id(), region.ptr());
 
     size_t first_page_in_region = region->base() / PAGE_SIZE;
     size_t last_page_in_region = (region->base() + region->size() - 1) / PAGE_SIZE;
@@ -63,8 +58,6 @@ void SoftMMU::remove_region(Region& region)
         m_page_to_region_map[first_page_in_region + i] = nullptr;
     }
 
-    if (is<SharedBufferRegion>(region))
-        m_shbuf_regions.remove(static_cast<SharedBufferRegion&>(region).shbuf_id());
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
 }
 
@@ -236,11 +229,6 @@ ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
     auto buffer = ByteBuffer::create_uninitialized(size);
     copy_from_vm(buffer.data(), source, size);
     return buffer;
-}
-
-SharedBufferRegion* SoftMMU::shbuf_region(int shbuf_id)
-{
-    return (SharedBufferRegion*)m_shbuf_regions.get(shbuf_id).value_or(nullptr);
 }
 
 bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueWithShadow<u8> value)

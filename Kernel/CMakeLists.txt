@@ -101,7 +101,6 @@ set(KERNEL_SOURCES
     RTC.cpp
     Random.cpp
     Scheduler.cpp
-    SharedBuffer.cpp
     StdLib.cpp
     Syscall.cpp
     Syscalls/anon_create.cpp
@@ -157,7 +156,6 @@ set(KERNEL_SOURCES
     Syscalls/setkeymap.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
-    Syscalls/shbuf.cpp
     Syscalls/shutdown.cpp
     Syscalls/sigaction.cpp
     Syscalls/socket.cpp

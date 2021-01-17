@@ -80,8 +80,7 @@ extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
     __ENUMERATE_PLEDGE_PROMISE(accept)    \
     __ENUMERATE_PLEDGE_PROMISE(settime)   \
     __ENUMERATE_PLEDGE_PROMISE(sigaction) \
-    __ENUMERATE_PLEDGE_PROMISE(setkeymap) \
-    __ENUMERATE_PLEDGE_PROMISE(shared_buffer)
+    __ENUMERATE_PLEDGE_PROMISE(setkeymap)
 
 enum class Pledge : u32 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) x,
@@ -334,10 +333,6 @@ public:
     int sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size);
     int sys$rename(Userspace<const Syscall::SC_rename_params*>);
     int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
-    int sys$shbuf_create(int, void** buffer);
-    int sys$shbuf_allow_pid(int, pid_t peer_pid);
-    void* sys$shbuf_get(int shbuf_id, Userspace<size_t*> size);
-    int sys$shbuf_release(int shbuf_id);
     int sys$halt();
     int sys$reboot();
     int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
@@ -530,7 +525,6 @@ private:
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& elf_header, int nread, size_t file_size);
 
     int alloc_fd(int first_candidate_fd = 0);
-    void disown_all_shared_buffers();
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(ProcessGroupID pgrp, int signal);

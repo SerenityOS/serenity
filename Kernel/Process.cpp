@@ -45,10 +45,10 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
-#include <Kernel/SharedBuffer.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/ProcessPagingScope.h>
@@ -644,7 +644,6 @@ void Process::finalize()
 
     m_dead = true;
 
-    disown_all_shared_buffers();
     {
         // FIXME: PID/TID BUG
         if (auto parent_thread = Thread::from_tid(m_ppid.value())) {

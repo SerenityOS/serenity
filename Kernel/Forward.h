@@ -60,7 +60,6 @@ class RangeAllocator;
 class Region;
 class Scheduler;
 class SchedulerPerProcessorData;
-class SharedBuffer;
 class Socket;
 template<typename BaseType>
 class SpinLock;

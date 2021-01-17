@@ -33,11 +33,6 @@ __BEGIN_DECLS
 
 int disown(pid_t);
 
-int shbuf_create(int, void** buffer);
-int shbuf_allow_pid(int, pid_t peer_pid);
-void* shbuf_get(int shbuf_id, size_t* size);
-int shbuf_release(int shbuf_id);
-
 int module_load(const char* path, size_t path_length);
 int module_unload(const char* name, size_t name_length);
 

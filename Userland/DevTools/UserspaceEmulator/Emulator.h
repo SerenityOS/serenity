@@ -91,10 +91,6 @@ private:
     int virt$stat(FlatPtr);
     int virt$realpath(FlatPtr);
     int virt$gethostname(FlatPtr, ssize_t);
-    int virt$shbuf_create(int size, FlatPtr buffer);
-    int virt$shbuf_allow_pid(int, pid_t peer_pid);
-    FlatPtr virt$shbuf_get(int shbuf_id, FlatPtr size);
-    int virt$shbuf_release(int shbuf_id);
     int virt$profiling_enable(pid_t);
     int virt$profiling_disable(pid_t);
     int virt$disown(pid_t);
