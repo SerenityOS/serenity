@@ -417,3 +417,28 @@ constexpr bool debug_tls = true;
 #else
 constexpr bool debug_tls = false;
 #endif
+
+#ifdef DEBUG_SPAM
+constexpr bool debug_spam = true;
+#else
+constexpr bool debug_spam = false;
+#endif
+
+#ifdef WRAPPER_GERNERATOR_DEBUG
+constexpr bool debug_wrapper_generator = true;
+#else
+constexpr bool debug_wrapper_generator = false;
+#endif
+
+#ifdef PARSER_DEBUG
+constexpr bool debug_parser = true;
+#else
+constexpr bool debug_parser = false;
+#endif
+
+#ifdef TOKENIZER_TRACE
+constexpr bool debug_trace_tokenizer = true;
+#else
+constexpr bool debug_trace_tokenizer = false;
+#endif
+

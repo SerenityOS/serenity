@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -71,15 +72,15 @@ void HTMLIFrameElement::load_src(const String& value)
 {
     auto url = document().complete_url(value);
     if (!url.is_valid()) {
-        dbg() << "iframe failed to load URL: Invalid URL: " << value;
+        dbgln("iframe failed to load URL: Invalid URL: {}", value);
         return;
     }
     if (url.protocol() == "file" && document().origin().protocol() != "file") {
-        dbg() << "iframe failed to load URL: Security violation: " << document().url() << " may not load " << url;
+        dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
         return;
     }
 
-    dbg() << "Loading iframe document from " << value;
+    dbgln("Loading iframe document from {}", value);
     m_content_frame->loader().load(url, FrameLoader::Type::IFrame);
 }
 
