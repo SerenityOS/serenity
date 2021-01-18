@@ -59,8 +59,9 @@
 enum {
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
+    _SC_OPEN_MAX,
     _SC_PAGESIZE,
-    _SC_OPEN_MAX
+    _SC_TTY_NAME_MAX,
 };
 
 #define PERF_EVENT_SAMPLE 0

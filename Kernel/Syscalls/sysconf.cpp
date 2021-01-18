@@ -26,6 +26,7 @@
 
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
+#include <limits.h>
 
 namespace Kernel {
 
@@ -35,10 +36,12 @@ long Process::sys$sysconf(int name)
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
         return Processor::processor_count();
-    case _SC_PAGESIZE:
-        return PAGE_SIZE;
     case _SC_OPEN_MAX:
         return max_open_file_descriptors();
+    case _SC_PAGESIZE:
+        return PAGE_SIZE;
+    case _SC_TTY_NAME_MAX:
+        return TTY_NAME_MAX;
     default:
         return -EINVAL;
     }
