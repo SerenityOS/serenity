@@ -217,13 +217,9 @@
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
 
-#define ADD_WINDOW_OBJECT_INTERFACE(name)                                 \
-    {                                                                     \
-        auto* prototype = heap().allocate<name##Prototype>(*this, *this); \
-        name##Constructor* constructor = nullptr;                         \
-        add_constructor(#name, constructor, prototype);                   \
-        set_web_prototype(#name, prototype);                              \
-        set_web_constructor(#name, constructor);                          \
+#define ADD_WINDOW_OBJECT_INTERFACE(name)                 \
+    {                                                     \
+        ensure_web_constructor<name##Constructor>(#name); \
     }
 
 #define ADD_WINDOW_OBJECT_INTERFACES                      \

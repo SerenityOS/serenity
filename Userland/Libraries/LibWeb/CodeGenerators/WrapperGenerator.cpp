@@ -160,6 +160,7 @@ struct Interface {
     String fully_qualified_name;
     String constructor_class;
     String prototype_class;
+    String prototype_base_class;
 };
 
 static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
@@ -312,6 +313,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
     interface->constructor_class = String::formatted("{}Constructor", interface->name);
     interface->prototype_class = String::formatted("{}Prototype", interface->name);
+    interface->prototype_base_class = String::formatted("{}Prototype", interface->parent_name.is_empty() ? "Object" : interface->parent_name);
 
     return interface;
 }
@@ -563,6 +565,7 @@ void generate_implementation(const IDL::Interface& interface)
     generator.set("name", interface.name);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
+    generator.set("prototype_class", interface.prototype_class);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
@@ -573,6 +576,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
@@ -614,7 +618,7 @@ namespace Web::Bindings {
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
     : @wrapper_base_class@(global_object, impl)
 {
-    set_prototype(static_cast<WindowObject&>(global_object).web_prototype("@name@"));
+    set_prototype(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"));
 }
 )~~~");
     }
@@ -1086,7 +1090,7 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     NativeFunction::initialize(global_object);
-    define_property(vm.names.prototype, window.web_prototype("@prototype_class@"), 0);
+    define_property(vm.names.prototype, window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
     define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 
@@ -1133,7 +1137,9 @@ void generate_prototype_implementation(const IDL::Interface& interface)
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
+    generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", interface.prototype_class);
+    generator.set("prototype_base_class", interface.prototype_base_class);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("constructor_class", interface.constructor_class);
     generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
@@ -1144,6 +1150,10 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
+#    include <LibWeb/Bindings/@prototype_base_class@.h>
+#endif
 #if __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
@@ -1165,6 +1175,15 @@ namespace Web::Bindings {
 @prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
 {
+)~~~");
+
+    if (!interface.parent_name.is_empty()) {
+        generator.append(R"~~~(
+            set_prototype(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@"));
+)~~~");
+    }
+
+    generator.append(R"~~~(
 }
 
 @prototype_class@::~@prototype_class@()
