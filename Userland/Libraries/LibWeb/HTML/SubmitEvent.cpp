@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/SubmitEvent.h>
 
 namespace Web::HTML {
 
-class SubmitEvent final : public DOM::Event {
-public:
-    using WrapperType = Bindings::SubmitEventWrapper;
+NonnullRefPtr<SubmitEvent> SubmitEvent::create(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+{
+    return adopt(*new SubmitEvent(event_name, move(submitter)));
+}
 
-    static NonnullRefPtr<SubmitEvent> create(const FlyString& event_name, RefPtr<HTMLElement> submitter);
+SubmitEvent::SubmitEvent(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+    : DOM::Event(event_name)
+    , m_submitter(submitter)
+{
+}
 
-    virtual ~SubmitEvent() override;
+SubmitEvent::~SubmitEvent()
+{
+}
 
-    RefPtr<HTMLElement> submitter() const;
-
-private:
-    SubmitEvent(const FlyString& event_name, RefPtr<HTMLElement> submitter);
-
-    RefPtr<HTMLElement> m_submitter;
-};
+RefPtr<HTMLElement> SubmitEvent::submitter() const
+{
+    return m_submitter;
+}
 
 }

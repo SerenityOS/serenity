@@ -140,6 +140,7 @@ set(SOURCES
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
+    HTML/SubmitEvent.cpp
     HTML/TagNames.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
