@@ -145,10 +145,13 @@ if (BUILD_LAGOM)
             get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
             add_test(
                 NAME "Shell-${TEST_NAME}"
-                COMMAND shell_lagom "${TEST_PATH}"
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                COMMAND shell_lagom --skip-shellrc "${TEST_PATH}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Shell/Tests
             )
-            set_tests_properties("Shell-${TEST_NAME}" PROPERTIES TIMEOUT 10)
+            set_tests_properties("Shell-${TEST_NAME}" PROPERTIES
+                TIMEOUT 10
+                FAIL_REGULAR_EXPRESSION "FAIL"
+                PASS_REGULAR_EXPRESSION "PASS")
         endforeach()
     endif()
 endif()
