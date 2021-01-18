@@ -194,10 +194,13 @@ start:
     orl $0x80000000, %eax
     movl %eax, %cr0
 
+    /* set up stack */
+    mov $stack_top, %esp
+    and $-16, %esp
+
     /* jmp to an address above the 3GB mark */
-    push %cs
-    push $1f 
-    retf
+    movl $1f,%eax
+    jmp *%eax
 1:
     movl %cr3, %eax
     movl %eax, %cr3
@@ -212,10 +215,7 @@ start:
     addl $8, %edi
     loop 1b
 
-    /* set up initial stack and jump into C++ land */
-    mov $stack_top, %esp
-    and $-16, %esp
-
+    /* jump into C++ land */
     addl $0xc0000000, %ebx
     movl %ebx, multiboot_info_ptr
 
