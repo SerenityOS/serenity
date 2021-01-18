@@ -1690,12 +1690,18 @@ IfCond::IfCond(Position position, Optional<Position> else_position, NonnullRefPt
 
     if (m_true_branch) {
         auto true_branch = m_true_branch.release_nonnull();
-        m_true_branch = create<AST::Execute>(true_branch->position(), true_branch);
+        if (true_branch->is_execute())
+            m_true_branch = static_ptr_cast<AST::Execute>(true_branch)->command();
+        else
+            m_true_branch = move(true_branch);
     }
 
     if (m_false_branch) {
         auto false_branch = m_false_branch.release_nonnull();
-        m_false_branch = create<AST::Execute>(false_branch->position(), false_branch);
+        if (false_branch->is_execute())
+            m_false_branch = static_ptr_cast<AST::Execute>(false_branch)->command();
+        else
+            m_false_branch = move(false_branch);
     }
 }
 
