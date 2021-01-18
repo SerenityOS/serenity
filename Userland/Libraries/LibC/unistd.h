@@ -34,6 +34,7 @@
 #pragma once
 
 #include <errno.h>
+#include <fd_set.h>
 #include <limits.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
