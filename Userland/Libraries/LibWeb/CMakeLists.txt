@@ -226,6 +226,8 @@ endfunction(add_wrapper_sources)
 function(libweb_js_wrapper class)
     get_filename_component(basename ${class} NAME)
     add_wrapper_sources(Bindings/${basename}Wrapper.cpp Bindings/${basename}Wrapper.h)
+    add_wrapper_sources(Bindings/${basename}Constructor.cpp Bindings/${basename}Constructor.h)
+    add_wrapper_sources(Bindings/${basename}Prototype.cpp Bindings/${basename}Prototype.h)
     add_custom_command(
         OUTPUT Bindings/${basename}Wrapper.h
         COMMAND ${write_if_different} Bindings/${basename}Wrapper.h CodeGenerators/WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
@@ -240,8 +242,40 @@ function(libweb_js_wrapper class)
         DEPENDS WrapperGenerator
         MAIN_DEPENDENCY ${class}.idl
     )
+    add_custom_command(
+        OUTPUT Bindings/${basename}Constructor.h
+        COMMAND ${write_if_different} Bindings/${basename}Constructor.h CodeGenerators/WrapperGenerator --constructor-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY ${class}.idl
+    )
+    add_custom_command(
+        OUTPUT Bindings/${basename}Constructor.cpp
+        COMMAND ${write_if_different} Bindings/${basename}Constructor.cpp CodeGenerators/WrapperGenerator --constructor-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY ${class}.idl
+    )
+    add_custom_command(
+        OUTPUT Bindings/${basename}Prototype.h
+        COMMAND ${write_if_different} Bindings/${basename}Prototype.h CodeGenerators/WrapperGenerator --prototype-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY ${class}.idl
+    )
+    add_custom_command(
+        OUTPUT Bindings/${basename}Prototype.cpp
+        COMMAND ${write_if_different} Bindings/${basename}Prototype.cpp CodeGenerators/WrapperGenerator --prototype-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+        VERBATIM
+        DEPENDS WrapperGenerator
+        MAIN_DEPENDENCY ${class}.idl
+    )
     add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
     add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
+    add_custom_target(generate_${basename}Constructor.h DEPENDS Bindings/${class}Constructor.h)
+    add_custom_target(generate_${basename}Constructor.cpp DEPENDS Bindings/${class}Constructor.cpp)
+    add_custom_target(generate_${basename}Prototype.h DEPENDS Bindings/${class}Prototype.h)
+    add_custom_target(generate_${basename}Prototype.cpp DEPENDS Bindings/${class}Prototype.cpp)
 endfunction()
 
 libweb_js_wrapper(DOM/CharacterData)
