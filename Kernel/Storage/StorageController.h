@@ -42,24 +42,21 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 class StorageDevice;
-class StorageController : public RefCounted<StorageController>
-    , public PCI::DeviceController {
+class StorageController : public RefCounted<StorageController> {
     AK_MAKE_ETERNAL
 public:
     enum class Type : u8 {
         IDE,
         NVMe
     };
+
+    virtual ~StorageController() = default;
+
     virtual Type type() const = 0;
     virtual RefPtr<StorageDevice> device(u32 index) const = 0;
     virtual size_t devices_count() const = 0;
 
 protected:
-    explicit StorageController(PCI::Address address)
-        : PCI::DeviceController(address)
-    {
-    }
-
     virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) = 0;
 
 protected:
