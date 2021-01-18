@@ -1,0 +1,11 @@
+--- Python-3.9.1/Python/pystate.c	2021-01-18 18:33:06.021000000 +0100
++++ Python-3.9.1/Python/pystate.c	2021-01-18 18:33:50.274359610 +0100
+@@ -223,7 +223,7 @@
+ 
+     interp->eval_frame = _PyEval_EvalFrameDefault;
+ #ifdef HAVE_DLOPEN
+-#if HAVE_DECL_RTLD_NOW
++#if defined(HAVE_DECL_RTLD_NOW) && !defined(__serenity__)
+     interp->dlopenflags = RTLD_NOW;
+ #else
+     interp->dlopenflags = RTLD_LAZY;
