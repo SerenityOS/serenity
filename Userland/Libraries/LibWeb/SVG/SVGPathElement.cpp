@@ -36,66 +36,73 @@
 
 namespace Web::SVG {
 
-#ifdef PATH_DEBUG
 static void print_instruction(const PathInstruction& instruction)
 {
+    ASSERT(debug_path);
+
     auto& data = instruction.data;
 
     switch (instruction.type) {
     case PathInstructionType::Move:
-        dbg() << "Move (absolute=" << instruction.absolute << ")";
+        dbgln("Move (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+            dbgln("    x={}, y={}", data[i], data[i + 1]);
         break;
     case PathInstructionType::ClosePath:
-        dbg() << "ClosePath (absolute=" << instruction.absolute << ")";
+        dbgln("ClosePath (absolute={})", instruction.absolute);
         break;
     case PathInstructionType::Line:
-        dbg() << "Line (absolute=" << instruction.absolute << ")";
+        dbgln("Line (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+            dbgln("    x={}, y={}", data[i], data[i + 1]);
         break;
     case PathInstructionType::HorizontalLine:
-        dbg() << "HorizontalLine (absolute=" << instruction.absolute << ")";
+        dbgln("HorizontalLine (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); ++i)
-            dbg() << "    x=" << data[i];
+            dbgln("    x={}", data[i]);
         break;
     case PathInstructionType::VerticalLine:
-        dbg() << "VerticalLine (absolute=" << instruction.absolute << ")";
+        dbgln("VerticalLine (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); ++i)
-            dbg() << "    y=" << data[i];
+            dbgln("    y={}", data[i]);
         break;
     case PathInstructionType::Curve:
-        dbg() << "Curve (absolute=" << instruction.absolute << ")";
+        dbgln("Curve (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 6)
-            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x2=" << data[i + 2] << ", y2=" << data[i + 3] << "), (x=" << data[i + 4] << ", y=" << data[i + 5] << ")";
+            dbgln("    (x1={}, y1={}, x2={}, y2={}), (x={}, y={})", data[i], data[i + 1], data[i + 2], data[i + 3], data[i + 4], data[i + 5]);
         break;
     case PathInstructionType::SmoothCurve:
-        dbg() << "SmoothCurve (absolute=" << instruction.absolute << ")";
+        dbgln("SmoothCurve (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 4)
-            dbg() << "    (x2=" << data[i] << ", y2=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
+            dbgln("    (x2={}, y2={}), (x={}, y={})", data[i], data[i + 1], data[i + 2], data[i + 3]);
         break;
     case PathInstructionType::QuadraticBezierCurve:
-        dbg() << "QuadraticBezierCurve (absolute=" << instruction.absolute << ")";
+        dbgln("QuadraticBezierCurve (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 4)
-            dbg() << "    (x1=" << data[i] << ", y1=" << data[i + 1] << "), (x=" << data[i + 2] << ", y=" << data[i + 3] << ")";
+            dbgln("    (x1={}, y1={}), (x={}, y={})", data[i], data[i + 1], data[i + 2], data[i + 3]);
         break;
     case PathInstructionType::SmoothQuadraticBezierCurve:
-        dbg() << "SmoothQuadraticBezierCurve (absolute=" << instruction.absolute << ")";
+        dbgln("SmoothQuadraticBezierCurve (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 2)
-            dbg() << "    x=" << data[i] << ", y=" << data[i + 1];
+            dbgln("    x={}, y={}", data[i], data[i + 1]);
         break;
     case PathInstructionType::EllipticalArc:
-        dbg() << "EllipticalArc (absolute=" << instruction.absolute << ")";
+        dbgln("EllipticalArc (absolute={})", instruction.absolute);
         for (size_t i = 0; i < data.size(); i += 7)
-            dbg() << "    (rx=" << data[i] << ", ry=" << data[i + 1] << ") x-axis-rotation=" << data[i + 2] << ", large-arc-flag=" << data[i + 3] << ", sweep-flag=" << data[i + 4] << ", (x=" << data[i + 5] << ", y=" << data[i + 6] << ")";
+            dbgln("    (rx={}, ry={}) x-axis-rotation={}, large-arc-flag={}, sweep-flag={}, (x={}, y={})",
+                data[i],
+                data[i + 1],
+                data[i + 2],
+                data[i + 3],
+                data[i + 4],
+                data[i + 5],
+                data[i + 6]);
         break;
     case PathInstructionType::Invalid:
         dbgln("Invalid");
         break;
     }
 }
-#endif
 
 PathDataParser::PathDataParser(const String& source)
     : m_source(source)
@@ -456,9 +463,9 @@ Gfx::Path& SVGPathElement::get_path()
         auto& absolute = instruction.absolute;
         auto& data = instruction.data;
 
-#ifdef PATH_DEBUG
-        print_instruction(instruction);
-#endif
+        if constexpr (debug_path) {
+            print_instruction(instruction);
+        }
 
         bool clear_last_control_point = true;
 
