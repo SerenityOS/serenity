@@ -136,6 +136,7 @@ class HeapBlock;
 class Interpreter;
 class LexicalEnvironment;
 class MarkedValueList;
+class NativeFunction;
 class NativeProperty;
 class PrimitiveString;
 class Reference;
