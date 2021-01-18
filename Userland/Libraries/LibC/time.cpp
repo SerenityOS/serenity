@@ -322,15 +322,19 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
     return fits ? str.length() : 0;
 }
 
-long timezone = 0;
+long timezone;
 long altzone;
 char* tzname[2];
 int daylight;
 
+constexpr const char* __utc = "UTC";
+
 void tzset()
 {
-    //FIXME: Here we prepend we are in UTC+0.
+    // FIXME: Here we pretend we are in UTC+0.
     timezone = 0;
+    tzname[0] = const_cast<char*>(__utc);
+    tzname[1] = const_cast<char*>(__utc);
 }
 
 clock_t clock()
