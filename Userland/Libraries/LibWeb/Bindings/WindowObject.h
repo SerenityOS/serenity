@@ -55,8 +55,29 @@ public:
 
     JS::Object* web_prototype(const String& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
     JS::NativeFunction* web_constructor(const String& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
-    void set_web_prototype(const String& class_name, JS::Object* prototype) { m_prototypes.set(class_name, prototype); }
-    void set_web_constructor(const String& class_name, JS::NativeFunction* constructor) { m_constructors.set(class_name, constructor); }
+
+    template<typename T>
+    JS::Object& ensure_web_prototype(const String& class_name)
+    {
+        auto it = m_prototypes.find(class_name);
+        if (it != m_prototypes.end())
+            return *it->value;
+        auto* prototype = heap().allocate<T>(*this, *this);
+        m_prototypes.set(class_name, prototype);
+        return *prototype;
+    }
+
+    template<typename T>
+    JS::NativeFunction& ensure_web_constructor(const String& class_name)
+    {
+        auto it = m_constructors.find(class_name);
+        if (it != m_constructors.end())
+            return *it->value;
+        auto* constructor = heap().allocate<T>(*this, *this);
+        m_constructors.set(class_name, constructor);
+        define_property(class_name, constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+        return *constructor;
+    }
 
 private:
     virtual const char* class_name() const override { return "WindowObject"; }
