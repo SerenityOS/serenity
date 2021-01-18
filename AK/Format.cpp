@@ -652,8 +652,18 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool new
 }
 #endif
 
+static bool is_debug_enabled = true;
+
+void set_debug_enabled(bool value)
+{
+    is_debug_enabled = value;
+}
+
 void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 {
+    if (!is_debug_enabled)
+        return;
+
     StringBuilder builder;
 
 // FIXME: This logic is redundant with the stuff in LogStream.cpp.
