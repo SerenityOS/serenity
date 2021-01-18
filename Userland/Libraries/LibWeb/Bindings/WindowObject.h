@@ -75,7 +75,7 @@ public:
             return *it->value;
         auto* constructor = heap().allocate<T>(*this, *this);
         m_constructors.set(class_name, constructor);
-        define_property(class_name, constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+        define_property(class_name, JS::Value(constructor), JS::Attribute::Writable | JS::Attribute::Configurable);
         return *constructor;
     }
 
