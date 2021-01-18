@@ -43,7 +43,9 @@ int wcsncmp(const wchar_t*, const wchar_t*, size_t);
 wchar_t* wcschr(const wchar_t*, int);
 const wchar_t* wcsrchr(const wchar_t*, wchar_t);
 wchar_t* wcscat(wchar_t*, const wchar_t*);
-wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
 wchar_t* wcsncat(wchar_t*, const wchar_t*, size_t);
+wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
+long wcstol(const wchar_t*, wchar_t**, int);
+long long wcstoll(const wchar_t*, wchar_t**, int);
 
 __END_DECLS
