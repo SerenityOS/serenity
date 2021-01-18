@@ -1,0 +1,30 @@
+--- Python-3.9.1/Python/preconfig.c	2021-01-17 21:03:08.698000000 +0100
++++ Python-3.9.1/Python/preconfig.c	2021-01-17 21:03:47.828031544 +0100
+@@ -790,16 +790,6 @@
+ 
+     preconfig_get_global_vars(config);
+ 
+-    /* Copy LC_CTYPE locale, since it's modified later */
+-    const char *loc = setlocale(LC_CTYPE, NULL);
+-    if (loc == NULL) {
+-        return _PyStatus_ERR("failed to LC_CTYPE locale");
+-    }
+-    char *init_ctype_locale = _PyMem_RawStrdup(loc);
+-    if (init_ctype_locale == NULL) {
+-        return _PyStatus_NO_MEMORY();
+-    }
+-
+     /* Save the config to be able to restore it if encodings change */
+     PyPreConfig save_config;
+ 
+@@ -899,10 +889,6 @@
+     status = _PyStatus_OK();
+ 
+ done:
+-    if (init_ctype_locale != NULL) {
+-        setlocale(LC_CTYPE, init_ctype_locale);
+-        PyMem_RawFree(init_ctype_locale);
+-    }
+     Py_UTF8Mode = init_utf8_mode ;
+ #ifdef MS_WINDOWS
+     Py_LegacyWindowsFSEncodingFlag = init_legacy_encoding;

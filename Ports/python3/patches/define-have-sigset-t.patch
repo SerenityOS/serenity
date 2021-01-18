@@ -1,0 +1,12 @@
+--- Python-3.9.1/Modules/posixmodule.h	2021-01-17 20:56:14.590000000 +0100
++++ Python-3.9.1/Modules/posixmodule.h	2021-01-17 20:56:34.207894812 +0100
+@@ -19,7 +19,8 @@
+ #endif /* MS_WINDOWS */
+ 
+ #if defined(PYPTHREAD_SIGMASK) || defined(HAVE_SIGWAIT) || \
+-        defined(HAVE_SIGWAITINFO) || defined(HAVE_SIGTIMEDWAIT)
++        defined(HAVE_SIGWAITINFO) || defined(HAVE_SIGTIMEDWAIT) || \
++        defined(__serenity__)
+ # define HAVE_SIGSET_T
+ #endif
+ 
