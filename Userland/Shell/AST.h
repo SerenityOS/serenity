@@ -984,7 +984,6 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
-    virtual bool would_execute() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<AST::Node> m_condition;
