@@ -363,7 +363,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "SVG")) {
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -474,6 +474,8 @@ static void generate_header(const IDL::Interface& interface)
 #    include <LibWeb/UIEvents/@name@.h>
 #elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
 #    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #endif
@@ -586,7 +588,7 @@ namespace Web::Bindings {
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-    : Wrapper(*global_object.object_prototype())
+    : Wrapper(static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_class@>("@name@"))
     , m_impl(impl)
 {
 }
@@ -692,6 +694,8 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #    include <LibWeb/UIEvents/@name@.h>
 #elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
 #    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #endif
@@ -836,12 +840,14 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/NavigationTiming/PerformanceTiming.h>
 #include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
@@ -855,6 +861,8 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #    include <LibWeb/UIEvents/@name@.h>
 #elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
 #    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
 #endif
@@ -862,6 +870,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::DOM;
 using namespace Web::HTML;
+using namespace Web::NavigationTiming;
 
 namespace Web::Bindings {
 

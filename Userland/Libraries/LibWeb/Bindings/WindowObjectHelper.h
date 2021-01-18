@@ -198,6 +198,8 @@
 #include <LibWeb/Bindings/NodePrototype.h>
 #include <LibWeb/Bindings/PerformanceConstructor.h>
 #include <LibWeb/Bindings/PerformancePrototype.h>
+#include <LibWeb/Bindings/PerformanceTimingConstructor.h>
+#include <LibWeb/Bindings/PerformanceTimingPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
 #include <LibWeb/Bindings/SVGGeometryElementConstructor.h>
@@ -308,6 +310,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)               \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                     \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)              \
+    ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)        \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)               \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)               \

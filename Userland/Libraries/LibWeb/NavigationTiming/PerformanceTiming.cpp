@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/StdLibExtras.h>
-#include <LibCore/ElapsedTimer.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/NavigationTiming/PerformanceTiming.h>
 
-namespace Web::HighResolutionTime {
+namespace Web::NavigationTiming {
 
-class Performance final
-    : public DOM::EventTarget
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::PerformanceWrapper;
-    using AllowOwnPtr = AK::TrueType;
+PerformanceTiming::PerformanceTiming(DOM::Window& window)
+    : m_window(window)
+{
+}
 
-    explicit Performance(DOM::Window&);
-    ~Performance();
+PerformanceTiming::~PerformanceTiming()
+{
+}
 
-    double now() const { return m_timer.elapsed(); }
-    double time_origin() const;
+void PerformanceTiming::ref()
+{
+    m_window.ref();
+}
 
-    RefPtr<NavigationTiming::PerformanceTiming> timing() { return *m_timing; }
-
-    virtual void ref_event_target() override;
-    virtual void unref_event_target() override;
-
-    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
-
-private:
-    DOM::Window& m_window;
-    Core::ElapsedTimer m_timer;
-
-    OwnPtr<NavigationTiming::PerformanceTiming> m_timing;
-};
+void PerformanceTiming::unref()
+{
+    m_window.unref();
+}
 
 }

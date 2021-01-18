@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,39 +27,45 @@
 #pragma once
 
 #include <AK/StdLibExtras.h>
-#include <LibCore/ElapsedTimer.h>
 #include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
 
-namespace Web::HighResolutionTime {
+namespace Web::NavigationTiming {
 
-class Performance final
-    : public DOM::EventTarget
-    , public Bindings::Wrappable {
+class PerformanceTiming final : public Bindings::Wrappable {
 public:
-    using WrapperType = Bindings::PerformanceWrapper;
+    using WrapperType = Bindings::PerformanceTimingWrapper;
     using AllowOwnPtr = AK::TrueType;
 
-    explicit Performance(DOM::Window&);
-    ~Performance();
+    explicit PerformanceTiming(DOM::Window&);
+    ~PerformanceTiming();
 
-    double now() const { return m_timer.elapsed(); }
-    double time_origin() const;
+    void ref();
+    void unref();
 
-    RefPtr<NavigationTiming::PerformanceTiming> timing() { return *m_timing; }
-
-    virtual void ref_event_target() override;
-    virtual void unref_event_target() override;
-
-    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
-    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
+    u32 navigation_start() { return 0; }
+    u32 unload_event_start() { return 0; }
+    u32 unload_event_end() { return 0; }
+    u32 redirect_start() { return 0; }
+    u32 redirect_end() { return 0; }
+    u32 fetch_start() { return 0; }
+    u32 domain_lookup_start() { return 0; }
+    u32 domain_lookup_end() { return 0; }
+    u32 connect_start() { return 0; }
+    u32 connect_end() { return 0; }
+    u32 secure_connection_start() { return 0; }
+    u32 request_start() { return 0; }
+    u32 response_start() { return 0; }
+    u32 response_end() { return 0; }
+    u32 dom_loading() { return 0; }
+    u32 dom_interactive() { return 0; }
+    u32 dom_content_loaded_event_start() { return 0; }
+    u32 dom_content_loaded_event_end() { return 0; }
+    u32 dom_complete() { return 0; }
+    u32 load_event_start() { return 0; }
+    u32 load_event_end() { return 0; }
 
 private:
     DOM::Window& m_window;
-    Core::ElapsedTimer m_timer;
-
-    OwnPtr<NavigationTiming::PerformanceTiming> m_timing;
 };
 
 }

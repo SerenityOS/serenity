@@ -1,0 +1,25 @@
+interface PerformanceTiming {
+
+    readonly attribute unsigned long navigationStart;
+    readonly attribute unsigned long unloadEventStart;
+    readonly attribute unsigned long unloadEventEnd;
+    readonly attribute unsigned long redirectStart;
+    readonly attribute unsigned long redirectEnd;
+    readonly attribute unsigned long fetchStart;
+    readonly attribute unsigned long domainLookupStart;
+    readonly attribute unsigned long domainLookupEnd;
+    readonly attribute unsigned long connectStart;
+    readonly attribute unsigned long connectEnd;
+    readonly attribute unsigned long secureConnectionStart;
+    readonly attribute unsigned long requestStart;
+    readonly attribute unsigned long responseStart;
+    readonly attribute unsigned long responseEnd;
+    readonly attribute unsigned long domLoading;
+    readonly attribute unsigned long domInteractive;
+    readonly attribute unsigned long domContentLoadedEventStart;
+    readonly attribute unsigned long domContentLoadedEventEnd;
+    readonly attribute unsigned long domComplete;
+    readonly attribute unsigned long loadEventStart;
+    readonly attribute unsigned long loadEventEnd;
+
+};

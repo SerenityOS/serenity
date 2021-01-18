@@ -1,4 +1,6 @@
 interface Performance : EventTarget {
     double now();
     readonly attribute double timeOrigin;
+
+    readonly attribute PerformanceTiming timing;
 };

@@ -142,6 +142,10 @@ namespace Web::HighResolutionTime {
 class Performance;
 }
 
+namespace Web::NavigationTiming {
+class PerformanceTiming;
+}
+
 namespace Web::SVG {
 class SVGElement;
 class SVGGeometryElement;
@@ -274,6 +278,7 @@ class ImageDataWrapper;
 class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
+class PerformanceTimingWrapper;
 class PerformanceWrapper;
 class ScriptExecutionContext;
 class SubmitEventWrapper;
