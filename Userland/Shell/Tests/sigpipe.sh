@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source test-commons.inc
+
 # `head -n 1` should close stdout of the `Shell -c` command, which means the
 # second echo should exit unsuccessfully and sigpipe.sh.out should not be
 # created.
@@ -10,4 +12,8 @@ rm -f sigpipe.sh.out
 # Failing commands don't make the test fail, just an explicit `exit 1` does.
 # So the test only fails if sigpipe.sh.out exists (since then `exit 1` runs),
 # not if the `test` statement returns false.
-test -e sigpipe.sh.out && exit 1
+if test -e sigpipe.sh.out {
+    fail sigpipe did not terminate further commands
+} else {
+    echo PASS
+}

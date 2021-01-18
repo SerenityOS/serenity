@@ -1,29 +1,33 @@
 #!/bin/sh
 
+source test-commons.inc
+
 # Syntax ok?
 fn() { echo $* }
 
 # Can we invoke that?
-test "$(fn 1)" = 1 || echo cannot invoke "'fn 1'" && exit 1
-test "$(fn 1 2)" = "1 2" || echo cannot invoke "'fn 1 2'" && exit 1
+if not test "$(fn 1)" = 1 { fail cannot invoke "'fn 1'" }
+if not test "$(fn 1 2)" = "1 2" { fail cannot invoke "'fn 1 2'" }
 
 # With explicit argument names?
 fn(a) { echo $a }
 
 # Can we invoke that?
-test "$(fn 1)" = 1 || echo cannot invoke "'fn 1'" with explicit names && exit 1
-test "$(fn 1 2)" = 1 || echo cannot invoke "'fn 1 2'" with explicit names and extra arguments && exit 1
+if not test "$(fn 1)" = 1 { fail cannot invoke "'fn 1'" with explicit names }
+if not test "$(fn 1 2)" = 1 { fail cannot invoke "'fn 1 2'" with explicit names and extra arguments }
 
+# FIXME: Reenable this when we have something akin to 'try'
+#        or when not-enough-args isn't a hard failure.
 # Can it fail?
-if fn 2>/dev/null {
-    echo "'fn'" with an explicit argument is not failing with not enough args
-    exit 1
-}
+# if fn 2>/dev/null {
+#     fail "'fn'" with an explicit argument is not failing with not enough args
+#     exit 1
+# }
 
 # $0 in function should be its name
 fn() { echo $0 }
 
-test "$(fn)" = fn || echo '$0' in function not equal to its name && exit 1
+if not test "$(fn)" = fn { fail '$0' in function not equal to its name }
 
 # Ensure ARGV does not leak from inner frames.
 fn() {
@@ -33,9 +37,11 @@ fn() {
 
 fn2() { }
 
-test "$(fn foobar)" = "foobar" || echo 'Frames are somehow messed up in nested functions' && exit 1
+if not test "$(fn foobar)" = "foobar" { fail 'Frames are somehow messed up in nested functions' }
 
 fn(xfoo) { }
 xfoo=1
 fn 2
-test $xfoo -eq 1 || echo 'Functions overwrite parent scopes' && exit 1
+if not test $xfoo -eq 1 { fail 'Functions overwrite parent scopes' }
+
+echo PASS
