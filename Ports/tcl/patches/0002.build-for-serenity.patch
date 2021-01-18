@@ -1,0 +1,29 @@
+diff --git a/tcl.m4 b/tcl.m4
+index d2ebe82..7479b72 100644
+--- a/tcl.m4
++++ b/tcl.m4
+@@ -1044,7 +1044,9 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
+     # Step 1: set the variable "system" to hold the name and version number
+     # for the system.
+ 
+-    SC_CONFIG_SYSTEM
++    # SC_CONFIG_SYSTEM
++    system="Serenity"
++    tcl_cv_sys_version="Serenity"
+ 
+     # Step 2: check for existence of -ldl library.  This is needed because
+     # Linux can use either -ldl or -ldld for dynamic loading.
+@@ -1240,6 +1242,13 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
+ 	    DL_LIBS="-lroot"
+ 	    AC_CHECK_LIB(network, inet_ntoa, [LIBS="$LIBS -lnetwork"])
+ 	    ;;
++    Serenity*)
++        SHLIB_CFLAGS="-fPIC"
++        SHLIB_SUFFIX=".so"
++        SHLIB_LD='${CC} ${CFLAGS} ${LDFLAGS} -shared'
++        DL_OBJS="tclLoadDl.o"
++        DL_LIBS=""
++        ;;
+ 	HP-UX-*.11.*)
+ 	    # Use updated header definitions where possible
+ 	    AC_DEFINE(_XOPEN_SOURCE_EXTENDED, 1, [Do we want to use the XOPEN network library?])

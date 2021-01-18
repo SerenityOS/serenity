@@ -1,0 +1,13 @@
+diff --git a/tcl.m4 b/tcl.m4
+index 7479b72..a17772c 100644
+--- a/tcl.m4
++++ b/tcl.m4
+@@ -1027,7 +1027,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
+ 	CFLAGS=$hold_cflags])
+     AS_IF([test $tcl_cv_cc_visibility_hidden = yes], [
+ 	AC_DEFINE(MODULE_SCOPE,
+-	    [extern __attribute__((__visibility__("hidden")))],
++	    [extern __attribute__((__visibility__("default")))],
+ 	    [Compiler support for module scope symbols])
+ 	AC_DEFINE(HAVE_HIDDEN, [1], [Compiler support for module scope symbols])
+     ])

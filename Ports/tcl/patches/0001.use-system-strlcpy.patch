@@ -1,0 +1,13 @@
+diff --git a/tcl.m4 b/tcl.m4
+index 27b7540..d2ebe82 100644
+--- a/tcl.m4
++++ b/tcl.m4
+@@ -3063,7 +3063,7 @@ if test "x$NEED_FAKE_RFC2553" = "x1"; then
+    AC_DEFINE([NEED_FAKE_RFC2553], 1,
+         [Use compat implementation of getaddrinfo() and friends])
+    AC_LIBOBJ([fake-rfc2553])
+-   AC_CHECK_FUNC(strlcpy)
++   AC_CHECK_FUNCS([strlcpy])
+ fi
+ ])
+ # Local Variables:

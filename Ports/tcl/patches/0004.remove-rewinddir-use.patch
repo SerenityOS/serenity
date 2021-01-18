@@ -1,0 +1,13 @@
+diff --git a/tclUnixFCmd.c b/tclUnixFCmd.c
+index 8660818..56a92e6 100644
+--- a/tclUnixFCmd.c
++++ b/tclUnixFCmd.c
+@@ -1052,7 +1052,7 @@ TraverseUnixTree(
+ 	     * NULL-return that may a symptom of a buggy readdir.
+ 	     */
+ 
+-	    TclOSrewinddir(dirPtr);
++	    // TclOSrewinddir(dirPtr);
+ 	    numProcessed = 0;
+ 	}
+     }

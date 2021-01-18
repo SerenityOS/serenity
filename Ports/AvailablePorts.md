@@ -63,6 +63,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`sed`](sed/)                  | GNU sed                                       | 4.2.1             | https://www.gnu.org/software/sed/                     |
 | [`sl`](sl/)                    | Steam Locomotive (SL)                         |                   | https://github.com/mtoyoda/sl                         |
 | [`stress-ng`](stress-ng/)      | stress-ng                                     | 0.11.23           | https://github.com/ColinIanKing/stress-ng             |
+| [`tcl`](tcl/)                  | TCL                                           | 8.6.11            | https://tcl.tk                                        |
 | [`termcap`](termcap/)          | GNU termcap                                   | 1.3.1             | https://www.gnu.org/software/termutils/               |
 | [`tinycc`](tinycc/)            | Tiny C Compiler (TinyCC)                      | dev               | https://github.com/TinyCC/tinycc                      |
 | [`tr`](tr/)                    | tr (OpenBSD)                                  | 6.7               | https://github.com/ibara/libpuffy                     |
