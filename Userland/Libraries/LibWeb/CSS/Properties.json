@@ -168,6 +168,10 @@
     "inherited": false,
     "initial": "inline"
   },
+  "flex-direction": {
+    "inherited": false,
+    "initial": "row"
+  },
   "float": {
     "inherited": false,
     "initial": "none"
