@@ -403,6 +403,8 @@ void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln<enabled>
 template<bool enabled = true>
 void dbgln() { dbgln<enabled>(""); }
 
+void set_debug_enabled(bool);
+
 template<typename T, typename = void>
 struct HasFormatter : TrueType {
 };
