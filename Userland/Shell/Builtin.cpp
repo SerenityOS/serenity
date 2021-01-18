@@ -879,6 +879,25 @@ int Shell::builtin_unset(int argc, const char** argv)
     return 0;
 }
 
+int Shell::builtin_not(int argc, const char** argv)
+{
+    // FIXME: Use ArgsParser when it can collect unrelated -arguments too.
+    if (argc == 1)
+        return 1;
+
+    AST::Command command;
+    for (size_t i = 1; i < (size_t)argc; ++i)
+        command.argv.append(argv[i]);
+
+    auto commands = expand_aliases({ move(command) });
+    int exit_code = 1;
+    for (auto& job : run_commands(commands)) {
+        block_on_job(job);
+        exit_code = job.exit_code();
+    }
+    return exit_code == 0 ? 1 : 0;
+}
+
 bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
 {
     if (command.argv.is_empty())

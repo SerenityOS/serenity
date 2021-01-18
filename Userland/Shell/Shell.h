@@ -52,6 +52,7 @@
     __ENUMERATE_SHELL_BUILTIN(unset)   \
     __ENUMERATE_SHELL_BUILTIN(history) \
     __ENUMERATE_SHELL_BUILTIN(umask)   \
+    __ENUMERATE_SHELL_BUILTIN(not )    \
     __ENUMERATE_SHELL_BUILTIN(dirs)    \
     __ENUMERATE_SHELL_BUILTIN(pushd)   \
     __ENUMERATE_SHELL_BUILTIN(popd)    \
