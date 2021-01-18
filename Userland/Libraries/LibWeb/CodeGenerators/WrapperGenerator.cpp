@@ -158,6 +158,8 @@ struct Interface {
     String wrapper_class;
     String wrapper_base_class;
     String fully_qualified_name;
+    String constructor_class;
+    String prototype_class;
 };
 
 static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
@@ -308,12 +310,18 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
     interface->wrapper_class = String::formatted("{}Wrapper", interface->name);
     interface->wrapper_base_class = String::formatted("{}Wrapper", interface->parent_name.is_empty() ? String::empty() : interface->parent_name);
+    interface->constructor_class = String::formatted("{}Constructor", interface->name);
+    interface->prototype_class = String::formatted("{}Prototype", interface->name);
 
     return interface;
 }
 
 }
 
+static void generate_constructor_header(const IDL::Interface&);
+static void generate_constructor_implementation(const IDL::Interface&);
+static void generate_prototype_header(const IDL::Interface&);
+static void generate_prototype_implementation(const IDL::Interface&);
 static void generate_header(const IDL::Interface&);
 static void generate_implementation(const IDL::Interface&);
 
@@ -323,8 +331,16 @@ int main(int argc, char** argv)
     const char* path = nullptr;
     bool header_mode = false;
     bool implementation_mode = false;
+    bool constructor_header_mode = false;
+    bool constructor_implementation_mode = false;
+    bool prototype_header_mode = false;
+    bool prototype_implementation_mode = false;
     args_parser.add_option(header_mode, "Generate the wrapper .h file", "header", 'H');
     args_parser.add_option(implementation_mode, "Generate the wrapper .cpp file", "implementation", 'I');
+    args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
+    args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
+    args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
+    args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.parse(argc, argv);
 
@@ -378,6 +394,18 @@ int main(int argc, char** argv)
 
     if (implementation_mode)
         generate_implementation(*interface);
+
+    if (constructor_header_mode)
+        generate_constructor_header(*interface);
+
+    if (constructor_implementation_mode)
+        generate_constructor_implementation(*interface);
+
+    if (prototype_header_mode)
+        generate_prototype_header(*interface);
+
+    if (prototype_implementation_mode)
+        generate_prototype_implementation(*interface);
 
     return 0;
 }
@@ -944,6 +972,209 @@ JS_DEFINE_NATIVE_FUNCTION(@wrapper_class@::@function.name:snakecase@)
     }
 
     generator.append(R"~~~(
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+static void generate_constructor_header(const IDL::Interface& interface)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("fully_qualified_name", interface.fully_qualified_name);
+    generator.set("constructor_class", interface.constructor_class);
+    generator.set("constructor_class:snakecase", snake_name(interface.constructor_class));
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibJS/Runtime/NativeFunction.h>
+
+namespace Web::Bindings {
+
+class @constructor_class@ : public JS::NativeFunction {
+    JS_OBJECT(@constructor_class@, JS::NativeFunction);
+public:
+    explicit @constructor_class@(JS::GlobalObject&);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~@constructor_class@() override;
+
+    virtual JS::Value call() override;
+    virtual JS::Value construct(JS::Function& new_target) override;
+
+private:
+    virtual bool has_constructor() const override { return true; }
+};
+
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+void generate_constructor_implementation(const IDL::Interface& interface)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("prototype_class", interface.prototype_class);
+    generator.set("wrapper_class", interface.wrapper_class);
+    generator.set("constructor_class", interface.constructor_class);
+    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+    generator.set("fully_qualified_name", interface.fully_qualified_name);
+
+    generator.append(R"~~~(
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/@constructor_class@.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
+#include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#if __has_include(<LibWeb/DOM/@name@.h>)
+#    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/HTML/@name@.h>)
+#    include <LibWeb/HTML/@name@.h>
+#elif __has_include(<LibWeb/UIEvents/@name@.h>)
+#    include <LibWeb/UIEvents/@name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
+#    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/SVG/@name@.h>)
+#    include <LibWeb/SVG/@name@.h>
+#endif
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::DOM;
+using namespace Web::HTML;
+
+namespace Web::Bindings {
+
+@constructor_class@::@constructor_class@(JS::GlobalObject& global_object)
+    : NativeFunction(*global_object.function_prototype())
+{
+}
+
+@constructor_class@::~@constructor_class@()
+{
+}
+
+JS::Value @constructor_class@::call()
+{
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "@name@");
+    return {};
+}
+
+JS::Value @constructor_class@::construct(Function&)
+{
+    return {};
+#if 0
+    // FIXME: It would be cool to construct stuff!
+    auto& window = static_cast<WindowObject&>(global_object());
+    return heap().allocate<@wrapper_class@>(window, window, @fully_qualified_name@::create(window.impl()));
+#endif
+}
+
+void @constructor_class@::initialize(JS::GlobalObject& global_object)
+{
+    auto& vm = this->vm();
+    auto& window = static_cast<WindowObject&>(global_object);
+    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
+
+    NativeFunction::initialize(global_object);
+    define_property(vm.names.prototype, window.web_prototype("@prototype_class@"), 0);
+    define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+}
+
+} // namespace Web::Bindings
+)~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+static void generate_prototype_header(const IDL::Interface& interface)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("fully_qualified_name", interface.fully_qualified_name);
+    generator.set("prototype_class", interface.prototype_class);
+    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
+
+namespace Web::Bindings {
+
+class @prototype_class@ : public JS::Object {
+    JS_OBJECT(@prototype_class@, JS::Object);
+public:
+    explicit @prototype_class@(JS::GlobalObject&);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~@prototype_class@() override;
+};
+
+} // namespace Web::Bindings
+    )~~~");
+
+    outln("{}", generator.as_string_view());
+}
+
+void generate_prototype_implementation(const IDL::Interface& interface)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("prototype_class", interface.prototype_class);
+    generator.set("wrapper_class", interface.wrapper_class);
+    generator.set("constructor_class", interface.constructor_class);
+    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+    generator.set("fully_qualified_name", interface.fully_qualified_name);
+
+    generator.append(R"~~~(
+#include <AK/Function.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
+#if __has_include(<LibWeb/DOM/@name@.h>)
+#    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/HTML/@name@.h>)
+#    include <LibWeb/HTML/@name@.h>
+#elif __has_include(<LibWeb/UIEvents/@name@.h>)
+#    include <LibWeb/UIEvents/@name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
+#    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/SVG/@name@.h>)
+#    include <LibWeb/SVG/@name@.h>
+#endif
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::DOM;
+using namespace Web::HTML;
+
+namespace Web::Bindings {
+
+@prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
+    : Object(*global_object.object_prototype())
+{
+}
+
+@prototype_class@::~@prototype_class@()
+{
+}
+
+void @prototype_class@::initialize(JS::GlobalObject& global_object)
+{
+    [[maybe_unused]] auto& vm = this->vm();
+    Object::initialize(global_object);
+}
+
 } // namespace Web::Bindings
 )~~~");
 
