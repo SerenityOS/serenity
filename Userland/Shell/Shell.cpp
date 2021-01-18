@@ -1833,7 +1833,8 @@ void Shell::kill_job(const Job* job, int sig)
 
     if (killpg(job->pgid(), sig) < 0) {
         if (kill(job->pid(), sig) < 0) {
-            perror("kill");
+            if (errno != ESRCH)
+                perror("kill");
         }
     }
 }
