@@ -288,8 +288,6 @@ public:
     Elf32_Addr patch_plt_entry(u32 relocation_offset);
 
     SymbolLookupResult lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const;
-    using SymbolLookupFunction = DynamicObject::SymbolLookupResult (*)(const char*);
-    SymbolLookupFunction m_global_symbol_lookup_func { nullptr };
 
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
