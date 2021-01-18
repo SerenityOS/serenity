@@ -39,6 +39,8 @@
 
 #define NAME_MAX 255
 
+#define TTY_NAME_MAX 32
+
 #define PIPE_BUF 4096
 
 #define INT_MAX INT32_MAX
