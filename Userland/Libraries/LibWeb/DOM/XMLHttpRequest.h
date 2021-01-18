@@ -62,6 +62,8 @@ public:
     void open(const String& method, const String& url);
     void send();
 
+    void set_request_header(const String& header, const String& value);
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
@@ -78,6 +80,8 @@ private:
 
     String m_method;
     String m_url;
+
+    HashMap<String, String, CaseInsensitiveStringTraits> m_request_headers;
 
     ByteBuffer m_response;
 };

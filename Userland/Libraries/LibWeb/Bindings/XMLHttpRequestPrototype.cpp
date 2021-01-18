@@ -43,6 +43,7 @@ void XMLHttpRequestPrototype::initialize(JS::GlobalObject& global_object)
     Object::initialize(global_object);
     define_native_function("open", open, 2);
     define_native_function("send", send, 0);
+    define_native_function("setRequestHeader", set_request_header, 2);
     define_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_property("responseText", response_text_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
@@ -90,6 +91,21 @@ JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::send)
     if (!impl)
         return {};
     impl->send();
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::set_request_header)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto arg0 = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto arg1 = vm.argument(1).to_string(global_object);
+    if (vm.exception())
+        return {};
+    impl->set_request_header(arg0, arg1);
     return JS::js_undefined();
 }
 
