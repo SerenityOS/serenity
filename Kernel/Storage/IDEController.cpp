@@ -68,7 +68,8 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
 }
 
 IDEController::IDEController(PCI::Address address, bool force_pio)
-    : StorageController(address)
+    : StorageController()
+    , PCI::DeviceController(address)
 {
     initialize(force_pio);
 }

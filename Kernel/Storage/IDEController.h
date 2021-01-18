@@ -37,7 +37,8 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class IDEController final : public StorageController {
+class IDEController final : public StorageController
+    , public PCI::DeviceController {
     AK_MAKE_ETERNAL
 public:
 public:
