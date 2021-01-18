@@ -41,18 +41,25 @@ private:
     enum VimMode {
         Normal,
         Insert,
+        Visual
     };
 
     VimMode m_vim_mode { VimMode::Normal };
 
+    TextPosition m_selection_start_position {};
+    void update_selection_on_cursor_move();
+    void clear_visual_mode_data();
+
     KeyCode m_previous_key {};
     void switch_to_normal_mode();
     void switch_to_insert_mode();
+    void switch_to_visual_mode();
     void move_half_page_up(const KeyEvent& event);
     void move_half_page_down(const KeyEvent& event);
 
     bool on_key_in_insert_mode(const KeyEvent& event);
     bool on_key_in_normal_mode(const KeyEvent& event);
+    bool on_key_in_visual_mode(const KeyEvent& event);
 };
 
 }
