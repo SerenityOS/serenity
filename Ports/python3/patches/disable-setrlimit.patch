@@ -1,0 +1,11 @@
+--- Python-3.9.1/Modules/faulthandler.c	2021-01-17 20:45:32.878000000 +0100
++++ Python-3.9.1/Modules/faulthandler.c	2021-01-17 20:45:33.006210297 +0100
+@@ -993,7 +993,7 @@
+     SetErrorMode(mode | SEM_NOGPFAULTERRORBOX);
+ #endif
+ 
+-#ifdef HAVE_SYS_RESOURCE_H
++#if 0
+     struct rlimit rl;
+ 
+     /* Disable creation of core dump */

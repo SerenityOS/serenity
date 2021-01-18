@@ -1,62 +1,51 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 set -e
 
 # This file will need to be run in bash, for now.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "$DIR"
-
 ARCH=${ARCH:-"i686"}
-TARGET="$ARCH-pc-serenity"
-PREFIX="$DIR/Local/$ARCH"
-BUILD=$(realpath "$DIR/../Build")
-SYSROOT="$BUILD/Root"
+PREFIX_DIR="$DIR/Local/$ARCH"
+BUILD_DIR="$DIR/Build/$ARCH"
+TARBALLS_DIR="$DIR/Tarballs"
 
-source "$DIR/../Ports/python-3.6/version.sh"
+source "$DIR/../Ports/python3/version.sh"
 
-echo PYTHON_VERSION is "$PYTHON_VERSION"
-echo PYTHON_URL is "$PYTHON_URL"
+mkdir -p "${TARBALLS_DIR}"
 
-echo PREFIX is "$PREFIX"
-echo SYSROOT is "$SYSROOT"
-
-mkdir -p "$DIR/Tarballs"
-
-pushd "$DIR/Tarballs"
-    if [ ! -e "$PYTHON_ARCHIVE" ]; then
-        curl -O "$PYTHON_URL"
+pushd "${TARBALLS_DIR}"
+    if [ ! -e "${PYTHON_ARCHIVE}" ]; then
+        echo "Downloading Python from ${PYTHON_ARCHIVE_URL}..."
+        curl -O "${PYTHON_ARCHIVE_URL}"
     else
-        echo "Skipped downloading Python-$PYTHON_VERSION"
+        echo "${PYTHON_ARCHIVE} already exists, not downloading archive"
     fi
 
-    md5="$(md5sum $PYTHON_ARCHIVE | cut -f1 -d' ')"
-    echo "python md5='$md5'"
-    if  [ "$md5" != "$PYTHON_MD5SUM" ] ; then
-        echo "python md5 sum mismatching, please run script again."
-        rm $PYTHON_ARCHIVE
+    if ! md5sum --status -c <(echo "${PYTHON_ARCHIVE_MD5SUM}" "${PYTHON_ARCHIVE}"); then
+        echo "Python archive MD5 sum mismatch, please run script again"
+        rm -f "${PYTHON_ARCHIVE}"
         exit 1
     fi
 
-    if [ ! -d "Python-$PYTHON_VERSION" ]; then
-        echo "Extracting python..."
-        tar -xf "$PYTHON_ARCHIVE"
+    if [ ! -d "Python-${PYTHON_VERSION}" ]; then
+        echo "Extracting ${PYTHON_ARCHIVE}..."
+        tar -xf "${PYTHON_ARCHIVE}"
     else
-        echo "Skipped extracting python"
+        echo "Python-${PYTHON_VERSION} already exists, not extracting archive"
     fi
 popd
-
-mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/$ARCH/python"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
 fi
 
-pushd "$DIR/Build/$ARCH"
-    pushd python
-        "$DIR"/Tarballs/Python-$PYTHON_VERSION/configure --prefix="$PREFIX" || exit 1
-        make -j "$MAKEJOBS" || exit 1
-        make install || exit 1
-    popd
+mkdir -p "${PREFIX_DIR}"
+mkdir -p "${BUILD_DIR}/python"
+
+pushd "${BUILD_DIR}/python"
+    "${TARBALLS_DIR}"/Python-"${PYTHON_VERSION}"/configure --prefix="${PREFIX_DIR}"
+    make -j "${MAKEJOBS}"
+    make install
 popd

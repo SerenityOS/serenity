@@ -1,0 +1,22 @@
+--- Python-3.9.1/Python/getversion.c	2021-01-18 08:31:52.780000000 +0100
++++ Python-3.9.1/Python/getversion.c	2021-01-18 08:32:14.176848948 +0100
+@@ -9,7 +9,7 @@
+ Py_GetVersion(void)
+ {
+     static char version[250];
+-    PyOS_snprintf(version, sizeof(version), "%.80s (%.80s) %.80s",
++    PyOS_snprintf(version, sizeof(version), "%s (%s) %s",
+                   PY_VERSION, Py_GetBuildInfo(), Py_GetCompiler());
+     return version;
+ }
+--- Python-3.9.1/Modules/getbuildinfo.c	2021-01-18 08:54:23.766207240 +0100
++++ Python-3.9.1/Modules/getbuildinfo.c	2021-01-18 08:54:09.757000000 +0100
+@@ -43,7 +43,7 @@
+     if (!(*gitid))
+         gitid = "default";
+     PyOS_snprintf(buildinfo, sizeof(buildinfo),
+-                  "%s%s%s, %.20s, %.9s", gitid, sep, revision,
++                  "%s%s%s, %s, %s", gitid, sep, revision,
+                   DATE, TIME);
+     return buildinfo;
+ }

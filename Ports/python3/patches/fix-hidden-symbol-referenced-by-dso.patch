@@ -1,0 +1,22 @@
+--- Python-3.9.1/Programs/python.c	2021-01-18 08:25:32.203494270 +0100
++++ Python-3.9.1/Programs/python.c	2021-01-18 08:25:49.711418585 +0100
+@@ -9,7 +9,7 @@
+     return Py_Main(argc, argv);
+ }
+ #else
+-int
++Py_EXPORTED_SYMBOL int
+ main(int argc, char **argv)
+ {
+     return Py_BytesMain(argc, argv);
+--- Python-3.9.1/Programs/_testembed.c	2021-01-18 08:22:35.085000000 +0100
++++ Python-3.9.1/Programs/_testembed.c	2021-01-18 08:23:16.036082910 +0100
+@@ -1711,7 +1711,7 @@
+     {NULL, NULL}
+ };
+ 
+-int main(int argc, char *argv[])
++Py_EXPORTED_SYMBOL int main(int argc, char *argv[])
+ {
+     if (argc > 1) {
+         for (struct TestCase *tc = TestCases; tc && tc->name; tc++) {
