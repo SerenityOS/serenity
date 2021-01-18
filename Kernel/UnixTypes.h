@@ -512,6 +512,8 @@ enum {
     SO_TYPE,
     SO_ERROR,
     SO_PEERCRED,
+    SO_RCVBUF,
+    SO_SNDBUF,
     SO_REUSEADDR,
     SO_BINDTODEVICE,
     SO_KEEPALIVE,
