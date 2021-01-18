@@ -31,6 +31,6 @@
 
 namespace Web::Bindings {
 
-EventTargetWrapper* wrap(JS::GlobalObject&, DOM::EventTarget&);
+JS::Object* wrap(JS::GlobalObject&, DOM::EventTarget&);
 
 }

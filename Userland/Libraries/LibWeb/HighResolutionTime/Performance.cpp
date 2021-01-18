@@ -65,7 +65,7 @@ bool Performance::dispatch_event(NonnullRefPtr<DOM::Event> event)
     return DOM::EventDispatcher::dispatch(*this, event);
 }
 
-Bindings::EventTargetWrapper* Performance::create_wrapper(JS::GlobalObject& global_object)
+JS::Object* Performance::create_wrapper(JS::GlobalObject& global_object)
 {
     return Bindings::wrap(global_object, *this);
 }

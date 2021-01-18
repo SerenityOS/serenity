@@ -840,6 +840,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Origin.h>
 
@@ -927,9 +928,18 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
+)~~~");
+
+        if (interface.name == "EventTarget") {
+            generator.append(R"~~~(
+    if (is<WindowObject>(this_object)) {
+        return &static_cast<WindowObject*>(this_object)->impl();
+    }
+)~~~");
+        }
+
+        generator.append(R"~~~(
     if (!is<@wrapper_class@>(this_object)) {
-        dbgln("expected @wrapper_class@ but got {}", this_object->class_name());
-        ASSERT_NOT_REACHED();
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@fully_qualified_name@");
         return nullptr;
     }

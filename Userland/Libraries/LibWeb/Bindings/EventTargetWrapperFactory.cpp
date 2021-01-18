@@ -29,7 +29,7 @@
 
 namespace Web::Bindings {
 
-EventTargetWrapper* wrap(JS::GlobalObject& global_object, DOM::EventTarget& target)
+JS::Object* wrap(JS::GlobalObject& global_object, DOM::EventTarget& target)
 {
     return target.create_wrapper(global_object);
 }
