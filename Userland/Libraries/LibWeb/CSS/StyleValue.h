@@ -90,6 +90,7 @@ enum class Display {
     TableColumn,
     TableColumnGroup,
     TableCaption,
+    Flex,
 };
 
 enum class WhiteSpace {

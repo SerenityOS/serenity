@@ -128,6 +128,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     const char* inline_block_color_on = "";
     const char* line_box_color_on = "";
     const char* fragment_color_on = "";
+    const char* flex_color_on = "";
     const char* color_off = "";
 
     if (interactive) {
@@ -138,6 +139,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         inline_block_color_on = "\033[36;1m";
         line_box_color_on = "\033[34;1m";
         fragment_color_on = "\033[35;1m";
+        flex_color_on = "\033[34;1m";
         color_off = "\033[0m";
     }
 
@@ -179,6 +181,8 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
             builder.appendff(" {}floating{}", floating_color_on, color_off);
         if (box.is_inline_block())
             builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
+        if (box.computed_values().display() == CSS::Display::Flex)
+            builder.appendff(" {}flex{}", flex_color_on, color_off);
 
         if (show_box_model) {
             // Dump the horizontal box properties

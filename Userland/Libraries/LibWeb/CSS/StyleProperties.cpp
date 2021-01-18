@@ -410,6 +410,8 @@ CSS::Display StyleProperties::display() const
         return CSS::Display::TableHeaderGroup;
     case CSS::ValueID::TableFooterGroup:
         return CSS::Display::TableFooterGroup;
+    case CSS::ValueID::Flex:
+        return CSS::Display::Flex;
     default:
         return CSS::Display::Block;
     }

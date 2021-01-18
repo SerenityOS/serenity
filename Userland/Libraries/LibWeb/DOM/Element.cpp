@@ -147,6 +147,8 @@ RefPtr<Layout::Node> Element::create_layout_node()
         inline_block->set_inline(true);
         return inline_block;
     }
+    if (display == CSS::Display::Flex)
+        return adopt(*new Layout::BlockBox(document(), this, move(style)));
     ASSERT_NOT_REACHED();
 }
 
