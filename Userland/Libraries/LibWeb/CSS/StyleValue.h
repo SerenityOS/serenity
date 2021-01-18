@@ -93,6 +93,13 @@ enum class Display {
     Flex,
 };
 
+enum class FlexDirection {
+    Row,
+    RowReverse,
+    Column,
+    ColumnReverse,
+};
+
 enum class WhiteSpace {
     Normal,
     Pre,

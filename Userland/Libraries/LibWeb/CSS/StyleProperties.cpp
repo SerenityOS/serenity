@@ -225,6 +225,25 @@ Optional<int> StyleProperties::z_index() const
     return static_cast<int>(value.value()->to_length().raw_value());
 }
 
+Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
+{
+    auto value = property(CSS::PropertyID::FlexDirection);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Row:
+        return CSS::FlexDirection::Row;
+    case CSS::ValueID::RowReverse:
+        return CSS::FlexDirection::RowReverse;
+    case CSS::ValueID::Column:
+        return CSS::FlexDirection::Column;
+    case CSS::ValueID::ColumnReverse:
+        return CSS::FlexDirection::ColumnReverse;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);

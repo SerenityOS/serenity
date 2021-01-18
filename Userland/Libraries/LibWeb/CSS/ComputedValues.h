@@ -45,6 +45,7 @@ public:
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
+    static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
 };
 
 struct BorderData {
@@ -65,6 +66,7 @@ public:
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
     CSS::Position position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
+    CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -123,6 +125,7 @@ protected:
         BorderData border_right;
         BorderData border_bottom;
         Color background_color { InitialValues::background_color() };
+        CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
     } m_noninherited;
 };
 
@@ -156,6 +159,7 @@ public:
     BorderData& border_top() { return m_noninherited.border_top; }
     BorderData& border_right() { return m_noninherited.border_right; }
     BorderData& border_bottom() { return m_noninherited.border_bottom; }
+    void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
 };
 
 }

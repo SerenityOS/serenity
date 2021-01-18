@@ -239,6 +239,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     computed_values.set_display(specified_style.display());
 
+    auto flex_direction = specified_style.flex_direction();
+    if (flex_direction.has_value())
+        computed_values.set_flex_direction(flex_direction.value());
+
     auto position = specified_style.position();
     if (position.has_value())
         computed_values.set_position(position.value());
