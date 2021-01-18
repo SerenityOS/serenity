@@ -19,7 +19,7 @@ It also supports the [test262 parser tests](https://github.com/tc39/test262-pars
 The test root directory is assumed to be `/home/anon/js-tests`, or `$SERENITY_ROOT/Libraries/LibJS/Tests`
 when using the Lagom build. Optionally you can pass a custom path to `test-js` to override these defaults.
 
-You can disable output from `dbg()` calls by setting the `DISABLE_DBG_OUTPUT` environment variable.
+You can disable output from `dbgln()` calls by setting the `DISABLE_DBG_OUTPUT` environment variable.
 
 ## Options
 

@@ -555,3 +555,21 @@ constexpr bool debug_disasm_dump = true;
 #else
 constexpr bool debug_disasm_dump = false;
 #endif
+
+#ifdef DEBUG_PATH
+constexpr bool debug_path = true;
+#else
+constexpr bool debug_path = false;
+#endif
+
+#ifdef LOCK_TRACE_DEBUG
+constexpr bool debug_lock_trace = true;
+#else
+constexpr bool debug_lock_trace = false;
+#endif
+
+#ifdef LOCK_RESTORE_DEBUG
+constexpr bool debug_lock_restore = true;
+#else
+constexpr bool debug_lock_restore = false;
+#endif

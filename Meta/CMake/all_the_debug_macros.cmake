@@ -166,11 +166,13 @@ add_compile_definitions("WAITBLOCK_DEBUG")
 add_compile_definitions("WAITQUEUE_DEBUG")
 add_compile_definitions("WEAKABLE_DEBUG")
 add_compile_definitions("WINDOWMANAGER_DEBUG")
-add_compile_definitions("WRAPPER_GERNERATOR_DEBUG")
 add_compile_definitions("WSMESSAGELOOP_DEBUG")
 add_compile_definitions("DEBUG_SOCKET")
 add_compile_definitions("WSSCREEN_DEBUG")
+add_compile_definitions("DEBUG_PATH")
 # False positive: IF_BMP_DEBUG is not actually a flag.
 # add_compile_definitions("IF_BMP_DEBUG")
 # False positive: LOG_DEBUG is a flag, but for a bitset, not a feature.
 # add_compile_definitions("LOG_DEBUG")
+# Clogs up build: The WrapperGenerator stuff is run at compile time.
+# add_compile_definitions("WRAPPER_GERNERATOR_DEBUG")

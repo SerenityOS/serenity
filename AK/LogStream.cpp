@@ -235,7 +235,7 @@ void dump_bytes(ReadonlyBytes bytes)
 
     builder.append(" }");
 
-    dbg() << builder.to_string();
+    dbgln("{}", builder.string_view());
 }
 
 }

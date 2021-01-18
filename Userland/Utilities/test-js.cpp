@@ -728,7 +728,7 @@ int main(int argc, char** argv)
     }
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
-        DebugLogStream::set_enabled(false);
+        AK::set_debug_enabled(false);
     }
 
     String test_root;

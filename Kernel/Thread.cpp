@@ -43,9 +43,6 @@
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/signal_numbers.h>
 
-//#define SIGNAL_DEBUG
-//#define THREAD_DEBUG
-
 namespace Kernel {
 
 Thread::Thread(NonnullRefPtr<Process> process)
@@ -363,10 +360,10 @@ void Thread::finalize()
 #ifdef LOCK_DEBUG
     ASSERT(!m_lock.own_lock());
     if (lock_count() > 0) {
-        dbg() << "Thread " << *this << " leaking " << lock_count() << " Locks!";
+        dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list)
-            dbg() << " - " << info.lock->name() << " @ " << info.lock << " locked at " << info.file << ":" << info.line << " count: " << info.count;
+            dbgln(" - {} @ {} locked at {}:{} count: {}", info.lock->name(), info.lock, info.file, info.line, info.count);
         ASSERT_NOT_REACHED();
     }
 #endif
