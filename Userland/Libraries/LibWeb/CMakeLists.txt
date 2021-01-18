@@ -152,6 +152,7 @@ set(SOURCES
     Layout/ButtonBox.cpp
     Layout/CanvasBox.cpp
     Layout/CheckBox.cpp
+    Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
     Layout/FrameBox.cpp
     Layout/ImageBox.cpp
