@@ -25,6 +25,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
@@ -141,8 +142,33 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
     return adopt(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
+RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path, int scale_factor)
 {
+    if (scale_factor > 1 && path.starts_with("/res/")) {
+        LexicalPath lexical_path { path };
+        StringBuilder highdpi_icon_path;
+        highdpi_icon_path.append(lexical_path.dirname());
+        highdpi_icon_path.append("/");
+        highdpi_icon_path.append(lexical_path.title());
+        highdpi_icon_path.appendf("-%dx.", scale_factor);
+        highdpi_icon_path.append(lexical_path.extension());
+
+        RefPtr<Bitmap> bmp;
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
+    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
+        bmp = load_##Name(highdpi_icon_path.to_string());
+        ENUMERATE_IMAGE_FORMATS
+#undef __ENUMERATE_IMAGE_FORMAT
+        if (bmp) {
+            ASSERT(bmp->width() % scale_factor == 0);
+            ASSERT(bmp->height() % scale_factor == 0);
+            bmp->m_size.set_width(bmp->width() / scale_factor);
+            bmp->m_size.set_height(bmp->height() / scale_factor);
+            bmp->m_scale = scale_factor;
+            return bmp;
+        }
+    }
+
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
     if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
         return load_##Name(path);

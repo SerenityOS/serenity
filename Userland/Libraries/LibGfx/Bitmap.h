@@ -112,7 +112,7 @@ public:
     static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
-    static RefPtr<Bitmap> load_from_file(const StringView& path); // FIXME: scale factor
+    static RefPtr<Bitmap> load_from_file(const StringView& path, int scale_factor = 1);
     static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)

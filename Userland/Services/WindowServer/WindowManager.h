@@ -230,6 +230,9 @@ public:
 
     Gfx::IntPoint get_recommended_window_position(const Gfx::IntPoint& desired);
 
+    int compositor_icon_scale() const;
+    void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
 
@@ -263,6 +266,7 @@ private:
 
     void do_move_to_front(Window&, bool, bool);
 
+    bool m_allow_hidpi_icons { true };
     RefPtr<Cursor> m_hidden_cursor;
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;

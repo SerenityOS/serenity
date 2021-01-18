@@ -57,6 +57,7 @@ static Gfx::Bitmap* s_restore_icon;
 static Gfx::Bitmap* s_close_icon;
 
 static String s_last_title_button_icons_path;
+static int s_last_title_button_icons_scale;
 
 WindowFrame::WindowFrame(Window& window)
     : m_window(window)
@@ -96,34 +97,35 @@ void WindowFrame::set_button_icons()
         return;
 
     String icons_path = WindowManager::the().palette().title_button_icons_path();
+    int icons_scale = WindowManager::the().compositor_icon_scale();
 
     StringBuilder full_path;
-    if (!s_minimize_icon || s_last_title_button_icons_path != icons_path) {
+    if (!s_minimize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-minimize.png");
-        if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png").leak_ref();
+        if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png", icons_scale).leak_ref();
         full_path.clear();
     }
-    if (!s_maximize_icon || s_last_title_button_icons_path != icons_path) {
+    if (!s_maximize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-maximize.png");
-        if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png").leak_ref();
+        if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png", icons_scale).leak_ref();
         full_path.clear();
     }
-    if (!s_restore_icon || s_last_title_button_icons_path != icons_path) {
+    if (!s_restore_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-restore.png");
-        if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png").leak_ref();
+        if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png", icons_scale).leak_ref();
         full_path.clear();
     }
-    if (!s_close_icon || s_last_title_button_icons_path != icons_path) {
+    if (!s_close_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-close.png");
-        if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string()).leak_ref()))
-            s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png").leak_ref();
+        if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale).leak_ref();
         full_path.clear();
     }
 
@@ -134,6 +136,7 @@ void WindowFrame::set_button_icons()
         m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
 
     s_last_title_button_icons_path = icons_path;
+    s_last_title_button_icons_scale = icons_scale;
 }
 
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)

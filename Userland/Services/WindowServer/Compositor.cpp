@@ -713,7 +713,10 @@ bool Compositor::set_resolution(int desired_width, int desired_height, int scale
         return false;
     }
 
+    int old_scale_factor = Screen::the().scale_factor();
     bool success = Screen::the().set_resolution(desired_width, desired_height, scale_factor);
+    if (success && old_scale_factor != scale_factor)
+        WindowManager::the().reload_icon_bitmaps_after_scale_change();
     init_bitmaps();
     invalidate_occlusions();
     compose();

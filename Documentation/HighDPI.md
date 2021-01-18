@@ -32,7 +32,7 @@ Resources such as icons, cursors, bitmap fonts are scale-dependent: In HighDPI m
 
 A 2x resource should look like a 1x resource, just with less jagged edges. A horizontal or vertical line that's 1 pixel wide in 1x should be 2 pixels wide in 2x.
 
-A good guideline for black-and-white images: start with a 1x bitmap, resize it to 200% using nearest-neighbor filtering, and then move black pixels around to smooth diagonal edges -- but the number of black pixels shouldn't change relative to the 200% nearest-neighbor-resampled image.
+A good guideline for black-and-white images: start with a 1x bitmap, resize it to 200% using nearest-neighbor filtering, and then move black pixels around to smooth diagonal edges -- but the number of black pixels shouldn't change relative to the 200% nearest-neighbor-resampled image. If that's not possible, err towards making the icon smaller instead of larger. A good technique is to use the Ctrl-Shift-Super-I shortcut in HighDPI mode to toggle between low-res and high-res icons in HighDPI mode.
 
 While a 1x 32x32 bitmap and a 2x 16x16 bitmap both have 32x32 pixels, they don't have to look the same: The 2x 16x16 should look exactly like the corresonding 1x 16x16, just with smoother edges. The 1x 32x32 pixel resource could instead pick a different crop. As a concrete example, the 1x 7x10 ladybug emoji image currently just has the ladybug's shell (for space reasons), and so should the 2x version of that emoji. On the other hand, if we add a higher-res 1x 14x20 ladybug emoji at some point, we might want show the ladybug's legs on it, instead of just a smoother rendition of just the shell. (The 2x version of that 14x20 emoji would then have legs and shell in less jagged.)
 
@@ -135,6 +135,8 @@ Android has additional modifiers in additon to scale factors in its resource sys
 
 In the end probably doesn't matter all that much which version to pick.
 
+For now, we're going with a "-2x" suffix on the file name.
+
 ### Resource loading strategy tradeoffs
 
 - eagerly load one scale, reload at new scale on scale factor change events
@@ -155,6 +157,8 @@ In the end probably doesn't matter all that much which version to pick.
   + conceptually easy to understand, but still need some collection class
   + puts (less) complexity in framework, app doesn't have to care
   + can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
+
+This isn't figured out yet, for now we're doing the first approach in select places in the window server.
 
 ### Resource loading API
 
@@ -186,4 +190,4 @@ The plan is to have all applications use highdpi backbuffers eventually. It'll t
 4. Let apps opt in to high-res window framebuffers, and convert all apps one-by-one
 5. Remove high-res window framebuffer opt-in since all apps have it now.
 
-We're currently before point 3.
+We're currently in the middle of point 3. Some window server icons are high-resolution, but fonts aren't yet, and in-window-server things with their own backing store (eg menus) aren't yet either.
