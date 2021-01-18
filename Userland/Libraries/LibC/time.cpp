@@ -333,6 +333,7 @@ void tzset()
 {
     // FIXME: Here we pretend we are in UTC+0.
     timezone = 0;
+    daylight = 0;
     tzname[0] = const_cast<char*>(__utc);
     tzname[1] = const_cast<char*>(__utc);
 }
