@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/EventTargetConstructor.h>
+#include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/LocationObject.h>
@@ -51,8 +53,9 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
 
-namespace Web {
-namespace Bindings {
+#include <LibWeb/Bindings/WindowObjectHelper.h>
+
+namespace Web::Bindings {
 
 WindowObject::WindowObject(DOM::Window& impl)
     : m_impl(impl)
@@ -86,6 +89,8 @@ void WindowObject::initialize()
     define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
+    ADD_WINDOW_OBJECT_INTERFACES;
+
     m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>(*this, *this);
     add_constructor("XMLHttpRequest", m_xhr_constructor, m_xhr_prototype);
 
@@ -104,6 +109,11 @@ void WindowObject::visit_edges(Visitor& visitor)
     visitor.visit(m_xhr_prototype);
     visitor.visit(m_range_constructor);
     visitor.visit(m_range_prototype);
+
+    for (auto& it : m_prototypes)
+        visitor.visit(it.value);
+    for (auto& it : m_constructors)
+        visitor.visit(it.value);
 }
 
 Origin WindowObject::origin() const
@@ -357,5 +367,4 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
 }
 
-}
 }
