@@ -330,9 +330,9 @@ private:
     mutable bool m_last_continuation_state { false }; // false == not needed.
 };
 
-static constexpr bool is_word_character(char c)
+[[maybe_unused]] static constexpr bool is_word_character(char c)
 {
-    return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a');
+    return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a') || (c <= '9' && c >= '0');
 }
 
 inline size_t find_offset_into_node(const String& unescaped_text, size_t escaped_offset)
