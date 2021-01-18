@@ -185,6 +185,7 @@ set(SOURCES
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     Namespace.cpp
+    NavigationTiming/PerformanceTiming.cpp
     OutOfProcessWebView.cpp
     Page/EventHandler.cpp
     Page/EditEventHandler.cpp
@@ -365,6 +366,7 @@ libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
 libweb_js_wrapper(HTML/SubmitEvent)
 libweb_js_wrapper(HighResolutionTime/Performance)
+libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
