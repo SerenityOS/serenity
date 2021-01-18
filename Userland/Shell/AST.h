@@ -558,6 +558,7 @@ public:
 private:
     NODE(ListConcatenate);
     virtual void dump(int level) const override;
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
@@ -656,6 +657,7 @@ private:
     NODE(CastToList);
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool is_list() const override { return true; }

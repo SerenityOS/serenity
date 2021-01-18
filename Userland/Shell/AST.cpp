@@ -390,6 +390,17 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
     return result;
 }
 
+void ListConcatenate::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
+{
+    for (auto& entry : m_list) {
+        auto value = entry->run(shell);
+        if (!value)
+            continue;
+        if (callback(value.release_nonnull()) == IterationDecision::Break)
+            break;
+    }
+}
+
 void ListConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     auto first = metadata.is_first_in_list;
@@ -692,6 +703,12 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
         cast_values.append(create<StringValue>(value));
 
     return create<ListValue>(cast_values);
+}
+
+void CastToList::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
+{
+    if (m_inner)
+        m_inner->for_each_entry(shell, move(callback));
 }
 
 void CastToList::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1046,7 +1063,7 @@ FunctionDeclaration::~FunctionDeclaration()
 void ForLoop::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%s in\n", m_variable_name.characters()), level + 1);
+    print_indented(String::format("%s in", m_variable_name.characters()), level + 1);
     if (m_iterated_expression)
         m_iterated_expression->dump(level + 2);
     else
@@ -1074,6 +1091,9 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             shell->take_error();
             return IterationDecision::Continue;
         }
+
+        if (!shell->has_error(Shell::ShellError::None))
+            return IterationDecision::Break;
 
         if (block_value->is_job()) {
             auto job = static_cast<JobValue*>(block_value.ptr())->job();
@@ -2855,15 +2875,7 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
         ASSERT(name_value.size() == 1);
         auto name = name_value[0];
         auto value = var.value->run(shell);
-        if (value->is_list()) {
-            auto parts = value->resolve_as_list(shell);
-            shell->set_local_variable(name, adopt(*new ListValue(move(parts))));
-        } else if (value->is_command()) {
-            shell->set_local_variable(name, value);
-        } else {
-            auto part = value->resolve_as_list(shell);
-            shell->set_local_variable(name, adopt(*new StringValue(part[0])));
-        }
+        shell->set_local_variable(name, value.release_nonnull());
     }
 
     return create<ListValue>({});
