@@ -35,6 +35,7 @@
 #include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
@@ -84,7 +85,7 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 {
     static const auto s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
     auto path = m_config->read_entry("Cursor", name, s_default_cursor_path);
-    auto gb = Gfx::Bitmap::load_from_file(path);
+    auto gb = Gfx::Bitmap::load_from_file(path, compositor_icon_scale());
     if (gb)
         return Cursor::create(*gb, path);
     return Cursor::create(*Gfx::Bitmap::load_from_file(s_default_cursor_path), s_default_cursor_path);
@@ -1092,6 +1093,12 @@ void WindowManager::event(Core::Event& event)
             return;
         }
 
+        if (key_event.type() == Event::KeyDown && (key_event.modifiers() == (Mod_Ctrl | Mod_Logo | Mod_Shift) && key_event.key() == Key_I)) {
+            reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
+            Compositor::the().invalidate_screen();
+            return;
+        }
+
         if (MenuManager::the().current_menu()) {
             MenuManager::the().dispatch_event(event);
             return;
@@ -1485,5 +1492,22 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
     }
 
     return point;
+}
+
+int WindowManager::compositor_icon_scale() const
+{
+    if (!m_allow_hidpi_icons)
+        return 1;
+    return scale_factor();
+}
+
+void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons)
+{
+    m_allow_hidpi_icons = allow_hidpi_icons;
+    reload_config();
+    for_each_window([&](Window& window) {
+        window.frame().set_button_icons();
+        return IterationDecision::Continue;
+    });
 }
 }
