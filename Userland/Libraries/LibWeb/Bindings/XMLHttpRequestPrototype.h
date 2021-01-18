@@ -41,6 +41,7 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(open);
     JS_DECLARE_NATIVE_FUNCTION(send);
+    JS_DECLARE_NATIVE_FUNCTION(set_request_header);
 
     JS_DECLARE_NATIVE_GETTER(ready_state_getter);
     JS_DECLARE_NATIVE_GETTER(response_text_getter);

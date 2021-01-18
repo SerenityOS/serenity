@@ -63,10 +63,16 @@ String XMLHttpRequest::response_text() const
     return String::copy(m_response);
 }
 
+void XMLHttpRequest::set_request_header(const String& header, const String& value)
+{
+    m_request_headers.set(header, value);
+}
+
 void XMLHttpRequest::open(const String& method, const String& url)
 {
     m_method = method;
     m_url = url;
+    m_request_headers.clear();
     set_ready_state(ReadyState::Opened);
 }
 
@@ -88,10 +94,15 @@ void XMLHttpRequest::send()
         return;
     }
 
+    LoadRequest request;
+    request.set_url(m_window->document().complete_url(m_url));
+    for (auto& it : m_request_headers)
+        request.set_header(it.key, it.value);
+
     // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
     // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
     ResourceLoader::the().load(
-        m_window->document().complete_url(m_url),
+        request,
         [weak_this = make_weak_ptr()](auto data, auto&) {
             if (!weak_this)
                 return;
