@@ -52,6 +52,12 @@ public:
     float width() const { return m_size.width(); }
     float height() const { return m_size.height(); }
 
+    float margin_box_width() const
+    {
+        auto margin_box = box_model().margin_box();
+        return width() + margin_box.left + margin_box.right;
+    }
+
     float border_box_width() const
     {
         auto border_box = box_model().border_box();
