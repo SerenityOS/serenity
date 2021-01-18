@@ -1,21 +1,20 @@
 #!/bin/sh
 
+source test-commons.inc
+
 setopt --verbose
 
-fail() {
-    echo $*
-    exit 1
-}
+if not test "$(echo {a,b,})" = "a b " {  fail normal brace expansion with one empty slot }
+if not test "$(echo {a,,b})" = "a  b" {  fail normal brace expansion with one empty slot }
+if not test "$(echo {a,,,b})" = "a   b" {  fail normal brace expansion with two empty slots }
+if not test "$(echo {a,b,,})" = "a b  " {  fail normal brace expansion with two empty slots }
 
-test "$(echo {a,b,})" = "a b " || fail normal brace expansion with one empty slot
-test "$(echo {a,,b})" = "a  b" || fail normal brace expansion with one empty slot
-test "$(echo {a,,,b})" = "a   b" || fail normal brace expansion with two empty slots
-test "$(echo {a,b,,})" = "a b  " || fail normal brace expansion with two empty slots
-
-test "$(echo {a..c})" = "a b c" || fail range brace expansion, alpha
-test "$(echo {0..3})" = "0 1 2 3" || fail range brace expansion, number
-test "$(echo {😂..😄})" = "😂 😃 😄" || fail range brace expansion, unicode codepoint
+if not test "$(echo {a..c})" = "a b c" {  fail range brace expansion, alpha }
+if not test "$(echo {0..3})" = "0 1 2 3" {  fail range brace expansion, number }
+if not test "$(echo {😂..😄})" = "😂 😃 😄" {  fail range brace expansion, unicode codepoint }
 
 # Make sure that didn't mess with dots and commas in normal barewords
-test .. = ".." || fail range brace expansion delimiter affects normal barewords
-test , = "," || fail normal brace expansion delimiter affects normal barewords
+if not test .. = ".." {  fail range brace expansion delimiter affects normal barewords }
+if not test , = "," {  fail normal brace expansion delimiter affects normal barewords }
+
+echo PASS

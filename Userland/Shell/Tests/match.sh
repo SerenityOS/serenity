@@ -1,12 +1,14 @@
 #!/bin/Shell
 
+source test-commons.inc
+
 result=no
 match hello {
     he* { result=yes }
     * { result=fail }
 };
 
-test "$result" = yes || echo invalid result $result for normal string match, single option && exit 1
+if not test "$result" = yes { fail invalid result $result for normal string match, single option }
 
 result=no
 match hello {
@@ -14,7 +16,7 @@ match hello {
     * { result=fail }
 };
 
-test "$result" = yes || echo invalid result $result for normal string match, multiple options && exit 1
+if not test "$result" = yes { fail invalid result $result for normal string match, multiple options }
 
 result=no
 match (well hello friends) {
@@ -23,7 +25,7 @@ match (well hello friends) {
     * { result=fail }
 };
 
-test "$result" = yes || echo invalid result $result for list match && exit 1
+if not test "$result" = yes { fail invalid result $result for list match }
 
 result=no
 match yes as v {
@@ -32,7 +34,7 @@ match yes as v {
     * { result=$v }
 };
 
-test "$result" = yes || echo invalid result $result for match with name && exit 1
+if not test "$result" = yes { fail invalid result $result for match with name }
 
 result=no
 # $(...) is a list, $(echo) should be an empty list, not an empty string
@@ -41,7 +43,7 @@ match $(echo) {
     () { result=yes }
 };
 
-test "$result" = yes || echo invalid result $result for list subst match && exit 1
+if not test "$result" = yes { fail invalid result $result for list subst match }
 
 result=no
 # "$(...)" is a string, "$(echo)" should be an empty string, not an empty list
@@ -50,7 +52,7 @@ match "$(echo)" {
     () { result=fail }
 };
 
-test "$result" = yes || echo invalid result $result for string subst match && exit 1
+if not test "$result" = yes { fail invalid result $result for string subst match }
 
 match (foo bar) {
     (f? *) as (x y) {
@@ -65,7 +67,7 @@ match (foo bar) {
     }
 }
 
-test "$result" = yes || echo invalid result $result for subst match with name && exit 1
+if not test "$result" = yes { fail invalid result $result for subst match with name }
 
 match (foo bar baz) {
     (f? * *z) as (x y z) {
@@ -80,4 +82,6 @@ match (foo bar baz) {
     }
 }
 
-test "$result" = yes || echo invalid result $result for subst match with name 2 && exit 1
+if not test "$result" = yes { fail invalid result $result for subst match with name 2 }
+
+echo PASS

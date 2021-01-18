@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source test-commons.inc
+
 setopt --verbose
 
 if test 1 -eq 1 {
@@ -7,12 +9,10 @@ if test 1 -eq 1 {
     # Basic 'if' structure, empty block.
     if true {
     } else {
-        echo "if true runs false branch"
-        exit 2
+        fail "if true runs false branch"
     }
     if false {
-        echo "if false runs true branch"
-        exit 2
+        fail "if false runs true branch"
     } else {
     }
 
@@ -26,33 +26,29 @@ if test 1 -eq 1 {
 
     # Basic 'if' structure, without 'else'
     if false {
-        echo "Fail: 'if false' runs the branch"
-        exit 2
+        fail "'if false' runs the branch"
     }
 
     # Extended 'cond' form.
     if false {
-        echo "Fail: 'if false' with 'else if' runs first branch"
-        exit 2
+        fail "'if false' with 'else if' runs first branch"
     } else if true {
     } else {
-        echo "Fail: 'if false' with 'else if' runs last branch"
-        exit 2
+        fail "'if false' with 'else if' runs last branch"
     }
 
     # FIXME: Some form of 'not' would be nice
     # &&/|| in condition
     if true || false {
     } else {
-        echo "Fail: 'if true || false' runs false branch"
-        exit 2
+        fail "'if true || false' runs false branch"
     }
 
     if true && false {
-        echo "Fail: 'if true && false' runs true branch"
-        exit 2
+        fail "'if true && false' runs true branch"
     }
 } else {
-    echo "Fail: 'if test 1 -eq 1' runs false branch"
-    exit 1
+    fail "'if test 1 -eq 1' runs false branch"
 }
+
+echo PASS

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source test-commons.inc
+
 singlecommand_ok=yes
 multicommand_ok=yes
 inlineexec_ok=yes
@@ -65,13 +67,20 @@ for $(yes) {
     break
 }
 
-test $singlecommand_ok || echo Fail: Single command inside for body
-test $multicommand_ok || echo Fail: Multiple commands inside for body
-test $inlineexec_ok || echo Fail: Inline Exec
-test $implicit_ok || echo Fail: implicit iter variable
-test $infinite_ok || echo Fail: infinite loop
-test $break_ok || echo Fail: break
-test $continue_ok || echo Fail: continue
-test $break_in_infinite_ok || echo Fail: break from external infinite loop
+if not test $singlecommand_ok { fail Single command inside for body }
+if not test $multicommand_ok { fail Multiple commands inside for body }
+if not test $inlineexec_ok { fail Inline Exec }
+if not test $implicit_ok { fail implicit iter variable }
+if not test $infinite_ok { fail infinite loop }
+if not test $break_ok { fail break }
+if not test $continue_ok { fail continue }
+if not test $break_in_infinite_ok { fail break from external infinite loop }
 
-test "$singlecommand_ok $multicommand_ok $inlineexec_ok $implicit_ok $infinite_ok $break_ok $continue_ok $break_in_infinite_ok" = "yes yes yes yes yes yes yes yes" || exit 1
+if not test \
+    "$singlecommand_ok $multicommand_ok $inlineexec_ok $implicit_ok $infinite_ok $break_ok $continue_ok $break_in_infinite_ok" \
+    = "yes yes yes yes yes yes yes yes" {
+
+    fail "Something failed :("
+}
+
+echo PASS
