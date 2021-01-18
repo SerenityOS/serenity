@@ -34,6 +34,14 @@ struct Option;
 }
 
 namespace SIR {
+
+template<class T, class... Args>
+static inline NonnullRefPtr<T>
+create_ast_node(Args&&... args)
+{
+    return adopt(*new T(forward<Args>(args)...));
+}
+
 class ASTNode : public RefCounted<ASTNode> {
 
 public:
@@ -43,15 +51,19 @@ public:
     virtual bool is_statement() const { return false; }
     virtual bool is_variable() const { return false; }
     virtual bool is_return_statement() const { return false; }
+    virtual bool is_jump_statement() const { return false; }
     virtual bool is_primary_expression() const { return false; }
 
     virtual bool is_identifier_expression() const { return false; }
+    virtual bool is_label_expression() const { return false; }
     virtual bool is_binary_expression() const { return false; }
+    virtual bool is_constant_expression() const { return false; }
 };
 
 class Type : public ASTNode {
 public:
     enum class Kind {
+        Boolean,
         Integer,
         Void,
     };
@@ -93,11 +105,23 @@ private:
     bool m_is_signed;
 };
 
+class BooleanType : public Type {
+public:
+    BooleanType()
+        : Type(Kind::Boolean, 1, 1)
+    {
+    }
+};
+
 class Variable : public ASTNode {
 public:
-    Variable(NonnullRefPtr<Type> node_type, String& name)
+    Variable(NonnullRefPtr<Type> node_type, String name)
         : m_node_type(move(node_type))
-        , m_name(name)
+        , m_name(move(name))
+    {
+    }
+    explicit Variable(NonnullRefPtr<Type> node_type)
+        : Variable(move(node_type), String::format(".D%zu", number_unnamed_variable_created++))
     {
     }
 
@@ -110,6 +134,7 @@ public:
 private:
     NonnullRefPtr<Type> m_node_type;
     String m_name;
+    static inline size_t number_unnamed_variable_created { 0 };
 };
 
 class Statement : public ASTNode {
@@ -190,6 +215,58 @@ public:
     bool is_identifier_expression() const override { return true; }
 };
 
+class ConstantExpression : public PrimaryExpression {
+public:
+    explicit ConstantExpression(int value)
+        : PrimaryExpression(create_ast_node<Variable>(create_ast_node<IntegerType>(32, 32, true)))
+        , m_value(value)
+    {
+    }
+
+    bool is_constant_expression() const override { return true; }
+    int value() const { return m_value; }
+
+private:
+    int m_value;
+};
+
+class LabelExpression : public PrimaryExpression {
+public:
+    explicit LabelExpression()
+        : PrimaryExpression(create_ast_node<Variable>(create_ast_node<VoidType>(), String::format(".L%zu", number_unnamed_label_created++)))
+    {
+    }
+    bool is_label_expression() const override { return true; }
+    const String& identifier() const { return result()->name(); }
+
+private:
+    static inline size_t number_unnamed_label_created { 0 };
+};
+
+class JumpStatement : public Statement {
+public:
+    JumpStatement(NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true, RefPtr<Expression> if_false = nullptr)
+        : m_condition(move(condition))
+        , m_if_true(move(if_true))
+        , m_if_false(move(if_false))
+    {
+    }
+
+    bool is_jump_statement() const override { return true; }
+
+    NonnullRefPtr<Expression> condition() { return m_condition; }
+    NonnullRefPtr<Expression> if_true() const { return m_if_true; }
+    RefPtr<Expression> if_false() const { return m_if_false; }
+    void set_condition(NonnullRefPtr<Expression> condition) { m_condition = move(condition); }
+    void set_if_true(NonnullRefPtr<Expression> if_true) { m_if_true = move(if_true); }
+    void set_if_false(NonnullRefPtr<Expression> if_false) { m_if_false = move(if_false); }
+
+private:
+    NonnullRefPtr<Expression> m_condition;
+    NonnullRefPtr<Expression> m_if_true;
+    RefPtr<Expression> m_if_false;
+};
+
 class ReturnStatement : public Statement {
 public:
     ReturnStatement() = default;
@@ -201,7 +278,7 @@ public:
 
     const RefPtr<ASTNode>& expression() const { return m_expression; }
     RefPtr<ASTNode>& expression() { return m_expression; }
-    void set_expression(NonnullRefPtr<ASTNode>& expression) { m_expression = expression; }
+    void set_expression(NonnullRefPtr<ASTNode> expression) { m_expression = move(expression); }
 
 private:
     RefPtr<ASTNode> m_expression;
@@ -245,13 +322,6 @@ public:
 private:
     NonnullRefPtrVector<Function> m_functions;
 };
-
-template<class T, class... Args>
-static inline NonnullRefPtr<T>
-create_ast_node(Args&&... args)
-{
-    return adopt(*new T(forward<Args>(args)...));
-}
 
 void run_intermediate_representation_passes(SIR::TranslationUnit&);
 

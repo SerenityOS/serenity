@@ -39,6 +39,18 @@ NonnullRefPtr<Core::File> I386Assembly::get_output_file()
     return output_file.value();
 }
 
+String I386Assembly::get_register_for_expression(const HashMap<String, String>& variables_already_seen, const RefPtr<SIR::Expression>& expression)
+{
+    if (expression->is_identifier_expression() || expression->is_binary_expression()) {
+        auto result = variables_already_seen.get(expression->result()->name());
+        ASSERT(result.has_value());
+        return result.value();
+    } else {
+        ASSERT(expression->is_constant_expression());
+        return String::format("$%i", reinterpret_cast<const AK::NonnullRefPtr<SIR::ConstantExpression>&>(expression)->value());
+    }
+}
+
 void I386Assembly::print_assembly_for_function(const SIR::Function& function)
 {
     size_t param_stack = m_param_stack_start;
@@ -58,15 +70,16 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
     for (auto& operation : function.body()) {
         if (operation.is_binary_expression()) {
             auto& binop = reinterpret_cast<const SIR::BinaryExpression&>(operation);
-            auto right_index = variables_already_seen.get(binop.right()->result()->name());
-            auto left_index = variables_already_seen.get(binop.left()->result()->name());
+            auto& right = binop.right();
+            auto& left = binop.left();
+            String right_value = get_register_for_expression(variables_already_seen, right);
+            String left_value = get_register_for_expression(variables_already_seen, left);
+            auto left_index = variables_already_seen.get(left->result()->name());
 
-            assert(right_index.has_value() && left_index.has_value());
-            assert(var_in_eax.has_value());
-            generator.set("right_operand.index", right_index.value());
-            generator.set("left_operand.index", left_index.value());
+            generator.set("right_operand.index", right_value);
+            generator.set("left_operand.index", left_value);
 
-            if (var_in_eax.value() != binop.left()->result().ptr())
+            if (!var_in_eax.has_value() || var_in_eax.value() != binop.left()->result().ptr())
                 generator.append("\tmovl\t{left_operand.index}, %eax\n");
 
             switch (binop.binary_operation()) {
@@ -105,11 +118,20 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
                 generator.append("\tmovl\t{right_operand.index}, %ecx\n");
                 generator.append("\tsarl\t%cl, %eax\n");
                 break;
+            case SIR::BinaryExpression::Kind::NotEqual:
+                generator.append("\tcmpl\t{right_operand.index}, %eax\n");
+                break;
             }
             //TODO: clear other var in eax, and check that there are no var in ecx and edx
             variables_already_seen.set(binop.result()->name(), "%eax");
             var_in_eax = binop.result();
         } else if (operation.is_return_statement()) {
+            auto& stmt = reinterpret_cast<const SIR::ReturnStatement&>(operation);
+
+            if (stmt.expression() && !var_in_eax.has_value()) {
+                generator.set("operand.stack_position", get_register_for_expression(variables_already_seen, stmt.expression()));
+                generator.append("\tmovl\t{operand.stack_position}, %eax\n");
+            }
             generator.append("\tpopl\t%ebp\n\tret\n");
         } else if (operation.is_variable()) {
             auto& var = reinterpret_cast<const SIR::Variable&>(operation);
@@ -118,6 +140,19 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
             variables_already_seen.set(var.name(), String::format("%zu(%%ebp)", param_stack));
             param_stack += var.node_type()->size_in_bytes();
             var_in_eax = &var;
+        } else if (operation.is_label_expression()) {
+            auto& label = reinterpret_cast<const SIR::LabelExpression&>(operation);
+            generator.set("label.identifier", label.identifier());
+
+            generator.append("{label.identifier}:\n");
+        } else if (operation.is_jump_statement()) {
+            auto& jump = reinterpret_cast<const SIR::JumpStatement&>(operation);
+            generator.set("if.identifier", jump.if_true()->result()->name());
+            generator.set("else.identifier", jump.if_false()->result()->name());
+
+            generator.append("\tje\t{if.identifier}\n");
+            generator.append("\tjmp\t{else.identifier}\n");
+            var_in_eax.clear();
         } else {
             ASSERT_NOT_REACHED();
         }

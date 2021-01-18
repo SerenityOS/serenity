@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@ class Option;
 namespace SIR {
 class TranslationUnit;
 class Function;
+class Expression;
 }
 
 namespace BackEnd {
@@ -51,6 +52,7 @@ public:
 private:
     NonnullRefPtr<Core::File> get_output_file();
     void print_assembly_for_function(const SIR::Function&);
+    String get_register_for_expression(const HashMap<String, String>&, const RefPtr<SIR::Expression>&);
 
     const SIR::TranslationUnit& m_tu;
     const Cpp::Option& m_options;

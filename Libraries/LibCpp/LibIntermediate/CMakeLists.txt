@@ -4,5 +4,5 @@ set(SOURCES
 )
 
 
-serenity_lib(LibIntermediate MiddleEnd)
+serenity_lib(LibIntermediate LibIntermediate)
 target_link_libraries(LibIntermediate LibCore)

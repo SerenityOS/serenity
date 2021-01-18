@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -105,6 +106,7 @@ namespace Cpp {
     __KNOWN_TYPE(Int, "int")
 
 #define FOR_EACH_CPP_KNOWN_KEYWORD \
+    __KNOWN_KEYWORD(If, "if")      \
     __KNOWN_KEYWORD(Return, "return")
 
 struct Position {

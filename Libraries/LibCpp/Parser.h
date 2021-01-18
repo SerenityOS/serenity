@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,6 @@ private:
     Token consume(Token::Type expected_type);
     void consume();
     [[noreturn]] void parse_error(StringView message);
-    NonnullRefPtr<Variable> create_unnamed_var(NonnullRefPtr<Type>& type);
     template<typename... Args>
     BinaryExpression& maybe_correct_binop_tree(BinaryExpression& result, Expression& right, Args... args);
 
@@ -98,7 +97,9 @@ private:
     NonnullRefPtr<Expression> parse_assignment_expression();
     NonnullRefPtr<Expression> parse_expression();
     NonnullRefPtr<Expression> parse_expr_or_braced_init_list();
-    NonnullRefPtr<Statement> parse_jump_statement();
+    Optional<NonnullRefPtr<Statement>> parse_jump_statement();
+    Optional<NonnullRefPtr<Statement>> parse_selection_statement();
+    NonnullRefPtr<Expression> parse_condition();
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<Statement> parse_statement_seq();
 
@@ -106,6 +107,5 @@ private:
     Lexer m_lexer;
     Optional<Token> m_saved_token;
     TranslationUnit m_tu;
-    size_t m_unnamed_var_counter { 0 };
 };
 }

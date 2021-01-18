@@ -87,15 +87,6 @@ Token Parser::consume(Token::Type expected_type)
     return tok;
 }
 
-NonnullRefPtr<Variable> Parser::create_unnamed_var(NonnullRefPtr<Type>& type)
-{
-    StringBuilder sb;
-
-    sb.appendf("_.%zu", m_unnamed_var_counter++);
-    auto name = sb.build();
-    return create_ast_node<Variable>(type, name);
-}
-
 /*
  * When parsing two operator with the same precedence, it will produce a tree with the branches inverted.
  * `i + j - k` will have a tree like `i + (j -k)`. This method transforms that tree into `(i + j) -k`.
@@ -353,7 +344,7 @@ NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
                                                                                                                                                    : BinaryExpression::Kind::Modulo;
         consume();
         auto right = parse_multiplicative_expression();
-        auto result_var = create_unnamed_var(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
         auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
@@ -374,7 +365,7 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
         auto operation = peek().m_type == Token::Type::Plus ? BinaryExpression::Kind::Addition : BinaryExpression::Kind::Subtraction;
         consume();
         auto right = parse_additive_expression();
-        auto result_var = create_unnamed_var(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
         auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
@@ -396,7 +387,7 @@ NonnullRefPtr<Expression> Parser::parse_shift_expression()
         auto operation = peek().m_type == Token::Type::LessLess ? BinaryExpression::Kind::LeftShift : BinaryExpression::Kind::RightShift;
         consume();
         auto right = parse_additive_expression();
-        auto result_var = create_unnamed_var(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result()->node_type());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
         auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
@@ -525,25 +516,58 @@ NonnullRefPtr<Expression> Parser::parse_expr_or_braced_init_list()
     return parse_expression();
 }
 
-// parse_jump_statement
+// jump_statement
 //      - return expr-or-braced-init-list ;
-NonnullRefPtr<Statement> Parser::parse_jump_statement()
+Optional<NonnullRefPtr<Statement>> Parser::parse_jump_statement()
 {
     SCOPE_LOGGER();
-    assert(consume(Token::Type::Keyword).m_known_keyword == Token::KnownKeyword::Return);
+    auto return_keyword = peek();
+    if (return_keyword.m_type == Token::Type::Keyword && return_keyword.m_known_keyword == Token::KnownKeyword::Return) {
+        consume();
+        RefPtr expression = parse_expr_or_braced_init_list();
 
-    RefPtr expression = parse_expr_or_braced_init_list();
+        expect(Token::Type::Semicolon);
+        return create_ast_node<ReturnStatement>(move(expression));
+    }
+    return {};
+}
 
-    expect(Token::Type::Semicolon);
-    return create_ast_node<ReturnStatement>(move(expression));
+// condition:
+//      - expression
+NonnullRefPtr<Expression> Parser::parse_condition()
+{
+    SCOPE_LOGGER();
+    return parse_expression();
+}
+
+// selection-statement:
+//      - if ( condition ) statement
+Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
+{
+    SCOPE_LOGGER();
+    auto keyword = peek();
+    if (keyword.m_type == Token::Type::Keyword && keyword.m_known_keyword == Token::KnownKeyword::If) {
+        consume();
+        expect(Token::Type::LeftParen);
+        auto condition = parse_condition();
+        expect(Token::Type::RightParen);
+        auto body = parse_statement();
+        return create_ast_node<IfStatement>(condition, body);
+    }
+    return {};
 }
 
 // statement:
 //      - jump-statement
+//      - selection-statement
 NonnullRefPtr<Statement> Parser::parse_statement()
 {
     SCOPE_LOGGER();
-    return parse_jump_statement();
+    auto statement = parse_jump_statement();
+    if (!statement.has_value())
+        statement = parse_selection_statement();
+    ASSERT(statement.has_value());
+    return statement.release_value();
 }
 
 // statement-seq:
@@ -555,13 +579,13 @@ NonnullRefPtr<Statement> Parser::parse_statement_seq()
 }
 
 // compound-statement:
-//      - { [statement-seq] }
+//      - { statement-seq* }
 NonnullRefPtrVector<ASTNode> Parser::parse_compound_statement()
 {
     SCOPE_LOGGER();
     NonnullRefPtrVector<ASTNode> body;
     expect(Token::Type::LeftCurly);
-    if (peek().m_type != Token::Type::RightCurly)
+    while (peek().m_type != Token::Type::RightCurly)
         body.append(parse_statement_seq());
     expect(Token::Type::RightCurly);
     return body;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,14 @@ class SignedIntType : public IntegerType {
 public:
     SignedIntType()
         : IntegerType(Kind::SignedInt, 32, 4, true)
+    {
+    }
+};
+
+class IfStatement : public SIR::JumpStatement {
+public:
+    IfStatement(NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true)
+        : SIR::JumpStatement(move(condition), move(if_true))
     {
     }
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2020-2021, Denis Campredon <deni_@hotmail.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,6 @@
 
 #include "SIR.h"
 
-namespace MiddleEnd::Utils {
+namespace LibIntermediate::Utils {
 NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>&, String&);
 }
