@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <wchar.h>
 
 extern "C" {
@@ -106,6 +107,16 @@ wchar_t* wcscat(wchar_t* dest, const wchar_t* src)
     return dest;
 }
 
+wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
+{
+    size_t dest_length = wcslen(dest);
+    size_t i;
+    for (i = 0; i < n && src[i] != '\0'; i++)
+        dest[dest_length + i] = src[i];
+    dest[dest_length + i] = '\0';
+    return dest;
+}
+
 wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
 {
     wchar_t* used_str = str;
@@ -151,13 +162,15 @@ wchar_t* wcstok(wchar_t* str, const wchar_t* delim, wchar_t** ptr)
     return &used_str[token_start];
 }
 
-wchar_t* wcsncat(wchar_t* dest, const wchar_t* src, size_t n)
+long wcstol(const wchar_t*, wchar_t**, int)
 {
-    size_t dest_length = wcslen(dest);
-    size_t i;
-    for (i = 0; i < n && src[i] != '\0'; i++)
-        dest[dest_length + i] = src[i];
-    dest[dest_length + i] = '\0';
-    return dest;
+    dbgln("FIXME: Implement wcstol()");
+    TODO();
+}
+
+long long wcstoll(const wchar_t*, wchar_t**, int)
+{
+    dbgln("FIXME: Implement wcstoll()");
+    TODO();
 }
 }
