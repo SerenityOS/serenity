@@ -169,9 +169,9 @@ bool Window::dispatch_event(NonnullRefPtr<Event> event)
     return EventDispatcher::dispatch(*this, event, true);
 }
 
-Bindings::EventTargetWrapper* Window::create_wrapper(JS::GlobalObject&)
+JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
 {
-    ASSERT_NOT_REACHED();
+    return &global_object;
 }
 
 }

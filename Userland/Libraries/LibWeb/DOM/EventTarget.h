@@ -51,7 +51,7 @@ public:
     void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
 
     virtual bool dispatch_event(NonnullRefPtr<Event>) = 0;
-    virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) = 0;
+    virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;
     Bindings::ScriptExecutionContext* script_execution_context() { return m_script_execution_context; }
 
     virtual EventTarget* get_parent(const Event&) { return nullptr; }

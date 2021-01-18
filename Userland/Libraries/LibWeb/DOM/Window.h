@@ -50,7 +50,7 @@ public:
     virtual void ref_event_target() override { RefCounted::ref(); }
     virtual void unref_event_target() override { RefCounted::unref(); }
     virtual bool dispatch_event(NonnullRefPtr<Event>) override;
-    virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
+    virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     const Document& document() const { return m_document; }
     Document& document() { return m_document; }
