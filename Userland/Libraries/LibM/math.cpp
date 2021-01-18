@@ -563,4 +563,34 @@ double erfc(double x) NOEXCEPT
 {
     return 1 - erf(x);
 }
+
+double nextafter(double, double) NOEXCEPT
+{
+    TODO();
+}
+
+float nextafterf(float, float) NOEXCEPT
+{
+    TODO();
+}
+
+long double nextafterl(long double, long double) NOEXCEPT
+{
+    TODO();
+}
+
+double nexttoward(double, long double) NOEXCEPT
+{
+    TODO();
+}
+
+float nexttowardf(float, long double) NOEXCEPT
+{
+    TODO();
+}
+
+long double nexttowardl(long double, long double) NOEXCEPT
+{
+    TODO();
+}
 }

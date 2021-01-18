@@ -134,4 +134,11 @@ double hypot(double, double) NOEXCEPT;
 double erf(double) NOEXCEPT;
 double erfc(double) NOEXCEPT;
 
+double nextafter(double, double) NOEXCEPT;
+float nextafterf(float, float) NOEXCEPT;
+long double nextafterl(long double, long double) NOEXCEPT;
+double nexttoward(double, long double) NOEXCEPT;
+float nexttowardf(float, long double) NOEXCEPT;
+long double nexttowardl(long double, long double) NOEXCEPT;
+
 __END_DECLS
