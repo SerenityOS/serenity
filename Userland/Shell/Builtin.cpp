@@ -40,6 +40,15 @@ extern char** environ;
 
 namespace Shell {
 
+int Shell::builtin_dump(int argc, const char** argv)
+{
+    if (argc != 2)
+        return 1;
+
+    Parser { argv[1] }.parse()->dump(0);
+    return 0;
+}
+
 int Shell::builtin_alias(int argc, const char** argv)
 {
     Vector<const char*> arguments;
