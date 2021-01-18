@@ -61,6 +61,19 @@ int wcscmp(const wchar_t* s1, const wchar_t* s2)
     return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
 }
 
+int wcsncmp(const wchar_t* s1, const wchar_t* s2, size_t n)
+{
+    if (!n)
+        return 0;
+    do {
+        if (*s1 != *s2++)
+            return *(const wchar_t*)s1 - *(const wchar_t*)--s2;
+        if (*s1++ == 0)
+            break;
+    } while (--n);
+    return 0;
+}
+
 wchar_t* wcschr(const wchar_t* str, int c)
 {
     wchar_t ch = c;
