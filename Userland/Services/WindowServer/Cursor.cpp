@@ -46,7 +46,8 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
     auto params_str = file_title.substring_view(last_dot_in_title.value() + 1);
 
     CursorParams params(default_hotspot);
-    for (size_t i = 0; i + 1 < params_str.length();) {
+    bool in_display_scale_part = false;
+    for (size_t i = 0; i + 1 < params_str.length() && !in_display_scale_part;) {
         auto property = params_str[i++];
 
         auto value = [&]() -> Optional<size_t> {
@@ -87,6 +88,9 @@ CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, c
                 params.m_frame_ms = value.value();
             else
                 dbgln("Cursor frame rate outside of valid range (100-1000ms)");
+            break;
+        case '-':
+            in_display_scale_part = true;
             break;
         default:
             dbg() << "Ignore unknown property '" << property << "' with value " << value.value() << " parsed from cursor path: " << cursor_path;
