@@ -560,6 +560,7 @@ void generate_implementation(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("name", interface.name);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
@@ -603,16 +604,17 @@ namespace Web::Bindings {
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-: Wrapper(*global_object.object_prototype())
-, m_impl(impl)
+    : Wrapper(*global_object.object_prototype())
+    , m_impl(impl)
 {
 }
 )~~~");
     } else {
         generator.append(R"~~~(
 @wrapper_class@::@wrapper_class@(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
-: @wrapper_base_class@(global_object, impl)
+    : @wrapper_base_class@(global_object, impl)
 {
+    set_prototype(static_cast<WindowObject&>(global_object).web_prototype("@name@"));
 }
 )~~~");
     }
