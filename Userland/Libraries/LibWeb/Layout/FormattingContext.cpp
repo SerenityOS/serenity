@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/FlexFormattingContext.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -60,12 +61,19 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
         return true;
     if (is<TableCellBox>(box))
         return true;
+
+    // FIXME: inline-flex as well
+    if (box.parent() && box.parent()->computed_values().display() == CSS::Display::Flex) {
+        // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
+        if (box.computed_values().display() != CSS::Display::Flex)
+            return true;
+    }
+
     // FIXME: table-caption
     // FIXME: anonymous table cells
     // FIXME: Block elements where overflow has a value other than visible and clip.
     // FIXME: display: flow-root
     // FIXME: Elements with contain: layout, content, or paint.
-    // FIXME: flex
     // FIXME: grid
     // FIXME: multicol
     // FIXME: column-span: all
@@ -79,6 +87,12 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
         context.run(box, layout_mode);
         return;
     }
+    if (box.computed_values().display() == CSS::Display::Flex) {
+        FlexFormattingContext context(box, this);
+        context.run(box, layout_mode);
+        return;
+    }
+
     if (is<TableBox>(box)) {
         TableFormattingContext context(box, this);
         context.run(box, layout_mode);
