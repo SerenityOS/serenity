@@ -1036,8 +1036,7 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     }
     auto file = file_result.value();
     auto data = file->read_all();
-    run_command(data);
-    return true;
+    return run_command(data) == 0;
 }
 void Shell::restore_ios()
 {
