@@ -858,6 +858,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool would_execute() const override { return true; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     String m_variable_name;
     RefPtr<AST::Node> m_iterated_expression;
@@ -984,6 +985,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool would_execute() const override { return true; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<AST::Node> m_condition;
     RefPtr<AST::Node> m_true_branch;
@@ -1041,6 +1043,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool would_execute() const override { return true; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<Node> m_matched_expr;
     String m_expr_name;
@@ -1153,6 +1156,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool is_list() const override { return true; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -1174,6 +1178,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual bool would_execute() const override { return false; }
+    virtual bool should_override_execution_in_current_process() const override { return true; }
 
     RefPtr<AST::Node> m_block;
 };
