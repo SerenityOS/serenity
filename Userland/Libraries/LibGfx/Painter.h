@@ -41,7 +41,7 @@ namespace Gfx {
 
 class Painter {
 public:
-    explicit Painter(Gfx::Bitmap&, int scale = 1);
+    explicit Painter(Gfx::Bitmap&);
     ~Painter();
 
     enum class LineStyle {
