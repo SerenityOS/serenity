@@ -67,6 +67,26 @@ inline u32 virtual_to_low_physical(u32 physical)
 class KBuffer;
 class SynthFSInode;
 
+enum class UsedMemoryRangeType {
+    LowMemory = 0,
+    Kernel,
+    BootModule,
+};
+
+constexpr static const char* UserMemoryRangeTypeNames[] {
+    "Low memory",
+    "Kernel",
+    "Boot module",
+};
+
+struct UsedMemoryRange {
+    UsedMemoryRangeType type;
+    PhysicalAddress start;
+    PhysicalAddress end;
+};
+
+const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value);
+
 #define MM Kernel::MemoryManager::the()
 
 struct MemoryManagerData {
@@ -93,6 +113,7 @@ public:
     static MemoryManager& the();
     static bool is_initialized();
 
+    static void early_initialize();
     static void initialize(u32 cpu);
 
     static inline MemoryManagerData& get_data()
@@ -165,6 +186,8 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
+    const Vector<UsedMemoryRange>& used_memory_ranges() { return m_used_memory_ranges; }
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -221,6 +244,7 @@ private:
 
     InlineLinkedList<Region> m_user_regions;
     InlineLinkedList<Region> m_kernel_regions;
+    Vector<UsedMemoryRange> m_used_memory_ranges;
 
     InlineLinkedList<VMObject> m_vmobjects;
 
