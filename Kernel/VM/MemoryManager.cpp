@@ -64,6 +64,11 @@ namespace Kernel {
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
 
+const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value)
+{
+    return stream << UserMemoryRangeTypeNames[static_cast<int>(value.type)] << " range @ " << value.start << " - " << value.end;
+}
+
 MemoryManager& MM
 {
     return *s_the;
@@ -122,25 +127,37 @@ void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> region;
 
-    // We need to make sure we exclude the kmalloc range as well as the kernel image.
-    // The kmalloc range directly follows the kernel image
-    const PhysicalAddress used_range_start(virtual_to_low_physical(FlatPtr(&start_of_kernel_image)));
-    const PhysicalAddress used_range_end(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)));
-    klog() << "MM: kernel range: " << used_range_start << " - " << used_range_end;
+    // Register used memory regions that we know of.
+    m_used_memory_ranges.ensure_capacity(4);
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
 
-    auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
-    for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
-        klog() << "MM: Multiboot mmap: base_addr = " << String::format("0x%08llx", mmap->addr) << ", length = " << String::format("0x%08llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+    if (multiboot_info_ptr->flags & 0x4) {
+        auto* bootmods_start = multiboot_copy_boot_modules_array;
+        auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
+
+        for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
+            m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
+        }
+    }
+
+    auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
+    auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
+
+    for (auto used_range : m_used_memory_ranges) {
+        klog() << "MM: " << used_range;
+    }
+
+    for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
+        klog() << "MM: Multiboot mmap: address = " << String::format("0x%016llx", mmap->addr) << ", length = " << String::format("0x%016llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
-            continue;
-
-        // FIXME: Maybe make use of stuff below the 1MiB mark?
-        if (mmap->addr < (1 * MiB))
             continue;
 
         if ((mmap->addr + mmap->len) > 0xffffffff)
             continue;
 
+        // Fix up unaligned memory regions.
         auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
             klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", (void*)mmap->addr) << " by " << diff << " bytes";
@@ -188,12 +205,12 @@ void MemoryManager::parse_memory_map()
 
     for (auto& region : m_super_physical_regions) {
         m_super_physical_pages += region.finalize_capacity();
-        klog() << "Super physical region: " << region.lower() << " - " << region.upper();
+        klog() << "MM: Super physical region: " << region.lower() << " - " << region.upper();
     }
 
     for (auto& region : m_user_physical_regions) {
         m_user_physical_pages += region.finalize_capacity();
-        klog() << "User physical region: " << region.lower() << " - " << region.upper();
+        klog() << "MM: User physical region: " << region.lower() << " - " << region.upper();
     }
 
     ASSERT(m_super_physical_pages > 0);

@@ -79,6 +79,9 @@ extern ctor_func_t end_ctors;
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard;
 
+multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
+size_t multiboot_copy_boot_modules_count;
+
 namespace Kernel {
 
 [[noreturn]] static void init_stage2(void*);
@@ -111,7 +114,8 @@ extern "C" [[noreturn]] void init()
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
     CommandLine::early_initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
-
+    memcpy(multiboot_copy_boot_modules_array, (u8*)low_physical_to_virtual(multiboot_info_ptr->mods_addr), multiboot_info_ptr->mods_count * sizeof(multiboot_module_entry_t));
+    multiboot_copy_boot_modules_count = multiboot_info_ptr->mods_count;
     s_bsp_processor.early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
