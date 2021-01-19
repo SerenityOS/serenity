@@ -728,7 +728,8 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
         return {};
     }
 
-    auto bitmap = Gfx::Bitmap::create_with_anon_fd(format, anon_fd, size, {}, Gfx::Bitmap::ShouldCloseAnonymousFile::No);
+    // FIXME: Plumb scale factor here eventually.
+    auto bitmap = Gfx::Bitmap::create_with_anon_fd(format, anon_fd, size, 1, {}, Gfx::Bitmap::ShouldCloseAnonymousFile::No);
     if (!bitmap)
         return {};
     return make<WindowBackingStore>(bitmap.release_nonnull());

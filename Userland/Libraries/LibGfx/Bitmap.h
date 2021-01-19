@@ -108,12 +108,12 @@ public:
         Yes,
     };
 
-    static RefPtr<Bitmap> create(BitmapFormat, const IntSize&);
-    static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&);
-    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&);
-    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, size_t pitch, void*);
-    static RefPtr<Bitmap> load_from_file(const StringView& path);
-    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
+    static RefPtr<Bitmap> create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
+    static RefPtr<Bitmap> load_from_file(const StringView& path); // FIXME: scale factor
+    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
     {
@@ -137,15 +137,21 @@ public:
 
     ~Bitmap();
 
-    u8* scanline_u8(int y);
-    const u8* scanline_u8(int y) const;
-    RGBA32* scanline(int y);
-    const RGBA32* scanline(int y) const;
+    u8* scanline_u8(int physical_y);
+    const u8* scanline_u8(int physical_y) const;
+    RGBA32* scanline(int physical_y);
+    const RGBA32* scanline(int physical_y) const;
 
     IntRect rect() const { return { {}, m_size }; }
     IntSize size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
+    int scale() const { return m_scale; }
+
+    IntRect physical_rect() const { return rect() * scale(); }
+    IntSize physical_size() const { return size() * scale(); }
+    int physical_width() const { return physical_size().width(); }
+    int physical_height() const { return physical_size().height(); }
     size_t pitch() const { return m_pitch; }
 
     ALWAYS_INLINE bool is_indexed() const
@@ -198,7 +204,7 @@ public:
         }
     }
 
-    static size_t minimum_pitch(size_t width, BitmapFormat);
+    static size_t minimum_pitch(size_t physical_width, BitmapFormat);
 
     unsigned bpp() const
     {
@@ -212,26 +218,26 @@ public:
 
     void set_mmap_name(const StringView&);
 
-    static constexpr size_t size_in_bytes(size_t pitch, int height) { return pitch * height; }
-    size_t size_in_bytes() const { return size_in_bytes(m_pitch, height()); }
+    static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
+    size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
 
     Color palette_color(u8 index) const { return Color::from_rgba(m_palette[index]); }
     void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
 
     template<StorageFormat>
-    Color get_pixel(int x, int y) const;
-    Color get_pixel(int x, int y) const;
-    Color get_pixel(const IntPoint& position) const
+    Color get_pixel(int physical_x, int physical_y) const;
+    Color get_pixel(int physical_x, int physical_y) const;
+    Color get_pixel(const IntPoint& physical_position) const
     {
-        return get_pixel(position.x(), position.y());
+        return get_pixel(physical_position.x(), physical_position.y());
     }
 
     template<StorageFormat>
-    void set_pixel(int x, int y, Color);
-    void set_pixel(int x, int y, Color);
-    void set_pixel(const IntPoint& position, Color color)
+    void set_pixel(int physical_x, int physical_y, Color);
+    void set_pixel(int physical_x, int physical_y, Color);
+    void set_pixel(const IntPoint& physical_position, Color color)
     {
-        set_pixel(position.x(), position.y(), color);
+        set_pixel(physical_position.x(), physical_position.y(), color);
     }
 
     bool is_purgeable() const { return m_purgeable; }
@@ -246,15 +252,16 @@ private:
         No,
         Yes
     };
-    Bitmap(BitmapFormat, const IntSize&, Purgeable, const BackingStore&);
-    Bitmap(BitmapFormat, const IntSize&, size_t pitch, void*);
-    Bitmap(BitmapFormat, int anon_fd, const IntSize&, void*, const Vector<RGBA32>& palette);
+    Bitmap(BitmapFormat, const IntSize&, int, Purgeable, const BackingStore&);
+    Bitmap(BitmapFormat, const IntSize&, int, size_t pitch, void*);
+    Bitmap(BitmapFormat, int anon_fd, const IntSize&, int, void*, const Vector<RGBA32>& palette);
 
-    static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, Purgeable);
+    static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, int, Purgeable);
 
     void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
 
     IntSize m_size;
+    int m_scale;
     void* m_data { nullptr };
     RGBA32* m_palette { nullptr };
     size_t m_pitch { 0 };
@@ -267,13 +274,13 @@ private:
 
 inline u8* Bitmap::scanline_u8(int y)
 {
-    ASSERT(y >= 0 && y < height());
+    ASSERT(y >= 0 && y < physical_height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
 inline const u8* Bitmap::scanline_u8(int y) const
 {
-    ASSERT(y >= 0 && y < height());
+    ASSERT(y >= 0 && y < physical_height());
     return reinterpret_cast<const u8*>(m_data) + (y * m_pitch);
 }
 
@@ -290,21 +297,21 @@ inline const RGBA32* Bitmap::scanline(int y) const
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGB32>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < width());
+    ASSERT(x >= 0 && x < physical_width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGBA32>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < width());
+    ASSERT(x >= 0 && x < physical_width());
     return Color::from_rgba(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < width());
+    ASSERT(x >= 0 && x < physical_width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
@@ -325,13 +332,13 @@ inline Color Bitmap::get_pixel(int x, int y) const
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < width());
+    ASSERT(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value();
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < width());
+    ASSERT(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
 inline void Bitmap::set_pixel(int x, int y, Color color)

@@ -18,7 +18,7 @@ Integer scale factors are needed in any case so let's get that working first. Ac
 Desired end state
 -----------------
 
-- All rects  (Window and Widget rects, mouse cursor) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
+- All rects  (Window and Widget rects, mouse cursor, even bitmap sizes) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
 - If something needs to be in pixels, its name starts with `physical_`. Physical coordinates should as much as possible not cross API boundaries.
 - Jury's still out if logical coordinates should stay ints. Probably, but it means mouse cursor etc only have point resolution, not pixel resolution
 - We should have something that can store a collection of (lazily-loaded?) bitmaps and fonts that each represent a single image / font at different scale levels, and at paint time the right representation is picked for the current scale

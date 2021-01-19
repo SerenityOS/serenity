@@ -55,6 +55,7 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
     auto& bitmap = *shareable_bitmap.bitmap();
     encoder << IPC::File(bitmap.anon_fd());
     encoder << bitmap.size();
+    encoder << bitmap.scale();
     encoder << (u32)bitmap.format();
     if (bitmap.is_indexed()) {
         auto palette = bitmap.palette_to_vector();
@@ -78,6 +79,9 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     Gfx::IntSize size;
     if (!decoder.decode(size))
         return false;
+    u32 scale;
+    if (!decoder.decode(scale))
+        return false;
     u32 raw_bitmap_format;
     if (!decoder.decode(raw_bitmap_format))
         return false;
@@ -89,7 +93,7 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
         if (!decoder.decode(palette))
             return false;
     }
-    auto bitmap = Gfx::Bitmap::create_with_anon_fd(bitmap_format, anon_file.take_fd(), size, palette, Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
+    auto bitmap = Gfx::Bitmap::create_with_anon_fd(bitmap_format, anon_file.take_fd(), size, scale, palette, Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
     if (!bitmap)
         return false;
     shareable_bitmap = Gfx::ShareableBitmap { bitmap.release_nonnull(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };

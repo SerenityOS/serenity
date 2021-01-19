@@ -121,6 +121,10 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     if (!height.has_value() || height.value() == 0)
         return nullptr;
 
+    auto scale = clipping.metadata.get("scale").value_or("0").to_uint();
+    if (!scale.has_value() || scale.value() == 0)
+        return nullptr;
+
     auto pitch = clipping.metadata.get("pitch").value_or("0").to_uint();
     if (!pitch.has_value() || pitch.value() == 0)
         return nullptr;
@@ -129,11 +133,11 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     if (!format.has_value() || format.value() == 0)
         return nullptr;
 
-    auto clipping_bitmap = Gfx::Bitmap::create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, pitch.value(), clipping.data.data());
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { (int)width.value(), (int)height.value() });
+    auto clipping_bitmap = Gfx::Bitmap::create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping.data.data());
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { (int)width.value(), (int)height.value() }, scale.value());
 
-    for (int y = 0; y < clipping_bitmap->height(); ++y) {
-        for (int x = 0; x < clipping_bitmap->width(); ++x) {
+    for (int y = 0; y < clipping_bitmap->physical_height(); ++y) {
+        for (int x = 0; x < clipping_bitmap->physical_width(); ++x) {
             auto pixel = clipping_bitmap->get_pixel(x, y);
             bitmap->set_pixel(x, y, pixel);
         }
@@ -147,6 +151,7 @@ void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
     HashMap<String, String> metadata;
     metadata.set("width", String::number(bitmap.width()));
     metadata.set("height", String::number(bitmap.height()));
+    metadata.set("scale", String::number(bitmap.scale()));
     metadata.set("format", String::number((int)bitmap.format()));
     metadata.set("pitch", String::number(bitmap.pitch()));
     set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);

@@ -566,10 +566,12 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
     if (window.last_backing_store() && window.last_backing_store_serial() == message.serial()) {
         window.swap_backing_stores();
     } else {
+        // FIXME: Plumb scale factor here eventually.
         auto backing_store = Gfx::Bitmap::create_with_anon_fd(
             message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
             message.anon_file().take_fd(),
             message.size(),
+            1,
             {},
             Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
         window.set_backing_store(move(backing_store), message.serial());
