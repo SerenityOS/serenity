@@ -634,6 +634,23 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
     return chown(custody, a_uid, a_gid);
 }
 
+static bool hard_link_allowed(const Inode& inode)
+{
+    auto metadata = inode.metadata();
+
+    if (Process::current()->euid() == metadata.uid)
+        return true;
+
+    if (metadata.is_regular_file()
+        && !metadata.is_setuid()
+        && !(metadata.is_setgid() && metadata.mode & S_IXGRP)
+        && metadata.may_write(*Process::current())) {
+        return true;
+    }
+
+    return false;
+}
+
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 {
     auto old_custody_or_error = resolve_path(old_path, base);
@@ -663,6 +680,9 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 
     if (parent_custody->is_readonly())
         return KResult(-EROFS);
+
+    if (!hard_link_allowed(old_inode))
+        return KResult(-EPERM);
 
     return parent_inode.add_child(old_inode, LexicalPath(new_path).basename(), old_inode.mode());
 }
