@@ -28,6 +28,14 @@
 
 #include <AK/Types.h>
 
+struct multiboot_module_entry {
+    u32 start;
+    u32 end;
+    u32 string_addr;
+    u32 reserved;
+};
+typedef struct multiboot_module_entry multiboot_module_entry_t;
+
 struct multiboot_aout_symbol_table {
     u32 tabsize;
     u32 strsize;
