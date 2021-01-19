@@ -952,6 +952,21 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     return custody;
 }
 
+static bool safe_to_follow_symlink(const Inode& inode, const InodeMetadata& parent_metadata)
+{
+    auto metadata = inode.metadata();
+    if (Process::current()->euid() == metadata.uid)
+        return true;
+
+    if (!(parent_metadata.is_sticky() && parent_metadata.mode & S_IWOTH))
+        return true;
+
+    if (metadata.uid == parent_metadata.uid)
+        return true;
+
+    return false;
+}
+
 KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     if (symlink_recursion_level >= symlink_recursion_limit)
@@ -1017,6 +1032,10 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
                 if (options & O_NOFOLLOW_NOERROR)
                     break;
             }
+
+            if (!safe_to_follow_symlink(*child_inode, parent_metadata))
+                return KResult(-EACCES);
+
             auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
             if (symlink_target.is_error() || !have_more_parts)
                 return symlink_target;
