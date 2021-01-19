@@ -53,7 +53,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         }
         if (buflen == -1)
             break;
-        lines.append(buffer);
+        lines.append({ buffer, AK::ShouldChomp::Chomp });
     }
 
     quick_sort(lines, [](auto& a, auto& b) {
@@ -62,6 +62,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     for (auto& line : lines) {
         fputs(line.characters(), stdout);
+        fputc('\n', stdout);
     }
 
     return 0;
