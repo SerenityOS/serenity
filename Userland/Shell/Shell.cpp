@@ -1079,17 +1079,18 @@ void Shell::block_on_job(RefPtr<Job> job)
         }
     } };
 
-    Core::EventLoop loop;
+    bool job_exited { false };
     job->on_exit = [&, old_exit = move(job->on_exit)](auto job) {
         if (old_exit)
             old_exit(job);
-        loop.quit(0);
+        job_exited = true;
     };
 
     if (job->exited())
         return;
 
-    loop.exec();
+    while (!job_exited)
+        Core::EventLoop::current().pump();
 
     // If the job is part of a pipeline, wait for the rest of the members too.
     if (auto command = job->command_ptr())
