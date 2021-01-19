@@ -43,7 +43,7 @@ enum class WallpaperMode {
     Simple,
     Tile,
     Center,
-    Scaled,
+    Stretch,
     Unchecked
 };
 
