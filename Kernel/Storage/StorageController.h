@@ -46,6 +46,7 @@ class StorageController : public RefCounted<StorageController> {
     AK_MAKE_ETERNAL
 public:
     enum class Type : u8 {
+        Ramdisk,
         IDE,
         NVMe
     };
