@@ -32,6 +32,7 @@
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
+#include <Kernel/Storage/RamdiskController.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
@@ -64,6 +65,7 @@ NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(
             controllers.append(IDEController::initialize(address, force_pio));
         }
     });
+    controllers.append(RamdiskController::initialize());
     return controllers;
 }
 
