@@ -56,7 +56,7 @@ struct BackingStore {
     size_t size_in_bytes { 0 };
 };
 
-size_t Bitmap::minimum_pitch(size_t width, BitmapFormat format)
+size_t Bitmap::minimum_pitch(size_t physical_width, BitmapFormat format)
 {
     size_t element_size;
     switch (determine_storage_format(format)) {
@@ -71,73 +71,74 @@ size_t Bitmap::minimum_pitch(size_t width, BitmapFormat format)
         ASSERT_NOT_REACHED();
     }
 
-    return width * element_size;
+    return physical_width * element_size;
 }
 
-static bool size_would_overflow(BitmapFormat format, const IntSize& size)
+static bool size_would_overflow(BitmapFormat format, const IntSize& size, int scale_factor)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
     // This check is a bit arbitrary, but should protect us from most shenanigans:
-    if (size.width() >= 32768 || size.height() >= 32768)
+    if (size.width() >= 32768 || size.height() >= 32768 || scale_factor < 1 || scale_factor > 4)
         return true;
     // In contrast, this check is absolutely necessary:
-    size_t pitch = Bitmap::minimum_pitch(size.width(), format);
-    return Checked<size_t>::multiplication_would_overflow(pitch, size.height());
+    size_t pitch = Bitmap::minimum_pitch(size.width() * scale_factor, format);
+    return Checked<size_t>::multiplication_would_overflow(pitch, size.height() * scale_factor);
 }
 
-RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size)
+RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    auto backing_store = Bitmap::allocate_backing_store(format, size, Purgeable::No);
+    auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::No);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, Purgeable::No, backing_store.value()));
+    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
 }
 
-RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size)
+RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    auto backing_store = Bitmap::allocate_backing_store(format, size, Purgeable::Yes);
+    auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::Yes);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, Purgeable::Yes, backing_store.value()));
+    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
 }
 
 #ifdef __serenity__
-RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size)
+RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    if (size_would_overflow(format, size))
+    if (size_would_overflow(format, size, scale_factor))
         return nullptr;
 
-    const auto pitch = minimum_pitch(size.width(), format);
-    const auto data_size = size_in_bytes(pitch, size.height());
+    const auto pitch = minimum_pitch(size.width() * scale_factor, format);
+    const auto data_size = size_in_bytes(pitch, size.height() * scale_factor);
 
     auto anon_fd = anon_create(round_up_to_power_of_two(data_size, PAGE_SIZE), O_CLOEXEC);
     if (anon_fd < 0)
         return nullptr;
-    return Bitmap::create_with_anon_fd(format, anon_fd, size, {}, ShouldCloseAnonymousFile::No);
+    return Bitmap::create_with_anon_fd(format, anon_fd, size, scale_factor, {}, ShouldCloseAnonymousFile::No);
 }
 #endif
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable, const BackingStore& backing_store)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, Purgeable purgeable, const BackingStore& backing_store)
     : m_size(size)
+    , m_scale(scale_factor)
     , m_data(backing_store.data)
     , m_pitch(backing_store.pitch)
     , m_format(format)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
     ASSERT(!m_size.is_empty());
-    ASSERT(!size_would_overflow(format, size));
+    ASSERT(!size_would_overflow(format, size, scale_factor));
     ASSERT(m_data);
     ASSERT(backing_store.size_in_bytes == size_in_bytes());
     allocate_palette_from_format(format, {});
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, size_t pitch, void* data)
+RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
 {
-    if (size_would_overflow(format, size))
+    if (size_would_overflow(format, size, scale_factor))
         return nullptr;
-    return adopt(*new Bitmap(format, size, pitch, data));
+    return adopt(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
 RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
@@ -151,30 +152,31 @@ RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
     return nullptr;
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, void* data)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_t pitch, void* data)
     : m_size(size)
+    , m_scale(scale_factor)
     , m_data(data)
     , m_pitch(pitch)
     , m_format(format)
 {
-    ASSERT(pitch >= minimum_pitch(size.width(), format));
-    ASSERT(!size_would_overflow(format, size));
+    ASSERT(pitch >= minimum_pitch(size.width() * scale_factor, format));
+    ASSERT(!size_would_overflow(format, size, scale_factor));
     // FIXME: assert that `data` is actually long enough!
 
     allocate_palette_from_format(format, {});
 }
 
-static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual_size)
+static bool check_size(const IntSize& size, int scale_factor, BitmapFormat format, unsigned actual_size)
 {
-
     // FIXME: Code duplication of size_in_bytes() and m_pitch
-    unsigned expected_size_min = Bitmap::minimum_pitch(size.width(), format) * size.height();
+    unsigned expected_size_min = Bitmap::minimum_pitch(size.width() * scale_factor, format) * size.height() * scale_factor;
     unsigned expected_size_max = round_up_to_power_of_two(expected_size_min, PAGE_SIZE);
     if (expected_size_min > actual_size || actual_size > expected_size_max) {
         // Getting here is most likely an error.
-        dbgln("Constructing a shared bitmap for format {} and size {}, which demands {} bytes, which rounds up to at most {}.",
+        dbgln("Constructing a shared bitmap for format {} and size {} @ {}x, which demands {} bytes, which rounds up to at most {}.",
             static_cast<int>(format),
             size,
+            scale_factor,
             expected_size_min,
             expected_size_max);
 
@@ -184,7 +186,7 @@ static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile should_close_anon_fd)
+RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile should_close_anon_fd)
 {
     void* data = nullptr;
     {
@@ -197,11 +199,11 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
             }
         };
 
-        if (size_would_overflow(format, size))
+        if (size_would_overflow(format, size, scale_factor))
             return nullptr;
 
-        const auto pitch = minimum_pitch(size.width(), format);
-        const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
+        const auto pitch = minimum_pitch(size.width() * scale_factor, format);
+        const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
 
         data = mmap(nullptr, round_up_to_power_of_two(data_size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, anon_fd, 0);
         if (data == MAP_FAILED) {
@@ -210,13 +212,14 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
         }
     }
 
-    return adopt(*new Bitmap(format, anon_fd, size, data, palette));
+    return adopt(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
 }
 
 /// Read a bitmap as described by:
 /// - actual size
 /// - width
 /// - height
+/// - scale_factor
 /// - format
 /// - palette count
 /// - palette data (= palette count * RGBA32)
@@ -227,6 +230,7 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
     unsigned actual_size;
     unsigned width;
     unsigned height;
+    unsigned scale_factor;
     BitmapFormat format;
     unsigned palette_size;
     Vector<RGBA32> palette;
@@ -237,13 +241,13 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
         return true;
     };
 
-    if (!read(actual_size) || !read(width) || !read(height) || !read(format) || !read(palette_size))
+    if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
         return nullptr;
 
     if (format > BitmapFormat::RGBA32 || format < BitmapFormat::Indexed1)
         return nullptr;
 
-    if (!check_size({ width, height }, format, actual_size))
+    if (!check_size({ width, height }, scale_factor, format, actual_size))
         return {};
 
     palette.ensure_capacity(palette_size);
@@ -257,7 +261,7 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 
     auto data = stream.bytes().slice(stream.offset(), actual_size);
 
-    auto bitmap = Bitmap::create(format, { width, height });
+    auto bitmap = Bitmap::create(format, { width, height }, scale_factor);
     if (!bitmap)
         return {};
 
@@ -282,7 +286,7 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
 
     auto palette = palette_to_vector();
 
-    if (!write(size_in_bytes()) || !write((unsigned)size().width()) || !write((unsigned)size().height()) || !write(m_format) || !write((unsigned)palette.size()))
+    if (!write(size_in_bytes()) || !write((unsigned)size().width()) || !write((unsigned)size().height()) || !write((unsigned)scale()) || !write(m_format) || !write((unsigned)palette.size()))
         return {};
 
     for (auto& p : palette) {
@@ -298,17 +302,18 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     return buffer;
 }
 
-Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, void* data, const Vector<RGBA32>& palette)
+Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, int scale_factor, void* data, const Vector<RGBA32>& palette)
     : m_size(size)
+    , m_scale(scale_factor)
     , m_data(data)
-    , m_pitch(minimum_pitch(size.width(), format))
+    , m_pitch(minimum_pitch(size.width() * scale_factor, format))
     , m_format(format)
     , m_needs_munmap(true)
     , m_purgeable(true)
     , m_anon_fd(anon_fd)
 {
     ASSERT(!is_indexed() || !palette.is_empty());
-    ASSERT(!size_would_overflow(format, size));
+    ASSERT(!size_would_overflow(format, size, scale_factor));
 
     if (is_indexed(m_format))
         allocate_palette_from_format(m_format, palette);
@@ -318,9 +323,9 @@ RefPtr<Gfx::Bitmap> Bitmap::clone() const
 {
     RefPtr<Gfx::Bitmap> new_bitmap {};
     if (m_purgeable) {
-        new_bitmap = Bitmap::create_purgeable(format(), size());
+        new_bitmap = Bitmap::create_purgeable(format(), size(), scale());
     } else {
-        new_bitmap = Bitmap::create(format(), size());
+        new_bitmap = Bitmap::create(format(), size(), scale());
     }
 
     if (!new_bitmap) {
@@ -335,13 +340,12 @@ RefPtr<Gfx::Bitmap> Bitmap::clone() const
 
 RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
-    auto w = this->width();
-    auto h = this->height();
-
-    auto new_bitmap = Gfx::Bitmap::create(this->format(), { h, w });
+    auto new_bitmap = Gfx::Bitmap::create(this->format(), { height(), width() }, scale());
     if (!new_bitmap)
         return nullptr;
 
+    auto w = this->physical_width();
+    auto h = this->physical_height();
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
             Color color;
@@ -359,13 +363,12 @@ RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) c
 
 RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
 {
-    auto w = this->width();
-    auto h = this->height();
-
-    auto new_bitmap = Gfx::Bitmap::create(this->format(), { w, h });
+    auto new_bitmap = Gfx::Bitmap::create(this->format(), { width(), height() }, scale());
     if (!new_bitmap)
         return nullptr;
 
+    auto w = this->physical_width();
+    auto h = this->physical_height();
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
             Color color = this->get_pixel(i, j);
@@ -387,7 +390,7 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
     auto anon_fd = anon_create(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE), O_CLOEXEC);
     if (anon_fd < 0)
         return nullptr;
-    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, m_size, palette_to_vector(), ShouldCloseAnonymousFile::No);
+    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, size(), scale(), palette_to_vector(), ShouldCloseAnonymousFile::No);
     if (!bitmap)
         return nullptr;
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
@@ -420,9 +423,9 @@ void Bitmap::set_mmap_name([[maybe_unused]] const StringView& name)
 void Bitmap::fill(Color color)
 {
     ASSERT(!is_indexed(m_format));
-    for (int y = 0; y < height(); ++y) {
+    for (int y = 0; y < physical_height(); ++y) {
         auto* scanline = this->scanline(y);
-        fast_u32_fill(scanline, color.value(), width());
+        fast_u32_fill(scanline, color.value(), physical_width());
     }
 }
 
@@ -469,13 +472,13 @@ ShareableBitmap Bitmap::to_shareable_bitmap() const
 }
 #endif
 
-Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, [[maybe_unused]] Purgeable purgeable)
+Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, int scale_factor, [[maybe_unused]] Purgeable purgeable)
 {
-    if (size_would_overflow(format, size))
+    if (size_would_overflow(format, size, scale_factor))
         return {};
 
-    const auto pitch = minimum_pitch(size.width(), format);
-    const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
+    const auto pitch = minimum_pitch(size.width() * scale_factor, format);
+    const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
 
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
     if (purgeable == Purgeable::Yes)

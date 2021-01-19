@@ -76,9 +76,9 @@ static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_da
     auto buffer = ByteBuffer::create_uninitialized(image_size);
 
     int current_row = 0;
-    for (int y = bitmap->height() - 1; y >= 0; --y) {
+    for (int y = bitmap->physical_height() - 1; y >= 0; --y) {
         auto* row = buffer.data() + (pixel_row_data_size * current_row++);
-        for (int x = 0; x < bitmap->width(); x++) {
+        for (int x = 0; x < bitmap->physical_width(); x++) {
             auto pixel = bitmap->get_pixel(x, y);
             row[x * bytes_per_pixel + 0] = pixel.blue();
             row[x * bytes_per_pixel + 1] = pixel.green();

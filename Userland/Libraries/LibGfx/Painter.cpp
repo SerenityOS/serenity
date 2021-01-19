@@ -68,15 +68,16 @@ ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
     return bitmap.get_pixel(x, y);
 }
 
-Painter::Painter(Gfx::Bitmap& bitmap, int scale)
+Painter::Painter(Gfx::Bitmap& bitmap)
     : m_target(bitmap)
 {
+    int scale = bitmap.scale();
     ASSERT(bitmap.format() == Gfx::BitmapFormat::RGB32 || bitmap.format() == Gfx::BitmapFormat::RGBA32);
-    ASSERT(bitmap.width() % scale == 0);
-    ASSERT(bitmap.height() % scale == 0);
+    ASSERT(bitmap.physical_width() % scale == 0);
+    ASSERT(bitmap.physical_height() % scale == 0);
     m_state_stack.append(State());
     state().font = &FontDatabase::default_font();
-    state().clip_rect = { { 0, 0 }, bitmap.size() };
+    state().clip_rect = { { 0, 0 }, bitmap.physical_size() };
     state().scale = scale;
     m_clip_origin = state().clip_rect;
 }
@@ -109,7 +110,7 @@ void Painter::clear_rect(const IntRect& a_rect, Color color)
     if (rect.is_empty())
         return;
 
-    ASSERT(m_target->rect().contains(rect));
+    ASSERT(m_target->physical_rect().contains(rect));
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
@@ -120,12 +121,12 @@ void Painter::clear_rect(const IntRect& a_rect, Color color)
     }
 }
 
-void Painter::fill_physical_rect(const IntRect& a_rect, Color color)
+void Painter::fill_physical_rect(const IntRect& a_physical_rect, Color color)
 {
-    auto rect = a_rect.intersected(clip_rect());
+    auto rect = a_physical_rect.intersected(clip_rect());
     if (rect.is_empty())
         return;
-    ASSERT(m_target->rect().contains(rect));
+    ASSERT(m_target->physical_rect().contains(rect));
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
@@ -693,14 +694,16 @@ void Painter::blit_offset(const IntPoint& position, const Gfx::Bitmap& source, c
     ASSERT_NOT_REACHED();
 }
 
-void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect)
+void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect)
 {
-    if (scale() != 1)
-        return draw_scaled_bitmap({ position, src_rect.size() }, source, src_rect);
+    if (scale() != source.scale())
+        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect);
 
     ASSERT(source.has_alpha_channel());
-    IntRect safe_src_rect = src_rect.intersected(source.rect());
-    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
+    IntRect safe_src_rect = a_src_rect.intersected(source.rect());
+    auto dst_rect = to_physical(IntRect(position, safe_src_rect.size()));
+    auto src_rect = a_src_rect * source.scale();
+
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
@@ -728,18 +731,25 @@ void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& sourc
     }
 }
 
-void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, float opacity)
+void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    if (opacity < 1.0f)
-        return blit_with_opacity(position, source, src_rect, opacity);
-    if (source.has_alpha_channel())
-        return blit_with_alpha(position, source, src_rect);
-    if (scale() != 1)
-        return draw_scaled_bitmap({ position, src_rect.size() }, source, src_rect, opacity);
+    assert(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
-    auto safe_src_rect = src_rect.intersected(source.rect());
+    if (opacity < 1.0f)
+        return blit_with_opacity(position, source, a_src_rect, opacity);
+    if (source.has_alpha_channel())
+        return blit_with_alpha(position, source, a_src_rect);
+    if (scale() != source.scale())
+        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect, opacity);
+
+    // If we get here, the Painter might have a scale factor, but the source bitmap has the same scale factor.
+    // We need to transform from logical to physical coordinates, but we can just copy pixels without resampling.
+    // All computations below are in physical coordinates (except for safe_src_rect).
+    auto safe_src_rect = a_src_rect.intersected(source.rect());
     ASSERT(source.rect().contains(safe_src_rect));
-    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
+    auto dst_rect = to_physical(IntRect(position, safe_src_rect.size()));
+    auto src_rect = a_src_rect * source.scale();
+
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
@@ -832,15 +842,13 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
     }
 }
 
-void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source, const IntRect& src_rect, float opacity)
+void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    if (scale() == 1 && a_dst_rect.size() == src_rect.size())
-        return blit(a_dst_rect.location(), source, src_rect, opacity);
+    if (scale() == source.scale() && a_dst_rect.size() == a_src_rect.size())
+        return blit(a_dst_rect.location(), source, a_src_rect, opacity);
 
     auto dst_rect = to_physical(a_dst_rect);
-
-    auto safe_src_rect = src_rect.intersected(source.rect());
-    ASSERT(source.rect().contains(safe_src_rect));
+    auto src_rect = a_src_rect * source.scale();
 
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
@@ -1232,7 +1240,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
     }
 }
 
-void Painter::draw_physical_pixel(const IntPoint& position, Color color, int thickness)
+void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color, int thickness)
 {
     // This always draws a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale
@@ -1240,11 +1248,11 @@ void Painter::draw_physical_pixel(const IntPoint& position, Color color, int thi
     ASSERT(draw_op() == DrawOp::Copy);
 
     if (thickness == 1) { // Implies scale() == 1.
-        auto& pixel = m_target->scanline(position.y())[position.x()];
+        auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
         return set_physical_pixel_with_draw_op(pixel, Color::from_rgba(pixel).blend(color));
     }
 
-    IntRect rect { position, { thickness, thickness } };
+    IntRect rect { physical_position, { thickness, thickness } };
     fill_physical_rect(rect, color);
 }
 
@@ -1488,7 +1496,7 @@ void Painter::draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const 
 void Painter::add_clip_rect(const IntRect& rect)
 {
     state().clip_rect.intersect(to_physical(rect));
-    state().clip_rect.intersect(m_target->rect()); // FIXME: This shouldn't be necessary?
+    state().clip_rect.intersect(m_target->physical_rect()); // FIXME: This shouldn't be necessary?
 }
 
 void Painter::clear_clip_rect()

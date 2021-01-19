@@ -45,12 +45,6 @@ public:
     const Bitmap* bitmap() const { return m_bitmap; }
     Bitmap* bitmap() { return m_bitmap; }
 
-    IntSize size() const { return m_bitmap ? m_bitmap->size() : IntSize(); }
-    IntRect rect() const { return m_bitmap ? m_bitmap->rect() : IntRect(); }
-
-    int width() const { return size().width(); }
-    int height() const { return size().height(); }
-
 private:
     RefPtr<Bitmap> m_bitmap;
 };
