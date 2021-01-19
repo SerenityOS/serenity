@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,36 @@
 
 #pragma once
 
-#include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Lock.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
-#include <Kernel/Storage/StorageController.h>
+#include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 
-class StorageDevice : public BlockDevice {
-    friend class StorageManagement;
+class RamdiskController;
+
+class RamdiskDevice final : public StorageDevice {
+    friend class RamdiskController;
     AK_MAKE_ETERNAL
 public:
-    enum class Type : u8 {
-        Ramdisk,
-        IDE,
-        NVMe,
-    };
+    static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, OwnPtr<Region>&& region, int major, int minor);
+    RamdiskDevice(const RamdiskController&, OwnPtr<Region>&&, int major, int minor);
+    virtual ~RamdiskDevice() override;
 
-public:
-    virtual Type type() const = 0;
-    virtual size_t max_addressable_block() const { return m_max_addressable_block; }
-
-    NonnullRefPtr<StorageController> controller() const;
+    // ^StorageDevice
+    virtual Type type() const override { return StorageDevice::Type::Ramdisk; }
+    virtual size_t max_addressable_block() const override;
 
     // ^BlockDevice
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
+    virtual void start_request(AsyncBlockDeviceRequest&) override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0600; }
-
-protected:
-    StorageDevice(const StorageController&, int, int, size_t, size_t);
     // ^DiskDevice
     virtual const char* class_name() const override;
 
-private:
-    NonnullRefPtr<StorageController> m_storage_controller;
-    NonnullRefPtrVector<DiskPartition> m_partitions;
-    size_t m_max_addressable_block;
+    bool is_slave() const;
+
+    Lock m_lock { "RamdiskDevice" };
+
+    OwnPtr<Region> m_region;
 };
 
 }
