@@ -502,7 +502,7 @@ KResult VFS::chmod(Custody& custody, mode_t mode)
         return KResult(-EROFS);
 
     // Only change the permission bits.
-    mode = (inode.mode() & ~06777u) | (mode & 06777u);
+    mode = (inode.mode() & ~07777u) | (mode & 07777u);
     return inode.chmod(mode);
 }
 
