@@ -58,8 +58,8 @@ static WallpaperMode mode_to_enum(const String& name)
         return WallpaperMode::Tile;
     if (name == "center")
         return WallpaperMode::Center;
-    if (name == "scaled")
-        return WallpaperMode::Scaled;
+    if (name == "stretch")
+        return WallpaperMode::Stretch;
     return WallpaperMode::Simple;
 }
 
@@ -263,7 +263,7 @@ void Compositor::compose()
                     rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
-            } else if (m_wallpaper_mode == WallpaperMode::Scaled) {
+            } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
                 float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
                 float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
 
