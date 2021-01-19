@@ -31,7 +31,6 @@
 
 Game::Game()
 {
-    srand(time(nullptr));
     reset();
 }
 
