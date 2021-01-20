@@ -409,6 +409,9 @@ String DevFSDeviceInode::determine_name() const
             char drive_letter = (u8)drive_index;
             return String::format("hd%c", drive_letter);
         }
+        case 6: {
+            return String::formatted("ramdisk{}", m_attached_device->minor());
+        }
 
         case 100:
             // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
