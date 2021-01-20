@@ -118,7 +118,7 @@ public:
     void clear_clip_rect();
 
     void translate(int dx, int dy) { translate({ dx, dy }); }
-    void translate(const IntPoint& delta) { state().translation.move_by(delta * state().scale); }
+    void translate(const IntPoint& delta) { state().translation.move_by(delta); }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
@@ -131,8 +131,8 @@ public:
 
 protected:
     IntPoint translation() const { return state().translation; }
-    IntRect to_physical(const IntRect& r) const { return (r * scale()).translated(translation()); }
-    IntPoint to_physical(const IntPoint& p) const { return (p * scale()).translated(translation()); }
+    IntRect to_physical(const IntRect& r) const { return r.translated(translation()) * scale(); }
+    IntPoint to_physical(const IntPoint& p) const { return p.translated(translation()) * scale(); }
     int scale() const { return state().scale; }
     void set_physical_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color);
@@ -146,7 +146,7 @@ protected:
         const Font* font;
         IntPoint translation;
         int scale = 1;
-        IntRect clip_rect; // In physical coordinates.
+        IntRect clip_rect;
         DrawOp draw_op;
     };
 
