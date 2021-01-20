@@ -60,12 +60,11 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
 
     StringBuilder builder;
 
-    auto prepend_assertion = [&] {
-        auto assertion = coredump.metadata().get("assertion");
-        if (!assertion.has_value() || assertion.value().is_empty())
+    auto prepend_metadata = [&](auto& key, auto& fmt) {
+        auto maybe_value = coredump.metadata().get(key);
+        if (!maybe_value.has_value() || maybe_value.value().is_empty())
             return;
-        builder.append("ASSERTION FAILED: ");
-        builder.append(assertion.value().characters());
+        builder.appendff(fmt, maybe_value.value());
         builder.append('\n');
         builder.append('\n');
     };
@@ -74,7 +73,9 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
     for (auto& entry : backtrace.entries()) {
         if (first_entry) {
             if (entry.function_name.starts_with("__assertion_failed"))
-                prepend_assertion();
+                prepend_metadata("assertion", "ASSERTION FAILED: {}");
+            else if (coredump.metadata().contains("pledge_violation"))
+                prepend_metadata("pledge_violation", "Has not pledged {}");
             first_entry = false;
         } else {
             builder.append('\n');
