@@ -24,6 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#    define _GNU_SOURCE // For memfd_create, MFD_CLOEXEC
+#endif
+
 #include <LibCore/AnonymousBuffer.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
