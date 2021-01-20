@@ -147,7 +147,12 @@ bool Ext2FS::initialize()
         return false;
     }
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
-    read_blocks(first_block_of_bgdt, blocks_to_read, buffer);
+    auto result = read_blocks(first_block_of_bgdt, blocks_to_read, buffer);
+    if (result.is_error()) {
+        // FIXME: Propagate the error
+        dbgln("Ext2FS: initialize had error: {}", result.error());
+        return false;
+    }
 
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_block_group_count; ++i) {
@@ -349,7 +354,12 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             dind_block_dirty = true;
         } else {
             auto buffer = UserOrKernelBuffer::for_kernel_buffer(dind_block_contents.data());
-            read_block(e2inode.i_block[EXT2_DIND_BLOCK], &buffer, block_size());
+            auto result = read_block(e2inode.i_block[EXT2_DIND_BLOCK], &buffer, block_size());
+            if (result.is_error()) {
+                // FIXME: Propagate the error
+                dbgln("Ext2FS: write_block_list_for_inode had error: {}", result.error());
+                return false;
+            }
         }
         auto* dind_block_as_pointers = (unsigned*)dind_block_contents.data();
 
@@ -372,7 +382,12 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
                 ind_block_dirty = true;
             } else {
                 auto buffer = UserOrKernelBuffer::for_kernel_buffer(ind_block_contents.data());
-                read_block(indirect_block_index, &buffer, block_size());
+                auto result = read_block(indirect_block_index, &buffer, block_size());
+                if (result.is_error()) {
+                    // FIXME: Propagate the error
+                    dbgln("Ext2FS: write_block_list_for_inode had error: {}", result.error());
+                    return false;
+                }
             }
             auto* ind_block_as_pointers = (unsigned*)ind_block_contents.data();
 
@@ -491,7 +506,11 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
         auto count = min(blocks_remaining, entries_per_block);
         u32 array[count];
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
-        read_block(array_block_index, &buffer, sizeof(array), 0);
+        auto result = read_block(array_block_index, &buffer, sizeof(array), 0);
+        if (result.is_error()) {
+            // FIXME: Stop here and propagate this error.
+            dbgln("Ext2FS: block_list_for_inode_impl had error: {}", result.error());
+        }
         for (BlockIndex i = 0; i < count; ++i)
             callback(array[i]);
     };
@@ -562,7 +581,9 @@ void Ext2FS::flush_block_group_descriptor_table()
     unsigned blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
-    write_blocks(first_block_of_bgdt, blocks_to_write, buffer);
+    auto result = write_blocks(first_block_of_bgdt, blocks_to_write, buffer);
+    if (result.is_error())
+        dbgln("Ext2FS: flush_block_group_descriptor_table had error: {}", result.error());
 }
 
 void Ext2FS::flush_writes()
@@ -579,7 +600,10 @@ void Ext2FS::flush_writes()
     for (auto& cached_bitmap : m_cached_bitmaps) {
         if (cached_bitmap->dirty) {
             auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer.data());
-            write_block(cached_bitmap->bitmap_block_index, buffer, block_size());
+            auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size());
+            if (result.is_error()) {
+                dbgln("Ext2FS: flush_writes() had error {}", result.error());
+            }
             cached_bitmap->dirty = false;
 #ifdef EXT2_DEBUG
             dbgln("Flushed bitmap block {}", cached_bitmap->bitmap_block_index);
@@ -685,7 +709,11 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
-    read_block(block_index, &buffer, sizeof(ext2_inode), offset);
+    auto result = read_block(block_index, &buffer, sizeof(ext2_inode), offset);
+    if (result.is_error()) {
+        // FIXME: Propagate the actual error.
+        return nullptr;
+    }
     m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
 }
