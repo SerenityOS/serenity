@@ -208,9 +208,9 @@ NonnullRefPtr<Type> Parser::parse_decl_specifier_seq()
     auto type = parse_decl_specifier();
 
     if (type.is_void)
-        return create_ast_node<VoidType>();
+        return create_ast_node<VoidType>(type.start, type.end);
     else if (type.is_int)
-        return create_ast_node<SignedIntType>();
+        return create_ast_node<SignedIntType>(type.start, type.end);
     else
         TODO();
 }
@@ -225,7 +225,7 @@ NonnullRefPtr<Variable> Parser::parse_parameter_declaration()
     auto declarator = parse_declarator();
     String name = declarator.value_or({}).name;
 
-    return create_ast_node<Variable>(specifiers, name);
+    return create_ast_node<Variable>(specifiers->start(), specifiers->end(), specifiers, name);
 }
 
 // parameter-declaration-list:
@@ -275,9 +275,9 @@ Optional<Parser::Declarator> Parser::parse_declarator()
     auto name = parse_noptr_declarator();
     if (name.has_value()) {
         if (peek().m_type != Token::Type::LeftParen)
-            return { { name.value(), {} } };
+            return { { peek().m_start, peek().m_end, name.value(), {} } };
         else
-            return { { name.value(), parse_parameters_and_qualifiers() } };
+            return { { peek().m_start, peek().m_end, name.value(), parse_parameters_and_qualifiers() } };
     }
     return {};
 }
@@ -290,8 +290,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     auto id = parse_id_expression();
     if (id.has_value()) {
         //TODO: should disapear when result will be bound to a variable
-        auto return_type = create_ast_node<Variable>(create_ast_node<SignedIntType>(), id.value());
-        return create_ast_node<IdentifierExpression>(move(return_type));
+        Position dummy_position {};
+        auto return_type = create_ast_node<Variable>(dummy_position, dummy_position, create_ast_node<SignedIntType>(dummy_position, dummy_position), id.value());
+        return create_ast_node<IdentifierExpression>(return_type->start(), return_type->end(), move(return_type));
     } else {
         parse_error("expected identifier");
     }
@@ -344,10 +345,10 @@ NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
                                                                                                                                                    : BinaryExpression::Kind::Modulo;
         consume();
         auto right = parse_multiplicative_expression();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
+        auto result = create_ast_node<BinaryExpression>(left->start(), right->end(), operation, left, right, result_var);
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Multiplication, BinaryExpression::Kind::Division, BinaryExpression::Kind::Modulo);
     }
     return left;
@@ -365,10 +366,10 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
         auto operation = peek().m_type == Token::Type::Plus ? BinaryExpression::Kind::Addition : BinaryExpression::Kind::Subtraction;
         consume();
         auto right = parse_additive_expression();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
+        auto result = create_ast_node<BinaryExpression>(left->start(), right->end(), operation, left, right, result_var);
 
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::Subtraction, BinaryExpression::Kind::Addition);
     }
@@ -387,10 +388,10 @@ NonnullRefPtr<Expression> Parser::parse_shift_expression()
         auto operation = peek().m_type == Token::Type::LessLess ? BinaryExpression::Kind::LeftShift : BinaryExpression::Kind::RightShift;
         consume();
         auto right = parse_additive_expression();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        auto result = create_ast_node<BinaryExpression>(operation, left, right, result_var);
+        auto result = create_ast_node<BinaryExpression>(left->start(), right->end(), operation, left, right, result_var);
 
         return maybe_correct_binop_tree(result, right, BinaryExpression::Kind::LeftShift, BinaryExpression::Kind::RightShift);
     }
@@ -431,10 +432,10 @@ NonnullRefPtr<Expression> Parser::parse_and_expression()
     if (peek().m_type == Token::Type::And) {
         consume();
         auto right = parse_equality_expression();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::And, left, right, result_var);
+        return create_ast_node<BinaryExpression>(left->start(), right->end(), BinaryExpression::Kind::And, left, right, result_var);
     }
     return left;
 }
@@ -449,10 +450,10 @@ NonnullRefPtr<Expression> Parser::parse_exclusive_or_operation()
     if (peek().m_type == Token::Type::Caret) {
         consume();
         auto right = parse_and_expression();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Xor, left, right, result_var);
+        return create_ast_node<BinaryExpression>(left->start(), right->end(), BinaryExpression::Kind::Xor, left, right, result_var);
     }
     return left;
 }
@@ -467,10 +468,10 @@ NonnullRefPtr<Expression> Parser::parse_inclusive_or_expression()
     if (peek().m_type == Token::Type::Pipe) {
         consume();
         auto right = parse_exclusive_or_operation();
-        auto result_var = create_ast_node<Variable>(left->result()->node_type());
+        auto result_var = create_ast_node<Variable>(left->result());
         assert(left->result()->node_type()->kind() == right->result()->node_type()->kind());
 
-        return create_ast_node<BinaryExpression>(BinaryExpression::Kind::Or, left, right, result_var);
+        return create_ast_node<BinaryExpression>(left->start(), right->end(), BinaryExpression::Kind::Or, left, right, result_var);
     }
     return left;
 }
@@ -525,9 +526,10 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_jump_statement()
     if (return_keyword.m_type == Token::Type::Keyword && return_keyword.m_known_keyword == Token::KnownKeyword::Return) {
         consume();
         RefPtr expression = parse_expr_or_braced_init_list();
+        auto semi_colon = peek();
 
         expect(Token::Type::Semicolon);
-        return create_ast_node<ReturnStatement>(move(expression));
+        return create_ast_node<ReturnStatement>(return_keyword.m_start, semi_colon.m_end, move(expression));
     }
     return {};
 }
@@ -552,7 +554,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
         auto condition = parse_condition();
         expect(Token::Type::RightParen);
         auto body = parse_statement();
-        return create_ast_node<IfStatement>(condition, body);
+        return create_ast_node<IfStatement>(keyword.m_start, body->end(), condition, body);
     }
     return {};
 }
@@ -609,7 +611,8 @@ NonnullRefPtr<Function> Parser::parse_function_definition()
 
     if (declarator.has_value()) {
         auto body = parse_function_body();
-        return create_ast_node<Function>(move(return_type), declarator.value().name, declarator.value().parameters, move(body));
+        //TODO: should be the pos of the }, not the token after it.
+        return create_ast_node<Function>(return_type->start(), peek().m_end, move(return_type), declarator.value().name, declarator.value().parameters, move(body));
     }
     parse_error("expected identifier");
 }

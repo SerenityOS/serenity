@@ -29,6 +29,6 @@
 namespace LibIntermediate::Utils {
 NonnullRefPtr<SIR::Variable> create_store(NonnullRefPtr<SIR::Type>& type, String& name)
 {
-    return create_ast_node<SIR::Variable>(type, name);
+    return create_ast_node<SIR::Variable>(type->start(), type->end(), type, name);
 }
 }

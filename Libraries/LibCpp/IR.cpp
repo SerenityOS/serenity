@@ -34,9 +34,9 @@ static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNod
 
 static NonnullRefPtr<Expression> create_comparison_operation(Expression& left, NonnullRefPtrVector<SIR::ASTNode>& new_body, SIR::BinaryExpression::Kind comparison, int i)
 {
-    auto right = create_ast_node<SIR::ConstantExpression>(i);
-    auto result = create_ast_node<Variable>(create_ast_node<SIR::BooleanType>());
-    auto expression = create_ast_node<BinaryExpression>(comparison, left, right, result);
+    auto right = create_ast_node<SIR::ConstantExpression>(left.end(), left.end(), i);
+    auto result = create_ast_node<Variable>(left.end(), left.end(), create_ast_node<SIR::BooleanType>(left.end(), left.end()));
+    auto expression = create_ast_node<BinaryExpression>(left.start(), left.end(), comparison, left, right, result);
     new_body.append(expression);
     return expression;
 }
@@ -84,8 +84,8 @@ static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<S
         auto bool_expression = create_comparison_operation(variable, new_body, SIR::BinaryExpression::Kind::NotEqual, 0);
         jump_statement.set_condition(bool_expression);
 
-        auto if_true = create_ast_node<SIR::LabelExpression>();
-        auto if_false = create_ast_node<SIR::LabelExpression>();
+        auto if_true = create_ast_node<SIR::LabelExpression>(jump_statement.start(), jump_statement.end());
+        auto if_false = create_ast_node<SIR::LabelExpression>(jump_statement.start(), jump_statement.end());
 
         new_body.append(jump_statement);
         new_body.append(if_true);

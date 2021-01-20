@@ -45,8 +45,8 @@ public:
     enum Kind {
         SignedInt,
     };
-    explicit IntegerType(Kind kind, size_t size_in_bits, size_t size_in_bytes, bool is_signed)
-        : SIR::IntegerType(size_in_bits, size_in_bytes, is_signed)
+    explicit IntegerType(Position start, Position end, Kind kind, size_t size_in_bits, size_t size_in_bytes, bool is_signed)
+        : SIR::IntegerType(start, end, size_in_bits, size_in_bytes, is_signed)
         , m_integer_kind(kind)
     {
     }
@@ -57,24 +57,24 @@ private:
 
 class SignedIntType : public IntegerType {
 public:
-    SignedIntType()
-        : IntegerType(Kind::SignedInt, 32, 4, true)
+    SignedIntType(Position start, Position end)
+        : IntegerType(start, end, Kind::SignedInt, 32, 4, true)
     {
     }
 };
 
 class IfStatement : public SIR::JumpStatement {
 public:
-    IfStatement(NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true)
-        : SIR::JumpStatement(move(condition), move(if_true))
+    IfStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true)
+        : SIR::JumpStatement(start, end, move(condition), move(if_true))
     {
     }
 };
 
 class Function : public SIR::Function {
 public:
-    Function(NonnullRefPtr<SIR::Type> return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable> parameters, NonnullRefPtrVector<ASTNode> body)
-        : SIR::Function(move(return_type), unmangled_name, move(parameters), move(body))
+    Function(Position start, Position end, NonnullRefPtr<SIR::Type> return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+        : SIR::Function(start, end, move(return_type), unmangled_name, move(parameters), move(body))
         , m_unmangled_name(unmangled_name)
     {
         set_name(mangle());

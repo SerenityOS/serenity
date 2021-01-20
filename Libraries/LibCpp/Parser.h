@@ -40,9 +40,13 @@ private:
     struct TypeSpecifier {
         bool is_void { false };
         bool is_int { false };
+        Position start {};
+        Position end {};
     };
 
     struct Declarator {
+        Position start {};
+        Position end {};
         String name;
         NonnullRefPtrVector<Variable> parameters;
     };

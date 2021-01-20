@@ -28,12 +28,15 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
+#include <LibCpp/Lexer.h>
 
 namespace Cpp {
 struct Option;
 }
 
 namespace SIR {
+
+using Position = Cpp::Position;
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
@@ -45,7 +48,11 @@ create_ast_node(Args&&... args)
 class ASTNode : public RefCounted<ASTNode> {
 
 public:
-    ASTNode() = default;
+    ASTNode(Position start, Position end)
+        : m_start(start)
+        , m_end(end)
+    {
+    }
     virtual ~ASTNode() = default;
     virtual bool is_expression() const { return false; }
     virtual bool is_statement() const { return false; }
@@ -58,6 +65,13 @@ public:
     virtual bool is_label_expression() const { return false; }
     virtual bool is_binary_expression() const { return false; }
     virtual bool is_constant_expression() const { return false; }
+
+    const Position& start() { return m_start; }
+    const Position& end() { return m_end; }
+
+private:
+    Position m_start;
+    Position m_end;
 };
 
 class Type : public ASTNode {
@@ -68,8 +82,9 @@ public:
         Void,
     };
 
-    Type(Kind kind, size_t size_in_bits, size_t size_in_bytes)
-        : m_kind(kind)
+    Type(Position start, Position end, Kind kind, size_t size_in_bits, size_t size_in_bytes)
+        : ASTNode(start, end)
+        , m_kind(kind)
         , m_size_in_bits(size_in_bits)
         , m_size_in_bytes(size_in_bytes)
     {
@@ -87,16 +102,16 @@ private:
 
 class VoidType : public Type {
 public:
-    VoidType()
-        : Type(Kind::Void, 0, 0)
+    VoidType(Position start, Position end)
+        : Type(start, end, Kind::Void, 0, 0)
     {
     }
 };
 
 class IntegerType : public Type {
 public:
-    IntegerType(size_t size_in_bits, size_t size_in_bytes, bool is_signed)
-        : Type(Kind::Integer, size_in_bits, size_in_bytes)
+    IntegerType(Position start, Position end, size_t size_in_bits, size_t size_in_bytes, bool is_signed)
+        : Type(start, end, Kind::Integer, size_in_bits, size_in_bytes)
         , m_is_signed(is_signed)
     {
     }
@@ -107,21 +122,26 @@ private:
 
 class BooleanType : public Type {
 public:
-    BooleanType()
-        : Type(Kind::Boolean, 1, 1)
+    BooleanType(Position start, Position end)
+        : Type(start, end, Kind::Boolean, 1, 1)
     {
     }
 };
 
 class Variable : public ASTNode {
 public:
-    Variable(NonnullRefPtr<Type> node_type, String name)
-        : m_node_type(move(node_type))
+    Variable(Position start, Position end, NonnullRefPtr<Type> node_type, String name)
+        : ASTNode(start, end)
+        , m_node_type(move(node_type))
         , m_name(move(name))
     {
     }
-    explicit Variable(NonnullRefPtr<Type> node_type)
-        : Variable(move(node_type), String::format(".D%zu", number_unnamed_variable_created++))
+    Variable(Position start, Position end, NonnullRefPtr<Type> node_type)
+        : Variable(start, end, move(node_type), String::format(".D%zu", number_unnamed_variable_created++))
+    {
+    }
+    explicit Variable(NonnullRefPtr<Variable>& other)
+        : Variable(other->start(), other->end(), other->node_type())
     {
     }
 
@@ -139,13 +159,19 @@ private:
 
 class Statement : public ASTNode {
 public:
+    Statement(Position start, Position end)
+        : ASTNode(start, end)
+    {
+    }
+
     bool is_statement() const override { return true; }
 };
 
 class Expression : public ASTNode {
 public:
-    explicit Expression(NonnullRefPtr<Variable> result)
-        : m_result(move(result))
+    Expression(Position start, Position end, NonnullRefPtr<Variable> result)
+        : ASTNode(start, end)
+        , m_result(move(result))
     {
     }
     bool is_expression() const override { return true; }
@@ -172,8 +198,8 @@ public:
         Subtraction,
         Xor
     };
-    BinaryExpression(Kind kind, NonnullRefPtr<ASTNode> left, NonnullRefPtr<ASTNode> right, NonnullRefPtr<Variable> result)
-        : Expression(move(result))
+    BinaryExpression(Position start, Position end, Kind kind, NonnullRefPtr<ASTNode> left, NonnullRefPtr<ASTNode> right, NonnullRefPtr<Variable> result)
+        : Expression(start, end, move(result))
         , m_binary_operation(kind)
         , m_left(move(left))
         , m_right(move(right))
@@ -198,8 +224,8 @@ private:
 
 class PrimaryExpression : public Expression {
 public:
-    explicit PrimaryExpression(NonnullRefPtr<Variable> result)
-        : Expression(move(result))
+    explicit PrimaryExpression(Position start, Position end, NonnullRefPtr<Variable> result)
+        : Expression(start, end, move(result))
     {
     }
     bool is_primary_expression() const override { return false; }
@@ -207,8 +233,8 @@ public:
 
 class IdentifierExpression : public PrimaryExpression {
 public:
-    explicit IdentifierExpression(NonnullRefPtr<Variable> result)
-        : PrimaryExpression(move(result))
+    explicit IdentifierExpression(Position start, Position end, NonnullRefPtr<Variable> result)
+        : PrimaryExpression(start, end, move(result))
 
     {
     }
@@ -217,8 +243,8 @@ public:
 
 class ConstantExpression : public PrimaryExpression {
 public:
-    explicit ConstantExpression(int value)
-        : PrimaryExpression(create_ast_node<Variable>(create_ast_node<IntegerType>(32, 32, true)))
+    explicit ConstantExpression(Position start, Position end, int value)
+        : PrimaryExpression(start, end, create_ast_node<Variable>(start, end, create_ast_node<IntegerType>(start, end, 32, 32, true)))
         , m_value(value)
     {
     }
@@ -232,8 +258,8 @@ private:
 
 class LabelExpression : public PrimaryExpression {
 public:
-    explicit LabelExpression()
-        : PrimaryExpression(create_ast_node<Variable>(create_ast_node<VoidType>(), String::format(".L%zu", number_unnamed_label_created++)))
+    explicit LabelExpression(Position start, Position end)
+        : PrimaryExpression(start, end, create_ast_node<Variable>(start, end, create_ast_node<VoidType>(start, end), String::format(".L%zu", number_unnamed_label_created++)))
     {
     }
     bool is_label_expression() const override { return true; }
@@ -245,8 +271,9 @@ private:
 
 class JumpStatement : public Statement {
 public:
-    JumpStatement(NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true, RefPtr<Expression> if_false = nullptr)
-        : m_condition(move(condition))
+    JumpStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true, RefPtr<Expression> if_false = nullptr)
+        : Statement(start, end)
+        , m_condition(move(condition))
         , m_if_true(move(if_true))
         , m_if_false(move(if_false))
     {
@@ -269,9 +296,9 @@ private:
 
 class ReturnStatement : public Statement {
 public:
-    ReturnStatement() = default;
-    explicit ReturnStatement(RefPtr<Expression> expression)
-        : m_expression(move(expression))
+    ReturnStatement(Position start, Position end, RefPtr<Expression> expression = nullptr)
+        : Statement(start, end)
+        , m_expression(move(expression))
     {
     }
     bool is_return_statement() const override { return true; }
@@ -286,11 +313,13 @@ private:
 
 class Function : public RefCounted<Function> {
 public:
-    Function(NonnullRefPtr<Type> return_type, String& name, NonnullRefPtrVector<Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+    Function(Position start, Position end, NonnullRefPtr<Type> return_type, String& name, NonnullRefPtrVector<Variable> parameters, NonnullRefPtrVector<ASTNode> body)
         : m_return_type(move(return_type))
         , m_name(name)
         , m_parameters(move(parameters))
         , m_body(move(body))
+        , m_start(start)
+        , m_end(end)
     {
     }
 
@@ -301,12 +330,16 @@ public:
     NonnullRefPtrVector<Variable>& parameters() { return m_parameters; }
     NonnullRefPtrVector<ASTNode>& body() { return m_body; }
     const NonnullRefPtrVector<ASTNode>& body() const { return m_body; }
+    const Position& start() const { return m_start; }
+    const Position& end() const { return m_end; }
 
 private:
     NonnullRefPtr<Type> m_return_type;
     String m_name;
     NonnullRefPtrVector<Variable> m_parameters;
     NonnullRefPtrVector<ASTNode> m_body;
+    Position m_start;
+    Position m_end;
 };
 
 class TranslationUnit {
