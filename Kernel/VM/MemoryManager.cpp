@@ -49,6 +49,12 @@ extern FlatPtr start_of_kernel_text;
 extern FlatPtr start_of_kernel_data;
 extern FlatPtr end_of_kernel_bss;
 
+extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
+extern size_t multiboot_copy_boot_modules_count;
+
+// Treat the super pages as logically separate from .bss
+__attribute__((section(".super_pages"))) static u8 super_pages[1 * MiB];
+
 namespace Kernel {
 
 // NOTE: We can NOT use AK::Singleton for this class, because
@@ -103,14 +109,9 @@ void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-
     if (Processor::current().has_feature(CPUFeature::NX)) {
-        // Disable execution of the kernel data and bss segments, as well as the kernel heap.
-        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
-            auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
-            pte.set_execute_disabled(true);
-        }
-        for (size_t i = FlatPtr(kmalloc_start); i < FlatPtr(kmalloc_end); i += PAGE_SIZE) {
+        // Disable execution of the kernel data, bss and heap segments.
+        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -120,14 +121,12 @@ void MemoryManager::protect_kernel_image()
 void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> region;
-    bool region_is_super = false;
 
     // We need to make sure we exclude the kmalloc range as well as the kernel image.
     // The kmalloc range directly follows the kernel image
     const PhysicalAddress used_range_start(virtual_to_low_physical(FlatPtr(&start_of_kernel_image)));
-    const PhysicalAddress used_range_end(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(kmalloc_end))));
-    klog() << "MM: kernel range: " << used_range_start << " - " << PhysicalAddress(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(&end_of_kernel_image))));
-    klog() << "MM: kmalloc range: " << PhysicalAddress(virtual_to_low_physical(FlatPtr(kmalloc_start))) << " - " << used_range_end;
+    const PhysicalAddress used_range_end(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)));
+    klog() << "MM: kernel range: " << used_range_start << " - " << used_range_end;
 
     auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
@@ -161,30 +160,31 @@ void MemoryManager::parse_memory_map()
         for (size_t page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
-            if (addr.get() < used_range_end.get() && addr.get() >= used_range_start.get())
+            // Skip used memory ranges.
+            bool should_skip = false;
+            for (auto used_range : m_used_memory_ranges) {
+                if (addr.get() >= used_range.start.get() && addr.get() <= used_range.end.get()) {
+                    should_skip = true;
+                    break;
+                }
+            }
+            if (should_skip)
                 continue;
 
-            if (page_base < 7 * MiB) {
-                // nothing
-            } else if (page_base >= 7 * MiB && page_base < 8 * MiB) {
-                if (region.is_null() || !region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
-                    m_super_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = m_super_physical_regions.last();
-                    region_is_super = true;
-                } else {
-                    region->expand(region->lower(), addr);
-                }
+            // Assign page to user physical region.
+            if (region.is_null() || region->upper().offset(PAGE_SIZE) != addr) {
+                m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
+                region = m_user_physical_regions.last();
             } else {
-                if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
-                    m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = m_user_physical_regions.last();
-                    region_is_super = false;
-                } else {
-                    region->expand(region->lower(), addr);
-                }
+                region->expand(region->lower(), addr);
             }
         }
     }
+
+    // Append statically-allocated super physical region.
+    m_super_physical_regions.append(PhysicalRegion::create(
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
 
     for (auto& region : m_super_physical_regions) {
         m_super_physical_pages += region.finalize_capacity();
