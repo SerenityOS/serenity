@@ -49,6 +49,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/WithScope.h>
+#include <typeinfo>
 
 namespace JS {
 
