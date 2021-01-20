@@ -1073,14 +1073,14 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
     }
     KBufferBuilder builder(buffer, true);
     if (!read_callback(identifier(), builder))
-        return KResult(-ENOENT);
+        return ENOENT;
     // We don't use builder.build() here, which would steal our buffer
     // and turn it into an OwnPtr. Instead, just flush to the buffer so
     // that we can read all the data that was written.
     if (!builder.flush())
-        return KResult(-ENOMEM);
+        return ENOMEM;
     if (!buffer)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return KSuccess;
 }
 
@@ -1220,7 +1220,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 #endif
 
     if (!Kernel::is_directory(identifier()))
-        return KResult(-ENOTDIR);
+        return ENOTDIR;
 
     auto proc_file_type = to_proc_file_type(identifier());
     auto parent_id = to_parent_id(identifier());
@@ -1263,7 +1263,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         auto pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (!process)
-            return KResult(-ENOENT);
+            return ENOENT;
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
                 if (entry.proc_file_type == FI_PID_exe && !process->executable())
@@ -1278,7 +1278,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         auto pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (!process)
-            return KResult(-ENOENT);
+            return ENOENT;
         for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
             auto description = process->file_description(i);
             if (!description)
@@ -1293,7 +1293,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         auto pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (!process)
-            return KResult(-ENOENT);
+            return ENOENT;
         process->for_each_thread([&](Thread& thread) -> IterationDecision {
             int tid = thread.tid().value();
             char name[16];
@@ -1478,7 +1478,7 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
     auto proc_file_type = to_proc_file_type(identifier());
     auto process = Process::from_pid(pid);
     if (!process)
-        return KResult(-ENOENT);
+        return ENOENT;
 
     if (to_proc_parent_directory(identifier()) == PDI_PID_fd) {
         if (out_parent)
@@ -1486,7 +1486,7 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
         int fd = to_fd(identifier());
         auto description = process->file_description(fd);
         if (!description)
-            return KResult(-ENOENT);
+            return ENOENT;
         auto proxy_inode = ProcFSProxyInode::create(const_cast<ProcFS&>(fs()), *description);
         return Custody::create(&base, "", proxy_inode, base.mount_flags());
     }
@@ -1511,7 +1511,7 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
     }
 
     if (!res)
-        return KResult(-ENOENT);
+        return ENOENT;
 
     return *res;
 }
@@ -1559,21 +1559,21 @@ InodeMetadata ProcFSProxyInode::metadata() const
 KResultOr<NonnullRefPtr<Inode>> ProcFSProxyInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     if (!m_fd->inode())
-        return KResult(-EINVAL);
+        return EINVAL;
     return m_fd->inode()->create_child(name, mode, dev, uid, gid);
 }
 
 KResult ProcFSProxyInode::add_child(Inode& child, const StringView& name, mode_t mode)
 {
     if (!m_fd->inode())
-        return KResult(-EINVAL);
+        return EINVAL;
     return m_fd->inode()->add_child(child, name, mode);
 }
 
 KResult ProcFSProxyInode::remove_child(const StringView& name)
 {
     if (!m_fd->inode())
-        return KResult(-EINVAL);
+        return EINVAL;
     return m_fd->inode()->remove_child(name);
 }
 
@@ -1587,23 +1587,23 @@ RefPtr<Inode> ProcFSProxyInode::lookup(StringView name)
 KResultOr<size_t> ProcFSProxyInode::directory_entry_count() const
 {
     if (!m_fd->inode())
-        return KResult(-EINVAL);
+        return EINVAL;
     return m_fd->inode()->directory_entry_count();
 }
 
 KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResult ProcFSInode::remove_child([[maybe_unused]] const StringView& name)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResultOr<size_t> ProcFSInode::directory_entry_count() const
@@ -1623,7 +1623,7 @@ KResultOr<size_t> ProcFSInode::directory_entry_count() const
 
 KResult ProcFSInode::chmod(mode_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 ProcFS::ProcFS()
@@ -1673,6 +1673,6 @@ ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identi
 
 KResult ProcFSInode::chown(uid_t, gid_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 }

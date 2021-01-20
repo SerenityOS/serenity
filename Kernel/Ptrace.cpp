@@ -38,7 +38,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
         if (Process::current()->tracer())
-            return KResult(-EBUSY);
+            return EBUSY;
 
         caller.set_wait_for_tracer_at_next_execve(true);
         return KSuccess;
@@ -49,23 +49,23 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     // long it is not the main thread. Alternatively, if this is desired, then the
     // bug is that this prevents PT_ATTACH to the main thread from another thread.
     if (params.tid == caller.pid().value())
-        return KResult(-EINVAL);
+        return EINVAL;
 
     auto peer = Thread::from_tid(params.tid);
     if (!peer)
-        return KResult(-ESRCH);
+        return ESRCH;
 
     if ((peer->process().uid() != caller.euid())
         || (peer->process().uid() != peer->process().euid())) // Disallow tracing setuid processes
-        return KResult(-EACCES);
+        return EACCES;
 
     if (!peer->process().is_dumpable())
-        return KResult(-EACCES);
+        return EACCES;
 
     auto& peer_process = peer->process();
     if (params.request == PT_ATTACH) {
         if (peer_process.tracer()) {
-            return KResult(-EBUSY);
+            return EBUSY;
         }
         peer_process.start_tracing_from(caller.pid());
         ScopedSpinLock lock(peer->get_lock());
@@ -78,13 +78,13 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     auto* tracer = peer_process.tracer();
 
     if (!tracer)
-        return KResult(-EPERM);
+        return EPERM;
 
     if (tracer->tracer_pid() != caller.pid())
-        return KResult(-EBUSY);
+        return EBUSY;
 
     if (peer->state() == Thread::State::Running)
-        return KResult(-EBUSY);
+        return EBUSY;
 
     scheduler_lock.unlock();
 
@@ -105,25 +105,25 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
 
     case PT_GETREGS: {
         if (!tracer->has_regs())
-            return KResult(-EINVAL);
+            return EINVAL;
         auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
         if (!copy_to_user(regs, &tracer->regs()))
-            return KResult(-EFAULT);
+            return EFAULT;
         break;
     }
 
     case PT_SETREGS: {
         if (!tracer->has_regs())
-            return KResult(-EINVAL);
+            return EINVAL;
 
         PtraceRegisters regs;
         if (!copy_from_user(&regs, (const PtraceRegisters*)params.addr))
-            return KResult(-EFAULT);
+            return EFAULT;
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
         if ((peer_saved_registers.cs & 0x03) != 3)
-            return KResult(-EFAULT);
+            return EFAULT;
 
         tracer->set_regs(regs);
         copy_ptrace_registers_into_kernel_registers(peer_saved_registers, regs);
@@ -133,24 +133,24 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     case PT_PEEK: {
         Kernel::Syscall::SC_ptrace_peek_params peek_params;
         if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
-            return KResult(-EFAULT);
+            return EFAULT;
         if (!is_user_address(VirtualAddress { peek_params.address }))
-            return KResult(-EFAULT);
+            return EFAULT;
         auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
         if (result.is_error())
             return result.error();
         if (!copy_to_user(peek_params.out_data, &result.value()))
-            return KResult(-EFAULT);
+            return EFAULT;
         break;
     }
 
     case PT_POKE:
         if (!is_user_address(VirtualAddress { params.addr }))
-            return KResult(-EFAULT);
+            return EFAULT;
         return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
 
     default:
-        return KResult(-EINVAL);
+        return EINVAL;
     }
 
     return KSuccess;

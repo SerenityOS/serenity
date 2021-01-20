@@ -61,7 +61,7 @@ int File::ioctl(FileDescription&, unsigned, FlatPtr)
 
 KResultOr<Region*> File::mmap(Process&, FileDescription&, VirtualAddress, size_t, size_t, int, bool)
 {
-    return KResult(-ENODEV);
+    return ENODEV;
 }
 
 }

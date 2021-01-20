@@ -134,7 +134,7 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     LOCKER(m_lock, Lock::Mode::Shared);
 
     if (!is_directory())
-        return KResult(-ENOTDIR);
+        return ENOTDIR;
 
     callback({ ".", identifier(), 0 });
     callback({ "..", m_parent, 0 });
@@ -278,7 +278,7 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
 
     // TODO: Support creating devices on TmpFS.
     if (dev != 0)
-        return KResult(-ENOTSUP);
+        return ENOTSUP;
 
     struct timeval now;
     kgettimeofday(now);
@@ -305,7 +305,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
     ASSERT(child.fsid() == fsid());
 
     if (name.length() > NAME_MAX)
-        return KResult(-ENAMETOOLONG);
+        return ENAMETOOLONG;
 
     m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
     did_add_child(child.identifier());
@@ -322,7 +322,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
 
     auto it = m_children.find(name);
     if (it == m_children.end())
-        return KResult(-ENOENT);
+        return ENOENT;
     auto child_id = it->value.inode->identifier();
     m_children.remove(it);
     did_remove_child(child_id);
@@ -339,7 +339,7 @@ KResult TmpFSInode::truncate(u64 size)
     else if (!m_content) {
         m_content = KBuffer::try_create_with_size(size);
         if (!m_content)
-            return KResult(-ENOMEM);
+            return ENOMEM;
     } else if (static_cast<size_t>(size) < m_content->capacity()) {
         size_t prev_size = m_metadata.size;
         m_content->set_size(size);
@@ -349,7 +349,7 @@ KResult TmpFSInode::truncate(u64 size)
         size_t prev_size = m_metadata.size;
         auto tmp = KBuffer::try_create_with_size(size);
         if (!tmp)
-            return KResult(-ENOMEM);
+            return ENOMEM;
         memcpy(tmp->data(), m_content->data(), prev_size);
         m_content = move(tmp);
     }

@@ -73,13 +73,13 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
         auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, whole_blocks, outbuf, whole_blocks * block_size());
         auto result = read_request->wait();
         if (result.wait_result().was_interrupted())
-            return KResult(-EINTR);
+            return EINTR;
         switch (result.request_result()) {
         case AsyncDeviceRequest::Failure:
         case AsyncDeviceRequest::Cancelled:
-            return KResult(-EIO);
+            return EIO;
         case AsyncDeviceRequest::MemoryFault:
-            return KResult(-EFAULT);
+            return EFAULT;
         default:
             break;
         }
@@ -93,12 +93,12 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
         auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size());
         auto result = read_request->wait();
         if (result.wait_result().was_interrupted())
-            return KResult(-EINTR);
+            return EINTR;
         switch (result.request_result()) {
         case AsyncDeviceRequest::Failure:
             return pos;
         case AsyncDeviceRequest::Cancelled:
-            return KResult(-EIO);
+            return EIO;
         case AsyncDeviceRequest::MemoryFault:
             // This should never happen, we're writing to a kernel buffer!
             ASSERT_NOT_REACHED();
@@ -106,7 +106,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
             break;
         }
         if (!outbuf.write(data.data(), pos, remaining))
-            return KResult(-EFAULT);
+            return EFAULT;
     }
 
     return pos + remaining;
@@ -140,13 +140,13 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
         auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, whole_blocks, inbuf, whole_blocks * block_size());
         auto result = write_request->wait();
         if (result.wait_result().was_interrupted())
-            return KResult(-EINTR);
+            return EINTR;
         switch (result.request_result()) {
         case AsyncDeviceRequest::Failure:
         case AsyncDeviceRequest::Cancelled:
-            return KResult(-EIO);
+            return EIO;
         case AsyncDeviceRequest::MemoryFault:
-            return KResult(-EFAULT);
+            return EFAULT;
         default:
             break;
         }
@@ -165,12 +165,12 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
             auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size());
             auto result = read_request->wait();
             if (result.wait_result().was_interrupted())
-                return KResult(-EINTR);
+                return EINTR;
             switch (result.request_result()) {
             case AsyncDeviceRequest::Failure:
                 return pos;
             case AsyncDeviceRequest::Cancelled:
-                return KResult(-EIO);
+                return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
                 ASSERT_NOT_REACHED();
@@ -180,18 +180,18 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
         }
 
         if (!inbuf.read(data.data(), pos, remaining))
-            return KResult(-EFAULT);
+            return EFAULT;
 
         {
             auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size());
             auto result = write_request->wait();
             if (result.wait_result().was_interrupted())
-                return KResult(-EINTR);
+                return EINTR;
             switch (result.request_result()) {
             case AsyncDeviceRequest::Failure:
                 return pos;
             case AsyncDeviceRequest::Cancelled:
-                return KResult(-EIO);
+                return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
                 ASSERT_NOT_REACHED();

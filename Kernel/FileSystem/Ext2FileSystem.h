@@ -148,7 +148,7 @@ private:
 
     Vector<BlockIndex> block_list_for_inode_impl(const ext2_inode&, bool include_block_list_blocks = false) const;
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
-    bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
+    KResult write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(InodeIndex, bool);

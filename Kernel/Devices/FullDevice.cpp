@@ -50,7 +50,7 @@ KResultOr<size_t> FullDevice::read(FileDescription&, size_t, UserOrKernelBuffer&
 {
     ssize_t count = min(static_cast<size_t>(PAGE_SIZE), size);
     if (!buffer.memset(0, count))
-        return KResult(-EFAULT);
+        return EFAULT;
     return count;
 }
 
@@ -58,7 +58,7 @@ KResultOr<size_t> FullDevice::write(FileDescription&, size_t, const UserOrKernel
 {
     if (size == 0)
         return 0;
-    return KResult(-ENOSPC);
+    return ENOSPC;
 }
 
 }

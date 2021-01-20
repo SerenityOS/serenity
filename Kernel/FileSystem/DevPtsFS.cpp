@@ -143,7 +143,7 @@ InodeMetadata DevPtsFSInode::metadata() const
 KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     if (identifier().index() > 1)
-        return KResult(-ENOTDIR);
+        return ENOTDIR;
 
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
@@ -187,27 +187,27 @@ void DevPtsFSInode::flush_metadata()
 
 KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResult DevPtsFSInode::remove_child(const StringView&)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResult DevPtsFSInode::chmod(mode_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResult DevPtsFSInode::chown(uid_t, gid_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 }

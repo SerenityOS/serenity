@@ -33,10 +33,10 @@ KResult Process::do_kill(Process& process, int signal)
     // FIXME: Allow sending SIGCONT to everyone in the process group.
     // FIXME: Should setuid processes have some special treatment here?
     if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
-        return KResult(-EPERM);
+        return EPERM;
     if (process.is_kernel_process() && signal == SIGKILL) {
         klog() << "attempted to send SIGKILL to kernel process " << process.name().characters() << "(" << process.pid().value() << ")";
-        return KResult(-EPERM);
+        return EPERM;
     }
     if (signal != 0)
         return process.send_signal(signal, this);
@@ -72,7 +72,7 @@ KResult Process::do_killpg(ProcessGroupID pgrp, int signal)
     });
 
     if (group_was_empty)
-        return KResult(-ESRCH);
+        return ESRCH;
     if (any_succeeded)
         return KSuccess;
     return error;

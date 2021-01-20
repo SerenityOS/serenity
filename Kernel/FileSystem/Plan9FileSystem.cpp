@@ -532,7 +532,7 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
         if (!description.can_write()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted())
-                return KResult(-EINTR);
+                return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
         auto nwritten_or_error = description.write(data_buffer, size);
@@ -553,7 +553,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
         if (!description.can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
-                return KResult(-EINTR);
+                return EINTR;
         }
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
         auto nread_or_error = description.read(data_buffer, size);
@@ -561,7 +561,7 @@ KResult Plan9FS::do_read(u8* data, size_t size)
             return nread_or_error.error();
         auto nread = nread_or_error.value();
         if (nread == 0)
-            return KResult(-EIO);
+            return EIO;
         data += nread;
         size -= nread;
     }
@@ -582,7 +582,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
 
     auto buffer = KBuffer::try_create_with_size(header.size, Region::Access::Read | Region::Access::Write);
     if (!buffer)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     // Copy the already read header into the buffer.
     memcpy(buffer->data(), &header, sizeof(header));
     result = do_read(buffer->data() + sizeof(header), header.size - sizeof(header));
@@ -622,11 +622,11 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
     if (result.is_error())
         return result;
     if (Thread::current()->block<Plan9FS::Blocker>({}, *this, message, completion).was_interrupted())
-        return KResult(-EINTR);
+        return EINTR;
 
     if (completion->result.is_error()) {
         dbgln("Plan9FS: Message was aborted with error {}", completion->result.error());
-        return KResult(-EIO);
+        return EIO;
     }
 
     auto reply_type = message.type();
@@ -635,7 +635,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         // Contains a numerical Linux errno; hopefully our errno numbers match.
         u32 error_code;
         message >> error_code;
-        return KResult(-error_code);
+        return KResult((ErrnoCode)error_code);
     } else if (reply_type == Message::Type::Rerror) {
         // Contains an error message. We could attempt to parse it, but for now
         // we simply return -EIO instead. In 9P200.u, it can also contain a
@@ -643,12 +643,12 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         StringView error_name;
         message >> error_name;
         dbgln("Plan9FS: Received error name {}", error_name);
-        return KResult(-EIO);
+        return EIO;
     } else if ((u8)reply_type != (u8)request_type + 1) {
         // Other than those error messages. we only expect the matching reply
         // message type.
         dbgln("Plan9FS: Received unexpected message type {} in response to {}", (u8)reply_type, (u8)request_type);
-        return KResult(-EIO);
+        return EIO;
     } else {
         return KSuccess;
     }
@@ -944,7 +944,7 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
         return result;
     } else {
         // TODO
-        return KResult(-ENOTIMPL);
+        return ENOTIMPL;
     }
 }
 
@@ -964,31 +964,31 @@ RefPtr<Inode> Plan9FSInode::lookup(StringView name)
 KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
 {
     // TODO
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Plan9FSInode::add_child(Inode&, const StringView&, mode_t)
 {
     // TODO
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Plan9FSInode::remove_child(const StringView&)
 {
     // TODO
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Plan9FSInode::chmod(mode_t)
 {
     // TODO
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Plan9FSInode::chown(uid_t, gid_t)
 {
     // TODO
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Plan9FSInode::truncate(u64 new_size)

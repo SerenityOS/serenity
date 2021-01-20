@@ -106,7 +106,7 @@ struct InodeMetadata {
     KResult stat(stat& buffer) const
     {
         if (!is_valid())
-            return KResult(-EIO);
+            return EIO;
         buffer.st_rdev = encoded_device(major_device, minor_device);
         buffer.st_ino = inode.index();
         buffer.st_mode = mode;

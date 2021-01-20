@@ -75,7 +75,7 @@ KResultOr<size_t> MasterPTY::read(FileDescription&, size_t, UserOrKernelBuffer& 
 KResultOr<size_t> MasterPTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_slave)
-        return KResult(-EIO);
+        return EIO;
     m_slave->on_master_write(buffer, size);
     return size;
 }

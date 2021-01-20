@@ -52,7 +52,7 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, U
         evaluate_block_conditions();
     }
     if (nread < 0)
-        return KResult(nread);
+        return KResult((ErrnoCode)-nread);
     return nread;
 }
 
@@ -65,7 +65,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, 
         evaluate_block_conditions();
     }
     if (nwritten < 0)
-        return KResult(nwritten);
+        return KResult((ErrnoCode)-nwritten);
     return nwritten;
 }
 
@@ -78,7 +78,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
     else
         vmobject = PrivateInodeVMObject::create_with_inode(inode());
     if (!vmobject)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return process.allocate_region_with_vmobject(preferred_vaddr, size, *vmobject, offset, description.absolute_path(), prot, shared);
 }
 
@@ -95,8 +95,8 @@ KResult InodeFile::truncate(u64 size)
     if (truncate_result.is_error())
         return truncate_result;
     int mtime_result = m_inode->set_mtime(kgettimeofday().tv_sec);
-    if (mtime_result != 0)
-        return KResult(mtime_result);
+    if (mtime_result < 0)
+        return KResult((ErrnoCode)-mtime_result);
     return KSuccess;
 }
 

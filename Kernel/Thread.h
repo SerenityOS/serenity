@@ -748,11 +748,11 @@ public:
     KResult try_join(AddBlockerHandler add_blocker)
     {
         if (Thread::current() == this)
-            return KResult(-EDEADLK);
+            return EDEADLK;
 
         ScopedSpinLock lock(m_lock);
         if (!m_is_joinable || state() == Dead)
-            return KResult(-EINVAL);
+            return EINVAL;
 
         add_blocker();
 

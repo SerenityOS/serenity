@@ -48,7 +48,7 @@ KResultOr<size_t> ZeroDevice::read(FileDescription&, size_t, UserOrKernelBuffer&
 {
     ssize_t count = min(static_cast<size_t>(PAGE_SIZE), size);
     if (!buffer.memset(0, count))
-        return KResult(-EFAULT);
+        return EFAULT;
     return count;
 }
 

@@ -86,7 +86,7 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     ASSERT(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
     if (!buffer.write(udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket)))
-        return KResult(-EFAULT);
+        return EFAULT;
     return udp_packet.length() - sizeof(UDPPacket);
 }
 
@@ -94,7 +94,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
-        return KResult(-EHOSTUNREACH);
+        return EHOSTUNREACH;
     const size_t buffer_size = sizeof(UDPPacket) + data_length;
 
     alignas(UDPPacket) u8 buffer[buffer_size];
@@ -105,7 +105,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(buffer_size);
     if (!data.read(udp_packet.payload(), data_length))
-        return KResult(-EFAULT);
+        return EFAULT;
 
     routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, UserOrKernelBuffer::for_kernel_buffer(buffer), buffer_size, ttl());
     return data_length;
@@ -146,7 +146,7 @@ KResult UDPSocket::protocol_bind()
 {
     LOCKER(sockets_by_port().lock());
     if (sockets_by_port().resource().contains(local_port()))
-        return KResult(-EADDRINUSE);
+        return EADDRINUSE;
     sockets_by_port().resource().set(local_port(), this);
     return KSuccess;
 }

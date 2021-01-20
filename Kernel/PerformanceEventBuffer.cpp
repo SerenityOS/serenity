@@ -51,7 +51,7 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
 KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2)
 {
     if (count() >= capacity())
-        return KResult(-ENOBUFS);
+        return ENOBUFS;
 
     PerformanceEvent event;
     event.type = type;
@@ -67,7 +67,7 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
         event.data.free.ptr = arg1;
         break;
     default:
-        return KResult(-EINVAL);
+        return EINVAL;
     }
 
     auto current_thread = Thread::current();

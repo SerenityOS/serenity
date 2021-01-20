@@ -58,7 +58,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
     if (Process::current()->pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
         [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTIN, nullptr);
-        return KResult(-EINTR);
+        return EINTR;
     }
 
     if (m_input_buffer.size() < static_cast<size_t>(size))
@@ -95,7 +95,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
         });
     }
     if (nwritten < 0)
-        return KResult(nwritten);
+        return KResult((ErrnoCode)-nwritten);
     if (nwritten > 0 || need_evaluate_block_conditions)
         evaluate_block_conditions();
     return (size_t)nwritten;
@@ -105,7 +105,7 @@ KResultOr<size_t> TTY::write(FileDescription&, size_t, const UserOrKernelBuffer&
 {
     if (m_termios.c_lflag & TOSTOP && Process::current()->pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTOU, nullptr);
-        return KResult(-EINTR);
+        return EINTR;
     }
 
     on_tty_write(buffer, size);

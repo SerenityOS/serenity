@@ -55,12 +55,12 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
 {
     REQUIRE_PROMISE(video);
     if (!shared)
-        return KResult(-ENODEV);
+        return ENODEV;
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     if (!vmobject)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return process.allocate_region_with_vmobject(
         preferred_vaddr,
         framebuffer_size_in_bytes(),

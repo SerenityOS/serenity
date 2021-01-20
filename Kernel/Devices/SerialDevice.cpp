@@ -59,7 +59,7 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, size_t, UserOrKernelBuffe
         return (ssize_t)data_size;
     });
     if (nwritten < 0)
-        return KResult(nwritten);
+        return KResult((ErrnoCode)-nwritten);
 
     return size;
 }
@@ -83,7 +83,7 @@ KResultOr<size_t> SerialDevice::write(FileDescription&, size_t, const UserOrKern
         return (ssize_t)data_size;
     });
     if (nread < 0)
-        return KResult(nread);
+        return KResult((ErrnoCode)-nread);
     return (size_t)nread;
 }
 

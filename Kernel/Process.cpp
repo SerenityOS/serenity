@@ -148,10 +148,10 @@ KResultOr<Region*> Process::allocate_region(const Range& range, const String& na
     ASSERT(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
     if (!vmobject)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot));
     if (!region->map(page_directory()))
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return &add_region(move(region));
 }
 
@@ -159,7 +159,7 @@ KResultOr<Region*> Process::allocate_region(VirtualAddress vaddr, size_t size, c
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return allocate_region(range, name, prot, strategy);
 }
 
@@ -169,21 +169,21 @@ KResultOr<Region*> Process::allocate_region_with_vmobject(const Range& range, No
     size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject <= offset_in_vmobject) {
         dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
-        return KResult(-EINVAL);
+        return EINVAL;
     }
     if (offset_in_vmobject >= vmobject->size()) {
         dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.");
-        return KResult(-EINVAL);
+        return EINVAL;
     }
     if (end_in_vmobject > vmobject->size()) {
         dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.");
-        return KResult(-EINVAL);
+        return EINVAL;
     }
     offset_in_vmobject &= PAGE_MASK;
     auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot), true, shared));
     if (!region.map(page_directory())) {
         // FIXME: What is an appropriate error code here, really?
-        return KResult(-ENOMEM);
+        return ENOMEM;
     }
     return &region;
 }
@@ -192,7 +192,7 @@ KResultOr<Region*> Process::allocate_region_with_vmobject(VirtualAddress vaddr, 
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, shared);
 }
 
@@ -573,12 +573,12 @@ Custody& Process::current_directory()
 KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size_t path_length) const
 {
     if (path_length == 0)
-        return KResult(-EINVAL);
+        return EINVAL;
     if (path_length > PATH_MAX)
-        return KResult(-ENAMETOOLONG);
+        return ENAMETOOLONG;
     auto copied_string = copy_string_from_user(user_path, path_length);
     if (copied_string.is_null())
-        return KResult(-EFAULT);
+        return EFAULT;
     return copied_string;
 }
 
@@ -819,7 +819,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
         receiver_thread->send_signal(signal, sender);
         return KSuccess;
     }
-    return KResult(-ESRCH);
+    return ESRCH;
 }
 
 RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable)

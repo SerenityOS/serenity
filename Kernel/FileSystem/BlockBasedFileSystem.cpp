@@ -169,7 +169,7 @@ KResult BlockBasedFS::write_block(unsigned index, const UserOrKernelBuffer& data
             return result;
     }
     if (!data.read(entry.data + offset, count))
-        return KResult(-EFAULT);
+        return EFAULT;
 
     cache().mark_dirty(entry);
     entry.has_data = true;
@@ -261,7 +261,7 @@ KResult BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer* buffer, siz
         entry.has_data = true;
     }
     if (buffer && !buffer->write(entry.data + offset, count))
-        return KResult(-EFAULT);
+        return EFAULT;
     return KSuccess;
 }
 
@@ -269,7 +269,7 @@ KResult BlockBasedFS::read_blocks(unsigned index, unsigned count, UserOrKernelBu
 {
     ASSERT(m_logical_block_size);
     if (!count)
-        return KResult(-EINVAL);
+        return EINVAL;
     if (count == 1)
         return read_block(index, &buffer, block_size(), 0, allow_cache);
     auto out = buffer;

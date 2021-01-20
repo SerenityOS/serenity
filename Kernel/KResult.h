@@ -27,6 +27,8 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
@@ -37,10 +39,9 @@ enum KSuccessTag {
 
 class [[nodiscard]] KResult {
 public:
-    ALWAYS_INLINE explicit KResult(int negative_e)
-        : m_error(negative_e)
+    KResult(ErrnoCode error)
+        : m_error(-error)
     {
-        ASSERT(negative_e <= 0);
     }
     KResult(KSuccessTag)
         : m_error(0)
@@ -64,6 +65,12 @@ template<typename T>
 class alignas(T) [[nodiscard]] KResultOr {
 public:
     KResultOr(KResult error)
+        : m_error(error)
+        , m_is_error(true)
+    {
+    }
+
+    KResultOr(ErrnoCode error)
         : m_error(error)
         , m_is_error(true)
     {

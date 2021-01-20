@@ -236,11 +236,11 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
     if (!m_dma_region) {
         auto page = MM.allocate_supervisor_physical_page();
         if (!page)
-            return KResult(-ENOMEM);
+            return ENOMEM;
         auto vmobject = AnonymousVMObject::create_with_physical_page(*page);
         m_dma_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_SIZE, "SB16 DMA buffer", Region::Access::Write);
         if (!m_dma_region)
-            return KResult(-ENOMEM);
+            return ENOMEM;
     }
 
 #ifdef SB16_DEBUG
@@ -249,7 +249,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
     ASSERT(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
-        return KResult(-ENOSPC);
+        return ENOSPC;
     }
 
     u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
@@ -257,7 +257,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
     const int sample_rate = 44100;
     set_sample_rate(sample_rate);
     if (!data.read(m_dma_region->vaddr().as_ptr(), length))
-        return KResult(-EFAULT);
+        return EFAULT;
     dma_start(length);
 
     // 16-bit single-cycle output.

@@ -42,10 +42,10 @@ AnonymousFile::~AnonymousFile()
 KResultOr<Region*> AnonymousFile::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
 {
     if (offset != 0)
-        return KResult(-EINVAL);
+        return EINVAL;
 
     if (size != m_vmobject->size())
-        return KResult(-EINVAL);
+        return EINVAL;
 
     return process.allocate_region_with_vmobject(preferred_vaddr, size, m_vmobject, offset, {}, prot, shared);
 }

@@ -82,7 +82,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
         auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
         nread = read_bytes(offset, sizeof(buffer), buf, description);
         if (nread < 0)
-            return KResult(nread);
+            return KResult((ErrnoCode)-nread);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
@@ -93,12 +93,12 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
     }
     if (nread < 0) {
         klog() << "Inode::read_entire: ERROR: " << nread;
-        return KResult(nread);
+        return KResult((ErrnoCode)-nread);
     }
 
     auto entire_file = builder.build();
     if (!entire_file)
-        return KResult(-ENOMEM);
+        return ENOMEM;
     return entire_file.release_nonnull();
 }
 
@@ -168,12 +168,12 @@ int Inode::set_mtime(time_t)
 
 KResult Inode::increment_link_count()
 {
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 KResult Inode::decrement_link_count()
 {
-    return KResult(-ENOTIMPL);
+    return ENOTIMPL;
 }
 
 void Inode::set_shared_vmobject(SharedInodeVMObject& vmobject)
@@ -271,7 +271,7 @@ KResult Inode::prepare_to_write_data()
     //        We should funnel everything through an interface at the VFS layer so this can happen from a single place.
     LOCKER(m_lock);
     if (fs().is_readonly())
-        return KResult(-EROFS);
+        return EROFS;
     auto metadata = this->metadata();
     if (metadata.is_setuid() || metadata.is_setgid()) {
         dbgln("Inode::prepare_to_write_data(): Stripping SUID/SGID bits from {}", identifier());
