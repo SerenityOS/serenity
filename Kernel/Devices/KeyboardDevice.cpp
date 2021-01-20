@@ -386,7 +386,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
             return (ssize_t)data_bytes;
         });
         if (n < 0)
-            return KResult(n);
+            return KResult((ErrnoCode)-n);
         ASSERT((size_t)n == sizeof(Event));
         nread += sizeof(Event);
 

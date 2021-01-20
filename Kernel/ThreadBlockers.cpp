@@ -611,7 +611,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     case P_PID: {
         m_waitee = Process::from_pid(m_waitee_id);
         if (!m_waitee || m_waitee->ppid() != Process::current()->pid()) {
-            m_result = KResult(-ECHILD);
+            m_result = ECHILD;
             m_error = true;
             return;
         }
@@ -620,7 +620,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
     case P_PGID: {
         m_waitee_group = ProcessGroup::from_pgid(m_waitee_id);
         if (!m_waitee_group) {
-            m_result = KResult(-ECHILD);
+            m_result = ECHILD;
             m_error = true;
             return;
         }
@@ -670,7 +670,7 @@ void Thread::WaitBlocker::do_was_disowned()
 {
     ASSERT(!m_did_unblock);
     m_did_unblock = true;
-    m_result = KResult(-ECHILD);
+    m_result = ECHILD;
 }
 
 void Thread::WaitBlocker::do_set_result(const siginfo_t& result)

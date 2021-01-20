@@ -177,7 +177,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
 #endif
     ASSERT(buffer_size >= payload_size);
     if (!buffer.write(tcp_packet.payload(), payload_size))
-        return KResult(-EFAULT);
+        return EFAULT;
     return payload_size;
 }
 
@@ -185,7 +185,7 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 {
     int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length);
     if (err < 0)
-        return KResult(err);
+        return KResult((ErrnoCode)-err);
     return data_length;
 }
 
@@ -354,7 +354,7 @@ KResult TCPSocket::protocol_bind()
     if (has_specific_local_address() && !m_adapter) {
         m_adapter = NetworkAdapter::from_ipv4_address(local_address());
         if (!m_adapter)
-            return KResult(-EADDRNOTAVAIL);
+            return EADDRNOTAVAIL;
     }
 
     return KSuccess;
@@ -364,7 +364,7 @@ KResult TCPSocket::protocol_listen()
 {
     LOCKER(sockets_by_tuple().lock());
     if (sockets_by_tuple().resource().contains(tuple()))
-        return KResult(-EADDRINUSE);
+        return EADDRINUSE;
     sockets_by_tuple().resource().set(tuple(), this);
     set_direction(Direction::Passive);
     set_state(State::Listen);
@@ -378,7 +378,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
 
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())
-        return KResult(-EHOSTUNREACH);
+        return EHOSTUNREACH;
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
@@ -390,7 +390,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     set_setup_state(SetupState::InProgress);
     int err = send_tcp_packet(TCPFlags::SYN);
     if (err < 0)
-        return KResult(err);
+        return KResult((ErrnoCode)-err);
     m_state = State::SynSent;
     m_role = Role::Connecting;
     m_direction = Direction::Outgoing;
@@ -401,17 +401,17 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         locker.unlock();
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())
-            return KResult(-EINTR);
+            return EINTR;
         locker.lock();
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
-            return KResult(-ECONNREFUSED);
+            return ECONNREFUSED;
         }
         return KSuccess;
     }
 
-    return KResult(-EINPROGRESS);
+    return EINPROGRESS;
 }
 
 int TCPSocket::protocol_allocate_local_port()

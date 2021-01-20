@@ -124,17 +124,17 @@ ssize_t DevFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileD
 
 KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResult DevFSInode::add_child(Inode&, const StringView&, mode_t)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResult DevFSInode::remove_child(const StringView&)
 {
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 KResultOr<size_t> DevFSInode::directory_entry_count() const
@@ -144,17 +144,17 @@ KResultOr<size_t> DevFSInode::directory_entry_count() const
 
 KResult DevFSInode::chmod(mode_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResult DevFSInode::chown(uid_t, gid_t)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 KResult DevFSInode::truncate(u64)
 {
-    return KResult(-EPERM);
+    return EPERM;
 }
 
 String DevFSLinkInode::name() const
@@ -221,7 +221,7 @@ InodeMetadata DevFSDirectoryInode::metadata() const
 KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
 {
     LOCKER(m_lock);
-    return KResult(-EINVAL);
+    return EINVAL;
 }
 RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 {
@@ -288,10 +288,10 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
     if (metadata.is_directory()) {
         for (auto& folder : m_subfolders) {
             if (folder.name() == name)
-                return KResult(-EEXIST);
+                return EEXIST;
         }
         if (name != "pts")
-            return KResult(-EROFS);
+            return EROFS;
         auto new_directory_inode = adopt(*new DevFSPtsDirectoryInode(m_parent_fs));
         m_subfolders.append(new_directory_inode);
         m_parent_fs.m_nodes.append(new_directory_inode);
@@ -300,7 +300,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
     if (metadata.is_symlink()) {
         for (auto& link : m_links) {
             if (link.name() == name)
-                return KResult(-EEXIST);
+                return EEXIST;
         }
         dbgln("DevFS: Success on create new symlink");
         auto new_link_inode = adopt(*new DevFSLinkInode(m_parent_fs, name));
@@ -308,7 +308,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
         m_parent_fs.m_nodes.append(new_link_inode);
         return new_link_inode;
     }
-    return KResult(-EROFS);
+    return EROFS;
 }
 
 DevFSRootDirectoryInode::~DevFSRootDirectoryInode()

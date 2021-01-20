@@ -59,7 +59,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 {
     LOCKER(m_lock);
     if (m_freelist.is_empty())
-        return KResult(-EBUSY);
+        return EBUSY;
     auto master_index = m_freelist.take_last();
     auto master = adopt(*new MasterPTY(master_index));
 #ifdef PTMX_DEBUG

@@ -139,8 +139,8 @@ private:
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;
-    virtual KResult chmod(mode_t) override { return KResult(-EINVAL); }
-    virtual KResult chown(uid_t, gid_t) override { return KResult(-EINVAL); }
+    virtual KResult chmod(mode_t) override { return EINVAL; }
+    virtual KResult chown(uid_t, gid_t) override { return EINVAL; }
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody&, RefPtr<Custody>*, int, int) const override { ASSERT_NOT_REACHED(); }
     virtual FileDescription* preopen_fd() override { return m_fd; }
 

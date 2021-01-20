@@ -149,7 +149,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
     if (vmobject->writable_mappings()) {
         dbgln("Refusing to execute a write-mapped program");
-        return KResult(-ETXTBSY);
+        return ETXTBSY;
     }
 
     size_t executable_size = inode.size();
@@ -157,13 +157,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF loading", Region::Access::Read);
     if (!executable_region) {
         dbgln("Could not allocate memory for ELF loading");
-        return KResult(-ENOMEM);
+        return ENOMEM;
     }
 
     auto elf_image = ELF::Image(executable_region->vaddr().as_ptr(), executable_size);
 
     if (!elf_image.is_valid())
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
 
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
@@ -181,7 +181,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
-                ph_load_result = KResult(-ENOEXEC);
+                ph_load_result = ENOEXEC;
                 return IterationDecision::Break;
             }
 
@@ -195,7 +195,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             master_tls_alignment = program_header.alignment();
 
             if (!copy_to_user(master_tls_region->vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image())) {
-                ph_load_result = KResult(-EFAULT);
+                ph_load_result = EFAULT;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
@@ -210,7 +210,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
-                ph_load_result = KResult(-ENOEXEC);
+                ph_load_result = ENOEXEC;
                 return IterationDecision::Break;
             }
 
@@ -236,7 +236,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             auto page_offset = program_header.vaddr();
             page_offset.mask(~PAGE_MASK);
             if (!copy_to_user((u8*)region_or_error.value()->vaddr().as_ptr() + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
-                ph_load_result = KResult(-EFAULT);
+                ph_load_result = EFAULT;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
@@ -269,7 +269,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
 
     if (!elf_image.entry().offset(load_offset).get()) {
         dbgln("do_exec: Failure loading program, entry pointer is invalid! {})", elf_image.entry().offset(load_offset));
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
     }
 
     auto stack_region_or_error = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
@@ -299,7 +299,7 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
     {
         auto page_directory = PageDirectory::create_for_userspace(*this);
         if (!page_directory)
-            return KResult(-ENOMEM);
+            return ENOMEM;
 
         // Need to make sure we don't swap contexts in the middle
         ScopedCritical critical;
@@ -366,12 +366,12 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF memory range calculation", Region::Access::Read);
     if (!region) {
         dbgln("Could not allocate memory for ELF");
-        return KResult(-ENOMEM);
+        return ENOMEM;
     }
 
     auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
     if (!elf_image.is_valid()) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     RequiredLoadRange range {};
@@ -688,7 +688,7 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
             return interpreter_words;
     }
 
-    return KResult(-ENOEXEC);
+    return ENOEXEC;
 }
 
 KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& main_program_header, int nread, size_t file_size)
@@ -698,7 +698,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     String interpreter_path;
     if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
     }
 
     if (!interpreter_path.is_empty()) {
@@ -719,34 +719,34 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         // Validate the program interpreter as a valid elf binary.
         // If your program interpreter is a #! file or something, it's time to stop playing games :)
         if (interp_metadata.size < (int)sizeof(Elf32_Ehdr))
-            return KResult(-ENOEXEC);
+            return ENOEXEC;
 
         char first_page[PAGE_SIZE] = {};
         auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
         auto nread_or_error = interpreter_description->read(first_page_buffer, sizeof(first_page));
         if (nread_or_error.is_error())
-            return KResult(-ENOEXEC);
+            return ENOEXEC;
         nread = nread_or_error.value();
 
         if (nread < (int)sizeof(Elf32_Ehdr))
-            return KResult(-ENOEXEC);
+            return ENOEXEC;
 
         auto elf_header = (Elf32_Ehdr*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
-            return KResult(-ENOEXEC);
+            return ENOEXEC;
         }
 
         // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
         String interpreter_interpreter_path;
         if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, &interpreter_interpreter_path)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_description->absolute_path());
-            return KResult(-ENOEXEC);
+            return ENOEXEC;
         }
 
         if (!interpreter_interpreter_path.is_empty()) {
             dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_description->absolute_path(), interpreter_interpreter_path);
-            return KResult(-ELOOP);
+            return ELOOP;
         }
 
         return interpreter_description;
@@ -754,7 +754,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
     if (main_program_header.e_type == ET_REL) {
         // We can't exec an ET_REL, that's just an object file from the compiler
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
     }
     if (main_program_header.e_type == ET_DYN) {
         // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
@@ -817,12 +817,12 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // #2) ELF32 for i386
 
     if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
     auto main_program_header = (Elf32_Ehdr*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
-        return KResult(-ENOEXEC);
+        return ENOEXEC;
     }
 
     auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);

@@ -288,7 +288,7 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
 #endif
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
         if (!buffer.write(&packet, nread, bytes_read_from_packet))
-            return KResult(-EFAULT);
+            return EFAULT;
         nread += bytes_read_from_packet;
         remaining_space_in_buffer -= bytes_read_from_packet;
 

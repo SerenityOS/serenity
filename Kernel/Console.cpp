@@ -83,7 +83,7 @@ Kernel::KResultOr<size_t> Console::write(Kernel::FileDescription&, size_t, const
         return (ssize_t)bytes_count;
     });
     if (nread < 0)
-        return Kernel::KResult(nread);
+        return Kernel::KResult((ErrnoCode)-nread);
     return (size_t)nread;
 }
 

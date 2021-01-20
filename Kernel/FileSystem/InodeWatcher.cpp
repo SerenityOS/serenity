@@ -77,14 +77,14 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffe
         return (ssize_t)data_bytes;
     });
     if (nwritten < 0)
-        return KResult(nwritten);
+        return KResult((ErrnoCode)-nwritten);
     evaluate_block_conditions();
     return bytes_to_write;
 }
 
 KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
 {
-    return KResult(-EIO);
+    return EIO;
 }
 
 String InodeWatcher::absolute_path(const FileDescription&) const

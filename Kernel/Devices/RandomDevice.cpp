@@ -50,7 +50,7 @@ KResultOr<size_t> RandomDevice::read(FileDescription&, size_t, UserOrKernelBuffe
         return (ssize_t)data_size;
     });
     if (!success)
-        return KResult(-EFAULT);
+        return EFAULT;
     return size;
 }
 
