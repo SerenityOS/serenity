@@ -918,11 +918,10 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
 #ifdef EXT2_VERY_DEBUG
         dbgln("Ext2FS: Writing block {} (offset_into_block: {})", m_block_list[bi], offset_into_block);
 #endif
-        int err = fs().write_block(m_block_list[bi], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache);
-        if (err < 0) {
+        auto result = fs().write_block(m_block_list[bi], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache);
+        if (result.is_error()) {
             dbgln("Ext2FS: write_block({}) failed (bi: {})", m_block_list[bi], bi);
-            ASSERT_NOT_REACHED();
-            return err;
+            return result;
         }
         remaining_count -= num_bytes_to_copy;
         nwritten += num_bytes_to_copy;
