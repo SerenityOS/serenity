@@ -499,6 +499,7 @@ public:
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
 
+    HashMap<String, String>& coredump_metadata() { return m_coredump_metadata; }
     const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
@@ -778,6 +779,8 @@ inline u32 Thread::effective_priority() const
             && !Process::current()->has_promised(Pledge::promise)) { \
             dbgln("Has not pledged {}", #promise);                   \
             cli();                                                   \
+            Process::current()->coredump_metadata().set(             \
+                "pledge_violation", #promise);                       \
             Process::current()->crash(SIGABRT, 0);                   \
             ASSERT_NOT_REACHED();                                    \
         }                                                            \

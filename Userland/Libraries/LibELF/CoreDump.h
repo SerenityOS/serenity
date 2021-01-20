@@ -57,6 +57,8 @@ struct [[gnu::packed]] ProcessInfo {
     // - "pid" (int)
     // - "termination_signal" (u8)
     // - "executable_path" (String)
+    // - "arguments" (Vector<String>)
+    // - "environment" (Vector<String>)
     char json_data[]; // Null terminated
 };
 
@@ -91,6 +93,7 @@ struct [[gnu::packed]] Metadata {
     //
     // Well-known keys:
     // - "assertion": Used by LibC's __assertion_failed() to store assertion info
+    // - "pledge_violation": Used by the Kernel's REQUIRE_PROMISE() to store pledge violation info
     char json_data[]; // Null terminated
 };
 
