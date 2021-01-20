@@ -614,6 +614,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     // If the command is empty, store the redirections and apply them to all later commands.
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
         m_global_redirections.append(command.redirections);
+        for (auto& next_in_chain : command.next_chain)
+            run_tail(command, next_in_chain, last_return_code);
         return nullptr;
     }
 
