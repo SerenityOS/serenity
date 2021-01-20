@@ -44,13 +44,18 @@ SECTIONS
         end_of_kernel_data = .;
     }
 
-    .bss ALIGN(4K) : AT (ADDR(.bss) - 0xc0000000)
+    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - 0xc0000000)
     {
         start_of_kernel_bss = .;
         *(page_tables)
         *(COMMON)
         *(.bss)
         end_of_kernel_bss = .;
+
+        . = ALIGN(4K);
+        *(.heap)
+        . = ALIGN(4K);
+        *(.super_pages)
     }
 
     end_of_kernel_image = .;
