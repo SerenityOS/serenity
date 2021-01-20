@@ -191,11 +191,12 @@ void dump_backtrace()
 void load_kernel_symbol_table()
 {
     auto result = VFS::the().open("/res/kernel.map", O_RDONLY, 0, VFS::the().root_custody());
-    ASSERT(!result.is_error());
-    auto description = result.value();
-    auto buffer = description->read_entire_file();
-    ASSERT(!buffer.is_error());
-    load_kernel_sybols_from_data(*buffer.value());
+    if (!result.is_error()) {
+        auto description = result.value();
+        auto buffer = description->read_entire_file();
+        if (!buffer.is_error())
+            load_kernel_sybols_from_data(*buffer.value());
+    }
 }
 
 }
