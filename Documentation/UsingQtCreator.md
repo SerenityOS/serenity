@@ -54,6 +54,45 @@ Use your own judgement whether you want to include such changes. Generally speak
 
 You may want to read up what `git add -p` does (or `git checkout -p`, to undo).
 
+## License template
+
+You may have noticed how Andreas just types `lic` and the [license appears](https://youtu.be/i0J6J1Twwyo?t=346).
+
+In order to so, create a new file anywhere, for example `license-template.creator`, with the standard license:
+
+```
+/*
+ * Copyright (c) 2021, the SerenityOS developers.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+```
+
+In QtCreator, select the menu "Tools", item "Options", section "C++", tab
+"File Naming" (don't ask me why it's here). At the bottom there should be the
+option "License template:". Click "Browse…", select your file (i.e.,
+`license-template.creator`). Click "OK", and you're done! :)
+
 ## Compiler Kits
 
 You can slightly improve how well Qt interprets the code by adding and setting up an appropriate "compiler kit".
