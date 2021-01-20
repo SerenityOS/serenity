@@ -97,6 +97,9 @@ void Canvas::draw(Gfx::Painter& painter)
 
     painter.draw_rect({ 20, 34, WIDTH - 40, HEIGHT - 45 }, palette().color(Gfx::ColorRole::Selection), true);
     painter.draw_rect({ 24, 38, WIDTH - 48, HEIGHT - 53 }, palette().color(Gfx::ColorRole::Selection));
+
+    auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png");
+    painter.blit({ 25, 39 }, *buggie, { 2, 30, 62, 20 });
 }
 
 int main(int argc, char** argv)
