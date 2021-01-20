@@ -16,7 +16,7 @@
 
         @GUI::Label {
             name: "info"
-            text: "Type the name of a program, folder, document,\\nor website, and SerenityOS will open it for you."
+            text: "Type the name of a program, folder, document,\nor website, and SerenityOS will open it for you."
             text_alignment: "CenterLeft"
         }
     }
