@@ -37,6 +37,16 @@
 #    include <serenity.h>
 #endif
 
+#if defined(__linux__) && !defined(MFD_CLOEXEC)
+#    include <linux/memfd.h>
+#    include <sys/syscall.h>
+
+static int memfd_create(const char* name, unsigned int flags)
+{
+    return syscall(SYS_memfd_create, name, flags);
+}
+#endif
+
 namespace Core {
 
 AnonymousBuffer AnonymousBuffer::create_with_size(size_t size)
