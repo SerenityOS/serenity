@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -257,6 +258,14 @@ void page_fault_handler(TrapFrame* trap)
     }
 
     auto current_thread = Thread::current();
+
+    if (current_thread)
+        current_thread->set_handling_page_fault(true);
+    ScopeGuard guard = [current_thread] {
+        if (current_thread)
+            current_thread->set_handling_page_fault(false);
+    };
+
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {}", VirtualAddress(regs.userspace_esp));
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);

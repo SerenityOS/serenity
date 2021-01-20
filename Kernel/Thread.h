@@ -1155,6 +1155,9 @@ public:
         return m_kernel_stack_region;
     }
 
+    bool is_handling_page_fault() const { return m_handling_page_fault; }
+    void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
+
 private:
     IntrusiveListNode m_runnable_list_node;
 
@@ -1258,6 +1261,7 @@ private:
     JoinBlockCondition m_join_condition;
     Atomic<bool> m_is_active { false };
     bool m_is_joinable { true };
+    bool m_handling_page_fault { false };
 
     unsigned m_syscall_count { 0 };
     unsigned m_inode_faults { 0 };
