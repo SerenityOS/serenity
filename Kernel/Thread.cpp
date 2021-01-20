@@ -166,6 +166,12 @@ void Thread::unblock(u8 signal)
         return;
     ASSERT(m_blocker);
     if (signal != 0) {
+        if (is_handling_page_fault()) {
+            // Don't let signals unblock threads that are blocked inside a page fault handler.
+            // This prevents threads from EINTR'ing the inode read in an inode page fault.
+            // FIXME: There's probably a better way to solve this.
+            return;
+        }
         if (!m_blocker->can_be_interrupted() && !m_should_die)
             return;
         m_blocker->set_interrupted_by_signal(signal);
@@ -461,6 +467,8 @@ u32 Thread::pending_signals_for_state() const
 {
     ASSERT(g_scheduler_lock.own_lock());
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
+    if (is_handling_page_fault())
+        return 0;
     return m_state != Stopped ? m_pending_signals : m_pending_signals & stopped_signal_mask;
 }
 
