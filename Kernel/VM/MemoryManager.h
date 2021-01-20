@@ -86,6 +86,7 @@ class MemoryManager {
     friend class PhysicalRegion;
     friend class AnonymousVMObject;
     friend class Region;
+    friend class ScatterGatherList;
     friend class VMObject;
     friend OwnPtr<KBuffer> procfs$mm(InodeIdentifier);
     friend OwnPtr<KBuffer> procfs$memstat(InodeIdentifier);

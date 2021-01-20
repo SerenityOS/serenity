@@ -206,6 +206,7 @@ set(KERNEL_SOURCES
     VM/PurgeablePageRanges.cpp
     VM/RangeAllocator.cpp
     VM/Region.cpp
+    VM/ScatterGatherList.cpp
     VM/SharedInodeVMObject.cpp
     VM/VMObject.cpp
     VirtualAddress.cpp
