@@ -82,6 +82,3 @@ inline void kfree_aligned(void* ptr)
 }
 
 void kmalloc_enable_expand();
-
-extern u8* const kmalloc_start;
-extern u8* const kmalloc_end;

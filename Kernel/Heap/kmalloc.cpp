@@ -186,14 +186,11 @@ struct KmallocGlobalHeap {
 };
 
 static KmallocGlobalHeap* g_kmalloc_global;
+static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
 
-// We need to make sure to not stomp on global variables or other parts
-// of the kernel image!
-extern u32 end_of_kernel_image;
-u8* const kmalloc_start = (u8*)PAGE_ROUND_UP(&end_of_kernel_image);
-u8* const kmalloc_end = kmalloc_start + (ETERNAL_RANGE_SIZE + POOL_SIZE) + sizeof(KmallocGlobalHeap);
-#define ETERNAL_BASE (kmalloc_start + sizeof(KmallocGlobalHeap))
-#define KMALLOC_BASE (ETERNAL_BASE + ETERNAL_RANGE_SIZE)
+// Treat the heap as logically separate from .bss
+__attribute__((section(".heap"))) static u8 kmalloc_eternal_heap[ETERNAL_RANGE_SIZE];
+__attribute__((section(".heap"))) static u8 kmalloc_pool_heap[POOL_SIZE];
 
 static size_t g_kmalloc_bytes_eternal = 0;
 static size_t g_kmalloc_call_count;
@@ -215,13 +212,15 @@ void kmalloc_enable_expand()
 
 void kmalloc_init()
 {
-    memset((void*)KMALLOC_BASE, 0, POOL_SIZE);
-    g_kmalloc_global = new (kmalloc_start) KmallocGlobalHeap(KMALLOC_BASE, POOL_SIZE); // Place heap at kmalloc_start
+    // Zero out heap since it's placed after end_of_kernel_bss.
+    memset(kmalloc_eternal_heap, 0, sizeof(kmalloc_eternal_heap));
+    memset(kmalloc_pool_heap, 0, sizeof(kmalloc_pool_heap));
+    g_kmalloc_global = new (g_kmalloc_global_heap) KmallocGlobalHeap(kmalloc_pool_heap, sizeof(kmalloc_pool_heap));
 
     s_lock.initialize();
 
-    s_next_eternal_ptr = (u8*)ETERNAL_BASE;
-    s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
+    s_next_eternal_ptr = kmalloc_eternal_heap;
+    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_pool_heap);
 }
 
 void* kmalloc_eternal(size_t size)
