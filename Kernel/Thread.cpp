@@ -694,19 +694,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    //    if (is_stopped() && signal != SIGCONT && signal != SIGKILL && signal != SIGTRAP) {
-    //#ifdef SIGNAL_DEBUG
-    //        klog() << "signal: " << *this << " is stopped, will handle signal " << signal << " when resumed";
-    //#endif
-    //        return DispatchSignalResult::Deferred;
-    //    }
-    //    if (is_blocked()) {
-    //#ifdef SIGNAL_DEBUG
-    //        klog() << "signal: " << *this << " is blocked, will handle signal " << signal << " when unblocking";
-    //#endif
-    //        return DispatchSignalResult::Deferred;
-    //    }
-
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     ASSERT(!(action.flags & SA_SIGINFO));
