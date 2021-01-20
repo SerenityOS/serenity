@@ -104,8 +104,8 @@ private:
     Optional<NonnullRefPtr<Statement>> parse_jump_statement();
     Optional<NonnullRefPtr<Statement>> parse_selection_statement();
     NonnullRefPtr<Expression> parse_condition();
-    NonnullRefPtr<Statement> parse_statement();
-    NonnullRefPtr<Statement> parse_statement_seq();
+    NonnullRefPtrVector<ASTNode> parse_statement();
+    NonnullRefPtrVector<ASTNode> parse_statement_seq();
 
     ByteBuffer m_file_content;
     Lexer m_lexer;

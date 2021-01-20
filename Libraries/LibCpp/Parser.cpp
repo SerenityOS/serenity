@@ -554,7 +554,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
         auto condition = parse_condition();
         expect(Token::Type::RightParen);
         auto body = parse_statement();
-        return create_ast_node<IfStatement>(keyword.m_start, body->end(), condition, body);
+        return create_ast_node<IfStatement>(keyword.m_start, m_lexer.get_current_position(), condition, body);
     }
     return {};
 }
@@ -562,19 +562,24 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
 // statement:
 //      - jump-statement
 //      - selection-statement
-NonnullRefPtr<Statement> Parser::parse_statement()
+//      - compound-statement
+NonnullRefPtrVector<ASTNode> Parser::parse_statement()
 {
     SCOPE_LOGGER();
+    if (peek().m_type == Token::Type::LeftCurly)
+        return parse_compound_statement();
     auto statement = parse_jump_statement();
     if (!statement.has_value())
         statement = parse_selection_statement();
     ASSERT(statement.has_value());
-    return statement.release_value();
+    NonnullRefPtrVector<ASTNode> vec;
+    vec.append(statement.release_value());
+    return vec;
 }
 
 // statement-seq:
 //      - statement
-NonnullRefPtr<Statement> Parser::parse_statement_seq()
+NonnullRefPtrVector<ASTNode> Parser::parse_statement_seq()
 {
     SCOPE_LOGGER();
     return parse_statement();

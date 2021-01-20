@@ -159,6 +159,10 @@ public:
 
     Vector<Token> lex();
     Token lex_one_token();
+    const Position get_current_position() const&
+    {
+        return m_position;
+    }
 
 private:
     char peek(size_t offset = 0) const;

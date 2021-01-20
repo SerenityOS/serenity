@@ -1,9 +1,3 @@
-/*FIXME: should be able to find but does not work. Only work if the beginning or the end is removed, ...
-[[:blank:]]cmpl[[:blank:]]$0, %eax
-[[:blank:]]je[[:blank:]].L0
-[[:blank:]]jmp[[:blank:]].L1
-*/
-
 /*$ find-in-asm:
 cmpl[[:blank:]]$0, %eax
 [[:blank:]]je[[:blank:]].L0
@@ -24,5 +18,12 @@ cmpl[[:blank:]]$0, %eax
 int f(int i) {
     if (i)
         return i;
+    return i;
+}
+
+int f2(int i) {
+    if (i) {
+        return i;
+    }
     return i;
 }

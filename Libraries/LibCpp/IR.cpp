@@ -30,7 +30,8 @@
 
 namespace Cpp {
 
-static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters);
+static void add_node_to_body(ASTNode&, NonnullRefPtrVector<SIR::ASTNode>&, const NonnullRefPtrVector<SIR::Variable>&);
+static void add_scope_to_body(NonnullRefPtrVector<ASTNode>&, NonnullRefPtrVector<ASTNode>&, const NonnullRefPtrVector<Variable>&);
 
 static NonnullRefPtr<Expression> create_comparison_operation(Expression& left, NonnullRefPtrVector<SIR::ASTNode>& new_body, SIR::BinaryExpression::Kind comparison, int i)
 {
@@ -41,7 +42,7 @@ static NonnullRefPtr<Expression> create_comparison_operation(Expression& left, N
     return expression;
 }
 
-static NonnullRefPtr<SIR::Expression> add_binary_operation_to_body(Cpp::BinaryExpression& binary_expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+static NonnullRefPtr<SIR::Expression> add_binary_operation_to_body(BinaryExpression& binary_expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, const NonnullRefPtrVector<SIR::Variable>& parameters)
 {
     add_node_to_body(binary_expression.left(), new_body, parameters);
     add_node_to_body(binary_expression.right(), new_body, parameters);
@@ -50,7 +51,7 @@ static NonnullRefPtr<SIR::Expression> add_binary_operation_to_body(Cpp::BinaryEx
     return binary_expression;
 }
 
-static NonnullRefPtr<SIR::Expression> add_expression_to_body(Cpp::ASTNode& expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+static NonnullRefPtr<SIR::Expression> add_expression_to_body(ASTNode& expression, NonnullRefPtrVector<SIR::ASTNode>& new_body, const NonnullRefPtrVector<SIR::Variable>& parameters)
 {
     if (expression.is_binary_expression()) {
         return add_binary_operation_to_body(reinterpret_cast<SIR::BinaryExpression&>(expression), new_body, parameters);
@@ -61,7 +62,7 @@ static NonnullRefPtr<SIR::Expression> add_expression_to_body(Cpp::ASTNode& expre
     }
 }
 
-static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+static void add_statement_to_body(ASTNode& statement, NonnullRefPtrVector<SIR::ASTNode>& new_body, const NonnullRefPtrVector<SIR::Variable>& parameters)
 {
     if (statement.is_return_statement()) {
         auto& return_statement = reinterpret_cast<SIR::ReturnStatement&>(statement);
@@ -74,8 +75,7 @@ static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<S
         new_body.append(return_statement);
     } else if (statement.is_jump_statement()) {
         auto& jump_statement = reinterpret_cast<SIR::JumpStatement&>(statement);
-        auto condition = jump_statement.condition().ptr();
-        auto inserted = add_expression_to_body(*condition, new_body, parameters);
+        auto inserted = add_expression_to_body(jump_statement.condition(), new_body, parameters);
 
         ASSERT(inserted && inserted->is_expression());
         auto variable = reinterpret_cast<NonnullRefPtr<Expression>&>(inserted);
@@ -89,16 +89,20 @@ static void add_statement_to_body(Cpp::ASTNode& statement, NonnullRefPtrVector<S
 
         new_body.append(jump_statement);
         new_body.append(if_true);
-        add_statement_to_body(jump_statement.if_true(), new_body, parameters);
+        add_scope_to_body(jump_statement.if_true(), new_body, parameters);
         new_body.append(if_false);
-        jump_statement.set_if_true(if_true);
+        {
+            NonnullRefPtrVector<ASTNode> vec_if_true;
+            vec_if_true.append(if_true);
+            jump_statement.set_if_true(vec_if_true);
+        }
         jump_statement.set_if_false(if_false);
 
     } else
         ASSERT_NOT_REACHED();
 }
 
-static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNode>& new_body, NonnullRefPtrVector<SIR::Variable>& parameters)
+static void add_node_to_body(ASTNode& node, NonnullRefPtrVector<SIR::ASTNode>& new_body, const NonnullRefPtrVector<SIR::Variable>& parameters)
 {
     if (node.is_expression())
         add_expression_to_body(node, new_body, parameters);
@@ -108,7 +112,13 @@ static void add_node_to_body(Cpp::ASTNode& node, NonnullRefPtrVector<SIR::ASTNod
         ASSERT_NOT_REACHED();
 }
 
-SIR::TranslationUnit IR::to_internal_representation(Cpp::TranslationUnit& tu)
+static void add_scope_to_body(NonnullRefPtrVector<ASTNode>& body, NonnullRefPtrVector<ASTNode>& new_body, const NonnullRefPtrVector<Variable>& parameters)
+{
+    for (size_t i = 0; i < body.size(); i++)
+        add_node_to_body(body.at(i), new_body, parameters);
+}
+
+SIR::TranslationUnit IR::to_internal_representation(TranslationUnit& tu)
 {
     NonnullRefPtrVector<SIR::Function> functions;
 
@@ -119,8 +129,7 @@ SIR::TranslationUnit IR::to_internal_representation(Cpp::TranslationUnit& tu)
             auto var = fun.parameters().ptr_at(i);
             new_body.append(LibIntermediate::Utils::create_store(var->node_type(), var->name()));
         }
-        for (size_t i = 0; i < fun.body().size(); i++)
-            add_node_to_body(fun.body().ptr_at(i), new_body, fun.parameters());
+        add_scope_to_body(fun.body(), new_body, fun.parameters());
 
         fun.body().clear();
         fun.body().append(new_body);

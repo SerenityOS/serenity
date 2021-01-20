@@ -271,7 +271,7 @@ private:
 
 class JumpStatement : public Statement {
 public:
-    JumpStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtr<Expression> if_true, RefPtr<Expression> if_false = nullptr)
+    JumpStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtrVector<ASTNode> if_true, RefPtr<Expression> if_false = nullptr)
         : Statement(start, end)
         , m_condition(move(condition))
         , m_if_true(move(if_true))
@@ -281,16 +281,18 @@ public:
 
     bool is_jump_statement() const override { return true; }
 
-    NonnullRefPtr<Expression> condition() { return m_condition; }
-    NonnullRefPtr<Expression> if_true() const { return m_if_true; }
-    RefPtr<Expression> if_false() const { return m_if_false; }
+    NonnullRefPtr<Expression> condition() const { return m_condition; }
+    NonnullRefPtrVector<ASTNode>& if_true() { return m_if_true; }
+    const NonnullRefPtrVector<ASTNode>& if_true() const { return m_if_true; }
+    RefPtr<Expression>& if_false() { return m_if_false; }
+    const RefPtr<Expression>& if_false() const { return m_if_false; }
     void set_condition(NonnullRefPtr<Expression> condition) { m_condition = move(condition); }
-    void set_if_true(NonnullRefPtr<Expression> if_true) { m_if_true = move(if_true); }
+    void set_if_true(NonnullRefPtrVector<ASTNode> if_true) { m_if_true = move(if_true); }
     void set_if_false(NonnullRefPtr<Expression> if_false) { m_if_false = move(if_false); }
 
 private:
     NonnullRefPtr<Expression> m_condition;
-    NonnullRefPtr<Expression> m_if_true;
+    NonnullRefPtrVector<ASTNode> m_if_true;
     RefPtr<Expression> m_if_false;
 };
 

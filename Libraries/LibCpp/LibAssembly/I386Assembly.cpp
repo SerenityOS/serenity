@@ -146,9 +146,13 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
 
             generator.append("{label.identifier}:\n");
         } else if (operation.is_jump_statement()) {
+            dbgln("{}", generator.as_string());
             auto& jump = reinterpret_cast<const SIR::JumpStatement&>(operation);
-            generator.set("if.identifier", jump.if_true()->result()->name());
-            generator.set("else.identifier", jump.if_false()->result()->name());
+            auto& if_true = jump.if_true().at(0);
+            auto& if_false = jump.if_false();
+            ASSERT(if_true.is_expression() && if_false->is_expression());
+            generator.set("if.identifier", reinterpret_cast<const SIR::Expression&>(if_true).result()->name());
+            generator.set("else.identifier", if_false->result()->name());
 
             generator.append("\tje\t{if.identifier}\n");
             generator.append("\tjmp\t{else.identifier}\n");
