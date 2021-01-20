@@ -78,6 +78,18 @@ These commands will put the fuzzers in `build/out/serenity` in the oss-fuzz repo
 python3 infra/helper.py run_fuzzer serenity FUZZER_NAME
 ```
 
+To build the fuzzers using the oss-fuzz build process, but against a local serenity checkout:
+
+```
+python3 infra/helper.py build_fuzzers serenity $HOME/src/serenity/
+```
+
+To run a shell in oss-fuzz's serenity docker image:
+
+```
+docker run -it gcr.io/oss-fuzz/serenity bash
+```
+
 ### Analyzing a crash
 
 LLVM fuzzers have a weird interface. In particular, to see the help, you need to call it with `-help=1`, and it will ignore `--help` and `-help`.
