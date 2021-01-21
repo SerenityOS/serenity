@@ -65,8 +65,8 @@ public:
 
 class IfStatement : public SIR::JumpStatement {
 public:
-    IfStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtrVector<ASTNode> if_true)
-        : SIR::JumpStatement(start, end, move(condition), move(if_true))
+    IfStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtrVector<ASTNode> if_true, Optional<NonnullRefPtrVector<ASTNode>> if_false)
+        : SIR::JumpStatement(start, end, move(condition), move(if_true), move(if_false))
     {
     }
 };

@@ -27,3 +27,18 @@ int f2(int i) {
     }
     return i;
 }
+
+int f3(int i) {
+    if (i)
+        return i;
+    else
+        return i;
+}
+
+int f4(int i) {
+    if (i) {
+        return i;
+    } else {
+        return i;
+    }
+}

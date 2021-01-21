@@ -91,13 +91,16 @@ static void add_statement_to_body(ASTNode& statement, NonnullRefPtrVector<SIR::A
         new_body.append(if_true);
         add_scope_to_body(jump_statement.if_true(), new_body, parameters);
         new_body.append(if_false);
-        {
-            NonnullRefPtrVector<ASTNode> vec_if_true;
-            vec_if_true.append(if_true);
-            jump_statement.set_if_true(vec_if_true);
-        }
-        jump_statement.set_if_false(if_false);
+        if (jump_statement.if_false().has_value())
+            add_scope_to_body(jump_statement.if_false().value(), new_body, parameters);
 
+        NonnullRefPtrVector<ASTNode> vec_if_true;
+        vec_if_true.append(if_true);
+        jump_statement.set_if_true(vec_if_true);
+
+        NonnullRefPtrVector<ASTNode> vec_if_false;
+        vec_if_false.append(if_false);
+        jump_statement.set_if_false(vec_if_false);
     } else
         ASSERT_NOT_REACHED();
 }

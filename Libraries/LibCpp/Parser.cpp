@@ -544,6 +544,7 @@ NonnullRefPtr<Expression> Parser::parse_condition()
 
 // selection-statement:
 //      - if ( condition ) statement
+//      - if ( condition ) statement else statement
 Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
 {
     SCOPE_LOGGER();
@@ -553,8 +554,13 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
         expect(Token::Type::LeftParen);
         auto condition = parse_condition();
         expect(Token::Type::RightParen);
-        auto body = parse_statement();
-        return create_ast_node<IfStatement>(keyword.m_start, m_lexer.get_current_position(), condition, body);
+        auto if_body = parse_statement();
+        Optional<NonnullRefPtrVector<ASTNode>> else_body;
+        if (peek().m_type == Token::Type::Keyword && peek().m_known_keyword == Token::KnownKeyword::Else) {
+            consume();
+            else_body = parse_statement();
+        }
+        return create_ast_node<IfStatement>(keyword.m_start, m_lexer.get_current_position(), condition, if_body, else_body);
     }
     return {};
 }

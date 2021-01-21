@@ -106,6 +106,7 @@ namespace Cpp {
     __KNOWN_TYPE(Int, "int")
 
 #define FOR_EACH_CPP_KNOWN_KEYWORD \
+    __KNOWN_KEYWORD(Else, "else")  \
     __KNOWN_KEYWORD(If, "if")      \
     __KNOWN_KEYWORD(Return, "return")
 
