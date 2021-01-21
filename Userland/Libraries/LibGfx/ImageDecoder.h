@@ -30,6 +30,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {

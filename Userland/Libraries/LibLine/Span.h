@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <stddef.h>
+
 namespace Line {
 
 class Span {

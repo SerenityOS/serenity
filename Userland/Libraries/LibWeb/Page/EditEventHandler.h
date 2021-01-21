@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Types.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
