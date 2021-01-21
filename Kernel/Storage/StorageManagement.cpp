@@ -130,43 +130,22 @@ NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions(
 void StorageManagement::determine_boot_device()
 {
     ASSERT(!m_controllers.is_empty());
-    if (!m_boot_argument.starts_with("/dev/hd")) {
-        klog() << "init_stage2: root filesystem must be on an hard drive";
+    if (m_boot_argument.starts_with("/dev/")) {
+        StringView device_name = m_boot_argument.substring_view(5);
+        Device::for_each([&](Device& device) {
+            if (device.is_block_device()) {
+                auto& block_device = static_cast<BlockDevice&>(device);
+                if (device.device_name() == device_name) {
+                    m_boot_block_device = block_device;
+                }
+            }
+        });
+    }
+
+    if (m_boot_block_device.is_null()) {
+        klog() << "init_stage2: boot device " << m_boot_argument << " not found";
         Processor::halt();
     }
-
-    auto drive_letter = m_boot_argument.substring(strlen("/dev/hd"), m_boot_argument.length() - strlen("/dev/hd"))[0];
-
-    if (drive_letter < 'a' || drive_letter > 'z') {
-        klog() << "init_stage2: root filesystem must be on an hard drive name";
-        Processor::halt();
-    }
-
-    size_t drive_index = (u8)drive_letter - (u8)'a';
-    if (drive_index >= m_storage_devices.size()) {
-        klog() << "init_stage2: invalid selection of hard drive.";
-        Processor::halt();
-    }
-
-    auto& determined_boot_device = m_storage_devices[drive_index];
-    auto root_device = m_boot_argument.substring(strlen("/dev/hda"), m_boot_argument.length() - strlen("/dev/hda"));
-    if (!root_device.length()) {
-        m_boot_block_device = determined_boot_device;
-        return;
-    }
-
-    auto partition_number = root_device.to_uint();
-    if (!partition_number.has_value()) {
-        klog() << "init_stage2: couldn't parse partition number from root kernel parameter";
-        Processor::halt();
-    }
-
-    if (partition_number.value() > determined_boot_device.m_partitions.size()) {
-        klog() << "init_stage2: invalid partition number!";
-        Processor::halt();
-    }
-
-    m_boot_block_device = determined_boot_device.m_partitions[partition_number.value() - 1];
 }
 
 void StorageManagement::determine_boot_device_with_partition_uuid()
