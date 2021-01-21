@@ -552,7 +552,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
     u32 value = cond->previous + 1;
     cond->value = value;
     int rc = futex(&cond->value, FUTEX_WAKE, 1, nullptr, nullptr, 0);
-    ASSERT(rc == 0);
+    ASSERT(rc >= 0);
     return 0;
 }
 
@@ -561,7 +561,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     u32 value = cond->previous + 1;
     cond->value = value;
     int rc = futex(&cond->value, FUTEX_WAKE, INT32_MAX, nullptr, nullptr, 0);
-    ASSERT(rc == 0);
+    ASSERT(rc >= 0);
     return 0;
 }
 
