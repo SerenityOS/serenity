@@ -74,8 +74,8 @@ int main(int argc, char** argv)
     uid_t current_uid = getuid();
 
     auto account_or_error = (username)
-        ? Core::Account::from_name(username, Core::Account::OpenPasswdFile::ReadWrite, Core::Account::OpenShadowFile::ReadWrite)
-        : Core::Account::from_uid(current_uid, Core::Account::OpenPasswdFile::ReadWrite, Core::Account::OpenShadowFile::ReadWrite);
+        ? Core::Account::from_name(username)
+        : Core::Account::from_uid(current_uid);
 
     if (account_or_error.is_error()) {
         warnln("Core::Account::{}: {}", (username) ? "from_name" : "from_uid", account_or_error.error());

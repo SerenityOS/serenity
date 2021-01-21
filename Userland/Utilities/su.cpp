@@ -58,8 +58,8 @@ int main(int argc, char** argv)
     }
 
     auto account_or_error = (user)
-        ? Core::Account::from_name(user, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly)
-        : Core::Account::from_uid(0, Core::Account::OpenPasswdFile::No, Core::Account::OpenShadowFile::ReadOnly);
+        ? Core::Account::from_name(user)
+        : Core::Account::from_uid(0);
     if (account_or_error.is_error()) {
         fprintf(stderr, "Core::Account::from_name: %s\n", account_or_error.error().characters());
         return 1;

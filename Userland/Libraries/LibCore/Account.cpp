@@ -65,36 +65,14 @@ static Vector<gid_t> get_gids(const StringView& username)
     return extra_gids;
 }
 
-Result<Account, String> Account::from_passwd(const passwd& pwd, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
+Result<Account, String> Account::from_passwd(const passwd& pwd)
 {
-    RefPtr<Core::File> passwd_file;
-    if (open_passwd_file != Core::Account::OpenPasswdFile::No) {
-        auto open_mode = open_passwd_file == Core::Account::OpenPasswdFile::ReadOnly
-            ? Core::File::OpenMode::ReadOnly
-            : Core::File::OpenMode::ReadWrite;
-        auto file_or_error = Core::File::open("/etc/passwd", open_mode);
-        if (file_or_error.is_error())
-            return file_or_error.error();
-        passwd_file = file_or_error.value();
-    }
-
-    RefPtr<Core::File> shadow_file;
-    if (open_shadow_file != Core::Account::OpenShadowFile::No) {
-        auto open_mode = open_shadow_file == Core::Account::OpenShadowFile::ReadOnly
-            ? Core::File::OpenMode::ReadOnly
-            : Core::File::OpenMode::ReadWrite;
-        auto file_or_error = Core::File::open("/etc/shadow", open_mode);
-        if (file_or_error.is_error())
-            return file_or_error.error();
-        shadow_file = file_or_error.value();
-    }
-
-    Account account(pwd, get_gids(pwd.pw_name), move(passwd_file), move(shadow_file));
+    Account account(pwd, get_gids(pwd.pw_name));
     endpwent();
     return account;
 }
 
-Result<Account, String> Account::from_name(const char* username, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
+Result<Account, String> Account::from_name(const char* username)
 {
     struct passwd* pwd = nullptr;
     errno = 0;
@@ -105,10 +83,10 @@ Result<Account, String> Account::from_name(const char* username, Core::Account::
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd, open_passwd_file, open_shadow_file);
+    return from_passwd(*pwd);
 }
 
-Result<Account, String> Account::from_uid(uid_t uid, Core::Account::OpenPasswdFile open_passwd_file, Core::Account::OpenShadowFile open_shadow_file)
+Result<Account, String> Account::from_uid(uid_t uid)
 {
     struct passwd* pwd = nullptr;
     errno = 0;
@@ -119,7 +97,7 @@ Result<Account, String> Account::from_uid(uid_t uid, Core::Account::OpenPasswdFi
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd, open_passwd_file, open_shadow_file);
+    return from_passwd(*pwd);
 }
 
 bool Account::authenticate(const char* password) const
@@ -169,10 +147,8 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(const passwd& pwd, Vector<gid_t> extra_gids, RefPtr<Core::File> passwd_file, RefPtr<Core::File> shadow_file)
-    : m_passwd_file(move(passwd_file))
-    , m_shadow_file(move(shadow_file))
-    , m_username(pwd.pw_name)
+Account::Account(const passwd& pwd, Vector<gid_t> extra_gids)
+    : m_username(pwd.pw_name)
     , m_uid(pwd.pw_uid)
     , m_gid(pwd.pw_gid)
     , m_gecos(pwd.pw_gecos)
@@ -180,9 +156,7 @@ Account::Account(const passwd& pwd, Vector<gid_t> extra_gids, RefPtr<Core::File>
     , m_shell(pwd.pw_shell)
     , m_extra_gids(extra_gids)
 {
-    if (m_shadow_file) {
-        load_shadow_file();
-    }
+    load_shadow_file();
 }
 
 String Account::generate_passwd_file() const
@@ -221,17 +195,15 @@ String Account::generate_passwd_file() const
 
 void Account::load_shadow_file()
 {
-    ASSERT(m_shadow_file);
-    ASSERT(m_shadow_file->is_open());
-
-    if (!m_shadow_file->seek(0)) {
-        ASSERT_NOT_REACHED();
-    }
+    auto file_or_error = Core::File::open("/etc/shadow", Core::File::ReadOnly);
+    ASSERT(!file_or_error.is_error());
+    auto shadow_file = file_or_error.release_value();
+    ASSERT(shadow_file->is_open());
 
     Vector<ShadowEntry> entries;
 
     for (;;) {
-        auto line = m_shadow_file->read_line();
+        auto line = shadow_file->read_line();
         if (line.is_null())
             break;
         auto parts = line.split(':');
@@ -270,11 +242,6 @@ String Account::generate_shadow_file() const
 
 bool Account::sync()
 {
-    ASSERT(m_passwd_file);
-    ASSERT(m_passwd_file->mode() == Core::File::OpenMode::ReadWrite);
-    ASSERT(m_shadow_file);
-    ASSERT(m_shadow_file->mode() == Core::File::OpenMode::ReadWrite);
-
     auto new_passwd_file_content = generate_passwd_file();
     auto new_shadow_file_content = generate_shadow_file();
 
