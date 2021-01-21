@@ -26,12 +26,14 @@
 
 #include <AK/Base64.h>
 #include <AK/Random.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/File.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Core {
@@ -273,39 +275,57 @@ bool Account::sync()
     ASSERT(m_shadow_file);
     ASSERT(m_shadow_file->mode() == Core::File::OpenMode::ReadWrite);
 
-    // FIXME: Maybe reorganize this to create temporary files and finish it completely before renaming them to /etc/{passwd,shadow}
-    //        If truncation succeeds but write fails, we'll have an empty file :(
+    auto new_passwd_file_content = generate_passwd_file();
+    auto new_shadow_file_content = generate_shadow_file();
 
-    auto new_passwd_file = generate_passwd_file();
-    auto new_shadow_file = generate_shadow_file();
-
-    if (new_passwd_file.is_null() || new_shadow_file.is_null()) {
+    if (new_passwd_file_content.is_null() || new_shadow_file_content.is_null()) {
         ASSERT_NOT_REACHED();
     }
 
-    if (!m_passwd_file->seek(0) || !m_shadow_file->seek(0)) {
-        ASSERT_NOT_REACHED();
+    char new_passwd_name[] = "/etc/passwd.XXXXXX";
+    char new_shadow_name[] = "/etc/shadow.XXXXXX";
+
+    {
+        auto new_passwd_fd = mkstemp(new_passwd_name);
+        if (new_passwd_fd < 0) {
+            perror("mkstemp");
+            ASSERT_NOT_REACHED();
+        }
+        ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
+        auto new_shadow_fd = mkstemp(new_shadow_name);
+        if (new_shadow_fd < 0) {
+            perror("mkstemp");
+            ASSERT_NOT_REACHED();
+        }
+        ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
+
+        if (fchmod(new_passwd_fd, 0644) < 0) {
+            perror("fchmod");
+            ASSERT_NOT_REACHED();
+        }
+
+        auto nwritten = write(new_passwd_fd, new_passwd_file_content.characters(), new_passwd_file_content.length());
+        if (nwritten < 0) {
+            perror("write");
+            ASSERT_NOT_REACHED();
+        }
+        ASSERT(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
+
+        nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
+        if (nwritten < 0) {
+            perror("write");
+            ASSERT_NOT_REACHED();
+        }
+        ASSERT(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
     }
 
-    if (!m_passwd_file->truncate(0)) {
-        dbgln("Truncating passwd file failed.");
+    if (rename(new_passwd_name, "/etc/passwd") < 0) {
+        perror("Failed to install new /etc/passwd");
         return false;
     }
 
-    if (!m_passwd_file->write(new_passwd_file)) {
-        // FIXME: Improve Core::File::write() error reporting.
-        dbgln("Writing to passwd file failed.");
-        return false;
-    }
-
-    if (!m_shadow_file->truncate(0)) {
-        dbgln("Truncating shadow file failed.");
-        return false;
-    }
-
-    if (!m_shadow_file->write(new_shadow_file)) {
-        // FIXME: Improve Core::File::write() error reporting.
-        dbgln("Writing to shadow file failed.");
+    if (rename(new_shadow_name, "/etc/shadow") < 0) {
+        perror("Failed to install new /etc/shadow");
         return false;
     }
 
