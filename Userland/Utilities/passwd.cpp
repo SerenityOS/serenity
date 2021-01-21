@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,22 +40,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio wpath rpath cpath tty id", nullptr) < 0) {
+    if (setegid(0) < 0) {
+        perror("setegid");
+        return 1;
+    }
+
+    if (pledge("stdio wpath rpath wpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    if (unveil("/etc/passwd", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/group", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/etc/shadow", "rwc") < 0) {
+    if (unveil("/etc", "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -86,23 +82,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Drop privileges after opening all the files through the Core::Account object.
-    auto gid = getgid();
-    if (setresgid(gid, gid, gid) < 0) {
-        perror("setresgid");
-        return 1;
-    }
-
-    auto uid = getuid();
-    if (setresuid(uid, uid, uid) < 0) {
-        perror("setresuid");
-        return 1;
-    }
-
-    // Make sure /etc/passwd is open and ready for reading, then we can drop a bunch of pledge promises.
     setpwent();
 
-    if (pledge("stdio tty", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -131,7 +113,7 @@ int main(int argc, char** argv)
         target_account.set_password(new_password.value().characters());
     }
 
-    if (pledge("stdio", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
