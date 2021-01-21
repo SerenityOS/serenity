@@ -390,7 +390,7 @@ add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
-    COMMAND /bin/mkdir -p CSS
+    COMMAND /usr/bin/env -S mkdir -p CSS
     COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
@@ -408,7 +408,7 @@ add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
 
 add_custom_command(
     OUTPUT CSS/ValueID.cpp
-    COMMAND /bin/mkdir -p CSS
+    COMMAND /usr/bin/env -S mkdir -p CSS
     COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
     VERBATIM
     DEPENDS Generate_CSS_ValueID_cpp

@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=sed
 version=4.2.1
 useconfigure="true"
