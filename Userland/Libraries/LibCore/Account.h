@@ -51,7 +51,10 @@ public:
     void set_password(const char* password);
     void set_password_enabled(bool enabled);
     void delete_password();
-    bool has_password() const { return !m_password_hash.is_empty(); }
+
+    // A null password means that this account was missing from /etc/shadow.
+    // It's considered to have a password in that case, and authentication will always fail.
+    bool has_password() const { return !m_password_hash.is_empty() || m_password_hash.is_null(); }
 
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
@@ -73,8 +76,6 @@ private:
 
     String m_username;
 
-    // Contents of passwd field in passwd entry.
-    // Can be empty, "x", or contain a leading '!'
     String m_password_hash;
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
