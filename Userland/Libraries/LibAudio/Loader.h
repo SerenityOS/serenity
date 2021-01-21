@@ -30,6 +30,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
+#include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
 
 namespace Audio {

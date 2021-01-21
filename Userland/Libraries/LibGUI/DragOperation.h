@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>

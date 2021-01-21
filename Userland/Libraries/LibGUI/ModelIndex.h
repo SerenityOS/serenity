@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Traits.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelRole.h>

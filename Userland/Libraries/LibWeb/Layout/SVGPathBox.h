@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibWeb/Layout/SVGGraphicsBox.h>
+#include <LibWeb/SVG/SVGPathElement.h>
 
 namespace Web::Layout {
 
