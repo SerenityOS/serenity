@@ -250,6 +250,9 @@ if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_subdirectory(Userland)
     add_subdirectory(Tests)
 endif()
+if (ENABLE_COMPILETIME_HEADER_CHECK)
+    add_subdirectory(Meta/HeaderCheck)
+endif()
 
 export_components("${CMAKE_BINARY_DIR}/components.ini")
 
