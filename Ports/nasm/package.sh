@@ -5,7 +5,6 @@ files="https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.gz na
 useconfigure=true
 makeopts=
 
-configure() {
+pre_configure() {
 	run ./autogen.sh
-	run ./"$configscript" --host=i686-pc-serenity $configopts
 }
