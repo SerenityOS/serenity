@@ -102,6 +102,10 @@ Result<Account, String> Account::from_uid(uid_t uid)
 
 bool Account::authenticate(const char* password) const
 {
+    // If there was no shadow entry for this account, authentication always fails.
+    if (m_password_hash.is_null())
+        return false;
+
     // An empty passwd field indicates that no password is required to log in.
     if (m_password_hash.is_empty())
         return true;
@@ -206,7 +210,7 @@ void Account::load_shadow_file()
         auto line = shadow_file->read_line();
         if (line.is_null())
             break;
-        auto parts = line.split(':');
+        auto parts = line.split(':', true);
         if (parts.size() != 2) {
             dbgln("Malformed shadow entry, ignoring.");
             continue;
