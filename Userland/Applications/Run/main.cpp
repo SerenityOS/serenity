@@ -28,6 +28,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/URL.h>
+#include <LibGUI/Application.h>
 #include <string.h>
 
 #include "RunWindow.h"

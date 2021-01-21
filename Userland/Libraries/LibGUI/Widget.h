@@ -29,7 +29,6 @@
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
