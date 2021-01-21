@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/Weakable.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
