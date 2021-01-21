@@ -60,6 +60,10 @@ private:
     [[noreturn]] void parse_error(StringView message);
     template<typename... Args>
     BinaryExpression& maybe_correct_binop_tree(BinaryExpression& result, Expression& right, Args... args);
+    bool match_keyword(Token::KnownKeyword keyword);
+    template<typename... Args>
+    bool match_any(Args... expected);
+    bool match(Token::Type expected);
 
     TranslationUnit parse_translation_unit();
     Optional<String> parse_unqualified_id();

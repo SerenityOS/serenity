@@ -68,16 +68,35 @@ void Parser::consume()
     m_saved_token.clear();
 }
 
-void Parser::expect(Token::Type expected_type)
+void Parser::expect(Token::Type expected)
 {
-    (void)consume(expected_type);
+    (void)consume(expected);
+}
+
+template<typename... Args>
+bool Parser::match_any(Args... expected_types)
+{
+    auto tok = peek();
+    return [](auto const& token_type, auto const&... expected) {
+        return ((token_type == expected) || ...);
+    }(peek().m_type, expected_types...);
+}
+
+bool Parser::match(Token::Type expected)
+{
+    return peek().m_type == expected;
+}
+
+bool Parser::match_keyword(Token::KnownKeyword keyword)
+{
+    return peek().m_type == Token::Type::Keyword && peek().m_known_keyword == keyword;
 }
 
 Token Parser::consume(Token::Type expected_type)
 {
     auto tok = peek();
 
-    if (tok.m_type != expected_type) {
+    if (!match(expected_type)) {
         Token expected_tok;
         expected_tok.m_type = expected_type;
         fprintf(stderr, "expected %s: got %s\n", expected_tok.to_string(), tok.to_string());
@@ -124,7 +143,7 @@ Optional<String> Parser::parse_unqualified_id()
     SCOPE_LOGGER();
     const Token identifier = peek();
 
-    if (identifier.m_type == Token::Type::Identifier) {
+    if (match(Token::Type::Identifier)) {
         consume();
         return identifier.m_identifier;
     }
@@ -236,7 +255,7 @@ NonnullRefPtrVector<Variable> Parser::parse_parameter_declaration_list()
     SCOPE_LOGGER();
     NonnullRefPtrVector<Variable> params;
     params.append(parse_parameter_declaration());
-    while (peek().m_type == Token::Type::Comma) {
+    while (match(Token::Type::Comma)) {
         consume();
         params.append(parse_parameter_declaration());
     }
@@ -261,7 +280,7 @@ NonnullRefPtrVector<Variable> Parser::parse_parameters_and_qualifiers()
     SCOPE_LOGGER();
     NonnullRefPtrVector<Variable> params;
     expect(Token::Type::LeftParen);
-    if (peek().m_type != Token::Type::RightParen)
+    if (!match(Token::Type::RightParen))
         params = parse_parameter_declaration_clause();
     expect(Token::Type::RightParen);
     return params;
@@ -274,7 +293,7 @@ Optional<Parser::Declarator> Parser::parse_declarator()
     SCOPE_LOGGER();
     auto name = parse_noptr_declarator();
     if (name.has_value()) {
-        if (peek().m_type != Token::Type::LeftParen)
+        if (!match(Token::Type::LeftParen))
             return { { peek().m_start, peek().m_end, name.value(), {} } };
         else
             return { { peek().m_start, peek().m_end, name.value(), parse_parameters_and_qualifiers() } };
@@ -340,7 +359,7 @@ NonnullRefPtr<Expression> Parser::parse_multiplicative_expression()
     SCOPE_LOGGER();
     auto left = parse_pm_expression();
     auto next_token_type = peek().m_type;
-    if (next_token_type == Token::Type::Asterisk || next_token_type == Token::Type::Slash || next_token_type == Token::Type::Percent) {
+    if (match_any(Token::Type::Asterisk, Token::Type::Slash, Token::Type::Percent)) {
         auto operation = next_token_type == Token::Type::Asterisk ? BinaryExpression::Kind::Multiplication : next_token_type == Token::Type::Slash ? BinaryExpression::Kind::Division
                                                                                                                                                    : BinaryExpression::Kind::Modulo;
         consume();
@@ -362,7 +381,7 @@ NonnullRefPtr<Expression> Parser::parse_additive_expression()
 {
     SCOPE_LOGGER();
     auto left = parse_multiplicative_expression();
-    if (peek().m_type == Token::Type::Plus || peek().m_type == Token::Type::Minus) {
+    if (match_any(Token::Type::Plus, Token::Type::Minus)) {
         auto operation = peek().m_type == Token::Type::Plus ? BinaryExpression::Kind::Addition : BinaryExpression::Kind::Subtraction;
         consume();
         auto right = parse_additive_expression();
@@ -384,7 +403,7 @@ NonnullRefPtr<Expression> Parser::parse_shift_expression()
 {
     SCOPE_LOGGER();
     auto left = parse_additive_expression();
-    if (peek().m_type == Token::Type::LessLess || peek().m_type == Token::Type::GreaterGreater) {
+    if (match_any(Token::Type::LessLess, Token::Type::GreaterGreater)) {
         auto operation = peek().m_type == Token::Type::LessLess ? BinaryExpression::Kind::LeftShift : BinaryExpression::Kind::RightShift;
         consume();
         auto right = parse_additive_expression();
@@ -429,7 +448,7 @@ NonnullRefPtr<Expression> Parser::parse_and_expression()
     SCOPE_LOGGER();
     auto left = parse_equality_expression();
 
-    if (peek().m_type == Token::Type::And) {
+    if (match(Token::Type::And)) {
         consume();
         auto right = parse_equality_expression();
         auto result_var = create_ast_node<Variable>(left->result());
@@ -447,7 +466,7 @@ NonnullRefPtr<Expression> Parser::parse_exclusive_or_operation()
     SCOPE_LOGGER();
     auto left = parse_and_expression();
 
-    if (peek().m_type == Token::Type::Caret) {
+    if (match(Token::Type::Caret)) {
         consume();
         auto right = parse_and_expression();
         auto result_var = create_ast_node<Variable>(left->result());
@@ -465,7 +484,7 @@ NonnullRefPtr<Expression> Parser::parse_inclusive_or_expression()
     SCOPE_LOGGER();
     auto left = parse_exclusive_or_operation();
 
-    if (peek().m_type == Token::Type::Pipe) {
+    if (match(Token::Type::Pipe)) {
         consume();
         auto right = parse_exclusive_or_operation();
         auto result_var = create_ast_node<Variable>(left->result());
@@ -523,7 +542,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_jump_statement()
 {
     SCOPE_LOGGER();
     auto return_keyword = peek();
-    if (return_keyword.m_type == Token::Type::Keyword && return_keyword.m_known_keyword == Token::KnownKeyword::Return) {
+    if (match_keyword(Token::KnownKeyword::Return)) {
         consume();
         RefPtr expression = parse_expr_or_braced_init_list();
         auto semi_colon = peek();
@@ -549,14 +568,14 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
 {
     SCOPE_LOGGER();
     auto keyword = peek();
-    if (keyword.m_type == Token::Type::Keyword && keyword.m_known_keyword == Token::KnownKeyword::If) {
+    if (match_keyword(Token::KnownKeyword::If)) {
         consume();
         expect(Token::Type::LeftParen);
         auto condition = parse_condition();
         expect(Token::Type::RightParen);
         auto if_body = parse_statement();
         Optional<NonnullRefPtrVector<ASTNode>> else_body;
-        if (peek().m_type == Token::Type::Keyword && peek().m_known_keyword == Token::KnownKeyword::Else) {
+        if (match_keyword(Token::KnownKeyword::Else)) {
             consume();
             else_body = parse_statement();
         }
@@ -572,7 +591,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
 NonnullRefPtrVector<ASTNode> Parser::parse_statement()
 {
     SCOPE_LOGGER();
-    if (peek().m_type == Token::Type::LeftCurly)
+    if (match(Token::Type::LeftCurly))
         return parse_compound_statement();
     auto statement = parse_jump_statement();
     if (!statement.has_value())
@@ -598,7 +617,7 @@ NonnullRefPtrVector<ASTNode> Parser::parse_compound_statement()
     SCOPE_LOGGER();
     NonnullRefPtrVector<ASTNode> body;
     expect(Token::Type::LeftCurly);
-    while (peek().m_type != Token::Type::RightCurly)
+    while (!match(Token::Type::RightCurly))
         body.append(parse_statement_seq());
     expect(Token::Type::RightCurly);
     return body;
@@ -643,8 +662,7 @@ NonnullRefPtrVector<Function> Parser::parse_declaration_sequence()
     SCOPE_LOGGER();
     NonnullRefPtrVector<Function> functions;
     while (true) {
-        const auto tok = peek();
-        if (tok.m_type != Token::Type::EndOfFile) {
+        if (!match(Token::Type::EndOfFile)) {
             auto function = parse_declaration();
             functions.append(move(function));
         } else {
@@ -659,8 +677,7 @@ Cpp::TranslationUnit Parser::parse_translation_unit()
 {
     SCOPE_LOGGER();
 
-    const auto tok = peek();
-    if (tok.m_type != Token::Type::EndOfFile) {
+    if (!match(Token::Type::EndOfFile)) {
         auto functions = parse_declaration_sequence();
         m_tu.functions().append(move(functions));
     }
