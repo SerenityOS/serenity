@@ -32,7 +32,7 @@
 
 namespace Crypto {
 
-static ByteBuffer decode_pem(ReadonlyBytes data_in, size_t cert_index = 0)
+static inline ByteBuffer decode_pem(ReadonlyBytes data_in, size_t cert_index = 0)
 {
     size_t i { 0 };
     size_t start_at { 0 };
