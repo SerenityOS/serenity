@@ -419,7 +419,6 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         current_process.set_tty(nullptr);
         return 0;
     }
-    ASSERT_NOT_REACHED();
     return -EINVAL;
 }
 
