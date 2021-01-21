@@ -33,6 +33,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Rect.h>
+#include <WindowServer/Cursor.h>
 #include <WindowServer/WindowFrame.h>
 #include <WindowServer/WindowType.h>
 
