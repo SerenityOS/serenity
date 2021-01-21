@@ -11,9 +11,11 @@ installopts="DESTDIR=$SERENITY_ROOT/Build/Root install-gcc install-target-libgcc
 depends="binutils"
 auth_type="sig"
 auth_opts="--keyring ./gnu-keyring.gpg gcc-${version}.tar.xz.sig"
+
 post_fetch() {
     run contrib/download_prerequisites
 }
+
 build() {
     run make $makeopts
     run find ./host-i686-pc-serenity/gcc/ -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
