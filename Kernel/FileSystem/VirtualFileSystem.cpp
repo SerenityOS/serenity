@@ -379,7 +379,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
     LexicalPath p(path);
     dbgln("VFS::mknod: '{}' mode={} dev={} in {}", p.basename(), mode, dev, parent_inode.identifier());
-    return parent_inode.create_child(p.basename(), mode, dev, current_process->uid(), current_process->gid()).result();
+    return parent_inode.create_child(p.basename(), mode, dev, current_process->euid(), current_process->egid()).result();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
@@ -404,8 +404,8 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
 #ifdef VFS_DEBUG
     dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
-    uid_t uid = owner.has_value() ? owner.value().uid : current_process->uid();
-    gid_t gid = owner.has_value() ? owner.value().gid : current_process->gid();
+    uid_t uid = owner.has_value() ? owner.value().uid : current_process->euid();
+    gid_t gid = owner.has_value() ? owner.value().gid : current_process->egid();
     auto inode_or_error = parent_inode.create_child(p.basename(), mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
@@ -448,7 +448,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 #ifdef VFS_DEBUG
     dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
 #endif
-    return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, current_process->uid(), current_process->gid()).result();
+    return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, current_process->euid(), current_process->egid()).result();
 }
 
 KResult VFS::access(StringView path, int mode, Custody& base)
@@ -743,7 +743,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 
     LexicalPath p(linkpath);
     dbgln("VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
-    auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->uid(), current_process->gid());
+    auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
