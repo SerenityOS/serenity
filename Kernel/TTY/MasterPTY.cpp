@@ -141,4 +141,9 @@ String MasterPTY::absolute_path(const FileDescription&) const
     return String::formatted("ptm:{}", m_pts_name);
 }
 
+String MasterPTY::device_name() const
+{
+    return String::formatted("{}", minor());
+}
+
 }

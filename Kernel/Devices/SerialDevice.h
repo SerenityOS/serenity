@@ -125,6 +125,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
+    virtual String device_name() const override;
 
 private:
     // ^CharacterDevice

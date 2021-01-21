@@ -338,6 +338,11 @@ void VirtualConsole::emit(const u8* data, size_t size)
         TTY::emit(data[i]);
 }
 
+String VirtualConsole::device_name() const
+{
+    return String::formatted("tty{}", minor());
+}
+
 void VirtualConsole::echo(u8 ch)
 {
     if (should_echo_input()) {
