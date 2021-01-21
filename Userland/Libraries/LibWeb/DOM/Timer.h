@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {

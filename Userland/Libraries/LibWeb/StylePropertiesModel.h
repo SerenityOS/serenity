@@ -28,6 +28,7 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Model.h>
+#include <LibWeb/CSS/StyleProperties.h>
 
 namespace Web {
 

@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/Vector.h>
+#include <LibGfx/Color.h>
+
 namespace Web {
 
 class SVGContext {

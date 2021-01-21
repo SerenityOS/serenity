@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/Forward.h>
 
 struct FontSelector {

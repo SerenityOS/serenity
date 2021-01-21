@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibELF/exec_elf.h>
 
 namespace ELF {

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>

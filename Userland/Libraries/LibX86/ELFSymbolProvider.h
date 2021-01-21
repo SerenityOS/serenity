@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibELF/Image.h>
+#include <LibX86/Instruction.h>
 
 namespace X86 {
 

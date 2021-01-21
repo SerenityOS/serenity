@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {

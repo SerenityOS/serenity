@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Forward.h>
