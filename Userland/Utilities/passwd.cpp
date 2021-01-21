@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio wpath rpath wpath cpath fattr tty", nullptr) < 0) {
+    if (pledge("stdio wpath rpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
