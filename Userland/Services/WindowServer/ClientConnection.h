@@ -35,6 +35,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ClientConnection.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/Menu.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
