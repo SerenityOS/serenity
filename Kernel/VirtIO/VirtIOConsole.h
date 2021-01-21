@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,9 +57,12 @@ private:
     virtual mode_t required_mode() const override { return 0666; }
 
     virtual bool handle_device_config_change() override;
+    virtual void handle_queue_update(u16 queue_index) override;
 
     OwnPtr<Region> m_receive_region;
     OwnPtr<Region> m_transmit_region;
+
+    static unsigned next_device_id;
 };
 
 }

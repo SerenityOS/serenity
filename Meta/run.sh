@@ -60,7 +60,10 @@ $SERENITY_EXTRA_QEMU_ARGS
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ide-hd,bus=ide.6,drive=disk,unit=0
 -usb
--debugcon stdio
+-device virtio-serial
+-chardev stdio,id=stdout,mux=on
+-device virtconsole,chardev=stdout
+-device isa-debugcon,chardev=stdout
 -soundhw pcspk
 -device sb16
 "

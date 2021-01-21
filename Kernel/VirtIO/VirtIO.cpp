@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,7 +127,9 @@ auto VirtIODevice::mapping_for_bar(u8 bar) -> MappedMMIO&
 
 void VirtIODevice::notify_queue(u16 queue_index)
 {
-    klog() << "VirtIODevice: notifying about queue change at idx: " << queue_index;
+#ifdef VIRTIO_DEBUG
+    klog() << m_class_name << ": notifying about queue change at idx: " << queue_index;
+#endif
     if (!m_notify_cfg)
         out<u16>(REG_QUEUE_NOTIFY, queue_index);
     else
@@ -211,7 +213,7 @@ bool VirtIODevice::accept_device_features(u64 device_features, u64 accepted_feat
     m_did_accept_features = true;
 
     if (is_feature_set(device_features, VIRTIO_F_VERSION_1)) {
-        accepted_features |= VIRTIO_F_VERSION_1;
+        accepted_features |= VIRTIO_F_VERSION_1; // let the device know were not a legacy driver
     }
 #ifdef VIRTIO_DEBUG
     else {
@@ -224,6 +226,11 @@ bool VirtIODevice::accept_device_features(u64 device_features, u64 accepted_feat
         klog() << m_class_name << ": packed queues not yet supported";
 #endif
         accepted_features &= ~(VIRTIO_F_RING_PACKED);
+    }
+
+    // TODO: implement indirect descriptors to allow queue_size buffers instead of buffers totalling (PAGE_SIZE * queue_size) bytes
+    if (is_feature_set(device_features, VIRTIO_F_INDIRECT_DESC)) {
+        // accepted_features |= VIRTIO_F_INDIRECT_DESC;
     }
 
     if (is_feature_set(device_features, VIRTIO_F_IN_ORDER)) {
@@ -322,21 +329,24 @@ bool VirtIODevice::activate_queue(u16 queue_index)
     return true;
 }
 
-void VirtIODevice::set_requested_queue_count(u16 count)
+bool VirtIODevice::setup_queues(u16 requested_queue_count)
 {
-    m_queue_count = count;
-}
+    ASSERT(!m_did_setup_queues);
+    m_did_setup_queues = true;
 
-bool VirtIODevice::setup_queues()
-{
     if (m_common_cfg) {
         auto maximum_queue_count = config_read16(*m_common_cfg, COMMON_CFG_NUM_QUEUES);
-        if (m_queue_count == 0) {
+        if (requested_queue_count == 0) {
             m_queue_count = maximum_queue_count;
-        } else if (m_queue_count > maximum_queue_count) {
+        } else if (requested_queue_count > maximum_queue_count) {
             klog() << m_class_name << ": " << m_queue_count << " queues requested but only " << maximum_queue_count << " available!";
             return false;
+        } else {
+            m_queue_count = requested_queue_count;
         }
+    } else {
+        m_queue_count = requested_queue_count;
+        klog() << m_class_name << ": device's available queue count could not be determined!";
     }
 
 #ifdef VIRTIO_DEBUG
@@ -353,25 +363,23 @@ bool VirtIODevice::setup_queues()
     return true;
 }
 
-bool VirtIODevice::finish_init()
+void VirtIODevice::finish_init()
 {
-    ASSERT(m_did_accept_features);
-    ASSERT(!(m_status & DEVICE_STATUS_DRIVER_OK));
-    if (!setup_queues()) {
-        klog() << m_class_name << ": Failed to setup queues";
-        return false;
-    }
+    ASSERT(m_did_accept_features);                 // ensure features were negotiated
+    ASSERT(m_did_setup_queues);                    // ensure queues were set-up
+    ASSERT(!(m_status & DEVICE_STATUS_DRIVER_OK)); // ensure we didnt already finish the initialization
+
     set_status_bit(DEVICE_STATUS_DRIVER_OK);
+
 #ifdef VIRTIO_DEBUG
     klog() << m_class_name << ": Finished initialization";
 #endif
-    return true;
 }
 
-void VirtIODevice::supply_buffer_and_notify(u16 queue_index, const u8* buffer, u32 len, BufferType buffer_type)
+void VirtIODevice::supply_buffer_and_notify(u16 queue_index, const ScatterGatherList& scatter_list, BufferType buffer_type, void* token)
 {
     ASSERT(queue_index < m_queue_count);
-    if (get_queue(queue_index).supply_buffer({}, buffer, len, buffer_type))
+    if (get_queue(queue_index).supply_buffer({}, scatter_list, buffer_type, token))
         notify_queue(queue_index);
 }
 
@@ -392,10 +400,13 @@ void VirtIODevice::handle_irq(const RegisterState&)
         }
     }
     if (isr_type & QUEUE_INTERRUPT) {
-        for (auto& queue : m_queues) {
-            if (queue.handle_interrupt())
-                return;
+        for (size_t i = 0; i < m_queues.size(); i++) {
+            if (get_queue(i).new_data_available())
+                return handle_queue_update(i);
         }
+#ifdef VIRTIO_DEBUG
+        klog() << m_class_name << ": Got queue interrupt but all queues are up to date!";
+#endif
     }
     if (isr_type & ~(QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT))
         klog() << m_class_name << ": Handling interrupt with unknown type: " << isr_type;
