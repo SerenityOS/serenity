@@ -65,6 +65,13 @@ void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
     m_channel.start_request(request, use_dma, is_slave());
 }
 
+String PATADiskDevice::device_name() const
+{
+    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
+    size_t drive_index = minor() / 16;
+    return String::formatted("hd{:c}{}", 'a' + drive_index, minor() + 1);
+}
+
 size_t PATADiskDevice::max_addressable_block() const
 {
     return m_cylinders * m_heads * m_sectors_per_track;

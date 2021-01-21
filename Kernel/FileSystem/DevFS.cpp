@@ -350,79 +350,12 @@ KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 
 String DevFSDeviceInode::name() const
 {
+    LOCKER(m_lock);
     if (m_cached_name.is_null() || m_cached_name.is_empty())
-        const_cast<DevFSDeviceInode&>(*this).m_cached_name = determine_name();
+        const_cast<DevFSDeviceInode&>(*this).m_cached_name = m_attached_device->device_name();
     return m_cached_name;
 }
 
-String DevFSDeviceInode::determine_name() const
-{
-    LOCKER(m_lock);
-    if (m_attached_device->is_character_device()) {
-        switch (m_attached_device->major()) {
-        case 85:
-            if (m_attached_device->minor() == 1)
-                return "keyboard";
-            ASSERT_NOT_REACHED();
-        case 10:
-            if (m_attached_device->minor() == 1)
-                return "mouse";
-            ASSERT_NOT_REACHED();
-        case 42:
-            if (m_attached_device->minor() == 42)
-                return "audio";
-            ASSERT_NOT_REACHED();
-        case 1:
-            switch (m_attached_device->minor()) {
-            case 8:
-                return "random";
-            case 3:
-                return "null";
-            case 5:
-                return "zero";
-            case 7:
-                return "full";
-            default:
-                ASSERT_NOT_REACHED();
-            }
-        case 5:
-            if (m_attached_device->minor() == 1)
-                return "console";
-            if (m_attached_device->minor() == 2)
-                return "ptmx";
-            ASSERT_NOT_REACHED();
-
-        case 4:
-            if (m_attached_device->minor() >= 64)
-                return String::formatted("ttyS{}", m_attached_device->minor() - 64);
-            return String::formatted("tty{}", m_attached_device->minor());
-
-        default:
-            ASSERT_NOT_REACHED();
-        }
-    } else {
-        switch (m_attached_device->major()) {
-        case 29:
-            return String::formatted("fb{}", m_attached_device->minor());
-        case 3: {
-            size_t drive_index = (u8)'a' + m_attached_device->minor();
-            char drive_letter = (u8)drive_index;
-            return String::format("hd%c", drive_letter);
-        }
-        case 6: {
-            return String::formatted("ramdisk{}", m_attached_device->minor());
-        }
-
-        case 100:
-            // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-            size_t drive_index = (u8)'a' + (m_attached_device->minor() / 16);
-            char drive_letter = (u8)drive_index;
-            return String::formatted("hd{:c}{}", drive_letter, m_attached_device->minor() + 1);
-        }
-    }
-
-    ASSERT_NOT_REACHED();
-}
 ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     LOCKER(m_lock);

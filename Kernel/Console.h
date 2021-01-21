@@ -53,6 +53,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0666; }
+    virtual String device_name() const override { return "console"; }
 
 private:
     CircularQueue<char, 16384> m_logbuffer;

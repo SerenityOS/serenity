@@ -87,6 +87,11 @@ KResultOr<size_t> SerialDevice::write(FileDescription&, size_t, const UserOrKern
     return (size_t)nread;
 }
 
+String SerialDevice::device_name() const
+{
+    return String::formatted("ttyS{}", minor() - 64);
+}
+
 void SerialDevice::initialize()
 {
     set_interrupts(0);

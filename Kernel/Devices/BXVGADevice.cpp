@@ -192,6 +192,11 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
         shared);
 }
 
+String BXVGADevice::device_name() const
+{
+    return String::formatted("fb{}", minor());
+}
+
 int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);

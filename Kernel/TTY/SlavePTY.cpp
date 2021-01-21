@@ -106,6 +106,11 @@ KResult SlavePTY::close()
     return KSuccess;
 }
 
+String SlavePTY::device_name() const
+{
+    return String::formatted("{}", minor());
+}
+
 FileBlockCondition& SlavePTY::block_condition()
 {
     return m_master->block_condition();

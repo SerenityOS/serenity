@@ -114,4 +114,9 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     };
 }
 
+String MBVGADevice::device_name() const
+{
+    return String::formatted("fb{}", minor());
+}
+
 }
