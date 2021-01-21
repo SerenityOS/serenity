@@ -236,8 +236,11 @@ uninstall() {
         >&2 echo "Error: $port is not installed. Cannot uninstall."
     fi
 }
-do_fetch() {
+do_installdepends() {
+    echo "Installing dependencies of $port!"
     installdepends
+}
+do_fetch() {
     echo "Fetching $port!"
     fetch
 }
@@ -282,6 +285,7 @@ do_uninstall() {
     uninstall
 }
 do_all() {
+    do_installdepends
     do_fetch
     do_patch
     do_configure
@@ -293,14 +297,14 @@ if [ -z "${1:-}" ]; then
     do_all
 else
     case "$1" in
-        fetch|patch|configure|build|install|clean|clean_dist|clean_all|uninstall)
+        fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall)
             do_$1
             ;;
         --auto)
             do_all $1
             ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, clean, clean_dist, clean_all, uninstall."
+            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall."
             exit 1
             ;;
     esac
