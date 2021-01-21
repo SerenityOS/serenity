@@ -30,7 +30,6 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
 #include <pwd.h>
 #include <sys/types.h>
 
@@ -38,20 +37,8 @@ namespace Core {
 
 class Account {
 public:
-    enum class OpenPasswdFile {
-        No,
-        ReadOnly,
-        ReadWrite,
-    };
-
-    enum class OpenShadowFile {
-        No,
-        ReadOnly,
-        ReadWrite,
-    };
-
-    static Result<Account, String> from_name(const char* username, OpenPasswdFile = OpenPasswdFile::No, OpenShadowFile = OpenShadowFile::No);
-    static Result<Account, String> from_uid(uid_t uid, OpenPasswdFile = OpenPasswdFile::No, OpenShadowFile = OpenShadowFile::No);
+    static Result<Account, String> from_name(const char* username);
+    static Result<Account, String> from_uid(uid_t uid);
 
     bool authenticate(const char* password) const;
     bool login() const;
@@ -76,16 +63,13 @@ public:
     bool sync();
 
 private:
-    static Result<Account, String> from_passwd(const passwd&, OpenPasswdFile, OpenShadowFile);
+    static Result<Account, String> from_passwd(const passwd&);
 
-    Account(const passwd& pwd, Vector<gid_t> extra_gids, RefPtr<Core::File> passwd_file, RefPtr<Core::File> shadow_file);
+    Account(const passwd& pwd, Vector<gid_t> extra_gids);
     void load_shadow_file();
 
     String generate_passwd_file() const;
     String generate_shadow_file() const;
-
-    RefPtr<Core::File> m_passwd_file;
-    RefPtr<Core::File> m_shadow_file;
 
     String m_username;
 
