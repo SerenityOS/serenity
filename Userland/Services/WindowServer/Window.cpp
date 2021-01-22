@@ -176,6 +176,32 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
+void Window::normalize_rect()
+{
+    auto min_size = 1;
+    // Must be -1 to allow windows just outside the desktop rect.
+    // For example, the windows that make the desktop rect smaller
+    // than the display resolution (e.g. the TaskBar).
+    auto min_visible = -1;
+    auto desktop = WindowManager::the().desktop_rect();
+    auto min_y = 0;
+    if (type() == WindowType::Normal) {
+        min_size = 50;
+        min_visible = 50;
+        // 5 pixels is the amount of frame decoration that can be sacrificed before starting to become an issue.
+        min_y = desktop.top() - 5;
+    }
+    auto new_width = max(width(), min_size);
+    auto new_height = max(height(), min_size);
+    Gfx::IntRect normalized_rect = {
+        clamp(x(), -new_width + min_visible, desktop.width() - min_visible),
+        clamp(y(), min_y, desktop.bottom() - min_visible),
+        new_width,
+        new_height,
+    };
+    set_rect(normalized_rect);
+}
+
 void Window::handle_mouse_event(const MouseEvent& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
