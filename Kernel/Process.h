@@ -758,11 +758,6 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
     return stream << process.name() << '(' << process.pid().value() << ')';
 }
 
-inline u32 Thread::effective_priority() const
-{
-    return m_priority + m_extra_priority;
-}
-
 #define REQUIRE_NO_PROMISES                        \
     do {                                           \
         if (Process::current()->has_promises()) {  \

@@ -83,6 +83,7 @@ class Thread
 
     friend class Process;
     friend class Scheduler;
+    friend class ThreadReadyQueue;
 
 public:
     inline static Thread* current()
@@ -102,7 +103,7 @@ public:
     void set_priority(u32 p) { m_priority = p; }
     u32 priority() const { return m_priority; }
 
-    u32 effective_priority() const;
+    u32 effective_priority() const { return m_priority; }
 
     void detach()
     {
@@ -1170,6 +1171,7 @@ public:
 
 private:
     IntrusiveListNode m_runnable_list_node;
+    int m_runnable_priority { -1 };
 
 private:
     friend struct SchedulerData;
@@ -1243,6 +1245,7 @@ private:
     TSS32 m_tss;
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
+    IntrusiveListNode m_ready_queue_node;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks_left { 0 };
@@ -1294,7 +1297,6 @@ private:
     State m_state { Invalid };
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
-    u32 m_extra_priority { 0 };
 
     State m_stop_state { Invalid };
 
