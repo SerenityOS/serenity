@@ -369,6 +369,8 @@ String DevFSDeviceInode::determine_name() const
         case 10:
             if (m_attached_device->minor() == 1)
                 return "mouse";
+            if (m_attached_device->minor() == 183)
+                return "hwrng";
             ASSERT_NOT_REACHED();
         case 42:
             if (m_attached_device->minor() == 42)
