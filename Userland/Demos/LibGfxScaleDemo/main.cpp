@@ -100,8 +100,8 @@ void Canvas::draw(Gfx::Painter& painter)
 
     auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png");
     painter.blit({ 25, 39 }, *buggie, { 2, 30, 62, 20 });
-    painter.draw_scaled_bitmap({ 88, 39, 62 * 2, 20 * 2 }, *buggie, { 2, 30, 62, 20 });
-    painter.draw_scaled_bitmap({ 202, 39, 80, 40 }, *buggie, { 2, 30, 62, 20 });
+    painter.draw_scaled_bitmap({ 88, 39, 62 * 2, 20 * 2 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
+    painter.draw_scaled_bitmap({ 202, 39, 80, 40 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
 }
 
 int main(int argc, char** argv)
