@@ -688,9 +688,10 @@ void Window::set_tiled(WindowTileType tiled)
     if (resize_aspect_ratio().has_value())
         return;
 
-    m_tiled = tiled;
-    if (tiled != WindowTileType::None)
+    if (m_tiled == WindowTileType::None)
         m_untiled_rect = m_rect;
+    m_tiled = tiled;
+
     set_rect(tiled_rect(tiled));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 }
