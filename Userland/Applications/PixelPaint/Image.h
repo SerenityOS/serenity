@@ -70,6 +70,7 @@ public:
     void paint_into(GUI::Painter&, const Gfx::IntRect& dest_rect);
     void save(const String& file_path) const;
     void export_bmp(const String& file_path);
+    void export_png(const String& file_path);
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
