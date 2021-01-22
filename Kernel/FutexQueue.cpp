@@ -107,7 +107,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
 u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_empty)
 {
     if (wake_count == 0)
-        return 0; // should we assert instaed?
+        return 0; // should we assert instead?
     ScopedSpinLock lock(m_lock);
 #ifdef FUTEXQUEUE_DEBUG
     dbg() << "FutexQueue @ " << this << ": wake_n(" << wake_count << ")";

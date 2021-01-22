@@ -59,7 +59,7 @@ Note that many operators will need to be escaped or quoted if used from within a
 
 ## Options
 
-* `--help`: Prints usage informations and exits.
+* `--help`: Prints usage information and exits.
 
 ## Examples
 

@@ -286,7 +286,7 @@ public:
             empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
             empend((ByteCodeValueType)OpCodeId::ForkJump);
-            empend((ByteCodeValueType) - (body_length + 5)); // JUMP to lavel _L
+            empend((ByteCodeValueType) - (body_length + 5)); // JUMP to label _L
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         }
@@ -321,7 +321,7 @@ public:
             empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
             empend((ByteCodeValueType)OpCodeId::ForkJump);
-            empend((ByteCodeValueType) - (body_length + 7)); // JUMP to lavel _L
+            empend((ByteCodeValueType) - (body_length + 7)); // JUMP to label _L
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         }

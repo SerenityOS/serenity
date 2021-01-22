@@ -249,7 +249,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
         break;
     }
     default:
-        dbgln("Warninig: unhandled Dwarf location type: {}", (int)location_info.value().type);
+        dbgln("Warning: unhandled Dwarf location type: {}", (int)location_info.value().type);
     }
 }
 

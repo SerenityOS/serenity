@@ -34,7 +34,7 @@ A 2x resource should look like a 1x resource, just with less jagged edges. A hor
 
 A good guideline for black-and-white images: start with a 1x bitmap, resize it to 200% using nearest-neighbor filtering, and then move black pixels around to smooth diagonal edges -- but the number of black pixels shouldn't change relative to the 200% nearest-neighbor-resampled image. If that's not possible, err towards making the icon smaller instead of larger. A good technique is to use the Ctrl-Shift-Super-I shortcut in HighDPI mode to toggle between low-res and high-res icons in HighDPI mode.
 
-While a 1x 32x32 bitmap and a 2x 16x16 bitmap both have 32x32 pixels, they don't have to look the same: The 2x 16x16 should look exactly like the corresonding 1x 16x16, just with smoother edges. The 1x 32x32 pixel resource could instead pick a different crop. As a concrete example, the 1x 7x10 ladybug emoji image currently just has the ladybug's shell (for space reasons), and so should the 2x version of that emoji. On the other hand, if we add a higher-res 1x 14x20 ladybug emoji at some point, we might want show the ladybug's legs on it, instead of just a smoother rendition of just the shell. (The 2x version of that 14x20 emoji would then have legs and shell in less jagged.)
+While a 1x 32x32 bitmap and a 2x 16x16 bitmap both have 32x32 pixels, they don't have to look the same: The 2x 16x16 should look exactly like the corresponding 1x 16x16, just with smoother edges. The 1x 32x32 pixel resource could instead pick a different crop. As a concrete example, the 1x 7x10 ladybug emoji image currently just has the ladybug's shell (for space reasons), and so should the 2x version of that emoji. On the other hand, if we add a higher-res 1x 14x20 ladybug emoji at some point, we might want show the ladybug's legs on it, instead of just a smoother rendition of just the shell. (The 2x version of that 14x20 emoji would then have legs and shell in less jagged.)
 
 ### Directory structure
 
@@ -131,7 +131,7 @@ Root-level split makes it easy to see which scale factors exist and is subjectiv
 
 Filename suffixes make it easy to see which icons don't have high-res versions (but in return clutter up an icon directory), and it makes it easy to get the intrinsic scale factor of a bitmap (just need to look at the image's basename, not at any directory).
 
-Android has additional modifiers in additon to scale factors in its resource system (UI language, light/dark mode, screen size in addition to resolution, etc). If we ever add more factors to the resource system, a suffix-based system would probably extend more nicely than a nesting-based one.
+Android has additional modifiers in addition to scale factors in its resource system (UI language, light/dark mode, screen size in addition to resolution, etc). If we ever add more factors to the resource system, a suffix-based system would probably extend more nicely than a nesting-based one.
 
 In the end probably doesn't matter all that much which version to pick.
 
@@ -176,7 +176,7 @@ or
 
 Going forward:
 
-    FIXME (depends on loading strategy decison a bit?)
+    FIXME (depends on loading strategy decision a bit?)
 
 Implementation plan
 -------------------
