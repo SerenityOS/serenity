@@ -34,6 +34,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/PNGWriter.h>
 #include <stdio.h>
 
 //#define PAINT_DEBUG
@@ -150,6 +151,19 @@ void Image::export_bmp(const String& file_path)
     auto bmp = dumper.dump(bitmap);
     auto file = fopen(file_path.characters(), "wb");
     fwrite(bmp.data(), sizeof(u8), bmp.size(), file);
+    fclose(file);
+}
+
+void Image::export_png(const String& file_path)
+{
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
+    GUI::Painter painter(*bitmap);
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+
+    Gfx::PNGWriter png_writer;
+    auto png = png_writer.write(bitmap);
+    auto file = fopen(file_path.characters(), "wb");
+    fwrite(png.data(), sizeof(u8), png.size(), file);
     fclose(file);
 }
 

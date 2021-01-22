@@ -160,6 +160,20 @@ int main(int argc, char** argv)
                 image_editor.image()->export_bmp(save_path.value());
             },
             window));
+    export_submenu.add_action(
+        GUI::Action::create(
+            "As PNG", [&](auto&) {
+                if (!image_editor.image())
+                    return;
+
+                Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
+
+                if (!save_path.has_value())
+                    return;
+
+                image_editor.image()->export_png(save_path.value());
+            },
+            window));
 
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
