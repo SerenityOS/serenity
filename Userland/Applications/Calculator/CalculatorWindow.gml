@@ -87,6 +87,7 @@
             text: "9"
             fixed_width: 35
             fixed_height: 28
+            foreground_color: "blue"
         }
 
         @GUI::Button {
