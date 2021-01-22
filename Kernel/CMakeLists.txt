@@ -223,6 +223,7 @@ set(KERNEL_SOURCES
     VirtIO/VirtIO.cpp
     VirtIO/VirtIOConsole.cpp
     VirtIO/VirtIOQueue.cpp
+    VirtIO/VirtIORNG.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp
