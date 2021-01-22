@@ -34,7 +34,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio dns", nullptr) < 0) {
+    if (pledge("stdio unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

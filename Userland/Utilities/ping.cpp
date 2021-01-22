@@ -61,7 +61,7 @@ static const char* host;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio id inet dns sigaction", nullptr) < 0) {
+    if (pledge("stdio id inet unix sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio inet dns sigaction", nullptr) < 0) {
+    if (pledge("stdio inet unix sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

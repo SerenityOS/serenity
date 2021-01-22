@@ -62,11 +62,6 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
     }
             ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
-            if (part == "dns") {
-                // "dns" is an alias for "unix" since DNS queries go via LookupServer
-                mask |= (1u << (u32)Pledge::unix);
-                continue;
-            }
             return false;
         }
         return true;
