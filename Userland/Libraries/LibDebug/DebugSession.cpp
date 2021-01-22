@@ -84,8 +84,8 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
         int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));
         if (rc < 0) {
             perror("execvp");
+            exit(1);
         }
-        ASSERT_NOT_REACHED();
     }
 
     if (waitpid(pid, nullptr, WSTOPPED) != pid) {
