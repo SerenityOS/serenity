@@ -151,6 +151,7 @@ func_defined pre_configure || pre_configure() {
     :
 }
 func_defined configure || configure() {
+    chmod +x "${workdir}"/"$configscript"
     run ./"$configscript" --host=i686-pc-serenity $configopts
 }
 func_defined build || build() {
@@ -252,7 +253,6 @@ do_configure() {
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port!"
         pre_configure
-        chmod +x "${workdir}"/"$configscript"
         configure
     else
         echo "This port does not use a configure script. Skipping configure step."
