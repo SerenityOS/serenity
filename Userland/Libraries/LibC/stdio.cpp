@@ -1205,16 +1205,11 @@ void funlockfile([[maybe_unused]] FILE* filehandle)
 FILE* tmpfile()
 {
     char tmp_path[] = "/tmp/XXXXXX";
-    if (__generate_unique_filename(tmp_path) < 0)
-        return nullptr;
-
-    int fd = open(tmp_path, O_CREAT | O_EXCL | O_RDWR, S_IWUSR | S_IRUSR);
+    int fd = mkstemp(tmp_path);
     if (fd < 0)
         return nullptr;
-
     // FIXME: instead of using this hack, implement with O_TMPFILE or similar
     unlink(tmp_path);
-
     return fdopen(fd, "rw");
 }
 }
