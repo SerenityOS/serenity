@@ -246,7 +246,7 @@ void Compositor::compose()
     auto temp_painter = *m_temp_painter;
 
     auto paint_wallpaper = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
-        // FIXME: If the wallpaper is opaque, no need to fill with color!
+        // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
         painter.fill_rect(rect, background_color);
         if (m_wallpaper) {
             if (m_wallpaper_mode == WallpaperMode::Simple) {
