@@ -84,7 +84,7 @@ Gfx::Color MonitorWidget::background_color()
 
 void MonitorWidget::paint_event(GUI::PaintEvent& event)
 {
-    Gfx::IntRect screen_rect = { 0, 0, m_desktop_resolution.width(), m_desktop_resolution.height() };
+    Gfx::IntRect screen_rect = { { 0, 0 }, m_desktop_resolution };
     auto screen_bitmap = Gfx::Bitmap::create(m_monitor_bitmap->format(), m_desktop_resolution);
     GUI::Painter screen_painter(*screen_bitmap);
     screen_painter.fill_rect(screen_rect, m_desktop_color);
@@ -93,7 +93,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         if (m_desktop_wallpaper_mode == "simple") {
             screen_painter.blit({ 0, 0 }, *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
         } else if (m_desktop_wallpaper_mode == "center") {
-            Gfx::IntPoint offset { screen_rect.width() / 2 - m_desktop_wallpaper_bitmap->size().width() / 2, screen_rect.height() / 2 - m_desktop_wallpaper_bitmap->size().height() / 2 };
+            Gfx::IntPoint offset { (screen_rect.width() - m_desktop_wallpaper_bitmap->width()) / 2, (screen_rect.height() - m_desktop_wallpaper_bitmap->height()) / 2 };
             screen_painter.blit_offset(screen_rect.location(), *m_desktop_wallpaper_bitmap, screen_rect, offset);
         } else if (m_desktop_wallpaper_mode == "tile") {
             screen_painter.draw_tiled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap);
