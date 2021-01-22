@@ -72,6 +72,105 @@ WaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
 
+struct ThreadReadyQueue {
+    IntrusiveList<Thread, &Thread::m_ready_queue_node> thread_list;
+};
+static SpinLock<u8> g_ready_queues_lock;
+static u32 g_ready_queues_mask;
+static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
+static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+
+static inline u32 thread_priority_to_priority_index(u32 thread_priority)
+{
+    // Converts the priority in the range of THREAD_PRIORITY_MIN...THREAD_PRIORITY_MAX
+    // to a index into g_ready_queues where 0 is the highest priority bucket
+    ASSERT(thread_priority >= THREAD_PRIORITY_MIN && thread_priority <= THREAD_PRIORITY_MAX);
+    constexpr u32 thread_priority_count = THREAD_PRIORITY_MAX - THREAD_PRIORITY_MIN + 1;
+    static_assert(thread_priority_count > 0);
+    auto priority_bucket = ((thread_priority_count - (thread_priority - THREAD_PRIORITY_MIN)) / thread_priority_count) * (g_ready_queue_buckets - 1);
+    ASSERT(priority_bucket < g_ready_queue_buckets);
+    return priority_bucket;
+}
+
+Thread& Scheduler::pull_next_runnable_thread()
+{
+    auto affinity_mask = 1u << Processor::current().id();
+
+    ScopedSpinLock lock(g_ready_queues_lock);
+    auto priority_mask = g_ready_queues_mask;
+    while (priority_mask != 0) {
+        auto priority = __builtin_ffsl(priority_mask);
+        ASSERT(priority > 0);
+        auto& ready_queue = g_ready_queues[--priority];
+        for (auto& thread : ready_queue.thread_list) {
+            ASSERT(thread.m_runnable_priority == (int)priority);
+            if (thread.is_active())
+                continue;
+            if (!(thread.affinity() & affinity_mask))
+                continue;
+            thread.m_runnable_priority = -1;
+            ready_queue.thread_list.remove(thread);
+            if (ready_queue.thread_list.is_empty())
+                g_ready_queues_mask &= ~(1u << priority);
+            // Mark it as active because we are using this thread. This is similar
+            // to comparing it with Processor::current_thread, but when there are
+            // multiple processors there's no easy way to check whether the thread
+            // is actually still needed. This prevents accidental finalization when
+            // a thread is no longer in Running state, but running on another core.
+
+            // We need to mark it active here so that this thread won't be
+            // scheduled on another core if it were to be queued before actually
+            // switching to it.
+            // FIXME: Figure out a better way maybe?
+            thread.set_active(true);
+            return thread;
+        }
+        priority_mask &= ~(1u << priority);
+    }
+    return *Processor::current().idle_thread();
+}
+
+bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
+{
+    if (&thread == Processor::current().idle_thread())
+        return true;
+    ScopedSpinLock lock(g_ready_queues_lock);
+    auto priority = thread.m_runnable_priority;
+    if (priority < 0) {
+        ASSERT(!thread.m_ready_queue_node.is_in_list());
+        return false;
+    }
+
+    if (check_affinity && !(thread.affinity() & (1 << Processor::current().id())))
+        return false;
+
+    ASSERT(g_ready_queues_mask & (1u << priority));
+    auto& ready_queue = g_ready_queues[priority];
+    thread.m_runnable_priority = -1;
+    ready_queue.thread_list.remove(thread);
+    if (ready_queue.thread_list.is_empty())
+        g_ready_queues_mask &= ~(1u << priority);
+    return true;
+}
+
+void Scheduler::queue_runnable_thread(Thread& thread)
+{
+    ASSERT(g_scheduler_lock.own_lock());
+    if (&thread == Processor::current().idle_thread())
+        return;
+    auto priority = thread_priority_to_priority_index(thread.effective_priority());
+
+    ScopedSpinLock lock(g_ready_queues_lock);
+    ASSERT(thread.m_runnable_priority < 0);
+    thread.m_runnable_priority = (int)priority;
+    ASSERT(!thread.m_ready_queue_node.is_in_list());
+    auto& ready_queue = g_ready_queues[priority];
+    bool was_empty = ready_queue.thread_list.is_empty();
+    ready_queue.thread_list.append(thread);
+    if (was_empty)
+        g_ready_queues_mask |= (1u << priority);
+}
+
 void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -169,25 +268,9 @@ bool Scheduler::pick_next()
         });
     }
 
-    Thread* thread_to_schedule = nullptr;
-
     auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
-    Vector<Thread*, 128> sorted_runnables;
-    for_each_runnable([&](auto& thread) {
-        if ((thread.affinity() & (1u << Processor::id())) == 0)
-            return IterationDecision::Continue;
-        if (thread.state() == Thread::Running && &thread != current_thread)
-            return IterationDecision::Continue;
-        sorted_runnables.append(&thread);
-        if (&thread == pending_beneficiary) {
-            thread_to_schedule = &thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    if (thread_to_schedule) {
-        // The thread we're supposed to donate to still exists
+    if (pending_beneficiary && dequeue_runnable_thread(*pending_beneficiary, true)) {
+        // The thread we're supposed to donate to still exists and we can
         const char* reason = scheduler_data.m_pending_donate_reason;
         scheduler_data.m_pending_beneficiary = nullptr;
         scheduler_data.m_pending_donate_reason = nullptr;
@@ -196,8 +279,8 @@ bool Scheduler::pick_next()
         // but since we're still holding the scheduler lock we're still in a critical section
         critical.leave();
 
-        dbgln<SCHEDULER_DEBUG>("Processing pending donate to {} reason={}", *thread_to_schedule, reason);
-        return donate_to_and_switch(thread_to_schedule, reason);
+        dbgln<SCHEDULER_DEBUG>("Processing pending donate to {} reason={}", *pending_beneficiary, reason);
+        return donate_to_and_switch(pending_beneficiary.ptr(), reason);
     }
 
     // Either we're not donating or the beneficiary disappeared.
@@ -205,38 +288,20 @@ bool Scheduler::pick_next()
     scheduler_data.m_pending_beneficiary = nullptr;
     scheduler_data.m_pending_donate_reason = nullptr;
 
-    quick_sort(sorted_runnables, [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
-
-    for (auto* thread : sorted_runnables) {
-        if (thread->process().exec_tid() && thread->process().exec_tid() != thread->tid())
-            continue;
-
-        ASSERT(thread->state() == Thread::Runnable || thread->state() == Thread::Running);
-
-        if (!thread_to_schedule) {
-            thread->m_extra_priority = 0;
-            thread_to_schedule = thread;
-        } else {
-            thread->m_extra_priority++;
-        }
-    }
-
-    if (!thread_to_schedule)
-        thread_to_schedule = Processor::current().idle_thread();
-
+    auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
             Processor::id(),
-            *thread_to_schedule,
-            thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
+            thread_to_schedule,
+            thread_to_schedule.tss().cs, thread_to_schedule.tss().eip);
     }
 
     // We need to leave our first critical section before switching context,
     // but since we're still holding the scheduler lock we're still in a critical section
     critical.leave();
 
-    thread_to_schedule->set_ticks_left(time_slice_for(*thread_to_schedule));
-    return context_switch(thread_to_schedule);
+    thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
+    return context_switch(&thread_to_schedule);
 }
 
 bool Scheduler::yield()
@@ -354,13 +419,6 @@ bool Scheduler::context_switch(Thread* thread)
     }
     thread->set_state(Thread::Running);
 
-    // Mark it as active because we are using this thread. This is similar
-    // to comparing it with Processor::current_thread, but when there are
-    // multiple processors there's no easy way to check whether the thread
-    // is actually still needed. This prevents accidental finalization when
-    // a thread is no longer in Running state, but running on another core.
-    thread->set_active(true);
-
     proc.switch_context(from_thread, thread);
 
     // NOTE: from_thread at this point reflects the thread we were
@@ -449,6 +507,7 @@ void Scheduler::initialize()
     RefPtr<Thread> idle_thread;
     g_scheduler_data = new SchedulerData;
     g_finalizer_wait_queue = new WaitQueue;
+    g_ready_queues = new ThreadReadyQueue[g_ready_queue_buckets];
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
     s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1).leak_ref();
