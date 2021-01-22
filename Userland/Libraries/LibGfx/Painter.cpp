@@ -619,20 +619,20 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
         int s = scale / source.scale();
         if (s == 1) {
-            int x_start = first_column + a_dst_rect.left();
+            int x_start = first_column + a_dst_rect.left() * scale;
             for (int row = first_row; row <= last_row; ++row) {
-                const RGBA32* sl = source.scanline((row + a_dst_rect.top()) % source.physical_height());
+                const RGBA32* sl = source.scanline((row + a_dst_rect.top() * scale) % source.physical_height());
                 for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
                     dst[x - x_start] = sl[x % source.physical_width()];
                 }
                 dst += dst_skip;
             }
         } else {
-            int x_start = first_column + a_dst_rect.left();
+            int x_start = first_column + a_dst_rect.left() * scale;
             for (int row = first_row; row <= last_row; ++row) {
-                const RGBA32* sl = source.scanline(((row + a_dst_rect.top()) / s) % source.height());
+                const RGBA32* sl = source.scanline(((row + a_dst_rect.top() * scale) / s) % source.physical_height());
                 for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
-                    dst[x - x_start] = sl[(x / s) % source.width()];
+                    dst[x - x_start] = sl[(x / s) % source.physical_width()];
                 }
                 dst += dst_skip;
             }
