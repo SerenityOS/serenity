@@ -257,10 +257,8 @@ void Compositor::compose()
             if (m_wallpaper_mode == WallpaperMode::Simple) {
                 painter.blit(rect.location(), *m_wallpaper, rect);
             } else if (m_wallpaper_mode == WallpaperMode::Center) {
-                Gfx::IntPoint offset { ws.size().width() / 2 - m_wallpaper->size().width() / 2,
-                    ws.size().height() / 2 - m_wallpaper->size().height() / 2 };
-                painter.blit_offset(rect.location(), *m_wallpaper,
-                    rect, offset);
+                Gfx::IntPoint offset { (ws.width() - m_wallpaper->width()) / 2, (ws.height() - m_wallpaper->height()) / 2 };
+                painter.blit_offset(rect.location(), *m_wallpaper, rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
             } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
