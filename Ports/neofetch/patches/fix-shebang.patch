@@ -2,7 +2,7 @@
 +++ neofetch-7.0.0/neofetch	2020-04-27 18:57:54.263417418 +0100
 @@ -1,4 +1,4 @@
 -#!/usr/bin/env bash
-+#!/bin/bash
++#!/usr/bin/env bash
  # vim: noai:ts=4:sw=4:expandtab
  # shellcheck source=/dev/null
  # shellcheck disable=2009

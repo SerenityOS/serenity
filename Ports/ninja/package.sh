@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=ninja
 version=1.8.2
 workdir=ninja-1.8.2

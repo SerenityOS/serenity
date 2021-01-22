@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=stress-ng
 version=0.11.23
 workdir=stress-ng-${version}

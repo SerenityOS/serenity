@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=indent
 version=2.2.11
 files="https://ftp.gnu.org/gnu/indent/indent-${version}.tar.gz indent-${version}.tar.gz

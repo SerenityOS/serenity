@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=diffutils
 version=3.5
 files="https://ftp.gnu.org/gnu/diffutils/diffutils-${version}.tar.xz diffutils-${version}.tar.xz

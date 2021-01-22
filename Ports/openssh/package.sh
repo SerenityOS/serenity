@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=openssh
 workdir=openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676
 version=8.3-9ca7e9c

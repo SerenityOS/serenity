@@ -57,6 +57,44 @@ sudo apt update
 
 Ensure your CMake version is >= 3.16 with `cmake --version`. If your system doesn't provide a suitable version of CMake, you can download a binary release from the [CMake website](https://cmake.org/download).
 
+**NixOS**
+
+You can use a `nix-shell` script like the following to set up the correct environment:
+
+myshell.nix:
+```
+with import <nixpkgs> {};
+
+stdenv.mkDerivation {
+  name = "cpp-env";
+  nativeBuildInputs = [
+    gcc10
+    curl
+    cmake
+    mpfr
+    ninja
+    gmp
+    libmpc
+    e2fsprogs
+    patch
+
+    # Example Build-time Additional Dependencies
+    pkgconfig
+  ];
+  buildInputs = [
+    # Example Run-time Additional Dependencies
+    openssl
+    x11
+    # glibc
+  ];
+  hardeningDisable = [ "format" "fortify" ];
+}
+```
+
+Then use this script: `nix-shell myshell.nix`.
+
+Once you're in nix-shell, you should be able to follow the build directions.
+
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash

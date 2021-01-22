@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=byacc
 version=20191125
 files="https://invisible-mirror.net/archives/byacc/byacc-${version}.tgz byacc-${version}.tgz
