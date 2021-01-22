@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,46 +26,33 @@
 
 #pragma once
 
-#include "HexEditor.h"
-#include <AK/Function.h>
-#include <AK/LexicalPath.h>
-#include <LibGUI/Application.h>
-#include <LibGUI/TextEditor.h>
-#include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
+#include <AK/Result.h>
+#include <AK/Vector.h>
+#include <LibGUI/Dialog.h>
 
-class HexEditor;
+enum OptionId {
+    OPTION_INVALID = -1,
+    OPTION_ASCII_STRING,
+    OPTION_HEX_VALUE
+};
 
-class HexEditorWidget final : public GUI::Widget {
-    C_OBJECT(HexEditorWidget)
+class FindDialog : public GUI::Dialog {
+    C_OBJECT(FindDialog);
+
 public:
-    virtual ~HexEditorWidget() override;
-    void open_file(const String& path);
-    bool request_close();
+    static int show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer);
 
 private:
-    HexEditorWidget();
-    void set_path(const LexicalPath& file);
-    void update_title();
+    Result<ByteBuffer, String> process_input(String text_value, OptionId opt);
 
-    RefPtr<HexEditor> m_editor;
-    String m_path;
-    String m_name;
-    String m_extension;
+    String text_value() const { return m_text_value; }
+    OptionId selected_option() const { return m_selected_option; }
 
-    String m_search_text;
-    ByteBuffer m_search_buffer;
-    int last_found_index() const { return m_last_found_index == -1 ? 0 : m_last_found_index; }
-    int m_last_found_index { -1 };
+    FindDialog();
+    virtual ~FindDialog() override;
 
-    RefPtr<GUI::Action> m_new_action;
-    RefPtr<GUI::Action> m_open_action;
-    RefPtr<GUI::Action> m_save_action;
-    RefPtr<GUI::Action> m_save_as_action;
-    RefPtr<GUI::Action> m_goto_decimal_offset_action;
-    RefPtr<GUI::Action> m_goto_hex_offset_action;
+    RefPtr<GUI::TextEditor> m_text_editor;
 
-    RefPtr<GUI::StatusBar> m_statusbar;
-
-    bool m_document_dirty { false };
+    String m_text_value;
+    OptionId m_selected_option { OPTION_INVALID };
 };

@@ -582,3 +582,28 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         }
     }
 }
+
+int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
+{
+    if (m_buffer.is_empty())
+        return -1;
+
+    if (needle.is_null()) {
+        dbgln("needle is null");
+        return -1;
+    }
+
+    auto raw_offset = memmem(m_buffer.data() + start, m_buffer.size(), needle.data(), needle.size());
+    if (raw_offset == NULL)
+        return -1;
+
+    int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
+    dbgln("find_and_highlight: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
+
+    auto end_of_match = relative_offset + needle;
+    set_position(relative_offset);
+    m_selection_start = relative_offset;
+    m_selection_end = end_of_match;
+
+    return end_of_match;
+}
