@@ -95,25 +95,88 @@ void Game::timer_event(Core::TimerEvent&)
     update();
 }
 
+Gfx::IntRect Game::first_cell_rect() const
+{
+    auto game_rect = rect();
+    auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);
+    auto x_margin = (game_rect.width() - (cell_size.width() * m_columns)) / 2;
+    auto y_margin = (game_rect.height() - (cell_size.height() * m_rows)) / 2;
+    return { x_margin, y_margin, cell_size.width(), cell_size.height() };
+}
+
 void Game::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), m_dead_color);
-    auto game_rect = rect();
-    auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);
-    auto x_margin = (game_rect.width() - (cell_size.width() * m_columns)) / 2;
-    auto y_margin = (game_rect.height() - (cell_size.height() * m_rows)) / 2;
+    auto first_rect = first_cell_rect();
 
     for (int y = 0; y < m_rows; y++) {
         for (int x = 0; x < m_columns; x++) {
             Gfx::IntRect rect {
-                x * cell_size.width() + x_margin,
-                y * cell_size.height() + y_margin,
-                cell_size.width(),
-                cell_size.height()
+                x * first_rect.width() + first_rect.left(),
+                y * first_rect.height() + first_rect.top(),
+                first_rect.width(),
+                first_rect.height()
             };
             painter.fill_rect(rect, m_universe[y][x] ? m_alive_color : m_dead_color);
         }
+    }
+}
+
+void Game::mousedown_event(GUI::MouseEvent& event)
+{
+    switch (event.button()) {
+    case GUI::MouseButton::Left:
+    case GUI::MouseButton::Right:
+        m_last_button = event.button();
+        break;
+    default:
+        return;
+    }
+    interact_at(event.position());
+}
+
+void Game::mouseup_event(GUI::MouseEvent& event)
+{
+    if (event.button() == m_last_button)
+        m_last_button = GUI::MouseButton::None;
+}
+
+void Game::mousemove_event(GUI::MouseEvent& event)
+{
+    interact_at(event.position());
+}
+
+void Game::interact_at(const Gfx::IntPoint& point)
+{
+    if (m_last_button == GUI::MouseButton::None)
+        return;
+
+    auto first_rect = first_cell_rect();
+    // Too tiny window, we don't actually display anything.
+    if (first_rect.width() == 0 || first_rect.height() == 0)
+        return;
+
+    // Too far left/up.
+    if (point.x() < first_rect.left() || point.y() < first_rect.top())
+        return;
+
+    int cell_x = (point.x() - first_rect.left()) / first_rect.width();
+    int cell_y = (point.y() - first_rect.top()) / first_rect.height();
+
+    // Too far right/down.
+    if (cell_x >= m_columns || cell_y >= m_rows)
+        return;
+
+    switch (m_last_button) {
+    case GUI::MouseButton::Left:
+        m_universe[cell_y][cell_x] = true;
+        break;
+    case GUI::MouseButton::Right:
+        m_universe[cell_y][cell_x] = false;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
