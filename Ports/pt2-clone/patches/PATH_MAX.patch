@@ -1,0 +1,78 @@
+Common subdirectories: pt2-clone-1.28/src/gfx and pt2-clone-1.28d/src/gfx
+diff -u pt2-clone-1.28/src/pt2_config.c pt2-clone-1.28d/src/pt2_config.c
+--- pt2-clone-1.28/src/pt2_config.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_config.c	2021-01-22 13:34:22.058489000 +0100
+@@ -21,6 +21,7 @@
+ #include "pt2_diskop.h"
+ #include "pt2_textout.h"
+ #include "pt2_sampler.h"
++#define PATH_MAX 4096
+ 
+ #ifndef _WIN32
+ static char oldCwd[PATH_MAX];
+diff -u pt2-clone-1.28/src/pt2_diskop.c pt2-clone-1.28d/src/pt2_diskop.c
+--- pt2-clone-1.28/src/pt2_diskop.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_diskop.c	2021-01-22 13:33:49.531212000 +0100
+@@ -36,6 +36,7 @@
+ #include "pt2_visuals.h"
+ #include "pt2_sample_loader.h"
+ #include "pt2_bmp.h"
++#define PATH_MAX 4096
+ 
+ typedef struct fileEntry_t
+ {
+diff -u pt2-clone-1.28/src/pt2_edit.c pt2-clone-1.28d/src/pt2_edit.c
+--- pt2-clone-1.28/src/pt2_edit.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_edit.c	2021-01-22 13:33:14.987979000 +0100
+@@ -29,6 +29,7 @@
+ #include "pt2_audio.h"
+ #include "pt2_sync.h"
+ #include "pt2_chordmaker.h"
++#define PATH_MAX 4096
+ 
+ const int8_t scancode2NoteLo[52] = // "USB usage page standard" order
+ {
+diff -u pt2-clone-1.28/src/pt2_main.c pt2-clone-1.28d/src/pt2_main.c
+--- pt2-clone-1.28/src/pt2_main.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_main.c	2021-01-22 13:33:34.867538000 +0100
+@@ -36,6 +36,7 @@
+ #include "pt2_bmp.h"
+ #include "pt2_sync.h"
+ #include "pt2_sampling.h"
++#define PATH_MAX 4096
+ 
+ #define CRASH_TEXT "Oh no!\nThe ProTracker 2 clone has crashed...\n\nA backup .mod was hopefully " \
+                    "saved to the current module directory.\n\nPlease report this bug if you can.\n" \
+diff -u pt2-clone-1.28/src/pt2_module_loader.c pt2-clone-1.28d/src/pt2_module_loader.c
+--- pt2-clone-1.28/src/pt2_module_loader.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_module_loader.c	2021-01-22 13:34:32.490256000 +0100
+@@ -27,6 +27,7 @@
+ #include "pt2_sample_loader.h"
+ #include "pt2_config.h"
+ #include "pt2_sampling.h"
++#define PATH_MAX 4096
+ 
+ typedef struct mem_t
+ {
+diff -u pt2-clone-1.28/src/pt2_mouse.c pt2-clone-1.28d/src/pt2_mouse.c
+--- pt2-clone-1.28/src/pt2_mouse.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_mouse.c	2021-01-22 13:33:59.278995000 +0100
+@@ -26,6 +26,7 @@
+ #include "pt2_bmp.h"
+ #include "pt2_sampling.h"
+ #include "pt2_chordmaker.h"
++#define PATH_MAX 4096
+ 
+ /* TODO: Move irrelevant routines outta here! Disgusting design!
+ ** Keep in mind that this was programmed in my early programming days...
+diff -u pt2-clone-1.28/src/pt2_sample_loader.c pt2-clone-1.28d/src/pt2_sample_loader.c
+--- pt2-clone-1.28/src/pt2_sample_loader.c	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28d/src/pt2_sample_loader.c	2021-01-22 13:34:03.582900000 +0100
+@@ -19,6 +19,7 @@
+ #include "pt2_config.h"
+ #include "pt2_sampling.h"
+ #include "pt2_downsamplers2x.h"
++#define PATH_MAX 4096
+ 
+ enum
+ {
