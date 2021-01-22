@@ -104,6 +104,8 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.draw_scaled_bitmap({ 202, 39, 80, 40 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
 
     painter.draw_tiled_bitmap({ 25, 60, WIDTH - 50, 40 }, *buggie);
+
+    painter.blit({ 25, 101 }, *buggie, { 2, 30, 3 * buggie->width(), 20 });
 }
 
 int main(int argc, char** argv)
