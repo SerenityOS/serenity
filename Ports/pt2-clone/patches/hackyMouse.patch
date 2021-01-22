@@ -1,0 +1,11 @@
+--- pt2-clone-1.28/src/pt2_visuals.c	2021-01-22 17:55:51.038785767 +0100
++++ pt2-clone-1.28/src/pt2_visuals.c.og	2021-01-22 17:55:12.287382000 +0100
+@@ -2426,7 +2426,7 @@
+ 		SDL_ShowCursor(SDL_FALSE);
+ 
+ 	// Workaround: SDL_GetGlobalMouseState() doesn't work with KMSDRM
+-	video.useDesktopMouseCoords = true;
++	video.useDesktopMouseCoords = false;
+ 	const char *videoDriver = SDL_GetCurrentVideoDriver();
+ 	if (videoDriver != NULL && strcmp("KMSDRM", videoDriver) == 0)
+ 		video.useDesktopMouseCoords = true;

@@ -1,0 +1,10 @@
+--- pt2-clone-1.28/CMakeLists.txt	2021-01-01 20:48:32.000000000 +0100
++++ pt2-clone-1.28D/CMakeLists.txt	2021-01-22 13:59:34.871852522 +0100
+@@ -3,7 +3,6 @@
+ project(pt2-clone)
+ 
+ find_package(SDL2 REQUIRED)
+-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${pt2-clone_SOURCE_DIR}/release/other/")
+ 
+ file(GLOB pt2-clone_SRC
+     "${pt2-clone_SOURCE_DIR}/src/*.c"
