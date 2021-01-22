@@ -111,7 +111,7 @@ u32 CanonicalCode::read_symbol(InputBitStream& stream) const
         code_bits = code_bits << 1 | stream.read_bits(1);
         ASSERT(code_bits < (1 << 16));
 
-        // FIXME: This is very inefficent and could greatly be improved by implementing this
+        // FIXME: This is very inefficient and could greatly be improved by implementing this
         //        algorithm: https://www.hanshq.net/zip.html#huffdec
         size_t index;
         if (AK::binary_search(m_symbol_codes.span(), code_bits, &index))

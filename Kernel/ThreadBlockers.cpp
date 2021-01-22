@@ -163,7 +163,7 @@ void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 {
     ASSERT(m_lock.own_lock());
     set_block_condition_raw_locked(&futex_queue);
-    // We can now releas the lock
+    // We can now release the lock
     m_lock.unlock(m_relock_flags);
 }
 

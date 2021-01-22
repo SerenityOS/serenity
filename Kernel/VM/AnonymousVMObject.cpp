@@ -145,7 +145,7 @@ AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
     ensure_or_reset_cow_map();
 
     if (m_unused_committed_pages > 0) {
-        // The original vmobject didn't use up all commited pages. When
+        // The original vmobject didn't use up all committed pages. When
         // cloning (fork) we will overcommit. For this purpose we drop all
         // lazy-commit references and replace them with shared zero pages.
         for (size_t i = 0; i < page_count(); i++) {
@@ -380,7 +380,7 @@ RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t page_inde
 
         ASSERT(m_unused_committed_pages > 0);
 
-        // We should't have any committed page tags in volatile regions
+        // We shouldn't have any committed page tags in volatile regions
         ASSERT([&]() {
             for (auto* purgeable_ranges : m_purgeable_ranges) {
                 if (purgeable_ranges->is_volatile(page_index))
