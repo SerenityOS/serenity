@@ -62,6 +62,7 @@ public:
     void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
     void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
+    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const FloatRect& src_rect, float opacity = 1.0f);
     void draw_triangle(const IntPoint&, const IntPoint&, const IntPoint&, Color);
     void draw_ellipse_intersecting(const IntRect&, Color, int thickness = 1);
     void set_pixel(const IntPoint&, Color);

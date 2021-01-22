@@ -262,11 +262,12 @@ void Compositor::compose()
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
             } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
-                float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
-                float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
+                float hscale = (float)m_wallpaper->width() / (float)ws.width();
+                float vscale = (float)m_wallpaper->height() / (float)ws.height();
 
                 // TODO: this may look ugly, we should scale to a backing bitmap and then blit
-                painter.draw_scaled_bitmap(rect, *m_wallpaper, { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale });
+                auto src_rect = Gfx::FloatRect { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale };
+                painter.draw_scaled_bitmap(rect, *m_wallpaper, src_rect);
             } else {
                 ASSERT_NOT_REACHED();
             }
