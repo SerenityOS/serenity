@@ -70,6 +70,9 @@ public:
     static void idle_loop(void*);
     static void invoke_async();
     static void notify_finalizer();
+    static Thread& pull_next_runnable_thread();
+    static bool dequeue_runnable_thread(Thread&, bool = false);
+    static void queue_runnable_thread(Thread&);
 
     template<typename Callback>
     static inline IterationDecision for_each_runnable(Callback);

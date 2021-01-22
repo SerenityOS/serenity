@@ -131,6 +131,10 @@ Thread::~Thread()
         // the middle of being destroyed.
         ScopedSpinLock lock(g_scheduler_lock);
         g_scheduler_data->thread_list_for_state(m_state).remove(*this);
+
+        // We shouldn't be queued
+        ASSERT(m_runnable_priority < 0);
+        ASSERT(!m_runnable_list_node.is_in_list());
     }
 }
 
@@ -904,7 +908,9 @@ void Thread::set_state(State new_state, u8 stop_signal)
         ASSERT(g_scheduler_data->has_thread(*this));
     }
 
-    if (previous_state == Stopped) {
+    if (previous_state == Runnable) {
+        Scheduler::dequeue_runnable_thread(*this);
+    } else if (previous_state == Stopped) {
         m_stop_state = State::Invalid;
         auto& process = this->process();
         if (process.set_stopped(false) == true) {
@@ -920,6 +926,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
     }
 
     if (m_state == Runnable) {
+        Scheduler::queue_runnable_thread(*this);
         Processor::smp_wake_n_idle_processors(1);
     } else if (m_state == Stopped) {
         // We don't want to restore to Running state, only Runnable!
