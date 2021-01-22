@@ -29,6 +29,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
+#include <Kernel/Time/HPET.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -45,6 +46,7 @@ KernelRng::KernelRng()
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
     if (supports_rdseed || supports_rdrand) {
+        klog() << "KernelRng: Using RDSEED or RDRAND as entropy source";
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
             if (supports_rdseed) {
@@ -62,6 +64,14 @@ KernelRng::KernelRng()
             }
 
             this->resource().add_random_event(value, i % 32);
+        }
+    } else {
+        // Add HPET as entropy source if we don't have anything better.
+        klog() << "KernelRng: Using HPET as entropy source (bad!)";
+
+        for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
+            u64 hpet_time = HPET::the().read_main_counter();
+            this->resource().add_random_event(hpet_time, i % 32);
         }
     }
 }
