@@ -33,7 +33,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio inet dns unix recvfd sendfd cpath rpath fattr wpath cpath", nullptr) < 0) {
+    if (pledge("stdio inet unix recvfd sendfd cpath rpath fattr wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio inet dns unix recvfd sendfd rpath wpath cpath", nullptr) < 0) {
+    if (pledge("stdio inet unix recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
