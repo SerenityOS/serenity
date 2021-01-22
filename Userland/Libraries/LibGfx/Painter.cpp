@@ -660,11 +660,11 @@ void Painter::blit_offset(const IntPoint& a_position, const Gfx::Bitmap& source,
 
 void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect)
 {
+    auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect);
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect);
 
     ASSERT(source.has_alpha_channel());
-    IntRect safe_src_rect = a_src_rect.intersected(source.rect());
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
 
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -709,13 +709,13 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
         return blit_with_opacity(position, source, a_src_rect, opacity);
     if (source.has_alpha_channel())
         return blit_with_alpha(position, source, a_src_rect);
+
+    auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect, opacity);
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect, opacity);
 
     // If we get here, the Painter might have a scale factor, but the source bitmap has the same scale factor.
     // We need to transform from logical to physical coordinates, but we can just copy pixels without resampling.
-    auto safe_src_rect = a_src_rect.intersected(source.rect());
-    ASSERT(source.rect().contains(safe_src_rect));
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
