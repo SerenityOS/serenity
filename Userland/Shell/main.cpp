@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
-    parser.add_positional_argument(script_args, "Extra argumets to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
 

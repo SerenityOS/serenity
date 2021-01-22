@@ -527,7 +527,7 @@ void Compositor::flush(const Gfx::IntRect& a_rect)
 {
     auto rect = Gfx::IntRect::intersection(a_rect, Screen::the().rect());
 
-    // Almost everything in Compositor is in logical coordintes, with the painters having
+    // Almost everything in Compositor is in logical coordinates, with the painters having
     // a scale applied. But this routine accesses the backbuffer pixels directly, so it
     // must work in physical coordinates.
     rect = rect * Screen::the().scale_factor();
