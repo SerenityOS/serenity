@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=jq
 version=1.6
 useconfigure=true

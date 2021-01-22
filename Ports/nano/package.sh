@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=nano
 version=4.5
 useconfigure="true"

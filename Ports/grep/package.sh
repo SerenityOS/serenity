@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=grep
 version=2.5.4
 files="https://ftp.gnu.org/gnu/grep/grep-${version}.tar.gz grep-${version}.tar.gz

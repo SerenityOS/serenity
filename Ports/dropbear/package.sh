@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=dropbear
 version=2019.78
 files="https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2 dropbear-${version}.tar.bz2
