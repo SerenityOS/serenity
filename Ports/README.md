@@ -7,6 +7,10 @@ These shell scripts will allow you to build that sort of software, easily.
 Note that you must have already built Serenity, and be in a Serenity build
 environment.
 
+## Available ports
+
+A list of all available ports can be found [here](AvailablePorts.md).
+
 ## Using ports scripts
 
 Each port has a script called `package.sh` which defines a name and version,
