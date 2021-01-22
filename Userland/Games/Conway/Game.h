@@ -38,15 +38,21 @@ private:
     Game();
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
 
+    Gfx::IntRect first_cell_rect() const;
     void seed_universe();
     void update_universe();
+    void interact_at(const Gfx::IntPoint&);
 
-    Gfx::Color m_alive_color { Color::Green };
-    Gfx::Color m_dead_color { Color::Black };
-    int m_rows { 200 };
-    int m_columns { 200 };
-    int m_sleep { 100 };
+    const Gfx::Color m_alive_color { Color::Green };
+    const Gfx::Color m_dead_color { Color::Black };
+    const int m_rows { 200 };
+    const int m_columns { 200 };
+    const int m_sleep { 100 };
+    GUI::MouseButton m_last_button { GUI::MouseButton::None };
 
     bool m_universe[200][200];
 };
