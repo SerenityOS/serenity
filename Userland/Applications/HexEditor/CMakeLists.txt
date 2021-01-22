@@ -1,6 +1,7 @@
 set(SOURCES
     HexEditor.cpp
     HexEditorWidget.cpp
+    FindDialog.cpp
     main.cpp
 )
 
