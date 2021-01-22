@@ -95,6 +95,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (pledge("stdio exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");
     return 1;
