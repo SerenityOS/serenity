@@ -268,7 +268,7 @@ void Compositor::compose()
                 float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
 
                 // TODO: this may look ugly, we should scale to a backing bitmap and then blit
-                painter.blit_scaled(rect, *m_wallpaper, rect, hscale, vscale);
+                painter.draw_scaled_bitmap(rect, *m_wallpaper, { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale });
             } else {
                 ASSERT_NOT_REACHED();
             }
