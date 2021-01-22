@@ -483,10 +483,8 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_user_physical_regions) {
-        if (!region.contains(page)) {
-            klog() << "MM: deallocate_user_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
+        if (!region.contains(page))
             continue;
-        }
 
         region.return_page(page);
         --m_user_physical_pages_used;
