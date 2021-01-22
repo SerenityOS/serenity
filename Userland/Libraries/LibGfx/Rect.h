@@ -354,12 +354,14 @@ public:
 
     Vector<Rect<T>, 4> shatter(const Rect<T>& hammer) const;
 
-    bool operator==(const Rect<T>& other) const
+    template<class U>
+    bool operator==(const Rect<U>& other) const
     {
-        return m_location == other.m_location && m_size == other.m_size;
+        return location() == other.location() && size() == other.size();
     }
 
-    bool operator!=(const Rect<T>& other) const
+    template<class U>
+    bool operator!=(const Rect<U>& other) const
     {
         return !(*this == other);
     }

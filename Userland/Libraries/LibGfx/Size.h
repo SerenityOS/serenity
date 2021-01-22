@@ -74,12 +74,14 @@ public:
         return other.m_width <= m_width && other.m_height <= m_height;
     }
 
-    bool operator==(const Size<T>& other) const
+    template<class U>
+    bool operator==(const Size<U>& other) const
     {
-        return m_width == other.m_width && m_height == other.m_height;
+        return width() == other.width() && height() == other.height();
     }
 
-    bool operator!=(const Size<T>& other) const
+    template<class U>
+    bool operator!=(const Size<U>& other) const
     {
         return !(*this == other);
     }
