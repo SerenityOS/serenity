@@ -22,6 +22,7 @@ set(SOURCES
     PBMLoader.cpp
     PGMLoader.cpp
     PNGLoader.cpp
+    PNGWriter.cpp
     PPMLoader.cpp
     Point.cpp
     Rect.cpp
