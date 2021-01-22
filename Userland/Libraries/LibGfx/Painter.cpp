@@ -843,7 +843,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
             auto scaled_x = ((x - dst_rect.x()) * hscale) >> 16;
             auto scaled_y = ((y - dst_rect.y()) * vscale) >> 16;
-            auto src_pixel = get_pixel(source, scaled_x, scaled_y);
+            auto src_pixel = get_pixel(source, scaled_x + src_rect.left(), scaled_y + src_rect.top());
             if (has_opacity)
                 src_pixel.set_alpha(src_pixel.alpha() * opacity);
             if constexpr (has_alpha_channel) {
