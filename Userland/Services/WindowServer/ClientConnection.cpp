@@ -48,15 +48,6 @@ namespace WindowServer {
 
 HashMap<int, NonnullRefPtr<ClientConnection>>* s_connections;
 
-static Gfx::IntRect normalize_window_rect(Gfx::IntRect rect, WindowType window_type)
-{
-    auto min_size = 1;
-    if (window_type == WindowType::Normal)
-        min_size = 50;
-    Gfx::IntRect normalized_rect = { rect.x(), rect.y(), max(rect.width(), min_size), max(rect.height(), min_size) };
-    return normalized_rect;
-}
-
 void ClientConnection::for_each_client(Function<void(ClientConnection&)> callback)
 {
     if (!s_connections)
@@ -403,10 +394,10 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
     if (message.rect().location() != window.rect().location()) {
         window.set_default_positioned(false);
     }
-    auto normalized_rect = normalize_window_rect(message.rect(), window.type());
-    window.set_rect(normalized_rect);
-    window.request_update(normalized_rect);
-    return make<Messages::WindowServer::SetWindowRectResponse>(normalized_rect);
+    window.set_rect(message.rect());
+    window.normalize_rect();
+    window.request_update(window.rect());
+    return make<Messages::WindowServer::SetWindowRectResponse>(window.rect());
 }
 
 OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRect& message)
@@ -461,8 +452,8 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
             rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
             window->set_default_positioned(true);
         }
-        auto normalized_rect = normalize_window_rect(rect, window->type());
-        window->set_rect(normalized_rect);
+        window->set_rect(rect);
+        window->normalize_rect();
     }
     if (window->type() == WindowType::Desktop) {
         window->set_rect(WindowManager::the().desktop_rect());

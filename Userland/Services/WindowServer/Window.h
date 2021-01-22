@@ -158,6 +158,7 @@ public:
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
+    void normalize_rect();
 
     void set_taskbar_rect(const Gfx::IntRect&);
     const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
