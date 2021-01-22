@@ -598,12 +598,17 @@ void Painter::blit_dimmed(const IntPoint& position, const Gfx::Bitmap& source, c
 
 void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    ASSERT((source.scale() == 1 || source.scale() == scale()) && "draw_tiled_bitmap only supports integer upsampling");
 
     auto dst_rect = a_dst_rect.translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    int scale = this->scale();
+    clipped_rect *= scale;
+    dst_rect *= scale;
+
     const int first_row = (clipped_rect.top() - dst_rect.top());
     const int last_row = (clipped_rect.bottom() - dst_rect.top());
     const int first_column = (clipped_rect.left() - dst_rect.left());
@@ -611,14 +616,25 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
-        int x_start = first_column + a_dst_rect.left();
-        for (int row = first_row; row <= last_row; ++row) {
-            const RGBA32* sl = source.scanline((row + a_dst_rect.top())
-                % source.size().height());
-            for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
-                dst[x - x_start] = sl[x % source.size().width()];
+        int s = scale / source.scale();
+        if (s == 1) {
+            int x_start = first_column + a_dst_rect.left();
+            for (int row = first_row; row <= last_row; ++row) {
+                const RGBA32* sl = source.scanline((row + a_dst_rect.top()) % source.physical_height());
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                    dst[x - x_start] = sl[x % source.physical_width()];
+                }
+                dst += dst_skip;
             }
-            dst += dst_skip;
+        } else {
+            int x_start = first_column + a_dst_rect.left();
+            for (int row = first_row; row <= last_row; ++row) {
+                const RGBA32* sl = source.scanline(((row + a_dst_rect.top()) / s) % source.height());
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                    dst[x - x_start] = sl[(x / s) % source.width()];
+                }
+                dst += dst_skip;
+            }
         }
         return;
     }
@@ -686,7 +702,7 @@ void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& sourc
 
 void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    assert(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
+    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
     if (opacity < 1.0f)
         return blit_with_opacity(position, source, a_src_rect, opacity);
