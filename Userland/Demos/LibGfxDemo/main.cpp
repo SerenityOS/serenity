@@ -147,7 +147,7 @@ void Canvas::draw()
 
     auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png");
     painter.blit({ 280, 280 }, *buggie, buggie->rect(), 0.5);
-    painter.blit_scaled({ 360, 280, buggie->rect().width() * 2, buggie->rect().height() * 2 }, *buggie, buggie->rect(), 0.5, 0.5);
+    painter.draw_scaled_bitmap({ 360, 280, buggie->rect().width() * 2, buggie->rect().height() * 2 }, *buggie, buggie->rect());
 
     painter.draw_rect({ 20, 260, 480, 320 }, Color::DarkGray);
 
