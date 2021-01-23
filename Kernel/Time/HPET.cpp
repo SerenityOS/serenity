@@ -271,6 +271,12 @@ u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool quer
     return (delta_ticks * 1000000000ull) / ticks_per_second;
 }
 
+u64 HPET::read_main_counter() const
+{
+    auto& main_counter = registers().main_counter_value;
+    return ((u64)main_counter.high << 32) | (u64)main_counter.low;
+}
+
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
 #if HPET_DEBUG

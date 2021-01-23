@@ -60,6 +60,7 @@ public:
     void disable_periodic_interrupt(const HPETComparator& comparator);
 
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
+    u64 read_main_counter() const;
 
     Vector<unsigned> capable_interrupt_numbers(u8 comparator_number);
     Vector<unsigned> capable_interrupt_numbers(const HPETComparator&);
