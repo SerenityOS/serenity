@@ -522,13 +522,14 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 
         const int tiling_deadzone = 10;
         const int secondary_deadzone = 2;
+        auto desktop = desktop_rect();
 
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             if (pixels_moved_from_start > 5) {
                 // dbgln("[WM] de-maximizing window");
                 m_move_origin = event.position();
-                if (m_move_origin.y() <= secondary_deadzone)
+                if (m_move_origin.y() <= secondary_deadzone + desktop.top())
                     return true;
                 m_move_window->set_maximized(false, event.position());
                 m_move_window_origin = m_move_window->position();
@@ -536,7 +537,6 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         } else {
             bool is_resizable = m_move_window->is_resizable();
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
-            auto desktop = desktop_rect();
 
             if (is_resizable && event.x() <= tiling_deadzone) {
                 if (event.y() <= tiling_deadzone + desktop.top())
