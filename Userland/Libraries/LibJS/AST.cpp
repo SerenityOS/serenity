@@ -810,7 +810,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
         if (!super_constructor.is_function() && !super_constructor.is_null()) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassExtendsValueNotAConstructorOrNull, super_constructor.to_string_without_side_effects());
             return {};
         }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
@@ -818,9 +818,18 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
-            super_constructor_prototype = &super_constructor.as_object().get(vm.names.prototype).as_object();
+            auto super_constructor_prototype_value = super_constructor.as_object().get(vm.names.prototype);
             if (interpreter.exception())
                 return {};
+            if (!super_constructor_prototype_value.is_object() && !super_constructor_prototype_value.is_null()) {
+                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_constructor_prototype_value.to_string_without_side_effects());
+                return {};
+            }
+            if (super_constructor_prototype_value.is_object()) {
+                super_constructor_prototype = &super_constructor_prototype_value.as_object();
+                if (interpreter.exception())
+                    return {};
+            }
         }
         prototype->set_prototype(super_constructor_prototype);
 

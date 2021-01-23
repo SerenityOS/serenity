@@ -36,8 +36,9 @@
     M(BigIntIntArgument, "BigInt argument must be an integer")                                                                          \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
+    M(ClassExtendsValueNotAConstructorOrNull, "Class extends value {} is not a constructor or null")                                    \
+    M(ClassExtendsValueInvalidPrototype, "Class extends value has an invalid prototype {}")                                             \
     M(ClassIsAbstract, "Abstract class {} cannot be constructed directly")                                                              \
-    M(ClassDoesNotExtendAConstructorOrNull, "Class extends value {} is not a constructor or null")                                      \
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                                                   \
