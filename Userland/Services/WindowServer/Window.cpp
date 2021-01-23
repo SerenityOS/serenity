@@ -319,20 +319,26 @@ void Window::set_occluded(bool occluded)
     WindowManager::the().notify_occlusion_state_changed(*this);
 }
 
-void Window::set_maximized(bool maximized)
+void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
 {
     if (m_maximized == maximized)
         return;
     if (maximized && (!is_resizable() || resize_aspect_ratio().has_value()))
         return;
-    set_tiled(WindowTileType::None);
+    m_tiled = WindowTileType::None;
     m_maximized = maximized;
     update_menu_item_text(PopupMenuItem::Maximize);
     if (maximized) {
         m_unmaximized_rect = m_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
     } else {
-        set_rect(m_unmaximized_rect);
+        if (fixed_point.has_value()) {
+            auto new_rect = Gfx::IntRect(m_rect);
+            new_rect.set_size_around(m_unmaximized_rect.size(), fixed_point.value());
+            set_rect(new_rect);
+        } else {
+            set_rect(m_unmaximized_rect);
+        }
     }
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
@@ -627,14 +633,14 @@ void Window::set_fullscreen(bool fullscreen)
 
 Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 {
+    ASSERT(tiled != WindowTileType::None);
+
     int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
     int title_bar_height = m_frame.title_bar_rect().height();
     int menu_height = WindowManager::the().maximized_window_rect(*this).y();
     int max_height = WindowManager::the().maximized_window_rect(*this).height();
 
     switch (tiled) {
-    case WindowTileType::None:
-        return m_untiled_rect;
     case WindowTileType::Left:
         return Gfx::IntRect(0,
             menu_height,
@@ -680,8 +686,27 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
     }
 }
 
+bool Window::set_untiled(const Gfx::IntPoint& fixed_point)
+{
+    if (m_tiled == WindowTileType::None)
+        return false;
+    ASSERT(!resize_aspect_ratio().has_value());
+
+    m_tiled = WindowTileType::None;
+
+    auto new_rect = Gfx::IntRect(m_rect);
+    new_rect.set_size_around(m_untiled_rect.size(), fixed_point);
+    set_rect(new_rect);
+
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+
+    return true;
+}
+
 void Window::set_tiled(WindowTileType tiled)
 {
+    ASSERT(tiled != WindowTileType::None);
+
     if (m_tiled == tiled)
         return;
 
