@@ -33,3 +33,17 @@ test("extending String", () => {
     const ms2 = new MyString2("abc");
     expect(ms2.charAt(1)).toBe("#b");
 });
+
+test("class extends value is invalid", () => {
+    expect(() => {
+        class A extends 123 {}
+    }).toThrowWithMessage(TypeError, "Class extends value 123 is not a constructor or null");
+});
+
+test("class extends value has invalid prototype", () => {
+    function f() {}
+    f.prototype = 123;
+    expect(() => {
+        class A extends f {}
+    }).toThrowWithMessage(TypeError, "Class extends value has an invalid prototype 123");
+});
