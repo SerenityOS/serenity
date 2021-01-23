@@ -200,6 +200,8 @@
 #include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/Bindings/PerformanceTimingConstructor.h>
 #include <LibWeb/Bindings/PerformanceTimingPrototype.h>
+#include <LibWeb/Bindings/ProgressEventConstructor.h>
+#include <LibWeb/Bindings/ProgressEventPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
 #include <LibWeb/Bindings/SVGGeometryElementConstructor.h>
@@ -219,6 +221,8 @@
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestEventTargetConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestEventTargetPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 
 #define ADD_WINDOW_OBJECT_INTERFACE(name)                 \
@@ -313,6 +317,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Node)                     \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)              \
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)        \
+    ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)            \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)               \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)               \
@@ -322,4 +327,5 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                     \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                  \
-    ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)
+    ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)           \
+    ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget)
