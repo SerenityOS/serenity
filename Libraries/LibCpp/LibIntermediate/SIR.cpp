@@ -34,8 +34,8 @@ static void add_return_to_void_functions(SIR::TranslationUnit& tu)
         const Type& return_type = function.return_type();
 
         if (return_type.kind() == Type::Kind::Void) {
-            if (function.body().is_empty() || !function.body().last().is_return_statement())
-                function.body().append(create_ast_node<ReturnStatement>(function.start(), function.end()));
+            if (function.body()->body().is_empty() || !function.body()->body().last().is_return_statement())
+                function.body()->add_node(create_ast_node<ReturnStatement>(function.start(), function.end()));
         }
     }
 }

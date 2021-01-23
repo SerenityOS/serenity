@@ -27,7 +27,10 @@
 #include "Parser.h"
 #include "AST.h"
 #include "Option.h"
+#include <AK/ScopeGuard.h>
 #include <LibCore/File.h>
+
+//#pragma GCC optimize("O0")
 
 #define DEBUG_SPAM
 #include <AK/ScopeLogger.h>
@@ -35,6 +38,11 @@
 #if defined DEBUG_SPAM && !defined DEBUG_CPP_PARSER
 #    define DEBUG_CPP_PARSER
 #endif
+
+#define AUTO_POP_SCOPE() auto scope##__COUNTER__ = ScopeGuard([this]() { \
+    ASSERT(m_current_scope->parent());                                   \
+    m_current_scope = *m_current_scope->parent();                        \
+})
 
 namespace Cpp {
 
@@ -104,6 +112,24 @@ Token Parser::consume(Token::Type expected_type)
     }
     consume();
     return tok;
+}
+
+Optional<NonnullRefPtr<Variable>> Parser::get_var_for_identifier(String& identifier)
+{
+    for (auto scope = m_current_scope; scope->parent(); scope = *scope->parent())
+        for (auto& declaration : scope->declarations())
+            if (declaration.name() == identifier)
+                return declaration;
+    return {};
+}
+
+NonnullRefPtr<Scope> Parser::create_and_push_scope()
+{
+    auto scope = create_ast_node<Scope>(m_lexer.get_current_position(), m_lexer.get_current_position());
+    m_current_scope->add_children(scope);
+    scope->set_parent(m_current_scope);
+    m_current_scope = scope;
+    return scope;
 }
 
 /*
@@ -308,10 +334,11 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     SCOPE_LOGGER();
     auto id = parse_id_expression();
     if (id.has_value()) {
-        //TODO: should disapear when result will be bound to a variable
-        Position dummy_position {};
-        auto return_type = create_ast_node<Variable>(dummy_position, dummy_position, create_ast_node<SignedIntType>(dummy_position, dummy_position), id.value());
-        return create_ast_node<IdentifierExpression>(return_type->start(), return_type->end(), move(return_type));
+        auto matching_var = get_var_for_identifier(id.value());
+
+        ASSERT(matching_var.has_value());
+        //TODO: the position is wrong. Should be returned via parse_id_position
+        return create_ast_node<IdentifierExpression>(m_lexer.get_current_position(), m_lexer.get_current_position(), matching_var.value());
     } else {
         parse_error("expected identifier");
     }
@@ -574,7 +601,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
         auto condition = parse_condition();
         expect(Token::Type::RightParen);
         auto if_body = parse_statement();
-        Optional<NonnullRefPtrVector<ASTNode>> else_body;
+        Optional<NonnullRefPtr<Scope>> else_body;
         if (match_keyword(Token::KnownKeyword::Else)) {
             consume();
             else_body = parse_statement();
@@ -588,7 +615,7 @@ Optional<NonnullRefPtr<Statement>> Parser::parse_selection_statement()
 //      - jump-statement
 //      - selection-statement
 //      - compound-statement
-NonnullRefPtrVector<ASTNode> Parser::parse_statement()
+NonnullRefPtr<Scope> Parser::parse_statement()
 {
     SCOPE_LOGGER();
     if (match(Token::Type::LeftCurly))
@@ -597,14 +624,15 @@ NonnullRefPtrVector<ASTNode> Parser::parse_statement()
     if (!statement.has_value())
         statement = parse_selection_statement();
     ASSERT(statement.has_value());
-    NonnullRefPtrVector<ASTNode> vec;
-    vec.append(statement.release_value());
-    return vec;
+    auto scope = create_and_push_scope();
+    AUTO_POP_SCOPE();
+    scope->add_node(statement.release_value());
+    return scope;
 }
 
 // statement-seq:
 //      - statement
-NonnullRefPtrVector<ASTNode> Parser::parse_statement_seq()
+NonnullRefPtr<Scope> Parser::parse_statement_seq()
 {
     SCOPE_LOGGER();
     return parse_statement();
@@ -612,20 +640,22 @@ NonnullRefPtrVector<ASTNode> Parser::parse_statement_seq()
 
 // compound-statement:
 //      - { statement-seq* }
-NonnullRefPtrVector<ASTNode> Parser::parse_compound_statement()
+NonnullRefPtr<Scope> Parser::parse_compound_statement()
 {
     SCOPE_LOGGER();
-    NonnullRefPtrVector<ASTNode> body;
+    auto scope = create_and_push_scope();
+    AUTO_POP_SCOPE();
+
     expect(Token::Type::LeftCurly);
     while (!match(Token::Type::RightCurly))
-        body.append(parse_statement_seq());
+        scope->add_node(parse_statement_seq());
     expect(Token::Type::RightCurly);
-    return body;
+    return scope;
 }
 
 // function-body:
 //      - compound-statement
-NonnullRefPtrVector<ASTNode> Parser::parse_function_body()
+NonnullRefPtr<Scope> Parser::parse_function_body()
 {
     SCOPE_LOGGER();
     return parse_compound_statement();
@@ -640,6 +670,10 @@ NonnullRefPtr<Function> Parser::parse_function_definition()
     auto declarator = parse_declarator();
 
     if (declarator.has_value()) {
+        auto scope = create_and_push_scope();
+        AUTO_POP_SCOPE();
+
+        scope->set_declarations(declarator.value().parameters);
         auto body = parse_function_body();
         //TODO: should be the pos of the }, not the token after it.
         return create_ast_node<Function>(return_type->start(), peek().m_end, move(return_type), declarator.value().name, declarator.value().parameters, move(body));
@@ -673,23 +707,24 @@ NonnullRefPtrVector<Function> Parser::parse_declaration_sequence()
 
 // translation-unit:
 //      - [declaration-seq]
-Cpp::TranslationUnit Parser::parse_translation_unit()
+void Parser::parse_translation_unit()
 {
     SCOPE_LOGGER();
 
     if (!match(Token::Type::EndOfFile)) {
         auto functions = parse_declaration_sequence();
-        m_tu.functions().append(move(functions));
+        for (auto& function : functions) {
+            translation_unit()->functions().append(function);
+        }
     }
-
-    return m_tu;
 }
 
-TranslationUnit Parser::parse(const Cpp::Option& options)
+NonnullRefPtr<TranslationUnit> Parser::parse(const Cpp::Option& options)
 {
     Parser parser(options.input_file);
 
-    return parser.parse_translation_unit();
+    parser.parse_translation_unit();
+    return parser.translation_unit();
 }
 
 ByteBuffer Parser::get_input_file_content(const String& filename)
@@ -703,7 +738,14 @@ ByteBuffer Parser::get_input_file_content(const String& filename)
 Parser::Parser(const String& filename)
     : m_file_content(get_input_file_content(filename))
     , m_lexer(m_file_content)
+    , m_tu(create_ast_node<TranslationUnit>(m_lexer.get_current_position(), m_lexer.get_current_position()))
+    , m_current_scope(m_tu)
 {
+}
+
+Parser::~Parser()
+{
+    ASSERT(!m_current_scope->parent());
 }
 
 }

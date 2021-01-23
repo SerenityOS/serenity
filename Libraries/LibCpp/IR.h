@@ -30,10 +30,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 
-namespace Cpp {
-class TranslationUnit;
-}
-
 namespace Cpp::IR {
-SIR::TranslationUnit to_internal_representation(Cpp::TranslationUnit& tu);
+void to_internal_representation(SIR::TranslationUnit& tu);
 }

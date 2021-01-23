@@ -67,7 +67,7 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
     auto variables_already_seen = HashMap<String, String>();
     Optional<const SIR::Variable*> var_in_eax;
 
-    for (auto& operation : function.body()) {
+    for (auto& operation : function.body()->body()) {
         if (operation.is_binary_expression()) {
             auto& binop = reinterpret_cast<const SIR::BinaryExpression&>(operation);
             auto& right = binop.right();
@@ -148,8 +148,8 @@ void I386Assembly::print_assembly_for_function(const SIR::Function& function)
         } else if (operation.is_jump_statement()) {
             dbgln("{}", generator.as_string());
             auto& jump = reinterpret_cast<const SIR::JumpStatement&>(operation);
-            auto& if_true = jump.if_true().at(0);
-            auto& if_false = jump.if_false().value().at(0);
+            auto& if_true = jump.if_true()->body().at(0);
+            auto& if_false = jump.if_false().value()->body().at(0);
 
             ASSERT(if_true.is_expression() && if_false.is_expression());
             generator.set("if.identifier", reinterpret_cast<const SIR::Expression&>(if_true).result()->name());

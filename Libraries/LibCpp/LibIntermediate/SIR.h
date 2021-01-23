@@ -37,6 +37,10 @@ struct Option;
 namespace SIR {
 
 using Position = Cpp::Position;
+class Variable;
+class ASTNode;
+class Statement;
+class Function;
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
@@ -46,7 +50,6 @@ create_ast_node(Args&&... args)
 }
 
 class ASTNode : public RefCounted<ASTNode> {
-
 public:
     ASTNode(Position start, Position end)
         : m_start(start)
@@ -60,6 +63,7 @@ public:
     virtual bool is_return_statement() const { return false; }
     virtual bool is_jump_statement() const { return false; }
     virtual bool is_primary_expression() const { return false; }
+    virtual bool is_scope() const { return false; }
 
     virtual bool is_identifier_expression() const { return false; }
     virtual bool is_label_expression() const { return false; }
@@ -72,6 +76,47 @@ public:
 private:
     Position m_start;
     Position m_end;
+};
+
+class Scope : public ASTNode {
+public:
+    Scope(Position start, Position end)
+        : ASTNode(start, end)
+    {
+    }
+
+    bool is_scope() const override { return true; }
+
+    NonnullRefPtrVector<Variable>& declarations() { return m_declarations; }
+    void set_declarations(NonnullRefPtrVector<Variable>& declarations) { m_declarations.append(declarations); }
+    const Scope* parent() const& { return m_parent; }
+    void set_parent(Scope& scope) { m_parent = &scope; }
+    void add_children(const NonnullRefPtr<Scope>& scope) { m_childrens.append(scope); }
+
+    void add_node(const NonnullRefPtr<ASTNode>& node) { m_body.append(node); }
+    const NonnullRefPtrVector<ASTNode>& body() const& { return m_body; }
+    NonnullRefPtrVector<ASTNode>& body() & { return m_body; }
+
+private:
+    NonnullRefPtrVector<Variable> m_declarations;
+    Scope* m_parent { nullptr };
+    NonnullRefPtrVector<Scope> m_childrens;
+    NonnullRefPtrVector<ASTNode> m_body;
+};
+
+class TranslationUnit : public Scope {
+public:
+    TranslationUnit(Position start, Position end, NonnullRefPtrVector<Function> functions = NonnullRefPtrVector<Function>())
+        : Scope(start, end)
+        , m_functions(move(functions))
+    {
+    }
+
+    const NonnullRefPtrVector<Function>& functions() const { return m_functions; }
+    NonnullRefPtrVector<Function>& functions() { return m_functions; }
+
+private:
+    NonnullRefPtrVector<Function> m_functions;
 };
 
 class Type : public ASTNode {
@@ -271,7 +316,7 @@ private:
 
 class JumpStatement : public Statement {
 public:
-    JumpStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtrVector<ASTNode> if_true, Optional<NonnullRefPtrVector<ASTNode>> if_false)
+    JumpStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtr<Scope> if_true, Optional<NonnullRefPtr<Scope>> if_false)
         : Statement(start, end)
         , m_condition(move(condition))
         , m_if_true(move(if_true))
@@ -282,18 +327,18 @@ public:
     bool is_jump_statement() const override { return true; }
 
     NonnullRefPtr<Expression> condition() const { return m_condition; }
-    NonnullRefPtrVector<ASTNode>& if_true() { return m_if_true; }
-    const NonnullRefPtrVector<ASTNode>& if_true() const { return m_if_true; }
-    Optional<NonnullRefPtrVector<ASTNode>>& if_false() { return m_if_false; }
-    const Optional<NonnullRefPtrVector<ASTNode>>& if_false() const { return m_if_false; }
+    NonnullRefPtr<Scope>& if_true() { return m_if_true; }
+    const NonnullRefPtr<Scope>& if_true() const { return m_if_true; }
+    Optional<NonnullRefPtr<Scope>>& if_false() { return m_if_false; }
+    const Optional<NonnullRefPtr<Scope>>& if_false() const { return m_if_false; }
     void set_condition(NonnullRefPtr<Expression> condition) { m_condition = move(condition); }
-    void set_if_true(NonnullRefPtrVector<ASTNode> if_true) { m_if_true = move(if_true); }
-    void set_if_false(Optional<NonnullRefPtrVector<ASTNode>> if_false) { m_if_false = move(if_false); }
+    void set_if_true(NonnullRefPtr<Scope> if_true) { m_if_true = move(if_true); }
+    void set_if_false(Optional<NonnullRefPtr<Scope>> if_false) { m_if_false = move(if_false); }
 
 private:
     NonnullRefPtr<Expression> m_condition;
-    NonnullRefPtrVector<ASTNode> m_if_true;
-    Optional<NonnullRefPtrVector<ASTNode>> m_if_false;
+    NonnullRefPtr<Scope> m_if_true;
+    Optional<NonnullRefPtr<Scope>> m_if_false;
 };
 
 class ReturnStatement : public Statement {
@@ -315,7 +360,7 @@ private:
 
 class Function : public RefCounted<Function> {
 public:
-    Function(Position start, Position end, NonnullRefPtr<Type> return_type, String& name, NonnullRefPtrVector<Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+    Function(Position start, Position end, NonnullRefPtr<Type> return_type, String& name, NonnullRefPtrVector<Variable> parameters, NonnullRefPtr<Scope> body)
         : m_return_type(move(return_type))
         , m_name(name)
         , m_parameters(move(parameters))
@@ -330,8 +375,9 @@ public:
     const NonnullRefPtr<Type>& return_type() const { return m_return_type; }
     const NonnullRefPtrVector<Variable>& parameters() const { return m_parameters; }
     NonnullRefPtrVector<Variable>& parameters() { return m_parameters; }
-    NonnullRefPtrVector<ASTNode>& body() { return m_body; }
-    const NonnullRefPtrVector<ASTNode>& body() const { return m_body; }
+    const NonnullRefPtr<Scope>& body() const& { return m_body; }
+    NonnullRefPtr<Scope>& body() & { return m_body; }
+    void set_body(NonnullRefPtr<Scope>& body) & { m_body = body; }
     const Position& start() const { return m_start; }
     const Position& end() const { return m_end; }
 
@@ -339,23 +385,9 @@ private:
     NonnullRefPtr<Type> m_return_type;
     String m_name;
     NonnullRefPtrVector<Variable> m_parameters;
-    NonnullRefPtrVector<ASTNode> m_body;
+    NonnullRefPtr<Scope> m_body;
     Position m_start;
     Position m_end;
-};
-
-class TranslationUnit {
-public:
-    TranslationUnit(NonnullRefPtrVector<Function> functions = NonnullRefPtrVector<Function>())
-        : m_functions(move(functions))
-    {
-    }
-
-    const NonnullRefPtrVector<Function>& functions() const { return m_functions; }
-    NonnullRefPtrVector<Function>& functions() { return m_functions; }
-
-private:
-    NonnullRefPtrVector<Function> m_functions;
 };
 
 void run_intermediate_representation_passes(SIR::TranslationUnit&);

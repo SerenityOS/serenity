@@ -39,6 +39,8 @@ using Statement = SIR::Statement;
 using ReturnStatement = SIR::ReturnStatement;
 using BinaryExpression = SIR::BinaryExpression;
 using IdentifierExpression = SIR::IdentifierExpression;
+using Scope = SIR::Scope;
+using TranslationUnit = SIR::TranslationUnit;
 
 class IntegerType : public SIR::IntegerType {
 public:
@@ -65,7 +67,7 @@ public:
 
 class IfStatement : public SIR::JumpStatement {
 public:
-    IfStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtrVector<ASTNode> if_true, Optional<NonnullRefPtrVector<ASTNode>> if_false)
+    IfStatement(Position start, Position end, NonnullRefPtr<Expression> condition, NonnullRefPtr<Scope> if_true, Optional<NonnullRefPtr<Scope>> if_false)
         : SIR::JumpStatement(start, end, move(condition), move(if_true), move(if_false))
     {
     }
@@ -73,7 +75,7 @@ public:
 
 class Function : public SIR::Function {
 public:
-    Function(Position start, Position end, NonnullRefPtr<SIR::Type> return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable> parameters, NonnullRefPtrVector<ASTNode> body)
+    Function(Position start, Position end, NonnullRefPtr<SIR::Type> return_type, String& unmangled_name, NonnullRefPtrVector<SIR::Variable> parameters, NonnullRefPtr<Scope> body)
         : SIR::Function(start, end, move(return_type), unmangled_name, move(parameters), move(body))
         , m_unmangled_name(unmangled_name)
     {
@@ -86,11 +88,4 @@ private:
     String m_unmangled_name;
 };
 
-class TranslationUnit {
-public:
-    NonnullRefPtrVector<Function>& functions() { return m_functions; }
-
-private:
-    NonnullRefPtrVector<Function> m_functions;
-};
 }

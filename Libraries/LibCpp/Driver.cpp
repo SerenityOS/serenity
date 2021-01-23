@@ -36,10 +36,10 @@ void Driver::run(int ac, const char** av)
 {
     auto options = Cpp::Option::parse_options(ac, av);
     auto tu = Cpp::Parser::parse(options);
-    auto ir = Cpp::IR::to_internal_representation(tu);
+    Cpp::IR::to_internal_representation(tu);
 
-    SIR::run_intermediate_representation_passes(ir);
-    auto assembly = BackEnd::I386Assembly(ir, options);
+    SIR::run_intermediate_representation_passes(tu);
+    auto assembly = BackEnd::I386Assembly(tu, options);
 
     assembly.print_asm();
 }

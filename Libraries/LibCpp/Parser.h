@@ -34,7 +34,8 @@
 namespace Cpp {
 class Parser {
 public:
-    static TranslationUnit parse(const Cpp::Option& options);
+    static NonnullRefPtr<TranslationUnit> parse(const Cpp::Option& options);
+    NonnullRefPtr<TranslationUnit> translation_unit() { return m_tu; }
 
 private:
     struct TypeSpecifier {
@@ -52,6 +53,7 @@ private:
     };
 
     explicit Parser(const String&);
+    ~Parser();
     static ByteBuffer get_input_file_content(const String& filename);
     [[nodiscard]] Token get_next_token_skip_comment_and_whitespaces();
     [[nodiscard]] Token peek();
@@ -65,7 +67,10 @@ private:
     bool match_any(Args... expected);
     bool match(Token::Type expected);
 
-    TranslationUnit parse_translation_unit();
+    Optional<NonnullRefPtr<Cpp::Variable>> get_var_for_identifier(String& identifier);
+    NonnullRefPtr<Scope> create_and_push_scope();
+
+    void parse_translation_unit();
     Optional<String> parse_unqualified_id();
     Optional<String> parse_id_expression();
     Optional<String> parse_declarator_id();
@@ -84,8 +89,8 @@ private:
     NonnullRefPtrVector<Variable> parse_parameter_declaration_list();
     NonnullRefPtrVector<Variable> parse_parameter_declaration_clause();
     NonnullRefPtrVector<Variable> parse_parameters_and_qualifiers();
-    NonnullRefPtrVector<ASTNode> parse_compound_statement();
-    NonnullRefPtrVector<ASTNode> parse_function_body();
+    NonnullRefPtr<Scope> parse_compound_statement();
+    NonnullRefPtr<Scope> parse_function_body();
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_postfix_expression();
     NonnullRefPtr<Expression> parse_unary_expression();
@@ -108,12 +113,13 @@ private:
     Optional<NonnullRefPtr<Statement>> parse_jump_statement();
     Optional<NonnullRefPtr<Statement>> parse_selection_statement();
     NonnullRefPtr<Expression> parse_condition();
-    NonnullRefPtrVector<ASTNode> parse_statement();
-    NonnullRefPtrVector<ASTNode> parse_statement_seq();
+    NonnullRefPtr<Scope> parse_statement();
+    NonnullRefPtr<Scope> parse_statement_seq();
 
     ByteBuffer m_file_content;
     Lexer m_lexer;
     Optional<Token> m_saved_token;
-    TranslationUnit m_tu;
+    NonnullRefPtr<TranslationUnit> m_tu;
+    NonnullRefPtr<Scope> m_current_scope;
 };
 }
