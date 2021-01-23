@@ -88,6 +88,11 @@ void TerminalWrapper::run_command(const String& command)
     };
 
     m_pid = fork();
+    if (m_pid < 0) {
+        perror("fork");
+        return;
+    }
+
     if (m_pid == 0) {
         // Create a new process group.
         setsid();
