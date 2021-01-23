@@ -197,6 +197,7 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
     WebContentClient.cpp
 )
@@ -370,6 +371,7 @@ libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
+libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
