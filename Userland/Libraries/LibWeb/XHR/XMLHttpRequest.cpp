@@ -43,7 +43,7 @@
 namespace Web::XHR {
 
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
-    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
+    : XMLHttpRequestEventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
     , m_window(window)
 {
 }

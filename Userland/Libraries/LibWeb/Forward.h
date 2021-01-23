@@ -192,6 +192,7 @@ class StackingContext;
 namespace Web::XHR {
 class ProgressEvent;
 class XMLHttpRequest;
+class XMLHttpRequestEventTarget;
 }
 
 namespace Web::Bindings {
@@ -300,6 +301,7 @@ class Wrapper;
 class XMLHttpRequestConstructor;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+class XMLHttpRequestEventTargetWrapper;
 class RangeConstructor;
 class RangePrototype;
 class RangeWrapper;
