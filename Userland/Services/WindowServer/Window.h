@@ -103,13 +103,14 @@ public:
     void set_resizable(bool);
 
     bool is_maximized() const { return m_maximized; }
-    void set_maximized(bool);
+    void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
     WindowTileType tiled() const { return m_tiled; }
     void set_tiled(WindowTileType);
+    bool set_untiled(const Gfx::IntPoint& fixed_point);
 
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
@@ -220,7 +221,16 @@ public:
     void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
 
     const Optional<Gfx::IntSize>& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
-    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio) { m_resize_aspect_ratio = ratio; }
+    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
+    {
+        // "Tiled" means that we take up a chunk of space relative to the screen.
+        // The screen can change, so "tiled" and "fixed aspect ratio" are mutually exclusive.
+        // Similarly for "maximized" and "fixed aspect ratio".
+        // In order to resolve this, undo those properties first:
+        set_untiled(position());
+        set_maximized(false);
+        m_resize_aspect_ratio = ratio;
+    }
 
     Gfx::IntSize base_size() const { return m_base_size; }
     void set_base_size(const Gfx::IntSize& size) { m_base_size = size; }
