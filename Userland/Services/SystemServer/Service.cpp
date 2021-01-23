@@ -319,7 +319,7 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
 
     if (!m_socket_path.is_null() && is_enabled()) {
         auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
-        m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 04777;
+        m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 0777;
         setup_socket();
     }
 }
