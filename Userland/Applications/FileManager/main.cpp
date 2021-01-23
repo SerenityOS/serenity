@@ -114,9 +114,7 @@ int main(int argc, char** argv)
     String initial_location;
 
     if (argc >= 2) {
-        char* buffer = realpath(argv[1], nullptr);
-        initial_location = buffer;
-        free(buffer);
+        initial_location = Core::File::real_path_for(argv[1]);
     }
 
     if (initial_location.is_empty())
