@@ -405,6 +405,16 @@ void dbgln() { dbgln<enabled>(""); }
 
 void set_debug_enabled(bool);
 
+#ifdef KERNEL
+void vdmesgln(StringView fmtstr, TypeErasedFormatParams);
+
+template<typename... Parameters>
+void dmesgln(StringView fmtstr, const Parameters&... parameters) { vdmesgln(fmtstr, VariadicFormatParams { parameters... }); }
+template<typename... Parameters>
+void dmesgln(const char* fmtstr, const Parameters&... parameters) { vdmesgln(fmtstr, VariadicFormatParams { parameters... }); }
+inline void dmesgln() { dmesgln(""); }
+#endif
+
 template<typename T, typename = void>
 struct HasFormatter : TrueType {
 };
@@ -459,7 +469,9 @@ struct Formatter<FormatString> : Formatter<String> {
 
 } // namespace AK
 
-#ifndef KERNEL
+#ifdef KERNEL
+using AK::dmesgln;
+#else
 using AK::out;
 using AK::outln;
 
