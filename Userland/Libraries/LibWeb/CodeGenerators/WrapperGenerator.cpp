@@ -232,6 +232,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
         consume_whitespace();
+
         assert_specific(';');
         Attribute attribute;
         attribute.readonly = readonly;
@@ -397,7 +398,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG")) {
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -519,6 +520,8 @@ static void generate_header(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 )~~~");
 
@@ -739,6 +742,8 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -920,12 +925,15 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::DOM;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
+using namespace Web::XHR;
 
 namespace Web::Bindings {
 

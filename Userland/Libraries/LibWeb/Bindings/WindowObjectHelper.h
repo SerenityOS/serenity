@@ -218,6 +218,8 @@
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
+#include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
+#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 
 #define ADD_WINDOW_OBJECT_INTERFACE(name)                 \
     {                                                     \
@@ -319,4 +321,5 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGPathElement)           \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)            \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                     \
-    ADD_WINDOW_OBJECT_INTERFACE(UIEvent)
+    ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                  \
+    ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)

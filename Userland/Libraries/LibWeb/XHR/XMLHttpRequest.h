@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,12 +40,12 @@ class XMLHttpRequest final
     , public DOM::EventTarget
     , public Bindings::Wrappable {
 public:
-    enum class ReadyState {
-        Unsent,
-        Opened,
-        HeadersReceived,
-        Loading,
-        Done,
+    enum class ReadyState : u16 {
+        Unsent = 0,
+        Opened = 1,
+        HeadersReceived = 2,
+        Loading = 3,
+        Done = 4,
     };
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;

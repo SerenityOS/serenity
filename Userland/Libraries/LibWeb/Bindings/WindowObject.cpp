@@ -93,9 +93,6 @@ void WindowObject::initialize()
 
     ADD_WINDOW_OBJECT_INTERFACES;
 
-    m_xhr_prototype = heap().allocate<XMLHttpRequestPrototype>(*this, *this);
-    add_constructor("XMLHttpRequest", m_xhr_constructor, m_xhr_prototype);
-
     m_range_prototype = heap().allocate<RangePrototype>(*this, *this);
     add_constructor("Range", m_range_constructor, m_range_prototype);
 }
@@ -107,8 +104,6 @@ WindowObject::~WindowObject()
 void WindowObject::visit_edges(Visitor& visitor)
 {
     GlobalObject::visit_edges(visitor);
-    visitor.visit(m_xhr_constructor);
-    visitor.visit(m_xhr_prototype);
     visitor.visit(m_range_constructor);
     visitor.visit(m_range_prototype);
 
