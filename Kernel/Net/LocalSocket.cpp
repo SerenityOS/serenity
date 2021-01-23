@@ -65,8 +65,8 @@ LocalSocket::LocalSocket(int type)
     all_sockets().resource().append(this);
 
     auto current_process = Process::current();
-    m_prebind_uid = current_process->uid();
-    m_prebind_gid = current_process->gid();
+    m_prebind_uid = current_process->euid();
+    m_prebind_gid = current_process->egid();
     m_prebind_mode = 0666;
 
     m_for_client.set_unblock_callback([this]() {
