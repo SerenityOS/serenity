@@ -581,12 +581,13 @@ Vector<Token> Lexer::lex()
                     commit_token(Token::Type::IncludePath);
                     begin_token();
                 }
+            } else {
+                while (peek() && peek() != '\n')
+                    consume();
+
+                commit_token(Token::Type::PreprocessorStatement);
             }
 
-            while (peek() && peek() != '\n')
-                consume();
-
-            commit_token(Token::Type::PreprocessorStatement);
             continue;
         }
         if (ch == '/' && peek(1) == '/') {
@@ -784,6 +785,19 @@ Vector<Token> Lexer::lex()
         emit_token(Token::Type::Unknown);
     }
     return tokens;
+}
+
+bool Position::operator<(const Position& other) const
+{
+    return line < other.line || (line == other.line && column < other.column);
+}
+bool Position::operator>(const Position& other) const
+{
+    return !(*this < other) && !(*this == other);
+}
+bool Position::operator==(const Position& other) const
+{
+    return line == other.line && column == other.column;
 }
 
 }
