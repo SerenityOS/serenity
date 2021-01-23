@@ -573,3 +573,15 @@ constexpr bool debug_lock_restore = true;
 #else
 constexpr bool debug_lock_restore = false;
 #endif
+
+#ifdef FUTEXQUEUE_DEBUG
+constexpr bool debug_futex_queue = true;
+#else
+constexpr bool debug_futex_queue = false;
+#endif
+
+#ifdef FUTEX_DEBUG
+constexpr bool debug_futex = true;
+#else
+constexpr bool debug_futex = false;
+#endif

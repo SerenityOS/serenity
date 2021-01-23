@@ -24,12 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
-
-//#define FUTEX_DEBUG
 
 namespace Kernel {
 
@@ -40,9 +39,10 @@ FutexQueue::FutexQueue(FlatPtr user_address_or_offset, VMObject* vmobject)
     : m_user_address_or_offset(user_address_or_offset)
     , m_is_global(vmobject != nullptr)
 {
-#ifdef FUTEX_DEBUG
-    dbg() << "Futex @ " << this << (m_is_global ? " (global)" : "(local)");
-#endif
+    dbgln<debug_futex>("Futex @ {}{}",
+        this,
+        m_is_global ? " (global)" : " (local)");
+
     if (m_is_global) {
         // Only register for global futexes
         m_vmobject = vmobject->make_weak_ptr();
@@ -56,9 +56,9 @@ FutexQueue::~FutexQueue()
         if (auto vmobject = m_vmobject.strong_ref())
             vmobject->unregister_on_deleted_handler(*this);
     }
-#ifdef FUTEX_DEBUG
-    dbg() << "~Futex @ " << this << (m_is_global ? " (global)" : "(local)");
-#endif
+    dbgln<debug_futex>("~Futex @ {}{}",
+        this,
+        m_is_global ? " (global)" : " (local)");
 }
 
 void FutexQueue::vmobject_deleted(VMObject& vmobject)
@@ -68,9 +68,9 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
     // to make sure we have at last a reference until we're done
     NonnullRefPtr<FutexQueue> own_ref(*this);
 
-#ifdef FUTEX_DEBUG
-    dbg() << "Futex::vmobject_deleted @ " << this << (m_is_global ? " (global)" : "(local)");
-#endif
+    dbgln<debug_futex>("Futex::vmobject_deleted @ {}{}",
+        this,
+        m_is_global ? " (global)" : " (local)");
 
     // Because this is called from the VMObject's destructor, getting a
     // strong_ref in this function is unsafe!
@@ -83,12 +83,12 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
 
     bool did_wake_all;
     auto wake_count = wake_all(did_wake_all);
-#ifdef FUTEX_DEBUG
-    if (wake_count > 0)
-        dbg() << "Futex: @ " << this << " unblocked " << wake_count << " waiters due to vmobject free";
-#else
-    (void)wake_count;
-#endif
+
+    if constexpr (debug_futex) {
+        if (wake_count > 0)
+            dbgln("Futex @ {} unblocked {} waiters due to vmobject free", this, wake_count);
+    }
+
     ASSERT(did_wake_all); // No one should be left behind...
 }
 
@@ -233,7 +233,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (!user_value.has_value())
             return -EFAULT;
         if (user_value.value() != params.val) {
-            dbg() << "futex wait: EAGAIN. user value: " << (void*)user_value.value() << " @ " << (void*)params.userspace_address << " != val: " << params.val;
+            dbgln("futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
             return -EAGAIN;
         }
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
