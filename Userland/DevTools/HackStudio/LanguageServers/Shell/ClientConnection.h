@@ -56,6 +56,7 @@ private:
     virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
     virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
     virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
+    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override { }
 
     RefPtr<GUI::TextDocument> document_for(const String& file_name);
 

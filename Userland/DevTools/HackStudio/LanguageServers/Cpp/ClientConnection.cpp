@@ -25,7 +25,8 @@
  */
 
 #include "ClientConnection.h"
-#include "AutoComplete.h"
+#include "LexerAutoComplete.h"
+#include "ParserAutoComplete.h"
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibCore/File.h>
@@ -146,7 +147,16 @@ void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSugges
         return;
     }
 
-    auto suggestions = AutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
+    Vector<GUI::AutocompleteProvider::Entry> suggestions;
+    switch (m_auto_complete_mode) {
+    case AutoCompleteMode::Lexer:
+        suggestions = LexerAutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
+        break;
+    case AutoCompleteMode::Parser: {
+        auto engine = ParserAutoComplete(document->text());
+        suggestions = engine.get_suggestions({ (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
+    }
+    }
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
 }
 
@@ -168,6 +178,17 @@ void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& me
     }
     auto content = message.content();
     document->set_text(content.view());
+}
+
+void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMode& message)
+{
+#ifdef DEBUG_CPP_LANGUAGE_SERVER
+    dbgln("SetAutoCompleteMode: {}", message.mode());
+#endif
+    if (message.mode() == "Parser")
+        m_auto_complete_mode = AutoCompleteMode::Parser;
+    else
+        m_auto_complete_mode = AutoCompleteMode::Lexer;
 }
 
 }

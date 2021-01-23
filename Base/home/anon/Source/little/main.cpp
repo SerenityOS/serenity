@@ -1,6 +1,6 @@
+#include "other.h"
 #include <stdio.h>
 #include <sys/stat.h>
-#include "other.h"
 
 enum TestEnum {
     ValueOne,
@@ -13,11 +13,17 @@ struct MyStruct {
     TestEnum test_value { ValueOne };
 };
 
+struct Container {
+    MyStruct inner;
+    int index;
+};
+
 int main(int, char**)
 {
     MyStruct my_struct;
     my_struct.status = !my_struct.status;
     printf("my_struct.x is %d\n", my_struct.x);
+    Container container;
     for (int i = 0; i < 3; ++i) {
         // This is a comment :^)
         func();

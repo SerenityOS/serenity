@@ -25,6 +25,7 @@
  */
 
 #include "LanguageClient.h"
+#include "DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 
@@ -70,6 +71,11 @@ void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::Autocomp
         on_autocomplete_suggestions(suggestions);
 
     // Otherwise, drop it on the floor :shrug:
+}
+
+void LanguageClient::set_autocomplete_mode(const String& mode)
+{
+    m_connection.post_message(Messages::LanguageServer::SetAutoCompleteMode(mode));
 }
 
 }
