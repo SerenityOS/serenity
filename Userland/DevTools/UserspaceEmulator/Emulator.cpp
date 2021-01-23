@@ -28,6 +28,7 @@
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
+#include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -58,8 +59,6 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC optimize("O3")
 #endif
-
-// #define DEBUG_SPAM
 
 namespace UserspaceEmulator {
 
@@ -344,7 +343,7 @@ void Emulator::dump_backtrace()
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-#ifdef DEBUG_SPAM
+#if DEBUG_SPAM
     reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {

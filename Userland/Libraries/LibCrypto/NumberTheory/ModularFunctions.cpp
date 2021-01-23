@@ -221,7 +221,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 
     GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
     if (gcd_output == 0) {
-#ifdef NT_DEBUG
+#if NT_DEBUG
         dbgln("GCD is zero");
 #endif
         return output;

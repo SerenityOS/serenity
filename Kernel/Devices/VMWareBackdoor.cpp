@@ -215,7 +215,7 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-#ifdef PS2MOUSE_DEBUG
+#if PS2MOUSE_DEBUG
         klog() << "PS2MouseDevice: Resetting VMWare mouse";
 #endif
         disable_absolute_vmmouse();

@@ -48,7 +48,7 @@ void LineProgram::parse_unit_header()
     ASSERT(m_unit_header.version == DWARF_VERSION);
     ASSERT(m_unit_header.opcode_base == SPECIAL_OPCODES_BASE);
 
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
     dbgln("unit length: {}", m_unit_header.length);
 #endif
 }
@@ -60,7 +60,7 @@ void LineProgram::parse_source_directories()
     while (m_stream.peek_or_error()) {
         String directory;
         m_stream >> directory;
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("directory: {}", directory);
 #endif
         m_source_directories.append(move(directory));
@@ -81,7 +81,7 @@ void LineProgram::parse_source_files()
         size_t _unused = 0;
         m_stream.read_LEB128_unsigned(_unused); // skip modification time
         m_stream.read_LEB128_unsigned(_unused); // skip file size
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("file: {}, directory index: {}", file_name, directory_index);
 #endif
         m_source_files.append({ file_name, directory_index });
@@ -92,7 +92,7 @@ void LineProgram::parse_source_files()
 
 void LineProgram::append_to_line_info()
 {
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
     dbgln("appending line info: {:p}, {}:{}", m_address, m_source_files[m_file_index].name, m_line);
 #endif
     if (!m_is_statement)
@@ -133,20 +133,20 @@ void LineProgram::handle_extended_opcode()
     case ExtendedOpcodes::SetAddress: {
         ASSERT(length == sizeof(size_t) + 1);
         m_stream >> m_address;
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("SetAddress: {:p}", m_address);
 #endif
         break;
     }
     case ExtendedOpcodes::SetDiscriminator: {
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("SetDiscriminator");
 #endif
         m_stream.discard_or_error(1);
         break;
     }
     default:
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("offset: {:p}", m_stream.offset());
 #endif
         ASSERT_NOT_REACHED();
@@ -163,7 +163,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         size_t operand = 0;
         m_stream.read_LEB128_unsigned(operand);
         size_t delta = operand * m_unit_header.min_instruction_length;
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("AdvancePC by: {} to: {:p}", delta, m_address + delta);
 #endif
         m_address += delta;
@@ -172,7 +172,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
     case StandardOpcodes::SetFile: {
         size_t new_file_index = 0;
         m_stream.read_LEB128_unsigned(new_file_index);
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("SetFile: new file index: {}", new_file_index);
 #endif
         m_file_index = new_file_index;
@@ -180,7 +180,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
     }
     case StandardOpcodes::SetColumn: {
         // not implemented
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("SetColumn");
 #endif
         size_t new_column;
@@ -193,13 +193,13 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_stream.read_LEB128_signed(line_delta);
         ASSERT(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("AdvanceLine: {}", m_line);
 #endif
         break;
     }
     case StandardOpcodes::NegateStatement: {
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("NegateStatement");
 #endif
         m_is_statement = !m_is_statement;
@@ -209,7 +209,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         u8 adjusted_opcode = 255 - SPECIAL_OPCODES_BASE;
         ssize_t address_increment = (adjusted_opcode / m_unit_header.line_range) * m_unit_header.min_instruction_length;
         address_increment *= m_unit_header.min_instruction_length;
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
         dbgln("ConstAddPc: advance pc by: {} to: {}", address_increment, (m_address + address_increment));
 #endif
         m_address += address_increment;

@@ -86,7 +86,7 @@ void IOAccess::write32_field(Address address, u32 field, u32 value)
 
 void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
-#ifdef PCI_DEBUG
+#if PCI_DEBUG
     dbgln("PCI: IO enumerating hardware");
 #endif
     // Single PCI host controller.

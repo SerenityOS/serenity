@@ -423,7 +423,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
     disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
-#ifdef E1000_DEBUG
+#if E1000_DEBUG
     klog() << "E1000: Sending packet (" << payload.size() << " bytes)";
 #endif
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
@@ -434,7 +434,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     descriptor.length = payload.size();
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
-#ifdef E1000_DEBUG
+#if E1000_DEBUG
     klog() << "E1000: Using tx descriptor " << tx_current << " (head is at " << in32(REG_TXDESCHEAD) << ")";
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
@@ -448,7 +448,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
         }
         m_wait_queue.wait_on({}, "E1000NetworkAdapter");
     }
-#ifdef E1000_DEBUG
+#if E1000_DEBUG
     dbgln("E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
 #endif
 }
@@ -467,7 +467,7 @@ void E1000NetworkAdapter::receive()
         auto* buffer = m_rx_buffers_regions[rx_current].vaddr().as_ptr();
         u16 length = rx_descriptors[rx_current].length;
         ASSERT(length <= 8192);
-#ifdef E1000_DEBUG
+#if E1000_DEBUG
         klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
 #endif
         did_receive({ buffer, length });

@@ -104,7 +104,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText
     }
     GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
     document->insert_at(start_position, message.text(), &s_default_document_client);
-#ifdef DEBUG_FILE_CONTENT
+#if DEBUG_FILE_CONTENT
     dbgln("{}", document->text());
 #endif
 }

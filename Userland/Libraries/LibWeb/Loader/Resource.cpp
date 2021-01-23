@@ -94,7 +94,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 
     auto content_type = headers.get("Content-Type");
     if (content_type.has_value()) {
-#ifdef RESOURCE_DEBUG
+#if RESOURCE_DEBUG
         dbgln("Content-Type header: '{}'", content_type.value());
 #endif
         m_encoding = encoding_from_content_type(content_type.value());
@@ -104,7 +104,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {
-#ifdef RESOURCE_DEBUG
+#if RESOURCE_DEBUG
         dbgln("No Content-Type header to go on! Guessing based on filename...");
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
