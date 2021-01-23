@@ -8,9 +8,6 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
-    Bindings/XMLHttpRequestConstructor.cpp
-    Bindings/XMLHttpRequestPrototype.cpp
-    Bindings/XMLHttpRequestWrapper.cpp
     Bindings/RangeConstructor.cpp
     Bindings/RangePrototype.cpp
     Bindings/RangeWrapper.cpp
@@ -375,6 +372,7 @@ libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
+libweb_js_wrapper(XHR/XMLHttpRequest)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
