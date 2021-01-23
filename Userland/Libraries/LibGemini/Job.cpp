@@ -67,7 +67,7 @@ void Job::on_socket_connected()
         m_sent_data = true;
         auto raw_request = m_request.to_raw_request();
 
-        if constexpr (debug_job) {
+        if constexpr (JOB_DEBUG) {
             dbgln("Job: raw_request:");
             dbgln("{}", String::copy(raw_request));
         }

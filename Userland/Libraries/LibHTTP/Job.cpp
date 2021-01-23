@@ -36,14 +36,14 @@ namespace HTTP {
 
 static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
 {
-    dbgln<debug_job>("Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
+    dbgln<JOB_DEBUG>("Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 
     if (content_encoding == "gzip") {
         if (!Core::Gzip::is_compressed(buf)) {
             dbgln("Job::handle_content_encoding: buf is not gzip compressed!");
         }
 
-        dbgln<debug_job>("Job::handle_content_encoding: buf is gzip compressed!");
+        dbgln<JOB_DEBUG>("Job::handle_content_encoding: buf is gzip compressed!");
 
         auto uncompressed = Core::Gzip::decompress(buf);
         if (!uncompressed.has_value()) {
@@ -51,7 +51,7 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
             return buf;
         }
 
-        if constexpr (debug_job) {
+        if constexpr (JOB_DEBUG) {
             dbgln("Job::handle_content_encoding: Gzip::decompress() successful.");
             dbgln("  Input size: {}", buf.size());
             dbgln("  Output size: {}", uncompressed.value().size());
@@ -77,7 +77,7 @@ void Job::flush_received_buffers()
 {
     if (!m_can_stream_response || m_buffered_size == 0)
         return;
-    dbgln<debug_job>("Job: Flushing received buffers: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
+    dbgln<JOB_DEBUG>("Job: Flushing received buffers: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
     for (size_t i = 0; i < m_received_buffers.size(); ++i) {
         auto& payload = m_received_buffers[i];
         auto written = do_write(payload);
@@ -92,7 +92,7 @@ void Job::flush_received_buffers()
         payload = payload.slice(written, payload.size() - written);
         break;
     }
-    dbgln<debug_job>("Job: Flushing received buffers done: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
+    dbgln<JOB_DEBUG>("Job: Flushing received buffers done: have {} bytes in {} buffers", m_buffered_size, m_received_buffers.size());
 }
 
 void Job::on_socket_connected()
@@ -103,7 +103,7 @@ void Job::on_socket_connected()
         m_sent_data = true;
         auto raw_request = m_request.to_raw_request();
 
-        if constexpr (debug_job) {
+        if constexpr (JOB_DEBUG) {
             dbgln("Job: raw_request:");
             dbgln("{}", String::copy(raw_request));
         }
@@ -198,10 +198,10 @@ void Job::on_socket_connected()
             m_headers.set(name, value);
             if (name.equals_ignoring_case("Content-Encoding")) {
                 // Assume that any content-encoding means that we can't decode it as a stream :(
-                dbgln<debug_job>("Content-Encoding {} detected, cannot stream output :(", value);
+                dbgln<JOB_DEBUG>("Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
             }
-            dbgln<debug_job>("Job: [{}] = '{}'", name, value);
+            dbgln<JOB_DEBUG>("Job: [{}] = '{}'", name, value);
             return;
         }
         ASSERT(m_state == State::InBody);
@@ -216,7 +216,7 @@ void Job::on_socket_connected()
                     // read size
                     auto size_data = read_line(PAGE_SIZE);
                     auto size_lines = size_data.view().lines();
-                    dbgln<debug_job>("Job: Received a chunk with size '{}'", size_data);
+                    dbgln<JOB_DEBUG>("Job: Received a chunk with size '{}'", size_data);
                     if (size_lines.size() == 0) {
                         dbgln("Job: Reached end of stream");
                         finish_up();
@@ -239,26 +239,26 @@ void Job::on_socket_connected()
                             m_current_chunk_total_size = 0;
                             m_current_chunk_remaining_size = 0;
 
-                            dbgln<debug_job>("Job: Received the last chunk with extensions '{}'", size_string.substring_view(1, size_string.length() - 1));
+                            dbgln<JOB_DEBUG>("Job: Received the last chunk with extensions '{}'", size_string.substring_view(1, size_string.length() - 1));
                         } else {
                             m_current_chunk_total_size = size;
                             m_current_chunk_remaining_size = size;
                             read_size = size;
 
-                            dbgln<debug_job>("Job: Chunk of size '{}' started", size);
+                            dbgln<JOB_DEBUG>("Job: Chunk of size '{}' started", size);
                         }
                     }
                 } else {
                     read_size = remaining;
 
-                    dbgln<debug_job>("Job: Resuming chunk with '{}' bytes left over", remaining);
+                    dbgln<JOB_DEBUG>("Job: Resuming chunk with '{}' bytes left over", remaining);
                 }
             } else {
                 auto transfer_encoding = m_headers.get("Transfer-Encoding");
                 if (transfer_encoding.has_value()) {
                     auto encoding = transfer_encoding.value();
 
-                    dbgln<debug_job>("Job: This content has transfer encoding '{}'", encoding);
+                    dbgln<JOB_DEBUG>("Job: This content has transfer encoding '{}'", encoding);
                     if (encoding.equals_ignoring_case("chunked")) {
                         m_current_chunk_remaining_size = -1;
                         goto read_chunk_size;
@@ -289,9 +289,9 @@ void Job::on_socket_connected()
             if (m_current_chunk_remaining_size.has_value()) {
                 auto size = m_current_chunk_remaining_size.value() - payload.size();
 
-                dbgln<debug_job>("Job: We have {} bytes left over in this chunk", size);
+                dbgln<JOB_DEBUG>("Job: We have {} bytes left over in this chunk", size);
                 if (size == 0) {
-                    dbgln<debug_job>("Job: Finished a chunk of {} bytes", m_current_chunk_total_size.value());
+                    dbgln<JOB_DEBUG>("Job: Finished a chunk of {} bytes", m_current_chunk_total_size.value());
 
                     if (m_current_chunk_total_size.value() == 0) {
                         m_state = State::Trailers;
@@ -302,7 +302,7 @@ void Job::on_socket_connected()
                     size = -1;
                     [[maybe_unused]] auto line = read_line(PAGE_SIZE);
 
-                    if constexpr (debug_job)
+                    if constexpr (JOB_DEBUG)
                         dbgln("Line following (should be empty): '{}'", line);
                 }
                 m_current_chunk_remaining_size = size;

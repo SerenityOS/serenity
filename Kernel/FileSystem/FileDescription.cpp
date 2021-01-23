@@ -49,7 +49,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
     description->m_custody = custody;
     auto result = description->attach();
     if (result.is_error()) {
-        dbgln<debug_file_description>("Failed to create file description for custody: {}", result);
+        dbgln<FILEDESCRIPTION_DEBUG>("Failed to create file description for custody: {}", result);
         return result;
     }
     return description;
@@ -60,7 +60,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
     auto description = adopt(*new FileDescription(file));
     auto result = description->attach();
     if (result.is_error()) {
-        dbgln<debug_file_description>("Failed to create file description for file: {}", result);
+        dbgln<FILEDESCRIPTION_DEBUG>("Failed to create file description for file: {}", result);
         return result;
     }
     return description;

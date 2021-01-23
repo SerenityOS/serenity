@@ -89,7 +89,7 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
     auto high = [](u64 value) -> u32 { return value >> 32; };
     auto low = [](u64 value) -> u32 { return value & 0xffffffff; };
 
-    if constexpr (debug_ghash_process) {
+    if constexpr (GHASH_PROCESS_DEBUG) {
         dbgln("AAD bits: {} : {}", high(aad_bits), low(aad_bits));
         dbgln("Cipher bits: {} : {}", high(cipher_bits), low(cipher_bits));
         dbgln("Tag bits: {} : {} : {} : {}", tag[0], tag[1], tag[2], tag[3]);
@@ -100,7 +100,7 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
     tag[2] ^= high(cipher_bits);
     tag[3] ^= low(cipher_bits);
 
-    dbgln<debug_ghash_process>("Tag bits: {} : {} : {} : {}", tag[0], tag[1], tag[2], tag[3]);
+    dbgln<GHASH_PROCESS_DEBUG>("Tag bits: {} : {} : {} : {}", tag[0], tag[1], tag[2], tag[3]);
 
     galois_multiply(tag, m_key, tag);
 

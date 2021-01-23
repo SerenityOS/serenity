@@ -80,19 +80,19 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
-    dbgln<debug_spam>("handle: WebContentServer::LoadURL: url={}", message.url());
+    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadURL: url={}", message.url());
     page().load(message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
 {
-    dbgln<debug_spam>("handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
+    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
     page().load_html(message.html(), message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
-    dbgln<debug_spam>("handle: WebContentServer::SetViewportRect: rect={}", message.rect());
+    dbgln<SPAM_DEBUG>("handle: WebContentServer::SetViewportRect: rect={}", message.rect());
     m_page_host->set_viewport_rect(message.rect());
 }
 

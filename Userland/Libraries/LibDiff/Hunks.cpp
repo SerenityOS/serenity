@@ -77,7 +77,7 @@ Vector<Hunk> parse_hunks(const String& diff)
         hunks.append(hunk);
     }
 
-    if constexpr (debug_hunks) {
+    if constexpr (HUNKS_DEBUG) {
         for (const auto& hunk : hunks) {
             dbgln("Hunk location:");
             dbgln("  orig: {}", hunk.original_start_line);

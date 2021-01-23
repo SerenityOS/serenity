@@ -39,7 +39,7 @@ FutexQueue::FutexQueue(FlatPtr user_address_or_offset, VMObject* vmobject)
     : m_user_address_or_offset(user_address_or_offset)
     , m_is_global(vmobject != nullptr)
 {
-    dbgln<debug_futex>("Futex @ {}{}",
+    dbgln<FUTEX_DEBUG>("Futex @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 
@@ -56,7 +56,7 @@ FutexQueue::~FutexQueue()
         if (auto vmobject = m_vmobject.strong_ref())
             vmobject->unregister_on_deleted_handler(*this);
     }
-    dbgln<debug_futex>("~Futex @ {}{}",
+    dbgln<FUTEX_DEBUG>("~Futex @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 }
@@ -68,7 +68,7 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
     // to make sure we have at last a reference until we're done
     NonnullRefPtr<FutexQueue> own_ref(*this);
 
-    dbgln<debug_futex>("Futex::vmobject_deleted @ {}{}",
+    dbgln<FUTEX_DEBUG>("Futex::vmobject_deleted @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 
@@ -84,7 +84,7 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
     bool did_wake_all;
     auto wake_count = wake_all(did_wake_all);
 
-    if constexpr (debug_futex) {
+    if constexpr (FUTEX_DEBUG) {
         if (wake_count > 0)
             dbgln("Futex @ {} unblocked {} waiters due to vmobject free", this, wake_count);
     }

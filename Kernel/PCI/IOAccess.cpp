@@ -35,7 +35,7 @@ void IOAccess::initialize()
 {
     if (!Access::is_initialized()) {
         new IOAccess();
-        dbgln<debug_pci>("PCI: IO access initialised.");
+        dbgln<PCI_DEBUG>("PCI: IO access initialised.");
     }
 }
 
@@ -49,37 +49,37 @@ IOAccess::IOAccess()
 
 u8 IOAccess::read8_field(Address address, u32 field)
 {
-    dbgln<debug_pci>("PCI: IO Reading 8-bit field {:#08x} for {}", field, address);
+    dbgln<PCI_DEBUG>("PCI: IO Reading 8-bit field {:#08x} for {}", field, address);
     return Access::early_read8_field(address, field);
 }
 
 u16 IOAccess::read16_field(Address address, u32 field)
 {
-    dbgln<debug_pci>("PCI: IO Reading 16-bit field {:#08x} for {}", field, address);
+    dbgln<PCI_DEBUG>("PCI: IO Reading 16-bit field {:#08x} for {}", field, address);
     return Access::early_read16_field(address, field);
 }
 
 u32 IOAccess::read32_field(Address address, u32 field)
 {
-    dbgln<debug_pci>("PCI: IO Reading 32-bit field {:#08x} for {}", field, address);
+    dbgln<PCI_DEBUG>("PCI: IO Reading 32-bit field {:#08x} for {}", field, address);
     return Access::early_read32_field(address, field);
 }
 
 void IOAccess::write8_field(Address address, u32 field, u8 value)
 {
-    dbgln<debug_pci>("PCI: IO Writing to 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
+    dbgln<PCI_DEBUG>("PCI: IO Writing to 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out8(PCI_VALUE_PORT + (field & 3), value);
 }
 void IOAccess::write16_field(Address address, u32 field, u16 value)
 {
-    dbgln<debug_pci>("PCI: IO Writing to 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
+    dbgln<PCI_DEBUG>("PCI: IO Writing to 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out16(PCI_VALUE_PORT + (field & 2), value);
 }
 void IOAccess::write32_field(Address address, u32 field, u32 value)
 {
-    dbgln<debug_pci>("PCI: IO Writing to 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
+    dbgln<PCI_DEBUG>("PCI: IO Writing to 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     IO::out32(PCI_VALUE_PORT, value);
 }

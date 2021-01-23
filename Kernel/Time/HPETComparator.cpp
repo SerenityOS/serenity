@@ -109,7 +109,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     m_frequency = frequency;
     m_enabled = true;
 
-    dbgln<debug_hpet_comperator>("HPET Comparator: Max frequency {} Hz, want to set {} Hz, periodic: {}", hpet_frequency, frequency, is_periodic());
+    dbgln<HPET_COMPARATOR_DEBUG>("HPET Comparator: Max frequency {} Hz, want to set {} Hz, periodic: {}", hpet_frequency, frequency, is_periodic());
 
     if (is_periodic()) {
         HPET::the().update_periodic_comparator_value();

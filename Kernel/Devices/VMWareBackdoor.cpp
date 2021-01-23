@@ -177,7 +177,7 @@ void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_send(command);
 
-    dbgln<debug_vmware_backdoor>("VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -188,7 +188,7 @@ void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_get(command);
 
-    dbgln<debug_vmware_backdoor>("VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -199,7 +199,7 @@ void VMWareBackdoor::send(VMWareCommand& command)
 {
     vmware_out(command);
 
-    dbgln<debug_vmware_backdoor>("VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -233,7 +233,7 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     int y = (command.cx);
     int z = (command.dx);
 
-    if constexpr (debug_ps2mouse) {
+    if constexpr (PS2MOUSE_DEBUG) {
         dbgln("Absolute Mouse: Buttons {:x}", buttons);
         dbgln("Mouse: x={}, y={}, z={}", x, y, z);
     }

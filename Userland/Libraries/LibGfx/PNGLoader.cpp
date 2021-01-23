@@ -613,7 +613,7 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
 
         if (filter > 4) {
-            dbgln<debug_png>("Invalid PNG filter: {}", filter);
+            dbgln<PNG_DEBUG>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -715,7 +715,7 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
         }
 
         if (filter > 4) {
-            dbgln<debug_png>("Invalid PNG filter: {}", filter);
+            dbgln<PNG_DEBUG>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }

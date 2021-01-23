@@ -72,7 +72,7 @@ void ImageLoader::resource_did_load()
 
     m_loading_state = LoadingState::Loaded;
 
-    if constexpr (debug_image_loader) {
+    if constexpr (IMAGE_LOADER_DEBUG) {
         if (!resource()->has_encoded_data()) {
             dbgln("ImageLoader: Resource did load, no encoded data. URL: {}", resource()->url());
         } else {

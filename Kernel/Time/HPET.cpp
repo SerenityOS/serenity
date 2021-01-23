@@ -206,7 +206,7 @@ void HPET::update_periodic_comparator_value()
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             u64 value = frequency() / comparator.ticks_per_second();
-            dbgln<debug_hpet>("HPET: Update periodic comparator {} comparator value to {} main value was: {}",
+            dbgln<HPET_DEBUG>("HPET: Update periodic comparator {} comparator value to {} main value was: {}",
                 comparator.comparator_number(),
                 value,
                 previous_main_value);
@@ -217,7 +217,7 @@ void HPET::update_periodic_comparator_value()
             // Set the new target comparator value to the delta to the remaining ticks
             u64 current_value = (u64)timer.comparator_value.low | ((u64)timer.comparator_value.high << 32);
             u64 value = current_value - previous_main_value;
-            dbgln<debug_hpet>("HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
+            dbgln<HPET_DEBUG>("HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
                 comparator.comparator_number(),
                 current_value,
                 value,

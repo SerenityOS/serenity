@@ -462,9 +462,9 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
             if (blocker.is_wait()) {
                 if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
                     m_processes.remove(i);
-                    dbgln<debug_waitblock>("WaitBlockCondition[{}] terminated, remove {}", m_process, *info.process);
+                    dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] terminated, remove {}", m_process, *info.process);
                 } else {
-                    dbgln<debug_waitblock>("WaitBlockCondition[{}] terminated, mark as waited {}", m_process, *info.process);
+                    dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] terminated, mark as waited {}", m_process, *info.process);
                     info.was_waited = true;
                 }
             }
@@ -488,7 +488,7 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
                 ASSERT(did_unblock); // disowning must unblock everyone
                 return true;
             });
-            dbgln<debug_waitblock>("WaitBlockCondition[{}] disowned {}", m_process, *info.process);
+            dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] disowned {}", m_process, *info.process);
             m_processes.remove(i);
             continue;
         }
@@ -541,13 +541,13 @@ bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockF
                 info.flags = flags;
                 info.signal = signal;
                 info.was_waited = did_wait;
-                dbgln<debug_waitblock>("WaitBlockCondition[{}] update {} flags={}, waited={}", m_process, process, (int)flags, info.was_waited);
+                dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] update {} flags={}, waited={}", m_process, process, (int)flags, info.was_waited);
                 updated_existing = true;
                 break;
             }
         }
         if (!updated_existing) {
-            dbgln<debug_waitblock>("WaitBlockCondition[{}] add {} flags: {}", m_process, process, (int)flags);
+            dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] add {} flags: {}", m_process, process, (int)flags);
             m_processes.append(ProcessBlockInfo(process, flags, signal));
         }
     }

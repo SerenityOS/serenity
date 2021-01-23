@@ -99,7 +99,7 @@ int main(int argc, char** argv)
                     return a.size < b.size;
                 return a.name < b.name;
             });
-            if constexpr (debug_disasm_dump) {
+            if constexpr (DISASM_DUMP_DEBUG) {
                 for (size_t i = 0; i < symbols.size(); ++i)
                     dbgln("{}: {:p}, {}", symbols[i].name, symbols[i].value, symbols[i].size);
             }

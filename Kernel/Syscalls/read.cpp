@@ -37,7 +37,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         return -EINVAL;
     if (size == 0)
         return 0;
-    dbgln<debug_io>("sys$read({}, {}, {})", fd, buffer.ptr(), size);
+    dbgln<IO_DEBUG>("sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;

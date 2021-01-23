@@ -104,14 +104,14 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 
     if (!context.data || context.data_size < 2) {
         context.state = TContext::State::Error;
-        dbgln<debug_portable_image_loader>("There is no enough data for {}", TContext::image_type);
+        dbgln<PORTABLE_IMAGE_LOADER_DEBUG>("There is no enough data for {}", TContext::image_type);
         return false;
     }
 
     u8 magic_number[2] {};
     if (!streamer.read_bytes(magic_number, 2)) {
         context.state = TContext::State::Error;
-        dbgln<debug_portable_image_loader>("We can't read magic number for {}", TContext::image_type);
+        dbgln<PORTABLE_IMAGE_LOADER_DEBUG>("We can't read magic number for {}", TContext::image_type);
         return false;
     }
 
@@ -128,7 +128,7 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
     }
 
     context.state = TContext::State::Error;
-    dbgln<debug_portable_image_loader>("Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::image_type);
+    dbgln<PORTABLE_IMAGE_LOADER_DEBUG>("Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::image_type);
     return false;
 }
 
@@ -186,7 +186,7 @@ static bool read_max_val(TContext& context, Streamer& streamer)
     }
 
     if (context.max_val > 255) {
-        dbgln<debug_portable_image_loader>("We can't parse 2 byte color for {}", TContext::image_type);
+        dbgln<PORTABLE_IMAGE_LOADER_DEBUG>("We can't parse 2 byte color for {}", TContext::image_type);
         context.state = TContext::Error;
         return false;
     }

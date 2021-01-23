@@ -406,7 +406,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
             hash.initialize(Crypto::Hash::HashKind::SHA512);
             break;
         default:
-            dbgln<debug_tls>("Unsupported hash mode {}", (u32)cert.key_algorithm);
+            dbgln<TLS_DEBUG>("Unsupported hash mode {}", (u32)cert.key_algorithm);
             // fallback to md5, it will fail later
             hash.initialize(Crypto::Hash::HashKind::MD5);
             break;
@@ -436,7 +436,7 @@ Optional<Certificate> TLSv12::parse_asn1(ReadonlyBytes buffer, bool) const
 
     _parse_asn1(m_context, cert, buffer.data(), buffer.size(), 1, fields, nullptr, 0, nullptr, nullptr);
 
-    dbgln<debug_tls>("Certificate issued for {} by {}", cert.subject, cert.issuer_subject);
+    dbgln<TLS_DEBUG>("Certificate issued for {} by {}", cert.subject, cert.issuer_subject);
 
     return cert;
 }
@@ -454,7 +454,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
 
     u32 certificate_total_length = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
 
-    dbgln<debug_tls>("total length: {}", certificate_total_length);
+    dbgln<TLS_DEBUG>("total length: {}", certificate_total_length);
 
     if (certificate_total_length <= 4)
         return 3 * certificate_total_length;
@@ -549,7 +549,7 @@ void TLSv12::consume(ReadonlyBytes record)
         return;
     }
 
-    dbgln<debug_tls>("Consuming {} bytes", record.size());
+    dbgln<TLS_DEBUG>("Consuming {} bytes", record.size());
 
     m_context.message_buffer.append(record.data(), record.size());
 
@@ -559,17 +559,17 @@ void TLSv12::consume(ReadonlyBytes record)
     size_t size_offset { 3 }; // read the common record header
     size_t header_size { 5 };
 
-    dbgln<debug_tls>("message buffer length {}", buffer_length);
+    dbgln<TLS_DEBUG>("message buffer length {}", buffer_length);
 
     while (buffer_length >= 5) {
         auto length = AK::convert_between_host_and_network_endian(*(u16*)m_context.message_buffer.offset_pointer(index + size_offset)) + header_size;
         if (length > buffer_length) {
-            dbgln<debug_tls>("Need more data: {} > {}", length, buffer_length);
+            dbgln<TLS_DEBUG>("Need more data: {} > {}", length, buffer_length);
             break;
         }
         auto consumed = handle_message(m_context.message_buffer.bytes().slice(index, length));
 
-        if constexpr (debug_tls) {
+        if constexpr (TLS_DEBUG) {
             if (consumed > 0)
                 dbgln("consumed {} bytes", consumed);
             else

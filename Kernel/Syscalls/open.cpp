@@ -63,7 +63,7 @@ int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
     if (path.is_error())
         return path.error();
 
-    dbgln<debug_io>("sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value(), options, mode);
+    dbgln<IO_DEBUG>("sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value(), options, mode);
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
@@ -99,7 +99,7 @@ int Process::sys$close(int fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
-    dbgln<debug_io>("sys$close({}) {}", fd, description.ptr());
+    dbgln<IO_DEBUG>("sys$close({}) {}", fd, description.ptr());
     if (!description)
         return -EBADF;
     int rc = description->close();
