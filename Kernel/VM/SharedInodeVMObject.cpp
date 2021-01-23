@@ -34,8 +34,8 @@ namespace Kernel {
 NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode& inode)
 {
     size_t size = inode.size();
-    if (inode.shared_vmobject())
-        return *inode.shared_vmobject();
+    if (auto shared_vmobject = inode.shared_vmobject())
+        return shared_vmobject.release_nonnull();
     auto vmobject = adopt(*new SharedInodeVMObject(inode, size));
     vmobject->inode().set_shared_vmobject(*vmobject);
     return vmobject;

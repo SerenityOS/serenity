@@ -93,7 +93,7 @@ public:
     bool is_kernel() const { return m_kernel || vaddr().get() >= 0xc0000000; }
     void set_kernel(bool kernel) { m_kernel = kernel; }
 
-    PageFaultResponse handle_fault(const PageFault&);
+    PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
 
     OwnPtr<Region> clone(Process&);
 
@@ -254,7 +254,7 @@ private:
     bool remap_vmobject_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
-    PageFaultResponse handle_inode_fault(size_t page_index);
+    PageFaultResponse handle_inode_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);
     PageFaultResponse handle_zero_fault(size_t page_index);
 
     bool map_individual_page_impl(size_t page_index);
