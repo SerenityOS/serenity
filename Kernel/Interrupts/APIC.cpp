@@ -41,9 +41,6 @@
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/TypedMapping.h>
 
-//#define APIC_DEBUG
-//#define APIC_SMP_DEBUG
-
 #define IRQ_APIC_TIMER (0xfc - IRQ_VECTOR_BASE)
 #define IRQ_APIC_IPI (0xfd - IRQ_VECTOR_BASE)
 #define IRQ_APIC_ERR (0xfe - IRQ_VECTOR_BASE)

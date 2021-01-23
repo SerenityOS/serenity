@@ -36,10 +36,6 @@
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
-//#define LOG_EVERY_CONTEXT_SWITCH
-//#define SCHEDULER_DEBUG
-//#define SCHEDULER_RUNNABLE_DEBUG
-
 namespace Kernel {
 
 class SchedulerPerProcessorData {

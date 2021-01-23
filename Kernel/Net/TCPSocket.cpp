@@ -36,8 +36,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 
-//#define TCP_SOCKET_DEBUG
-
 namespace Kernel {
 
 void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)

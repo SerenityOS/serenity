@@ -29,8 +29,6 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 
-//#define IRQ_DEBUG
-
 namespace Kernel {
 
 IRQHandler::IRQHandler(u8 irq)

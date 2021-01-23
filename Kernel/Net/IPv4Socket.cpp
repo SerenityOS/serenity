@@ -43,8 +43,6 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
-//#define IPV4_SOCKET_DEBUG
-
 namespace Kernel {
 
 static AK::Singleton<Lockable<HashTable<IPv4Socket*>>> s_table;

@@ -28,8 +28,6 @@
 #include <AK/HashTable.h>
 #include <LibCpp/Lexer.h>
 
-// #define DEBUG_AUTOCOMPLETE
-
 namespace LanguageServers::Cpp {
 
 Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)

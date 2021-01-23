@@ -41,8 +41,6 @@
 #include <serenity.h>
 #include <stdio.h>
 
-//#define EVENT_DEBUG
-
 class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
 

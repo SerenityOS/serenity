@@ -33,8 +33,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// #define DYNAMIC_OBJECT_VERBOSE
-
 #ifdef DYNAMIC_OBJECT_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
 #else

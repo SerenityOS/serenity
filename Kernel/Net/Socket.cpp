@@ -35,8 +35,6 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
-//#define SOCKET_DEBUG
-
 namespace Kernel {
 
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)

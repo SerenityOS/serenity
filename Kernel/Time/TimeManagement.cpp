@@ -41,8 +41,6 @@
 #include <Kernel/TimerQueue.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define TIME_DEBUG
-
 namespace Kernel {
 
 static AK::Singleton<TimeManagement> s_the;

@@ -33,8 +33,6 @@
 #include <ctype.h>
 #include <stdio.h>
 
-//#define GENERATE_DEBUG_CODE
-
 struct Parameter {
     Vector<String> attributes;
     String type;

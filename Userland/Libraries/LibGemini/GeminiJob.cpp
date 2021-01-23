@@ -31,8 +31,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-//#define GEMINIJOB_DEBUG
-
 namespace Gemini {
 
 void GeminiJob::start()

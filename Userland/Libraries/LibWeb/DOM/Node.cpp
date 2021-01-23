@@ -46,8 +46,6 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 
-//#define EVENT_DEBUG
-
 namespace Web::DOM {
 
 Node::Node(Document& document, NodeType type)

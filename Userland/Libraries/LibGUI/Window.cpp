@@ -45,8 +45,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//#define UPDATE_COALESCING_DEBUG
-
 namespace GUI {
 
 static i32 s_next_backing_store_serial;

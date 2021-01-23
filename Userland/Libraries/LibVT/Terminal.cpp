@@ -29,8 +29,6 @@
 #include <LibVT/Terminal.h>
 #include <string.h>
 
-//#define TERMINAL_DEBUG
-
 namespace VT {
 
 Terminal::Terminal(TerminalClient& client)

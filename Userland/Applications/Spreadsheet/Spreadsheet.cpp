@@ -41,8 +41,6 @@
 #include <LibJS/Runtime/Function.h>
 #include <ctype.h>
 
-//#define COPY_DEBUG
-
 namespace Spreadsheet {
 
 Sheet::Sheet(const StringView& name, Workbook& workbook)

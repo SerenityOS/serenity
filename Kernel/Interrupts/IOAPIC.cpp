@@ -34,8 +34,6 @@
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define IOAPIC_DEBUG
-
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {
 enum DeliveryMode {

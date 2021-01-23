@@ -59,8 +59,6 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-//#define TERMINAL_DEBUG
-
 void TerminalWidget::set_pty_master_fd(int fd)
 {
     m_ptm_fd = fd;

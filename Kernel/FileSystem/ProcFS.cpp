@@ -61,8 +61,6 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-//#define PROCFS_DEBUG
-
 namespace Kernel {
 
 enum ProcParentDirectory {

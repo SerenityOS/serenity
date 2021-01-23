@@ -30,8 +30,6 @@
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define PCI_DEBUG
-
 namespace Kernel {
 namespace PCI {
 

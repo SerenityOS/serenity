@@ -37,8 +37,6 @@
 #include <LibJS/Runtime/Object.h>
 #include <setjmp.h>
 
-//#define HEAP_DEBUG
-
 namespace JS {
 
 Heap::Heap(VM& vm)

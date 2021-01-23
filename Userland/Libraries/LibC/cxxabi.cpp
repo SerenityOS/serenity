@@ -29,8 +29,6 @@
 #include <stdlib.h>
 #include <sys/internals.h>
 
-//#define GLOBAL_DTORS_DEBUG
-
 extern "C" {
 
 struct __exit_entry {

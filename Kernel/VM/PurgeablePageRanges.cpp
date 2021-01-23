@@ -32,9 +32,6 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 
-//#define PAGE_FAULT_DEBUG
-//#define VOLATILE_PAGE_RANGES_DEBUG
-
 namespace Kernel {
 
 #ifdef VOLATILE_PAGE_RANGES_DEBUG

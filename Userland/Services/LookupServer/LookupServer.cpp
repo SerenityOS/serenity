@@ -40,8 +40,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-//#define LOOKUPSERVER_DEBUG
-
 LookupServer::LookupServer()
 {
     auto config = Core::ConfigFile::get_for_system("LookupServer");

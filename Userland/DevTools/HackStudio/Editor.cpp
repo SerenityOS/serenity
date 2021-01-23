@@ -51,8 +51,6 @@
 #include <LibWeb/OutOfProcessWebView.h>
 #include <fcntl.h>
 
-// #define EDITOR_DEBUG
-
 namespace HackStudio {
 
 Editor::Editor()

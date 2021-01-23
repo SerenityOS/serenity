@@ -57,8 +57,6 @@
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
 
-//#define SELECTION_DEBUG
-
 REGISTER_WIDGET(Web, InProcessWebView)
 
 namespace Web {

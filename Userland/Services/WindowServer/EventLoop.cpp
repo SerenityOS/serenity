@@ -42,8 +42,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define WSMESSAGELOOP_DEBUG
-
 namespace WindowServer {
 
 EventLoop::EventLoop()

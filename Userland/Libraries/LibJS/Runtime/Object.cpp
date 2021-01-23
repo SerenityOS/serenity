@@ -38,8 +38,6 @@
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Value.h>
 
-//#define OBJECT_DEBUG
-
 namespace JS {
 
 PropertyDescriptor PropertyDescriptor::from_dictionary(VM& vm, const Object& object)

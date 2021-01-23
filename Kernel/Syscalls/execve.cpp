@@ -44,8 +44,6 @@
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 
-//#define EXEC_DEBUG
-
 namespace Kernel {
 
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd);

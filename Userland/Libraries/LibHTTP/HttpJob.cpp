@@ -31,8 +31,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-//#define HTTPJOB_DEBUG
-
 namespace HTTP {
 void HttpJob::start()
 {

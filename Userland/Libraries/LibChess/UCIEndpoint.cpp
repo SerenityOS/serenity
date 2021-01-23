@@ -30,8 +30,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 
-// #define UCI_DEBUG
-
 namespace Chess::UCI {
 
 Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)

@@ -32,8 +32,6 @@
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 
-//#define MENU_DEBUG
-
 namespace GUI {
 
 static HashMap<int, Menu*>& all_menus()

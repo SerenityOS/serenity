@@ -45,8 +45,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-// #define DYNAMIC_LOAD_VERBOSE
-
 #ifdef DYNAMIC_LOAD_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
 #else

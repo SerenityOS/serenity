@@ -36,8 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//#define ICO_DEBUG
-
 namespace Gfx {
 
 // FIXME: This is in little-endian order. Maybe need a NetworkOrdered<T> equivalent eventually.

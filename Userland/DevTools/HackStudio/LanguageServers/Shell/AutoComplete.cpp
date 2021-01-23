@@ -31,8 +31,6 @@
 #include <Shell/Parser.h>
 #include <Shell/Shell.h>
 
-// #define DEBUG_AUTOCOMPLETE
-
 namespace LanguageServers::Shell {
 
 Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, size_t offset)

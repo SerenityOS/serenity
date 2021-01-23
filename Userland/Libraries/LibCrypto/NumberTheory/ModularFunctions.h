@@ -29,8 +29,6 @@
 #include <AK/Random.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
-//#define NT_DEBUG
-
 namespace Crypto {
 namespace NumberTheory {
 

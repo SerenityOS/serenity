@@ -38,8 +38,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define PTHREAD_DEBUG
-
 namespace {
 using PthreadAttrImpl = Syscall::SC_create_thread_params;
 

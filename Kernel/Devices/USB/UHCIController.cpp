@@ -33,9 +33,6 @@
 #include <Kernel/VM/MemoryManager.h>
 
 #define UHCI_ENABLED 1
-//#define UHCI_DEBUG
-//#define UHCI_VERBOSE_DEBUG
-
 static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
 static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 

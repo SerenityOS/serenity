@@ -32,8 +32,6 @@
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 
-//#define ELF_IMAGE_DEBUG
-
 namespace ELF {
 
 Image::Image(ReadonlyBytes bytes, bool verbose_logging)
