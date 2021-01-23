@@ -373,6 +373,7 @@ libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
+libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
