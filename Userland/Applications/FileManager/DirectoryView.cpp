@@ -29,6 +29,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
@@ -349,13 +350,15 @@ void DirectoryView::add_path_to_history(const StringView& path)
 
 void DirectoryView::open(const StringView& path)
 {
-    if (model().root_path() == path) {
+    auto real_path = Core::File::real_path_for(path);
+
+    if (model().root_path() == real_path) {
         model().update();
         return;
     }
 
     set_active_widget(&current_view());
-    model().set_root_path(path);
+    model().set_root_path(real_path);
 }
 
 void DirectoryView::set_status_message(const StringView& message)
