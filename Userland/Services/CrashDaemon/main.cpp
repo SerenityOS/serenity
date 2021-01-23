@@ -45,7 +45,7 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
         if (statbuf.st_mode & 0400) // Check if readable
             break;
 
-        usleep(10000); // sleep for 10ms
+        sleep(1);
     }
 }
 
