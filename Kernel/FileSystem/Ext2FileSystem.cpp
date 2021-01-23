@@ -1439,11 +1439,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
-
-    // Fix up the mode to definitely be a directory.
-    // FIXME: This is a bit on the hackish side.
-    mode &= ~0170000;
-    mode |= 0040000;
+    ASSERT(is_directory(mode));
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
