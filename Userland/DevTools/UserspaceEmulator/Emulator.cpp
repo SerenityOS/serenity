@@ -529,6 +529,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$ftruncate(arg1, arg2);
     case SC_umask:
         return virt$umask(arg1);
+    case SC_chown:
+        return virt$chown(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -609,6 +611,18 @@ int Emulator::virt$chmod(FlatPtr path_addr, size_t path_length, mode_t mode)
 {
     auto path = mmu().copy_buffer_from_vm(path_addr, path_length);
     return syscall(SC_chmod, path.data(), path.size(), mode);
+}
+
+int Emulator::virt$chown(FlatPtr params_addr)
+{
+    Syscall::SC_chown_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
+    params.path.characters = (const char*)path.data();
+    params.path.length = path.size();
+
+    return syscall(SC_chown, &params);
 }
 
 int Emulator::virt$fchmod(int fd, mode_t mode)
