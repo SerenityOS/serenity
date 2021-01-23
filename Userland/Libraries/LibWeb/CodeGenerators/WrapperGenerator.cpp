@@ -144,7 +144,6 @@ struct Constant {
 
 struct Attribute {
     bool readonly { false };
-    bool unsigned_ { false };
     Type type;
     String name;
     HashMap<String, String> extended_attributes;
@@ -211,9 +210,16 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     assert_specific('{');
 
     auto parse_type = [&] {
+        bool unsigned_ = lexer.consume_specific("unsigned");
+        if (unsigned_)
+            consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?'; });
         auto nullable = lexer.consume_specific('?');
-        return Type { name, nullable };
+        StringBuilder builder;
+        if (unsigned_)
+            builder.append("unsigned ");
+        builder.append(name);
+        return Type { builder.to_string(), nullable };
     };
 
     auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
@@ -224,10 +230,6 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         if (lexer.consume_specific("attribute"))
             consume_whitespace();
 
-        bool unsigned_ = lexer.consume_specific("unsigned");
-        if (unsigned_)
-            consume_whitespace();
-
         auto type = parse_type();
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
@@ -236,7 +238,6 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         assert_specific(';');
         Attribute attribute;
         attribute.readonly = readonly;
-        attribute.unsigned_ = unsigned_;
         attribute.type = type;
         attribute.name = name;
         attribute.getter_callback_name = String::formatted("{}_getter", snake_name(attribute.name));
@@ -250,9 +251,6 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         consume_whitespace();
 
         Constant constant;
-        bool unsigned_ = lexer.consume_specific("unsigned");
-        if (unsigned_)
-            consume_whitespace();
         constant.type = parse_type();
         consume_whitespace();
         constant.name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
@@ -1093,6 +1091,12 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
             scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_boolean();
 )~~~");
+        } else if (parameter.type.name == "unsigned long") {
+            scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
         } else {
             dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
             ASSERT_NOT_REACHED();
@@ -1158,11 +1162,11 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
     return new_array;
 )~~~");
-        } else if (return_type.name == "boolean" || return_type.name == "double" || return_type.name == "long") {
+        } else if (return_type.name == "boolean" || return_type.name == "double" || return_type.name == "long" || return_type.name == "unsigned long") {
             scoped_generator.append(R"~~~(
     return JS::Value(retval);
 )~~~");
-        } else if (return_type.name == "short") {
+        } else if (return_type.name == "short" || return_type.name == "unsigned short") {
             scoped_generator.append(R"~~~(
     return JS::Value((i32)retval);
 )~~~");
