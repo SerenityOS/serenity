@@ -50,82 +50,82 @@ void Lock::lock(Mode mode)
     auto current_thread = Thread::current();
     ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
-        if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
-            do {
-                // FIXME: Do not add new readers if writers are queued.
-                Mode current_mode = m_mode;
-                switch (current_mode) {
-                case Mode::Unlocked: {
-                    dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently unlocked", this, mode_to_string(mode));
-                    m_mode = mode;
-                    ASSERT(!m_holder);
-                    ASSERT(m_shared_holders.is_empty());
-                    if (mode == Mode::Exclusive) {
-                        m_holder = current_thread;
-                    } else {
-                        ASSERT(mode == Mode::Shared);
-                        m_shared_holders.set(current_thread, 1);
-                    }
-                    ASSERT(m_times_locked == 0);
-                    m_times_locked++;
-#if LOCK_DEBUG
-                    current_thread->holding_lock(*this, 1, file, line);
-#endif
-                    m_lock.store(false, AK::memory_order_release);
-                    return;
-                }
-                case Mode::Exclusive: {
-                    ASSERT(m_holder);
-                    if (m_holder != current_thread)
-                        break;
-                    ASSERT(m_shared_holders.is_empty());
-
-                    if constexpr (LOCK_TRACE_DEBUG) {
-                        if (mode == Mode::Exclusive)
-                            dbgln("Lock::lock @ {}: acquire {}, currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
-                        else
-                            dbgln("Lock::lock @ {}: acquire exclusive (requested {}), currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
-                    }
-
-                    ASSERT(mode == Mode::Exclusive || mode == Mode::Shared);
-                    ASSERT(m_times_locked > 0);
-                    m_times_locked++;
-#if LOCK_DEBUG
-                    current_thread->holding_lock(*this, 1, file, line);
-#endif
-                    m_lock.store(false, AK::memory_order_release);
-                    return;
-                }
-                case Mode::Shared: {
-                    ASSERT(!m_holder);
-                    if (mode != Mode::Shared)
-                        break;
-
-                    dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently shared, locks held {}", this, mode_to_string(mode), m_times_locked);
-
-                    ASSERT(m_times_locked > 0);
-                    m_times_locked++;
-                    ASSERT(!m_shared_holders.is_empty());
-                    auto it = m_shared_holders.find(current_thread);
-                    if (it != m_shared_holders.end())
-                        it->value++;
-                    else
-                        m_shared_holders.set(current_thread, 1);
-#if LOCK_DEBUG
-                    current_thread->holding_lock(*this, 1, file, line);
-#endif
-                    m_lock.store(false, AK::memory_order_release);
-                    return;
-                }
-                default:
-                    ASSERT_NOT_REACHED();
-                }
-                m_lock.store(false, AK::memory_order_release);
-            } while (m_queue.wait_on({}, m_name) == Thread::BlockResult::NotBlocked);
-        } else {
+        if (m_lock.exchange(true, AK::memory_order_acq_rel) != false) {
             // I don't know *who* is using "m_lock", so just yield.
             Scheduler::yield_from_critical();
+            continue;
         }
+
+        // FIXME: Do not add new readers if writers are queued.
+        Mode current_mode = m_mode;
+        switch (current_mode) {
+        case Mode::Unlocked: {
+            dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently unlocked", this, mode_to_string(mode));
+            m_mode = mode;
+            ASSERT(!m_holder);
+            ASSERT(m_shared_holders.is_empty());
+            if (mode == Mode::Exclusive) {
+                m_holder = current_thread;
+            } else {
+                ASSERT(mode == Mode::Shared);
+                m_shared_holders.set(current_thread, 1);
+            }
+            ASSERT(m_times_locked == 0);
+            m_times_locked++;
+#if LOCK_DEBUG
+            current_thread->holding_lock(*this, 1, file, line);
+#endif
+            m_lock.store(false, AK::memory_order_release);
+            return;
+        }
+        case Mode::Exclusive: {
+            ASSERT(m_holder);
+            if (m_holder != current_thread)
+                break;
+            ASSERT(m_shared_holders.is_empty());
+
+            if constexpr (LOCK_TRACE_DEBUG) {
+                if (mode == Mode::Exclusive)
+                    dbgln("Lock::lock @ {}: acquire {}, currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
+                else
+                    dbgln("Lock::lock @ {}: acquire exclusive (requested {}), currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
+            }
+
+            ASSERT(mode == Mode::Exclusive || mode == Mode::Shared);
+            ASSERT(m_times_locked > 0);
+            m_times_locked++;
+#if LOCK_DEBUG
+            current_thread->holding_lock(*this, 1, file, line);
+#endif
+            m_lock.store(false, AK::memory_order_release);
+            return;
+        }
+        case Mode::Shared: {
+            ASSERT(!m_holder);
+            if (mode != Mode::Shared)
+                break;
+
+            dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently shared, locks held {}", this, mode_to_string(mode), m_times_locked);
+
+            ASSERT(m_times_locked > 0);
+            m_times_locked++;
+            ASSERT(!m_shared_holders.is_empty());
+            auto it = m_shared_holders.find(current_thread);
+            if (it != m_shared_holders.end())
+                it->value++;
+            else
+                m_shared_holders.set(current_thread, 1);
+#if LOCK_DEBUG
+            current_thread->holding_lock(*this, 1, file, line);
+#endif
+            m_lock.store(false, AK::memory_order_release);
+            return;
+        }
+        default:
+            ASSERT_NOT_REACHED();
+        }
+        m_lock.store(false, AK::memory_order_release);
+        m_queue.wait_on({}, m_name);
     }
 }
 
