@@ -8,9 +8,6 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
-    Bindings/RangeConstructor.cpp
-    Bindings/RangePrototype.cpp
-    Bindings/RangeWrapper.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/Parser/CSSParser.cpp
@@ -288,6 +285,7 @@ libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/HTMLAnchorElement)

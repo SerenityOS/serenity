@@ -1,0 +1,13 @@
+interface Range {
+
+    readonly attribute Node startContainer;
+    readonly attribute unsigned long startOffset;
+    readonly attribute Node endContainer;
+    readonly attribute unsigned long endOffset;
+
+    undefined setStart(Node node, unsigned long offset);
+    undefined setEnd(Node node, unsigned long offset);
+
+    Range cloneRange();
+
+};
