@@ -32,7 +32,7 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 
-namespace Web {
+namespace Web::XHR {
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>

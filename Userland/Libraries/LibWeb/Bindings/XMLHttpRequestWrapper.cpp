@@ -30,16 +30,16 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
-#include <LibWeb/DOM/XMLHttpRequest.h>
+#include <LibWeb/XHR/XMLHttpRequest.h>
 
 namespace Web::Bindings {
 
-XMLHttpRequestWrapper* wrap(JS::GlobalObject& global_object, XMLHttpRequest& impl)
+XMLHttpRequestWrapper* wrap(JS::GlobalObject& global_object, XHR::XMLHttpRequest& impl)
 {
     return static_cast<XMLHttpRequestWrapper*>(wrap_impl(global_object, impl));
 }
 
-XMLHttpRequestWrapper::XMLHttpRequestWrapper(JS::GlobalObject& global_object, XMLHttpRequest& impl)
+XMLHttpRequestWrapper::XMLHttpRequestWrapper(JS::GlobalObject& global_object, XHR::XMLHttpRequest& impl)
     : EventTargetWrapper(global_object, impl)
 {
     set_prototype(static_cast<WindowObject&>(global_object).xhr_prototype());
@@ -49,14 +49,14 @@ XMLHttpRequestWrapper::~XMLHttpRequestWrapper()
 {
 }
 
-XMLHttpRequest& XMLHttpRequestWrapper::impl()
+XHR::XMLHttpRequest& XMLHttpRequestWrapper::impl()
 {
-    return static_cast<XMLHttpRequest&>(EventTargetWrapper::impl());
+    return static_cast<XHR::XMLHttpRequest&>(EventTargetWrapper::impl());
 }
 
-const XMLHttpRequest& XMLHttpRequestWrapper::impl() const
+const XHR::XMLHttpRequest& XMLHttpRequestWrapper::impl() const
 {
-    return static_cast<const XMLHttpRequest&>(EventTargetWrapper::impl());
+    return static_cast<const XHR::XMLHttpRequest&>(EventTargetWrapper::impl());
 }
 
 }

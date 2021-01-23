@@ -33,12 +33,12 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/DOM/XMLHttpRequest.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/XHR/XMLHttpRequest.h>
 
-namespace Web {
+namespace Web::XHR {
 
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
