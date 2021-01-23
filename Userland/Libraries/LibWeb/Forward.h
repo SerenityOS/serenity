@@ -190,6 +190,7 @@ class StackingContext;
 }
 
 namespace Web::XHR {
+class ProgressEvent;
 class XMLHttpRequest;
 }
 
@@ -283,6 +284,7 @@ class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceTimingWrapper;
 class PerformanceWrapper;
+class ProgressEventWrapper;
 class ScriptExecutionContext;
 class SubmitEventWrapper;
 class SVGElementWrapper;
