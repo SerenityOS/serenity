@@ -821,13 +821,14 @@ public:
         ASSERT(this == Thread::current());
         ScopedCritical critical;
         ASSERT(!s_mm_lock.own_lock());
-        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
         T t(forward<Args>(args)...);
 
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
         // synchronize on the spin locks already.
         Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
@@ -881,23 +882,20 @@ public:
             set_state(Thread::Blocked);
         }
 
+        scheduler_lock.unlock();
         block_lock.unlock();
 
+        dbgln<THREAD_DEBUG>("Thread {} blocking on {} ({}) -->", *this, &t, t.state_string());
         bool did_timeout = false;
-        auto previous_locked = LockMode::Unlocked;
         u32 lock_count_to_restore = 0;
+        auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
         for (;;) {
-            scheduler_lock.unlock();
-
             // Yield to the scheduler, and wait for us to resume unblocked.
-            if (previous_locked == LockMode::Unlocked)
-                previous_locked = unlock_process_if_locked(lock_count_to_restore);
-
             ASSERT(!g_scheduler_lock.own_lock());
             ASSERT(Processor::current().in_critical());
             yield_while_not_holding_big_lock();
+            ASSERT(Processor::current().in_critical());
 
-            scheduler_lock.lock();
             ScopedSpinLock block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
                 dbgln("Thread should be stopped, current state: {}", state_string());
@@ -918,11 +916,13 @@ public:
                 ASSERT(m_blocker == &t);
                 m_blocker = nullptr;
             }
+            dbgln<THREAD_DEBUG>("<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
             m_in_block = false;
             break;
         }
 
         if (t.was_interrupted_by_signal()) {
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             ScopedSpinLock lock(m_lock);
             dispatch_one_pending_signal();
         }
@@ -931,7 +931,6 @@ public:
         // to clean up now while we're still holding m_lock
         auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
 
-        scheduler_lock.unlock();
         if (timer && !did_timeout) {
             // Cancel the timer while not holding any locks. This allows
             // the timer function to complete before we remove it
