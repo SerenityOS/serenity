@@ -41,8 +41,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-//#define PAGE_FAULT_DEBUG
-
 extern u8* start_of_kernel_image;
 extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;

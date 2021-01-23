@@ -35,8 +35,6 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
-//#define DEBUG_LOCAL_SOCKET
-
 namespace Kernel {
 
 static AK::Singleton<Lockable<InlineLinkedList<LocalSocket>>> s_list;

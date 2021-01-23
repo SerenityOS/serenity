@@ -38,8 +38,6 @@
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
-//#define VFS_DEBUG
-
 namespace Kernel {
 
 static AK::Singleton<VFS> s_the;

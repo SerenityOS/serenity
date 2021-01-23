@@ -27,8 +27,6 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 
-// #define OFFD_DEBUG
-
 namespace Kernel {
 
 NonnullRefPtr<DiskPartition> DiskPartition::create(BlockDevice& device, unsigned minor_number, DiskPartitionMetadata metadata)

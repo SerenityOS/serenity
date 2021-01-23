@@ -33,8 +33,6 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define SB16_DEBUG
-
 namespace Kernel {
 #define SB16_DEFAULT_IRQ 5
 

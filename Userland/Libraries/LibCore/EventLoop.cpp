@@ -54,9 +54,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define EVENTLOOP_DEBUG
-//#define DEFERRED_INVOKE_DEBUG
-
 namespace Core {
 
 class RPCClient;

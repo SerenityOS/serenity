@@ -31,8 +31,6 @@
 #include <ctype.h>
 #include <stdio.h>
 
-//#define LEXER_DEBUG
-
 namespace JS {
 
 HashMap<String, TokenType> Lexer::s_keywords;

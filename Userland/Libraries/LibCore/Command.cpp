@@ -35,8 +35,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-// #define DBG_FAILED_COMMANDS
-
 namespace Core {
 
 // Only supported in serenity mode because we use `posix_spawn_file_actions_addchdir`

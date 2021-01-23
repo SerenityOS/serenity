@@ -37,9 +37,6 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
-//#define EXT2_DEBUG
-//#define EXT2_VERY_DEBUG
-
 namespace Kernel {
 
 static const size_t max_link_count = 65535;

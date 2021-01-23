@@ -28,8 +28,6 @@
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/Process.h>
 
-//#define BBFS_DEBUG
-
 namespace Kernel {
 
 struct CacheEntry {

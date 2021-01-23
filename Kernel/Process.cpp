@@ -56,11 +56,6 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
 
-//#define DEBUG_IO
-//#define DEBUG_POLL_SELECT
-//#define PROCESS_DEBUG
-//#define SIGNAL_DEBUG
-
 namespace Kernel {
 
 static void create_signal_trampolines();

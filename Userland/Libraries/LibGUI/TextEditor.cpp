@@ -50,8 +50,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-//#define DEBUG_TEXTEDITOR
-
 REGISTER_WIDGET(GUI, TextEditor)
 
 namespace GUI {

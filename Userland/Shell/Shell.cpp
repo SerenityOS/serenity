@@ -56,8 +56,6 @@
 static bool s_disable_hyperlinks = false;
 extern char** environ;
 
-//#define SH_DEBUG
-
 namespace Shell {
 
 // FIXME: This should eventually be removed once we've established that

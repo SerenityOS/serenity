@@ -32,7 +32,6 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 
-//#define INTERRUPT_DEBUG
 namespace Kernel {
 
 void SharedIRQHandler::initialize(u8 interrupt_number)

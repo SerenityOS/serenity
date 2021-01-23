@@ -34,8 +34,6 @@
 #include <Kernel/IO.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
-//#define KEYBOARD_DEBUG
-
 namespace Kernel {
 
 #define IRQ_KEYBOARD 1

@@ -52,11 +52,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define WINDOWMANAGER_DEBUG
-//#define RESIZE_DEBUG
-//#define MOVE_DEBUG
-//#define DOUBLECLICK_DEBUG
-
 namespace WindowServer {
 
 static WindowManager* s_the;
@@ -780,8 +775,6 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
         ASSERT_NOT_REACHED();
     }
 }
-
-// #define DOUBLECLICK_DEBUG
 
 bool WindowManager::is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const
 {

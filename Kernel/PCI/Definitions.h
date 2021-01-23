@@ -70,8 +70,6 @@ namespace Kernel {
 #define PCI_MAX_FUNCTIONS_PER_DEVICE 8
 // clang-format on
 
-//#define PCI_DEBUG 1
-
 namespace PCI {
 struct ID {
     u16 vendor_id { 0 };
