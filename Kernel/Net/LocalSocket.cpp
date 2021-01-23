@@ -114,7 +114,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     dbgln<debug_local_socket>("LocalSocket({}) bind({})", this, path);
 
-    mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
+    mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
     auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
@@ -411,7 +411,7 @@ KResult LocalSocket::chmod(FileDescription&, mode_t mode)
     if (m_file)
         return m_file->chmod(mode);
 
-    m_prebind_mode = mode & 04777;
+    m_prebind_mode = mode & 0777;
     return KSuccess;
 }
 

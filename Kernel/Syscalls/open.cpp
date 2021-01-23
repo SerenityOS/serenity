@@ -57,7 +57,7 @@ int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
         REQUIRE_PROMISE(cpath);
 
     // Ignore everything except permission bits.
-    mode &= 04777;
+    mode &= 0777;
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
