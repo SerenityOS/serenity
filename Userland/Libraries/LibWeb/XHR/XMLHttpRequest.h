@@ -32,14 +32,14 @@
 #include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
     , public Weakable<XMLHttpRequest>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+    , public XMLHttpRequestEventTarget {
 public:
     enum class ReadyState : u16 {
         Unsent = 0,

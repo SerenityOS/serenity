@@ -1,4 +1,4 @@
-interface XMLHttpRequest : EventTarget {
+interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     const unsigned short UNSENT = 0;
     const unsigned short OPENED = 1;
