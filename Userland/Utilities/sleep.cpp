@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 static volatile bool g_interrupted;
@@ -38,7 +39,7 @@ static void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
-    int secs;
+    double secs;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(secs, "Number of seconds to sleep for", "num-seconds");
@@ -54,9 +55,25 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    unsigned remaining = sleep(secs);
-    if (remaining) {
-        printf("Sleep interrupted with %u seconds remaining.\n", remaining);
+    double whole_seconds = static_cast<time_t>(secs);
+    double fraction = secs - whole_seconds;
+
+    timespec requested_sleep {
+        .tv_sec = static_cast<time_t>(whole_seconds),
+        .tv_nsec = static_cast<long>(fraction * (double)1000000000),
+    };
+
+    timespec remaining_sleep {};
+
+    if (clock_nanosleep(CLOCK_MONOTONIC, 0, &requested_sleep, &remaining_sleep) < 0) {
+        if (errno != EINTR) {
+            perror("clock_nanosleep");
+            return 1;
+        }
+    }
+
+    if (remaining_sleep.tv_sec || remaining_sleep.tv_nsec) {
+        outln("Sleep interrupted with {}.{} seconds remaining.", remaining_sleep.tv_sec, remaining_sleep.tv_nsec);
     }
 
     signal(SIGINT, SIG_DFL);
