@@ -204,7 +204,7 @@ public:
     template<typename Callback>
     void for_each_child(Callback);
     template<typename Callback>
-    void for_each_thread(Callback) const;
+    IterationDecision for_each_thread(Callback) const;
 
     void die();
     void finalize();
@@ -507,6 +507,9 @@ private:
     friend class Scheduler;
     friend class Region;
 
+    bool add_thread(Thread&);
+    bool remove_thread(Thread&);
+
     PerformanceEventBuffer& ensure_perf_events();
 
     Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
@@ -592,6 +595,8 @@ private:
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
     Atomic<u32> m_thread_count { 0 };
+    mutable IntrusiveList<Thread, &Thread::m_process_thread_list_node> m_thread_list;
+    mutable RecursiveSpinLock m_thread_list_lock;
 
     const bool m_is_kernel_process;
     bool m_dead { false };
@@ -693,12 +698,9 @@ inline void Process::for_each_child(Callback callback)
 }
 
 template<typename Callback>
-inline void Process::for_each_thread(Callback callback) const
+inline IterationDecision Process::for_each_thread(Callback callback) const
 {
-    InterruptDisabler disabler;
-    ProcessID my_pid = pid();
-
-    if (my_pid == 0) {
+    if (pid() == 0) {
         // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
         Processor::for_each(
             [&](Processor& proc) -> IterationDecision {
@@ -707,15 +709,15 @@ inline void Process::for_each_thread(Callback callback) const
                     return callback(*idle_thread);
                 return IterationDecision::Continue;
             });
-        return;
+    } else {
+        ScopedSpinLock thread_list_lock(m_thread_list_lock);
+        for (auto& thread : m_thread_list) {
+            IterationDecision decision = callback(thread);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
     }
-
-    Thread::for_each([callback, my_pid](Thread& thread) -> IterationDecision {
-        if (thread.pid() == my_pid)
-            return callback(thread);
-
-        return IterationDecision::Continue;
-    });
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
