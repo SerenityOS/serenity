@@ -281,7 +281,8 @@ bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
     ASSERT(s_mm_lock.own_lock());
-    ASSERT(m_page_directory);
+    if (!m_page_directory)
+        return success; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page_range(page_index, page_count))
         return success; // not an error, region doesn't map this page range
     ScopedSpinLock page_lock(m_page_directory->get_lock());
@@ -318,7 +319,8 @@ bool Region::remap_vmobject_page_range(size_t page_index, size_t page_count)
 bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 {
     ScopedSpinLock lock(s_mm_lock);
-    ASSERT(m_page_directory);
+    if (!m_page_directory)
+        return true; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page(page_index))
         return true; // not an error, region doesn't map this page
     ScopedSpinLock page_lock(m_page_directory->get_lock());
@@ -404,9 +406,8 @@ void Region::remap()
     map(*m_page_directory);
 }
 
-PageFaultResponse Region::handle_fault(const PageFault& fault)
+PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
 {
-    ScopedSpinLock lock(s_mm_lock);
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
@@ -419,7 +420,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
         if (vmobject().is_inode()) {
             dbgln<PAGE_FAULT_DEBUG>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
-            return handle_inode_fault(page_index_in_region);
+            return handle_inode_fault(page_index_in_region, mm_lock);
         }
 
         auto& page_slot = physical_page_slot(page_index_in_region);
@@ -514,12 +515,18 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     return response;
 }
 
-PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
+PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(vmobject().is_inode());
 
+    mm_lock.unlock();
+    ASSERT(!s_mm_lock.own_lock());
+    ASSERT(!g_scheduler_lock.own_lock());
+
     LOCKER(vmobject().m_paging_lock);
+
+    mm_lock.lock();
 
     ASSERT_INTERRUPTS_DISABLED();
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
@@ -541,8 +548,13 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
+
+    // Reading the page may block, so release the MM lock temporarily
+    mm_lock.unlock();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
     auto nread = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
+    mm_lock.lock();
+
     if (nread < 0) {
         klog() << "MM: handle_inode_fault had error (" << nread << ") while reading!";
         return PageFaultResponse::ShouldCrash;
