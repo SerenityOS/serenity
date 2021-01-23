@@ -28,8 +28,6 @@
 
 #include <AK/Types.h>
 
-//#define KMALLOC_DEBUG_LARGE_ALLOCATIONS
-
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa
 

@@ -32,8 +32,6 @@
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
-//#define TTY_DEBUG
-
 namespace Kernel {
 
 TTY::TTY(unsigned major, unsigned minor)

@@ -40,8 +40,6 @@ namespace Kernel {
 #define NANOSECOND_PERIOD_TO_HERTZ(x) 1000000000 / x
 #define MEGAHERTZ_TO_HERTZ(x) (x / 1000000)
 
-//#define HPET_DEBUG
-
 namespace HPETFlags {
 enum class Attributes {
     Counter64BitCapable = 1 << 13,

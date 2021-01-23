@@ -32,8 +32,6 @@
 #include <string.h>
 #include <termcap.h>
 
-//#define TERMCAP_DEBUG
-
 extern "C" {
 
 char PC;

@@ -34,8 +34,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
-//#define FIFO_DEBUG
-
 namespace Kernel {
 
 static AK::Singleton<Lockable<HashTable<FIFO*>>> s_table;

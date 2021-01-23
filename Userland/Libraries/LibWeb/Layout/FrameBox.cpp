@@ -35,8 +35,6 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/Frame.h>
 
-//#define DEBUG_HIGHLIGHT_FOCUSED_FRAME
-
 namespace Web::Layout {
 
 FrameBox::FrameBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)

@@ -49,8 +49,6 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-//#define PS2MOUSE_DEBUG
-
 static AK::Singleton<PS2MouseDevice> s_the;
 
 PS2MouseDevice::PS2MouseDevice()

@@ -40,7 +40,6 @@
 
 // FIXME: Thread safety.
 
-//#define MALLOC_DEBUG
 #define RECYCLE_BIG_ALLOCATIONS
 
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))

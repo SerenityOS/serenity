@@ -31,8 +31,6 @@
 #include <AK/StringImpl.h>
 #include <AK/kmalloc.h>
 
-//#define DEBUG_STRINGIMPL
-
 #ifdef DEBUG_STRINGIMPL
 unsigned g_stringimpl_count;
 static HashTable<StringImpl*>* g_all_live_stringimpls;

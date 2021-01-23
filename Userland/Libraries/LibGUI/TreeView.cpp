@@ -32,8 +32,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 
-//#define DEBUG_ITEM_RECTS
-
 REGISTER_WIDGET(GUI, TreeView)
 
 namespace GUI {

@@ -1536,8 +1536,6 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
     }
 }
 
-//#define FILL_PATH_DEBUG
-
 [[maybe_unused]] static void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
 {
     auto diffs = fto - ffrom;

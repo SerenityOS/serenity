@@ -28,8 +28,6 @@
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 
-//#define RTL8139_DEBUG
-
 namespace Kernel {
 
 #define REG_MAC 0x00

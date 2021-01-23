@@ -29,8 +29,6 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/IOAccess.h>
 
-//#define PCI_DEBUG
-
 namespace Kernel {
 namespace PCI {
 

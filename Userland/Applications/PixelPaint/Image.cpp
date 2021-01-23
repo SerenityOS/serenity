@@ -37,8 +37,6 @@
 #include <LibGfx/PNGWriter.h>
 #include <stdio.h>
 
-//#define PAINT_DEBUG
-
 namespace PixelPaint {
 
 RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)

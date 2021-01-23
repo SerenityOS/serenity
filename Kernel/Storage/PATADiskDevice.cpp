@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define PATA_DEVICE_DEBUG
-
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>

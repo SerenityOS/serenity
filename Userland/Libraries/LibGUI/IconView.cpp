@@ -34,8 +34,6 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGfx/Palette.h>
 
-//#define DRAGDROP_DEBUG
-
 namespace GUI {
 
 IconView::IconView()

@@ -34,8 +34,6 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
-//#define MULTIPROCESSOR_DEBUG
-
 namespace Kernel {
 
 OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()

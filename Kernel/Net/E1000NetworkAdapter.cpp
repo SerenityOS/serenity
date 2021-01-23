@@ -30,8 +30,6 @@
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
 
-//#define E1000_DEBUG
-
 namespace Kernel {
 
 // clang-format off

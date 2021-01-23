@@ -53,8 +53,6 @@ namespace Kernel {
 #define VMWARE_PORT 0x5658
 #define VMWARE_PORT_HIGHBANDWIDTH 0x5659
 
-//#define VMWAREBACKDOOR_DEBUG
-
 inline void vmware_out(VMWareCommand& command)
 {
     command.magic = VMWARE_MAGIC;

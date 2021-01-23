@@ -40,15 +40,6 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 
-//#define NETWORK_TASK_DEBUG
-//#define ETHERNET_DEBUG
-//#define ETHERNET_VERY_DEBUG
-//#define ARP_DEBUG
-//#define IPV4_DEBUG
-//#define ICMP_DEBUG
-//#define UDP_DEBUG
-//#define TCP_DEBUG
-
 namespace Kernel {
 
 static void handle_arp(const EthernetFrameHeader&, size_t frame_size);

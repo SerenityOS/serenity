@@ -32,8 +32,6 @@
 #include <mallocdefs.h>
 #include <string.h>
 
-//#define REACHABLE_DEBUG
-
 namespace UserspaceEmulator {
 
 MallocTracer::MallocTracer(Emulator& emulator)

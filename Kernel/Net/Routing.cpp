@@ -30,8 +30,6 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
 
-//#define ROUTING_DEBUG
-
 namespace Kernel {
 
 static AK::Singleton<Lockable<HashMap<IPv4Address, MACAddress>>> s_arp_table;

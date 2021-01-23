@@ -34,8 +34,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
-// #define DEBUG_DIFF
-
 namespace HackStudio {
 
 DiffViewer::~DiffViewer()

@@ -31,8 +31,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 
-//#define WAITBLOCK_DEBUG
-
 namespace Kernel {
 
 bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_condition, void* data)
