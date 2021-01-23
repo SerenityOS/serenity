@@ -825,11 +825,8 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassExtendsValueInvalidPrototype, super_constructor_prototype_value.to_string_without_side_effects());
                 return {};
             }
-            if (super_constructor_prototype_value.is_object()) {
+            if (super_constructor_prototype_value.is_object())
                 super_constructor_prototype = &super_constructor_prototype_value.as_object();
-                if (interpreter.exception())
-                    return {};
-            }
         }
         prototype->set_prototype(super_constructor_prototype);
 
