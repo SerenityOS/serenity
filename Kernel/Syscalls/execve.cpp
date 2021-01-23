@@ -527,6 +527,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
 
+    m_coredump_metadata.clear();
+
     current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
 
