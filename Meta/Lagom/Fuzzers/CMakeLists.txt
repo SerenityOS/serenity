@@ -34,10 +34,11 @@ add_simple_fuzzer(FuzzShell)
 add_simple_fuzzer(FuzzTTF)
 add_simple_fuzzer(FuzzURL)
 
-if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+if (NOT ENABLE_OSS_FUZZ)
+set(CMAKE_EXE_LINKER_FLAGS "${ORIGINAL_CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_SHARED_LINKER_FLAGS "${ORIGINAL_CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_MODULE_LINKER_FLAGS "${ORIGINAL_CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
 add_executable(FuzzilliJs FuzzilliJs.cpp)
-# FIXME: For some reason, these option overrides are ignored and FuzzilliJs gets treated
-#        as a regular fuzzer. Once fixed, please remove the "AND NOT ENABLE_FUZZER_SANITIZER" above.
 target_compile_options(FuzzilliJs
     PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
     )
