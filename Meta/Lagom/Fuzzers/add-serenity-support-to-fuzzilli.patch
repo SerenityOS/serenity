@@ -1,8 +1,8 @@
 diff --git a/Sources/FuzzilliCli/Profiles/Profile.swift b/Sources/FuzzilliCli/Profiles/Profile.swift
-index 6d8a795..a506d41 100644
+index 900b4e2..c916e84 100644
 --- a/Sources/FuzzilliCli/Profiles/Profile.swift
 +++ b/Sources/FuzzilliCli/Profiles/Profile.swift
-@@ -32,6 +32,33 @@ struct Profile {
+@@ -33,6 +33,35 @@ struct Profile {
      let additionalBuiltins: [String: Type]
  }
  
@@ -25,6 +25,8 @@ index 6d8a795..a506d41 100644
 +    crashTests: ["fuzzilli('FUZZILLI_CRASH', 0)", "fuzzilli('FUZZILLI_CRASH', 1)"],
 +
 +    additionalCodeGenerators: WeightedList<CodeGenerator>([]),
++
++    additionalProgramTemplates: WeightedList<ProgramTemplate>([]),
 +    
 +    disabledCodeGenerators: [],
 +
@@ -36,7 +38,7 @@ index 6d8a795..a506d41 100644
  let profiles = [
      "qjs": qjsProfile,
      "jsc": jscProfile,
-@@ -39,4 +66,5 @@ let profiles = [
+@@ -40,4 +69,5 @@ let profiles = [
      "v8": v8Profile,
      "duktape": duktapeProfile,
      "jerryscript": jerryscriptProfile,

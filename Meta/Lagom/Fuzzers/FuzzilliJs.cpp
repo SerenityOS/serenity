@@ -40,7 +40,10 @@
 #include <string>
 #include <sys/mman.h>
 
+#include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 //
 // BEGIN FUZZING CODE
