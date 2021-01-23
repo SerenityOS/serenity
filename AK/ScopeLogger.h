@@ -56,7 +56,7 @@ private:
 }
 
 using AK::ScopeLogger;
-#    define SCOPE_LOGGER() auto tmp##__COUNTER__ = ScopeLogger(__PRETTY_FUNCTION__);
+#    define SCOPE_LOGGER() auto tmp##__COUNTER__ = ScopeLogger(__PRETTY_FUNCTION__)
 
 #else
 #    define SCOPE_LOGGER()
