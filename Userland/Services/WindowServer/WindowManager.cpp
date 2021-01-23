@@ -559,6 +559,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
             } else if (m_move_window->tiled() == WindowTileType::None) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
+                // "Bounce back" the window it it would end up too far outside the screen:
+                m_move_window->normalize_rect();
             } else if (pixels_moved_from_start > 5) {
                 m_move_window->set_untiled(event.position());
                 m_move_origin = event.position();
