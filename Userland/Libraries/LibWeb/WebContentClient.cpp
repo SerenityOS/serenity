@@ -56,7 +56,7 @@ void WebContentClient::handle([[maybe_unused]] const Messages::WebContentClient:
 
 void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateContentRect& message)
 {
-    dbgln<debug_spam>("handle: WebContentClient::DidInvalidateContentRect! content_rect={}", message.content_rect());
+    dbgln<SPAM_DEBUG>("handle: WebContentClient::DidInvalidateContentRect! content_rect={}", message.content_rect());
 
     // FIXME: Figure out a way to coalesce these messages to reduce unnecessary painting
     m_view.notify_server_did_invalidate_content_rect({}, message.content_rect());
@@ -72,25 +72,25 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelecti
 
 void WebContentClient::handle(const Messages::WebContentClient::DidLayout& message)
 {
-    dbgln<debug_spam>("handle: WebContentClient::DidLayout! content_size={}", message.content_size());
+    dbgln<SPAM_DEBUG>("handle: WebContentClient::DidLayout! content_size={}", message.content_size());
     m_view.notify_server_did_layout({}, message.content_size());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidChangeTitle& message)
 {
-    dbgln<debug_spam>("handle: WebContentClient::DidChangeTitle! title={}", message.title());
+    dbgln<SPAM_DEBUG>("handle: WebContentClient::DidChangeTitle! title={}", message.title());
     m_view.notify_server_did_change_title({}, message.title());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidRequestScrollIntoView& message)
 {
-    dbgln<debug_spam>("handle: WebContentClient::DidRequestScrollIntoView! rect={}", message.rect());
+    dbgln<SPAM_DEBUG>("handle: WebContentClient::DidRequestScrollIntoView! rect={}", message.rect());
     m_view.notify_server_did_request_scroll_into_view({}, message.rect());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidHoverLink& message)
 {
-    dbgln<debug_spam>("handle: WebContentClient::DidHoverLink! url={}", message.url());
+    dbgln<SPAM_DEBUG>("handle: WebContentClient::DidHoverLink! url={}", message.url());
     m_view.notify_server_did_hover_link({}, message.url());
 }
 

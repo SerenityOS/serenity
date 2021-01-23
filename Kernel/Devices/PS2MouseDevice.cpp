@@ -99,7 +99,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 
     auto commit_packet = [&] {
         m_data_state = 0;
-        dbgln<debug_ps2mouse>("PS2Mouse: {}, {} {} {}",
+        dbgln<PS2MOUSE_DEBUG>("PS2Mouse: {}, {} {} {}",
             m_data.bytes[1],
             m_data.bytes[2],
             (m_data.bytes[0] & 1) ? "Left" : "",
@@ -283,7 +283,7 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
         auto packet = m_queue.dequeue();
         lock.unlock();
 
-        if constexpr (debug_ps2mouse) {
+        if constexpr (PS2MOUSE_DEBUG) {
             dbgln("PS2 Mouse Read: Buttons {:x}", packet.buttons);
             dbgln("PS2 Mouse: X {}, Y {}, Z {}, Relative {}", packet.x, packet.y, packet.z, packet.buttons);
             dbgln("PS2 Mouse Read: Filter packets");

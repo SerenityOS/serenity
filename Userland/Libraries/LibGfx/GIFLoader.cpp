@@ -212,13 +212,13 @@ public:
         }
 
         if (m_current_code > m_code_table.size()) {
-            dbgln<debug_gif>("Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
+            dbgln<GIF_DEBUG>("Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
             return {};
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
-            dbgln<debug_gif>("Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
+            dbgln<GIF_DEBUG>("Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
@@ -527,12 +527,12 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xFF) {
                 if (sub_block.size() != 14) {
-                    dbgln<debug_gif>("Unexpected application extension size: {}", sub_block.size());
+                    dbgln<GIF_DEBUG>("Unexpected application extension size: {}", sub_block.size());
                     continue;
                 }
 
                 if (sub_block[11] != 1) {
-                    dbgln<debug_gif>("Unexpected application extension format");
+                    dbgln<GIF_DEBUG>("Unexpected application extension format");
                     continue;
                 }
 

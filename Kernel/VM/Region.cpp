@@ -410,7 +410,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
-            dbgln<debug_page_fault>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
+            dbgln<PAGE_FAULT_DEBUG>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
             return handle_inode_fault(page_index_in_region);
         }
 
@@ -435,10 +435,10 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
-        dbgln<debug_page_fault>("PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        dbgln<PAGE_FAULT_DEBUG>("PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-            dbgln<debug_page_fault>("NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            dbgln<PAGE_FAULT_DEBUG>("NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_zero_fault(page_index_in_region);
         }
         return handle_cow_fault(page_index_in_region);
@@ -472,14 +472,14 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (page_slot->is_lazy_committed_page()) {
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
-        dbgln<debug_page_fault>("      >> ALLOCATED COMMITTED {}", page_slot->paddr());
+        dbgln<PAGE_FAULT_DEBUG>("      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_slot.is_null()) {
             klog() << "MM: handle_zero_fault was unable to allocate a physical page";
             return PageFaultResponse::OutOfMemory;
         }
-        dbgln<debug_page_fault>("      >> ALLOCATED {}", page_slot->paddr());
+        dbgln<PAGE_FAULT_DEBUG>("      >> ALLOCATED {}", page_slot->paddr());
     }
 
     if (!remap_vmobject_page(page_index_in_vmobject)) {
@@ -518,10 +518,10 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
-    dbgln<debug_page_fault>("Inode fault in {} page index: {}", name(), page_index_in_region);
+    dbgln<PAGE_FAULT_DEBUG>("Inode fault in {} page index: {}", name(), page_index_in_region);
 
     if (!vmobject_physical_page_entry.is_null()) {
-        dbgln<debug_page_fault>("MM: page_in_from_inode() but page already present. Fine with me!");
+        dbgln<PAGE_FAULT_DEBUG>("MM: page_in_from_inode() but page already present. Fine with me!");
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;

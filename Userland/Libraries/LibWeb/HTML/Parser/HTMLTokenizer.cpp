@@ -36,10 +36,10 @@ namespace Web::HTML {
 
 #pragma GCC diagnostic ignored "-Wunused-label"
 
-#if TOKENIZER_TRACE
-#    define PARSE_ERROR()                                                              \
-        do {                                                                           \
-            dbgln("Parse error (tokenization) {} @ {}", __PRETTY_FUNCTION__, __LINE__) \
+#if TOKENIZER_TRACE_DEBUG
+#    define PARSE_ERROR()                                                               \
+        do {                                                                            \
+            dbgln("Parse error (tokenization) {} @ {}", __PRETTY_FUNCTION__, __LINE__); \
         } while (0)
 #else
 #    define PARSE_ERROR()
@@ -221,7 +221,7 @@ Optional<u32> HTMLTokenizer::next_code_point()
         return {};
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
-    dbgln<debug_trace_tokenizer>("(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
+    dbgln<TOKENIZER_TRACE_DEBUG>("(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
@@ -2618,17 +2618,17 @@ HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)
 {
-    dbgln<debug_trace_tokenizer>("[{}] Switch to {}", state_name(m_state), state_name(new_state));
+    dbgln<TOKENIZER_TRACE_DEBUG>("[{}] Switch to {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::will_reconsume_in([[maybe_unused]] State new_state)
 {
-    dbgln<debug_trace_tokenizer>("[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
+    dbgln<TOKENIZER_TRACE_DEBUG>("[{}] Reconsume in {}", state_name(m_state), state_name(new_state));
 }
 
 void HTMLTokenizer::switch_to(Badge<HTMLDocumentParser>, State new_state)
 {
-    dbgln<debug_trace_tokenizer>("[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
+    dbgln<TOKENIZER_TRACE_DEBUG>("[{}] Parser switches tokenizer state to {}", state_name(m_state), state_name(new_state));
     m_state = new_state;
 }
 

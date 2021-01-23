@@ -925,7 +925,7 @@ void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const F
     // Perhaps it's an emoji?
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
-        dbgln<debug_emoji>("Failed to find an emoji for code_point {}", code_point);
+        dbgln<EMOJI_DEBUG>("Failed to find an emoji for code_point {}", code_point);
         draw_glyph(point, '?', font, color);
         return;
     }
@@ -1639,7 +1639,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                         // The points between this segment and the previous are
                         // inside the shape
 
-                        dbgln<debug_fill_path>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
+                        dbgln<FILL_PATH_DEBUG>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
                         draw_line(from, to, color, 1);
                     }
 

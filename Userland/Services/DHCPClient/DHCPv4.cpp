@@ -44,7 +44,7 @@ ParsedDHCPv4Options DHCPv4Packet::parse_options() const
                 dbgln("Bogus option length {} assuming forgotten END", length);
                 break;
             }
-            dbgln<debug_dhcpv4>("DHCP Option {} with length {}", (u8)opt_name, length);
+            dbgln<DHCPV4_DEBUG>("DHCP Option {} with length {}", (u8)opt_name, length);
             ++index;
             options.options.set(opt_name, { length, &m_options[index] });
             index += length - 1;

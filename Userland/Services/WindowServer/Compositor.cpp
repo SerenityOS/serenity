@@ -194,7 +194,7 @@ void Compositor::compose()
     if (m_custom_background_color.has_value())
         background_color = m_custom_background_color.value();
 
-    if constexpr (debug_compose) {
+    if constexpr (COMPOSE_DEBUG) {
         dbgln("COMPOSE: invalidated: window: {} cursor: {}, any: {}", m_invalidated_window, m_invalidated_cursor, m_invalidated_any);
         for (auto& r : dirty_screen_rects.rects())
             dbgln("dirty screen: {}", r);
@@ -215,7 +215,7 @@ void Compositor::compose()
     };
 
     auto prepare_rect = [&](const Gfx::IntRect& rect) {
-        dbgln<debug_compose>("    -> flush opaque: {}", rect);
+        dbgln<COMPOSE_DEBUG>("    -> flush opaque: {}", rect);
         ASSERT(!flush_rects.intersects(rect));
         ASSERT(!flush_transparent_rects.intersects(rect));
         flush_rects.add(rect);
@@ -223,7 +223,7 @@ void Compositor::compose()
     };
 
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
-        dbgln<debug_compose>("   -> flush transparent: {}", rect);
+        dbgln<COMPOSE_DEBUG>("   -> flush transparent: {}", rect);
         ASSERT(!flush_rects.intersects(rect));
         bool have_rect = false;
         for (auto& r : flush_transparent_rects.rects()) {
@@ -270,7 +270,7 @@ void Compositor::compose()
     };
 
     m_opaque_wallpaper_rects.for_each_intersected(dirty_screen_rects, [&](const Gfx::IntRect& render_rect) {
-        dbgln<debug_compose>("  render wallpaper opaque: {}", render_rect);
+        dbgln<COMPOSE_DEBUG>("  render wallpaper opaque: {}", render_rect);
         prepare_rect(render_rect);
         paint_wallpaper(back_painter, render_rect);
         return IterationDecision::Continue;
@@ -282,7 +282,7 @@ void Compositor::compose()
             return IterationDecision::Continue;
         auto frame_rects = frame_rect.shatter(window.rect());
 
-        dbgln<debug_compose>("  window {} frame rect: {}", window.title(), frame_rect);
+        dbgln<COMPOSE_DEBUG>("  window {} frame rect: {}", window.title(), frame_rect);
 
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
         auto compose_window_rect = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
@@ -291,7 +291,7 @@ void Compositor::compose()
                     // TODO: Should optimize this to use a backing buffer
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
-                    dbgln<debug_compose>("    render frame: {}", intersected_rect);
+                    dbgln<COMPOSE_DEBUG>("    render frame: {}", intersected_rect);
                     window.frame().paint(painter);
                     return IterationDecision::Continue;
                 });
@@ -360,7 +360,7 @@ void Compositor::compose()
 
         auto& dirty_rects = window.dirty_rects();
 
-        if constexpr (debug_compose) {
+        if constexpr (COMPOSE_DEBUG) {
             for (auto& dirty_rect : dirty_rects.rects())
                 dbgln("    dirty: {}", dirty_rect);
             for (auto& r : window.opaque_rects().rects())
@@ -373,7 +373,7 @@ void Compositor::compose()
         auto& opaque_rects = window.opaque_rects();
         if (!opaque_rects.is_empty()) {
             opaque_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<debug_compose>("    render opaque: {}", render_rect);
+                dbgln<COMPOSE_DEBUG>("    render opaque: {}", render_rect);
 
                 prepare_rect(render_rect);
                 Gfx::PainterStateSaver saver(back_painter);
@@ -388,7 +388,7 @@ void Compositor::compose()
         auto& transparency_wallpaper_rects = window.transparency_wallpaper_rects();
         if (!transparency_wallpaper_rects.is_empty()) {
             transparency_wallpaper_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<debug_compose>("    render wallpaper: {}", render_rect);
+                dbgln<COMPOSE_DEBUG>("    render wallpaper: {}", render_rect);
 
                 prepare_transparency_rect(render_rect);
                 paint_wallpaper(temp_painter, render_rect);
@@ -398,7 +398,7 @@ void Compositor::compose()
         auto& transparency_rects = window.transparency_rects();
         if (!transparency_rects.is_empty()) {
             transparency_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<debug_compose>("    render transparent: {}", render_rect);
+                dbgln<COMPOSE_DEBUG>("    render transparent: {}", render_rect);
 
                 prepare_transparency_rect(render_rect);
                 Gfx::PainterStateSaver saver(temp_painter);
@@ -671,7 +671,7 @@ void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
                 from_rect.height() - (int)(height_delta_per_step * animation_index)
             };
 
-            dbgln<debug_minimize_animation>("Minimize animation from {} to {} frame# {} {}", from_rect, to_rect, animation_index, rect);
+            dbgln<MINIMIZE_ANIMATION_DEBUG>("Minimize animation from {} to {} frame# {} {}", from_rect, to_rect, animation_index, rect);
 
             painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
             flush_rects.add(rect);
@@ -1001,7 +1001,7 @@ void Compositor::recompute_occlusions()
         m_opaque_wallpaper_rects = move(visible_rects);
     }
 
-    if constexpr (debug_occlusions) {
+    if constexpr (OCCLUSIONS_DEBUG) {
         for (auto& r : m_opaque_wallpaper_rects.rects())
             dbgln("  wallpaper opaque: {}", r);
     }
@@ -1011,7 +1011,7 @@ void Compositor::recompute_occlusions()
         if (w.is_minimized() || window_frame_rect.is_empty())
             return IterationDecision::Continue;
 
-        if constexpr (debug_occlusions) {
+        if constexpr (OCCLUSIONS_DEBUG) {
             dbgln("  Window {} frame rect: {}", w.title(), window_frame_rect);
             for (auto& r : w.opaque_rects().rects())
                 dbgln("    opaque: {}", r);

@@ -74,7 +74,7 @@ LocalSocket::LocalSocket(int type)
         evaluate_block_conditions();
     });
 
-    dbgln<debug_local_socket>("LocalSocket({}) created with type={}", this, type);
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) created with type={}", this, type);
 }
 
 LocalSocket::~LocalSocket()
@@ -110,7 +110,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
-    dbgln<debug_local_socket>("LocalSocket({}) bind({})", this, path);
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) bind({})", this, path);
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
@@ -154,7 +154,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         return EFAULT;
     safe_address[sizeof(safe_address) - 1] = '\0';
 
-    dbgln<debug_local_socket>("LocalSocket({}) connect({})", this, safe_address);
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({})", this, safe_address);
 
     auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
     if (description_or_error.is_error())
@@ -190,7 +190,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         return EINTR;
     }
 
-    dbgln<debug_local_socket>("LocalSocket({}) connect({}) status is {}", this, safe_address, to_string(setup_state()));
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({}) status is {}", this, safe_address, to_string(setup_state()));
 
     if (!((u32)unblock_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Connect)) {
         set_connect_side_role(Role::None);
@@ -210,7 +210,7 @@ KResult LocalSocket::listen(size_t backlog)
     m_role = Role::Listener;
     set_connect_side_role(Role::Listener, previous_role != m_role);
 
-    dbgln<debug_local_socket>("LocalSocket({}) listening with backlog={}", this, backlog);
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) listening with backlog={}", this, backlog);
 
     return KSuccess;
 }

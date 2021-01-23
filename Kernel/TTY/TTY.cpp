@@ -304,7 +304,7 @@ void TTY::set_termios(const termios& t)
 {
     m_termios = t;
 
-    dbgln<debug_tty>("{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}",
+    dbgln<TTY_DEBUG>("{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}",
         tty_name(),
         should_echo_input(),
         should_generate_signals(),

@@ -47,7 +47,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 
 SlavePTY::~SlavePTY()
 {
-    dbgln<debug_slavepty>("~SlavePTY({})", m_index);
+    dbgln<SLAVEPTY_DEBUG>("~SlavePTY({})", m_index);
     DevPtsFS::unregister_slave_pty(*this);
 }
 

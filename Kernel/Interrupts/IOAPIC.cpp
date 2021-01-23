@@ -201,12 +201,12 @@ void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 deli
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
 
-    if constexpr (debug_ioapic)
+    if constexpr (IOAPIC_DEBUG)
         dbgln("IOAPIC Value: {:#x}", read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET));
 
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET + 1, redirection_entry2);
 
-    if constexpr (debug_ioapic)
+    if constexpr (IOAPIC_DEBUG)
         dbgln("IOAPIC Value: {:#x}", read_register((index << 1) + 0x11));
 }
 
@@ -320,13 +320,13 @@ void IOAPIC::write_register(u32 index, u32 value) const
     m_regs->select = index;
     m_regs->window = value;
 
-    dbgln<debug_ioapic>("IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln<IOAPIC_DEBUG>("IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
 }
 u32 IOAPIC::read_register(u32 index) const
 {
     InterruptDisabler disabler;
     m_regs->select = index;
-    dbgln<debug_ioapic>("IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln<IOAPIC_DEBUG>("IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
     return m_regs->window;
 }
 

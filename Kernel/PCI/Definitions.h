@@ -194,7 +194,7 @@ public:
         , m_id(id)
         , m_capabilities(capabilities)
     {
-        if constexpr (debug_pci) {
+        if constexpr (PCI_DEBUG) {
             for (auto capability : capabilities)
                 dbgln("{} has capability {}", address, capability.m_id);
         }

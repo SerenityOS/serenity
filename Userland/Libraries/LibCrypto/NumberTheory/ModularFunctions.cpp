@@ -231,7 +231,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     UnsignedBigInteger::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
     UnsignedBigInteger::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
 
-    dbgln<debug_nt>("quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
+    dbgln<NT_DEBUG>("quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
 
     return output;
 }

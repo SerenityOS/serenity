@@ -87,7 +87,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
     auto document = GUI::TextDocument::create(&s_default_document_client);
     document->set_text(content_view);
     m_open_files.set(message.file_name(), document);
-    dbgln<debug_file_content>("{}", document->text());
+    dbgln<FILE_CONTENT_DEBUG>("{}", document->text());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)

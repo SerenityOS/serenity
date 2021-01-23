@@ -47,7 +47,7 @@ void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 
 void TCPSocket::set_state(State new_state)
 {
-    dbgln<debug_tcp_socket>("TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
+    dbgln<TCP_SOCKET_DEBUG>("TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
 
     auto was_disconnected = protocol_is_disconnected();
     auto previous_role = m_role;
@@ -154,7 +154,7 @@ TCPSocket::~TCPSocket()
     LOCKER(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
 
-    dbgln<debug_tcp_socket>("~TCPSocket in state {}", to_string(state()));
+    dbgln<TCP_SOCKET_DEBUG>("~TCPSocket in state {}", to_string(state()));
 }
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
@@ -273,14 +273,14 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
 
-        dbgln<debug_tcp_socket>("TCPSocket: receive_tcp_packet: {}", ack_number);
+        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet: {}", ack_number);
 
         int removed = 0;
         LOCKER(m_not_acked_lock);
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 
-            dbgln<debug_tcp_socket>("TCPSocket: iterate: {}", packet.ack_number);
+            dbgln<TCP_SOCKET_DEBUG>("TCPSocket: iterate: {}", packet.ack_number);
 
             if (packet.ack_number <= ack_number) {
                 m_not_acked.take_first();
@@ -290,7 +290,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             }
         }
 
-        dbgln<debug_tcp_socket>("TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
+        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
     }
 
     m_packets_in++;
