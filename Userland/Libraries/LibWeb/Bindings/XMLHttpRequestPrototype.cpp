@@ -29,7 +29,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
-#include <LibWeb/DOM/XMLHttpRequest.h>
+#include <LibWeb/XHR/XMLHttpRequest.h>
 
 namespace Web::Bindings {
 
@@ -47,18 +47,18 @@ void XMLHttpRequestPrototype::initialize(JS::GlobalObject& global_object)
     define_native_property("readyState", ready_state_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_property("responseText", response_text_getter, nullptr, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    define_property("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
-    define_property("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
-    define_property("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
-    define_property("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
-    define_property("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
+    define_property("UNSENT", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
+    define_property("OPENED", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
+    define_property("HEADERS_RECEIVED", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
+    define_property("LOADING", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
+    define_property("DONE", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
 }
 
 XMLHttpRequestPrototype::~XMLHttpRequestPrototype()
 {
 }
 
-static XMLHttpRequest* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static XHR::XMLHttpRequest* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)

@@ -32,16 +32,16 @@ namespace Web::Bindings {
 
 class XMLHttpRequestWrapper final : public EventTargetWrapper {
 public:
-    XMLHttpRequestWrapper(JS::GlobalObject&, XMLHttpRequest&);
+    XMLHttpRequestWrapper(JS::GlobalObject&, XHR::XMLHttpRequest&);
     virtual ~XMLHttpRequestWrapper() override;
 
-    XMLHttpRequest& impl();
-    const XMLHttpRequest& impl() const;
+    XHR::XMLHttpRequest& impl();
+    const XHR::XMLHttpRequest& impl() const;
 
 private:
     virtual const char* class_name() const override { return "XMLHttpRequestWrapper"; }
 };
 
-XMLHttpRequestWrapper* wrap(JS::GlobalObject&, XMLHttpRequest&);
+XMLHttpRequestWrapper* wrap(JS::GlobalObject&, XHR::XMLHttpRequest&);
 
 }

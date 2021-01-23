@@ -54,7 +54,6 @@ set(SOURCES
     DOM/Text.idl
     DOM/Timer.cpp
     DOM/Window.cpp
-    DOM/XMLHttpRequest.cpp
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
@@ -204,6 +203,7 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    XHR/XMLHttpRequest.cpp
     WebContentClient.cpp
 )
 

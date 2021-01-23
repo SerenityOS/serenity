@@ -30,7 +30,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
-#include <LibWeb/DOM/XMLHttpRequest.h>
+#include <LibWeb/XHR/XMLHttpRequest.h>
 
 namespace Web::Bindings {
 
@@ -47,11 +47,11 @@ void XMLHttpRequestConstructor::initialize(JS::GlobalObject& global_object)
     define_property(vm.names.prototype, window.xhr_prototype(), 0);
     define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 
-    define_property("UNSENT", JS::Value((i32)XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
-    define_property("OPENED", JS::Value((i32)XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
-    define_property("HEADERS_RECEIVED", JS::Value((i32)XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
-    define_property("LOADING", JS::Value((i32)XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
-    define_property("DONE", JS::Value((i32)XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
+    define_property("UNSENT", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Unsent), JS::Attribute::Enumerable);
+    define_property("OPENED", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Opened), JS::Attribute::Enumerable);
+    define_property("HEADERS_RECEIVED", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::HeadersReceived), JS::Attribute::Enumerable);
+    define_property("LOADING", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Loading), JS::Attribute::Enumerable);
+    define_property("DONE", JS::Value((i32)XHR::XMLHttpRequest::ReadyState::Done), JS::Attribute::Enumerable);
 }
 
 XMLHttpRequestConstructor::~XMLHttpRequestConstructor()
@@ -67,7 +67,7 @@ JS::Value XMLHttpRequestConstructor::call()
 JS::Value XMLHttpRequestConstructor::construct(Function&)
 {
     auto& window = static_cast<WindowObject&>(global_object());
-    return heap().allocate<XMLHttpRequestWrapper>(window, window, XMLHttpRequest::create(window.impl()));
+    return heap().allocate<XMLHttpRequestWrapper>(window, window, XHR::XMLHttpRequest::create(window.impl()));
 }
 
 }
