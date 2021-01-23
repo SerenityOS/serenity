@@ -144,9 +144,9 @@ extern "C" [[noreturn]] void init()
 
     klog() << "Starting SerenityOS...";
 
-    __stack_chk_guard = get_fast_random<u32>();
-
     TimeManagement::initialize(0);
+
+    __stack_chk_guard = get_fast_random<u32>();
 
     NullDevice::initialize();
     if (!get_serial_debug())
