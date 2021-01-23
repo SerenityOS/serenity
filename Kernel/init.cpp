@@ -307,10 +307,8 @@ void setup_serial_debug()
     // serial_debug will output all the klog() and dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    //
-    // note: it must be the first option in the boot cmdline.
     u32 cmdline = low_physical_to_virtual(multiboot_info_ptr->cmdline);
-    if (cmdline && StringView(reinterpret_cast<const char*>(cmdline)).starts_with("serial_debug"))
+    if (cmdline && StringView(reinterpret_cast<const char*>(cmdline)).contains("serial_debug"))
         set_serial_debug(true);
 }
 
