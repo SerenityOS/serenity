@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -72,7 +73,7 @@ bool TLSv12::expand_key()
     auto server_iv = key + offset;
     offset += iv_size;
 
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("client key");
     print_buffer(client_key, key_size);
     dbgln("server key");
@@ -171,7 +172,7 @@ bool TLSv12::compute_master_secret(size_t length)
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
     m_context.premaster_key.clear();
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("master key:");
     print_buffer(m_context.master_key);
 #endif
@@ -213,7 +214,7 @@ ByteBuffer TLSv12::build_certificate()
     builder.append((u8)HandshakeType::CertificateMessage);
 
     if (!total_certificate_size) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("No certificates, sending empty certificate message");
 #endif
         builder.append_u24(certificate_vector_header_size);

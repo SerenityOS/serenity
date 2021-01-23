@@ -43,7 +43,7 @@ void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
     m_total_range = { base, size };
     m_available_ranges.append({ base, size });
-#ifdef VRA_DEBUG
+#if VRA_DEBUG
     ScopedSpinLock lock(m_lock);
     dump();
 #endif
@@ -215,7 +215,7 @@ void RangeAllocator::deallocate(Range range)
             return;
         }
     }
-#ifdef VRA_DEBUG
+#if VRA_DEBUG
     dbgln("VRA: After deallocate");
     dump();
 #endif

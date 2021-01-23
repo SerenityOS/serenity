@@ -357,7 +357,7 @@ void Thread::finalize()
     ASSERT(Thread::current() == g_finalizer);
     ASSERT(Thread::current() != this);
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
     ASSERT(!m_lock.own_lock());
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
@@ -687,7 +687,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     ASSERT(process().is_user_process());
     ASSERT(this == Thread::current());
 
-#ifdef SIGNAL_DEBUG
+#if SIGNAL_DEBUG
     klog() << "signal: dispatch signal " << signal << " to " << *this << " state: " << state_string();
 #endif
 
@@ -756,7 +756,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     if (handler_vaddr.as_ptr() == SIG_IGN) {
-#ifdef SIGNAL_DEBUG
+#if SIGNAL_DEBUG
         klog() << "signal: " << *this << " ignored signal " << signal;
 #endif
         return DispatchSignalResult::Continue;
@@ -780,7 +780,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
 
-#ifdef SIGNAL_DEBUG
+#if SIGNAL_DEBUG
         klog() << "signal: setting up user stack to return to eip: " << String::format("%p", (void*)ret_eip) << " esp: " << String::format("%p", (void*)old_esp);
 #endif
 
@@ -820,7 +820,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     setup_stack(regs);
     regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
-#ifdef SIGNAL_DEBUG
+#if SIGNAL_DEBUG
     dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
 #endif
     return DispatchSignalResult::Continue;

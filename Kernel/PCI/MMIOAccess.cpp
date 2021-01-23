@@ -85,7 +85,7 @@ void MMIOAccess::initialize(PhysicalAddress mcfg)
 {
     if (!Access::is_initialized()) {
         new MMIOAccess(mcfg);
-#ifdef PCI_DEBUG
+#if PCI_DEBUG
         dbgln("PCI: MMIO access initialised.");
 #endif
     }
@@ -97,7 +97,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     klog() << "PCI: Using MMIO for PCI configuration space access";
 
     auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
-#ifdef PCI_DEBUG
+#if PCI_DEBUG
     dbgln("PCI: Checking MCFG Table length to choose the correct mapping size");
 #endif
 

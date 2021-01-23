@@ -68,7 +68,7 @@ void NetworkJob::did_fail(Error error)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_error = error;
-#ifdef CNETWORKJOB_DEBUG
+#if CNETWORKJOB_DEBUG
     dbgprintf("%s{%p} job did_fail! error: %u (%s)\n", class_name(), this, (unsigned)error, to_string(error));
 #endif
     ASSERT(on_finish);

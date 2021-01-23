@@ -28,10 +28,9 @@
 
 #include "AK/StringBuilder.h"
 #include "LibRegex/RegexMatcher.h"
+#include <AK/Debug.h>
 
-//#define REGEX_DEBUG
-
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
 
 namespace regex {
 

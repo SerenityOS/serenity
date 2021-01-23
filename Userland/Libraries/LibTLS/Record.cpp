@@ -200,7 +200,7 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     u64 sequence_number = AK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("========================= PACKET DATA ==========================");
     print_buffer((const u8*)&sequence_number, sizeof(u64));
     print_buffer(buf.data(), buf.size());
@@ -344,7 +344,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
             length = decrypted_span.size();
 
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("Decrypted: ");
             print_buffer(decrypted);
 #endif
@@ -395,7 +395,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     case MessageType::Handshake:
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("tls handshake message");
 #endif
         payload_res = handle_payload(plain);
@@ -406,7 +406,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("change cipher spec message");
 #endif
             m_context.cipher_spec_set = true;

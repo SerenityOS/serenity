@@ -36,7 +36,7 @@ namespace Web::HTML {
 
 #pragma GCC diagnostic ignored "-Wunused-label"
 
-#ifdef TOKENIZER_TRACE
+#if TOKENIZER_TRACE
 #    define PARSE_ERROR()                                                              \
         do {                                                                           \
             dbgln("Parse error (tokenization) {} @ {}", __PRETTY_FUNCTION__, __LINE__) \

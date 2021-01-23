@@ -146,7 +146,7 @@ IDEChannel::~IDEChannel()
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave)
 {
     ScopedSpinLock lock(m_request_lock);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     dbgln("IDEChannel::start_request");
 #endif
     m_current_request = &request;
@@ -231,19 +231,19 @@ void IDEChannel::handle_irq(const RegisterState&)
     u8 bstatus = m_io_group.bus_master_base().offset(2).in<u8>();
     if (!(bstatus & 0x4)) {
         // interrupt not from this device, ignore
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
         klog() << "IDEChannel: ignore interrupt";
 #endif
         return;
     }
 
     ScopedSpinLock lock(m_request_lock);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: interrupt: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0);
 #endif
 
     if (!m_current_request) {
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
         dbgln("IDEChannel: IRQ but no pending request!");
 #endif
         return;
@@ -324,7 +324,7 @@ void IDEChannel::detect_disks()
             ;
 
         if (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() == 0x00) {
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
             klog() << "IDEChannel: No " << (i == 0 ? "master" : "slave") << " disk detected!";
 #endif
             continue;
@@ -439,7 +439,7 @@ void IDEChannel::ata_read_sectors(bool slave_request)
 {
     auto& request = *m_current_request;
     ASSERT(request.block_count() <= 256);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     dbgln("IDEChannel::ata_read_sectors");
 #endif
 
@@ -447,7 +447,7 @@ void IDEChannel::ata_read_sectors(bool slave_request)
         ;
 
     auto lba = request.block_index();
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: Reading " << request.block_count() << " sector(s) @ LBA " << lba;
 #endif
 
@@ -570,14 +570,14 @@ void IDEChannel::ata_write_sectors(bool slave_request)
     ASSERT(request.block_count() <= 256);
     u32 start_sector = request.block_index();
     u32 count = request.block_count();
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel::ata_write_sectors request (" << count << " sector(s) @ " << start_sector << ")";
 #endif
 
     while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
         ;
 
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: Writing " << count << " sector(s) @ LBA " << start_sector;
 #endif
 

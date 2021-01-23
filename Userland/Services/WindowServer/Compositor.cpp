@@ -863,7 +863,7 @@ void Compositor::recompute_occlusions()
         return IterationDecision::Continue;
     });
 
-#ifdef OCCLUSIONS_DEBUG
+#if OCCLUSIONS_DEBUG
     dbgln("OCCLUSIONS:");
 #endif
 

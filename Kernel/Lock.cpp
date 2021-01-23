@@ -32,7 +32,7 @@
 
 namespace Kernel {
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 void Lock::lock(Mode mode)
 {
     lock("unknown", 0, mode);
@@ -68,7 +68,7 @@ void Lock::lock(Mode mode)
                     }
                     ASSERT(m_times_locked == 0);
                     m_times_locked++;
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -90,7 +90,7 @@ void Lock::lock(Mode mode)
                     ASSERT(mode == Mode::Exclusive || mode == Mode::Shared);
                     ASSERT(m_times_locked > 0);
                     m_times_locked++;
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -111,7 +111,7 @@ void Lock::lock(Mode mode)
                         it->value++;
                     else
                         m_shared_holders.set(current_thread, 1);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -179,7 +179,7 @@ void Lock::unlock()
                 m_mode = Mode::Unlocked;
             }
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
             current_thread->holding_lock(*this, -1);
 #endif
 
@@ -219,7 +219,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                 m_times_locked = 0;
                 m_mode = Mode::Unlocked;
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
 #endif
                 previous_mode = Mode::Exclusive;
@@ -240,7 +240,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                 ASSERT(it->value > 0);
                 lock_count_to_restore = it->value;
                 ASSERT(lock_count_to_restore > 0);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
 #endif
                 m_shared_holders.remove(it);
@@ -269,7 +269,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     }
 }
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 void Lock::restore_lock(Mode mode, u32 lock_count)
 {
     return restore_lock("unknown", 0, mode, lock_count);
@@ -301,7 +301,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 ASSERT(m_shared_holders.is_empty());
                 m_holder = current_thread;
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, (int)lock_count, file, line);
 #endif
                 return;
@@ -322,7 +322,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 // There may be other shared lock holders already, but we should not have an entry yet
                 ASSERT(set_result == AK::HashSetResult::InsertedNewEntry);
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, (int)lock_count, file, line);
 #endif
                 return;

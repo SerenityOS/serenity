@@ -275,7 +275,7 @@ u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool quer
 
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Set comparator " << comparator.comparator_number() << " to be periodic.";
 #endif
     disable(comparator);
@@ -289,7 +289,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 }
 void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Disable periodic interrupt in comparator " << comparator.comparator_number() << ".";
 #endif
     disable(comparator);
@@ -304,7 +304,7 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 
 void HPET::disable(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Disable comparator " << comparator.comparator_number() << ".";
 #endif
     ASSERT(comparator.comparator_number() <= m_comparators.size());
@@ -313,7 +313,7 @@ void HPET::disable(const HPETComparator& comparator)
 }
 void HPET::enable(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Enable comparator " << comparator.comparator_number() << ".";
 #endif
     ASSERT(comparator.comparator_number() <= m_comparators.size());

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
@@ -46,8 +47,6 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
 #include <LibELF/AuxiliaryVector.h>
-
-//#define LOCK_DEBUG
 
 namespace Kernel {
 
@@ -1109,7 +1108,7 @@ public:
 
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
     void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
     {
         ASSERT(refs_delta != 0);
@@ -1246,7 +1245,7 @@ private:
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
     struct HoldingLockInfo {
         Lock* lock;
         const char* file;

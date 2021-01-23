@@ -36,7 +36,7 @@ namespace HackStudio {
 
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mousedown");
 #endif
     auto& form_widget = m_editor.form_widget();
@@ -73,7 +73,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
 
 void CursorTool::on_mouseup(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mouseup");
 #endif
     if (event.button() == GUI::MouseButton::Left) {
@@ -94,7 +94,7 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
 
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mousemove");
 #endif
     auto& form_widget = m_editor.form_widget();
@@ -133,7 +133,7 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 
 void CursorTool::on_keydown(GUI::KeyEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_keydown");
 #endif
 

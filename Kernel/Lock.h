@@ -51,7 +51,7 @@ public:
     ~Lock() { }
 
     void lock(Mode = Mode::Exclusive);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
     void lock(const char* file, int line, Mode mode = Mode::Exclusive);
     void restore_lock(const char* file, int line, Mode, u32);
 #endif
@@ -98,7 +98,7 @@ private:
 
 class Locker {
 public:
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
     ALWAYS_INLINE explicit Locker(const char* file, int line, Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
         : m_lock(l)
     {
@@ -133,7 +133,7 @@ private:
     bool m_locked { true };
 };
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 #    define LOCKER(...) Locker locker(__FILE__, __LINE__, __VA_ARGS__)
 #    define RESTORE_LOCK(lock, ...) (lock).restore_lock(__FILE__, __LINE__, __VA_ARGS__)
 #else

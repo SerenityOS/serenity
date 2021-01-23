@@ -26,561 +26,653 @@
 
 #pragma once
 
-// FIXME: We could generate this file with CMake and configure.
+#cmakedefine01 PROCESS_DEBUG
+#cmakedefine01 SCHEDULER_DEBUG
+#cmakedefine01 SCHEDULER_RUNNABLE_DEBUG
+#cmakedefine01 THREAD_DEBUG
+#cmakedefine01 LOCK_DEBUG
+#cmakedefine01 SIGNAL_DEBUG
+#cmakedefine01 BMP_DEBUG
+#cmakedefine01 WAITBLOCK_DEBUG
+#cmakedefine01 WAITQUEUE_DEBUG
+#cmakedefine01 MULTIPROCESSOR_DEBUG
+#cmakedefine01 ACPI_DEBUG
+#cmakedefine01 PAGE_FAULT_DEBUG
+#cmakedefine01 CONTEXT_SWITCH_DEBUG
+#cmakedefine01 SMP_DEBUG
+#cmakedefine01 BXVGA_DEBUG
+#cmakedefine01 PS2MOUSE_DEBUG
+#cmakedefine01 VMWAREBACKDOOR_DEBUG
+#cmakedefine01 FILEDESCRIPTION_DEBUG
+#cmakedefine01 PROCFS_DEBUG
+#cmakedefine01 VFS_DEBUG
+#cmakedefine01 IOAPIC_DEBUG
+#cmakedefine01 IRQ_DEBUG
+#cmakedefine01 INTERRUPT_DEBUG
+#cmakedefine01 E1000_DEBUG
+#cmakedefine01 IPV4_SOCKET_DEBUG
+#cmakedefine01 DEBUG_LOCAL_SOCKET
+#cmakedefine01 DEBUG_SOCKET
+#cmakedefine01 TCP_SOCKET_DEBUG
+#cmakedefine01 PCI_DEBUG
+#cmakedefine01 PATA_DEBUG
+#cmakedefine01 DEBUG_IO
+#cmakedefine01 FORK_DEBUG
+#cmakedefine01 DEBUG_POLL_SELECT
+#cmakedefine01 HPET_DEBUG
+#cmakedefine01 HPET_COMPARATOR_DEBUG
+#cmakedefine01 MASTERPTY_DEBUG
+#cmakedefine01 SLAVEPTY_DEBUG
+#cmakedefine01 PTMX_DEBUG
+#cmakedefine01 TTY_DEBUG
+#cmakedefine01 CONTIGUOUS_VMOBJECT_DEBUG
+#cmakedefine01 VRA_DEBUG
+#cmakedefine01 COPY_DEBUG
+#cmakedefine01 DEBUG_CURSOR_TOOL
+#cmakedefine01 DEBUG_FILE_CONTENT
+#cmakedefine01 DEBUG_GZIP
+#cmakedefine01 CNETWORKJOB_DEBUG
+#cmakedefine01 CSOCKET_DEBUG
+#cmakedefine01 SAFE_SYSCALL_DEBUG
+#cmakedefine01 GHASH_PROCESS_DEBUG
+#cmakedefine01 NT_DEBUG
+#cmakedefine01 CRYPTO_DEBUG
+#cmakedefine01 DWARF_DEBUG
+#cmakedefine01 DEBUG_HUNKS
+#cmakedefine01 JOB_DEBUG
+#cmakedefine01 GIF_DEBUG
+#cmakedefine01 JPG_DEBUG
+#cmakedefine01 EMOJI_DEBUG
+#cmakedefine01 FILL_PATH_DEBUG
+#cmakedefine01 PNG_DEBUG
+#cmakedefine01 PORTABLE_IMAGE_LOADER_DEBUG
+#cmakedefine01 DEBUG_SYNTAX_HIGHLIGHTING
+#cmakedefine01 KEYBOARD_SHORTCUTS_DEBUG
+#cmakedefine01 DEBUG_MARKDOWN
+#cmakedefine01 REGEX_DEBUG
+#cmakedefine01 TLS_DEBUG
+#cmakedefine01 DEBUG_SPAM
+#cmakedefine01 WRAPPER_GERNERATOR_DEBUG
+#cmakedefine01 PARSER_DEBUG
+#cmakedefine01 TOKENIZER_TRACE
+#cmakedefine01 IMAGE_LOADER_DEBUG
+#cmakedefine01 RESOURCE_DEBUG
+#cmakedefine01 CACHE_DEBUG
+#cmakedefine01 DHCPV4_DEBUG
+#cmakedefine01 DHCPV4CLIENT_DEBUG
+#cmakedefine01 IMAGE_DECODER_DEBUG
+#cmakedefine01 SYSTEM_MENU_DEBUG
+#cmakedefine01 SYSTEMSERVER_DEBUG
+#cmakedefine01 SERVICE_DEBUG
+#cmakedefine01 COMPOSE_DEBUG
+#cmakedefine01 MINIMIZE_ANIMATION_DEBUG
+#cmakedefine01 OCCLUSIONS_DEBUG
+#cmakedefine01 DEBUG_MENUS
+#cmakedefine01 WSSCREEN_DEBUG
+#cmakedefine01 WINDOWMANAGER_DEBUG
+#cmakedefine01 RESIZE_DEBUG
+#cmakedefine01 MOVE_DEBUG
+#cmakedefine01 DOUBLECLICK_DEBUG
+#cmakedefine01 DISASM_DUMP
+#cmakedefine01 DEBUG_PATH
+#cmakedefine01 LOCK_TRACE_DEBUG
+#cmakedefine01 LOCK_RESTORE_DEBUG
+#cmakedefine01 FUTEXQUEUE_DEBUG
+#cmakedefine01 FUTEX_DEBUG
 
-#ifdef PROCESS_DEBUG
+#if PROCESS_DEBUG
 constexpr bool debug_process = true;
 #else
 constexpr bool debug_process = false;
 #endif
 
-#ifdef SCHEDULER_DEBUG
+#if SCHEDULER_DEBUG
 constexpr bool debug_scheduler = true;
 #else
 constexpr bool debug_scheduler = false;
 #endif
 
-#ifdef SCHEDULER_RUNNABLE_DEBUG
+#if SCHEDULER_RUNNABLE_DEBUG
 constexpr bool debug_scheduler_runnable = true;
 #else
 constexpr bool debug_scheduler_runnable = false;
 #endif
 
-#ifdef THREAD_DEBUG
+#if THREAD_DEBUG
 constexpr bool debug_thread = true;
 #else
 constexpr bool debug_thread = false;
 #endif
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 constexpr bool debug_lock = true;
 #else
 constexpr bool debug_lock = false;
 #endif
 
-#ifdef SIGNAL_DEBUG
+#if SIGNAL_DEBUG
 constexpr bool debug_signal = true;
 #else
 constexpr bool debug_signal = false;
 #endif
 
-#ifdef BMP_DEBUG
+#if BMP_DEBUG
 constexpr bool debug_bmp = true;
 #else
 constexpr bool debug_bmp = false;
 #endif
 
-#ifdef WAITBLOCK_DEBUG
+#if WAITBLOCK_DEBUG
 constexpr bool debug_waitblock = true;
 #else
 constexpr bool debug_waitblock = false;
 #endif
 
-#ifdef WAITQUEUE_DEBUG
+#if WAITQUEUE_DEBUG
 constexpr bool debug_waitqueue = true;
 #else
 constexpr bool debug_waitqueue = false;
 #endif
 
-#ifdef MULTIPROCESSOR_DEBUG
+#if MULTIPROCESSOR_DEBUG
 constexpr bool debug_multiprocessor = true;
 #else
 constexpr bool debug_multiprocessor = false;
 #endif
 
-#ifdef ACPI_DEBUG
+#if ACPI_DEBUG
 constexpr bool debug_acpi = true;
 #else
 constexpr bool debug_acpi = false;
 #endif
 
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
 constexpr bool debug_page_fault = true;
 #else
 constexpr bool debug_page_fault = false;
 #endif
 
-#ifdef CONTEXT_SWITCH_DEBUG
+#if CONTEXT_SWITCH_DEBUG
 constexpr bool debug_context_switch = true;
 #else
 constexpr bool debug_context_switch = false;
 #endif
 
-#ifdef SMP_DEBUG
+#if SMP_DEBUG
 constexpr bool debug_smp = true;
 #else
 constexpr bool debug_smp = false;
 #endif
 
-#ifdef BXVGA_DEBUG
+#if BXVGA_DEBUG
 constexpr bool debug_bxvga = true;
 #else
 constexpr bool debug_bxvga = false;
 #endif
 
-#ifdef PS2MOUSE_DEBUG
+#if PS2MOUSE_DEBUG
 constexpr bool debug_ps2mouse = true;
 #else
 constexpr bool debug_ps2mouse = false;
 #endif
 
-#ifdef VMWAREBACKDOOR_DEBUG
+#if VMWAREBACKDOOR_DEBUG
 constexpr bool debug_vmware_backdoor = true;
 #else
 constexpr bool debug_vmware_backdoor = false;
 #endif
 
-#ifdef FILEDESCRIPTION_DEBUG
+#if FILEDESCRIPTION_DEBUG
 constexpr bool debug_file_description = true;
 #else
 constexpr bool debug_file_description = false;
 #endif
 
-#ifdef PROCFS_DEBUG
+#if PROCFS_DEBUG
 constexpr bool debug_procfs = true;
 #else
 constexpr bool debug_procfs = false;
 #endif
 
-#ifdef VFS_DEBUG
+#if VFS_DEBUG
 constexpr bool debug_vfs = true;
 #else
 constexpr bool debug_vfs = false;
 #endif
 
-#ifdef IOAPIC_DEBUG
+#if IOAPIC_DEBUG
 constexpr bool debug_ioapic = true;
 #else
 constexpr bool debug_ioapic = false;
 #endif
 
-#ifdef IRQ_DEBUG
+#if IRQ_DEBUG
 constexpr bool debug_irq = true;
 #else
 constexpr bool debug_irq = false;
 #endif
 
-#ifdef INTERRUPT_DEBUG
+#if INTERRUPT_DEBUG
 constexpr bool debug_interrupt = true;
 #else
 constexpr bool debug_interrupt = false;
 #endif
 
-#ifdef E1000_DEBUG
+#if E1000_DEBUG
 constexpr bool debug_e1000 = true;
 #else
 constexpr bool debug_e1000 = false;
 #endif
 
-#ifdef IPV4_SOCKET_DEBUG
+#if IPV4_SOCKET_DEBUG
 constexpr bool debug_ipv4_socket = true;
 #else
 constexpr bool debug_ipv4_socket = false;
 #endif
 
-#ifdef DEBUG_LOCAL_SOCKET
+#if DEBUG_LOCAL_SOCKET
 constexpr bool debug_local_socket = true;
 #else
 constexpr bool debug_local_socket = false;
 #endif
 
-#ifdef DEBUG_SOCKET
+#if DEBUG_SOCKET
 constexpr bool debug_socket = true;
 #else
 constexpr bool debug_socket = false;
 #endif
 
-#ifdef TCP_SOCKET_DEBUG
+#if TCP_SOCKET_DEBUG
 constexpr bool debug_tcp_socket = true;
 #else
 constexpr bool debug_tcp_socket = false;
 #endif
 
-#ifdef PCI_DEBUG
+#if PCI_DEBUG
 constexpr bool debug_pci = true;
 #else
 constexpr bool debug_pci = false;
 #endif
 
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
 constexpr bool debug_pata = true;
 #else
 constexpr bool debug_pata = false;
 #endif
 
-#ifdef DEBUG_IO
+#if DEBUG_IO
 constexpr bool debug_io = true;
 #else
 constexpr bool debug_io = false;
 #endif
 
-#ifdef FORK_DEBUG
+#if FORK_DEBUG
 constexpr bool debug_fork = true;
 #else
 constexpr bool debug_fork = false;
 #endif
 
-#ifdef DEBUG_POLL_SELECT
+#if DEBUG_POLL_SELECT
 constexpr bool debug_poll_select = true;
 #else
 constexpr bool debug_poll_select = false;
 #endif
 
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
 constexpr bool debug_hpet = true;
 #else
 constexpr bool debug_hpet = false;
 #endif
 
-#ifdef HPET_COMPARATOR_DEBUG
+#if HPET_COMPARATOR_DEBUG
 constexpr bool debug_hpet_comperator = true;
 #else
 constexpr bool debug_hpet_comperator = false;
 #endif
 
-#ifdef MASTERPTY_DEBUG
+#if MASTERPTY_DEBUG
 constexpr bool debug_masterpty = true;
 #else
 constexpr bool debug_masterpty = false;
 #endif
 
-#ifdef SLAVEPTY_DEBUG
+#if SLAVEPTY_DEBUG
 constexpr bool debug_slavepty = true;
 #else
 constexpr bool debug_slavepty = false;
 #endif
 
-#ifdef PTMX_DEBUG
+#if PTMX_DEBUG
 constexpr bool debug_ptmx = true;
 #else
 constexpr bool debug_ptmx = false;
 #endif
 
-#ifdef TTY_DEBUG
+#if TTY_DEBUG
 constexpr bool debug_tty = true;
 #else
 constexpr bool debug_tty = false;
 #endif
 
-#ifdef CONTIGUOUS_VMOBJECT_DEBUG
+#if CONTIGUOUS_VMOBJECT_DEBUG
 constexpr bool debug_contiguous_vmobject = true;
 #else
 constexpr bool debug_contiguous_vmobject = false;
 #endif
 
-#ifdef VRA_DEBUG
+#if VRA_DEBUG
 constexpr bool debug_vra = true;
 #else
 constexpr bool debug_vra = false;
 #endif
 
-#ifdef COPY_DEBUG
+#if COPY_DEBUG
 constexpr bool debug_copy = true;
 #else
 constexpr bool debug_copy = false;
 #endif
 
-#ifdef DEBUG_CURSOR_TOOL
+#if DEBUG_CURSOR_TOOL
 constexpr bool debug_cursor_tool = true;
 #else
 constexpr bool debug_cursor_tool = false;
 #endif
 
-#ifdef DEBUG_FILE_CONTENT
+#if DEBUG_FILE_CONTENT
 constexpr bool debug_file_content = true;
 #else
 constexpr bool debug_file_content = false;
 #endif
 
-#ifdef DEBUG_GZIP
+#if DEBUG_GZIP
 constexpr bool debug_gzip = true;
 #else
 constexpr bool debug_gzip = false;
 #endif
 
-#ifdef CNETWORKJOB_DEBUG
+#if CNETWORKJOB_DEBUG
 constexpr bool debug_cnetworkjob = true;
 #else
 constexpr bool debug_cnetworkjob = false;
 #endif
 
-#ifdef CSOCKET_DEBUG
+#if CSOCKET_DEBUG
 constexpr bool debug_csocket = true;
 #else
 constexpr bool debug_csocket = false;
 #endif
 
-#ifdef SAFE_SYSCALL_DEBUG
+#if SAFE_SYSCALL_DEBUG
 constexpr bool debug_safe_syscall = true;
 #else
 constexpr bool debug_safe_syscall = false;
 #endif
 
-#ifdef GHASH_PROCESS_DEBUG
+#if GHASH_PROCESS_DEBUG
 constexpr bool debug_ghash_process = true;
 #else
 constexpr bool debug_ghash_process = false;
 #endif
 
-#ifdef NT_DEBUG
+#if NT_DEBUG
 constexpr bool debug_nt = true;
 #else
 constexpr bool debug_nt = false;
 #endif
 
-#ifdef CRYPTO_DEBUG
+#if CRYPTO_DEBUG
 constexpr bool debug_crypto = true;
 #else
 constexpr bool debug_crypto = false;
 #endif
 
-#ifdef DWARF_DEBUG
+#if DWARF_DEBUG
 constexpr bool debug_dwarf = true;
 #else
 constexpr bool debug_dwarf = false;
 #endif
 
-#ifdef DEBUG_HUNKS
+#if DEBUG_HUNKS
 constexpr bool debug_hunks = true;
 #else
 constexpr bool debug_hunks = false;
 #endif
 
-#ifdef JOB_DEBUG
+#if JOB_DEBUG
 constexpr bool debug_job = true;
 #else
 constexpr bool debug_job = false;
 #endif
 
-#ifdef GIF_DEBUG
+#if GIF_DEBUG
 constexpr bool debug_gif = true;
 #else
 constexpr bool debug_gif = false;
 #endif
 
-#ifdef JPG_DEBUG
+#if JPG_DEBUG
 constexpr bool debug_jpg = true;
 #else
 constexpr bool debug_jpg = false;
 #endif
 
-#ifdef EMOJI_DEBUG
+#if EMOJI_DEBUG
 constexpr bool debug_emoji = true;
 #else
 constexpr bool debug_emoji = false;
 #endif
 
-#ifdef FILL_PATH_DEBUG
+#if FILL_PATH_DEBUG
 constexpr bool debug_fill_path = true;
 #else
 constexpr bool debug_fill_path = false;
 #endif
 
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
 constexpr bool debug_png = true;
 #else
 constexpr bool debug_png = false;
 #endif
 
-#ifdef PORTABLE_IMAGE_LOADER_DEBUG
+#if PORTABLE_IMAGE_LOADER_DEBUG
 constexpr bool debug_portable_image_loader = true;
 #else
 constexpr bool debug_portable_image_loader = false;
 #endif
 
-#ifdef DEBUG_SYNTAX_HIGHLIGHTING
+#if DEBUG_SYNTAX_HIGHLIGHTING
 constexpr bool debug_syntax_highlighting = true;
 #else
 constexpr bool debug_syntax_highlighting = false;
 #endif
 
-#ifdef KEYBOARD_SHORTCUTS_DEBUG
+#if KEYBOARD_SHORTCUTS_DEBUG
 constexpr bool debug_keyboard_shortcuts = true;
 #else
 constexpr bool debug_keyboard_shortcuts = false;
 #endif
 
-#ifdef DEBUG_MARKDOWN
+#if DEBUG_MARKDOWN
 constexpr bool debug_markdown = true;
 #else
 constexpr bool debug_markdown = false;
 #endif
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
 constexpr bool debug_regex = true;
 #else
 constexpr bool debug_regex = false;
 #endif
 
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
 constexpr bool debug_tls = true;
 #else
 constexpr bool debug_tls = false;
 #endif
 
-#ifdef DEBUG_SPAM
+#if DEBUG_SPAM
 constexpr bool debug_spam = true;
 #else
 constexpr bool debug_spam = false;
 #endif
 
-#ifdef WRAPPER_GERNERATOR_DEBUG
+#if WRAPPER_GERNERATOR_DEBUG
 constexpr bool debug_wrapper_generator = true;
 #else
 constexpr bool debug_wrapper_generator = false;
 #endif
 
-#ifdef PARSER_DEBUG
+#if PARSER_DEBUG
 constexpr bool debug_parser = true;
 #else
 constexpr bool debug_parser = false;
 #endif
 
-#ifdef TOKENIZER_TRACE
+#if TOKENIZER_TRACE
 constexpr bool debug_trace_tokenizer = true;
 #else
 constexpr bool debug_trace_tokenizer = false;
 #endif
 
-#ifdef IMAGE_LOADER_DEBUG
+#if IMAGE_LOADER_DEBUG
 constexpr bool debug_image_loader = true;
 #else
 constexpr bool debug_image_loader = false;
 #endif
 
-#ifdef RESOURCE_DEBUG
+#if RESOURCE_DEBUG
 constexpr bool debug_resource = true;
 #else
 constexpr bool debug_resource = false;
 #endif
 
-#ifdef CACHE_DEBUG
+#if CACHE_DEBUG
 constexpr bool debug_cache = true;
 #else
 constexpr bool debug_cache = false;
 #endif
 
-#ifdef DHCPV4_DEBUG
+#if DHCPV4_DEBUG
 constexpr bool debug_dhcpv4 = true;
 #else
 constexpr bool debug_dhcpv4 = false;
 #endif
 
-#ifdef DHCPV4CLIENT_DEBUG
+#if DHCPV4CLIENT_DEBUG
 constexpr bool debug_dhcpv4_client = true;
 #else
 constexpr bool debug_dhcpv4_client = false;
 #endif
 
-#ifdef IMAGE_DECODER_DEBUG
+#if IMAGE_DECODER_DEBUG
 constexpr bool debug_image_decoder = true;
 #else
 constexpr bool debug_image_decoder = false;
 #endif
 
-#ifdef SYSTEM_MENU_DEBUG
+#if SYSTEM_MENU_DEBUG
 constexpr bool debug_system_menu = true;
 #else
 constexpr bool debug_system_menu = false;
 #endif
 
-#ifdef SYSTEMSERVER_DEBUG
+#if SYSTEMSERVER_DEBUG
 constexpr bool debug_system_server = true;
 #else
 constexpr bool debug_system_server = false;
 #endif
 
-#ifdef SERVICE_DEBUG
+#if SERVICE_DEBUG
 constexpr bool debug_service = true;
 #else
 constexpr bool debug_service = false;
 #endif
 
-#ifdef COMPOSE_DEBUG
+#if COMPOSE_DEBUG
 constexpr bool debug_compose = true;
 #else
 constexpr bool debug_compose = false;
 #endif
 
-#ifdef MINIMIZE_ANIMATION_DEBUG
+#if MINIMIZE_ANIMATION_DEBUG
 constexpr bool debug_minimize_animation = true;
 #else
 constexpr bool debug_minimize_animation = false;
 #endif
 
-#ifdef OCCLUSIONS_DEBUG
+#if OCCLUSIONS_DEBUG
 constexpr bool debug_occlusions = true;
 #else
 constexpr bool debug_occlusions = false;
 #endif
 
-#ifdef DEBUG_MENUS
+#if DEBUG_MENUS
 constexpr bool debug_menus = true;
 #else
 constexpr bool debug_menus = false;
 #endif
 
-#ifdef WSSCREEN_DEBUG
+#if WSSCREEN_DEBUG
 constexpr bool debug_wsscreen = true;
 #else
 constexpr bool debug_wsscreen = false;
 #endif
 
-#ifdef WINDOWMANAGER_DEBUG
+#if WINDOWMANAGER_DEBUG
 constexpr bool debug_window_manager = true;
 #else
 constexpr bool debug_window_manager = false;
 #endif
 
-#ifdef RESIZE_DEBUG
+#if RESIZE_DEBUG
 constexpr bool debug_resize = true;
 #else
 constexpr bool debug_resize = false;
 #endif
 
-#ifdef MOVE_DEBUG
+#if MOVE_DEBUG
 constexpr bool debug_move = true;
 #else
 constexpr bool debug_move = false;
 #endif
 
-#ifdef DOUBLECLICK_DEBUG
+#if DOUBLECLICK_DEBUG
 constexpr bool debug_double_click = true;
 #else
 constexpr bool debug_double_click = false;
 #endif
 
-#ifdef DISASM_DUMP
+#if DISASM_DUMP
 constexpr bool debug_disasm_dump = true;
 #else
 constexpr bool debug_disasm_dump = false;
 #endif
 
-#ifdef DEBUG_PATH
+#if DEBUG_PATH
 constexpr bool debug_path = true;
 #else
 constexpr bool debug_path = false;
 #endif
 
-#ifdef LOCK_TRACE_DEBUG
+#if LOCK_TRACE_DEBUG
 constexpr bool debug_lock_trace = true;
 #else
 constexpr bool debug_lock_trace = false;
 #endif
 
-#ifdef LOCK_RESTORE_DEBUG
+#if LOCK_RESTORE_DEBUG
 constexpr bool debug_lock_restore = true;
 #else
 constexpr bool debug_lock_restore = false;
 #endif
 
-#ifdef FUTEXQUEUE_DEBUG
+#if FUTEXQUEUE_DEBUG
 constexpr bool debug_futex_queue = true;
 #else
 constexpr bool debug_futex_queue = false;
 #endif
 
-#ifdef FUTEX_DEBUG
+#if FUTEX_DEBUG
 constexpr bool debug_futex = true;
 #else
 constexpr bool debug_futex = false;

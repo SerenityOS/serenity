@@ -384,7 +384,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
     dbgln("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current().id(), fault.code(), fault.vaddr());
 #endif
     auto* region = find_region_from_vaddr(fault.vaddr());

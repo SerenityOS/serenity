@@ -1620,7 +1620,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             quick_sort(active_list, [](const auto& line0, const auto& line1) {
                 return line1.x < line0.x;
             });
-#ifdef FILL_PATH_DEBUG
+#if FILL_PATH_DEBUG
             if ((int)scanline % 10 == 0) {
                 draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
             }
@@ -1692,7 +1692,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
         }
     }
 
-#ifdef FILL_PATH_DEBUG
+#if FILL_PATH_DEBUG
     size_t i { 0 };
     for (auto& segment : segments) {
         draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);

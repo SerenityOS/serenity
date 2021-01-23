@@ -91,7 +91,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
     if (session_length && session_length <= 32) {
         memcpy(m_context.session_id, buffer.offset_pointer(res), session_length);
         m_context.session_id_size = session_length;
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("Remote session ID:");
         print_buffer(ReadonlyBytes { m_context.session_id, session_length });
 #endif
@@ -228,7 +228,7 @@ ssize_t TLSv12::handle_finished(ReadonlyBytes buffer, WritePacketStage& write_pa
     }
 
 // TODO: Compare Hashes
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("FIXME: handle_finished :: Check message validity");
 #endif
     m_context.connection_status = ConnectionStatus::Established;
@@ -276,7 +276,7 @@ void TLSv12::build_random(PacketBuilder& builder)
     }
 
     auto& certificate = m_context.certificates[certificate_option.value()];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("PreMaster secret");
     print_buffer(m_context.premaster_key);
 #endif
@@ -287,7 +287,7 @@ void TLSv12::build_random(PacketBuilder& builder)
     auto outbuf = Bytes { out, rsa.output_size() };
     rsa.encrypt(m_context.premaster_key, outbuf);
 
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
     dbgln("Encrypted: ");
     print_buffer(outbuf);
 #endif
@@ -305,7 +305,7 @@ void TLSv12::build_random(PacketBuilder& builder)
 ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 {
     if (m_context.connection_status == ConnectionStatus::Established) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("Renegotiation attempt ignored");
 #endif
         // FIXME: We should properly say "NoRenegotiation", but that causes a handshake failure
@@ -359,7 +359,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[2];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("server hello");
 #endif
             if (m_context.is_server) {
@@ -380,7 +380,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[4];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("certificate");
 #endif
             if (m_context.connection_status == ConnectionStatus::Negotiating) {
@@ -415,7 +415,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[5];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("server key exchange");
 #endif
             if (m_context.is_server) {
@@ -451,7 +451,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[7];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("server hello done");
 #endif
             if (m_context.is_server) {
@@ -470,7 +470,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[8];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("certificate verify");
 #endif
             if (m_context.connection_status == ConnectionStatus::KeyExchange) {
@@ -486,7 +486,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[9];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("client key exchange");
 #endif
             if (m_context.is_server) {
@@ -506,7 +506,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[10];
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("finished");
 #endif
             payload_res = handle_finished(buffer.slice(1, payload_size), write_packets);
@@ -593,7 +593,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             break;
         case WritePacketStage::ClientHandshake:
             if (m_context.client_verified == VerificationNeeded) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> Client Certificate");
 #endif
                 auto packet = build_certificate();
@@ -601,14 +601,14 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 m_context.client_verified = Verified;
             }
             {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> Key exchange");
 #endif
                 auto packet = build_client_key_exchange();
                 write_packet(packet);
             }
             {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> change cipher spec");
 #endif
                 auto packet = build_change_cipher_spec();
@@ -617,7 +617,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             m_context.cipher_spec_set = 1;
             m_context.local_sequence_number = 0;
             {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> client finished");
 #endif
                 auto packet = build_finished();
@@ -633,14 +633,14 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         case WritePacketStage::Finished:
             // finished
             {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> change cipher spec");
 #endif
                 auto packet = build_change_cipher_spec();
                 write_packet(packet);
             }
             {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
                 dbgln("> client finished");
 #endif
                 auto packet = build_finished();

@@ -24,12 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/Text.h>
 #include <string.h>
-
-//#define DEBUG_MARKDOWN
 
 namespace Markdown {
 
@@ -243,7 +242,7 @@ Optional<Text> Text::parse(const StringView& str)
             current_link_is_actually_img = true;
             break;
         case '[':
-#ifdef DEBUG_MARKDOWN
+#if DEBUG_MARKDOWN
             if (first_span_in_the_current_link != -1)
                 dbgln("Dropping the outer link");
 #endif
@@ -251,7 +250,7 @@ Optional<Text> Text::parse(const StringView& str)
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
-#ifdef DEBUG_MARKDOWN
+#if DEBUG_MARKDOWN
                 dbgln("Unmatched ]");
 #endif
                 continue;

@@ -458,7 +458,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("MM: zero_page() but page already present. Fine with me!");
 #endif
         if (!remap_vmobject_page(page_index_in_vmobject))

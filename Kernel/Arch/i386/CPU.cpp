@@ -318,7 +318,7 @@ void page_fault_handler(TrapFrame* trap)
 
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("Continuing after resolved page fault");
 #endif
     } else {

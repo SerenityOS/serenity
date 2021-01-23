@@ -208,7 +208,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         size_t length = _get_asn1_length((const u8*)&buffer[position], size - position, octets);
 
         if (octets > 4 || octets > size - position) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("could not read the certificate");
 #endif
             return position;
@@ -216,7 +216,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
 
         position += octets;
         if (size - position < length) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("not enough data for sequence");
 #endif
             return (i8)Error::NeedMoreData;
@@ -415,7 +415,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
         auto fingerprint = hash.digest();
         cert.fingerprint.grow(fingerprint.data_length());
         cert.fingerprint.overwrite(0, fingerprint.immutable_data(), fingerprint.data_length());
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("Certificate fingerprint:");
         print_buffer(cert.fingerprint);
 #endif
@@ -446,7 +446,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     ssize_t res = 0;
 
     if (buffer.size() < 3) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("not enough certificate header data");
 #endif
         return (i8)Error::NeedMoreData;
@@ -462,7 +462,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     res += 3;
 
     if (certificate_total_length > buffer.size() - res) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
         dbgln("not enough data for claimed total cert length");
 #endif
         return (i8)Error::NeedMoreData;
@@ -475,7 +475,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     while (size > 0) {
         ++index;
         if (buffer.size() - res < 3) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("not enough data for certificate length");
 #endif
             return (i8)Error::NeedMoreData;
@@ -484,7 +484,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
         res += 3;
 
         if (buffer.size() - res < certificate_size) {
-#ifdef TLS_DEBUG
+#if TLS_DEBUG
             dbgln("not enough data for certificate body");
 #endif
             return (i8)Error::NeedMoreData;

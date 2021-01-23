@@ -68,8 +68,11 @@ if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
+configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
+
 include_directories(Userland/Libraries)
 include_directories(.)
+include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(Meta/Lagom)
 add_subdirectory(Userland/DevTools/IPCCompiler)

@@ -77,9 +77,15 @@ set(LAGOM_REGEX_SOURCES ${LIBREGEX_LIBC_SOURCES} ${LIBREGEX_SOURCES})
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
 set(LAGOM_MORE_SOURCES ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES})
 
-include_directories (../../)
-include_directories (../../Userland/)
-include_directories (../../Userland/Libraries/)
+# FIXME: This is a hack, because the lagom stuff can be build individually or
+#        in combination with the system, we generate two Debug.h files. One in
+#        Build/AK/Debug.h and the other in Build/Meta/Lagom/AK/Debug.h.
+configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
+
+include_directories(../../)
+include_directories(../../Userland/)
+include_directories(../../Userland/Libraries/)
+include_directories(${CMAKE_BINARY_DIR})
 add_library(LagomCore ${LAGOM_CORE_SOURCES})
 
 if (BUILD_LAGOM)

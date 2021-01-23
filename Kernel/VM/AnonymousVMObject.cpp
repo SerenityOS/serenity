@@ -443,7 +443,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     auto& page_slot = physical_pages()[page_index];
     bool have_committed = m_shared_committed_cow_pages && is_nonvolatile(page_index);
     if (page_slot->ref_count() == 1) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
 #endif
         set_should_cow(page_index, false);
@@ -456,12 +456,12 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
 
     RefPtr<PhysicalPage> page;
     if (have_committed) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a committed COW page and it's time to COW!");
 #endif
         page = m_shared_committed_cow_pages->allocate_one();
     } else {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a COW page and it's time to COW!");
 #endif
         page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
