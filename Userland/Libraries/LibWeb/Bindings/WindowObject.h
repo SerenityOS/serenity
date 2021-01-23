@@ -47,9 +47,6 @@ public:
 
     Origin origin() const;
 
-    RangePrototype* range_prototype() { return m_range_prototype; }
-    RangeConstructor* range_constructor() { return m_range_constructor; }
-
     JS::Object* web_prototype(const String& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
     JS::NativeFunction* web_constructor(const String& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
 
@@ -99,9 +96,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(btoa);
 
     NonnullRefPtr<DOM::Window> m_impl;
-
-    RangePrototype* m_range_prototype { nullptr };
-    RangeConstructor* m_range_constructor { nullptr };
 
     HashMap<String, JS::Object*> m_prototypes;
     HashMap<String, JS::NativeFunction*> m_constructors;

@@ -92,9 +92,6 @@ void WindowObject::initialize()
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     ADD_WINDOW_OBJECT_INTERFACES;
-
-    m_range_prototype = heap().allocate<RangePrototype>(*this, *this);
-    add_constructor("Range", m_range_constructor, m_range_prototype);
 }
 
 WindowObject::~WindowObject()
@@ -104,9 +101,6 @@ WindowObject::~WindowObject()
 void WindowObject::visit_edges(Visitor& visitor)
 {
     GlobalObject::visit_edges(visitor);
-    visitor.visit(m_range_constructor);
-    visitor.visit(m_range_prototype);
-
     for (auto& it : m_prototypes)
         visitor.visit(it.value);
     for (auto& it : m_constructors)
