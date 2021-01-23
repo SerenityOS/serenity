@@ -1152,9 +1152,9 @@ int pclose(FILE* stream)
 int remove(const char* pathname)
 {
     int rc = unlink(pathname);
-    if (rc < 0 && errno != EISDIR)
-        return -1;
-    return rmdir(pathname);
+    if (rc < 0 && errno == EISDIR)
+        return rmdir(pathname);
+    return rc;
 }
 
 int scanf(const char* fmt, ...)
