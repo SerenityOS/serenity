@@ -142,7 +142,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     for (const auto& app : g_apps) {
         auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
 
-        if constexpr (debug_system_menu) {
+        if constexpr (SYSTEM_MENU_DEBUG) {
             if (icon)
                 dbgln("App {} has icon with size {}", app.name, icon->size());
         }

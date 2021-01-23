@@ -125,7 +125,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     if (size == 0)
         return 0;
 
-    dbgln<debug_io>("sys$write({}, {}, {})", fd, data, size);
+    dbgln<IO_DEBUG>("sys$write({}, {}, {})", fd, data, size);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;

@@ -235,7 +235,7 @@ void LineProgram::handle_sepcial_opcode(u8 opcode)
     m_address += address_increment;
     m_line += line_increment;
 
-    if constexpr (debug_dwarf) {
+    if constexpr (DWARF_DEBUG) {
         dbgln("Special adjusted_opcode: {}, address_increment: {}, line_increment: {}", adjusted_opcode, address_increment, line_increment);
         dbgln("Address is now: {:p}, and line is: {}:{}", m_address, m_source_files[m_file_index].name, m_line);
     }
@@ -251,7 +251,7 @@ void LineProgram::run_program()
         u8 opcode = 0;
         m_stream >> opcode;
 
-        dbgln<debug_dwarf>("{:p}: opcode: {}", m_stream.offset() - 1, opcode);
+        dbgln<DWARF_DEBUG>("{:p}: opcode: {}", m_stream.offset() - 1, opcode);
 
         if (opcode == 0) {
             handle_extended_opcode();

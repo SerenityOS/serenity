@@ -55,7 +55,7 @@ void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_response = move(response);
-    dbgln<debug_cnetworkjob>("{} job did_finish", *this);
+    dbgln<CNETWORKJOB_DEBUG>("{} job did_finish", *this);
     ASSERT(on_finish);
     on_finish(true);
     shutdown();

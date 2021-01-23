@@ -86,7 +86,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
             if (it->value->type() != type) {
                 dbgln("FIXME: Not using cached resource for {} since there's a type mismatch.", request.url());
             } else {
-                dbgln<debug_cache>("Reusing cached resource for: {}", request.url());
+                dbgln<CACHE_DEBUG>("Reusing cached resource for: {}", request.url());
                 return it->value;
             }
         }

@@ -406,7 +406,7 @@ int main(int argc, char** argv)
         interface->fully_qualified_name = interface->name;
     }
 
-    if constexpr (debug_wrapper_generator) {
+    if constexpr (WRAPPER_GENERATOR_DEBUG) {
         dbgln("Attributes:");
         for (auto& attribute : interface->attributes) {
             dbgln("  {}{}{} {}",

@@ -129,13 +129,13 @@ bool Scheduler::pick_next()
         // Scheduler::enter_current because we don't want to allow it to
         // transition back to user mode.
 
-        if constexpr (debug_scheduler)
+        if constexpr (SCHEDULER_DEBUG)
             dbgln("Scheduler[{}]: Thread {} is dying", Processor::current().id(), *current_thread);
 
         current_thread->set_state(Thread::Dying);
     }
 
-    if constexpr (debug_scheduler_runnable) {
+    if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dbgln("Scheduler[{}j]: Non-runnables:", Processor::current().id());
         Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
             if (thread.state() == Thread::Dying) {
@@ -196,7 +196,7 @@ bool Scheduler::pick_next()
         // but since we're still holding the scheduler lock we're still in a critical section
         critical.leave();
 
-        dbgln<debug_scheduler>("Processing pending donate to {} reason={}", *thread_to_schedule, reason);
+        dbgln<SCHEDULER_DEBUG>("Processing pending donate to {} reason={}", *thread_to_schedule, reason);
         return donate_to_and_switch(thread_to_schedule, reason);
     }
 
@@ -224,7 +224,7 @@ bool Scheduler::pick_next()
     if (!thread_to_schedule)
         thread_to_schedule = Processor::current().idle_thread();
 
-    if constexpr (debug_scheduler) {
+    if constexpr (SCHEDULER_DEBUG) {
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
             Processor::current().id(),
             *thread_to_schedule,
@@ -250,7 +250,7 @@ bool Scheduler::yield()
     scheduler_data.m_pending_donate_reason = nullptr;
 
     auto current_thread = Thread::current();
-    dbgln<debug_scheduler>("Scheduler[{}]: yielding thread {} in_irq={}", proc.id(), *current_thread, proc.in_irq());
+    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: yielding thread {} in_irq={}", proc.id(), *current_thread, proc.in_irq());
     ASSERT(current_thread != nullptr);
     if (proc.in_irq() || proc.in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
@@ -263,7 +263,7 @@ bool Scheduler::yield()
     if (!Scheduler::pick_next())
         return false;
 
-    if constexpr (debug_scheduler)
+    if constexpr (SCHEDULER_DEBUG)
         dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::current().id(), *current_thread, Processor::current().in_irq());
     return true;
 }
@@ -280,7 +280,7 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const
         return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
-    dbgln<debug_scheduler>("Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.id(), ticks_to_donate, *beneficiary, reason);
+    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.id(), ticks_to_donate, *beneficiary, reason);
     beneficiary->set_ticks_left(ticks_to_donate);
 
     return Scheduler::context_switch(beneficiary);

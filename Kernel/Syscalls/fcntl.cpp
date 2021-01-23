@@ -33,7 +33,7 @@ namespace Kernel {
 int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
-    dbgln<debug_io>("sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
+    dbgln<IO_DEBUG>("sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;

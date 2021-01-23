@@ -66,12 +66,12 @@ void Parser::locate_static_data()
 
 PhysicalAddress Parser::find_table(const StringView& signature)
 {
-    dbgln<debug_acpi>("ACPI: Calling Find Table method!");
+    dbgln<ACPI_DEBUG>("ACPI: Calling Find Table method!");
     for (auto p_sdt : m_sdt_pointers) {
         auto sdt = map_typed<Structures::SDTHeader>(p_sdt);
-        dbgln<debug_acpi>("ACPI: Examining Table @ {}", p_sdt);
+        dbgln<ACPI_DEBUG>("ACPI: Examining Table @ {}", p_sdt);
         if (!strncmp(sdt->sig, signature.characters_without_null_termination(), 4)) {
-            dbgln<debug_acpi>("ACPI: Found Table @ {}", p_sdt);
+            dbgln<ACPI_DEBUG>("ACPI: Found Table @ {}", p_sdt);
             return p_sdt;
         }
     }
@@ -93,7 +93,7 @@ void Parser::init_fadt()
 
     auto sdt = map_typed<Structures::FADT>(m_fadt);
 
-    dbgln<debug_acpi>("ACPI: FADT @ V{}, {}", &sdt, m_fadt);
+    dbgln<ACPI_DEBUG>("ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
     klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
     klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
@@ -219,7 +219,7 @@ void Parser::try_acpi_reboot()
         klog() << "ACPI: Reboot, Not supported!";
         return;
     }
-    dbgln<debug_acpi>("ACPI: Rebooting, Probing FADT ({})", m_fadt);
+    dbgln<ACPI_DEBUG>("ACPI: Rebooting, Probing FADT ({})", m_fadt);
 
     auto fadt = map_typed<Structures::FADT>(m_fadt);
     ASSERT(validate_reset_register());
@@ -267,18 +267,18 @@ void Parser::initialize_main_system_description_table()
         auto& xsdt = (const Structures::XSDT&)*sdt;
         klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
-        dbgln<debug_acpi>("ACPI: XSDT pointer @ V{}", &xsdt);
+        dbgln<ACPI_DEBUG>("ACPI: XSDT pointer @ V{}", &xsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
-            dbgln<debug_acpi>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
+            dbgln<ACPI_DEBUG>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
         auto& rsdt = (const Structures::RSDT&)*sdt;
         klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
-        dbgln<debug_acpi>("ACPI: RSDT pointer @ V{}", &rsdt);
+        dbgln<ACPI_DEBUG>("ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-            dbgln<debug_acpi>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
+            dbgln<ACPI_DEBUG>("ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
             m_sdt_pointers.append(PhysicalAddress(rsdt.table_ptrs[i]));
         }
     }

@@ -95,11 +95,11 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
         fds.append(fd);
     }
 
-    if constexpr (debug_io || debug_poll_select)
+    if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
         dbgln("selecting on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted()) {
-        dbgln<debug_poll_select>("select was interrupted");
+        dbgln<POLL_SELECT_DEBUG>("select was interrupted");
         return -EINTR;
     }
 
@@ -198,7 +198,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
             current_thread->update_signal_mask(previous_signal_mask);
     });
 
-    if constexpr (debug_io || debug_poll_select)
+    if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
         dbgln("polling on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted())

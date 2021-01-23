@@ -116,7 +116,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
 
 void RSA::encrypt(ReadonlyBytes in, Bytes& out)
 {
-    dbgln<debug_crypto>("in size: {}", in.size());
+    dbgln<CRYPTO_DEBUG>("in size: {}", in.size());
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     if (!(in_integer < m_public_key.modulus())) {
         dbgln("value too large for key");
@@ -230,7 +230,7 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
 void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
 {
     auto mod_len = (m_public_key.modulus().trimmed_length() * sizeof(u32) * 8 + 7) / 8;
-    dbgln<debug_crypto>("key size: {}", mod_len);
+    dbgln<CRYPTO_DEBUG>("key size: {}", mod_len);
     if (in.size() > mod_len - 11) {
         dbgln("message too long :(");
         out = out.trim(0);
@@ -262,7 +262,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     out.overwrite(3 + ps_length, in.data(), in.size());
     out = out.trim(3 + ps_length + in.size()); // should be a single block
 
-    dbgln<debug_crypto>("padded output size: {} buffer size: {}", 3 + ps_length + in.size(), out.size());
+    dbgln<CRYPTO_DEBUG>("padded output size: {} buffer size: {}", 3 + ps_length + in.size(), out.size());
 
     RSA::encrypt(out, out);
 }

@@ -59,7 +59,7 @@ void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 
 bool SharedIRQHandler::eoi()
 {
-    dbgln<debug_interrupt>("EOI IRQ {}", interrupt_number());
+    dbgln<INTERRUPT_DEBUG>("EOI IRQ {}", interrupt_number());
     m_responsible_irq_controller->eoi(*this);
     return true;
 }
@@ -86,18 +86,18 @@ void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
 
-    if constexpr (debug_interrupt) {
+    if constexpr (INTERRUPT_DEBUG) {
         dbgln("Interrupt @ {}", interrupt_number());
         dbgln("Interrupt Handlers registered - {}", m_handlers.size());
     }
 
     int i = 0;
     for (auto* handler : m_handlers) {
-        dbgln<debug_interrupt>("Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
+        dbgln<INTERRUPT_DEBUG>("Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
         ASSERT(handler != nullptr);
         handler->increment_invoking_counter();
         handler->handle_interrupt(regs);
-        dbgln<debug_interrupt>("Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());
+        dbgln<INTERRUPT_DEBUG>("Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());
         i++;
     }
 }

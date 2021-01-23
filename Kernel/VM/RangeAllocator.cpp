@@ -79,7 +79,7 @@ Vector<Range, 2> Range::carve(const Range& taken)
     if (taken.end() < end())
         parts.append({ taken.end(), end().get() - taken.end().get() });
 
-    if constexpr (debug_vra) {
+    if constexpr (VRA_DEBUG) {
         dbgln("VRA: carve: take {:x}-{:x} from {:x}-{:x}",
             taken.base().get(),
             taken.end().get() - 1,
@@ -129,13 +129,13 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 
         Range allocated_range(VirtualAddress(aligned_base), size);
         if (available_range == allocated_range) {
-            dbgln<debug_vra>("VRA: Allocated perfect-fit anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
+            dbgln<VRA_DEBUG>("VRA: Allocated perfect-fit anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
             m_available_ranges.remove(i);
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
-        if constexpr (debug_vra) {
-            dbgln<debug_vra>("VRA: Allocated anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
+        if constexpr (VRA_DEBUG) {
+            dbgln<VRA_DEBUG>("VRA: Allocated anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
             dump();
         }
         return allocated_range;
@@ -161,7 +161,7 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
         }
         carve_at_index(i, allocated_range);
 
-        if constexpr (debug_vra) {
+        if constexpr (VRA_DEBUG) {
             dbgln("VRA: Allocated specific({}): {}", size, available_range.base().get());
             dump();
         }
@@ -179,7 +179,7 @@ void RangeAllocator::deallocate(Range range)
     ASSERT(range.size());
     ASSERT(range.base() < range.end());
 
-    if constexpr (debug_vra) {
+    if constexpr (VRA_DEBUG) {
         dbgln("VRA: Deallocate: {}({})", range.base().get(), range.size());
         dump();
     }
