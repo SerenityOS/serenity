@@ -118,6 +118,7 @@ set(KERNEL_SOURCES
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
     Net/RTL8139NetworkAdapter.cpp
+    Net/RTL8169NetworkAdapter.cpp
     Net/Routing.cpp
     Net/Socket.cpp
     Net/TCPSocket.cpp

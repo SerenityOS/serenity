@@ -230,6 +230,10 @@
 #cmakedefine01 RTL8139_DEBUG
 #endif
 
+#ifndef RTL8169_DEBUG
+#cmakedefine01 RTL8169_DEBUG
+#endif
+
 #ifndef SB16_DEBUG
 #cmakedefine01 SB16_DEBUG
 #endif
