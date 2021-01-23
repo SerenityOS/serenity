@@ -530,9 +530,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 m_move_origin = event.position();
                 if (m_move_origin.y() <= secondary_deadzone)
                     return true;
-                auto width_before_resize = m_move_window->width();
-                m_move_window->set_maximized(false);
-                m_move_window->move_to(m_move_origin.x() - (m_move_window->width() * ((float)m_move_origin.x() / width_before_resize)), m_move_origin.y());
+                m_move_window->set_maximized(false, event.position());
                 m_move_window_origin = m_move_window->position();
             }
         } else {
@@ -558,15 +556,18 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 m_move_window->set_tiled(WindowTileType::Top);
             } else if (is_resizable && event.y() >= desktop.bottom() - secondary_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Bottom);
-            } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
-                m_move_window->set_tiled(WindowTileType::None);
+            } else if (m_move_window->tiled() == WindowTileType::None) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
-                if (m_move_window->rect().contains(event.position()))
-                    hovered_window = m_move_window;
+            } else if (pixels_moved_from_start > 5) {
+                m_move_window->set_untiled(event.position());
+                m_move_origin = event.position();
+                m_move_window_origin = m_move_window->position();
             }
-            return true;
         }
+        if (m_move_window->rect().contains(event.position()))
+            hovered_window = m_move_window;
+        return true;
     }
     return false;
 }
