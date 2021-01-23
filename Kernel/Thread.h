@@ -50,6 +50,8 @@
 
 namespace Kernel {
 
+extern RecursiveSpinLock s_mm_lock;
+
 enum class DispatchSignalResult {
     Deferred = 0,
     Yield,
@@ -818,6 +820,7 @@ public:
         ASSERT(!Processor::current().in_irq());
         ASSERT(this == Thread::current());
         ScopedCritical critical;
+        ASSERT(!s_mm_lock.own_lock());
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
@@ -1061,18 +1064,12 @@ public:
         m_ipv4_socket_write_bytes += bytes;
     }
 
-    void set_active(bool active)
-    {
-        m_is_active.store(active, AK::memory_order_release);
-    }
+    void set_active(bool active) { m_is_active = active; }
 
     u32 saved_critical() const { return m_saved_critical; }
     void save_critical(u32 critical) { m_saved_critical = critical; }
 
-    [[nodiscard]] bool is_active() const
-    {
-        return m_is_active.load(AK::MemoryOrder::memory_order_acquire);
-    }
+    [[nodiscard]] bool is_active() const { return m_is_active; }
 
     [[nodiscard]] bool is_finalizable() const
     {
@@ -1170,10 +1167,10 @@ public:
     void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
 
 private:
+    IntrusiveListNode m_process_thread_list_node;
     IntrusiveListNode m_runnable_list_node;
     int m_runnable_priority { -1 };
 
-private:
     friend struct SchedulerData;
     friend class WaitQueue;
 
@@ -1274,7 +1271,7 @@ private:
 #endif
 
     JoinBlockCondition m_join_condition;
-    Atomic<bool> m_is_active { false };
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };
     PreviousMode m_previous_mode { PreviousMode::UserMode };

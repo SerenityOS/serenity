@@ -49,7 +49,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     : m_process(move(process))
     , m_name(m_process->name())
 {
-    bool is_first_thread = m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    bool is_first_thread = m_process->add_thread(*this);
     ArmedScopeGuard guard([&]() {
         drop_thread_count(is_first_thread);
     });
@@ -130,6 +130,7 @@ Thread::~Thread()
         // block conditions would access m_process, which would be in
         // the middle of being destroyed.
         ScopedSpinLock lock(g_scheduler_lock);
+        ASSERT(!m_process_thread_list_node.is_in_list());
         g_scheduler_data->thread_list_for_state(m_state).remove(*this);
 
         // We shouldn't be queued
@@ -388,10 +389,9 @@ void Thread::finalize()
 
 void Thread::drop_thread_count(bool initializing_first_thread)
 {
-    auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    bool is_last = process().remove_thread(*this);
 
-    ASSERT(thread_cnt_before != 0);
-    if (!initializing_first_thread && thread_cnt_before == 1)
+    if (!initializing_first_thread && is_last)
         process().finalize();
 }
 

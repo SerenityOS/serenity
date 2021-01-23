@@ -907,4 +907,22 @@ PerformanceEventBuffer& Process::ensure_perf_events()
         m_perf_event_buffer = make<PerformanceEventBuffer>();
     return *m_perf_event_buffer;
 }
+
+bool Process::remove_thread(Thread& thread)
+{
+    auto thread_cnt_before = m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    ASSERT(thread_cnt_before != 0);
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    m_thread_list.remove(thread);
+    return thread_cnt_before == 1;
+}
+
+bool Process::add_thread(Thread& thread)
+{
+    bool is_first = m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    m_thread_list.append(thread);
+    return is_first;
+}
+
 }
