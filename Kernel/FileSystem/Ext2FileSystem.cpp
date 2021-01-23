@@ -1043,7 +1043,7 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 
 KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
-    if (mode & S_IFDIR)
+    if (::is_directory(mode))
         return fs().create_directory(identifier(), name, mode, uid, gid);
     return fs().create_inode(identifier(), name, mode, 0, dev, uid, gid);
 }
