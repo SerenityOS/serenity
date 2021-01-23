@@ -242,7 +242,7 @@ Optional<Text> Text::parse(const StringView& str)
             current_link_is_actually_img = true;
             break;
         case '[':
-#if DEBUG_MARKDOWN
+#if MARKDOWN_DEBUG
             if (first_span_in_the_current_link != -1)
                 dbgln("Dropping the outer link");
 #endif
@@ -250,7 +250,7 @@ Optional<Text> Text::parse(const StringView& str)
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
-#if DEBUG_MARKDOWN
+#if MARKDOWN_DEBUG
                 dbgln("Unmatched ]");
 #endif
                 continue;

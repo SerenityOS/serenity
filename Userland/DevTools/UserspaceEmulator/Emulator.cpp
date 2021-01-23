@@ -343,7 +343,7 @@ void Emulator::dump_backtrace()
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-#if DEBUG_SPAM
+#if SPAM_DEBUG
     reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
