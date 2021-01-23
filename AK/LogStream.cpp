@@ -149,7 +149,10 @@ KernelLogStream klog()
 #else
 DebugLogStream klog()
 {
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return dbg();
+#    pragma GCC diagnostic pop
 }
 #endif
 

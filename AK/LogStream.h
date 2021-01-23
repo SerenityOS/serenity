@@ -179,7 +179,7 @@ inline const LogStream& operator<<(const LogStream& stream, bool value)
     return stream << (value ? "true" : "false");
 }
 
-DebugLogStream dbg();
+[[deprecated("Plase use dbgln in AK/Format.h instead.")]] DebugLogStream dbg();
 
 #ifdef KERNEL
 KernelLogStream klog();
