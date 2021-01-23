@@ -1,0 +1,585 @@
+/*
+ * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#pragma once
+
+#include "Applications/Piano/Music.h"
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/Optional.h>
+#include <AK/RefCounted.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibCpp/Lexer.h>
+
+namespace Cpp {
+
+class ASTNode;
+class TranslationUnit;
+class Declaration;
+class FunctionDefinition;
+class Type;
+class Parameter;
+class Statement;
+
+class ASTNode : public RefCounted<ASTNode> {
+public:
+    virtual ~ASTNode() = default;
+    virtual const char* class_name() const = 0;
+    virtual void dump(size_t indent) const;
+
+    ASTNode* parent() const { return m_parent; }
+    Position start() const
+    {
+        ASSERT(m_start.has_value());
+        return m_start.value();
+    }
+    Position end() const
+    {
+        ASSERT(m_end.has_value());
+        return m_end.value();
+    }
+    void set_end(const Position& end) { m_end = end; }
+    void set_parent(ASTNode& parent) { m_parent = &parent; }
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const { return {}; }
+
+    virtual bool is_identifier() const { return false; }
+    virtual bool is_member_expression() const { return false; }
+    virtual bool is_variable_or_parameter_declaration() const { return false; }
+
+protected:
+    ASTNode(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : m_parent(parent)
+        , m_start(start)
+        , m_end(end)
+    {
+    }
+
+private:
+    ASTNode* m_parent { nullptr };
+    Optional<Position> m_start;
+    Optional<Position> m_end;
+};
+
+class TranslationUnit : public ASTNode {
+
+public:
+    virtual ~TranslationUnit() override = default;
+    const NonnullRefPtrVector<Declaration>& children() const { return m_children; }
+    virtual const char* class_name() const override { return "TranslationUnit"; }
+    virtual void dump(size_t indent) const override;
+    void append(NonnullRefPtr<Declaration> child)
+    {
+        m_children.append(move(child));
+    }
+    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_children; }
+
+public:
+    TranslationUnit(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : ASTNode(parent, start, end)
+    {
+    }
+
+private:
+    NonnullRefPtrVector<Declaration> m_children;
+};
+
+class Statement : public ASTNode {
+public:
+    virtual ~Statement() override = default;
+    virtual const char* class_name() const override { return "Statement"; }
+
+    virtual bool is_declaration() const { return false; }
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+protected:
+    Statement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : ASTNode(parent, start, end)
+    {
+    }
+};
+
+class Declaration : public Statement {
+
+public:
+    virtual bool is_declaration() const override { return true; }
+    virtual bool is_variable_declaration() const { return false; }
+    virtual bool is_parameter() const { return false; }
+    virtual bool is_struct_or_class() const { return false; }
+
+protected:
+    Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+};
+
+class InvalidDeclaration : public Declaration {
+
+public:
+    virtual ~InvalidDeclaration() override = default;
+    virtual const char* class_name() const override { return "InvalidDeclaration"; }
+    InvalidDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Declaration(parent, start, end)
+    {
+    }
+};
+
+class FunctionDeclaration : public Declaration {
+public:
+    virtual ~FunctionDeclaration() override = default;
+    virtual const char* class_name() const override { return "FunctionDeclaration"; }
+    virtual void dump(size_t indent) const override;
+    const StringView& name() const { return m_name; }
+    RefPtr<FunctionDefinition> definition() { return m_definition; }
+
+    FunctionDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Declaration(parent, start, end)
+    {
+    }
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+    StringView m_name;
+    RefPtr<Type> m_return_type;
+    NonnullRefPtrVector<Parameter> m_parameters;
+    RefPtr<FunctionDefinition> m_definition;
+};
+
+class VariableOrParameterDeclaration : public Declaration {
+public:
+    virtual ~VariableOrParameterDeclaration() override = default;
+    virtual bool is_variable_or_parameter_declaration() const override { return true; }
+
+    StringView m_name;
+    RefPtr<Type> m_type;
+
+protected:
+    VariableOrParameterDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Declaration(parent, start, end)
+    {
+    }
+};
+
+class Parameter : public VariableOrParameterDeclaration {
+public:
+    virtual ~Parameter() override = default;
+    virtual const char* class_name() const override { return "Parameter"; }
+    virtual void dump(size_t indent) const override;
+
+    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, StringView name)
+        : VariableOrParameterDeclaration(parent, start, end)
+    {
+        m_name = name;
+    }
+
+    virtual bool is_parameter() const override { return true; }
+};
+
+class Type : public ASTNode {
+public:
+    virtual ~Type() override = default;
+    virtual const char* class_name() const override { return "Type"; }
+    const StringView& name() const { return m_name; }
+    virtual void dump(size_t indent) const override;
+
+    Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, StringView name)
+        : ASTNode(parent, start, end)
+        , m_name(name)
+    {
+    }
+
+    StringView m_name;
+};
+
+class Pointer : public Type {
+public:
+    virtual ~Pointer() override = default;
+    virtual const char* class_name() const override { return "Pointer"; }
+    virtual void dump(size_t indent) const override;
+
+    Pointer(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Type(parent, start, end, {})
+    {
+    }
+
+    RefPtr<Type> m_pointee;
+};
+
+class FunctionDefinition : public ASTNode {
+public:
+    virtual ~FunctionDefinition() override = default;
+    virtual const char* class_name() const override { return "FunctionDefinition"; }
+    NonnullRefPtrVector<Statement>& statements() { return m_statements; }
+    virtual void dump(size_t indent) const override;
+
+    FunctionDefinition(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : ASTNode(parent, start, end)
+    {
+    }
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+    NonnullRefPtrVector<Statement> m_statements;
+};
+
+class InvalidStatement : public Statement {
+public:
+    virtual ~InvalidStatement() override = default;
+    virtual const char* class_name() const override { return "InvalidStatement"; }
+    InvalidStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+};
+
+class Expression : public Statement {
+public:
+    virtual ~Expression() override = default;
+    virtual const char* class_name() const override { return "Expression"; }
+
+protected:
+    Expression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+};
+
+class InvalidExpression : public Expression {
+public:
+    virtual ~InvalidExpression() override = default;
+    virtual const char* class_name() const override { return "InvalidExpression"; }
+    InvalidExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+};
+
+class VariableDeclaration : public VariableOrParameterDeclaration {
+public:
+    virtual ~VariableDeclaration() override = default;
+    virtual const char* class_name() const override { return "VariableDeclaration"; }
+    virtual void dump(size_t indent) const override;
+
+    VariableDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : VariableOrParameterDeclaration(parent, start, end)
+    {
+    }
+
+    virtual bool is_variable_declaration() const override { return true; }
+
+    RefPtr<Expression> m_initial_value;
+};
+
+class Identifier : public Expression {
+public:
+    virtual ~Identifier() override = default;
+    virtual const char* class_name() const override { return "Identifier"; }
+    virtual void dump(size_t indent) const override;
+
+    Identifier(ASTNode* parent, Optional<Position> start, Optional<Position> end, StringView name)
+        : Expression(parent, start, end)
+        , m_name(name)
+    {
+    }
+    Identifier(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Identifier(parent, start, end, {})
+    {
+    }
+
+    virtual bool is_identifier() const override { return true; }
+
+    StringView m_name;
+};
+
+class NumericLiteral : public Expression {
+public:
+    virtual ~NumericLiteral() override = default;
+    virtual const char* class_name() const override { return "NumricLiteral"; }
+    virtual void dump(size_t indent) const override;
+
+    NumericLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, StringView value)
+        : Expression(parent, start, end)
+        , m_value(value)
+    {
+    }
+
+    StringView m_value;
+};
+
+class BooleanLiteral : public Expression {
+public:
+    virtual ~BooleanLiteral() override = default;
+    virtual const char* class_name() const override { return "BooleanLiteral"; }
+    virtual void dump(size_t indent) const override;
+
+    BooleanLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, bool value)
+        : Expression(parent, start, end)
+        , m_value(value)
+    {
+    }
+
+    bool m_value;
+};
+
+enum class BinaryOp {
+    Addition,
+    Subtraction,
+    Multiplication,
+    Division,
+    Modulo,
+    GreaterThan,
+    GreaterThanEquals,
+    LessThan,
+    LessThanEquals,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    LeftShift,
+    RightShift,
+};
+
+class BinaryExpression : public Expression {
+public:
+    BinaryExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    virtual ~BinaryExpression() override = default;
+    virtual const char* class_name() const override { return "BinaryExpression"; }
+    virtual void dump(size_t indent) const override;
+
+    BinaryOp m_op;
+    RefPtr<Expression> m_lhs;
+    RefPtr<Expression> m_rhs;
+};
+
+enum class AssignmentOp {
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+};
+
+class AssignmentExpression : public Expression {
+public:
+    AssignmentExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    virtual ~AssignmentExpression() override = default;
+    virtual const char* class_name() const override { return "AssignmentExpression"; }
+    virtual void dump(size_t indent) const override;
+
+    AssignmentOp m_op;
+    RefPtr<Expression> m_lhs;
+    RefPtr<Expression> m_rhs;
+};
+
+class FunctionCall final : public Expression {
+public:
+    FunctionCall(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    ~FunctionCall() override = default;
+    virtual const char* class_name() const override { return "FunctionCall"; }
+    virtual void dump(size_t indent) const override;
+
+    StringView m_name;
+    NonnullRefPtrVector<Expression> m_arguments;
+};
+
+class StringLiteral final : public Expression {
+public:
+    StringLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    ~StringLiteral() override = default;
+    virtual const char* class_name() const override { return "StringLiteral"; }
+    virtual void dump(size_t indent) const override;
+
+    StringView m_value;
+};
+
+class ReturnStatement : public Statement {
+public:
+    virtual ~ReturnStatement() override = default;
+    virtual const char* class_name() const override { return "ReturnStatement"; }
+
+    ReturnStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+    virtual void dump(size_t indent) const override;
+
+    RefPtr<Expression> m_value;
+};
+
+class EnumDeclaration : public Declaration {
+public:
+    virtual ~EnumDeclaration() override = default;
+    virtual const char* class_name() const override { return "EnumDeclaration"; }
+    virtual void dump(size_t indent) const override;
+
+    EnumDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Declaration(parent, start, end)
+    {
+    }
+
+    StringView m_name;
+    Vector<StringView> m_entries;
+};
+
+class MemberDeclaration : public Declaration {
+public:
+    virtual ~MemberDeclaration() override = default;
+    virtual const char* class_name() const override { return "MemberDeclaration"; }
+    virtual void dump(size_t indent) const override;
+
+    MemberDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Declaration(parent, start, end)
+    {
+    }
+
+    RefPtr<Type> m_type;
+    StringView m_name;
+    RefPtr<Expression> m_initial_value;
+};
+
+class StructOrClassDeclaration : public Declaration {
+public:
+    virtual ~StructOrClassDeclaration() override = default;
+    virtual const char* class_name() const override { return "StructOrClassDeclaration"; }
+    virtual void dump(size_t indent) const override;
+    virtual bool is_struct_or_class() const override { return true; }
+
+    enum class Type {
+        Struct,
+        Class
+    };
+
+    StructOrClassDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, StructOrClassDeclaration::Type type)
+        : Declaration(parent, start, end)
+        , m_type(type)
+    {
+    }
+
+    StructOrClassDeclaration::Type m_type;
+    StringView m_name;
+    NonnullRefPtrVector<MemberDeclaration> m_members;
+};
+
+enum class UnaryOp {
+    Invalid,
+    BitwiseNot,
+    Not,
+    Plus,
+    Minus,
+    PlusPlus,
+};
+
+class UnaryExpression : public Expression {
+public:
+    UnaryExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    virtual ~UnaryExpression() override = default;
+    virtual const char* class_name() const override { return "UnaryExpression"; }
+    virtual void dump(size_t indent) const override;
+
+    UnaryOp m_op;
+    RefPtr<Expression> m_lhs;
+};
+
+class MemberExpression : public Expression {
+public:
+    MemberExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Expression(parent, start, end)
+    {
+    }
+
+    virtual ~MemberExpression() override = default;
+    virtual const char* class_name() const override { return "MemberExpression"; }
+    virtual void dump(size_t indent) const override;
+    virtual bool is_member_expression() const override { return true; }
+
+    RefPtr<Expression> m_object;
+    RefPtr<Identifier> m_property;
+};
+
+class ForStatement : public Statement {
+public:
+    ForStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+
+    virtual ~ForStatement() override = default;
+    virtual const char* class_name() const override { return "ForStatement"; }
+    virtual void dump(size_t indent) const override;
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+    RefPtr<VariableDeclaration> m_init;
+    RefPtr<Expression> m_test;
+    RefPtr<Expression> m_update;
+    RefPtr<Statement> m_body;
+};
+
+class BlockStatement final : public Statement {
+public:
+    BlockStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+
+    virtual ~BlockStatement() override = default;
+    virtual const char* class_name() const override { return "BlockStatement"; }
+    virtual void dump(size_t indent) const override;
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+    NonnullRefPtrVector<Statement> m_statements;
+};
+
+class Comment final : public Statement {
+public:
+    Comment(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+
+    virtual ~Comment() override = default;
+    virtual const char* class_name() const override { return "Comment"; }
+};
+}

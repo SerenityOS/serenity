@@ -96,11 +96,16 @@ namespace Cpp {
     __TOKEN(Float)                 \
     __TOKEN(Keyword)               \
     __TOKEN(KnownType)             \
-    __TOKEN(Identifier)
+    __TOKEN(Identifier)            \
+    __TOKEN(EOF_TOKEN)
 
 struct Position {
-    size_t line;
-    size_t column;
+    size_t line { 0 };
+    size_t column { 0 };
+
+    bool operator<(const Position&) const;
+    bool operator>(const Position&) const;
+    bool operator==(const Position&) const;
 };
 
 struct Token {
@@ -110,9 +115,9 @@ struct Token {
 #undef __TOKEN
     };
 
-    const char* to_string() const
+    static const char* type_to_string(Type t)
     {
-        switch (m_type) {
+        switch (t) {
 #define __TOKEN(x) \
     case Type::x:  \
         return #x;
@@ -121,6 +126,14 @@ struct Token {
         }
         ASSERT_NOT_REACHED();
     }
+
+    const char* to_string() const
+    {
+        return type_to_string(m_type);
+    }
+    Position start() const { return m_start; }
+    Position end() const { return m_end; }
+    Type type() const { return m_type; }
 
     Type m_type { Type::Unknown };
     Position m_start;

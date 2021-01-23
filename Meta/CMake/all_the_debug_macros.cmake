@@ -159,6 +159,7 @@ set(UPDATE_COALESCING_DEBUG ON)
 set(VOLATILE_PAGE_RANGES_DEBUG ON)
 set(WSMESSAGELOOP_DEBUG ON)
 set(GPT_DEBUG ON)
+set(CPP_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)
