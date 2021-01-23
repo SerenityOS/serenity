@@ -36,9 +36,9 @@ namespace LanguageServers::Cpp {
 
 using namespace ::Cpp;
 
-class AutoComplete {
+class LexerAutoComplete {
 public:
-    AutoComplete() = delete;
+    LexerAutoComplete() = delete;
 
     static Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position);
 

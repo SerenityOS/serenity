@@ -8,4 +8,5 @@ endpoint LanguageServer = 8001
     SetFileContent(String file_name, String content) =|
 
     AutoCompleteSuggestions(String file_name, i32 cursor_line, i32 cursor_column) =|
+    SetAutoCompleteMode(String mode) =|
 }

@@ -24,14 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AutoComplete.h"
+#include "LexerAutoComplete.h"
 #include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <LibCpp/Lexer.h>
 
 namespace LanguageServers::Cpp {
 
-Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
+Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
 {
     auto lines = code.split('\n', true);
     Cpp::Lexer lexer(code);
@@ -52,14 +52,14 @@ Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const Str
     return suggestions;
 }
 
-StringView AutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
+StringView LexerAutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
 {
     ASSERT(token.m_start.line == token.m_end.line);
     ASSERT(token.m_start.column <= token.m_end.column);
     return lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 
-Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, const GUI::TextPosition& position)
+Optional<size_t> LexerAutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, const GUI::TextPosition& position)
 {
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
@@ -74,7 +74,7 @@ Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& token
     return {};
 }
 
-Vector<GUI::AutocompleteProvider::Entry> AutoComplete::identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
+Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
 {
     auto partial_input = text_of_token(lines, tokens[target_token_index]);
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
