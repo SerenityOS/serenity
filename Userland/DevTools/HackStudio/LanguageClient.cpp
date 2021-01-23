@@ -32,8 +32,11 @@ namespace HackStudio {
 
 void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSuggestions& message)
 {
-    if (m_language_client)
-        m_language_client->provide_autocomplete_suggestions(message.suggestions());
+    if (!m_language_client) {
+        dbgln("Language Server connection has no attached language client");
+        return;
+    }
+    m_language_client->provide_autocomplete_suggestions(message.suggestions());
 }
 
 void LanguageClient::open_file(const String& path, int fd)
