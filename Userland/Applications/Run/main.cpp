@@ -35,14 +35,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept cpath rpath unix fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread accept cpath rpath unix fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept rpath unix proc exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread accept rpath unix proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
