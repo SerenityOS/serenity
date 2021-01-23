@@ -222,7 +222,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (rc < 0)
         return rc;
 
-#ifdef IPV4_SOCKET_DEBUG
+#if IPV4_SOCKET_DEBUG
     klog() << "sendto: destination=" << m_peer_address.to_string().characters() << ":" << m_peer_port;
 #endif
 
@@ -364,7 +364,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
             return EINVAL;
     }
 
-#ifdef IPV4_SOCKET_DEBUG
+#if IPV4_SOCKET_DEBUG
     klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
 #endif
 

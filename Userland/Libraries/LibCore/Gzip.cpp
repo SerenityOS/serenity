@@ -52,7 +52,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
         return data[current++];
     };
 
-#ifdef DEBUG_GZIP
+#if DEBUG_GZIP
     dbgln("get_gzip_payload: Skipping over gzip header.");
 #endif
 
@@ -135,7 +135,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
             source.data(), &source_len);
 
         if (puff_ret == 0) {
-#ifdef DEBUG_GZIP
+#if DEBUG_GZIP
             dbgln("Gzip::decompress: Decompression success.");
 #endif
             destination.trim(destination_len);
@@ -144,7 +144,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 
         if (puff_ret == 1) {
             // FIXME: Find a better way of decompressing without needing to try over and over again.
-#ifdef DEBUG_GZIP
+#if DEBUG_GZIP
             dbgln("Gzip::decompress: Output buffer exhausted. Growing.");
 #endif
             destination.grow(destination.size() * 2);

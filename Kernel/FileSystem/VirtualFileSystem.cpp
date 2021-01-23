@@ -58,7 +58,7 @@ VFS& VFS::the()
 
 VFS::VFS()
 {
-#ifdef VFS_DEBUG
+#if VFS_DEBUG
     klog() << "VFS: Constructing VFS";
 #endif
 }

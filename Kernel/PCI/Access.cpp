@@ -109,7 +109,7 @@ void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Functio
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
     if (early_read_type(address) == PCI_TYPE_BRIDGE) {
         u8 secondary_bus = early_read8_field(address, PCI_SECONDARY_BUS);
-#ifdef PCI_DEBUG
+#if PCI_DEBUG
         klog() << "PCI: Found secondary bus: " << secondary_bus;
 #endif
         ASSERT(secondary_bus != bus);

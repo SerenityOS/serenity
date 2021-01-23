@@ -376,7 +376,7 @@ TEST_CASE(ini_file_entries)
     Regex<PosixExtended> re("[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]");
     RegexResult result;
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     RegexDebug regex_dbg(stderr);
     regex_dbg.print_raw_bytecode(re);
     regex_dbg.print_header();
@@ -387,7 +387,7 @@ TEST_CASE(ini_file_entries)
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 3u);
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     for (auto& v : result.matches)
         fprintf(stderr, "%s\n", v.view.to_string().characters());
 #endif
@@ -425,7 +425,7 @@ TEST_CASE(named_capture_group)
     Regex<PosixExtended> re("[[:alpha:]]*=(?<Test>[[:digit:]]*)");
     RegexResult result;
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     RegexDebug regex_dbg(stderr);
     regex_dbg.print_raw_bytecode(re);
     regex_dbg.print_header();
@@ -446,7 +446,7 @@ TEST_CASE(a_star)
     Regex<PosixExtended> re("a*");
     RegexResult result;
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     RegexDebug regex_dbg(stderr);
     regex_dbg.print_raw_bytecode(re);
     regex_dbg.print_header();
@@ -506,7 +506,7 @@ TEST_CASE(ECMA262_parse)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern);
         EXPECT_EQ(re.parser_result.error, test.expected_error);
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);
@@ -551,7 +551,7 @@ TEST_CASE(ECMA262_match)
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);
@@ -584,7 +584,7 @@ TEST_CASE(replace)
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         dbgln("\n");
         RegexDebug regex_dbg(stderr);
         regex_dbg.print_raw_bytecode(re);

@@ -26,6 +26,7 @@
 
 #include "RegexLexer.h"
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <stdio.h>
 
@@ -150,7 +151,7 @@ Token Lexer::next()
         case '\\':
             return 2;
         default:
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
             fprintf(stderr, "[LEXER] Found invalid escape sequence: \\%c (the parser will have to deal with this!)\n", peek(1));
 #endif
             return 0;
