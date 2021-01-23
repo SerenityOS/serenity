@@ -30,6 +30,8 @@
 #include <AK/Forward.h>
 #include <AK/LexicalPath.h>
 #include <AK/Types.h>
+#include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <LibIPC/ServerConnection.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
@@ -64,6 +66,8 @@ public:
         set_my_client_id(response->client_id());
     }
 
+    WeakPtr<LanguageClient> language_client() { return m_language_client; }
+
     template<typename ConcreteType>
     static NonnullRefPtr<ServerConnection> get_or_create(const String& project_path)
     {
@@ -81,21 +85,24 @@ public:
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
 
-    LanguageClient* m_language_client { nullptr };
+    WeakPtr<LanguageClient> m_language_client;
 };
 
-class LanguageClient {
+class LanguageClient : public Weakable<LanguageClient> {
 public:
     explicit LanguageClient(NonnullRefPtr<ServerConnection>&& connection)
         : m_connection(*connection)
         , m_server_connection(move(connection))
     {
+        m_previous_client = m_connection.language_client();
         m_connection.attach(*this);
     }
 
     virtual ~LanguageClient()
     {
         m_connection.detach();
+        if (m_previous_client)
+            m_connection.attach(*m_previous_client);
     }
 
     virtual void open_file(const String& path, int fd);
@@ -111,6 +118,7 @@ public:
 private:
     ServerConnection& m_connection;
     NonnullRefPtr<ServerConnection> m_server_connection;
+    WeakPtr<LanguageClient> m_previous_client;
 };
 
 template<typename ServerConnectionT>
