@@ -1,7 +1,8 @@
 set(SOURCES
     ClientConnection.cpp
     main.cpp
-    AutoComplete.cpp
+    LexerAutoComplete.cpp
+    ParserAutoComplete.cpp
 )
 
 set(GENERATED_SOURCES

@@ -109,6 +109,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 
     m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
+    m_suggestion_view->set_column_width(1, 100);
 }
 
 void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)

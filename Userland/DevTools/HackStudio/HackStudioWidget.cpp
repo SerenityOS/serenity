@@ -841,6 +841,7 @@ void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
 {
     auto& project_menu = menubar.add_menu("Project");
     project_menu.add_action(*m_new_action);
+    project_menu.add_action(*create_set_autocomplete_mode_action());
 }
 
 void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
@@ -916,6 +917,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
     });
 
     action->set_enabled(false);
+    return action;
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_set_autocomplete_mode_action()
+{
+    auto action = GUI::Action::create_checkable("AutoComplete C++ with Parser", [this](auto& action) {
+        get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path())->set_autocomplete_mode(action.is_checked() ? "Parser" : "Lexer");
+    });
     return action;
 }
 

@@ -55,10 +55,18 @@ private:
     virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
     virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
     virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
+    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override;
 
     RefPtr<GUI::TextDocument> document_for(const String& file_name);
 
     HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
+
+    enum class AutoCompleteMode {
+        Lexer,
+        Parser
+    };
+
+    AutoCompleteMode m_auto_complete_mode { AutoCompleteMode::Lexer };
 };
 
 }
