@@ -30,6 +30,7 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/HPET.h>
+#include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -65,13 +66,22 @@ KernelRng::KernelRng()
 
             this->resource().add_random_event(value, i % 32);
         }
-    } else {
+    } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
-        klog() << "KernelRng: Using HPET as entropy source (bad!)";
+        klog() << "KernelRng: Using HPET as entropy source";
 
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u64 hpet_time = HPET::the().read_main_counter();
             this->resource().add_random_event(hpet_time, i % 32);
+        }
+    } else {
+        // Fallback to RTC
+        klog() << "KernelRng: Using RTC as entropy source (bad!)";
+        time_t current_time = RTC::now();
+        for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
+            this->resource().add_random_event(current_time, i % 32);
+            current_time *= 0x574a;
+            current_time += 0x40b2;
         }
     }
 }
