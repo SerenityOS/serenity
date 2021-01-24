@@ -220,21 +220,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     glyph_header_width_spinbox.set_value(m_edited_font->glyph_fixed_width());
     glyph_header_width_spinbox.set_enabled(false);
 
-    //// Baseline Row
-    auto& baseline_container = font_metadata_group_box.add<GUI::Widget>();
-    baseline_container.set_layout<GUI::HorizontalBoxLayout>();
-    baseline_container.set_fixed_height(22);
-
-    auto& baseline_label = baseline_container.add<GUI::Label>();
-    baseline_label.set_fixed_width(100);
-    baseline_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    baseline_label.set_text("Baseline:");
-
-    auto& baseline_spinbox = baseline_container.add<GUI::SpinBox>();
-    baseline_spinbox.set_min(0);
-    baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
-    baseline_spinbox.set_value(m_edited_font->baseline());
-
     //// Mean line Row
     auto& mean_line_container = font_metadata_group_box.add<GUI::Widget>();
     mean_line_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -249,6 +234,21 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     mean_line_spinbox.set_min(0);
     mean_line_spinbox.set_max(m_edited_font->glyph_height() - 1);
     mean_line_spinbox.set_value(m_edited_font->mean_line());
+
+    //// Baseline Row
+    auto& baseline_container = font_metadata_group_box.add<GUI::Widget>();
+    baseline_container.set_layout<GUI::HorizontalBoxLayout>();
+    baseline_container.set_fixed_height(22);
+
+    auto& baseline_label = baseline_container.add<GUI::Label>();
+    baseline_label.set_fixed_width(100);
+    baseline_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    baseline_label.set_text("Baseline:");
+
+    auto& baseline_spinbox = baseline_container.add<GUI::SpinBox>();
+    baseline_spinbox.set_min(0);
+    baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
+    baseline_spinbox.set_value(m_edited_font->baseline());
 
     //// Fixed checkbox Row
     auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
