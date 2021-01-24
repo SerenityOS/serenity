@@ -243,7 +243,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     auto& mean_line_label = mean_line_container.add<GUI::Label>();
     mean_line_label.set_fixed_width(100);
     mean_line_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    mean_line_label.set_text("Mean Line:");
+    mean_line_label.set_text("Mean line:");
 
     auto& mean_line_spinbox = mean_line_container.add<GUI::SpinBox>();
     mean_line_spinbox.set_min(0);
