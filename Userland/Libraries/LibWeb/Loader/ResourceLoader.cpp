@@ -78,19 +78,24 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     if (!request.is_valid())
         return nullptr;
 
-    auto it = s_resource_cache.find(request);
-    if (it != s_resource_cache.end()) {
-        if (it->value->type() != type) {
-            dbgln("FIXME: Not using cached resource for {} since there's a type mismatch.", request.url());
-        } else {
-            dbgln<debug_cache>("Reusing cached resource for: {}", request.url());
-            return it->value;
+    bool use_cache = request.url().protocol() != "file";
+
+    if (use_cache) {
+        auto it = s_resource_cache.find(request);
+        if (it != s_resource_cache.end()) {
+            if (it->value->type() != type) {
+                dbgln("FIXME: Not using cached resource for {} since there's a type mismatch.", request.url());
+            } else {
+                dbgln<debug_cache>("Reusing cached resource for: {}", request.url());
+                return it->value;
+            }
         }
     }
 
     auto resource = Resource::create({}, type, request);
 
-    s_resource_cache.set(request, resource);
+    if (use_cache)
+        s_resource_cache.set(request, resource);
 
     load(
         request,
