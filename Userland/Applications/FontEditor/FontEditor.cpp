@@ -265,7 +265,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         int right_site_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
         right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
 
-        m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
+        m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 12;
         m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 346;
     };
 
