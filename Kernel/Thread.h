@@ -1065,6 +1065,9 @@ public:
         m_is_active.store(active, AK::memory_order_release);
     }
 
+    u32 saved_critical() const { return m_saved_critical; }
+    void save_critical(u32 critical) { m_saved_critical = critical; }
+
     [[nodiscard]] bool is_active() const
     {
         return m_is_active.load(AK::MemoryOrder::memory_order_acquire);
@@ -1239,6 +1242,7 @@ private:
     ThreadID m_tid { -1 };
     TSS32 m_tss;
     TrapFrame* m_current_trap { nullptr };
+    u32 m_saved_critical { 1 };
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks_left { 0 };
