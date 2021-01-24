@@ -708,7 +708,7 @@ class Processor {
 
     u32 m_cpu;
     u32 m_in_irq;
-    u32 m_in_critical;
+    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_in_critical;
 
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
@@ -876,15 +876,16 @@ public:
     {
         ASSERT(prev_irq <= m_in_irq);
         if (!prev_irq) {
-            if (m_in_critical == 0) {
-                auto prev_critical = m_in_critical++;
+            u32 prev_critical = 0;
+            if (m_in_critical.compare_exchange_strong(prev_critical, 1)) {
                 m_in_irq = prev_irq;
                 deferred_call_execute_pending();
-                ASSERT(m_in_critical == prev_critical + 1);
-                m_in_critical = prev_critical;
-            }
-            if (!m_in_critical)
+                auto prev_raised = m_in_critical.exchange(prev_critical);
+                ASSERT(prev_raised == prev_critical + 1);
                 check_invoke_scheduler();
+            } else if (prev_critical == 0) {
+                check_invoke_scheduler();
+            }
         } else {
             m_in_irq = prev_irq;
         }
@@ -895,11 +896,16 @@ public:
         return m_in_irq;
     }
 
+    ALWAYS_INLINE void restore_in_critical(u32 critical)
+    {
+        m_in_critical = critical;
+    }
+
     ALWAYS_INLINE void enter_critical(u32& prev_flags)
     {
-        m_in_critical++;
         prev_flags = cpu_flags();
         cli();
+        m_in_critical++;
     }
 
     ALWAYS_INLINE void leave_critical(u32 prev_flags)
@@ -925,9 +931,8 @@ public:
 
     ALWAYS_INLINE u32 clear_critical(u32& prev_flags, bool enable_interrupts)
     {
-        u32 prev_crit = m_in_critical;
-        m_in_critical = 0;
         prev_flags = cpu_flags();
+        u32 prev_crit = m_in_critical.exchange(0, AK::MemoryOrder::memory_order_acquire);
         if (!m_in_irq)
             check_invoke_scheduler();
         if (enable_interrupts)
@@ -937,15 +942,15 @@ public:
 
     ALWAYS_INLINE void restore_critical(u32 prev_crit, u32 prev_flags)
     {
-        ASSERT(m_in_critical == 0);
-        m_in_critical = prev_crit;
+        m_in_critical.store(prev_crit, AK::MemoryOrder::memory_order_release);
+        ASSERT(!prev_crit || !(prev_flags & 0x200));
         if (prev_flags & 0x200)
             sti();
         else
             cli();
     }
 
-    ALWAYS_INLINE u32& in_critical() { return m_in_critical; }
+    ALWAYS_INLINE u32 in_critical() { return m_in_critical.load(); }
 
     ALWAYS_INLINE const FPUState& clean_fpu_state() const
     {
