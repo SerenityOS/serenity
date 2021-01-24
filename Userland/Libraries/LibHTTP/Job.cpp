@@ -300,9 +300,10 @@ void Job::on_socket_connected()
 
                     // we've read everything, now let's get the next chunk
                     size = -1;
+                    [[maybe_unused]] auto line = read_line(PAGE_SIZE);
 
                     if constexpr (debug_job)
-                        dbgln("Line following (should be empty): '{}'", read_line(PAGE_SIZE));
+                        dbgln("Line following (should be empty): '{}'", line);
                 }
                 m_current_chunk_remaining_size = size;
             }
