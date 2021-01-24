@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
@@ -558,7 +559,7 @@ void Window::update(const Gfx::IntRect& a_rect)
 
     for (auto& pending_rect : m_pending_paint_event_rects) {
         if (pending_rect.contains(a_rect)) {
-#ifdef UPDATE_COALESCING_DEBUG
+#if UPDATE_COALESCING_DEBUG
             dbgln("Ignoring {} since it's contained by pending rect {}", a_rect, pending_rect);
 #endif
             return;

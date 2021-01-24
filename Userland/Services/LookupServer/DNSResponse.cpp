@@ -27,6 +27,7 @@
 #include "DNSResponse.h"
 #include "DNSPacket.h"
 #include "DNSRequest.h"
+#include <AK/Debug.h>
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
 
@@ -61,7 +62,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
     }
 
     auto& response_header = *(const DNSPacket*)(raw_data);
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
     dbgln("Got response (ID: {})", response_header.id());
     dbgln("  Question count: {}", response_header.question_count());
     dbgln("    Answer count: {}", response_header.answer_count());
@@ -87,7 +88,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
         auto& record_and_class = *(const RawDNSAnswerQuestion*)&raw_data[offset];
         response.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
         offset += 4;
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
         auto& question = response.m_questions.last();
         dbgln("Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
 #endif
@@ -111,7 +112,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
             // FIXME: Parse some other record types perhaps?
             dbgln("data=(unimplemented record type {})", record.type());
         }
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
         dbgln("Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
 #endif
         response.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);

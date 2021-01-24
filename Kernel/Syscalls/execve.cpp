@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
@@ -446,7 +447,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     ASSERT(is_user_process());
     ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
     dbgln("do_exec({})", path);
 #endif
 
@@ -511,7 +512,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     kill_threads_except_self();
 
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
     dbgln("Memory layout after ELF load:");
     dump_regions();
 #endif
@@ -703,7 +704,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
     if (!interpreter_path.is_empty()) {
 
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
         dbgln("exec({}): Using program interpreter {}", path, interpreter_path);
 #endif
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());

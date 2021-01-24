@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
@@ -443,7 +444,7 @@ public:
         stream >> message_endpoint_magic;
         if (stream.handle_any_error()) {
 )~~~");
-#ifdef GENERATE_DEBUG_CODE
+#if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
             dbgln("Failed to read message endpoint magic");
 )~~~");
@@ -454,7 +455,7 @@ public:
 
         if (message_endpoint_magic != @endpoint.magic@) {
 )~~~");
-#ifdef GENERATE_DEBUG_CODE
+#if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
             dbgln("Endpoint magic number message_endpoint_magic != @endpoint.magic@");
 )~~~");
@@ -467,7 +468,7 @@ public:
         stream >> message_id;
         if (stream.handle_any_error()) {
 )~~~");
-#ifdef GENERATE_DEBUG_CODE
+#if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
             dbgln("Failed to read message ID");
 )~~~");
@@ -501,7 +502,7 @@ public:
         endpoint_generator.append(R"~~~(
         default:
 )~~~");
-#ifdef GENERATE_DEBUG_CODE
+#if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
             dbgln("Failed to decode @endpoint.name@.({})", message_id);
 )~~~");
@@ -512,7 +513,7 @@ public:
 
         if (stream.handle_any_error()) {
 )~~~");
-#ifdef GENERATE_DEBUG_CODE
+#if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
             dbgln("Failed to read the message");
 )~~~");

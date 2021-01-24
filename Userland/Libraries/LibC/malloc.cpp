@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/LogStream.h>
 #include <AK/ScopedValueRollback.h>
@@ -257,13 +258,13 @@ static void* malloc_impl(size_t size)
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
         dbgprintf("Block %p is now full in size class %zu\n", block, good_size);
 #endif
         allocator->usable_blocks.remove(block);
         allocator->full_blocks.append(block);
     }
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
     dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
 #endif
 
@@ -316,7 +317,7 @@ static void free_impl(void* ptr)
     assert(magic == MAGIC_PAGE_HEADER);
     auto* block = (ChunkedBlock*)block_base;
 
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
     dbgprintf("LibC: freeing %p in allocator %p (size=%zu, used=%zu)\n", ptr, block, block->bytes_per_chunk(), block->used_chunks());
 #endif
 
@@ -330,7 +331,7 @@ static void free_impl(void* ptr)
     if (block->is_full()) {
         size_t good_size;
         auto* allocator = allocator_for_size(block->m_size, good_size);
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
         dbgprintf("Block %p no longer full in size class %zu\n", block, good_size);
 #endif
         g_malloc_stats.number_of_freed_full_blocks++;
@@ -344,7 +345,7 @@ static void free_impl(void* ptr)
         size_t good_size;
         auto* allocator = allocator_for_size(block->m_size, good_size);
         if (allocator->block_count < number_of_chunked_blocks_to_keep_around_per_size_class) {
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
             dbgprintf("Keeping block %p around for size class %zu\n", block, good_size);
 #endif
             g_malloc_stats.number_of_keeps++;
@@ -354,7 +355,7 @@ static void free_impl(void* ptr)
             madvise(block, ChunkedBlock::block_size, MADV_SET_VOLATILE);
             return;
         }
-#ifdef MALLOC_DEBUG
+#if MALLOC_DEBUG
         dbgprintf("Releasing block %p for size class %zu\n", block, good_size);
 #endif
         g_malloc_stats.number_of_frees++;

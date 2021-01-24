@@ -50,7 +50,7 @@ RefPtr<VMObject> AnonymousVMObject::clone()
         });
     }
 
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
     klog() << "Cloning " << this << ", need " << need_cow_pages << " committed cow pages";
 #endif
     if (!MM.commit_user_physical_pages(need_cow_pages))
@@ -311,7 +311,7 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
 
     // Return those committed pages back to the system
     if (uncommit_page_count > 0) {
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
         klog() << "Uncommit " << uncommit_page_count << " lazy-commit pages from " << this;
 #endif
         MM.uncommit_user_physical_pages(uncommit_page_count);
@@ -364,7 +364,7 @@ size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const Volat
         }
     }
 
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
     klog() << "Added " << pages_updated << " lazy-commit pages to " << this;
 #endif
     m_unused_committed_pages += pages_updated;

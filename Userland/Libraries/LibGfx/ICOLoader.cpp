@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
@@ -188,7 +189,7 @@ static bool load_ico_directory(ICOLoadingContext& context)
     for (size_t i = 0; i < image_count.value(); ++i) {
         auto maybe_desc = decode_ico_direntry(stream);
         if (!maybe_desc.has_value()) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
             printf("load_ico_directory: error loading entry: %lu\n", i);
 #endif
             return false;
@@ -197,13 +198,13 @@ static bool load_ico_directory(ICOLoadingContext& context)
         auto& desc = maybe_desc.value();
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
             printf("load_ico_directory: offset: %lu size: %lu doesn't fit in ICO size: %lu\n",
                 desc.offset, desc.size, context.data_size);
 #endif
             return false;
         }
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_directory: index %zu width: %u height: %u offset: %lu size: %lu\n",
             i, desc.width, desc.height, desc.offset, desc.size);
 #endif
@@ -222,14 +223,14 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
 
     memcpy(&info, context.data + desc.offset, sizeof(info));
     if (info.size != sizeof(info)) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: info size: %u, expected: %lu\n", info.size, sizeof(info));
 #endif
         return false;
     }
 
     if (info.width < 0) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: width %d < 0\n", info.width);
 #endif
         return false;
@@ -241,26 +242,26 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     }
 
     if (info.planes != 1) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: planes: %d != 1", info.planes);
 #endif
         return false;
     }
 
     if (info.bpp != 32) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: unsupported bpp: %u\n", info.bpp);
 #endif
         return false;
     }
 
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
     printf("load_ico_bmp: width: %d height: %d direction: %s bpp: %d size_image: %u\n",
         info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
 #endif
 
     if (info.compression != 0 || info.palette_size != 0 || info.important_colors != 0) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: following fields must be 0: compression: %u palette_size: %u important_colors: %u\n",
             info.compression, info.palette_size, info.important_colors);
 #endif
@@ -268,7 +269,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     }
 
     if (info.width != desc.width || info.height != 2 * desc.height) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: size mismatch: ico %dx%d, bmp %dx%d\n",
             desc.width, desc.height, info.width, info.height);
 #endif
@@ -280,7 +281,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
     size_t available_len = desc.size - sizeof(info);
     if (required_len > available_len) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
         printf("load_ico_bmp: required_len: %lu > available_len: %lu\n",
             required_len, available_len);
 #endif
@@ -329,7 +330,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
     if (png_decoder.sniff()) {
         desc.bitmap = png_decoder.bitmap();
         if (!desc.bitmap) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
             printf("load_ico_bitmap: failed to load PNG encoded image index: %lu\n", real_index);
 #endif
             return false;
@@ -337,7 +338,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
         return true;
     } else {
         if (!load_ico_bmp(context, desc)) {
-#ifdef ICO_DEBUG
+#if ICO_DEBUG
             printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", real_index);
 #endif
             return false;

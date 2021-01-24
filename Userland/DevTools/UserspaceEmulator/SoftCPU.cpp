@@ -27,6 +27,7 @@
 #include "SoftCPU.h"
 #include "Emulator.h"
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -147,7 +148,7 @@ ValueWithShadow<u8> SoftCPU::read_memory8(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x1b || address.selector() == 0x23 || address.selector() == 0x2b);
     auto value = m_emulator.mmu().read8(address);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mread_memory8: @{:04x}:{:08x} -> {:02x} ({:02x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     return value;
@@ -157,7 +158,7 @@ ValueWithShadow<u16> SoftCPU::read_memory16(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x1b || address.selector() == 0x23 || address.selector() == 0x2b);
     auto value = m_emulator.mmu().read16(address);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mread_memory16: @{:04x}:{:08x} -> {:04x} ({:04x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     return value;
@@ -167,7 +168,7 @@ ValueWithShadow<u32> SoftCPU::read_memory32(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x1b || address.selector() == 0x23 || address.selector() == 0x2b);
     auto value = m_emulator.mmu().read32(address);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mread_memory32: @{:04x}:{:08x} -> {:08x} ({:08x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     return value;
@@ -177,7 +178,7 @@ ValueWithShadow<u64> SoftCPU::read_memory64(X86::LogicalAddress address)
 {
     ASSERT(address.selector() == 0x1b || address.selector() == 0x23 || address.selector() == 0x2b);
     auto value = m_emulator.mmu().read64(address);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mread_memory64: @{:04x}:{:08x} -> {:016x} ({:016x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     return value;
@@ -186,7 +187,7 @@ ValueWithShadow<u64> SoftCPU::read_memory64(X86::LogicalAddress address)
 void SoftCPU::write_memory8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     ASSERT(address.selector() == 0x23 || address.selector() == 0x2b);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mwrite_memory8: @{:04x}:{:08x} <- {:02x} ({:02x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     m_emulator.mmu().write8(address, value);
@@ -195,7 +196,7 @@ void SoftCPU::write_memory8(X86::LogicalAddress address, ValueWithShadow<u8> val
 void SoftCPU::write_memory16(X86::LogicalAddress address, ValueWithShadow<u16> value)
 {
     ASSERT(address.selector() == 0x23 || address.selector() == 0x2b);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mwrite_memory16: @{:04x}:{:08x} <- {:04x} ({:04x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     m_emulator.mmu().write16(address, value);
@@ -204,7 +205,7 @@ void SoftCPU::write_memory16(X86::LogicalAddress address, ValueWithShadow<u16> v
 void SoftCPU::write_memory32(X86::LogicalAddress address, ValueWithShadow<u32> value)
 {
     ASSERT(address.selector() == 0x23 || address.selector() == 0x2b);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mwrite_memory32: @{:04x}:{:08x} <- {:08x} ({:08x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     m_emulator.mmu().write32(address, value);
@@ -213,7 +214,7 @@ void SoftCPU::write_memory32(X86::LogicalAddress address, ValueWithShadow<u32> v
 void SoftCPU::write_memory64(X86::LogicalAddress address, ValueWithShadow<u64> value)
 {
     ASSERT(address.selector() == 0x23 || address.selector() == 0x2b);
-#ifdef MEMORY_DEBUG
+#if MEMORY_DEBUG
     outln("\033[36;1mwrite_memory64: @{:04x}:{:08x} <- {:016x} ({:016x})\033[0m", address.selector(), address.offset(), value, value.shadow());
 #endif
     m_emulator.mmu().write64(address, value);

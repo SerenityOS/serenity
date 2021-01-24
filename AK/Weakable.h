@@ -35,10 +35,6 @@
 #    include <Kernel/Arch/i386/CPU.h>
 #endif
 
-#ifndef WEAKABLE_DEBUG
-#    define WEAKABLE_DEBUG
-#endif
-
 namespace AK {
 
 template<typename T>

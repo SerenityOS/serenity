@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
@@ -115,7 +116,7 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
         }
     }
 
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
     dbgln("gather_roots:");
     for (auto* root : roots)
         dbgln("  + {}", root);
@@ -126,7 +127,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 {
     FlatPtr dummy;
 
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
     dbgln("gather_conservative_roots:");
 #endif
 
@@ -157,19 +158,19 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     for (auto possible_pointer : possible_pointers) {
         if (!possible_pointer)
             continue;
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
         dbgln("  ? {}", (const void*)possible_pointer);
 #endif
         auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
         if (all_live_heap_blocks.contains(possible_heap_block)) {
             if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
                 if (cell->is_live()) {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
                     dbgln("  ?-> {}", (const void*)cell);
 #endif
                     roots.set(cell);
                 } else {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
                     dbgln("  #-> {}", (const void*)cell);
 #endif
                 }
@@ -186,7 +187,7 @@ public:
     {
         if (cell->is_marked())
             return;
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
         dbgln("  ! {}", cell);
 #endif
         cell->set_marked(true);
@@ -196,7 +197,7 @@ public:
 
 void Heap::mark_live_cells(const HashTable<Cell*>& roots)
 {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
     dbgln("mark_live_cells:");
 #endif
     MarkingVisitor visitor;
@@ -206,7 +207,7 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
 
 void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measurement_timer)
 {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
     dbgln("sweep_dead_cells:");
 #endif
     Vector<HeapBlock*, 32> empty_blocks;
@@ -223,7 +224,7 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         block.for_each_cell([&](Cell* cell) {
             if (cell->is_live()) {
                 if (!cell->is_marked()) {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
                     dbgln("  ~ {}", cell);
 #endif
                     block.deallocate(cell);
@@ -245,20 +246,20 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     });
 
     for (auto* block : empty_blocks) {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
         dbgln(" - HeapBlock empty @ {}: cell_size={}", block, block->cell_size());
 #endif
         allocator_for_size(block->cell_size()).block_did_become_empty({}, *block);
     }
 
     for (auto* block : full_blocks_that_became_usable) {
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
         dbgln(" - HeapBlock usable again @ {}: cell_size={}", block, block->cell_size());
 #endif
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
-#ifdef HEAP_DEBUG
+#if HEAP_DEBUG
     for_each_block([&](auto& block) {
         dbgln(" > Live HeapBlock @ {}: cell_size={}", &block, block.cell_size());
         return IterationDecision::Continue;

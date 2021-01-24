@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
 #include <LibAudio/Buffer.h>
@@ -70,7 +71,7 @@ bool WavLoaderPlugin::sniff()
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
-#ifdef AWAVLOADER_DEBUG
+#if AWAVLOADER_DEBUG
     dbgln("Read WAV of format PCM with num_channels {} sample rate {}, bits per sample {}", m_num_channels, m_sample_rate, m_bits_per_sample);
 #endif
     size_t samples_to_read = static_cast<int>(max_bytes_to_read_from_input) / (m_num_channels * (m_bits_per_sample / 8));

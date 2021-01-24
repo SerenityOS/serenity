@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Validation.h>
@@ -35,10 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-
-#ifndef DYNAMIC_LOAD_DEBUG
-#    define DYNAMIC_LOAD_DEBUG
-#endif
 
 #ifdef DYNAMIC_LOAD_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
@@ -173,7 +170,7 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 {
     ASSERT(flags & RTLD_GLOBAL);
 
-#ifdef DYNAMIC_LOAD_DEBUG
+#if DYNAMIC_LOAD_DEBUG
     m_dynamic_object->dump();
 #endif
 

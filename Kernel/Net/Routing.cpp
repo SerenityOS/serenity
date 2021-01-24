@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
 #include <Kernel/Net/LoopbackAdapter.h>
@@ -179,7 +180,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { local_adapter, local_adapter->mac_address() };
 
     if (!local_adapter && !gateway_adapter) {
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
         klog() << "Routing: Couldn't find a suitable adapter for route to " << target.to_string().characters();
 #endif
         return { nullptr, {} };
@@ -189,13 +190,13 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     IPv4Address next_hop_ip;
 
     if (local_adapter) {
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
         klog() << "Routing: Got adapter for route (direct): " << local_adapter->name().characters() << " (" << local_adapter->ipv4_address().to_string().characters() << "/" << local_adapter->ipv4_netmask().to_string().characters() << ") for " << target.to_string().characters();
 #endif
         adapter = local_adapter;
         next_hop_ip = target;
     } else if (gateway_adapter) {
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
         klog() << "Routing: Got adapter for route (using gateway " << gateway_adapter->ipv4_gateway().to_string().characters() << "): " << gateway_adapter->name().characters() << " (" << gateway_adapter->ipv4_address().to_string().characters() << "/" << gateway_adapter->ipv4_netmask().to_string().characters() << ") for " << target.to_string().characters();
 #endif
         adapter = gateway_adapter;
@@ -208,14 +209,14 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         LOCKER(arp_table().lock());
         auto addr = arp_table().resource().get(next_hop_ip);
         if (addr.has_value()) {
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
             klog() << "Routing: Using cached ARP entry for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";
 #endif
             return { adapter, addr.value() };
         }
     }
 
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
     klog() << "Routing: Sending ARP request via adapter " << adapter->name().characters() << " for IPv4 address " << next_hop_ip.to_string().characters();
 #endif
 
@@ -230,14 +231,14 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     Optional<MACAddress> addr;
     if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
             klog() << "Routing: Got ARP response using adapter " << adapter->name().characters() << " for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";
 #endif
             return { adapter, addr.value() };
         }
     }
 
-#ifdef ROUTING_DEBUG
+#if ROUTING_DEBUG
     klog() << "Routing: Couldn't find route using adapter " << adapter->name().characters() << " for " << target.to_string().characters();
 #endif
 

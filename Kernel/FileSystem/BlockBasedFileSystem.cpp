@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/IntrusiveList.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/Process.h>
@@ -144,7 +145,7 @@ KResult BlockBasedFS::write_block(unsigned index, const UserOrKernelBuffer& data
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
-#ifdef BBFS_DEBUG
+#if BBFS_DEBUG
     klog() << "BlockBasedFileSystem::write_block " << index << ", size=" << count;
 #endif
 
@@ -217,7 +218,7 @@ bool BlockBasedFS::raw_write_blocks(unsigned index, size_t count, const UserOrKe
 KResult BlockBasedFS::write_blocks(unsigned index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
-#ifdef BBFS_DEBUG
+#if BBFS_DEBUG
     klog() << "BlockBasedFileSystem::write_blocks " << index << " x" << count;
 #endif
     for (unsigned i = 0; i < count; ++i) {
@@ -232,7 +233,7 @@ KResult BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer* buffer, siz
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
-#ifdef BBFS_DEBUG
+#if BBFS_DEBUG
     klog() << "BlockBasedFileSystem::read_block " << index;
 #endif
 

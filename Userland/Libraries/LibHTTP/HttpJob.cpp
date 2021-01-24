@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCore/Gzip.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpJob.h>
@@ -37,7 +38,7 @@ void HttpJob::start()
     ASSERT(!m_socket);
     m_socket = Core::TCPSocket::construct(this);
     m_socket->on_connected = [this] {
-#ifdef CHTTPJOB_DEBUG
+#if CHTTPJOB_DEBUG
         dbgln("HttpJob: on_connected callback");
 #endif
         on_socket_connected();

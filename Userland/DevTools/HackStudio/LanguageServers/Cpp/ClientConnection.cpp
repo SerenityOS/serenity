@@ -92,7 +92,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
-#ifdef DEBUG_CPP_LANGUAGE_SERVER
+#if CPP_LANGUAGE_SERVER_DEBUG
     dbgln("InsertText for file: {}", message.file_name());
     dbgln("Text: {}", message.text());
     dbgln("[{}:{}]", message.start_line(), message.start_column());
@@ -111,7 +111,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
-#ifdef DEBUG_CPP_LANGUAGE_SERVER
+#if CPP_LANGUAGE_SERVER_DEBUG
     dbgln("RemoveText for file: {}", message.file_name());
     dbgln("[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
 #endif
@@ -136,7 +136,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
-#ifdef DEBUG_CPP_LANGUAGE_SERVER
+#if CPP_LANGUAGE_SERVER_DEBUG
     dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
 #endif
 

@@ -26,6 +26,7 @@
  */
 
 #include "Lexer.h"
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <ctype.h>
@@ -169,7 +170,7 @@ void Lexer::consume()
         return;
 
     if (is_line_terminator()) {
-#ifdef LEXER_DEBUG
+#if LEXER_DEBUG
         String type;
         if (m_current_char == '\n')
             type = "LINE FEED";
@@ -198,7 +199,7 @@ void Lexer::consume()
         if (!second_char_of_crlf) {
             m_line_number++;
             m_line_column = 1;
-#ifdef LEXER_DEBUG
+#if LEXER_DEBUG
             dbgln("Incremented line number, now at: line {}, column 1", m_line_number);
         } else {
             dbgln("Previous was CR, this is LF - not incrementing line number again.");
@@ -638,7 +639,7 @@ Token Lexer::next()
         value_start_line_number,
         value_start_column_number);
 
-#ifdef LEXER_DEBUG
+#if LEXER_DEBUG
     dbgln("------------------------------");
     dbgln("Token: {}", m_current_token.name());
     dbgln("Trivia: _{}_", m_current_token.trivia());

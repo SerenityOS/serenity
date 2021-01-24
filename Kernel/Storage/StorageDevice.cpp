@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -63,7 +64,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
         remaining = 0;
     }
 
-#ifdef STORAGE_DEVICE_DEBUG
+#if STORAGE_DEVICE_DEBUG
     klog() << "StorageDevice::read() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 
@@ -130,7 +131,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
         remaining = 0;
     }
 
-#ifdef STORAGE_DEVICE_DEBUG
+#if STORAGE_DEVICE_DEBUG
     klog() << "StorageDevice::write() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
 #endif
 

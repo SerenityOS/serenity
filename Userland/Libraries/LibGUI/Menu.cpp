@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -68,7 +69,7 @@ void Menu::set_icon(const Gfx::Bitmap* icon)
 void Menu::add_action(NonnullRefPtr<Action> action)
 {
     m_items.append(make<MenuItem>(m_menu_id, move(action)));
-#ifdef GMENU_DEBUG
+#if GMENU_DEBUG
     dbgln("GUI::Menu::add_action(): MenuItem Menu ID: {}", m_menu_id);
 #endif
 }
@@ -109,7 +110,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     unrealize_menu();
     m_menu_id = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenu>(m_name)->menu_id();
 
-#ifdef MENU_DEBUG
+#if MENU_DEBUG
     dbgln("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
 #endif
     ASSERT(m_menu_id > 0);

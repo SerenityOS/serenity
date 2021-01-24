@@ -26,11 +26,8 @@
 
 #include <AK/AllOf.h>
 #include <AK/Array.h>
+#include <AK/Debug.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
-
-#ifndef GPT_DEBUG
-#    define GPT_DEBUG
-#endif
 
 namespace Kernel {
 
@@ -103,7 +100,7 @@ bool GUIDPartitionTable::initialize()
         return false;
     }
 
-#ifdef GPT_DEBUG
+#if GPT_DEBUG
     klog() << "GUIDPartitionTable: signature - 0x" << String::format("%x", header().sig[1]) << String::format("%x", header().sig[0]);
 #endif
 

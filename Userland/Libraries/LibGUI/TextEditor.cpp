@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
@@ -478,7 +479,7 @@ void TextEditor::paint_event(PaintEvent& event)
         for_each_visual_line(line_index, [&](const Gfx::IntRect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
-#ifdef DEBUG_TEXTEDITOR
+#if TEXTEDITOR_DEBUG
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
 

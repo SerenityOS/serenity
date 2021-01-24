@@ -27,6 +27,7 @@
 #include "MallocTracer.h"
 #include "Emulator.h"
 #include "MmapRegion.h"
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <AK/TemporaryChange.h>
 #include <mallocdefs.h>
@@ -309,7 +310,7 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
             auto value = m_emulator.mmu().read32({ 0x23, other_mallocation.address + i * sizeof(u32) });
             if (value.value() == mallocation.address && !value.is_uninitialized()) {
-#ifdef REACHABLE_DEBUG
+#if REACHABLE_DEBUG
                 reportln("mallocation {:p} is reachable from other mallocation {:p}", mallocation.address, other_mallocation.address);
 #endif
                 reachable = true;
@@ -339,7 +340,7 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         for (size_t i = 0; i < pointers_in_region; ++i) {
             auto value = region.read32(i * sizeof(u32));
             if (value.value() == mallocation.address && !value.is_uninitialized()) {
-#ifdef REACHABLE_DEBUG
+#if REACHABLE_DEBUG
                 reportln("mallocation {:p} is reachable from region {:p}-{:p}", mallocation.address, region.base(), region.end() - 1);
 #endif
                 reachable = true;

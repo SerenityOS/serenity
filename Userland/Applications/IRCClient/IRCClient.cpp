@@ -31,6 +31,7 @@
 #include "IRCQuery.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
@@ -38,10 +39,6 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <strings.h>
-
-#ifndef IRC_DEBUG
-#    define IRC_DEBUG
-#endif
 
 enum IRCNumeric {
     RPL_WELCOME = 1,
@@ -255,7 +252,7 @@ void IRCClient::send_whois(const String& nick)
 
 void IRCClient::handle(const Message& msg)
 {
-#ifdef IRC_DEBUG
+#if IRC_DEBUG
     outln("IRCClient::execute: prefix='{}', command='{}', arguments={}",
         msg.prefix,
         msg.command,
@@ -486,7 +483,7 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
 
     bool is_ctcp = has_ctcp_payload(msg.arguments[1]);
 
-#ifdef IRC_DEBUG
+#if IRC_DEBUG
     outln("handle_privmsg_or_notice: type='{}'{}, sender_nick='{}', target='{}'",
         type == PrivmsgOrNotice::Privmsg ? "privmsg" : "notice",
         is_ctcp ? " (ctcp)" : "",

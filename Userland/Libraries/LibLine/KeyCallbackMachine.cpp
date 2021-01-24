@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibLine/Editor.h>
 
 namespace {
@@ -39,7 +40,7 @@ void KeyCallbackMachine::register_key_input_callback(Vector<Key> keys, Function<
 
 void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
 {
-#ifdef CALLBACK_MACHINE_DEBUG
+#if CALLBACK_MACHINE_DEBUG
     dbgln("Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
 #endif
     if (m_sequence_length == 0) {
@@ -80,7 +81,7 @@ void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
         return;
     }
 
-#ifdef CALLBACK_MACHINE_DEBUG
+#if CALLBACK_MACHINE_DEBUG
     dbgln("seq_length={}, matching vector:", m_sequence_length);
     for (auto& key : m_current_matching_keys) {
         for (auto& k : key)

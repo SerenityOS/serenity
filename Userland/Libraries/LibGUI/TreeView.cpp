@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
@@ -257,7 +258,7 @@ void TreeView::paint_event(PaintEvent& event)
         auto rect = a_rect.translated(0, y_offset);
         auto toggle_rect = a_toggle_rect.translated(0, y_offset);
 
-#ifdef DEBUG_ITEM_RECTS
+#if ITEM_RECTS_DEBUG
         painter.fill_rect(rect, Color::WarmGray);
 #endif
 
