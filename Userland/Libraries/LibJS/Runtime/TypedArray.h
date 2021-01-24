@@ -132,7 +132,10 @@ protected:
     TypedArray(u32 array_length, Object& prototype)
         : TypedArrayBase(prototype)
     {
+        ASSERT(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(T)));
         m_viewed_array_buffer = ArrayBuffer::create(global_object(), array_length * sizeof(T));
+        if (array_length)
+            ASSERT(data() != nullptr);
         m_array_length = array_length;
         m_byte_length = m_viewed_array_buffer->byte_length();
     }
