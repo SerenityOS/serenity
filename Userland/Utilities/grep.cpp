@@ -65,12 +65,14 @@ int main(int argc, char** argv)
     const char* pattern = nullptr;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
+    bool invert_match = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files starting in working directory", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions (default)", "extended-regexp", 'E');
     args_parser.add_option(pattern, "Pattern", "regexp", 'e', "Pattern");
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
+    args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
     args_parser.add_option(Core::ArgsParser::Option {
         .requires_argument = true,
         .help_string = "Action to take for binary files ([binary], text, skip)",
@@ -132,11 +134,11 @@ int main(int argc, char** argv)
             return false;
 
         auto result = re.match(str, PosixFlags::Global);
-        if (result.success) {
+        if (result.success ^ invert_match) {
             if (is_binary && binary_mode == BinaryFileMode::Binary) {
                 outln("binary file \x1B[34m{}\x1B[0m matches", filename);
             } else {
-                if (result.matches.size() && print_filename) {
+                if ((result.matches.size() || invert_match) && print_filename) {
                     out("\x1B[34m{}:\x1B[0m", filename);
                 }
 
