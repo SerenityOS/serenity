@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -186,15 +187,19 @@ int main(int argc, char** argv)
     };
 
     if (!files.size() && !recursive) {
-        auto stdin_file = Core::File::standard_input();
-        while (!stdin_file->eof()) {
-            auto line = stdin_file->read_line();
-            bool is_binary = line.bytes().contains_slow(0);
+        char* line = nullptr;
+        size_t line_len = 0;
+        ssize_t nread = 0;
+        ScopeGuard free_line = [line] { free(line); };
+        while ((nread = getline(&line, &line_len, stdin)) != -1) {
+            ASSERT(nread > 0);
+            StringView line_view(line, nread - 1);
+            bool is_binary = line_view.contains(0);
 
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return 1;
 
-            if (matches(line, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+            if (matches(line_view, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
                 return 0;
         }
     } else {
