@@ -60,9 +60,11 @@ extern char** environ;
 
 namespace Shell {
 
+// Note: Conditionally enabling this with `ifdef __serenity__` produces some odd behaviour
+// https://github.com/SerenityOS/serenity/pull/4921#discussion_r563338358
+#if 0
 // FIXME: This should eventually be removed once we've established that
 //        waitpid() is not passed the same job twice.
-#ifdef __serenity__
 #    define ENSURE_WAITID_ONCE
 #endif
 
