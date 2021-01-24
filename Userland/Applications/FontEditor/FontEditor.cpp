@@ -255,17 +255,17 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     fixed_width_checkbox.set_text("Fixed width");
     fixed_width_checkbox.set_checked(m_edited_font->is_fixed_width());
 
-    // Event hanglers
+    // Event handlers
     auto update_demo = [&] {
         demo_label_1.update();
         demo_label_2.update();
     };
 
     auto calculate_prefed_sizes = [&] {
-        int right_site_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
-        right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
+        int right_side_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
+        right_side_width = max(right_side_width, m_glyph_map_widget->preferred_width());
 
-        m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 12;
+        m_preferred_width = m_glyph_editor_widget->width() + right_side_width + 12;
         m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 346;
     };
 
