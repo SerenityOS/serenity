@@ -389,8 +389,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (result.is_error())
         return result;
 
-    if (!is_regular_file(mode) && !is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode))
-        return EINVAL;
+    if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
+        // Turn it into a regular file. (This feels rather hackish.)
+        mode |= 0100000;
+    }
 
     auto& parent_inode = parent_custody.inode();
     auto current_process = Process::current();
