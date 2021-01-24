@@ -80,6 +80,8 @@ public:
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
     void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
+    bool can_query_precise_time() const { return m_can_query_precise_time; }
+
 private:
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
