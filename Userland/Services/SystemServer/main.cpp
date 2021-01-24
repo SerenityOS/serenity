@@ -84,6 +84,14 @@ static void parse_boot_mode()
     dbgln("Booting in {} mode", g_boot_mode);
 }
 
+static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
+{
+    int rc = chown(path, uid, gid);
+    if (rc < 0 && errno != ENOENT) {
+        ASSERT_NOT_REACHED();
+    }
+}
+
 static void prepare_devfs()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
@@ -109,45 +117,26 @@ static void prepare_devfs()
     }
 
     // FIXME: Find a better way to chown without hardcoding the gid!
-    // This will fail with ENOENT in text mode.
-    rc = chown("/dev/fb0", 0, 3);
-    if (rc < 0 && errno != ENOENT) {
-        ASSERT_NOT_REACHED();
-    }
+    chown_wrapper("/dev/fb0", 0, 3);
 
     // FIXME: Find a better way to chown without hardcoding the gid!
-    rc = chown("/dev/keyboard", 0, 3);
-    if (rc < 0) {
-        ASSERT_NOT_REACHED();
-    }
+    chown_wrapper("/dev/keyboard", 0, 3);
 
     // FIXME: Find a better way to chown without hardcoding the gid!
-    rc = chown("/dev/mouse", 0, 3);
-    if (rc < 0) {
-        ASSERT_NOT_REACHED();
+    chown_wrapper("/dev/mouse", 0, 3);
+
+    for (size_t index = 0; index < 4; index++) {
+        // FIXME: Find a better way to chown without hardcoding the gid!
+        chown_wrapper(String::formatted("/dev/tty{}", index).characters(), 0, 2);
     }
 
     for (size_t index = 0; index < 4; index++) {
         // FIXME: Find a better way to chown without hardcoding the gid!
-        rc = chown(String::formatted("/dev/tty{}", index).characters(), 0, 2);
-        if (rc < 0) {
-            ASSERT_NOT_REACHED();
-        }
-    }
-
-    for (size_t index = 0; index < 4; index++) {
-        // FIXME: Find a better way to chown without hardcoding the gid!
-        rc = chown(String::formatted("/dev/ttyS{}", index).characters(), 0, 2);
-        if (rc < 0) {
-            ASSERT_NOT_REACHED();
-        }
+        chown_wrapper(String::formatted("/dev/ttyS{}", index).characters(), 0, 2);
     }
 
     // FIXME: Find a better way to chown without hardcoding the gid!
-    rc = chown("/dev/audio", 0, 4);
-    if (rc < 0) {
-        ASSERT_NOT_REACHED();
-    }
+    chown_wrapper("/dev/audio", 0, 4);
 
     rc = symlink("/proc/self/fd/0", "/dev/stdin");
     if (rc < 0) {
