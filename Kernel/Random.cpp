@@ -69,6 +69,7 @@ KernelRng::KernelRng()
 void KernelRng::wait_for_entropy()
 {
     if (!resource().is_ready()) {
+        dbgln("Entropy starvation...");
         m_seed_queue.wait_on({}, "KernelRng");
     }
 }
@@ -80,7 +81,7 @@ void KernelRng::wake_if_ready()
     }
 }
 
-size_t EntropySource::next_source { 0 };
+size_t EntropySource::next_source { static_cast<size_t>(EntropySource::Static::MaxHardcodedSourceIndex) };
 
 void get_good_random_bytes(u8* buffer, size_t buffer_size)
 {

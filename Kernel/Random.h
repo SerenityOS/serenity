@@ -147,8 +147,18 @@ class EntropySource {
     };
 
 public:
+    enum class Static : size_t {
+        Interrupts,
+        MaxHardcodedSourceIndex,
+    };
+
     EntropySource()
         : m_source(next_source++)
+    {
+    }
+
+    EntropySource(Static hardcoded_source)
+        : m_source(static_cast<size_t>(hardcoded_source))
     {
     }
 
@@ -166,7 +176,6 @@ private:
     static size_t next_source;
     size_t m_pool { 0 };
     size_t m_source;
-    Lock m_lock;
 };
 
 // NOTE: These API's are primarily about expressing intent/needs in the calling code.

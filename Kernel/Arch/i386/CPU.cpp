@@ -44,6 +44,7 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
+#include <Kernel/Random.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -57,6 +58,8 @@ static DescriptorTablePointer s_idtr;
 static Descriptor s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
+
+static EntropySource s_entropy_source_interrupts{EntropySource::Static::Interrupts};
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
@@ -709,6 +712,7 @@ void handle_interrupt(TrapFrame* trap)
     auto& regs = *trap->regs;
     ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
+    s_entropy_source_interrupts.add_random_event(irq);
     auto* handler = s_interrupt_handler[irq];
     ASSERT(handler);
     handler->increment_invoking_counter();
