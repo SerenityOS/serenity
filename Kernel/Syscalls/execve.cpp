@@ -819,12 +819,12 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // #2) ELF32 for i386
 
     if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
-        return ENOEXEC;
+        return -ENOEXEC;
     auto main_program_header = (Elf32_Ehdr*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
-        return ENOEXEC;
+        return -ENOEXEC;
     }
 
     auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);
