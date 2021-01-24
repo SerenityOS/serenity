@@ -255,26 +255,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     fixed_width_checkbox.set_text("Fixed width");
     fixed_width_checkbox.set_checked(m_edited_font->is_fixed_width());
 
-    // Bottom
-    auto& bottom_container = add<GUI::Widget>();
-    bottom_container.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_container.layout()->set_margins({ 8, 0, 8, 8 });
-    bottom_container.set_fixed_height(32);
-
-    bottom_container.layout()->add_spacer();
-
-    auto& save_button = bottom_container.add<GUI::Button>();
-    save_button.set_fixed_size(80, 22);
-    save_button.set_text("Save");
-    save_button.on_click = [this](auto) { save_as(m_path); };
-
-    auto& quit_button = bottom_container.add<GUI::Button>();
-    quit_button.set_fixed_size(80, 22);
-    quit_button.set_text("Quit");
-    quit_button.on_click = [](auto) {
-        exit(0);
-    };
-
     // Event hanglers
     auto update_demo = [&] {
         demo_label_1.update();
@@ -286,7 +266,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
 
         m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 380;
+        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 346;
     };
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
