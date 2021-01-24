@@ -35,17 +35,18 @@ bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
     ASSERT(data != nullptr); // Thread that is requesting to be blocked
     ASSERT(m_lock.is_locked());
     ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
-    if (m_wake_requested) {
+    if (m_wake_requested || !m_should_block) {
         m_wake_requested = false;
-        dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: do not block thread {}, wake was pending", this, data);
+        dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: do not block thread {}, {}", this, data, m_should_block ? "wake was pending" : "not blocking");
         return false;
     }
     dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: should block thread {}", this, data);
     return true;
 }
 
-void WaitQueue::wake_one()
+u32 WaitQueue::wake_one()
 {
+    u32 did_wake = 0;
     ScopedSpinLock lock(m_lock);
     dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: wake_one", this);
     bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
@@ -55,11 +56,14 @@ void WaitQueue::wake_one()
         dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: wake_one unblocking {}", this, data);
         if (blocker.unblock()) {
             stop_iterating = true;
+            did_wake = 1;
             return true;
         }
         return false;
     });
     m_wake_requested = !did_unblock_one;
+    dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: wake_one woke {} threads", this, did_wake);
+    return did_wake;
 }
 
 u32 WaitQueue::wake_n(u32 wake_count)
@@ -84,6 +88,7 @@ u32 WaitQueue::wake_n(u32 wake_count)
         return false;
     });
     m_wake_requested = !did_unblock_some;
+    dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: wake_n({}) woke {} threads", this, wake_count, did_wake);
     return did_wake;
 }
 
@@ -108,6 +113,7 @@ u32 WaitQueue::wake_all()
         return false;
     });
     m_wake_requested = !did_unblock_any;
+    dbgln<WAITQUEUE_DEBUG>("WaitQueue @ {}: wake_all woke {} threads", this, did_wake);
     return did_wake;
 }
 
