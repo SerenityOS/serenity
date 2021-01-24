@@ -305,17 +305,16 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
     // flagged by calling Scheduler::donate_to or Scheduler::yield
     // above. We have to do it this way because we intentionally
     // leave the critical section here to be able to switch contexts.
-    u32 prev_flags;
-    u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+    auto critical_before = Processor::current().in_critical();
+    ASSERT(critical_before);
 
-    // CONTEXT SWITCH HAPPENS HERE!
+    Scheduler::yield_from_critical();
 
-    // NOTE: We may be on a different CPU now!
-    Processor::current().restore_critical(prev_crit, prev_flags);
-
+    ASSERT(Processor::current().in_critical() == critical_before);
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
         RESTORE_LOCK(process().big_lock(), previous_locked, lock_count_to_restore);
+        ASSERT(Processor::current().in_critical() == critical_before);
     }
 }
 
