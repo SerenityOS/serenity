@@ -120,7 +120,7 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
     String html_data = gemini_document->render_to_html();
 
-#ifdef GEMINI_DEBUG
+#if GEMINI_DEBUG
     dbgln("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 #endif

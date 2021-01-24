@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <LibJS/Heap/Heap.h>
@@ -397,7 +398,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
             return false;
         }
 
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Defining new property {} with accessor descriptor {{ attributes={}, getter={}, setter={} }}", property_name.to_display_string(), attributes, getter, setter);
 #endif
 
@@ -417,7 +418,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
     if (vm.exception())
         return {};
 
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
     dbgln("Defining new property {} with data descriptor {{ attributes={}, value={} }}", property_name.to_display_string(), attributes, value);
 #endif
 
@@ -497,7 +498,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
     bool new_property = !metadata.has_value();
 
     if (!is_extensible() && new_property) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow define_property of non-extensible object");
 #endif
         if (throw_exceptions && vm().in_strict_mode())
@@ -526,7 +527,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
     }
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow reconfig of non-configurable property");
 #endif
         if (throw_exceptions)
@@ -542,14 +543,14 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         }
         metadata = shape().lookup(property_name);
 
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Reconfigured property {}, new shape says offset is {} and my storage capacity is {}", property_name.to_display_string(), metadata.value().offset, m_storage.size());
 #endif
     }
 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow write to non-writable property");
 #endif
         return false;
@@ -574,7 +575,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     auto new_property = !existing_property.has_value();
 
     if (!is_extensible() && new_property) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow define_property of non-extensible object");
 #endif
         if (throw_exceptions && vm().in_strict_mode())
@@ -593,7 +594,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow reconfig of non-configurable property");
 #endif
         if (throw_exceptions)
@@ -603,7 +604,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 
     auto value_here = new_property ? Value() : existing_property.value().value;
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
-#ifdef OBJECT_DEBUG
+#if OBJECT_DEBUG
         dbgln("Disallow write to non-writable property");
 #endif
         return false;

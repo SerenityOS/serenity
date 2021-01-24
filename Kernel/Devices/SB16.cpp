@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
@@ -241,7 +242,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
             return ENOMEM;
     }
 
-#ifdef SB16_DEBUG
+#if SB16_DEBUG
     klog() << "SB16: Writing buffer of " << length << " bytes";
 #endif
     ASSERT(length <= PAGE_SIZE);

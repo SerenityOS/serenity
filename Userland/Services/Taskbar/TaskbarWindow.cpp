@@ -26,6 +26,7 @@
 
 #include "TaskbarWindow.h"
 #include "TaskbarButton.h"
+#include <AK/Debug.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/AppFile.h>
@@ -228,7 +229,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
     case GUI::Event::WM_WindowRemoved: {
-#ifdef EVENT_DEBUG
+#if EVENT_DEBUG
         auto& removed_event = static_cast<GUI::WMWindowRemovedEvent&>(event);
         dbgln("WM_WindowRemoved: client_id={}, window_id={}",
             removed_event.client_id(),
@@ -241,7 +242,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_WindowRectChanged: {
-#ifdef EVENT_DEBUG
+#if EVENT_DEBUG
         auto& changed_event = static_cast<GUI::WMWindowRectChangedEvent&>(event);
         dbgln("WM_WindowRectChanged: client_id={}, window_id={}, rect={}",
             changed_event.client_id(),
@@ -262,7 +263,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
 
     case GUI::Event::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GUI::WMWindowStateChangedEvent&>(event);
-#ifdef EVENT_DEBUG
+#if EVENT_DEBUG
         dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_minimized={}",
             changed_event.client_id(),
             changed_event.window_id(),

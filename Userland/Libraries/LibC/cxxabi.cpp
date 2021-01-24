@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +63,7 @@ void __cxa_finalize(void* dso_handle)
 
     int entry_index = __exit_entry_count;
 
-#ifdef GLOBAL_DTORS_DEBUG
+#if GLOBAL_DTORS_DEBUG
     dbgprintf("__cxa_finalize: %d entries in the finalizer list\n", entry_index);
 #endif
 
@@ -70,7 +71,7 @@ void __cxa_finalize(void* dso_handle)
         auto& exit_entry = __exit_entries[entry_index];
         bool needs_calling = !exit_entry.has_been_called && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
-#ifdef GLOBAL_DTORS_DEBUG
+#if GLOBAL_DTORS_DEBUG
             dbgprintf("__cxa_finalize: calling entry[%d] %p(%p) dso: %p\n", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
 #endif
             exit_entry.method(exit_entry.parameter);

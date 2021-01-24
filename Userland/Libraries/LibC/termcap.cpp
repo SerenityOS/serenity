@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -40,7 +41,7 @@ char* BC;
 
 int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
-#ifdef TERMCAP_DEBUG
+#if TERMCAP_DEBUG
     fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
 #endif
     PC = '\0';
@@ -100,7 +101,7 @@ static void ensure_caps()
 char* tgetstr(const char* id, char** area)
 {
     ensure_caps();
-#ifdef TERMCAP_DEBUG
+#if TERMCAP_DEBUG
     fprintf(stderr, "tgetstr: id='%s'\n", id);
 #endif
     auto it = caps->find(id);
@@ -119,7 +120,7 @@ char* tgetstr(const char* id, char** area)
 
 int tgetflag([[maybe_unused]] const char* id)
 {
-#ifdef TERMCAP_DEBUG
+#if TERMCAP_DEBUG
     fprintf(stderr, "tgetflag: '%s'\n", id);
 #endif
     auto it = caps->find(id);
@@ -130,7 +131,7 @@ int tgetflag([[maybe_unused]] const char* id)
 
 int tgetnum(const char* id)
 {
-#ifdef TERMCAP_DEBUG
+#if TERMCAP_DEBUG
     fprintf(stderr, "tgetnum: '%s'\n", id);
 #endif
     auto it = caps->find(id);

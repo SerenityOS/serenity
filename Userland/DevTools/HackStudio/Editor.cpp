@@ -30,6 +30,7 @@
 #include "HackStudio.h"
 #include "Language.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -153,7 +154,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
         dbgln("no man path for {}", hovered_token);
 #endif
         m_documentation_tooltip_window->hide();
@@ -164,7 +165,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
     dbgln("opening {}", it->value);
 #endif
     auto file = Core::File::construct(it->value);
@@ -235,7 +236,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             auto end_line_length = document().line(span.range.end().line()).length();
             adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
             dbgln("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 #endif
 
@@ -301,7 +302,7 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
         adjusted_range.end().set_column(adjusted_range.end().column() + 1);
         auto span_text = document().text_in_range(adjusted_range);
         auto header_path = span_text.substring(1, span_text.length() - 2);
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
         dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
 #endif
         navigate_to_include_if_available(header_path);
@@ -333,7 +334,7 @@ static HashMap<String, String>& include_paths()
             auto path = it.next_full_path();
             if (!Core::File::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
                 dbgln("Adding header \"{}\" in path \"{}\"", key, path);
 #endif
                 paths.set(key, path);
@@ -357,7 +358,7 @@ void Editor::navigate_to_include_if_available(String path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
-#ifdef EDITOR_DEBUG
+#if EDITOR_DEBUG
         dbgln("no header {} found.", path);
 #endif
         return;

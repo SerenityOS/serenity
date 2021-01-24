@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibVT/Terminal.h>
@@ -822,7 +823,7 @@ void Terminal::ICH(const ParamVector& params)
 
 void Terminal::on_input(u8 ch)
 {
-#ifdef TERMINAL_DEBUG
+#if TERMINAL_DEBUG
     dbgln("Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
 

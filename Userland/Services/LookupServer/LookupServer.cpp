@@ -28,6 +28,7 @@
 #include "DNSRequest.h"
 #include "DNSResponse.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -113,7 +114,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
         return;
     }
     auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
     dbgln("Got request for '{}'", hostname);
 #endif
 
@@ -123,7 +124,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
         responses.append(known_host.value());
     } else if (!hostname.is_empty()) {
         for (auto& nameserver : m_nameservers) {
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
             dbgln("Doing lookup using nameserver '{}'", nameserver);
 #endif
             bool did_get_response = false;
@@ -174,7 +175,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         if (cached_lookup.question.record_type() == record_type) {
             Vector<String> responses;
             for (auto& cached_answer : cached_lookup.answers) {
-#ifdef LOOKUPSERVER_DEBUG
+#if LOOKUPSERVER_DEBUG
                 dbgln("Cache hit: {} -> {}, expired: {}", hostname, cached_answer.record_data(), cached_answer.has_expired());
 #endif
                 if (!cached_answer.has_expired())

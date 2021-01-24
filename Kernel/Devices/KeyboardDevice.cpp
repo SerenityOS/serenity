@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -293,7 +294,7 @@ void KeyboardDevice::irq_handle_byte_read(u8 byte)
         return;
     }
 
-#ifdef KEYBOARD_DEBUG
+#if KEYBOARD_DEBUG
     dbgln("Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
 #endif
     switch (ch) {
