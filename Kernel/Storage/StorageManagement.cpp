@@ -25,6 +25,7 @@
  */
 
 #include <AK/UUID.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/PCI/Access.h>
@@ -60,11 +61,13 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
 NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
 {
     NonnullRefPtrVector<StorageController> controllers;
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-        if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
-            controllers.append(IDEController::initialize(address, force_pio));
-        }
-    });
+    if (!kernel_command_line().contains("disable_ide")) {
+        PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
+            if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
+                controllers.append(IDEController::initialize(address, force_pio));
+            }
+        });
+    }
     controllers.append(RamdiskController::initialize());
     return controllers;
 }
