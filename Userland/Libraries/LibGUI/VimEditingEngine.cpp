@@ -73,6 +73,8 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
     } else if (m_previous_key == KeyCode::Key_G) {
         if (event.key() == KeyCode::Key_G) {
             move_to_first_line();
+        } else if (event.key() == KeyCode::Key_E) {
+            move_to_end_of_previous_word();
         }
         m_previous_key = {};
     } else {
@@ -139,7 +141,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 switch_to_insert_mode();
                 break;
             case (KeyCode::Key_B):
-                move_to_previous_span(event); // FIXME: This probably isn't 100% correct.
+                move_to_beginning_of_previous_word();
                 break;
             case (KeyCode::Key_Backspace):
             case (KeyCode::Key_H):
@@ -147,6 +149,11 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_left(event);
                 break;
             case (KeyCode::Key_D):
+                m_previous_key = event.key();
+                break;
+            case (KeyCode::Key_E):
+                move_to_end_of_next_word();
+                break;
             case (KeyCode::Key_G):
                 m_previous_key = event.key();
                 break;
@@ -174,7 +181,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 m_editor->undo();
                 break;
             case (KeyCode::Key_W):
-                move_to_next_span(event); // FIXME: This probably isn't 100% correct.
+                move_to_beginning_of_next_word();
                 break;
             case (KeyCode::Key_X):
                 delete_char();
@@ -202,6 +209,9 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
     if (m_previous_key == KeyCode::Key_G) {
         if (event.key() == KeyCode::Key_G) {
             move_to_first_line();
+            update_selection_on_cursor_move();
+        } else if (event.key() == KeyCode::Key_E) {
+            move_to_end_of_previous_word();
             update_selection_on_cursor_move();
         }
         m_previous_key = {};
@@ -260,7 +270,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
         if (!event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_B):
-                move_to_previous_span(event); // FIXME: This probably isn't 100% correct.
+                move_to_beginning_of_previous_word();
                 update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_Backspace):
@@ -272,6 +282,10 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
             case (KeyCode::Key_D):
                 // TODO: Yank selected text
                 m_editor->do_delete();
+                break;
+            case (KeyCode::Key_E):
+                move_to_end_of_next_word();
+                update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_G):
                 m_previous_key = event.key();
@@ -295,7 +309,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
                 // FIXME: Set selection to uppercase.
                 break;
             case (KeyCode::Key_W):
-                move_to_next_span(event); // FIXME: This probably isn't 100% correct.
+                move_to_beginning_of_next_word();
                 update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_X):
