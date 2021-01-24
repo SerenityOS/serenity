@@ -27,10 +27,6 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 
-#ifndef EBR_DEBUG
-#    define EBR_DEBUG
-#endif
-
 namespace Kernel {
 
 Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> EBRPartitionTable::try_to_initialize(const StorageDevice& device)

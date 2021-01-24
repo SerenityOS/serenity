@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/MACAddress.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
@@ -185,7 +186,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 
         m_entropy_source.add_random_event(status);
 
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
         klog() << "RTL8139NetworkAdapter::handle_irq status=0x" << String::format("%x", status);
 #endif
 
@@ -193,7 +194,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
             break;
 
         if (status & INT_RXOK) {
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
             klog() << "RTL8139NetworkAdapter: rx ready";
 #endif
             receive();
@@ -203,7 +204,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
             reset();
         }
         if (status & INT_TXOK) {
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
             klog() << "RTL8139NetworkAdapter: tx complete";
 #endif
         }
@@ -291,7 +292,7 @@ void RTL8139NetworkAdapter::read_mac_address()
 
 void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
     klog() << "RTL8139NetworkAdapter::send_raw length=" << payload.size();
 #endif
 
@@ -315,7 +316,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
         klog() << "RTL8139NetworkAdapter: hardware buffers full; discarding packet";
         return;
     } else {
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
         klog() << "RTL8139NetworkAdapter: chose buffer " << hw_buffer << " @ " << PhysicalAddress(m_tx_buffers[hw_buffer]);
 #endif
         m_tx_next_buffer = (hw_buffer + 1) % 4;
@@ -330,7 +331,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     // 60 bytes if necessary to make sure the whole thing is large enough.
     auto length = payload.size();
     if (length < 60) {
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
         klog() << "RTL8139NetworkAdapter: adjusting payload size from " << length << " to 60";
 #endif
         length = 60;
@@ -346,7 +347,7 @@ void RTL8139NetworkAdapter::receive()
     u16 status = *(const u16*)(start_of_packet + 0);
     u16 length = *(const u16*)(start_of_packet + 2);
 
-#ifdef RTL8139_DEBUG
+#if RTL8139_DEBUG
     klog() << "RTL8139NetworkAdapter::receive status=0x" << String::format("%x", status) << " length=" << length << " offset=" << m_rx_buffer_offset;
 #endif
 

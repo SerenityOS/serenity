@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Widget.h>
@@ -81,7 +82,7 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
         context.set_viewport_rect(old_viewport_rect);
         context.painter().restore();
 
-#ifdef DEBUG_HIGHLIGHT_FOCUSED_FRAME
+#if HIGHLIGHT_FOCUSED_FRAME_DEBUG
         if (dom_node().content_frame()->is_focused_frame()) {
             context.painter().draw_rect(absolute_rect().to<int>(), Color::Cyan);
         }

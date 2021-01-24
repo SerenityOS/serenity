@@ -25,6 +25,7 @@
  */
 
 #include "HexEditor.h"
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
@@ -222,7 +223,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
         outln("HexEditor::mousedown_event(hex): offset={}", offset);
 #endif
 
@@ -244,7 +245,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
         outln("HexEditor::mousedown_event(text): offset={}", offset);
 #endif
 
@@ -344,7 +345,7 @@ void HexEditor::scroll_position_into_view(int position)
 
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
     outln("HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
 #endif
 

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Demangle.h>
 #include <AK/Memory.h>
 #include <AK/QuickSort.h>
@@ -51,7 +52,7 @@ Image::~Image()
 {
 }
 
-#ifdef ELF_IMAGE_DEBUG
+#if ELF_IMAGE_DEBUG
 static const char* object_file_type_to_string(Elf32_Half type)
 {
     switch (type) {
@@ -91,7 +92,7 @@ unsigned Image::symbol_count() const
 
 void Image::dump() const
 {
-#ifdef ELF_IMAGE_DEBUG
+#if ELF_IMAGE_DEBUG
     dbgln("ELF::Image({:p}) {{", this);
     dbgln("    is_valid: {}", is_valid());
 
@@ -293,7 +294,7 @@ const Image::RelocationSection Image::Section::relocations() const
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
-#ifdef ELF_IMAGE_DEBUG
+#if ELF_IMAGE_DEBUG
     dbgln("Found relocations for {} in {}", name(), relocation_section.name());
 #endif
     return static_cast<const RelocationSection>(relocation_section);

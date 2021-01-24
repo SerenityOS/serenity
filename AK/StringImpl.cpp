@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Memory.h>
@@ -31,7 +32,7 @@
 #include <AK/StringImpl.h>
 #include <AK/kmalloc.h>
 
-#ifdef DEBUG_STRINGIMPL
+#if STRINGIMPL_DEBUG
 unsigned g_stringimpl_count;
 static HashTable<StringImpl*>* g_all_live_stringimpls;
 
@@ -62,7 +63,7 @@ StringImpl& StringImpl::the_empty_stringimpl()
 StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
     : m_length(length)
 {
-#ifdef DEBUG_STRINGIMPL
+#if STRINGIMPL_DEBUG
     if (!g_all_live_stringimpls)
         g_all_live_stringimpls = new HashTable<StringImpl*>;
     ++g_stringimpl_count;
@@ -74,7 +75,7 @@ StringImpl::~StringImpl()
 {
     if (m_fly)
         FlyString::did_destroy_impl({}, *this);
-#ifdef DEBUG_STRINGIMPL
+#if STRINGIMPL_DEBUG
     --g_stringimpl_count;
     g_all_live_stringimpls->remove(this);
 #endif

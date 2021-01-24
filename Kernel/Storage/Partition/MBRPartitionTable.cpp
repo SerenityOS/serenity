@@ -25,11 +25,8 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
-
-#ifndef MBR_DEBUG
-#    define MBR_DEBUG
-#endif
 
 namespace Kernel {
 
@@ -123,7 +120,7 @@ const MBRPartitionTable::Header& MBRPartitionTable::header() const
 bool MBRPartitionTable::initialize()
 {
     auto& header = this->header();
-#ifdef MBR_DEBUG
+#if MBR_DEBUG
 
     klog() << "Master Boot Record: mbr_signature=0x" << String::format("%x", header.mbr_signature);
 

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
@@ -89,7 +90,7 @@ void NetworkTask_main(void*)
                 return;
             packet_size = adapter.dequeue_packet(buffer, buffer_size, packet_timestamp);
             pending_packets--;
-#ifdef NETWORK_TASK_DEBUG
+#if NETWORK_TASK_DEBUG
             klog() << "NetworkTask: Dequeued packet from " << adapter.name().characters() << " (" << packet_size << " bytes)";
 #endif
         });
@@ -113,11 +114,11 @@ void NetworkTask_main(void*)
             continue;
         }
         auto& eth = *(const EthernetFrameHeader*)buffer;
-#ifdef ETHERNET_DEBUG
+#if ETHERNET_DEBUG
         dbgln("NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
 #endif
 
-#ifdef ETHERNET_VERY_DEBUG
+#if ETHERNET_VERY_DEBUG
         for (size_t i = 0; i < packet_size; i++) {
             klog() << String::format("%#02x", buffer[i]);
 
@@ -170,7 +171,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         return;
     }
 
-#ifdef ARP_DEBUG
+#if ARP_DEBUG
     dbgln("handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
         packet.operation(),
         packet.sender_hardware_address().to_string(),
@@ -224,7 +225,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const timeva
         return;
     }
 
-#ifdef IPV4_DEBUG
+#if IPV4_DEBUG
     klog() << "handle_ipv4: source=" << packet.source().to_string().characters() << ", target=" << packet.destination().to_string().characters();
 #endif
 
@@ -244,7 +245,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const timeva
 void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 {
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
-#ifdef ICMP_DEBUG
+#if ICMP_DEBUG
     dbgln("handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 #endif
 
@@ -299,7 +300,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
     }
 
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
-#ifdef UDP_DEBUG
+#if UDP_DEBUG
     klog() << "handle_udp: source=" << ipv4_packet.source().to_string().characters() << ":" << udp_packet.source_port() << ", destination=" << ipv4_packet.destination().to_string().characters() << ":" << udp_packet.destination_port() << " length=" << udp_packet.length();
 #endif
 
@@ -336,7 +337,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
     dbgln("handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
         ipv4_packet.source().to_string(),
         tcp_packet.source_port(),
@@ -361,7 +362,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
     klog() << "handle_tcp: looking for socket; tuple=" << tuple.to_string().characters();
 #endif
 
@@ -389,7 +390,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->local_port() == tcp_packet.destination_port());
 
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
     klog() << "handle_tcp: got socket; state=" << socket->tuple().to_string().characters() << " " << TCPSocket::to_string(socket->state());
 #endif
 
@@ -409,7 +410,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
     case TCPSocket::State::Listen:
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN: {
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
             klog() << "handle_tcp: incoming connection";
 #endif
             auto& local_address = ipv4_packet.destination();
@@ -420,7 +421,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
                 return;
             }
             LOCKER(client->lock());
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
             klog() << "handle_tcp: created new client socket with tuple " << client->tuple().to_string().characters();
 #endif
             client->set_sequence_number(1000);
@@ -584,7 +585,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
         socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
 
-#ifdef TCP_DEBUG
+#if TCP_DEBUG
         klog() << "Got packet with ack_no=" << tcp_packet.ack_number() << ", seq_no=" << tcp_packet.sequence_number() << ", payload_size=" << payload_size << ", acking it with new ack_no=" << socket->ack_number() << ", seq_no=" << socket->sequence_number();
 #endif
 

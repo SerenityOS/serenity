@@ -26,6 +26,7 @@
 
 #include "UCIEndpoint.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -42,7 +43,7 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 
 void Endpoint::send_command(const Command& command)
 {
-#ifdef UCI_DEBUG
+#if UCI_DEBUG
     dbgln("{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
 #endif
     m_out->write(command.to_string());
@@ -93,7 +94,7 @@ NonnullOwnPtr<Command> Endpoint::read_command()
 {
     String line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
 
-#ifdef UCI_DEBUG
+#if UCI_DEBUG
     dbgln("{} Received UCI Command: {}", class_name(), line);
 #endif
 

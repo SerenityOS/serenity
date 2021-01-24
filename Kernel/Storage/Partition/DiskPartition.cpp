@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 
@@ -60,7 +61,7 @@ KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, UserOr
 {
     unsigned adjust = m_metadata.start_block() * block_size();
 
-#ifdef OFFD_DEBUG
+#if OFFD_DEBUG
     klog() << "DiskPartition::read offset=" << fd.offset() << " adjust=" << adjust << " len=" << len;
 #endif
 
@@ -71,7 +72,7 @@ bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
 
-#ifdef OFFD_DEBUG
+#if OFFD_DEBUG
     klog() << "DiskPartition::can_read offset=" << offset << " adjust=" << adjust;
 #endif
 
@@ -82,7 +83,7 @@ KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
 
-#ifdef OFFD_DEBUG
+#if OFFD_DEBUG
     klog() << "DiskPartition::write offset=" << offset << " adjust=" << adjust << " len=" << len;
 #endif
 
@@ -93,7 +94,7 @@ bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
 {
     unsigned adjust = m_metadata.start_block() * block_size();
 
-#ifdef OFFD_DEBUG
+#if OFFD_DEBUG
     klog() << "DiskPartition::can_write offset=" << offset << " adjust=" << adjust;
 #endif
 
