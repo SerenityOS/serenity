@@ -26,6 +26,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
+#include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -70,7 +71,13 @@ int main(int argc, char** argv)
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
     ASSERT(json.has_value());
-    json.value().as_array().for_each([](auto& value) {
+
+    Vector<JsonValue> sorted_regions = json.value().as_array().values();
+    quick_sort(sorted_regions, [](auto& a, auto& b) {
+        return a.as_object().get("address").to_u32() < b.as_object().get("address").to_u32();
+    });
+
+    for (auto& value : sorted_regions) {
         auto map = value.as_object();
         auto address = map.get("address").to_int();
         auto size = map.get("size").to_string();
@@ -100,7 +107,7 @@ int main(int argc, char** argv)
         auto name = map.get("name").to_string();
         printf("%-20s ", name.characters());
         printf("\n");
-    });
+    }
 
     return 0;
 }
