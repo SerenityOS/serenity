@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -148,6 +149,15 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         if (vm.exception()) {                                                                                                          \
             /* Re-throw more specific RangeError */                                                                                    \
             vm.clear_exception();                                                                                                      \
+            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
+            return {};                                                                                                                 \
+        }                                                                                                                              \
+        if (array_length > NumericLimits<i32>::max()) {                                                                                \
+            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
+            return {};                                                                                                                 \
+        }                                                                                                                              \
+        /* FIXME: What is the best/correct behavior here? */                                                                           \
+        if (Checked<u32>::multiplication_would_overflow(array_length, sizeof(Type))) {                                                 \
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
             return {};                                                                                                                 \
         }                                                                                                                              \
