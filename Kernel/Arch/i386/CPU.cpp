@@ -1291,6 +1291,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         write_cr3(to_tss.cr3);
 
     to_thread->set_cpu(processor.id());
+    processor.restore_in_critical(to_thread->saved_critical());
 
     asm volatile("fxrstor %0"
         ::"m"(to_thread->fpu_state()));
@@ -1308,6 +1309,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     ASSERT(is_kernel_mode());
 
     dbgln<CONTEXT_SWITCH_DEBUG>("switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+    from_thread->save_critical(m_in_critical);
 
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
@@ -1347,6 +1349,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
           [to_eip] "c" (to_thread->tss().eip),
           [from_thread] "d" (from_thread),
           [to_thread] "a" (to_thread)
+        : "memory"
     );
 
     dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
