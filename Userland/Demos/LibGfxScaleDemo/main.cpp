@@ -113,6 +113,10 @@ void Canvas::draw(Gfx::Painter& painter)
     ASSERT(!grid->has_alpha_channel());
     painter.fill_rect({ 25, 122, 62, 20 }, Color::Green);
     painter.blit({ 25, 122 }, *grid, { (grid->width() - 62) / 2, (grid->height() - 20) / 2 + 40, 62, 20 }, 0.9);
+
+    painter.blit_brightened({ 88, 122 }, *buggie, { 2, 30, 62, 20 });
+    painter.blit_dimmed({ 140, 122 }, *buggie, { 2, 30, 62, 20 });
+    painter.blit_disabled({ 192, 122 }, *buggie, { 2, 30, 62, 20 }, palette());
 }
 
 int main(int argc, char** argv)
