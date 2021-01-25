@@ -121,14 +121,6 @@ public:
     virtual size_t element_size() const override { return sizeof(T); };
 
 protected:
-    TypedArray(ArrayBuffer& array_buffer, u32 array_length, Object& prototype)
-        : TypedArrayBase(prototype)
-    {
-        m_viewed_array_buffer = &array_buffer;
-        m_array_length = array_length;
-        m_byte_length = m_viewed_array_buffer->byte_length();
-    }
-
     TypedArray(u32 array_length, Object& prototype)
         : TypedArrayBase(prototype)
     {
