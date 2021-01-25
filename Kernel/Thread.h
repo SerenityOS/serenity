@@ -1106,6 +1106,14 @@ public:
     u32 ticks_in_user() const { return m_ticks_in_user; }
     u32 ticks_in_kernel() const { return m_ticks_in_kernel; }
 
+    enum class PreviousMode : u8 {
+        KernelMode = 0,
+        UserMode
+    };
+    PreviousMode previous_mode() const { return m_previous_mode; }
+    void set_previous_mode(PreviousMode mode) { m_previous_mode = mode; }
+    TrapFrame*& current_trap() { return m_current_trap; }
+
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
@@ -1230,6 +1238,7 @@ private:
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS32 m_tss;
+    TrapFrame* m_current_trap { nullptr };
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks_left { 0 };
@@ -1261,6 +1270,7 @@ private:
     Atomic<bool> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };
+    PreviousMode m_previous_mode { PreviousMode::UserMode };
 
     unsigned m_syscall_count { 0 };
     unsigned m_inode_faults { 0 };

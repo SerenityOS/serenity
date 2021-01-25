@@ -1078,6 +1078,7 @@ private:
 
 struct TrapFrame {
     u32 prev_irq_level;
+    TrapFrame* next_trap;
     RegisterState* regs; // must be last
 
     TrapFrame() = delete;
@@ -1087,7 +1088,7 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
-#define TRAP_FRAME_SIZE (2 * 4)
+#define TRAP_FRAME_SIZE (3 * 4)
 static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
 
 extern "C" void enter_trap_no_irq(TrapFrame*);

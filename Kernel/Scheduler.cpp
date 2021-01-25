@@ -369,10 +369,12 @@ bool Scheduler::context_switch(Thread* thread)
     ASSERT(thread == Thread::current());
 
 #if ARCH(I386)
-    auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
-    if (thread->process().is_user_process() && iopl != 0) {
-        dbgln("PANIC: Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
-        Processor::halt();
+    if (thread->process().is_user_process()) {
+        auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
+        if (iopl != 0) {
+            dbgln("PANIC: Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
+            Processor::halt();
+        }
     }
 #endif
 
@@ -392,7 +394,7 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
         auto current_thread = Thread::current();
-        if (!current_thread->is_in_block()) {
+        if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode) {
             ScopedSpinLock lock(current_thread->get_lock());
             if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
                 current_thread->dispatch_one_pending_signal();
@@ -484,6 +486,10 @@ void Scheduler::timer_tick(const RegisterState& regs)
     auto current_thread = Processor::current().current_thread();
     if (!current_thread)
         return;
+
+    // Sanity checks
+    ASSERT(current_thread->current_trap());
+    ASSERT(current_thread->current_trap()->regs == &regs);
 
     bool is_bsp = Processor::current().id() == 0;
     if (!is_bsp)

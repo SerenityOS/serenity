@@ -1463,6 +1463,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
     trap.regs = &iretframe;
     trap.prev_irq_level = 0;
+    trap.next_trap = nullptr;
 
     stack_top -= sizeof(u32); // pointer to TrapFrame
     *reinterpret_cast<u32*>(stack_top) = stack_top + 4;
@@ -1612,6 +1613,15 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
     trap.prev_irq_level = m_in_irq;
     if (raise_irq)
         m_in_irq++;
+    if (m_current_thread) {
+        auto& current_trap = m_current_thread->current_trap();
+        trap.next_trap = current_trap;
+        current_trap = &trap;
+        // The cs register of this trap tells us where we will return back to
+        m_current_thread->set_previous_mode(((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+    } else {
+        trap.next_trap = nullptr;
+    }
 }
 
 void Processor::exit_trap(TrapFrame& trap)
@@ -1624,6 +1634,21 @@ void Processor::exit_trap(TrapFrame& trap)
 
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
+
+    if (m_current_thread) {
+        auto& current_trap = m_current_thread->current_trap();
+        current_trap = trap.next_trap;
+        if (current_trap) {
+            // If we have another higher level trap then we probably returned
+            // from an interrupt or irq handler. The cs register of the
+            // new/higher level trap tells us what the mode prior to it was
+            m_current_thread->set_previous_mode(((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+        } else {
+            // If we don't have a higher level trap then we're back in user mode.
+            // Unless we're a kernel process, in which case we're always in kernel mode
+            m_current_thread->set_previous_mode(m_current_thread->process().is_kernel_process() ? Thread::PreviousMode::KernelMode : Thread::PreviousMode::UserMode);
+        }
+    }
 }
 
 void Processor::check_invoke_scheduler()
