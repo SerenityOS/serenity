@@ -892,6 +892,7 @@ void ClientConnection::may_have_become_unresponsive()
     m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
         set_unresponsive(true);
     });
+    m_ping_timer->start();
 }
 
 void ClientConnection::did_become_responsive()
