@@ -467,7 +467,7 @@ public:
 
     bool has_promises() const
     {
-        return m_promises;
+        return m_has_promises;
     }
     bool has_promised(Pledge pledge) const
     {
@@ -637,6 +637,7 @@ private:
 
     RefPtr<Timer> m_alarm_timer;
 
+    bool m_has_promises { false };
     u32 m_promises { 0 };
     u32 m_execpromises { 0 };
 
