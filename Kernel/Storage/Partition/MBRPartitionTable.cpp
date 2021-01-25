@@ -25,7 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
 
 namespace Kernel {

@@ -25,8 +25,8 @@
  */
 
 #include <AK/BinarySearch.h>
-#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>

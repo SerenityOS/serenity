@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/Debug.h>
 #include <AK/Types.h>
+#include <Kernel/Debug.h>
 
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa

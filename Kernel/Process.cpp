@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/Demangle.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
@@ -34,6 +33,7 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CoreDump.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>

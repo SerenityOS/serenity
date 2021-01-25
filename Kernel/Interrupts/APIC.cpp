@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
@@ -33,6 +32,7 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
+#include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>

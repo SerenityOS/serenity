@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Assertions.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>

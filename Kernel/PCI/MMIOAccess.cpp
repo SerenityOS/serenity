@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <Kernel/Debug.h>
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
 
