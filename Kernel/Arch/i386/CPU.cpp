@@ -1366,8 +1366,10 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
     // context), we need to notify the scheduler so that it can release
-    // the scheduler lock.
-    Scheduler::leave_on_first_switch(trap->regs->eflags);
+    // the scheduler lock. We don't want to enable interrupts at this point
+    // as we're still in the middle of a context switch. Doing so could
+    // trigger a context switch within a context switch, leading to a crash.
+    Scheduler::leave_on_first_switch(trap->regs->eflags & ~0x200);
 }
 
 extern "C" void thread_context_first_enter(void);
