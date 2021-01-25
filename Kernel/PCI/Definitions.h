@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Debug.h>
 
 namespace Kernel {
 

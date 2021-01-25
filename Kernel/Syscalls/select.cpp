@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Time.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 

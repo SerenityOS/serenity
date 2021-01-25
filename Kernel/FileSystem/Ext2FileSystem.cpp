@@ -25,11 +25,11 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/MemoryStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>

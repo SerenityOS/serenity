@@ -26,7 +26,7 @@
 
 #include "SlavePTY.h"
 #include "MasterPTY.h"
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
 

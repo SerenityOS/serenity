@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
