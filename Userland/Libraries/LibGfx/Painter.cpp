@@ -848,7 +848,7 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
     if (clipped_rect.is_empty())
         return;
 
-    if (source.has_alpha_channel()) {
+    if (source.has_alpha_channel() || opacity != 1.0f) {
         switch (source.format()) {
         case BitmapFormat::RGB32:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
