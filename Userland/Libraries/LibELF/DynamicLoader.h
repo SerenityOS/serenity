@@ -106,7 +106,7 @@ private:
     };
 
     static void* do_mmap(int fd, size_t size, const String& name);
-    RefPtr<DynamicObject> dynamic_object_from_image() const;
+    const DynamicObject& dynamic_object() const;
 
     explicit DynamicLoader(const char* filename, int fd, size_t file_size);
 
@@ -153,12 +153,14 @@ private:
     size_t m_tls_size { 0 };
 
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
+
+    mutable RefPtr<DynamicObject> m_cached_dynamic_object;
 };
 
 template<typename F>
 void DynamicLoader::for_each_needed_library(F func) const
 {
-    dynamic_object_from_image()->for_each_needed_library(move(func));
+    dynamic_object().for_each_needed_library(move(func));
 }
 
 } // end namespace ELF
