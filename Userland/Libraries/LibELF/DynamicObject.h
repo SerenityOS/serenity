@@ -276,18 +276,17 @@ public:
     void for_each_initialization_array_function(F f) const;
 
     struct SymbolLookupResult {
-        bool found { false };
         FlatPtr value { 0 };
         FlatPtr address { 0 };
         unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
-    SymbolLookupResult lookup_symbol(const char* name) const;
+    Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     Elf32_Addr patch_plt_entry(u32 relocation_offset);
 
-    SymbolLookupResult lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const;
+    Optional<SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
 
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 

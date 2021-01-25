@@ -333,14 +333,13 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         dbgln<DYNAMIC_LOAD_DEBUG>("Absolute relocation: name: '{}', value: {}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
-        if (!res.found) {
-            if (symbol.bind() == STB_WEAK) {
+        if (!res.has_value()) {
+            if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
-            }
             dbgln("ERROR: symbol not found: {}.", symbol.name());
             ASSERT_NOT_REACHED();
         }
-        u32 symbol_address = res.address;
+        u32 symbol_address = res.value().address;
         *patch_ptr += symbol_address;
         dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
         break;
@@ -349,8 +348,8 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         dbgln<DYNAMIC_LOAD_DEBUG>("PC-relative relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
-        ASSERT(res.found);
-        u32 relative_offset = (res.address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
+        ASSERT(res.has_value());
+        u32 relative_offset = (res.value().address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
         *patch_ptr += relative_offset;
         dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
         break;
@@ -359,7 +358,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         dbgln<DYNAMIC_LOAD_DEBUG>("Global data relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
-        if (!res.found) {
+        if (!res.has_value()) {
             // We do not support these
             // TODO: Can we tell gcc not to generate the piece of code that uses these?
             // (--disable-tm-clone-registry flag in gcc conifugraion?)
@@ -368,17 +367,16 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
                 break;
             }
 
-            if (symbol.bind() == STB_WEAK) {
+            if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
-            }
 
             // Symbol not found
             return RelocationResult::Failed;
         }
-        dbgln<DYNAMIC_LOAD_DEBUG>("was symbol found? {}, address: {:#08x}", res.found, res.address);
+        dbgln<DYNAMIC_LOAD_DEBUG>("symbol found, location: {:#08x}", res.value().address);
         dbgln<DYNAMIC_LOAD_DEBUG>("object: {}", m_filename);
 
-        u32 symbol_location = res.address;
+        u32 symbol_location = res.value().address;
         ASSERT(symbol_location != (FlatPtr)m_dynamic_object->base_address().as_ptr());
         *patch_ptr = symbol_location;
         dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
@@ -404,12 +402,11 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         dbgln<DYNAMIC_LOAD_DEBUG>("Symbol is_undefined?: {}", symbol.is_undefined());
         dbgln<DYNAMIC_LOAD_DEBUG>("TLS relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
-        if (!res.found)
+        if (!res.has_value())
             break;
-        ASSERT(res.found);
-        u32 symbol_value = res.value;
+        u32 symbol_value = res.value().value;
         dbgln<DYNAMIC_LOAD_DEBUG>("symbol value: {}", symbol_value);
-        const auto dynamic_object_of_symbol = res.dynamic_object;
+        auto* dynamic_object_of_symbol = res.value().dynamic_object;
         ASSERT(dynamic_object_of_symbol);
         size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
         dbgln<DYNAMIC_LOAD_DEBUG>("patch ptr: {:p}", patch_ptr);
@@ -503,7 +500,7 @@ u32 DynamicLoader::ProgramHeaderRegion::mmap_prot() const
     return prot;
 }
 
-DynamicObject::SymbolLookupResult DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
+Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
     return m_dynamic_object->lookup_symbol(symbol);
 }
