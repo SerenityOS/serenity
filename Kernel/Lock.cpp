@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Thread.h>

@@ -25,10 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>

@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
@@ -38,6 +37,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/LockMode.h>

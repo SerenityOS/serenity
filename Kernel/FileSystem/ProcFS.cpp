@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
@@ -33,6 +32,7 @@
 #include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Console.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/FileSystem/Custody.h>

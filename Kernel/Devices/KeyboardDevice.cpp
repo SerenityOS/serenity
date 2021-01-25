@@ -26,11 +26,11 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/TTY/VirtualConsole.h>

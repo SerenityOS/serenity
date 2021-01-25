@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Thread.h>
 #include <Kernel/WaitQueue.h>
 

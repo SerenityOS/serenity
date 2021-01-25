@@ -81,6 +81,7 @@ set(LAGOM_MORE_SOURCES ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${
 #        in combination with the system, we generate two Debug.h files. One in
 #        Build/AK/Debug.h and the other in Build/Meta/Lagom/AK/Debug.h.
 configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
+configure_file(../../Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
 include_directories(../../)
 include_directories(../../Userland/)

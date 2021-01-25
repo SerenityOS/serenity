@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>
 #include <Kernel/Thread.h>

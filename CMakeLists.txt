@@ -69,6 +69,7 @@ if (ENABLE_ALL_THE_DEBUG_MACROS)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
+configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
 include_directories(Userland/Libraries)
 include_directories(.)

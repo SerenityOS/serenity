@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
+#include <Kernel/Debug.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>

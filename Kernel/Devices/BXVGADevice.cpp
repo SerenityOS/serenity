@@ -25,8 +25,8 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/Debug.h>
 #include <AK/Singleton.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>

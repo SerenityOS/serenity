@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <Kernel/Assertions.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/TimeManagement.h>
 

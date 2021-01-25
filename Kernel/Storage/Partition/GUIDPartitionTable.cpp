@@ -26,7 +26,7 @@
 
 #include <AK/AllOf.h>
 #include <AK/Array.h>
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 
 namespace Kernel {

@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2021, Paul Scharnofske
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#pragma once
+
+#cmakedefine01 ACPI_DEBUG
+#cmakedefine01 APIC_DEBUG
+#cmakedefine01 APIC_SMP_DEBUG
+#cmakedefine01 ARP_DEBUG
+#cmakedefine01 BBFS_DEBUG
+#cmakedefine01 BXVGA_DEBUG
+#cmakedefine01 COMMIT_DEBUG
+#cmakedefine01 CONTEXT_SWITCH_DEBUG
+#cmakedefine01 CONTIGUOUS_VMOBJECT_DEBUG
+#cmakedefine01 E1000_DEBUG
+#cmakedefine01 ETHERNET_DEBUG
+#cmakedefine01 ETHERNET_VERY_DEBUG
+#cmakedefine01 EXEC_DEBUG
+#cmakedefine01 EXT2_DEBUG
+#cmakedefine01 EXT2_VERY_DEBUG
+#cmakedefine01 FIFO_DEBUG
+#cmakedefine01 FILEDESCRIPTION_DEBUG
+#cmakedefine01 FORK_DEBUG
+#cmakedefine01 FUTEX_DEBUG
+#cmakedefine01 FUTEXQUEUE_DEBUG
+#cmakedefine01 GPT_DEBUG
+#cmakedefine01 HPET_COMPARATOR_DEBUG
+#cmakedefine01 HPET_DEBUG
+#cmakedefine01 ICMP_DEBUG
+#cmakedefine01 INTERRUPT_DEBUG
+#cmakedefine01 IOAPIC_DEBUG
+#cmakedefine01 IO_DEBUG
+#cmakedefine01 IPV4_DEBUG
+#cmakedefine01 IPV4_SOCKET_DEBUG
+#cmakedefine01 IRQ_DEBUG
+#cmakedefine01 KEYBOARD_DEBUG
+#cmakedefine01 KMALLOC_DEBUG
+#cmakedefine01 LOCAL_SOCKET_DEBUG
+#cmakedefine01 LOCK_DEBUG
+#cmakedefine01 LOCK_RESTORE_DEBUG
+#cmakedefine01 LOCK_TRACE_DEBUG
+#cmakedefine01 MASTERPTY_DEBUG
+#cmakedefine01 MBR_DEBUG
+#cmakedefine01 MULTIPROCESSOR_DEBUG
+#cmakedefine01 NETWORK_TASK_DEBUG
+#cmakedefine01 OFFD_DEBUG
+#cmakedefine01 PAGE_FAULT_DEBUG
+#cmakedefine01 PATA_DEBUG
+#cmakedefine01 PCI_DEBUG
+#cmakedefine01 POLL_SELECT_DEBUG
+#cmakedefine01 PROCESS_DEBUG
+#cmakedefine01 PROCFS_DEBUG
+#cmakedefine01 PS2MOUSE_DEBUG
+#cmakedefine01 PTMX_DEBUG
+#cmakedefine01 ROUTING_DEBUG
+#cmakedefine01 RTL8139_DEBUG
+#cmakedefine01 SB16_DEBUG
+#cmakedefine01 SCHEDULER_DEBUG
+#cmakedefine01 SCHEDULER_RUNNABLE_DEBUG
+#cmakedefine01 SIGNAL_DEBUG
+#cmakedefine01 SLAVEPTY_DEBUG
+#cmakedefine01 SMP_DEBUG
+#cmakedefine01 SOCKET_DEBUG
+#cmakedefine01 STORAGE_DEVICE_DEBUG
+#cmakedefine01 TCP_DEBUG
+#cmakedefine01 TCP_SOCKET_DEBUG
+#cmakedefine01 THREAD_DEBUG
+#cmakedefine01 TTY_DEBUG
+#cmakedefine01 UDP_DEBUG
+#cmakedefine01 UHCI_DEBUG
+#cmakedefine01 UHCI_VERBOSE_DEBUG
+#cmakedefine01 VFS_DEBUG
+#cmakedefine01 VMWARE_BACKDOOR_DEBUG
+#cmakedefine01 VOLATILE_PAGE_RANGES_DEBUG
+#cmakedefine01 VRA_DEBUG
+#cmakedefine01 WAITBLOCK_DEBUG
+#cmakedefine01 WAITQUEUE_DEBUG
+#cmakedefine01 KMALLOC_DEBUG_LARGE_ALLOCATIONS

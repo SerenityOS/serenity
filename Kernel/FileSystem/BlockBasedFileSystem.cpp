@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/IntrusiveList.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/Process.h>
 

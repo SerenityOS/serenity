@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>

@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>

@@ -26,8 +26,8 @@
 
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
-#include <AK/Debug.h>
 #include <AK/Singleton.h>
+#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>

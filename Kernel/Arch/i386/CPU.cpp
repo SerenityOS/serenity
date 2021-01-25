@@ -25,7 +25,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Debug.h>
+#include <Kernel/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>

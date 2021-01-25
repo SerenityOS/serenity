@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 
