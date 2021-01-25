@@ -80,19 +80,22 @@ DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
     m_valid = validate();
 }
 
-RefPtr<DynamicObject> DynamicLoader::dynamic_object_from_image() const
+const DynamicObject& DynamicLoader::dynamic_object() const
 {
-    VirtualAddress dynamic_section_address;
+    if (!m_cached_dynamic_object) {
+        VirtualAddress dynamic_section_address;
 
-    m_elf_image.for_each_program_header([&dynamic_section_address](auto program_header) {
-        if (program_header.type() == PT_DYNAMIC) {
-            dynamic_section_address = VirtualAddress(program_header.raw_data());
-        }
-        return IterationDecision::Continue;
-    });
-    ASSERT(!dynamic_section_address.is_null());
+        m_elf_image.for_each_program_header([&dynamic_section_address](auto program_header) {
+            if (program_header.type() == PT_DYNAMIC) {
+                dynamic_section_address = VirtualAddress(program_header.raw_data());
+            }
+            return IterationDecision::Continue;
+        });
+        ASSERT(!dynamic_section_address.is_null());
 
-    return ELF::DynamicObject::construct(VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
+        m_cached_dynamic_object = ELF::DynamicObject::construct(VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
+    }
+    return *m_cached_dynamic_object;
 }
 
 size_t DynamicLoader::calculate_tls_size() const
