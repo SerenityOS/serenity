@@ -131,7 +131,7 @@ private:
     RelocationResult do_relocation(size_t total_tls_size, DynamicObject::Relocation relocation);
     size_t calculate_tls_size() const;
 
-    DynamicObject::SymbolLookupResult lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const;
+    Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
 
     String m_filename;
     String m_program_interpreter;

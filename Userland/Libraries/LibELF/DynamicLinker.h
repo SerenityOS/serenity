@@ -34,7 +34,7 @@ namespace ELF {
 
 class DynamicLinker {
 public:
-    static DynamicObject::SymbolLookupResult lookup_global_symbol(const char* symbol);
+    static Optional<DynamicObject::SymbolLookupResult> lookup_global_symbol(const char* symbol);
     [[noreturn]] static void linker_main(String&& main_program_name, int fd, bool is_secure, int argc, char** argv, char** envp);
 
 private:

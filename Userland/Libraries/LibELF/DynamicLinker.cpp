@@ -66,19 +66,18 @@ bool g_allowed_to_check_environment_variables { false };
 bool g_do_breakpoint_trap_before_entry { false };
 }
 
-DynamicObject::SymbolLookupResult DynamicLinker::lookup_global_symbol(const char* symbol_name)
+Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const char* symbol_name)
 {
-    DynamicObject::SymbolLookupResult weak_result = {};
+    Optional<DynamicObject::SymbolLookupResult> weak_result;
     for (auto& lib : g_global_objects) {
         auto res = lib->lookup_symbol(symbol_name);
-        if (res.found) {
-            if (res.bind == STB_GLOBAL) {
-                return res;
-            } else if (res.bind == STB_WEAK && !weak_result.found) {
-                weak_result = res;
-            }
-            // We don't want to allow local symbols to be pulled in to other modules
-        }
+        if (!res.has_value())
+            continue;
+        if (res.value().bind == STB_GLOBAL)
+            return res;
+        if (res.value().bind == STB_WEAK && !weak_result.has_value())
+            weak_result = res;
+        // We don't want to allow local symbols to be pulled in to other modules
     }
     return weak_result;
 }
@@ -163,21 +162,21 @@ static void initialize_libc(DynamicObject& libc)
     // Also, we can't just mark `__libc_init` with "__attribute__((constructor))"
     // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
     auto res = libc.lookup_symbol("environ");
-    ASSERT(res.found);
-    *((char***)res.address) = g_envp;
+    ASSERT(res.has_value());
+    *((char***)res.value().address) = g_envp;
 
     res = libc.lookup_symbol("__environ_is_malloced");
-    ASSERT(res.found);
-    *((bool*)res.address) = false;
+    ASSERT(res.has_value());
+    *((bool*)res.value().address) = false;
 
     res = libc.lookup_symbol("exit");
-    ASSERT(res.found);
-    g_libc_exit = (LibCExitFunction)res.address;
+    ASSERT(res.has_value());
+    g_libc_exit = (LibCExitFunction)res.value().address;
 
     res = libc.lookup_symbol("__libc_init");
-    ASSERT(res.found);
+    ASSERT(res.has_value());
     typedef void libc_init_func();
-    ((libc_init_func*)res.address)();
+    ((libc_init_func*)res.value().address)();
 }
 
 static void load_elf(const String& name)
