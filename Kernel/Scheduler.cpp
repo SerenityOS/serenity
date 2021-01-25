@@ -500,7 +500,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
         [[maybe_unused]] auto rc = perf_events.append_with_eip_and_ebp(regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0);
     }
 
-    if (current_thread->tick((regs.cs & 3) == 0))
+    if (current_thread->tick())
         return;
 
     ASSERT_INTERRUPTS_DISABLED();
