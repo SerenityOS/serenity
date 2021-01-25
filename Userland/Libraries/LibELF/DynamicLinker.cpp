@@ -100,7 +100,7 @@ static void map_library(const String& name, int fd)
 static void map_library(const String& name)
 {
     // TODO: Do we want to also look for libs in other paths too?
-    String path = String::format("/usr/lib/%s", name.characters());
+    String path = String::formatted("/usr/lib/{}", name);
     int fd = open(path.characters(), O_RDONLY);
     ASSERT(fd >= 0);
     map_library(name, fd);
