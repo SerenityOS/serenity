@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=flex
 version=2.6.4
 files="https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz flex-${version}.tar.gz

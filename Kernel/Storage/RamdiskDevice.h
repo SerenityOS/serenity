@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Heap/Heap.h>
-#include <LibWeb/Bindings/RangeConstructor.h>
-#include <LibWeb/Bindings/RangePrototype.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Range.h>
+#pragma once
 
-namespace Web::Bindings {
+#include <Kernel/Lock.h>
+#include <Kernel/Storage/StorageDevice.h>
 
-RangeConstructor::RangeConstructor(JS::GlobalObject& global_object)
-    : NativeFunction(*global_object.function_prototype())
-{
-}
+namespace Kernel {
 
-void RangeConstructor::initialize(JS::GlobalObject& global_object)
-{
-    auto& vm = this->vm();
-    NativeFunction::initialize(global_object);
-    auto& window = static_cast<WindowObject&>(global_object);
-    define_property(vm.names.prototype, window.range_prototype(), 0);
-    define_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
-}
+class RamdiskController;
 
-JS::Value RangeConstructor::call()
-{
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Range");
-    return {};
-}
+class RamdiskDevice final : public StorageDevice {
+    friend class RamdiskController;
+    AK_MAKE_ETERNAL
+public:
+    static NonnullRefPtr<RamdiskDevice> create(const RamdiskController&, OwnPtr<Region>&& region, int major, int minor);
+    RamdiskDevice(const RamdiskController&, OwnPtr<Region>&&, int major, int minor);
+    virtual ~RamdiskDevice() override;
 
-JS::Value RangeConstructor::construct(Function&)
-{
-    auto& window = static_cast<WindowObject&>(global_object());
-    return heap().allocate<RangeWrapper>(window, window, DOM::Range::create(window.impl()));
-}
+    // ^StorageDevice
+    virtual Type type() const override { return StorageDevice::Type::Ramdisk; }
+    virtual size_t max_addressable_block() const override;
+
+    // ^BlockDevice
+    virtual void start_request(AsyncBlockDeviceRequest&) override;
+
+    // ^DiskDevice
+    virtual const char* class_name() const override;
+    virtual String device_name() const override;
+
+    bool is_slave() const;
+
+    Lock m_lock { "RamdiskDevice" };
+
+    OwnPtr<Region> m_region;
+};
 
 }

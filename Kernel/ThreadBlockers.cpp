@@ -24,13 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
-
-//#define WAITBLOCK_DEBUG
 
 namespace Kernel {
 
@@ -163,7 +162,7 @@ void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 {
     ASSERT(m_lock.own_lock());
     set_block_condition_raw_locked(&futex_queue);
-    // We can now releas the lock
+    // We can now release the lock
     m_lock.unlock(m_relock_flags);
 }
 
@@ -463,13 +462,9 @@ void Thread::WaitBlockCondition::try_unblock(Thread::WaitBlocker& blocker)
             if (blocker.is_wait()) {
                 if (info.flags == Thread::WaitBlocker::UnblockFlags::Terminated) {
                     m_processes.remove(i);
-#ifdef WAITBLOCK_DEBUG
-                    dbg() << "WaitBlockCondition[" << m_process << "] terminated, remove " << *info.process;
-#endif
+                    dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] terminated, remove {}", m_process, *info.process);
                 } else {
-#ifdef WAITBLOCK_DEBUG
-                    dbg() << "WaitBlockCondition[" << m_process << "] terminated, mark as waited " << *info.process;
-#endif
+                    dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] terminated, mark as waited {}", m_process, *info.process);
                     info.was_waited = true;
                 }
             }
@@ -493,9 +488,7 @@ void Thread::WaitBlockCondition::disowned_by_waiter(Process& process)
                 ASSERT(did_unblock); // disowning must unblock everyone
                 return true;
             });
-#ifdef WAITBLOCK_DEBUG
-            dbg() << "WaitBlockCondition[" << m_process << "] disowned " << *info.process;
-#endif
+            dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] disowned {}", m_process, *info.process);
             m_processes.remove(i);
             continue;
         }
@@ -548,17 +541,13 @@ bool Thread::WaitBlockCondition::unblock(Process& process, WaitBlocker::UnblockF
                 info.flags = flags;
                 info.signal = signal;
                 info.was_waited = did_wait;
-#ifdef WAITBLOCK_DEBUG
-                dbg() << "WaitBlockCondition[" << m_process << "] update " << process << " flags: " << (int)flags << " mark as waited: " << info.was_waited;
-#endif
+                dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] update {} flags={}, waited={}", m_process, process, (int)flags, info.was_waited);
                 updated_existing = true;
                 break;
             }
         }
         if (!updated_existing) {
-#ifdef WAITBLOCK_DEBUG
-            dbg() << "WaitBlockCondition[" << m_process << "] add " << process << " flags: " << (int)flags;
-#endif
+            dbgln<WAITBLOCK_DEBUG>("WaitBlockCondition[{}] add {} flags: {}", m_process, process, (int)flags);
             m_processes.append(ProcessBlockInfo(process, flags, signal));
         }
     }

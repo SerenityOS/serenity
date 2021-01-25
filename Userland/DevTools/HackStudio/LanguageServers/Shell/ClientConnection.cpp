@@ -26,12 +26,10 @@
 
 #include "ClientConnection.h"
 #include "AutoComplete.h"
+#include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibCore/File.h>
 #include <LibGUI/TextDocument.h>
-
-// #define DEBUG_SH_LANGUAGE_SERVER
-// #define DEBUG_FILE_CONTENT
 
 namespace LanguageServers::Shell {
 
@@ -89,14 +87,12 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
     auto document = GUI::TextDocument::create(&s_default_document_client);
     document->set_text(content_view);
     m_open_files.set(message.file_name(), document);
-#ifdef DEBUG_FILE_CONTENT
-    dbg() << document->text();
-#endif
+    dbgln<FILE_CONTENT_DEBUG>("{}", document->text());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
-#ifdef DEBUG_SH_LANGUAGE_SERVER
+#if SH_LANGUAGE_SERVER_DEBUG
     dbgln("InsertText for file: {}", message.file_name());
     dbgln("Text: {}", message.text());
     dbgln("[{}:{}]", message.start_line(), message.start_column());
@@ -108,14 +104,14 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText
     }
     GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
     document->insert_at(start_position, message.text(), &s_default_document_client);
-#ifdef DEBUG_FILE_CONTENT
+#if FILE_CONTENT_DEBUG
     dbgln("{}", document->text());
 #endif
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
-#ifdef DEBUG_SH_LANGUAGE_SERVER
+#if SH_LANGUAGE_SERVER_DEBUG
     dbgln("RemoveText for file: {}", message.file_name());
     dbgln("[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
 #endif
@@ -133,14 +129,12 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
     };
 
     document->remove(range);
-#ifdef DEBUG_FILE_CONTENT
-    dbg() << document->text();
-#endif
+    dbgln<FILE_CONTENT_DEBUG>("{}", document->text());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
-#ifdef DEBUG_SH_LANGUAGE_SERVER
+#if SH_LANGUAGE_SERVER_DEBUG
     dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
 #endif
 

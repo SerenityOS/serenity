@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Object.h>
@@ -41,8 +42,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-//#define WSMESSAGELOOP_DEBUG
 
 namespace WindowServer {
 
@@ -66,14 +65,19 @@ EventLoop::EventLoop()
         IPC::new_client_connection<ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 
-    ASSERT(m_keyboard_fd >= 0);
-    ASSERT(m_mouse_fd >= 0);
+    if (m_keyboard_fd >= 0) {
+        m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);
+        m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
+    } else {
+        dbgln("Couldn't open /dev/keyboard");
+    }
 
-    m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);
-    m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
-
-    m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Read);
-    m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
+    if (m_mouse_fd >= 0) {
+        m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Read);
+        m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
+    } else {
+        dbgln("Couldn't open /dev/mouse");
+    }
 }
 
 EventLoop::~EventLoop()
@@ -98,7 +102,7 @@ void EventLoop::drain_mouse()
         return;
     for (size_t i = 0; i < npackets; ++i) {
         auto& packet = packets[i];
-#ifdef WSMESSAGELOOP_DEBUG
+#if WSMESSAGELOOP_DEBUG
         dbgln("EventLoop: Mouse X {}, Y {}, Z {}, relative={}", packet.x, packet.y, packet.z, packet.is_relative);
 #endif
         buttons = packet.buttons;
@@ -116,7 +120,7 @@ void EventLoop::drain_mouse()
 
         if (buttons != state.buttons) {
             state.buttons = buttons;
-#ifdef WSMESSAGELOOP_DEBUG
+#if WSMESSAGELOOP_DEBUG
             dbgln("EventLoop: Mouse Button Event");
 #endif
             screen.on_receive_mouse_data(state);

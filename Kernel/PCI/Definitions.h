@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
@@ -68,8 +69,6 @@ namespace Kernel {
 #define PCI_MAX_BUSES 256
 #define PCI_MAX_FUNCTIONS_PER_DEVICE 8
 // clang-format on
-
-//#define PCI_DEBUG 1
 
 namespace PCI {
 struct ID {
@@ -195,11 +194,10 @@ public:
         , m_id(id)
         , m_capabilities(capabilities)
     {
-#ifdef PCI_DEBUG
-        for (auto capability : capabilities) {
-            dbg() << address << " has capbility " << capability.m_id;
+        if constexpr (PCI_DEBUG) {
+            for (auto capability : capabilities)
+                dbgln("{} has capability {}", address, capability.m_id);
         }
-#endif
     }
 
     Vector<Capability> capabilities() const { return m_capabilities; }

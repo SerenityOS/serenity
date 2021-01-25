@@ -28,16 +28,15 @@
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
 #include "WidgetTreeModel.h"
+#include <AK/Debug.h>
 #include <AK/LogStream.h>
 #include <LibGfx/Palette.h>
-
-//#define DEBUG_CURSOR_TOOL
 
 namespace HackStudio {
 
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if CURSOR_TOOL_DEBUG
     dbgln("CursorTool::on_mousedown");
 #endif
     auto& form_widget = m_editor.form_widget();
@@ -49,9 +48,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
                 m_editor.selection().toggle(*result.widget);
             } else if (!event.modifiers()) {
                 if (!m_editor.selection().contains(*result.widget)) {
-#ifdef DEBUG_CURSOR_TOOL
-                    dbg() << "Selection didn't contain " << *result.widget << ", making it the only selected one";
-#endif
+                    dbgln<CURSOR_TOOL_DEBUG>("Selection didn't contain {}, making it the only selected one", *result.widget);
                     m_editor.selection().set(*result.widget);
                 }
 
@@ -76,7 +73,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
 
 void CursorTool::on_mouseup(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if CURSOR_TOOL_DEBUG
     dbgln("CursorTool::on_mouseup");
 #endif
     if (event.button() == GUI::MouseButton::Left) {
@@ -97,7 +94,7 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
 
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if CURSOR_TOOL_DEBUG
     dbgln("CursorTool::on_mousemove");
 #endif
     auto& form_widget = m_editor.form_widget();
@@ -136,7 +133,7 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 
 void CursorTool::on_keydown(GUI::KeyEvent& event)
 {
-#ifdef DEBUG_CURSOR_TOOL
+#if CURSOR_TOOL_DEBUG
     dbgln("CursorTool::on_keydown");
 #endif
 

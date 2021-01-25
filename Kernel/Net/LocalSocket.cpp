@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -33,8 +34,6 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
-
-//#define DEBUG_LOCAL_SOCKET
 
 namespace Kernel {
 
@@ -64,8 +63,8 @@ LocalSocket::LocalSocket(int type)
     all_sockets().resource().append(this);
 
     auto current_process = Process::current();
-    m_prebind_uid = current_process->uid();
-    m_prebind_gid = current_process->gid();
+    m_prebind_uid = current_process->euid();
+    m_prebind_gid = current_process->egid();
     m_prebind_mode = 0666;
 
     m_for_client.set_unblock_callback([this]() {
@@ -75,9 +74,7 @@ LocalSocket::LocalSocket(int type)
         evaluate_block_conditions();
     });
 
-#ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} created with type=" << type;
-#endif
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) created with type={}", this, type);
 }
 
 LocalSocket::~LocalSocket()
@@ -113,11 +110,9 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
-#ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} bind(" << path << ")";
-#endif
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) bind({})", this, path);
 
-    mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
+    mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
     auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
@@ -159,9 +154,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         return EFAULT;
     safe_address[sizeof(safe_address) - 1] = '\0';
 
-#ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ")";
-#endif
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({})", this, safe_address);
 
     auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
     if (description_or_error.is_error())
@@ -197,9 +190,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
         return EINTR;
     }
 
-#ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ") status is " << to_string(setup_state());
-#endif
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) connect({}) status is {}", this, safe_address, to_string(setup_state()));
 
     if (!((u32)unblock_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Connect)) {
         set_connect_side_role(Role::None);
@@ -218,9 +209,9 @@ KResult LocalSocket::listen(size_t backlog)
     auto previous_role = m_role;
     m_role = Role::Listener;
     set_connect_side_role(Role::Listener, previous_role != m_role);
-#ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} listening with backlog=" << backlog;
-#endif
+
+    dbgln<LOCAL_SOCKET_DEBUG>("LocalSocket({}) listening with backlog={}", this, backlog);
+
     return KSuccess;
 }
 
@@ -418,7 +409,7 @@ KResult LocalSocket::chmod(FileDescription&, mode_t mode)
     if (m_file)
         return m_file->chmod(mode);
 
-    m_prebind_mode = mode & 04777;
+    m_prebind_mode = mode & 0777;
     return KSuccess;
 }
 

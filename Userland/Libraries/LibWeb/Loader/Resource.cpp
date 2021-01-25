@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibCore/MimeData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -93,19 +94,17 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 
     auto content_type = headers.get("Content-Type");
     if (content_type.has_value()) {
-#ifdef RESOURCE_DEBUG
+#if RESOURCE_DEBUG
         dbgln("Content-Type header: '{}'", content_type.value());
 #endif
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
-#ifdef RESOURCE_DEBUG
-        dbg() << "This is a data URL with mime-type _" << url().data_mime_type() << "_";
-#endif
+        dbgln<RESOURCE_DEBUG>("This is a data URL with mime-type _{}_", url().data_mime_type());
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {
-#ifdef RESOURCE_DEBUG
+#if RESOURCE_DEBUG
         dbgln("No Content-Type header to go on! Guessing based on filename...");
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.

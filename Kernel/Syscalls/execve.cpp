@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
@@ -43,8 +44,6 @@
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
-
-//#define EXEC_DEBUG
 
 namespace Kernel {
 
@@ -448,7 +447,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     ASSERT(is_user_process());
     ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
     dbgln("do_exec({})", path);
 #endif
 
@@ -513,7 +512,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     kill_threads_except_self();
 
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
     dbgln("Memory layout after ELF load:");
     dump_regions();
 #endif
@@ -526,6 +525,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
+
+    m_coredump_metadata.clear();
 
     current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
@@ -703,7 +704,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
     if (!interpreter_path.is_empty()) {
 
-#ifdef EXEC_DEBUG
+#if EXEC_DEBUG
         dbgln("exec({}): Using program interpreter {}", path, interpreter_path);
 #endif
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
@@ -817,12 +818,12 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // #2) ELF32 for i386
 
     if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
-        return ENOEXEC;
+        return -ENOEXEC;
     auto main_program_header = (Elf32_Ehdr*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
-        return ENOEXEC;
+        return -ENOEXEC;
     }
 
     auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);

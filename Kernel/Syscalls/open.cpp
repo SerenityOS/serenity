@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -56,14 +57,13 @@ int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
         REQUIRE_PROMISE(cpath);
 
     // Ignore everything except permission bits.
-    mode &= 04777;
+    mode &= 0777;
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-#ifdef DEBUG_IO
-    dbg() << "sys$open(dirfd=" << dirfd << ", path=\"" << path.value() << "\", options=" << options << ", mode=" << mode << ")";
-#endif
+
+    dbgln<IO_DEBUG>("sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value(), options, mode);
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
@@ -99,9 +99,7 @@ int Process::sys$close(int fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
-#ifdef DEBUG_IO
-    dbg() << "sys$close(" << fd << ") " << description.ptr();
-#endif
+    dbgln<IO_DEBUG>("sys$close({}) {}", fd, description.ptr());
     if (!description)
         return -EBADF;
     int rc = description->close();

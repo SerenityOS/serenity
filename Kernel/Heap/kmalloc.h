@@ -26,9 +26,8 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/Types.h>
-
-//#define KMALLOC_DEBUG_LARGE_ALLOCATIONS
 
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa
@@ -56,7 +55,7 @@ inline void* operator new[](size_t, void* p) { return p; }
 
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] ALWAYS_INLINE void* kmalloc(size_t size)
 {
-#ifdef KMALLOC_DEBUG_LARGE_ALLOCATIONS
+#if KMALLOC_DEBUG_LARGE_ALLOCATIONS
     // Any kernel allocation >= 1M is 99.9% a bug.
     if (size >= 1048576)
         asm volatile("cli;hlt");
@@ -82,6 +81,3 @@ inline void kfree_aligned(void* ptr)
 }
 
 void kmalloc_enable_expand();
-
-extern u8* const kmalloc_start;
-extern u8* const kmalloc_end;

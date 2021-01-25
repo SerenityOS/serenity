@@ -24,13 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
-
-//#define COMMIT_DEBUG
-//#define PAGE_FAULT_DEBUG
 
 namespace Kernel {
 
@@ -52,7 +50,7 @@ RefPtr<VMObject> AnonymousVMObject::clone()
         });
     }
 
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
     klog() << "Cloning " << this << ", need " << need_cow_pages << " committed cow pages";
 #endif
     if (!MM.commit_user_physical_pages(need_cow_pages))
@@ -145,7 +143,7 @@ AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
     ensure_or_reset_cow_map();
 
     if (m_unused_committed_pages > 0) {
-        // The original vmobject didn't use up all commited pages. When
+        // The original vmobject didn't use up all committed pages. When
         // cloning (fork) we will overcommit. For this purpose we drop all
         // lazy-commit references and replace them with shared zero pages.
         for (size_t i = 0; i < page_count(); i++) {
@@ -313,7 +311,7 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
 
     // Return those committed pages back to the system
     if (uncommit_page_count > 0) {
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
         klog() << "Uncommit " << uncommit_page_count << " lazy-commit pages from " << this;
 #endif
         MM.uncommit_user_physical_pages(uncommit_page_count);
@@ -366,7 +364,7 @@ size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const Volat
         }
     }
 
-#ifdef COMMIT_DEBUG
+#if COMMIT_DEBUG
     klog() << "Added " << pages_updated << " lazy-commit pages to " << this;
 #endif
     m_unused_committed_pages += pages_updated;
@@ -380,7 +378,7 @@ RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t page_inde
 
         ASSERT(m_unused_committed_pages > 0);
 
-        // We should't have any committed page tags in volatile regions
+        // We shouldn't have any committed page tags in volatile regions
         ASSERT([&]() {
             for (auto* purgeable_ranges : m_purgeable_ranges) {
                 if (purgeable_ranges->is_volatile(page_index))
@@ -445,7 +443,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     auto& page_slot = physical_pages()[page_index];
     bool have_committed = m_shared_committed_cow_pages && is_nonvolatile(page_index);
     if (page_slot->ref_count() == 1) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
 #endif
         set_should_cow(page_index, false);
@@ -458,12 +456,12 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
 
     RefPtr<PhysicalPage> page;
     if (have_committed) {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a committed COW page and it's time to COW!");
 #endif
         page = m_shared_committed_cow_pages->allocate_one();
     } else {
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
         dbgln("    >> It's a COW page and it's time to COW!");
 #endif
         page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
@@ -474,9 +472,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     }
 
     u8* dest_ptr = MM.quickmap_page(*page);
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW " << page->paddr() << " <- " << page_slot->paddr();
-#endif
+    dbgln<PAGE_FAULT_DEBUG>("      >> COW {} <- {}", page->paddr(), page_slot->paddr());
     {
         SmapDisabler disabler;
         void* fault_at;

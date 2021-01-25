@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
@@ -38,8 +39,6 @@ namespace Kernel {
 #define ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD 0x05F5E100
 #define NANOSECOND_PERIOD_TO_HERTZ(x) 1000000000 / x
 #define MEGAHERTZ_TO_HERTZ(x) (x / 1000000)
-
-//#define HPET_DEBUG
 
 namespace HPETFlags {
 enum class Attributes {
@@ -207,9 +206,10 @@ void HPET::update_periodic_comparator_value()
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             u64 value = frequency() / comparator.ticks_per_second();
-#ifdef HPET_DEBUG
-            dbg() << "HPET: Update periodic comparator " << comparator.comparator_number() << " comparator value to " << value << " main value was: " << previous_main_value;
-#endif
+            dbgln<HPET_DEBUG>("HPET: Update periodic comparator {} comparator value to {} main value was: {}",
+                comparator.comparator_number(),
+                value,
+                previous_main_value);
             timer.comparator_value.low = (u32)value;
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
             timer.comparator_value.high = (u32)(value >> 32);
@@ -217,9 +217,11 @@ void HPET::update_periodic_comparator_value()
             // Set the new target comparator value to the delta to the remaining ticks
             u64 current_value = (u64)timer.comparator_value.low | ((u64)timer.comparator_value.high << 32);
             u64 value = current_value - previous_main_value;
-#ifdef HPET_DEBUG
-            dbg() << "HPET: Update non-periodic comparator " << comparator.comparator_number() << " comparator value from " << current_value << " to " << value << " main value was: " << previous_main_value;
-#endif
+            dbgln<HPET_DEBUG>("HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
+                comparator.comparator_number(),
+                current_value,
+                value,
+                previous_main_value);
             timer.comparator_value.low = (u32)value;
             timer.comparator_value.high = (u32)(value >> 32);
         }
@@ -271,7 +273,7 @@ u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool quer
 
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Set comparator " << comparator.comparator_number() << " to be periodic.";
 #endif
     disable(comparator);
@@ -285,7 +287,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 }
 void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Disable periodic interrupt in comparator " << comparator.comparator_number() << ".";
 #endif
     disable(comparator);
@@ -300,7 +302,7 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 
 void HPET::disable(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Disable comparator " << comparator.comparator_number() << ".";
 #endif
     ASSERT(comparator.comparator_number() <= m_comparators.size());
@@ -309,7 +311,7 @@ void HPET::disable(const HPETComparator& comparator)
 }
 void HPET::enable(const HPETComparator& comparator)
 {
-#ifdef HPET_DEBUG
+#if HPET_DEBUG
     klog() << "HPET: Enable comparator " << comparator.comparator_number() << ".";
 #endif
     ASSERT(comparator.comparator_number() <= m_comparators.size());

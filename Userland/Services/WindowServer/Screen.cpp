@@ -29,6 +29,7 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "WindowManager.h"
+#include <AK/Debug.h>
 #include <Kernel/API/FB.h>
 #include <Kernel/API/MousePacket.h>
 #include <fcntl.h>
@@ -81,15 +82,14 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
 
     FBResolution physical_resolution { 0, (unsigned)new_physical_width, (unsigned)new_physical_height };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
-#ifdef WSSCREEN_DEBUG
-    dbg() << "fb_set_resolution() - return code " << rc;
-#endif
+    dbgln<WSSCREEN_DEBUG>("fb_set_resolution() - return code {}", rc);
+
     if (rc == 0) {
         on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);
         return true;
     }
     if (rc == -1) {
-        dbg() << "Invalid resolution " << width << "x" << height;
+        dbgln("Invalid resolution {}x{}", width, height);
         on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);
         return false;
     }
@@ -144,12 +144,12 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
     auto prev_location = m_physical_cursor_location / m_scale_factor;
     if (packet.is_relative) {
         m_physical_cursor_location.move_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
-#ifdef WSSCREEN_DEBUG
+#if WSSCREEN_DEBUG
         dbgln("Screen: New Relative mouse point @ {}", m_physical_cursor_location);
 #endif
     } else {
         m_physical_cursor_location = { packet.x * physical_width() / 0xffff, packet.y * physical_height() / 0xffff };
-#ifdef WSSCREEN_DEBUG
+#if WSSCREEN_DEBUG
         dbgln("Screen: New Absolute mouse point @ {}", m_physical_cursor_location);
 #endif
     }

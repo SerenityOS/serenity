@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,46 +26,33 @@
 
 #pragma once
 
-// FIXME: We could generate this file with CMake and configure.
+#include <AK/Result.h>
+#include <AK/Vector.h>
+#include <LibGUI/Dialog.h>
 
-#ifdef PROCESS_DEBUG
-constexpr bool debug_process = true;
-#else
-constexpr bool debug_process = false;
-#endif
+enum OptionId {
+    OPTION_INVALID = -1,
+    OPTION_ASCII_STRING,
+    OPTION_HEX_VALUE
+};
 
-#ifdef SCHEDULER_DEBUG
-constexpr bool debug_scheduler = true;
-#else
-constexpr bool debug_scheduler = false;
-#endif
+class FindDialog : public GUI::Dialog {
+    C_OBJECT(FindDialog);
 
-#ifdef SCHEDULER_RUNNABLE_DEBUG
-constexpr bool debug_scheduler_runnable = true;
-#else
-constexpr bool debug_scheduler_runnable = false;
-#endif
+public:
+    static int show(GUI::Window* parent_window, String& out_tex, ByteBuffer& out_buffer);
 
-#ifdef THREAD_DEBUG
-constexpr bool debug_thread = true;
-#else
-constexpr bool debug_thread = false;
-#endif
+private:
+    Result<ByteBuffer, String> process_input(String text_value, OptionId opt);
 
-#ifdef LOCK_DEBUG
-constexpr bool debug_lock = true;
-#else
-constexpr bool debug_lock = false;
-#endif
+    String text_value() const { return m_text_value; }
+    OptionId selected_option() const { return m_selected_option; }
 
-#ifdef SIGNAL_DEBUG
-constexpr bool debug_signal = true;
-#else
-constexpr bool debug_signal = false;
-#endif
+    FindDialog();
+    virtual ~FindDialog() override;
 
-#ifdef BMP_DEBUG
-constexpr bool debug_bmp = true;
-#else
-constexpr bool debug_bmp = false;
-#endif
+    RefPtr<GUI::TextEditor> m_text_editor;
+
+    String m_text_value;
+    OptionId m_selected_option { OPTION_INVALID };
+};

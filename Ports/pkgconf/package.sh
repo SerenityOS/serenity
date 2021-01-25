@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=pkgconf
 version=1.7.3
 files="https://distfiles.dereferenced.org/pkgconf/pkgconf-1.7.3.tar.xz pkgconf-1.7.3.tar.xz"

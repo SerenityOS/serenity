@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,35 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
+#include <AK/Types.h>
+#include <Kernel/Storage/RamdiskDevice.h>
+#include <Kernel/Storage/StorageController.h>
+#include <Kernel/Storage/StorageDevice.h>
 
-namespace Web::Bindings {
+namespace Kernel {
 
-class RangePrototype final : public JS::Object {
-    JS_OBJECT(RangePrototype, JS::Object);
+class AsyncBlockDeviceRequest;
 
+class RamdiskController final : public StorageController {
+    AK_MAKE_ETERNAL
 public:
-    explicit RangePrototype(JS::GlobalObject&);
+public:
+    static NonnullRefPtr<RamdiskController> initialize();
+    virtual ~RamdiskController() override;
 
-    void initialize(JS::GlobalObject&) override;
+    virtual Type type() const override { return Type::Ramdisk; }
+    virtual RefPtr<StorageDevice> device(u32 index) const override;
+    virtual bool reset() override;
+    virtual bool shutdown() override;
+    virtual size_t devices_count() const override;
+    virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
+    virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(set_start);
-    JS_DECLARE_NATIVE_FUNCTION(set_end);
-    JS_DECLARE_NATIVE_FUNCTION(clone_range);
+    RamdiskController();
 
-    JS_DECLARE_NATIVE_GETTER(start_container_getter);
-    JS_DECLARE_NATIVE_GETTER(end_container_getter);
-    JS_DECLARE_NATIVE_GETTER(start_offset_getter);
-    JS_DECLARE_NATIVE_GETTER(end_offset_getter);
-    JS_DECLARE_NATIVE_GETTER(collapsed_getter);
+    NonnullRefPtrVector<RamdiskDevice> m_devices;
 };
-
 }

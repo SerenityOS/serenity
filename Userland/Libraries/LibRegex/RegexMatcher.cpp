@@ -27,13 +27,14 @@
 #include "RegexMatcher.h"
 #include "RegexDebug.h"
 #include "RegexParser.h"
+#include <AK/Debug.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace regex {
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
 static RegexDebug s_regex_dbg(stderr);
 #endif
 
@@ -137,7 +138,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         }
     };
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     s_regex_dbg.print_header();
 #endif
 
@@ -147,9 +148,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     for (auto& view : views) {
         input.view = view;
-#ifdef REGEX_DEBUG
-        dbg() << "[match] Starting match with view (" << view.length() << "): _" << view.to_string() << "_";
-#endif
+        dbgln<REGEX_DEBUG>("[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
@@ -215,10 +214,11 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     continue;
                 }
 
-#ifdef REGEX_DEBUG
-                dbg() << "state.string_position: " << state.string_position << " view_index: " << view_index;
-                dbg() << "[match] Found a match (length = " << state.string_position - view_index << "): " << input.view.substring_view(view_index, state.string_position - view_index).to_string();
-#endif
+                if constexpr (REGEX_DEBUG) {
+                    dbgln("state.string_position={}, view_index={}", state.string_position, view_index);
+                    dbgln("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
+                }
+
                 ++match_count;
 
                 if (continue_search) {
@@ -314,7 +314,7 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
             return {};
         }
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         s_regex_dbg.print_opcode("VM", *opcode, state, recursion_level, false);
 #endif
 
@@ -326,7 +326,7 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
             result = opcode->execute(input, state, output);
         }
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         s_regex_dbg.print_result(*opcode, bytecode, input, state, result);
 #endif
 
@@ -369,14 +369,14 @@ ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const Match
     for (auto& state : states) {
 
         state.instruction_position = state.fork_at_position;
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
         fprintf(stderr, "Forkstay... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
 #endif
         auto success = execute(input, state, output, recursion_level);
         if (!success.has_value())
             return {};
         if (success.value()) {
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
             fprintf(stderr, "Forkstay succeeded... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
 #endif
             original_state = state;

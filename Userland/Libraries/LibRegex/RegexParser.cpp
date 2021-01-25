@@ -141,7 +141,7 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
     else
         set_error(Error::InvalidPattern);
 
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
     fprintf(stderr, "[PARSER] Produced bytecode with %lu entries (opcodes + arguments)\n", m_parser_state.bytecode.size());
 #endif
     return {
@@ -454,7 +454,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
         if (match(TokenType::EscapeSequence)) {
             length = 1;
             Token t = consume();
-#ifdef REGEX_DEBUG
+#if REGEX_DEBUG
             printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
 #endif
 

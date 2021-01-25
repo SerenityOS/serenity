@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/usr/bin/env -S bash ../.port_include.sh
 port=zstd
 version=1.4.4
 files="https://github.com/facebook/zstd/releases/download/v${version}/zstd-${version}.tar.gz zstd-${version}.tar.gz

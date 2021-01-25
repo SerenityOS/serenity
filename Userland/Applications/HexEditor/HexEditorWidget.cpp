@@ -25,6 +25,7 @@
  */
 
 #include "HexEditorWidget.h"
+#include "FindDialog.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
@@ -188,6 +189,42 @@ HexEditorWidget::HexEditorWidget()
             m_editor->update();
         }));
     }
+
+    auto& search_menu = menubar->add_menu("Search");
+    search_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, [&](const GUI::Action&) {
+        auto old_buffer = m_search_buffer.isolated_copy();
+        if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
+
+            bool same_buffers = false;
+            if (old_buffer.size() == m_search_buffer.size()) {
+                if (memcmp(old_buffer.data(), m_search_buffer.data(), old_buffer.size()) == 0)
+                    same_buffers = true;
+            }
+
+            auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
+
+            if (result == -1) {
+                GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                return;
+            }
+            m_last_found_index = result;
+        }
+    }));
+
+    search_menu.add_action(GUI::Action::create("Find", { Mod_None, Key_F3 }, [&](const GUI::Action&) {
+        if (m_search_text.is_empty() || m_search_buffer.is_empty() || m_search_buffer.is_null()) {
+            GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
+            return;
+        }
+
+        auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
+        if (!result) {
+            GUI::MessageBox::show(window(), String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+            return;
+        }
+        m_editor->update();
+        m_last_found_index = result;
+    }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("Hex Editor"), window()));

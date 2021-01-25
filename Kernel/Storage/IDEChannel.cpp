@@ -40,8 +40,6 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-//#define PATA_DEBUG
-
 #define ATA_SR_BSY 0x80
 #define ATA_SR_DRDY 0x40
 #define ATA_SR_DF 0x20
@@ -146,7 +144,7 @@ IDEChannel::~IDEChannel()
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave)
 {
     ScopedSpinLock lock(m_request_lock);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     dbgln("IDEChannel::start_request");
 #endif
     m_current_request = &request;
@@ -178,9 +176,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
     Processor::deferred_call_queue([this, result]() {
-#ifdef PATA_DEBUG
-        dbg() << "IDEChannel::complete_current_request result: " << result;
-#endif
+        dbgln<PATA_DEBUG>("IDEChannel::complete_current_request result: {}", (int)result);
         ASSERT(m_current_request);
         auto& request = *m_current_request;
         m_current_request = nullptr;
@@ -233,19 +229,19 @@ void IDEChannel::handle_irq(const RegisterState&)
     u8 bstatus = m_io_group.bus_master_base().offset(2).in<u8>();
     if (!(bstatus & 0x4)) {
         // interrupt not from this device, ignore
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
         klog() << "IDEChannel: ignore interrupt";
 #endif
         return;
     }
 
     ScopedSpinLock lock(m_request_lock);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: interrupt: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0);
 #endif
 
     if (!m_current_request) {
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
         dbgln("IDEChannel: IRQ but no pending request!");
 #endif
         return;
@@ -326,7 +322,7 @@ void IDEChannel::detect_disks()
             ;
 
         if (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() == 0x00) {
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
             klog() << "IDEChannel: No " << (i == 0 ? "master" : "slave") << " disk detected!";
 #endif
             continue;
@@ -368,9 +364,7 @@ void IDEChannel::ata_read_sectors_with_dma(bool slave_request)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
-#ifdef PATA_DEBUG
-    dbg() << "IDEChannel::ata_read_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
-#endif
+    dbgln<PATA_DEBUG>("IDEChannel::ata_read_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * request.block_count();
@@ -443,7 +437,7 @@ void IDEChannel::ata_read_sectors(bool slave_request)
 {
     auto& request = *m_current_request;
     ASSERT(request.block_count() <= 256);
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     dbgln("IDEChannel::ata_read_sectors");
 #endif
 
@@ -451,7 +445,7 @@ void IDEChannel::ata_read_sectors(bool slave_request)
         ;
 
     auto lba = request.block_index();
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: Reading " << request.block_count() << " sector(s) @ LBA " << lba;
 #endif
 
@@ -489,9 +483,7 @@ void IDEChannel::ata_write_sectors_with_dma(bool slave_request)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
-#ifdef PATA_DEBUG
-    dbg() << "IDEChannel::ata_write_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
-#endif
+    dbgln<PATA_DEBUG>("IDEChannel::ata_write_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * request.block_count();
@@ -576,14 +568,14 @@ void IDEChannel::ata_write_sectors(bool slave_request)
     ASSERT(request.block_count() <= 256);
     u32 start_sector = request.block_index();
     u32 count = request.block_count();
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel::ata_write_sectors request (" << count << " sector(s) @ " << start_sector << ")";
 #endif
 
     while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
         ;
 
-#ifdef PATA_DEBUG
+#if PATA_DEBUG
     klog() << "IDEChannel: Writing " << count << " sector(s) @ LBA " << start_sector;
 #endif
 

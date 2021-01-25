@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -41,8 +42,6 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
-
-//#define IPV4_SOCKET_DEBUG
 
 namespace Kernel {
 
@@ -67,9 +66,7 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
-#ifdef IPV4_SOCKET_DEBUG
-    dbg() << "IPv4Socket{" << this << "} created with type=" << type << ", protocol=" << protocol;
-#endif
+    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}) created with type={}, protocol={}", this, type, protocol);
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
     if (m_buffer_mode == BufferMode::Bytes) {
         m_scratch_buffer = KBuffer::create_with_size(65536);
@@ -122,9 +119,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
     m_local_address = IPv4Address((const u8*)&address.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
-#ifdef IPV4_SOCKET_DEBUG
-    dbg() << "IPv4Socket::bind " << class_name() << "{" << this << "} to " << m_local_address << ":" << m_local_port;
-#endif
+    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket::bind {}({}) to {}:{}", class_name(), this, m_local_address, m_local_port);
 
     return protocol_bind();
 }
@@ -140,9 +135,7 @@ KResult IPv4Socket::listen(size_t backlog)
     m_role = Role::Listener;
     evaluate_block_conditions();
 
-#ifdef IPV4_SOCKET_DEBUG
-    dbg() << "IPv4Socket{" << this << "} listening with backlog=" << backlog;
-#endif
+    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}) listening with backlog={}", this, backlog);
 
     return protocol_listen();
 }
@@ -227,7 +220,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (rc < 0)
         return rc;
 
-#ifdef IPV4_SOCKET_DEBUG
+#if IPV4_SOCKET_DEBUG
     klog() << "sendto: destination=" << m_peer_address.to_string().characters() << ":" << m_peer_port;
 #endif
 
@@ -293,9 +286,11 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         if (!m_receive_queue.is_empty()) {
             packet = m_receive_queue.take_first();
             set_can_read(!m_receive_queue.is_empty());
-#ifdef IPV4_SOCKET_DEBUG
-            dbg() << "IPv4Socket(" << this << "): recvfrom without blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
-#endif
+
+            dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
+                this,
+                packet.data.value().size(),
+                m_receive_queue.size());
         }
     }
     if (!packet.data.has_value()) {
@@ -320,18 +315,18 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         ASSERT(!m_receive_queue.is_empty());
         packet = m_receive_queue.take_first();
         set_can_read(!m_receive_queue.is_empty());
-#ifdef IPV4_SOCKET_DEBUG
-        dbg() << "IPv4Socket(" << this << "): recvfrom with blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
-#endif
+
+        dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
+            this,
+            packet.data.value().size(),
+            m_receive_queue.size());
     }
     ASSERT(packet.data.has_value());
 
     packet_timestamp = packet.timestamp;
 
     if (addr) {
-#ifdef IPV4_SOCKET_DEBUG
-        dbg() << "Incoming packet is from: " << packet.peer_address << ":" << packet.peer_port;
-#endif
+        dbgln<IPV4_SOCKET_DEBUG>("Incoming packet is from: {}:{}", packet.peer_address, packet.peer_port);
 
         sockaddr_in out_addr {};
         memcpy(&out_addr.sin_addr, &packet.peer_address, sizeof(IPv4Address));
@@ -367,7 +362,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
             return EINVAL;
     }
 
-#ifdef IPV4_SOCKET_DEBUG
+#if IPV4_SOCKET_DEBUG
     klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
 #endif
 
@@ -415,12 +410,18 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         set_can_read(true);
     }
     m_bytes_received += packet_size;
-#ifdef IPV4_SOCKET_DEBUG
-    if (buffer_mode() == BufferMode::Bytes)
-        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received;
-    else
-        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received << ", packets in queue: " << m_receive_queue.size();
-#endif
+
+    if constexpr (IPV4_SOCKET_DEBUG) {
+        if (buffer_mode() == BufferMode::Bytes)
+            dbgln("IPv4Socket({}): did_receive {} bytes, total_received={}", this, packet_size, m_bytes_received);
+        else
+            dbgln("IPv4Socket({}): did_receive {} bytes, total_received={}, packets in queue: {}",
+                this,
+                packet_size,
+                m_bytes_received,
+                m_receive_queue.size());
+    }
+
     return true;
 }
 

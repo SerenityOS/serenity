@@ -25,6 +25,7 @@
  */
 
 #include <AK/BinarySearch.h>
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -32,12 +33,9 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 
-//#define PAGE_FAULT_DEBUG
-//#define VOLATILE_PAGE_RANGES_DEBUG
-
 namespace Kernel {
 
-#ifdef VOLATILE_PAGE_RANGES_DEBUG
+#if VOLATILE_PAGE_RANGES_DEBUG
 inline LogStream& operator<<(const LogStream& stream, const VolatilePageRange& range)
 {
     stream << "{" << range.base << " (" << range.count << ") purged: " << range.was_purged << "}";
@@ -68,7 +66,7 @@ bool VolatilePageRanges::add(const VolatilePageRange& range)
         return false;
     add_range.was_purged = range.was_purged;
 
-#ifdef VOLATILE_PAGE_RANGES_DEBUG
+#if VOLATILE_PAGE_RANGES_DEBUG
     klog() << "ADD " << range << " (total range: " << m_total_range << ") -->";
     dump_volatile_page_ranges(m_ranges);
     ScopeGuard debug_guard([&]() {
@@ -142,7 +140,7 @@ bool VolatilePageRanges::remove(const VolatilePageRange& range, bool& was_purged
     if (remove_range.is_empty())
         return false;
 
-#ifdef VOLATILE_PAGE_RANGES_DEBUG
+#if VOLATILE_PAGE_RANGES_DEBUG
     klog() << "REMOVE " << range << " (total range: " << m_total_range << ") -->";
     dump_volatile_page_ranges(m_ranges);
     ScopeGuard debug_guard([&]() {

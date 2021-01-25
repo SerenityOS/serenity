@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,12 +46,6 @@ public:
     const DOM::Window& impl() const { return *m_impl; }
 
     Origin origin() const;
-
-    XMLHttpRequestPrototype* xhr_prototype() { return m_xhr_prototype; }
-    XMLHttpRequestConstructor* xhr_constructor() { return m_xhr_constructor; }
-
-    RangePrototype* range_prototype() { return m_range_prototype; }
-    RangeConstructor* range_constructor() { return m_range_constructor; }
 
     JS::Object* web_prototype(const String& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
     JS::NativeFunction* web_constructor(const String& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
@@ -102,12 +96,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(btoa);
 
     NonnullRefPtr<DOM::Window> m_impl;
-
-    XMLHttpRequestConstructor* m_xhr_constructor { nullptr };
-    XMLHttpRequestPrototype* m_xhr_prototype { nullptr };
-
-    RangePrototype* m_range_prototype { nullptr };
-    RangeConstructor* m_range_constructor { nullptr };
 
     HashMap<String, JS::Object*> m_prototypes;
     HashMap<String, JS::NativeFunction*> m_constructors;

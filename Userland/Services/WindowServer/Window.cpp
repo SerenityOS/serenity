@@ -191,6 +191,33 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
+void Window::
+_rect()
+{
+    auto min_size = 1;
+    // Must be -1 to allow windows just outside the desktop rect.
+    // For example, the windows that make the desktop rect smaller
+    // than the display resolution (e.g. the TaskBar).
+    auto min_visible = -1;
+    auto desktop = WindowManager::the().desktop_rect();
+    auto min_y = 0;
+    if (type() == WindowType::Normal) {
+        min_size = 50;
+        min_visible = 50;
+        // 5 pixels is the amount of frame decoration that can be sacrificed before starting to become an issue.
+        min_y = desktop.top() - 5;
+    }
+    auto new_width = max(width(), min_size);
+    auto new_height = max(height(), min_size);
+    Gfx::IntRect normalized_rect = {
+        clamp(x(), -new_width + min_visible, desktop.width() - min_visible),
+        clamp(y(), min_y, desktop.bottom() - min_visible),
+        new_width,
+        new_height,
+    };
+    set_rect(normalized_rect);
+}
+
 void Window::handle_mouse_event(const MouseEvent& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
@@ -308,20 +335,26 @@ void Window::set_occluded(bool occluded)
     WindowManager::the().notify_occlusion_state_changed(*this);
 }
 
-void Window::set_maximized(bool maximized)
+void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
 {
     if (m_maximized == maximized)
         return;
     if (maximized && (!is_resizable() || resize_aspect_ratio().has_value()))
         return;
-    set_tiled(WindowTileType::None);
+    m_tiled = WindowTileType::None;
     m_maximized = maximized;
     update_menu_item_text(PopupMenuItem::Maximize);
     if (maximized) {
         m_unmaximized_rect = m_physical_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
     } else {
-        set_rect(m_unmaximized_rect);
+        if (fixed_point.has_value()) {
+            auto new_rect = Gfx::IntRect(m_rect);
+            new_rect.set_size_around(m_unmaximized_rect.size(), fixed_point.value());
+            set_rect(new_rect);
+        } else {
+            set_rect(m_unmaximized_rect);
+        }
     }
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_physical_rect));
@@ -614,13 +647,12 @@ void Window::set_fullscreen(bool fullscreen)
 Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 {
     int frame_width = (m_frame.rect().width() - m_physical_rect.width()) / 2;
+
     int title_bar_height = m_frame.title_bar_rect().height();
     int menu_height = WindowManager::the().maximized_window_rect(*this).y();
     int max_height = WindowManager::the().maximized_window_rect(*this).height();
 
     switch (tiled) {
-    case WindowTileType::None:
-        return m_untiled_rect;
     case WindowTileType::Left:
         return Gfx::IntRect(0,
             menu_height,
@@ -666,17 +698,37 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
     }
 }
 
+bool Window::set_untiled(const Gfx::IntPoint& fixed_point)
+{
+    if (m_tiled == WindowTileType::None)
+        return false;
+    ASSERT(!resize_aspect_ratio().has_value());
+
+    m_tiled = WindowTileType::None;
+
+    auto new_rect = Gfx::IntRect(m_rect);
+    new_rect.set_size_around(m_untiled_rect.size(), fixed_point);
+    set_rect(new_rect);
+
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+
+    return true;
+}
+
 void Window::set_tiled(WindowTileType tiled)
 {
+    ASSERT(tiled != WindowTileType::None);
+
     if (m_tiled == tiled)
         return;
 
     if (resize_aspect_ratio().has_value())
         return;
 
-    m_tiled = tiled;
-    if (tiled != WindowTileType::None)
+    if (m_tiled == WindowTileType::None)
         m_untiled_rect = m_physical_rect;
+    m_tiled = tiled;
+  
     set_rect(tiled_rect(tiled));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_physical_rect));
 }

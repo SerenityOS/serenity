@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,22 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/Wrapper.h>
+#include <AK/FlyString.h>
 
-namespace Web::Bindings {
+namespace Web::XHR::EventNames {
 
-class RangeWrapper final : public Wrapper {
-public:
-    RangeWrapper(JS::GlobalObject&, DOM::Range&);
+#define ENUMERATE_XHR_EVENTS                \
+    __ENUMERATE_XHR_EVENT(readystatechange) \
+    __ENUMERATE_XHR_EVENT(loadstart)        \
+    __ENUMERATE_XHR_EVENT(progress)         \
+    __ENUMERATE_XHR_EVENT(abort)            \
+    __ENUMERATE_XHR_EVENT(error)            \
+    __ENUMERATE_XHR_EVENT(load)             \
+    __ENUMERATE_XHR_EVENT(timeout)          \
+    __ENUMERATE_XHR_EVENT(loadend)
 
-    DOM::Range& impl() { return m_impl; }
-    const DOM::Range& impl() const { return m_impl; }
-
-private:
-    virtual const char* class_name() const override { return "RangeWrapper"; }
-
-    NonnullRefPtr<DOM::Range> m_impl;
-};
-
-RangeWrapper* wrap(JS::GlobalObject&, DOM::Range&);
+#define __ENUMERATE_XHR_EVENT(name) extern FlyString name;
+ENUMERATE_XHR_EVENTS
+#undef __ENUMERATE_XHR_EVENT
 
 }

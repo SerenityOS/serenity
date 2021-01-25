@@ -149,7 +149,10 @@ KernelLogStream klog()
 #else
 DebugLogStream klog()
 {
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return dbg();
+#    pragma GCC diagnostic pop
 }
 #endif
 
@@ -235,7 +238,7 @@ void dump_bytes(ReadonlyBytes bytes)
 
     builder.append(" }");
 
-    dbg() << builder.to_string();
+    dbgln("{}", builder.string_view());
 }
 
 }

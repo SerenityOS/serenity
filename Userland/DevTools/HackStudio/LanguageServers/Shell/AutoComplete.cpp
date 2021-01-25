@@ -31,8 +31,6 @@
 #include <Shell/Parser.h>
 #include <Shell/Shell.h>
 
-// #define DEBUG_AUTOCOMPLETE
-
 namespace LanguageServers::Shell {
 
 Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const String& code, size_t offset)
@@ -42,7 +40,7 @@ Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const Str
     if (!ast)
         return {};
 
-#ifdef DEBUG_AUTOCOMPLETE
+#if AUTOCOMPLETE_DEBUG
     dbgln("Complete '{}'", code);
     ast->dump(1);
     dbgln("At offset {}", offset);
@@ -51,7 +49,7 @@ Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const Str
     auto result = ast->complete_for_editor(m_shell, offset);
     Vector<GUI::AutocompleteProvider::Entry> completions;
     for (auto& entry : result) {
-#ifdef DEBUG_AUTOCOMPLETE
+#if AUTOCOMPLETE_DEBUG
         dbgln("Suggestion: '{}' starting at {}", entry.text_string, entry.input_offset);
 #endif
         completions.append({ entry.text_string, entry.input_offset });

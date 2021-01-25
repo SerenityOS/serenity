@@ -45,8 +45,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-// #define SUGGESTIONS_DEBUG
-
 namespace {
 constexpr u32 ctrl(char c) { return c & 0x3f; }
 }

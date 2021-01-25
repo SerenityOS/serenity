@@ -62,7 +62,7 @@ public:
     void set_bytes_per_row(int);
 
     void set_position(int position);
-
+    int find_and_highlight(ByteBuffer& needle, int start = 0);
     Function<void(int, EditMode, int, int)> on_status_change; // position, edit mode, selection start, selection end
     Function<void()> on_change;
 

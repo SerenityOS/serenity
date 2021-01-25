@@ -26,10 +26,9 @@
 
 #include "SlavePTY.h"
 #include "MasterPTY.h"
+#include <AK/Debug.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
-
-//#define SLAVEPTY_DEBUG
 
 namespace Kernel {
 
@@ -48,9 +47,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 
 SlavePTY::~SlavePTY()
 {
-#ifdef SLAVEPTY_DEBUG
-    dbg() << "~SlavePTY(" << m_index << ")";
-#endif
+    dbgln<SLAVEPTY_DEBUG>("~SlavePTY({})", m_index);
     DevPtsFS::unregister_slave_pty(*this);
 }
 
@@ -107,6 +104,11 @@ KResult SlavePTY::close()
 {
     m_master->notify_slave_closed({});
     return KSuccess;
+}
+
+String SlavePTY::device_name() const
+{
+    return String::formatted("{}", minor());
 }
 
 FileBlockCondition& SlavePTY::block_condition()

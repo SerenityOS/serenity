@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
@@ -59,8 +60,6 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
-
-//#define PROCFS_DEBUG
 
 namespace Kernel {
 
@@ -987,9 +986,7 @@ NonnullRefPtr<Inode> ProcFS::root_inode() const
 
 RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 {
-#ifdef PROCFS_DEBUG
-    dbg() << "ProcFS::get_inode(" << inode_id.index() << ")";
-#endif
+    dbgln<PROCFS_DEBUG>("ProcFS::get_inode({})", inode_id.index());
     if (inode_id == root_inode()->identifier())
         return m_root_inode;
 
@@ -1102,9 +1099,7 @@ void ProcFSInode::did_seek(FileDescription& description, off_t new_offset)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-#ifdef PROCFS_DEBUG
-    dbg() << "ProcFSInode::metadata(" << index() << ")";
-#endif
+    dbgln<PROCFS_DEBUG>("ProcFSInode::metadata({})", index());
     InodeMetadata metadata;
     metadata.inode = identifier();
     metadata.ctime = mepoch;
@@ -1113,9 +1108,7 @@ InodeMetadata ProcFSInode::metadata() const
     auto proc_parent_directory = to_proc_parent_directory(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
 
-#ifdef PROCFS_DEBUG
-    dbg() << "  -> pid: " << to_pid(identifier()).value() << ", fi: " << proc_file_type << ", pdi: " << proc_parent_directory;
-#endif
+    dbgln<PROCFS_DEBUG>("  -> pid={}, fi={}, pdi={}", to_pid(identifier()).value(), (int)proc_file_type, (int)proc_parent_directory);
 
     if (is_process_related_file(identifier())) {
         ProcessID pid = to_pid(identifier());
@@ -1180,18 +1173,14 @@ InodeMetadata ProcFSInode::metadata() const
 
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-#ifdef PROCFS_DEBUG
-    dbg() << "ProcFS: read_bytes offset: " << offset << " count: " << count;
-#endif
+    dbgln<PROCFS_DEBUG>("ProcFS: read_bytes offset: {} count: {}", offset, count);
     ASSERT(offset >= 0);
     ASSERT(buffer.user_or_kernel_ptr());
 
     if (!description)
         return -EIO;
     if (!description->data()) {
-#ifdef PROCFS_DEBUG
-        dbgln("ProcFS: Do not have cached data!");
-#endif
+        dbgln<PROCFS_DEBUG>("ProcFS: Do not have cached data!");
         return -EIO;
     }
 
@@ -1215,9 +1204,7 @@ InodeIdentifier ProcFS::ProcFSDirectoryEntry::identifier(unsigned fsid) const
 
 KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
-#ifdef PROCFS_DEBUG
-    dbg() << "ProcFS: traverse_as_directory " << index();
-#endif
+    dbgln<PROCFS_DEBUG>("ProcFS: traverse_as_directory {}", index());
 
     if (!Kernel::is_directory(identifier()))
         return ENOTDIR;

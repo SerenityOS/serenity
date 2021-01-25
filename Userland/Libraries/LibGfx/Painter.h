@@ -62,6 +62,7 @@ public:
     void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
     void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
+    void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const FloatRect& src_rect, float opacity = 1.0f);
     void draw_triangle(const IntPoint&, const IntPoint&, const IntPoint&, Color);
     void draw_ellipse_intersecting(const IntRect&, Color, int thickness = 1);
     void set_pixel(const IntPoint&, Color);
@@ -75,7 +76,6 @@ public:
     void blit_filtered(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, Function<Color(Color)>);
     void draw_tiled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&);
     void blit_offset(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, const IntPoint&);
-    void blit_scaled(const IntRect&, const Gfx::Bitmap&, const IntRect&, float, float);
     void blit_disabled(const IntPoint&, const Gfx::Bitmap&, const IntRect&, const Palette&);
     void draw_text(const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const IntRect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);

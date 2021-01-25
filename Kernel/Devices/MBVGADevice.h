@@ -45,6 +45,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0660; }
+    virtual String device_name() const override;
 
 private:
     virtual const char* class_name() const override { return "MBVGA"; }

@@ -27,6 +27,7 @@
 #include "Shell.h"
 #include "Execution.h"
 #include "Formatter.h"
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
@@ -56,8 +57,6 @@
 static bool s_disable_hyperlinks = false;
 extern char** environ;
 
-//#define SH_DEBUG
-
 namespace Shell {
 
 // FIXME: This should eventually be removed once we've established that
@@ -70,7 +69,7 @@ void Shell::setup_signals()
 {
     if (m_should_reinstall_signal_handlers) {
         Core::EventLoop::register_signal(SIGCHLD, [this](int) {
-#ifdef SH_DEBUG
+#if SH_DEBUG
             dbgln("SIGCHLD!");
 #endif
             notify_child_event();
@@ -508,7 +507,7 @@ String Shell::format(const StringView& source, ssize_t& cursor) const
 Shell::Frame Shell::push_frame(String name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
-#ifdef SH_DEBUG
+#if SH_DEBUG
     dbgln("New frame '{}' at {:p}", name, &m_local_frames.last());
 #endif
     return { m_local_frames, m_local_frames.last() };
@@ -574,7 +573,7 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
     if (!command)
         return 0;
 
-#ifdef SH_DEBUG
+#if SH_DEBUG
     dbgln("Command follows");
     command->dump(0);
 #endif
@@ -614,6 +613,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     // If the command is empty, store the redirections and apply them to all later commands.
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
         m_global_redirections.append(command.redirections);
+        for (auto& next_in_chain : command.next_chain)
+            run_tail(command, next_in_chain, last_return_code);
         return nullptr;
     }
 
@@ -669,7 +670,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&] {
         for (auto& rewiring : rewirings) {
 
-#ifdef SH_DEBUG
+#if SH_DEBUG
             dbgln("in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
 #endif
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
@@ -784,7 +785,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             }
         }
 
-#ifdef SH_DEBUG
+#if SH_DEBUG
         dbgln("Synced up with parent, we're good to exec()");
 #endif
 
@@ -982,7 +983,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     NonnullRefPtrVector<Job> spawned_jobs;
 
     for (auto& command : commands) {
-#ifdef SH_DEBUG
+#if SH_DEBUG
         dbgln("Command");
         for (auto& arg : command.argv)
             dbgln("argv: {}", arg);
@@ -1079,17 +1080,18 @@ void Shell::block_on_job(RefPtr<Job> job)
         }
     } };
 
-    Core::EventLoop loop;
+    bool job_exited { false };
     job->on_exit = [&, old_exit = move(job->on_exit)](auto job) {
         if (old_exit)
             old_exit(job);
-        loop.quit(0);
+        job_exited = true;
     };
 
     if (job->exited())
         return;
 
-    loop.exec();
+    while (!job_exited)
+        Core::EventLoop::current().pump();
 
     // If the job is part of a pipeline, wait for the rest of the members too.
     if (auto command = job->command_ptr())
@@ -1625,11 +1627,11 @@ void Shell::notify_child_event()
 #endif
 
             int wstatus = 0;
-#ifdef SH_DEBUG
+#if SH_DEBUG
             dbgln("waitpid({}) = ...", job.pid());
 #endif
             auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-#ifdef SH_DEBUG
+#if SH_DEBUG
             dbgln("... = {} - {}", child_pid, wstatus);
 #endif
 
@@ -1785,7 +1787,7 @@ void Shell::stop_all_jobs()
             printf("Killing active jobs\n");
         for (auto& entry : jobs) {
             if (entry.value->is_suspended()) {
-#ifdef SH_DEBUG
+#if SH_DEBUG
                 dbgln("Job {} is suspended", entry.value->pid());
 #endif
                 kill_job(entry.value, SIGCONT);
@@ -1797,7 +1799,7 @@ void Shell::stop_all_jobs()
         usleep(10000); // Wait for a bit before killing the job
 
         for (auto& entry : jobs) {
-#ifdef SH_DEBUG
+#if SH_DEBUG
             dbgln("Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
 #endif
             kill_job(entry.value, SIGKILL);

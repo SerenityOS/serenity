@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Devices/RandomDevice.h>
@@ -34,8 +35,6 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-
-//#define TCP_SOCKET_DEBUG
 
 namespace Kernel {
 
@@ -48,9 +47,7 @@ void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 
 void TCPSocket::set_state(State new_state)
 {
-#ifdef TCP_SOCKET_DEBUG
-    dbg() << "TCPSocket{" << this << "} state moving from " << to_string(m_state) << " to " << to_string(new_state);
-#endif
+    dbgln<TCP_SOCKET_DEBUG>("TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
 
     auto was_disconnected = protocol_is_disconnected();
     auto previous_role = m_role;
@@ -157,9 +154,7 @@ TCPSocket::~TCPSocket()
     LOCKER(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
 
-#ifdef TCP_SOCKET_DEBUG
-    dbg() << "~TCPSocket in state " << to_string(state());
-#endif
+    dbgln<TCP_SOCKET_DEBUG>("~TCPSocket in state {}", to_string(state()));
 }
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
@@ -172,7 +167,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
-#ifdef TCP_SOCKET_DEBUG
+#if TCP_SOCKET_DEBUG
     klog() << "payload_size " << payload_size << ", will it fit in " << buffer_size << "?";
 #endif
     ASSERT(buffer_size >= payload_size);
@@ -255,7 +250,7 @@ void TCPSocket::send_outgoing_packets()
         packet.tx_time = now;
         packet.tx_counter++;
 
-#ifdef TCP_SOCKET_DEBUG
+#if TCP_SOCKET_DEBUG
         auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
         klog() << "sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
 #endif
@@ -278,18 +273,14 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
 
-#ifdef TCP_SOCKET_DEBUG
-        dbg() << "TCPSocket: receive_tcp_packet: " << ack_number;
-#endif
+        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet: {}", ack_number);
 
         int removed = 0;
         LOCKER(m_not_acked_lock);
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 
-#ifdef TCP_SOCKET_DEBUG
-            dbg() << "TCPSocket: iterate: " << packet.ack_number;
-#endif
+            dbgln<TCP_SOCKET_DEBUG>("TCPSocket: iterate: {}", packet.ack_number);
 
             if (packet.ack_number <= ack_number) {
                 m_not_acked.take_first();
@@ -299,9 +290,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             }
         }
 
-#ifdef TCP_SOCKET_DEBUG
-        dbg() << "TCPSocket: receive_tcp_packet acknowledged " << removed << " packets";
-#endif
+        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
     }
 
     m_packets_in++;
@@ -459,7 +448,7 @@ bool TCPSocket::protocol_is_disconnected() const
 void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
-#ifdef TCP_SOCKET_DEBUG
+#if TCP_SOCKET_DEBUG
         dbgln(" Sending FIN/ACK from Established and moving into FinWait1");
 #endif
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
@@ -474,7 +463,7 @@ KResult TCPSocket::close()
     Locker socket_locker(lock());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
-#ifdef TCP_SOCKET_DEBUG
+#if TCP_SOCKET_DEBUG
         dbgln(" Sending FIN from CloseWait and moving into LastAck");
 #endif
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);

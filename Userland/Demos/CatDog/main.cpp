@@ -26,6 +26,7 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>

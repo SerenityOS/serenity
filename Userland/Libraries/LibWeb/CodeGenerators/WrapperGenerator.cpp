@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
@@ -135,9 +136,14 @@ struct Function {
     }
 };
 
+struct Constant {
+    Type type;
+    String name;
+    String value;
+};
+
 struct Attribute {
     bool readonly { false };
-    bool unsigned_ { false };
     Type type;
     String name;
     HashMap<String, String> extended_attributes;
@@ -152,6 +158,7 @@ struct Interface {
     String parent_name;
 
     Vector<Attribute> attributes;
+    Vector<Constant> constants;
     Vector<Function> functions;
 
     // Added for convenience after parsing
@@ -203,9 +210,16 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     assert_specific('{');
 
     auto parse_type = [&] {
+        bool unsigned_ = lexer.consume_specific("unsigned");
+        if (unsigned_)
+            consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?'; });
         auto nullable = lexer.consume_specific('?');
-        return Type { name, nullable };
+        StringBuilder builder;
+        if (unsigned_)
+            builder.append("unsigned ");
+        builder.append(name);
+        return Type { builder.to_string(), nullable };
     };
 
     auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
@@ -216,24 +230,38 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         if (lexer.consume_specific("attribute"))
             consume_whitespace();
 
-        bool unsigned_ = lexer.consume_specific("unsigned");
-        if (unsigned_)
-            consume_whitespace();
-
         auto type = parse_type();
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
         consume_whitespace();
+
         assert_specific(';');
         Attribute attribute;
         attribute.readonly = readonly;
-        attribute.unsigned_ = unsigned_;
         attribute.type = type;
         attribute.name = name;
         attribute.getter_callback_name = String::formatted("{}_getter", snake_name(attribute.name));
         attribute.setter_callback_name = String::formatted("{}_setter", snake_name(attribute.name));
         attribute.extended_attributes = move(extended_attributes);
         interface->attributes.append(move(attribute));
+    };
+
+    auto parse_constant = [&] {
+        lexer.consume_specific("const");
+        consume_whitespace();
+
+        Constant constant;
+        constant.type = parse_type();
+        consume_whitespace();
+        constant.name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
+        consume_whitespace();
+        lexer.consume_specific('=');
+        consume_whitespace();
+        constant.value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
+        consume_whitespace();
+        assert_specific(';');
+
+        interface->constants.append(move(constant));
     };
 
     auto parse_function = [&](HashMap<String, String>& extended_attributes) {
@@ -301,6 +329,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             extended_attributes = parse_extended_attributes();
         }
 
+        if (lexer.next_is("const")) {
+            parse_constant();
+            continue;
+        }
+
         if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes);
             continue;
@@ -363,7 +396,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG")) {
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -373,23 +406,30 @@ int main(int argc, char** argv)
         interface->fully_qualified_name = interface->name;
     }
 
-#if 0
-    dbgln("Attributes:");
-    for (auto& attribute : interface->attributes) {
-        dbg() << "  " << (attribute.readonly ? "Readonly " : "")
-              << attribute.type.name << (attribute.type.nullable ? "?" : "")
-              << " " << attribute.name;
-    }
+    if constexpr (WRAPPER_GENERATOR_DEBUG) {
+        dbgln("Attributes:");
+        for (auto& attribute : interface->attributes) {
+            dbgln("  {}{}{} {}",
+                attribute.readonly ? "readonly " : "",
+                attribute.type.name,
+                attribute.type.nullable ? "?" : "",
+                attribute.name);
+        }
 
-    dbgln("Functions:");
-    for (auto& function : interface->functions) {
-        dbg() << "  " << function.return_type.name << (function.return_type.nullable ? "?" : "")
-              << " " << function.name;
-        for (auto& parameter : function.parameters) {
-            dbg() << "    " << parameter.type.name << (parameter.type.nullable ? "?" : "") << " " << parameter.name;
+        dbgln("Functions:");
+        for (auto& function : interface->functions) {
+            dbgln("  {}{} {}",
+                function.return_type.name,
+                function.return_type.nullable ? "?" : "",
+                function.name);
+            for (auto& parameter : function.parameters) {
+                dbgln("    {}{} {}",
+                    parameter.type.name,
+                    parameter.type.nullable ? "?" : "",
+                    parameter.name);
+            }
         }
     }
-#endif
 
     if (header_mode)
         generate_header(*interface);
@@ -478,6 +518,8 @@ static void generate_header(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 )~~~");
 
@@ -698,6 +740,8 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -740,6 +784,20 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
     NativeFunction::initialize(global_object);
     define_property(vm.names.prototype, &window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
     define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+
+)~~~");
+
+    for (auto& constant : interface.constants) {
+        auto constant_generator = generator.fork();
+        constant_generator.set("constant.name", constant.name);
+        constant_generator.set("constant.value", constant.value);
+
+        constant_generator.append(R"~~~(
+define_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+)~~~");
+    }
+
+    generator.append(R"~~~(
 }
 
 } // namespace Web::Bindings
@@ -865,12 +923,15 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #    include <LibWeb/NavigationTiming/@name@.h>
 #elif __has_include(<LibWeb/SVG/@name@.h>)
 #    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::DOM;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
+using namespace Web::XHR;
 
 namespace Web::Bindings {
 
@@ -911,6 +972,16 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 
         attribute_generator.append(R"~~~(
     define_native_property("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+)~~~");
+    }
+
+    for (auto& constant : interface.constants) {
+        auto constant_generator = generator.fork();
+        constant_generator.set("constant.name", constant.name);
+        constant_generator.set("constant.value", constant.value);
+
+        constant_generator.append(R"~~~(
+    define_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
 )~~~");
     }
 
@@ -1020,6 +1091,12 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
             scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_boolean();
 )~~~");
+        } else if (parameter.type.name == "unsigned long") {
+            scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
         } else {
             dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
             ASSERT_NOT_REACHED();
@@ -1085,9 +1162,13 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
     return new_array;
 )~~~");
-        } else if (return_type.name == "long" || return_type.name == "double" || return_type.name == "boolean" || return_type.name == "short") {
+        } else if (return_type.name == "boolean" || return_type.name == "double" || return_type.name == "long" || return_type.name == "unsigned long") {
             scoped_generator.append(R"~~~(
     return JS::Value(retval);
+)~~~");
+        } else if (return_type.name == "short" || return_type.name == "unsigned short") {
+            scoped_generator.append(R"~~~(
+    return JS::Value((i32)retval);
 )~~~");
         } else if (return_type.name == "Uint8ClampedArray") {
             scoped_generator.append(R"~~~(

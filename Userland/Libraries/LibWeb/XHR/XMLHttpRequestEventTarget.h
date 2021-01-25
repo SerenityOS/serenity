@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,31 @@
 
 #pragma once
 
-#include <LibJS/Runtime/NativeFunction.h>
+#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/DOM/EventDispatcher.h>
+#include <LibWeb/DOM/EventTarget.h>
 
-namespace Web::Bindings {
+namespace Web::XHR {
 
-class RangeConstructor final : public JS::NativeFunction {
+class XMLHttpRequestEventTarget
+    : public DOM::EventTarget
+    , public Bindings::Wrappable {
 public:
-    explicit RangeConstructor(JS::GlobalObject&);
+    using WrapperType = Bindings::XMLHttpRequestEventTargetWrapper;
 
-    void initialize(JS::GlobalObject&) override;
+    virtual ~XMLHttpRequestEventTarget() override {};
 
-    JS::Value call() override;
-    JS::Value construct(JS::Function& new_target) override;
+protected:
+    explicit XMLHttpRequestEventTarget(Bindings::ScriptExecutionContext& script_execution_context)
+        : DOM::EventTarget(script_execution_context)
+    {
+    }
 
 private:
-    bool has_constructor() const override { return true; }
-    const char* class_name() const override { return "RangeConstructor"; }
+    virtual JS::Object* create_wrapper(JS::GlobalObject& global_object) override
+    {
+        return wrap(global_object, *this);
+    }
 };
 
 }

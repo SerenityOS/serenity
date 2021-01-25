@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Pierre Hoffmeister
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,25 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/EventTargetWrapper.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibGfx/Bitmap.h>
 
-namespace Web::Bindings {
+namespace Gfx {
 
-class XMLHttpRequestWrapper final : public EventTargetWrapper {
+class PNGChunk;
+
+class PNGWriter {
 public:
-    XMLHttpRequestWrapper(JS::GlobalObject&, XMLHttpRequest&);
-    virtual ~XMLHttpRequestWrapper() override;
-
-    XMLHttpRequest& impl();
-    const XMLHttpRequest& impl() const;
+    ByteBuffer write(const RefPtr<Bitmap>);
 
 private:
-    virtual const char* class_name() const override { return "XMLHttpRequestWrapper"; }
+    Vector<u8> m_data;
+    void add_chunk(const PNGChunk&);
+    void add_png_header();
+    void add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, u8 color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
+    void add_IDAT_chunk(const RefPtr<Bitmap>);
+    void add_IEND_chunk();
 };
-
-XMLHttpRequestWrapper* wrap(JS::GlobalObject&, XMLHttpRequest&);
 
 }

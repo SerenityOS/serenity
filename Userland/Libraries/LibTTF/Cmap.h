@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Span.h>
+#include <stdint.h>
 
 namespace TTF {
 

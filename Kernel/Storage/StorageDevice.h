@@ -39,6 +39,7 @@ class StorageDevice : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
     enum class Type : u8 {
+        Ramdisk,
         IDE,
         NVMe,
     };

@@ -24,17 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Thread.h>
 
-//#define LOCK_TRACE_DEBUG
-//#define LOCK_RESTORE_DEBUG
-
 namespace Kernel {
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 void Lock::lock(Mode mode)
 {
     lock("unknown", 0, mode);
@@ -58,9 +56,7 @@ void Lock::lock(Mode mode)
                 Mode current_mode = m_mode;
                 switch (current_mode) {
                 case Mode::Unlocked: {
-#ifdef LOCK_TRACE_DEBUG
-                    dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently unlocked";
-#endif
+                    dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently unlocked", this, mode_to_string(mode));
                     m_mode = mode;
                     ASSERT(!m_holder);
                     ASSERT(m_shared_holders.is_empty());
@@ -72,7 +68,7 @@ void Lock::lock(Mode mode)
                     }
                     ASSERT(m_times_locked == 0);
                     m_times_locked++;
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -83,16 +79,18 @@ void Lock::lock(Mode mode)
                     if (m_holder != current_thread)
                         break;
                     ASSERT(m_shared_holders.is_empty());
-#ifdef LOCK_TRACE_DEBUG
-                    if (mode == Mode::Exclusive)
-                        dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently exclusive, holding: " << m_times_locked;
-                    else
-                        dbg() << "Lock::lock @ " << this << ": acquire exclusive (requested " << mode_to_string(mode) << "), currently exclusive, holding " << m_times_locked;
-#endif
+
+                    if constexpr (LOCK_TRACE_DEBUG) {
+                        if (mode == Mode::Exclusive)
+                            dbgln("Lock::lock @ {}: acquire {}, currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
+                        else
+                            dbgln("Lock::lock @ {}: acquire exclusive (requested {}), currently exclusive, holding: {}", this, mode_to_string(mode), m_times_locked);
+                    }
+
                     ASSERT(mode == Mode::Exclusive || mode == Mode::Shared);
                     ASSERT(m_times_locked > 0);
                     m_times_locked++;
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -102,9 +100,9 @@ void Lock::lock(Mode mode)
                     ASSERT(!m_holder);
                     if (mode != Mode::Shared)
                         break;
-#ifdef LOCK_TRACE_DEBUG
-                    dbg() << "Lock::lock @ " << this << ": acquire " << mode_to_string(mode) << ", currently shared, locks held: " << m_times_locked;
-#endif
+
+                    dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {}: acquire {}, currently shared, locks held {}", this, mode_to_string(mode), m_times_locked);
+
                     ASSERT(m_times_locked > 0);
                     m_times_locked++;
                     ASSERT(!m_shared_holders.is_empty());
@@ -113,7 +111,7 @@ void Lock::lock(Mode mode)
                         it->value++;
                     else
                         m_shared_holders.set(current_thread, 1);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                     current_thread->holding_lock(*this, 1, file, line);
 #endif
                     m_lock.store(false, AK::memory_order_release);
@@ -141,12 +139,13 @@ void Lock::unlock()
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             Mode current_mode = m_mode;
-#ifdef LOCK_TRACE_DEBUG
-            if (current_mode == Mode::Shared)
-                dbg() << "Lock::unlock @ " << this << ": release " << mode_to_string(current_mode) << ", locks held: " << m_times_locked;
-            else
-                dbg() << "Lock::unlock @ " << this << ": release " << mode_to_string(current_mode) << ", holding: " << m_times_locked;
-#endif
+            if constexpr (LOCK_TRACE_DEBUG) {
+                if (current_mode == Mode::Shared)
+                    dbgln("Lock::unlock @ {}: release {}, locks held: {}", this, mode_to_string(current_mode), m_times_locked);
+                else
+                    dbgln("Lock::unlock @ {}: release {}, holding: {}", this, mode_to_string(current_mode), m_times_locked);
+            }
+
             ASSERT(current_mode != Mode::Unlocked);
 
             ASSERT(m_times_locked > 0);
@@ -180,7 +179,7 @@ void Lock::unlock()
                 m_mode = Mode::Unlocked;
             }
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
             current_thread->holding_lock(*this, -1);
 #endif
 
@@ -211,16 +210,16 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                     lock_count_to_restore = 0;
                     return Mode::Unlocked;
                 }
-#ifdef LOCK_RESTORE_DEBUG
-                dbg() << "Lock::force_unlock_if_locked @ " << this << ": unlocking exclusive with lock count: " << m_times_locked;
-#endif
+
+                dbgln<LOCK_RESTORE_DEBUG>("Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
+
                 m_holder = nullptr;
                 ASSERT(m_times_locked > 0);
                 lock_count_to_restore = m_times_locked;
                 m_times_locked = 0;
                 m_mode = Mode::Unlocked;
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
 #endif
                 previous_mode = Mode::Exclusive;
@@ -234,13 +233,14 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                     lock_count_to_restore = 0;
                     return Mode::Unlocked;
                 }
-#ifdef LOCK_RESTORE_DEBUG
-                dbg() << "Lock::force_unlock_if_locked @ " << this << ": unlocking exclusive with lock count: " << it->value << ", total locks: " << m_times_locked;
-#endif
+
+                dbgln<LOCK_RESTORE_DEBUG>("Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}, total locks: {}",
+                    this, it->value, m_times_locked);
+
                 ASSERT(it->value > 0);
                 lock_count_to_restore = it->value;
                 ASSERT(lock_count_to_restore > 0);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
 #endif
                 m_shared_holders.remove(it);
@@ -269,7 +269,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     }
 }
 
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
 void Lock::restore_lock(Mode mode, u32 lock_count)
 {
     return restore_lock("unknown", 0, mode, lock_count);
@@ -292,16 +292,16 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 auto expected_mode = Mode::Unlocked;
                 if (!m_mode.compare_exchange_strong(expected_mode, Mode::Exclusive))
                     break;
-#ifdef LOCK_RESTORE_DEBUG
-                dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was unlocked";
-#endif
+
+                dbgln<LOCK_RESTORE_DEBUG>("Lock::restore_lock @ {}: restoring {} with lock count {}, was unlocked", this, mode_to_string(mode), lock_count);
+
                 ASSERT(m_times_locked == 0);
                 m_times_locked = lock_count;
                 ASSERT(!m_holder);
                 ASSERT(m_shared_holders.is_empty());
                 m_holder = current_thread;
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, (int)lock_count, file, line);
 #endif
                 return;
@@ -310,9 +310,10 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 auto expected_mode = Mode::Unlocked;
                 if (!m_mode.compare_exchange_strong(expected_mode, Mode::Shared) && expected_mode != Mode::Shared)
                     break;
-#ifdef LOCK_RESTORE_DEBUG
-                dbg() << "Lock::restore_lock @ " << this << ": restoring " << mode_to_string(mode) << " with lock count " << lock_count << ", was " << mode_to_string(expected_mode);
-#endif
+
+                dbgln<LOCK_RESTORE_DEBUG>("Lock::restore_lock @ {}: restoring {} with lock count {}, was {}",
+                    this, mode_to_string(mode), lock_count, mode_to_string(expected_mode));
+
                 ASSERT(expected_mode == Mode::Shared || m_times_locked == 0);
                 m_times_locked += lock_count;
                 ASSERT(!m_holder);
@@ -321,7 +322,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 // There may be other shared lock holders already, but we should not have an entry yet
                 ASSERT(set_result == AK::HashSetResult::InsertedNewEntry);
                 m_lock.store(false, AK::memory_order_release);
-#ifdef LOCK_DEBUG
+#if LOCK_DEBUG
                 m_holder->holding_lock(*this, (int)lock_count, file, line);
 #endif
                 return;

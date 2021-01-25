@@ -31,6 +31,7 @@
 #include "FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/QuickSort.h>
@@ -509,57 +510,32 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     }
 }
 
-void Painter::blit_scaled(const IntRect& dst_rect_raw, const Gfx::Bitmap& source, const IntRect& src_rect, float hscale, float vscale)
+void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
-    auto dst_rect = IntRect(dst_rect_raw.location(), dst_rect_raw.size()).translated(translation());
-    auto clipped_rect = dst_rect.intersected(clip_rect());
-    if (clipped_rect.is_empty())
-        return;
-    const int first_row = (clipped_rect.top() - dst_rect.top());
-    const int last_row = (clipped_rect.bottom() - dst_rect.top());
-    const int first_column = (clipped_rect.left() - dst_rect.left());
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-
-    int x_start = first_column + src_rect.left();
-    for (int row = first_row; row <= last_row; ++row) {
-        int sr = (row + src_rect.top()) * vscale;
-        if (sr >= source.size().height() || sr < 0) {
-            dst += dst_skip;
-            continue;
-        }
-        const RGBA32* sl = source.scanline(sr);
-        for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
-            int sx = x * hscale;
-            if (sx < source.size().width() && sx >= 0)
-                dst[x - x_start] = sl[sx];
-        }
-        dst += dst_skip;
-    }
-    return;
-}
-
-void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, float opacity)
-{
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
+    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
     ASSERT(!m_target->has_alpha_channel());
 
     if (!opacity)
         return;
     if (opacity >= 1.0f)
-        return blit(position, source, src_rect);
+        return blit(position, source, a_src_rect);
 
     u8 alpha = 255 * opacity;
 
-    IntRect safe_src_rect = IntRect::intersection(src_rect, source.rect());
-    IntRect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(state().translation);
+    IntRect safe_src_rect = IntRect::intersection(a_src_rect, source.rect());
+    if (scale() != source.scale())
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect, opacity);
+
+    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
     auto clipped_rect = IntRect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    int scale = this->scale();
+    auto src_rect = a_src_rect * scale;
+    clipped_rect *= scale;
+    dst_rect *= scale;
+
     const int first_row = clipped_rect.top() - dst_rect.top();
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
@@ -569,6 +545,8 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
     const unsigned src_skip = source.pitch() / sizeof(RGBA32);
 
+    // FIXME: This does the wrong thing if source has an alpha channel: It ignores it and pretends that every pixel in source is fully opaque.
+    // Maybe just punt to draw_scaled_bitmap() in that case too?
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
             Color src_color_with_alpha = Color::from_rgb(src[x]);
@@ -630,12 +608,17 @@ void Painter::blit_dimmed(const IntPoint& position, const Gfx::Bitmap& source, c
 
 void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    ASSERT((source.scale() == 1 || source.scale() == scale()) && "draw_tiled_bitmap only supports integer upsampling");
 
     auto dst_rect = a_dst_rect.translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    int scale = this->scale();
+    clipped_rect *= scale;
+    dst_rect *= scale;
+
     const int first_row = (clipped_rect.top() - dst_rect.top());
     const int last_row = (clipped_rect.bottom() - dst_rect.top());
     const int first_column = (clipped_rect.left() - dst_rect.left());
@@ -643,14 +626,25 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
-        int x_start = first_column + a_dst_rect.left();
-        for (int row = first_row; row <= last_row; ++row) {
-            const RGBA32* sl = source.scanline((row + a_dst_rect.top())
-                % source.size().height());
-            for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
-                dst[x - x_start] = sl[x % source.size().width()];
+        int s = scale / source.scale();
+        if (s == 1) {
+            int x_start = first_column + a_dst_rect.left() * scale;
+            for (int row = first_row; row <= last_row; ++row) {
+                const RGBA32* sl = source.scanline((row + a_dst_rect.top() * scale) % source.physical_height());
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                    dst[x - x_start] = sl[x % source.physical_width()];
+                }
+                dst += dst_skip;
             }
-            dst += dst_skip;
+        } else {
+            int x_start = first_column + a_dst_rect.left() * scale;
+            for (int row = first_row; row <= last_row; ++row) {
+                const RGBA32* sl = source.scanline(((row + a_dst_rect.top() * scale) / s) % source.physical_height());
+                for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+                    dst[x - x_start] = sl[(x / s) % source.physical_width()];
+                }
+                dst += dst_skip;
+            }
         }
         return;
     }
@@ -658,49 +652,28 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     ASSERT_NOT_REACHED();
 }
 
-void Painter::blit_offset(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, const IntPoint& offset)
+void Painter::blit_offset(const IntPoint& a_position, const Gfx::Bitmap& source, const IntRect& a_src_rect, const IntPoint& offset)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
-    auto dst_rect = IntRect(position, src_rect.size()).translated(translation());
-    auto clipped_rect = dst_rect.intersected(clip_rect());
-    if (clipped_rect.is_empty())
-        return;
-    const int first_row = (clipped_rect.top() - dst_rect.top());
-    const int last_row = (clipped_rect.bottom() - dst_rect.top());
-    const int first_column = (clipped_rect.left() - dst_rect.left());
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-
-    if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
-        int x_start = first_column + src_rect.left();
-        for (int row = first_row; row <= last_row; ++row) {
-            int sr = row - offset.y() + src_rect.top();
-            if (sr >= source.size().height() || sr < 0) {
-                dst += dst_skip;
-                continue;
-            }
-            const RGBA32* sl = source.scanline(sr);
-            for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
-                int sx = x - offset.x();
-                if (sx < source.size().width() && sx >= 0)
-                    dst[x - x_start] = sl[sx];
-            }
-            dst += dst_skip;
-        }
-        return;
+    auto src_rect = IntRect { a_src_rect.location() - offset, a_src_rect.size() };
+    auto position = a_position;
+    if (src_rect.x() < 0) {
+        position.set_x(position.x() - src_rect.x());
+        src_rect.set_x(0);
     }
-
-    ASSERT_NOT_REACHED();
+    if (src_rect.y() < 0) {
+        position.set_y(position.y() - src_rect.y());
+        src_rect.set_y(0);
+    }
+    blit(position, source, src_rect);
 }
 
 void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect)
 {
+    auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect);
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect);
 
     ASSERT(source.has_alpha_channel());
-    IntRect safe_src_rect = a_src_rect.intersected(source.rect());
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
 
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -739,19 +712,19 @@ void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& sourc
 
 void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    assert(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
+    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
     if (opacity < 1.0f)
         return blit_with_opacity(position, source, a_src_rect, opacity);
     if (source.has_alpha_channel())
         return blit_with_alpha(position, source, a_src_rect);
+
+    auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, a_src_rect.size() }, source, a_src_rect, opacity);
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect, opacity);
 
     // If we get here, the Painter might have a scale factor, but the source bitmap has the same scale factor.
     // We need to transform from logical to physical coordinates, but we can just copy pixels without resampling.
-    auto safe_src_rect = a_src_rect.intersected(source.rect());
-    ASSERT(source.rect().contains(safe_src_rect));
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
@@ -820,27 +793,32 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, con
 }
 
 template<bool has_alpha_channel, typename GetPixel>
-ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRect& dst_rect, const IntRect& clipped_rect, const Gfx::Bitmap& source, const IntRect& src_rect, int hscale, int vscale, GetPixel get_pixel, float opacity)
+ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRect& dst_rect, const IntRect& clipped_rect, const Gfx::Bitmap& source, const FloatRect& src_rect, GetPixel get_pixel, float opacity)
 {
-    if (dst_rect == clipped_rect && !(dst_rect.width() % src_rect.width()) && !(dst_rect.height() % src_rect.height())) {
-        int hfactor = dst_rect.width() / src_rect.width();
-        int vfactor = dst_rect.height() / src_rect.height();
+    IntRect int_src_rect = enclosing_int_rect(src_rect);
+    if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
+        int hfactor = dst_rect.width() / int_src_rect.width();
+        int vfactor = dst_rect.height() / int_src_rect.height();
         if (hfactor == 2 && vfactor == 2)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, src_rect, source, 2, 2, get_pixel, opacity);
+            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 2, 2, get_pixel, opacity);
         if (hfactor == 3 && vfactor == 3)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, src_rect, source, 3, 3, get_pixel, opacity);
+            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 3, 3, get_pixel, opacity);
         if (hfactor == 4 && vfactor == 4)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, src_rect, source, 4, 4, get_pixel, opacity);
-        return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, src_rect, source, hfactor, vfactor, get_pixel, opacity);
+            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, 4, 4, get_pixel, opacity);
+        return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, int_src_rect, source, hfactor, vfactor, get_pixel, opacity);
     }
 
     bool has_opacity = opacity != 1.0f;
+    int hscale = (src_rect.width() * (1 << 16)) / dst_rect.width();
+    int vscale = (src_rect.height() * (1 << 16)) / dst_rect.height();
+    int src_left = src_rect.left() * (1 << 16);
+    int src_top = src_rect.top() * (1 << 16);
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
-            auto scaled_x = ((x - dst_rect.x()) * hscale) >> 16;
-            auto scaled_y = ((y - dst_rect.y()) * vscale) >> 16;
+            auto scaled_x = ((x - dst_rect.x()) * hscale + src_left) >> 16;
+            auto scaled_y = ((y - dst_rect.y()) * vscale + src_top) >> 16;
             auto src_pixel = get_pixel(source, scaled_x, scaled_y);
             if (has_opacity)
                 src_pixel.set_alpha(src_pixel.alpha() * opacity);
@@ -854,8 +832,14 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
 
 void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    if (scale() == source.scale() && a_dst_rect.size() == a_src_rect.size())
-        return blit(a_dst_rect.location(), source, a_src_rect, opacity);
+    draw_scaled_bitmap(a_dst_rect, source, FloatRect { a_src_rect }, opacity);
+}
+
+void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source, const FloatRect& a_src_rect, float opacity)
+{
+    IntRect int_src_rect = enclosing_int_rect(a_src_rect);
+    if (scale() == source.scale() && a_src_rect == int_src_rect && a_dst_rect.size() == int_src_rect.size())
+        return blit(a_dst_rect.location(), source, int_src_rect, opacity);
 
     auto dst_rect = to_physical(a_dst_rect);
     auto src_rect = a_src_rect * source.scale();
@@ -863,46 +847,43 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
     if (clipped_rect.is_empty())
         return;
 
-    int hscale = (src_rect.width() << 16) / dst_rect.width();
-    int vscale = (src_rect.height() << 16) / dst_rect.height();
-
     if (source.has_alpha_channel()) {
         switch (source.format()) {
         case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::RGB32>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
             break;
         case BitmapFormat::RGBA32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::RGBA32>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGBA32>, opacity);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed8>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
             break;
         case BitmapFormat::Indexed4:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed4>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed4>, opacity);
             break;
         case BitmapFormat::Indexed2:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed2>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed2>, opacity);
             break;
         case BitmapFormat::Indexed1:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed1>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed1>, opacity);
             break;
         default:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Invalid>, opacity);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity);
             break;
         }
     } else {
         switch (source.format()) {
         case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::RGB32>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
             break;
         case BitmapFormat::RGBA32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::RGBA32>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGBA32>, opacity);
             break;
         case BitmapFormat::Indexed8:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Indexed8>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
             break;
         default:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<BitmapFormat::Invalid>, opacity);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Invalid>, opacity);
             break;
         }
     }
@@ -944,9 +925,7 @@ void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const F
     // Perhaps it's an emoji?
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
-#ifdef EMOJI_DEBUG
-        dbg() << "Failed to find an emoji for code_point " << code_point;
-#endif
+        dbgln<EMOJI_DEBUG>("Failed to find an emoji for code_point {}", code_point);
         draw_glyph(point, '?', font, color);
         return;
     }
@@ -1557,8 +1536,6 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
     }
 }
 
-//#define FILL_PATH_DEBUG
-
 [[maybe_unused]] static void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
 {
     auto diffs = fto - ffrom;
@@ -1641,7 +1618,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             quick_sort(active_list, [](const auto& line0, const auto& line1) {
                 return line1.x < line0.x;
             });
-#ifdef FILL_PATH_DEBUG
+#if FILL_PATH_DEBUG
             if ((int)scanline % 10 == 0) {
                 draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
             }
@@ -1661,9 +1638,8 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                     if (is_inside_shape(winding_number)) {
                         // The points between this segment and the previous are
                         // inside the shape
-#ifdef FILL_PATH_DEBUG
-                        dbg() << "y=" << scanline << ": " << winding_number << " at " << i << ": " << from << " -- " << to;
-#endif
+
+                        dbgln<FILL_PATH_DEBUG>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
                         draw_line(from, to, color, 1);
                     }
 
@@ -1714,7 +1690,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
         }
     }
 
-#ifdef FILL_PATH_DEBUG
+#if FILL_PATH_DEBUG
     size_t i { 0 };
     for (auto& segment : segments) {
         draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);

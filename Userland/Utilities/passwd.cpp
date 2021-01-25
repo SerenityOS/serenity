@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
     setpwent();
 
-    if (pledge("stdio rpath wpath cpath fattr tty", nullptr) < 0) {
+    if (pledge("stdio wpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
         target_account.set_password(new_password.value().characters());
     }
 
-    if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio wpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

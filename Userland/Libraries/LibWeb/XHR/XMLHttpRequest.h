@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,24 +28,25 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
+#include <AK/URL.h>
 #include <AK/Weakable.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
-namespace Web {
+namespace Web::XHR {
 
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
     , public Weakable<XMLHttpRequest>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
+    , public XMLHttpRequestEventTarget {
 public:
-    enum class ReadyState {
-        Unsent,
-        Opened,
-        HeadersReceived,
-        Loading,
-        Done,
+    enum class ReadyState : u16 {
+        Unsent = 0,
+        Opened = 1,
+        HeadersReceived = 2,
+        Loading = 3,
+        Done = 4,
     };
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;
@@ -71,19 +72,26 @@ private:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void set_ready_state(ReadyState);
+    void fire_progress_event(const String&, u64, u64);
 
     explicit XMLHttpRequest(DOM::Window&);
 
     NonnullRefPtr<DOM::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
+    bool m_send { false };
 
     String m_method;
-    String m_url;
+    URL m_url;
 
     HashMap<String, String, CaseInsensitiveStringTraits> m_request_headers;
 
-    ByteBuffer m_response;
+    bool m_synchronous { false };
+    bool m_upload_complete { false };
+    bool m_upload_listener { false };
+    bool m_timed_out { false };
+
+    ByteBuffer m_response_object;
 };
 
 }

@@ -39,7 +39,7 @@ void Client::drain_socket()
     while (m_socket->can_read()) {
         auto buf = m_socket->read(1024);
 
-        dbg() << "Read " << buf.size() << " bytes: " << buf;
+        dbgln("Read {} bytes.", buf.size());
 
         if (m_socket->eof()) {
             quit();

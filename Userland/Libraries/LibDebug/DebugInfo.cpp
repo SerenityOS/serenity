@@ -25,14 +25,13 @@
  */
 
 #include "DebugInfo.h"
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/Expression.h>
-
-//#define DEBUG_SPAM
 
 namespace Debug {
 
@@ -63,13 +62,13 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             return;
 
         if (child.get_attribute(Dwarf::Attribute::Inline).has_value()) {
-#ifdef DEBUG_SPAM
+#if SPAM_DEBUG
             dbgln("DWARF inlined functions are not supported");
 #endif
             return;
         }
         if (child.get_attribute(Dwarf::Attribute::Ranges).has_value()) {
-#ifdef DEBUG_SPAM
+#if SPAM_DEBUG
             dbgln("DWARF ranges are not supported");
 #endif
             return;
@@ -82,7 +81,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             scope.name = name.value().data.as_string;
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
-#ifdef DEBUG_SPAM
+#if SPAM_DEBUG
             dbgln("DWARF: Couldn't find attribute LowPc for scope");
 #endif
             return;
@@ -249,7 +248,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
         break;
     }
     default:
-        dbgln("Warninig: unhandled Dwarf location type: {}", (int)location_info.value().type);
+        dbgln("Warning: unhandled Dwarf location type: {}", (int)location_info.value().type);
     }
 }
 

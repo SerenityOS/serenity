@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
 #include <AK/String.h>
@@ -51,8 +52,6 @@ namespace Kernel {
 #define VMWARE_MAGIC 0x564D5868
 #define VMWARE_PORT 0x5658
 #define VMWARE_PORT_HIGHBANDWIDTH 0x5659
-
-//#define VMWAREBACKDOOR_DEBUG
 
 inline void vmware_out(VMWareCommand& command)
 {
@@ -177,25 +176,34 @@ void VMWareBackdoor::disable_absolute_vmmouse()
 void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_send(command);
-#ifdef VMWAREBACKDOOR_DEBUG
-    dbg() << "VMWareBackdoor Command High bandwidth Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
-#endif
+
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+        command.ax,
+        command.bx,
+        command.cx,
+        command.dx);
 }
 
 void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_get(command);
-#ifdef VMWAREBACKDOOR_DEBUG
-    dbg() << "VMWareBackdoor Command High bandwidth Get Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
-#endif
+
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+        command.ax,
+        command.bx,
+        command.cx,
+        command.dx);
 }
 
 void VMWareBackdoor::send(VMWareCommand& command)
 {
     vmware_out(command);
-#ifdef VMWAREBACKDOOR_DEBUG
-    dbg() << "VMWareBackdoor Command Send Results: EAX " << String::format("%x", command.ax) << " EBX " << String::format("%x", command.bx) << " ECX " << String::format("%x", command.cx) << " EDX " << String::format("%x", command.dx);
-#endif
+
+    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+        command.ax,
+        command.bx,
+        command.cx,
+        command.dx);
 }
 
 Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
@@ -205,7 +213,7 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-#ifdef PS2MOUSE_DEBUG
+#if PS2MOUSE_DEBUG
         klog() << "PS2MouseDevice: Resetting VMWare mouse";
 #endif
         disable_absolute_vmmouse();
@@ -225,10 +233,11 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     int y = (command.cx);
     int z = (command.dx);
 
-#ifdef PS2MOUSE_DEBUG
-    dbg() << "Absolute Mouse: Buttons " << String::format("%x", buttons);
-    dbg() << "Mouse: X " << x << ", Y " << y << ", Z " << z;
-#endif
+    if constexpr (PS2MOUSE_DEBUG) {
+        dbgln("Absolute Mouse: Buttons {:x}", buttons);
+        dbgln("Mouse: x={}, y={}, z={}", x, y, z);
+    }
+
     MousePacket packet;
     packet.x = x;
     packet.y = y;

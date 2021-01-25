@@ -49,6 +49,10 @@ int main(int argc, char** argv, char** env)
     parser.parse(argc, argv);
 
     auto executable_path = Core::find_executable_in_path(command[0]);
+    if (executable_path.is_empty()) {
+        reportln("Cannot find executable for '{}'.", command[0]);
+        return 1;
+    }
 
     Vector<String> arguments;
     for (auto arg : command) {

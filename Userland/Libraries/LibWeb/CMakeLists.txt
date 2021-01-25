@@ -8,12 +8,6 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
-    Bindings/XMLHttpRequestConstructor.cpp
-    Bindings/XMLHttpRequestPrototype.cpp
-    Bindings/XMLHttpRequestWrapper.cpp
-    Bindings/RangeConstructor.cpp
-    Bindings/RangePrototype.cpp
-    Bindings/RangeWrapper.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/Parser/CSSParser.cpp
@@ -54,7 +48,6 @@ set(SOURCES
     DOM/Text.idl
     DOM/Timer.cpp
     DOM/Window.cpp
-    DOM/XMLHttpRequest.cpp
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
@@ -204,6 +197,8 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    XHR/EventNames.cpp
+    XHR/XMLHttpRequest.cpp
     WebContentClient.cpp
 )
 
@@ -291,6 +286,7 @@ libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
@@ -375,6 +371,9 @@ libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
+libweb_js_wrapper(XHR/ProgressEvent)
+libweb_js_wrapper(XHR/XMLHttpRequest)
+libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
 
 get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
@@ -390,7 +389,7 @@ add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
-    COMMAND /bin/mkdir -p CSS
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
     COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
@@ -408,7 +407,7 @@ add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
 
 add_custom_command(
     OUTPUT CSS/ValueID.cpp
-    COMMAND /bin/mkdir -p CSS
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
     COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
     VERBATIM
     DEPENDS Generate_CSS_ValueID_cpp

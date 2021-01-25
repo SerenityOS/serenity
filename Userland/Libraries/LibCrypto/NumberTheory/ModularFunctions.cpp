@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 namespace Crypto {
@@ -220,7 +221,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 
     GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
     if (gcd_output == 0) {
-#ifdef NT_DEBUG
+#if NT_DEBUG
         dbgln("GCD is zero");
 #endif
         return output;
@@ -230,9 +231,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     UnsignedBigInteger::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
     UnsignedBigInteger::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
 
-#ifdef NT_DEBUG
-    dbg() << "quot: " << temp_quotient << " rem: " << temp_remainder << " out: " << output;
-#endif
+    dbgln<NT_DEBUG>("quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
 
     return output;
 }

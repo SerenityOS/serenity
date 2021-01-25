@@ -63,7 +63,7 @@ void Client::start()
             return;
         }
 
-        dbg() << "Got raw request: '" << String::copy(raw_request) << "'";
+        dbgln("Got raw request: '{}'", String::copy(raw_request));
 
         handle_request(raw_request.bytes());
         die();
@@ -77,9 +77,9 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     auto& request = request_or_error.value();
 
-    dbg() << "Got HTTP request: " << request.method_name() << " " << request.resource();
+    dbgln("Got HTTP request: {} {}", request.method_name(), request.resource());
     for (auto& header : request.headers()) {
-        dbg() << "    " << header.name << " => " << header.value;
+        dbgln("    {} => {}", header.name, header.value);
     }
 
     if (request.method() != HTTP::HttpRequest::Method::GET) {
@@ -88,7 +88,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     }
 
     auto requested_path = LexicalPath::canonicalized_path(request.resource());
-    dbg() << "Canonical requested path: '" << requested_path << "'";
+    dbgln("Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
     path_builder.append(m_root_path);

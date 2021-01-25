@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
@@ -32,8 +33,6 @@
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/VM/MemoryManager.h>
-
-//#define IOAPIC_DEBUG
 
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {
@@ -201,13 +200,14 @@ void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 deli
     u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
-#ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Value: 0x" << String::format("%x", read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET));
-#endif
+
+    if constexpr (IOAPIC_DEBUG)
+        dbgln("IOAPIC Value: {:#x}", read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET));
+
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET + 1, redirection_entry2);
-#ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Value: 0x" << String::format("%x", read_register((index << 1) + 0x11));
-#endif
+
+    if constexpr (IOAPIC_DEBUG)
+        dbgln("IOAPIC Value: {:#x}", read_register((index << 1) + 0x11));
 }
 
 void IOAPIC::mask_all_redirection_entries() const
@@ -319,17 +319,15 @@ void IOAPIC::write_register(u32 index, u32 value) const
     InterruptDisabler disabler;
     m_regs->select = index;
     m_regs->window = value;
-#ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Writing, Value 0x" << String::format("%x", m_regs->window) << " @ offset 0x" << String::format("%x", m_regs->select);
-#endif
+
+    dbgln<IOAPIC_DEBUG>("IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
 }
 u32 IOAPIC::read_register(u32 index) const
 {
     InterruptDisabler disabler;
     m_regs->select = index;
-#ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Reading, Value 0x" << String::format("%x", m_regs->window) << " @ offset 0x" << String::format("%x", m_regs->select);
-#endif
+    dbgln<IOAPIC_DEBUG>("IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
     return m_regs->window;
 }
+
 }

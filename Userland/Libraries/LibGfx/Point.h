@@ -107,12 +107,14 @@ public:
         return point;
     }
 
-    bool operator==(const Point<T>& other) const
+    template<class U>
+    bool operator==(const Point<U>& other) const
     {
-        return m_x == other.m_x && m_y == other.m_y;
+        return x() == other.x() && y() == other.y();
     }
 
-    bool operator!=(const Point<T>& other) const
+    template<class U>
+    bool operator!=(const Point<U>& other) const
     {
         return !(*this == other);
     }

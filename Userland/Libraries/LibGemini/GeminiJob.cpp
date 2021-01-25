@@ -24,14 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <LibCore/EventLoop.h>
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibTLS/TLSv12.h>
 #include <stdio.h>
 #include <unistd.h>
-
-//#define GEMINIJOB_DEBUG
 
 namespace Gemini {
 
@@ -41,7 +40,7 @@ void GeminiJob::start()
     m_socket = TLS::TLSv12::construct(this);
     m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_connected = [this] {
-#ifdef GEMINIJOB_DEBUG
+#if GEMINIJOB_DEBUG
         dbgln("GeminiJob: on_connected callback");
 #endif
         on_socket_connected();

@@ -127,6 +127,7 @@ private:
     int virt$dbgputch(char);
     int virt$chmod(FlatPtr, size_t, mode_t);
     int virt$fchmod(int, mode_t);
+    int virt$chown(FlatPtr);
     int virt$fchown(int, uid_t, gid_t);
     int virt$clock_settime(uint32_t clock_id, FlatPtr user_ts);
     int virt$listen(int, int);

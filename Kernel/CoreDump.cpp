@@ -84,7 +84,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
     auto fd_or_error = VFS::the().open(
         lexical_path.basename(),
         O_CREAT | O_WRONLY | O_EXCL,
-        0, // We will enable reading from userspace when we finish generating the coredump file
+        S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
         *dump_directory.value(),
         UidAndGid { process.uid(), process.gid() });
 

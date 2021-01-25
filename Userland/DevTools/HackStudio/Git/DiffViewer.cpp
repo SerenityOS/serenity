@@ -25,6 +25,7 @@
  */
 
 #include "DiffViewer.h"
+#include <AK/Debug.h>
 #include <LibDiff/Hunks.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Painter.h>
@@ -33,8 +34,6 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-
-// #define DEBUG_DIFF
 
 namespace HackStudio {
 
@@ -161,7 +160,7 @@ void DiffViewer::set_content(const String& original, const String& diff)
     m_original_lines = split_to_lines(original);
     m_hunks = Diff::parse_hunks(diff);
 
-#ifdef DEBUG_DIFF
+#if DIFF_DEBUG
     for (size_t i = 0; i < m_original_lines.size(); ++i)
         dbgln("{}:{}", i, m_original_lines[i]);
 #endif

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # $1 name of the variable
 # $2 input path
 

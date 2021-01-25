@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Dialog.h>
+#include <LibGfx/Font.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {

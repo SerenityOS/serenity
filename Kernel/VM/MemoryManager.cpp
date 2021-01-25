@@ -41,13 +41,17 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-//#define PAGE_FAULT_DEBUG
-
 extern u8* start_of_kernel_image;
 extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
 extern FlatPtr start_of_kernel_data;
 extern FlatPtr end_of_kernel_bss;
+
+extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
+extern size_t multiboot_copy_boot_modules_count;
+
+// Treat the super pages as logically separate from .bss
+__attribute__((section(".super_pages"))) static u8 super_pages[1 * MiB];
 
 namespace Kernel {
 
@@ -57,6 +61,11 @@ namespace Kernel {
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
+
+const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value)
+{
+    return stream << UserMemoryRangeTypeNames[static_cast<int>(value.type)] << " range @ " << value.start << " - " << value.end;
+}
 
 MemoryManager& MM
 {
@@ -103,14 +112,9 @@ void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-
     if (Processor::current().has_feature(CPUFeature::NX)) {
-        // Disable execution of the kernel data and bss segments, as well as the kernel heap.
-        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
-            auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
-            pte.set_execute_disabled(true);
-        }
-        for (size_t i = FlatPtr(kmalloc_start); i < FlatPtr(kmalloc_end); i += PAGE_SIZE) {
+        // Disable execution of the kernel data, bss and heap segments.
+        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -120,28 +124,38 @@ void MemoryManager::protect_kernel_image()
 void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> region;
-    bool region_is_super = false;
 
-    // We need to make sure we exclude the kmalloc range as well as the kernel image.
-    // The kmalloc range directly follows the kernel image
-    const PhysicalAddress used_range_start(virtual_to_low_physical(FlatPtr(&start_of_kernel_image)));
-    const PhysicalAddress used_range_end(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(kmalloc_end))));
-    klog() << "MM: kernel range: " << used_range_start << " - " << PhysicalAddress(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(&end_of_kernel_image))));
-    klog() << "MM: kmalloc range: " << PhysicalAddress(virtual_to_low_physical(FlatPtr(kmalloc_start))) << " - " << used_range_end;
+    // Register used memory regions that we know of.
+    m_used_memory_ranges.ensure_capacity(4);
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
 
-    auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
-    for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
-        klog() << "MM: Multiboot mmap: base_addr = " << String::format("0x%08llx", mmap->addr) << ", length = " << String::format("0x%08llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+    if (multiboot_info_ptr->flags & 0x4) {
+        auto* bootmods_start = multiboot_copy_boot_modules_array;
+        auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
+
+        for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
+            m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
+        }
+    }
+
+    auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
+    auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
+
+    for (auto used_range : m_used_memory_ranges) {
+        klog() << "MM: " << used_range;
+    }
+
+    for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
+        klog() << "MM: Multiboot mmap: address = " << String::format("0x%016llx", mmap->addr) << ", length = " << String::format("0x%016llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
-            continue;
-
-        // FIXME: Maybe make use of stuff below the 1MiB mark?
-        if (mmap->addr < (1 * MiB))
             continue;
 
         if ((mmap->addr + mmap->len) > 0xffffffff)
             continue;
 
+        // Fix up unaligned memory regions.
         auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
             klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", (void*)mmap->addr) << " by " << diff << " bytes";
@@ -161,39 +175,40 @@ void MemoryManager::parse_memory_map()
         for (size_t page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
-            if (addr.get() < used_range_end.get() && addr.get() >= used_range_start.get())
+            // Skip used memory ranges.
+            bool should_skip = false;
+            for (auto used_range : m_used_memory_ranges) {
+                if (addr.get() >= used_range.start.get() && addr.get() <= used_range.end.get()) {
+                    should_skip = true;
+                    break;
+                }
+            }
+            if (should_skip)
                 continue;
 
-            if (page_base < 7 * MiB) {
-                // nothing
-            } else if (page_base >= 7 * MiB && page_base < 8 * MiB) {
-                if (region.is_null() || !region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
-                    m_super_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = m_super_physical_regions.last();
-                    region_is_super = true;
-                } else {
-                    region->expand(region->lower(), addr);
-                }
+            // Assign page to user physical region.
+            if (region.is_null() || region->upper().offset(PAGE_SIZE) != addr) {
+                m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
+                region = m_user_physical_regions.last();
             } else {
-                if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
-                    m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = m_user_physical_regions.last();
-                    region_is_super = false;
-                } else {
-                    region->expand(region->lower(), addr);
-                }
+                region->expand(region->lower(), addr);
             }
         }
     }
 
+    // Append statically-allocated super physical region.
+    m_super_physical_regions.append(PhysicalRegion::create(
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
+
     for (auto& region : m_super_physical_regions) {
         m_super_physical_pages += region.finalize_capacity();
-        klog() << "Super physical region: " << region.lower() << " - " << region.upper();
+        klog() << "MM: Super physical region: " << region.lower() << " - " << region.upper();
     }
 
     for (auto& region : m_user_physical_regions) {
         m_user_physical_pages += region.finalize_capacity();
-        klog() << "User physical region: " << region.lower() << " - " << region.upper();
+        klog() << "MM: User physical region: " << region.lower() << " - " << region.upper();
     }
 
     ASSERT(m_super_physical_pages > 0);
@@ -367,7 +382,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-#ifdef PAGE_FAULT_DEBUG
+#if PAGE_FAULT_DEBUG
     dbgln("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current().id(), fault.code(), fault.vaddr());
 #endif
     auto* region = find_region_from_vaddr(fault.vaddr());
@@ -483,10 +498,8 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_user_physical_regions) {
-        if (!region.contains(page)) {
-            klog() << "MM: deallocate_user_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
+        if (!region.contains(page))
             continue;
-        }
 
         region.return_page(page);
         --m_user_physical_pages_used;

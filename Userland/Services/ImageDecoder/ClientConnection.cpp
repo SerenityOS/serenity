@@ -61,7 +61,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
 {
     auto encoded_buffer = message.data();
     if (!encoded_buffer.is_valid()) {
-#ifdef IMAGE_DECODER_DEBUG
+#if IMAGE_DECODER_DEBUG
         dbgln("Encoded data is invalid");
 #endif
         return {};
@@ -71,7 +71,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
     auto bitmap = decoder->bitmap();
 
     if (!bitmap) {
-#ifdef IMAGE_DECODER_DEBUG
+#if IMAGE_DECODER_DEBUG
         dbgln("Could not decode image from encoded data");
 #endif
         return make<Messages::ImageDecoderServer::DecodeImageResponse>(Gfx::ShareableBitmap());

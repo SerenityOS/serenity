@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -187,7 +187,12 @@ class PaintContext;
 class Resource;
 class ResourceLoader;
 class StackingContext;
+}
+
+namespace Web::XHR {
+class ProgressEvent;
 class XMLHttpRequest;
+class XMLHttpRequestEventTarget;
 }
 
 namespace Web::Bindings {
@@ -280,6 +285,7 @@ class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceTimingWrapper;
 class PerformanceWrapper;
+class ProgressEventWrapper;
 class ScriptExecutionContext;
 class SubmitEventWrapper;
 class SVGElementWrapper;
@@ -295,6 +301,7 @@ class Wrapper;
 class XMLHttpRequestConstructor;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+class XMLHttpRequestEventTargetWrapper;
 class RangeConstructor;
 class RangePrototype;
 class RangeWrapper;

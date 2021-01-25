@@ -25,6 +25,7 @@
  */
 
 #include "HexEditor.h"
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
@@ -222,7 +223,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
         outln("HexEditor::mousedown_event(hex): offset={}", offset);
 #endif
 
@@ -244,7 +245,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
         outln("HexEditor::mousedown_event(text): offset={}", offset);
 #endif
 
@@ -344,7 +345,7 @@ void HexEditor::scroll_position_into_view(int position)
 
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
-#ifdef HEX_DEBUG
+#if HEX_DEBUG
     outln("HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
 #endif
 
@@ -581,4 +582,29 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(m_buffer[byte_position]) ? m_buffer[byte_position] : '.'), Gfx::TextAlignment::TopLeft, text_color);
         }
     }
+}
+
+int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
+{
+    if (m_buffer.is_empty())
+        return -1;
+
+    if (needle.is_null()) {
+        dbgln("needle is null");
+        return -1;
+    }
+
+    auto raw_offset = memmem(m_buffer.data() + start, m_buffer.size(), needle.data(), needle.size());
+    if (raw_offset == NULL)
+        return -1;
+
+    int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
+    dbgln("find_and_highlight: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
+
+    auto end_of_match = relative_offset + needle;
+    set_position(relative_offset);
+    m_selection_start = relative_offset;
+    m_selection_end = end_of_match;
+
+    return end_of_match;
 }

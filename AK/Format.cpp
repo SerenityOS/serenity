@@ -652,12 +652,21 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool new
 }
 #endif
 
+static bool is_debug_enabled = true;
+
+void set_debug_enabled(bool value)
+{
+    is_debug_enabled = value;
+}
+
 void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 {
+    if (!is_debug_enabled)
+        return;
+
     StringBuilder builder;
 
-// FIXME: This logic is redundant with the stuff in LogStream.cpp.
-#if defined(__serenity__)
+#ifdef __serenity__
 #    ifdef KERNEL
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
@@ -685,9 +694,30 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 
     const auto string = builder.string_view();
 
-    const auto retval = dbgputstr(string.characters_without_null_termination(), string.length());
-    ASSERT(retval == 0);
+    dbgputstr(string.characters_without_null_termination(), string.length());
 }
+
+#ifdef KERNEL
+void vdmesgln(StringView fmtstr, TypeErasedFormatParams params)
+{
+    StringBuilder builder;
+
+#    ifdef __serenity__
+    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+        auto& thread = *Kernel::Thread::current();
+        builder.appendff("\033[34;1m[{}({}:{})]\033[0m: ", thread.process().name(), thread.pid().value(), thread.tid().value());
+    } else {
+        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
+    }
+#    endif
+
+    vformat(builder, fmtstr, params);
+    builder.append('\n');
+
+    const auto string = builder.string_view();
+    kernelputstr(string.characters_without_null_termination(), string.length());
+}
+#endif
 
 template struct Formatter<unsigned char, void>;
 template struct Formatter<unsigned short, void>;

@@ -25,10 +25,9 @@
  */
 
 #include "AutoComplete.h"
+#include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <LibCpp/Lexer.h>
-
-// #define DEBUG_AUTOCOMPLETE
 
 namespace LanguageServers::Cpp {
 
@@ -44,7 +43,7 @@ Vector<GUI::AutocompleteProvider::Entry> AutoComplete::get_suggestions(const Str
 
     auto suggestions = identifier_prefixes(lines, tokens, index_of_target_token.value());
 
-#ifdef DEBUG_AUTOCOMPLETE
+#if AUTOCOMPLETE_DEBUG
     for (auto& suggestion : suggestions) {
         dbgln("suggestion: {}", suggestion.completion);
     }

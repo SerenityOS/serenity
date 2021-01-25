@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,24 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Bindings/RangePrototype.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/Range.h>
+#include <LibWeb/XHR/EventNames.h>
 
-namespace Web::Bindings {
+namespace Web::XHR::EventNames {
 
-RangeWrapper::RangeWrapper(JS::GlobalObject& global_object, DOM::Range& impl)
-    : Wrapper(global_object)
-    , m_impl(impl)
+#define __ENUMERATE_XHR_EVENT(name) FlyString name;
+ENUMERATE_XHR_EVENTS
+#undef __ENUMERATE_XHR_EVENT
+
+[[gnu::constructor]] static void initialize()
 {
-    set_prototype(static_cast<WindowObject&>(global_object).range_prototype());
-}
+    static bool s_initialized = false;
+    if (s_initialized)
+        return;
 
-RangeWrapper* wrap(JS::GlobalObject& global_object, DOM::Range& impl)
-{
-    return static_cast<RangeWrapper*>(wrap_impl(global_object, impl));
+#define __ENUMERATE_XHR_EVENT(name) \
+    name = #name;
+    ENUMERATE_XHR_EVENTS
+#undef __ENUMERATE_XHR_EVENT
+
+    s_initialized = true;
 }
 
 }

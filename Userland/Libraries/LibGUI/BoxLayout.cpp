@@ -30,8 +30,6 @@
 #include <LibGfx/Orientation.h>
 #include <stdio.h>
 
-//#define GBOXLAYOUT_DEBUG
-
 REGISTER_WIDGET(GUI, HorizontalBoxLayout)
 REGISTER_WIDGET(GUI, VerticalBoxLayout)
 

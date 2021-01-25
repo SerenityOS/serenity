@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define PATA_DEVICE_DEBUG
-
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -63,6 +61,11 @@ void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
     bool use_dma = !m_channel.m_io_group.bus_master_base().is_null() && m_channel.m_dma_enabled.resource();
     m_channel.start_request(request, use_dma, is_slave());
+}
+
+String PATADiskDevice::device_name() const
+{
+    return String::formatted("hd{:c}", 'a' + minor());
 }
 
 size_t PATADiskDevice::max_addressable_block() const

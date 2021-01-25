@@ -220,6 +220,21 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     glyph_header_width_spinbox.set_value(m_edited_font->glyph_fixed_width());
     glyph_header_width_spinbox.set_enabled(false);
 
+    //// Mean line Row
+    auto& mean_line_container = font_metadata_group_box.add<GUI::Widget>();
+    mean_line_container.set_layout<GUI::HorizontalBoxLayout>();
+    mean_line_container.set_fixed_height(22);
+
+    auto& mean_line_label = mean_line_container.add<GUI::Label>();
+    mean_line_label.set_fixed_width(100);
+    mean_line_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mean_line_label.set_text("Mean line:");
+
+    auto& mean_line_spinbox = mean_line_container.add<GUI::SpinBox>();
+    mean_line_spinbox.set_min(0);
+    mean_line_spinbox.set_max(m_edited_font->glyph_height() - 1);
+    mean_line_spinbox.set_value(m_edited_font->mean_line());
+
     //// Baseline Row
     auto& baseline_container = font_metadata_group_box.add<GUI::Widget>();
     baseline_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -235,58 +250,23 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
     baseline_spinbox.set_value(m_edited_font->baseline());
 
-    //// Mean line Row
-    auto& mean_line_container = font_metadata_group_box.add<GUI::Widget>();
-    mean_line_container.set_layout<GUI::HorizontalBoxLayout>();
-    mean_line_container.set_fixed_height(22);
-
-    auto& mean_line_label = mean_line_container.add<GUI::Label>();
-    mean_line_label.set_fixed_width(100);
-    mean_line_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    mean_line_label.set_text("Mean Line:");
-
-    auto& mean_line_spinbox = mean_line_container.add<GUI::SpinBox>();
-    mean_line_spinbox.set_min(0);
-    mean_line_spinbox.set_max(m_edited_font->glyph_height() - 1);
-    mean_line_spinbox.set_value(m_edited_font->mean_line());
-
     //// Fixed checkbox Row
     auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
     fixed_width_checkbox.set_text("Fixed width");
     fixed_width_checkbox.set_checked(m_edited_font->is_fixed_width());
 
-    // Bottom
-    auto& bottom_container = add<GUI::Widget>();
-    bottom_container.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_container.layout()->set_margins({ 8, 0, 8, 8 });
-    bottom_container.set_fixed_height(32);
-
-    bottom_container.layout()->add_spacer();
-
-    auto& save_button = bottom_container.add<GUI::Button>();
-    save_button.set_fixed_size(80, 22);
-    save_button.set_text("Save");
-    save_button.on_click = [this](auto) { save_as(m_path); };
-
-    auto& quit_button = bottom_container.add<GUI::Button>();
-    quit_button.set_fixed_size(80, 22);
-    quit_button.set_text("Quit");
-    quit_button.on_click = [](auto) {
-        exit(0);
-    };
-
-    // Event hanglers
+    // Event handlers
     auto update_demo = [&] {
         demo_label_1.update();
         demo_label_2.update();
     };
 
     auto calculate_prefed_sizes = [&] {
-        int right_site_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
-        right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
+        int right_side_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
+        right_side_width = max(right_side_width, m_glyph_map_widget->preferred_width());
 
-        m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 380;
+        m_preferred_width = m_glyph_editor_widget->width() + right_side_width + 12;
+        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 346;
     };
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {

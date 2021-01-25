@@ -52,6 +52,12 @@ private:
     String m_path;
     String m_name;
     String m_extension;
+
+    String m_search_text;
+    ByteBuffer m_search_buffer;
+    int last_found_index() const { return m_last_found_index == -1 ? 0 : m_last_found_index; }
+    int m_last_found_index { -1 };
+
     RefPtr<GUI::Action> m_new_action;
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;

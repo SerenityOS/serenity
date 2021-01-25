@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -40,8 +41,6 @@
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
-
-//#define PNG_DEBUG
 
 namespace Gfx {
 
@@ -527,7 +526,7 @@ static bool decode_png_header(PNGLoadingContext& context)
         return true;
 
     if (!context.data || context.data_size < sizeof(png_header)) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         dbgln("Missing PNG header");
 #endif
         context.state = PNGLoadingContext::State::Error;
@@ -535,7 +534,7 @@ static bool decode_png_header(PNGLoadingContext& context)
     }
 
     if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         dbgln("Invalid PNG header");
 #endif
         context.state = PNGLoadingContext::State::Error;
@@ -614,9 +613,7 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
 
         if (filter > 4) {
-#ifdef PNG_DEBUG
-            dbg() << "Invalid PNG filter: " << filter;
-#endif
+            dbgln<PNG_DEBUG>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -718,9 +715,7 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
         }
 
         if (filter > 4) {
-#ifdef PNG_DEBUG
-            dbg() << "Invalid PNG filter: " << filter;
-#endif
+            dbgln<PNG_DEBUG>("Invalid PNG filter: {}", filter);
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -879,7 +874,7 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
     context.filter_method = ihdr.filter_method;
     context.interlace_method = ihdr.interlace_method;
 
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
     printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
     printf("     Color type: %d\n", context.color_type);
     printf("Compress Method: %d\n", context.compression_method);
@@ -888,7 +883,7 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 #endif
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         dbgln("PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
 #endif
         return false;
@@ -952,7 +947,7 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         printf("Bail at chunk_size\n");
 #endif
         return false;
@@ -960,26 +955,26 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
     u8 chunk_type[5];
     chunk_type[4] = '\0';
     if (!streamer.read_bytes(chunk_type, 4)) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         printf("Bail at chunk_type\n");
 #endif
         return false;
     }
     ReadonlyBytes chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         printf("Bail at chunk_data\n");
 #endif
         return false;
     }
     u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
         printf("Bail at chunk_crc\n");
 #endif
         return false;
     }
-#ifdef PNG_DEBUG
+#if PNG_DEBUG
     printf("Chunk type: '%s', size: %u, crc: %x\n", chunk_type, chunk_size, chunk_crc);
 #endif
 

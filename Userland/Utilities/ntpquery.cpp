@@ -111,7 +111,7 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 int main(int argc, char** argv)
 {
 #ifdef __serenity__
-    if (pledge("stdio inet dns settime", nullptr) < 0) {
+    if (pledge("stdio inet unix settime", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
 
 #ifdef __serenity__
     if (!adjust_time && !set_time) {
-        if (pledge("stdio inet dns", nullptr) < 0) {
+        if (pledge("stdio inet unix", nullptr) < 0) {
             perror("pledge");
             return 1;
         }

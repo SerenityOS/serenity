@@ -35,6 +35,9 @@ int Process::sys$anon_create(size_t size, int options)
 {
     REQUIRE_PROMISE(stdio);
 
+    if (!size)
+        return -EINVAL;
+
     if (size % PAGE_SIZE)
         return -EINVAL;
 

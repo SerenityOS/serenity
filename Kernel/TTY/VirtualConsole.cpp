@@ -335,7 +335,12 @@ void VirtualConsole::terminal_history_changed()
 void VirtualConsole::emit(const u8* data, size_t size)
 {
     for (size_t i = 0; i < size; i++)
-        TTY::emit(data[i]);
+        TTY::emit(data[i], true);
+}
+
+String VirtualConsole::device_name() const
+{
+    return String::formatted("tty{}", minor());
 }
 
 void VirtualConsole::echo(u8 ch)
