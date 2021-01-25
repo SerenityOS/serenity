@@ -770,7 +770,7 @@ void TextEditor::delete_current_line()
         start = { 0, 0 };
         end = { 0, line(0).length() };
     } else if (m_cursor.line() == line_count() - 1) {
-        start = { m_cursor.line() - 1, line(m_cursor.line()).length() };
+        start = { m_cursor.line() - 1, line(m_cursor.line() - 1).length() };
         end = { m_cursor.line(), line(m_cursor.line()).length() };
     } else {
         start = { m_cursor.line(), 0 };
