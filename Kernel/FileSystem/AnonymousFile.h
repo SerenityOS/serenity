@@ -39,7 +39,7 @@ public:
 
     virtual ~AnonymousFile() override;
 
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared) override;
 
 private:
     virtual const char* class_name() const override { return "AnonymousFile"; }

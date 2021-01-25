@@ -172,19 +172,18 @@ u32 BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, size_t offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
     ASSERT(offset == 0);
-    ASSERT(size == framebuffer_size_in_bytes());
+    ASSERT(range.size() == framebuffer_size_in_bytes());
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     if (!vmobject)
         return ENOMEM;
     return process.allocate_region_with_vmobject(
-        preferred_vaddr,
-        framebuffer_size_in_bytes(),
+        range,
         vmobject.release_nonnull(),
         0,
         "BXVGA Framebuffer",

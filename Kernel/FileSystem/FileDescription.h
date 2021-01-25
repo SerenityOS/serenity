@@ -108,7 +108,7 @@ public:
     Custody* custody() { return m_custody.ptr(); }
     const Custody* custody() const { return m_custody.ptr(); }
 
-    KResultOr<Region*> mmap(Process&, VirtualAddress, size_t offset, size_t, int prot, bool shared);
+    KResultOr<Region*> mmap(Process&, const Range&, size_t offset, int prot, bool shared);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }

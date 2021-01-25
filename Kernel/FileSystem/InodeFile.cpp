@@ -69,7 +69,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, 
     return nwritten;
 }
 
-KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
+KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, const Range& range, size_t offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<InodeVMObject> vmobject;
@@ -79,7 +79,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
         vmobject = PrivateInodeVMObject::create_with_inode(inode());
     if (!vmobject)
         return ENOMEM;
-    return process.allocate_region_with_vmobject(preferred_vaddr, size, *vmobject, offset, description.absolute_path(), prot, shared);
+    return process.allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, description.absolute_path(), prot, shared);
 }
 
 String InodeFile::absolute_path(const FileDescription& description) const

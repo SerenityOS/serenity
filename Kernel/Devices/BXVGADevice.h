@@ -42,7 +42,7 @@ public:
     BXVGADevice();
 
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot, bool shared) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared) override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0660; }
