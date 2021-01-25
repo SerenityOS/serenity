@@ -699,6 +699,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
+    ASSERT(previous_mode() == PreviousMode::UserMode);
+
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     ASSERT(!(action.flags & SA_SIGINFO));
@@ -761,6 +763,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 #endif
         return DispatchSignalResult::Continue;
     }
+
+    ASSERT(previous_mode() == PreviousMode::UserMode);
+    ASSERT(current_trap());
 
     ProcessPagingScope paging_scope(m_process);
 
@@ -843,7 +848,19 @@ bool Thread::push_value_on_stack(FlatPtr value)
 
 RegisterState& Thread::get_register_dump_from_stack()
 {
-    return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
+    auto* trap = current_trap();
+
+    // We should *always* have a trap. If we don't we're probably a kernel
+    // thread that hasn't been pre-empted. If we want to support this, we
+    // need to capture the registers probably into m_tss and return it
+    ASSERT(trap);
+
+    while (trap) {
+        if (!trap->next_trap)
+            break;
+        trap = trap->next_trap;
+    }
+    return *trap->regs;
 }
 
 RefPtr<Thread> Thread::clone(Process& process)
