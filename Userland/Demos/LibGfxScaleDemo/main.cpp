@@ -98,6 +98,7 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.draw_rect({ 20, 34, WIDTH - 40, HEIGHT - 45 }, palette().color(Gfx::ColorRole::Selection), true);
     painter.draw_rect({ 24, 38, WIDTH - 48, HEIGHT - 53 }, palette().color(Gfx::ColorRole::Selection));
 
+    // buggie.png has an alpha channel.
     auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png");
     painter.blit({ 25, 39 }, *buggie, { 2, 30, 62, 20 });
     painter.draw_scaled_bitmap({ 88, 39, 62 * 2, 20 * 2 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
@@ -106,6 +107,11 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.draw_tiled_bitmap({ 25, 60, WIDTH - 50, 40 }, *buggie);
 
     painter.blit({ 25, 101 }, *buggie, { 2, 30, 3 * buggie->width(), 20 });
+
+    // banner does not have an alpha channel.
+    auto banner = Gfx::Bitmap::load_from_file("/res/graphics/brand-banner.png");
+    painter.fill_rect({ 25, 122, 28, 20 }, Color::Green);
+    painter.blit({ 25, 122 }, *banner, { 314, 12, 28, 20 }, 0.8);
 }
 
 int main(int argc, char** argv)
