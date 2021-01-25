@@ -108,10 +108,11 @@ void Canvas::draw(Gfx::Painter& painter)
 
     painter.blit({ 25, 101 }, *buggie, { 2, 30, 3 * buggie->width(), 20 });
 
-    // banner does not have an alpha channel.
-    auto banner = Gfx::Bitmap::load_from_file("/res/graphics/brand-banner.png");
-    painter.fill_rect({ 25, 122, 28, 20 }, Color::Green);
-    painter.blit({ 25, 122 }, *banner, { 314, 12, 28, 20 }, 0.8);
+    // grid does not have an alpha channel.
+    auto grid = Gfx::Bitmap::load_from_file("/res/wallpapers/grid.png");
+    ASSERT(!grid->has_alpha_channel());
+    painter.fill_rect({ 25, 122, 62, 20 }, Color::Green);
+    painter.blit({ 25, 122 }, *grid, { (grid->width() - 62) / 2, (grid->height() - 20) / 2 + 40, 62, 20 }, 0.9);
 }
 
 int main(int argc, char** argv)
