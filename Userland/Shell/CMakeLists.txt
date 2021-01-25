@@ -18,3 +18,9 @@ set(SOURCES
 
 serenity_bin(Shell)
 target_link_libraries(Shell LibShell)
+
+install(DIRECTORY Tests/ DESTINATION usr/Tests/Shell
+        PATTERN "Tests/*"
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                   GROUP_EXECUTE GROUP_READ
+                   WORLD_EXECUTE WORLD_READ)

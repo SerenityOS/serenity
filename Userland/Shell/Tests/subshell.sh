@@ -1,6 +1,6 @@
-#/bin/sh
+#!/bin/sh
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
 
