@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 singlecommand_ok=yes
 multicommand_ok=yes
