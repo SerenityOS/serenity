@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 # `head -n 1` should close stdout of the `Shell -c` command, which means the
 # second echo should exit unsuccessfully and sigpipe.sh.out should not be

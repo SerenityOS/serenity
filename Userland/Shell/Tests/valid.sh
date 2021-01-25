@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 # Are comments ignored?
 # Sanity check: can we do && and || ?

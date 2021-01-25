@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 if not test "$*" = "" { fail "Argv list not empty" }
 if not test "$#" -eq 0 { fail "Argv list empty but count non-zero" }
