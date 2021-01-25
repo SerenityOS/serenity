@@ -45,15 +45,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifdef DYNAMIC_LOAD_VERBOSE
-#    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
-#else
-#    define VERBOSE(fmt, ...) \
-        do {                  \
-        } while (0)
-#endif
-#define TLS_VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
-
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 
 static void init_libc()
