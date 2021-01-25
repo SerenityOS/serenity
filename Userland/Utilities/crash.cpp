@@ -121,6 +121,7 @@ int main(int argc, char** argv)
     bool do_trigger_user_mode_instruction_prevention = false;
     bool do_use_io_instruction = false;
     bool do_read_cpu_counter = false;
+    bool do_pledge_violation = false;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help(
@@ -143,6 +144,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
     args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
+    args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
 
     if (argc != 2) {
         args_parser.print_usage(stderr, argv[0]);
@@ -321,6 +323,17 @@ int main(int argc, char** argv)
     if (do_read_cpu_counter || do_all_crash_types) {
         Crash("Read the CPU timestamp counter", [] {
             asm volatile("rdtsc");
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
+    if (do_pledge_violation || do_all_crash_types) {
+        Crash("Violate pledge()'d promises", [] {
+            if (pledge("", nullptr) < 0) {
+                perror("pledge");
+                return Crash::Failure::DidNotCrash;
+            }
+            printf("Didn't pledge 'stdio', this should fail!\n");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
