@@ -971,7 +971,7 @@ public:
 
     void exit(void* = nullptr);
 
-    bool tick(bool in_kernel);
+    bool tick();
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }
 

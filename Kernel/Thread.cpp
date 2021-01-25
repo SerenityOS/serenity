@@ -413,9 +413,9 @@ void Thread::finalize_dying_threads()
     }
 }
 
-bool Thread::tick(bool in_kernel)
+bool Thread::tick()
 {
-    if (in_kernel) {
+    if (previous_mode() == PreviousMode::KernelMode) {
         ++m_process->m_ticks_in_kernel;
         ++m_ticks_in_kernel;
     } else {
