@@ -153,11 +153,11 @@ void Compositor::compose()
 
     // Mark window regions as dirty that need to be re-rendered
     wm.for_each_visible_window_from_back_to_front([&](Window& window) {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.virtual_rect();
         for (auto& dirty_rect : dirty_screen_rects.rects()) {
             auto invalidate_rect = dirty_rect.intersected(frame_rect);
             if (!invalidate_rect.is_empty()) {
-                auto inner_rect_offset = window.rect().location() - frame_rect.location();
+                auto inner_rect_offset = window.physical_rect().location() - frame_rect.location();
                 invalidate_rect.move_by(-(frame_rect.location() + inner_rect_offset));
                 window.invalidate_no_notify(invalidate_rect);
                 m_invalidated_window = true;
@@ -175,12 +175,12 @@ void Compositor::compose()
         if (transparency_rects.is_empty())
             return IterationDecision::Continue;
 
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.virtual_rect();
         auto& dirty_rects = window.dirty_rects();
         wm.for_each_visible_window_from_back_to_front([&](Window& w) {
             if (&w == &window)
                 return IterationDecision::Continue;
-            auto frame_rect2 = w.frame().rect();
+            auto frame_rect2 = w.virtual_rect();
             if (!frame_rect2.intersects(frame_rect))
                 return IterationDecision::Continue;
             transparency_rects.for_each_intersected(w.dirty_rects(), [&](const Gfx::IntRect& intersected_dirty) {
@@ -285,10 +285,10 @@ void Compositor::compose()
     });
 
     auto compose_window = [&](Window& window) -> IterationDecision {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.virtual_rect();
         if (!frame_rect.intersects(ws.rect()))
             return IterationDecision::Continue;
-        auto frame_rects = frame_rect.shatter(window.rect());
+        auto frame_rects = frame_rect.shatter(window.physical_rect());
 
 #ifdef COMPOSE_DEBUG
         dbg() << "  window " << window.title() << " frame rect: " << frame_rect;
@@ -304,6 +304,13 @@ void Compositor::compose()
 #ifdef COMPOSE_DEBUG
                     dbg() << "    render frame: " << intersected_rect;
 #endif
+                    if (window.shadow_enabled()) {
+                        // FIXME: this is a simple shadow effect. Try to do something prettier.
+                        for (int i = 0; i < 5; ++i) {
+                            painter.fill_rect(window.virtual_rect().shrunken(i*2, i*2), Color(Color::Black).with_alpha(8 - i));
+                        }
+                    }
+
                     window.frame().paint(painter);
                     return IterationDecision::Continue;
                 });
@@ -311,7 +318,7 @@ void Compositor::compose()
 
             if (!backing_store) {
                 if (window.is_opaque())
-                    painter.fill_rect(window.rect().intersected(rect), wm.palette().window());
+                    painter.fill_rect(window.physical_rect().intersected(rect), wm.palette().window());
                 return;
             }
 
@@ -330,25 +337,25 @@ void Compositor::compose()
             case ResizeDirection::Right:
             case ResizeDirection::Down:
             case ResizeDirection::DownRight:
-                backing_rect.set_location(window.rect().location());
+                backing_rect.set_location(window.physical_rect().location());
                 break;
             case ResizeDirection::Left:
             case ResizeDirection::Up:
             case ResizeDirection::UpLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_right_without_resize(window.physical_rect().right());
+                backing_rect.set_bottom_without_resize(window.physical_rect().bottom());
                 break;
             case ResizeDirection::UpRight:
-                backing_rect.set_left(window.rect().left());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_left(window.physical_rect().left());
+                backing_rect.set_bottom_without_resize(window.physical_rect().bottom());
                 break;
             case ResizeDirection::DownLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_top(window.rect().top());
+                backing_rect.set_right_without_resize(window.physical_rect().right());
+                backing_rect.set_top(window.physical_rect().top());
                 break;
             }
 
-            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window.rect())
+            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window.physical_rect())
                                                                  .intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
@@ -365,7 +372,7 @@ void Compositor::compose()
             }
 
             if (window.is_opaque()) {
-                for (auto background_rect : window.rect().shatter(backing_rect))
+                for (auto background_rect : window.physical_rect().shatter(backing_rect))
                     painter.fill_rect(background_rect, wm.palette().window());
             }
         };
@@ -670,8 +677,8 @@ void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
         if (window.in_minimize_animation()) {
             int animation_index = window.minimize_animation_index();
 
-            auto from_rect = window.is_minimized() ? window.frame().rect() : window.taskbar_rect();
-            auto to_rect = window.is_minimized() ? window.taskbar_rect() : window.frame().rect();
+            auto from_rect = window.is_minimized() ? window.virtual_rect() : window.taskbar_rect();
+            auto to_rect = window.is_minimized() ? window.taskbar_rect() : window.virtual_rect();
 
             float x_delta_per_step = (float)(from_rect.x() - to_rect.x()) / minimize_animation_steps;
             float y_delta_per_step = (float)(from_rect.y() - to_rect.y()) / minimize_animation_steps;
@@ -751,14 +758,14 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_damage_rect)
         m_last_geometry_label_damage_rect = {};
         return false;
     }
-    auto geometry_string = window_being_moved_or_resized->rect().to_string();
+    auto geometry_string = window_being_moved_or_resized->physical_rect().to_string();
     if (!window_being_moved_or_resized->size_increment().is_null()) {
         int width_steps = (window_being_moved_or_resized->width() - window_being_moved_or_resized->base_size().width()) / window_being_moved_or_resized->size_increment().width();
         int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
         geometry_string = String::formatted("{} ({}x{})", geometry_string, width_steps, height_steps);
     }
     auto geometry_label_rect = Gfx::IntRect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
-    geometry_label_rect.center_within(window_being_moved_or_resized->rect());
+    geometry_label_rect.center_within(window_being_moved_or_resized->physical_rect());
     auto& back_painter = *m_back_painter;
     back_painter.fill_rect(geometry_label_rect.translated(1, 1), Color(Color::Black).with_alpha(80));
     Gfx::StylePainter::paint_button(back_painter, geometry_label_rect.translated(-1, -1), wm.palette(), Gfx::ButtonStyle::Normal, false);
@@ -855,7 +862,7 @@ bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_
             return IterationDecision::Continue;
         if (!window.is_opaque())
             return IterationDecision::Continue;
-        if (window.frame().rect().contains(rect)) {
+        if (window.virtual_rect().contains(rect)) {
             found_containing_window = true;
             return IterationDecision::Break;
         }
@@ -871,7 +878,7 @@ void Compositor::recompute_occlusions()
         if (wm.m_switcher.is_visible()) {
             window.set_occluded(false);
         } else {
-            if (any_opaque_window_above_this_one_contains_rect(window, window.frame().rect()))
+            if (any_opaque_window_above_this_one_contains_rect(window, window.virtual_rect()))
                 window.set_occluded(true);
             else
                 window.set_occluded(false);
@@ -913,7 +920,7 @@ void Compositor::recompute_occlusions()
         Gfx::DisjointRectSet visible_rects(screen_rect);
         bool have_transparent = false;
         WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& w) {
-            auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+            auto window_frame_rect = w.virtual_rect().intersected(screen_rect);
             w.transparency_wallpaper_rects().clear();
             auto& visible_opaque = w.opaque_rects();
             auto& transparency_rects = w.transparency_rects();
@@ -942,7 +949,7 @@ void Compositor::recompute_occlusions()
 
                 if (w2.is_minimized())
                     return IterationDecision::Continue;
-                auto window_frame_rect2 = w2.frame().rect().intersected(screen_rect);
+                auto window_frame_rect2 = w2.virtual_rect().intersected(screen_rect);
                 auto covering_rect = window_frame_rect2.intersected(window_frame_rect);
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
@@ -1023,7 +1030,7 @@ void Compositor::recompute_occlusions()
 #endif
 
     wm.for_each_visible_window_from_back_to_front([&](Window& w) {
-        auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+        auto window_frame_rect = w.virtual_rect().intersected(screen_rect);
         if (w.is_minimized() || window_frame_rect.is_empty())
             return IterationDecision::Continue;
 

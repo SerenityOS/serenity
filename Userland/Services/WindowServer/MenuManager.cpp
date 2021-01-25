@@ -222,7 +222,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         }
         ASSERT(window->is_visible());
 
-        bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
+        bool event_is_inside_current_menu = window->physical_rect().contains(mouse_event.position());
         if (event_is_inside_current_menu) {
             WindowManager::the().set_hovered_window(window);
             auto translated_event = mouse_event.translated(-window->position());
@@ -252,7 +252,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
             for (auto& menu : m_open_menu_stack) {
                 if (!menu)
                     continue;
-                if (!menu->menu_window()->rect().contains(mouse_event.position()))
+                if (!menu->menu_window()->physical_rect().contains(mouse_event.position()))
                     continue;
                 WindowManager::the().set_hovered_window(menu->menu_window());
                 auto translated_event = mouse_event.translated(-menu->menu_window()->position());

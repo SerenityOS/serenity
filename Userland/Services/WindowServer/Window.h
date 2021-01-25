@@ -141,10 +141,10 @@ public:
     float opacity() const { return m_opacity; }
     void set_opacity(float);
 
-    int x() const { return m_rect.x(); }
-    int y() const { return m_rect.y(); }
-    int width() const { return m_rect.width(); }
-    int height() const { return m_rect.height(); }
+    int x() const { return m_physical_rect.x(); }
+    int y() const { return m_physical_rect.y(); }
+    int width() const { return m_physical_rect.width(); }
+    int height() const { return m_physical_rect.height(); }
 
     bool is_active() const;
 
@@ -154,7 +154,8 @@ public:
     bool is_modal() const;
     bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
 
-    Gfx::IntRect rect() const { return m_rect; }
+    Gfx::IntRect virtual_rect() const { return m_virtual_rect; }
+    Gfx::IntRect physical_rect() const { return m_physical_rect; }
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
@@ -167,11 +168,11 @@ public:
 
     void move_by(const Gfx::IntPoint& delta) { set_position_without_repaint(position().translated(delta)); }
 
-    Gfx::IntPoint position() const { return m_rect.location(); }
+    Gfx::IntPoint position() const { return m_physical_rect.location(); }
     void set_position(const Gfx::IntPoint& position) { set_rect({ position.x(), position.y(), width(), height() }); }
     void set_position_without_repaint(const Gfx::IntPoint& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
-    Gfx::IntSize size() const { return m_rect.size(); }
+    Gfx::IntSize size() const { return m_physical_rect.size(); }
 
     void invalidate(bool with_frame = true);
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
@@ -285,11 +286,20 @@ public:
 
     bool is_opaque() const
     {
+        if (shadow_enabled())
+            return false;
         if (opacity() < 1.0f)
             return false;
         if (has_alpha_channel())
             return false;
         return true;
+    }
+
+    bool shadow_enabled() const 
+    {
+        return !m_frameless &&
+            m_shadow_enabled &&
+            type() == WindowType::Normal;
     }
 
     Gfx::DisjointRectSet& opaque_rects() { return m_opaque_rects; }
@@ -312,7 +322,8 @@ private:
     Vector<WeakPtr<Window>> m_accessory_windows;
 
     String m_title;
-    Gfx::IntRect m_rect;
+    Gfx::IntRect m_virtual_rect;
+    Gfx::IntRect m_physical_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
     Gfx::DisjointRectSet m_dirty_rects;
@@ -365,6 +376,7 @@ private:
     MenuItem* m_window_menu_close_item { nullptr };
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
+    bool m_shadow_enabled { true };
 };
 
 }

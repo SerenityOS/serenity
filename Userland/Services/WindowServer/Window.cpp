@@ -144,12 +144,20 @@ void Window::set_title(const String& title)
 void Window::set_rect(const Gfx::IntRect& rect)
 {
     ASSERT(!rect.is_empty());
-    if (m_rect == rect)
+    if (m_physical_rect == rect)
         return;
-    auto old_rect = m_rect;
-    m_rect = rect;
+    auto old_rect = m_physical_rect;
+    m_physical_rect = rect;
+
+    if (shadow_enabled()) {
+        Compositor::the().invalidate_screen(m_virtual_rect); // we need to clear the previous drawn shadow
+        m_virtual_rect = m_frame.rect().inflated(10, 10);
+    } else {
+        m_virtual_rect = m_frame.rect();
+    }
+
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
+        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_physical_rect.size());
     }
 
     invalidate(true);
@@ -159,18 +167,25 @@ void Window::set_rect(const Gfx::IntRect& rect)
 void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
 {
     ASSERT(!rect.is_empty());
-    if (m_rect == rect)
+    if (m_physical_rect == rect)
         return;
-    auto old_rect = m_rect;
-    m_rect = rect;
+    auto old_rect = m_physical_rect;
+    m_physical_rect = rect;
 
-    if (old_rect.size() == m_rect.size()) {
-        auto delta = m_rect.location() - old_rect.location();
+    if (old_rect.size() == m_physical_rect.size()) {
+        auto delta = m_physical_rect.location() - old_rect.location();
         for (auto& child_window : m_child_windows) {
             if (child_window)
                 child_window->move_by(delta);
         }
     }
+
+    if (shadow_enabled()) {
+        Compositor::the().invalidate_screen(m_virtual_rect); // we need to clear the previous drawn shadow
+        m_virtual_rect = m_frame.rect().inflated(10, 10);
+    } else {
+        m_virtual_rect = m_frame.rect();
+    }    
 
     invalidate(true);
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
@@ -226,7 +241,7 @@ void Window::set_minimized(bool minimized)
     m_minimized = minimized;
     update_menu_item_text(PopupMenuItem::Minimize);
     Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().rect());
+    Compositor::the().invalidate_screen(virtual_rect());
     if (!blocking_modal_window())
         start_minimize_animation();
     if (!minimized)
@@ -281,7 +296,7 @@ void Window::set_opacity(float opacity)
     m_opacity = opacity;
     if (was_opaque != is_opaque())
         Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().rect());
+    Compositor::the().invalidate_screen(virtual_rect());
     WindowManager::the().notify_opacity_changed(*this);
 }
 
@@ -303,13 +318,13 @@ void Window::set_maximized(bool maximized)
     m_maximized = maximized;
     update_menu_item_text(PopupMenuItem::Maximize);
     if (maximized) {
-        m_unmaximized_rect = m_rect;
+        m_unmaximized_rect = m_physical_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
     } else {
         set_rect(m_unmaximized_rect);
     }
     m_frame.did_set_maximized({}, maximized);
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_physical_rect));
     set_default_positioned(false);
 }
 
@@ -401,7 +416,7 @@ void Window::set_visible(bool b)
     if (m_visible)
         invalidate(true);
     else
-        Compositor::the().invalidate_screen(frame().rect());
+        Compositor::the().invalidate_screen(virtual_rect());
 }
 
 void Window::invalidate(bool invalidate_frame)
@@ -433,7 +448,7 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
         return false;
     }
 
-    auto outer_rect = frame().rect();
+    auto outer_rect = virtual_rect();
     auto inner_rect = rect;
     inner_rect.move_by(position());
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
@@ -450,12 +465,9 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
 void Window::prepare_dirty_rects()
 {
     if (m_invalidated_all) {
-        if (m_invalidated_frame)
-            m_dirty_rects = frame().rect();
-        else
-            m_dirty_rects = rect();
+        m_dirty_rects = virtual_rect();
     } else {
-        m_dirty_rects.move_by(frame().rect().location());
+        m_dirty_rects.move_by(virtual_rect().location());
     }
 }
 
@@ -587,9 +599,9 @@ void Window::set_fullscreen(bool fullscreen)
     if (m_fullscreen == fullscreen)
         return;
     m_fullscreen = fullscreen;
-    Gfx::IntRect new_window_rect = m_rect;
+    Gfx::IntRect new_window_rect = m_physical_rect;
     if (m_fullscreen) {
-        m_saved_nonfullscreen_rect = m_rect;
+        m_saved_nonfullscreen_rect = m_physical_rect;
         new_window_rect = Screen::the().rect();
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
@@ -601,7 +613,7 @@ void Window::set_fullscreen(bool fullscreen)
 
 Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 {
-    int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
+    int frame_width = (m_frame.rect().width() - m_physical_rect.width()) / 2;
     int title_bar_height = m_frame.title_bar_rect().height();
     int menu_height = WindowManager::the().maximized_window_rect(*this).y();
     int max_height = WindowManager::the().maximized_window_rect(*this).height();
@@ -664,9 +676,9 @@ void Window::set_tiled(WindowTileType tiled)
 
     m_tiled = tiled;
     if (tiled != WindowTileType::None)
-        m_untiled_rect = m_rect;
+        m_untiled_rect = m_physical_rect;
     set_rect(tiled_rect(tiled));
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_physical_rect));
 }
 
 void Window::detach_client(Badge<ClientConnection>)
@@ -691,7 +703,7 @@ void Window::recalculate_rect()
     }
 
     if (send_event) {
-        Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+        Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_physical_rect));
     }
 }
 

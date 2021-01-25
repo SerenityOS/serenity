@@ -206,7 +206,7 @@ void WindowSwitcher::draw()
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
-        painter.draw_text(item_rect, window.rect().to_string(), Gfx::TextAlignment::CenterRight, rect_text_color);
+        painter.draw_text(item_rect, window.physical_rect().to_string(), Gfx::TextAlignment::CenterRight, rect_text_color);
     }
 }
 

@@ -298,7 +298,7 @@ void WindowManager::tell_wm_listener_about_window(Window& listener, Window& wind
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.physical_rect(), window.progress()));
 }
 
 void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)
@@ -307,7 +307,7 @@ void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window&
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.rect()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.physical_rect()));
 }
 
 void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window& window)
@@ -477,7 +477,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     m_resizing_mouse_button = button;
     m_resize_window = window;
     m_resize_origin = position;
-    m_resize_window_original_rect = window.rect();
+    m_resize_window_original_rect = window.physical_rect();
 
     m_active_input_tracking_window = nullptr;
 
@@ -503,7 +503,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 #endif
 
         m_move_window->invalidate();
-        if (m_move_window->rect().contains(event.position()))
+        if (m_move_window->physical_rect().contains(event.position()))
             hovered_window = m_move_window;
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
@@ -570,7 +570,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 m_move_window->set_tiled(WindowTileType::None);
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
-                if (m_move_window->rect().contains(event.position()))
+                if (m_move_window->physical_rect().contains(event.position()))
                     hovered_window = m_move_window;
             }
             return true;
@@ -588,9 +588,9 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
 #ifdef RESIZE_DEBUG
         dbg() << "[WM] Finish resizing Window{" << m_resize_window << "}";
 #endif
-        Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
+        Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->physical_rect()));
         m_resize_window->invalidate();
-        if (m_resize_window->rect().contains(event.position()))
+        if (m_resize_window->physical_rect().contains(event.position()))
             hovered_window = m_resize_window;
         m_resize_window = nullptr;
         m_resizing_mouse_button = MouseButton::None;
@@ -691,7 +691,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     if (new_rect.contains(event.position()))
         hovered_window = m_resize_window;
 
-    if (m_resize_window->rect() == new_rect)
+    if (m_resize_window->physical_rect() == new_rect)
         return true;
 #ifdef RESIZE_DEBUG
     dbg() << "[WM] Resizing, original: " << m_resize_window_original_rect << ", now: " << new_rect;
@@ -709,7 +709,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
     if (event.type() == Event::MouseMove) {
         // We didn't let go of the drag yet, see if we should send some drag move events..
         for_each_visible_window_from_front_to_back([&](Window& window) {
-            if (!window.rect().contains(event.position()))
+            if (!window.physical_rect().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
             auto translated_event = event.translated(-window.position());
@@ -1003,7 +1003,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             }
 
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
-            if (window.rect().contains(event.position())) {
+            if (window.physical_rect().contains(event.position())) {
                 hovered_window = &window;
                 if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.blocking_modal_window()) {
                     auto translated_event = event.translated(-window.position());

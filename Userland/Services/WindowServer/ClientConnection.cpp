@@ -400,7 +400,7 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
         return {};
     }
 
-    if (message.rect().location() != window.rect().location()) {
+    if (message.rect().location() != window.physical_rect().location()) {
         window.set_default_positioned(false);
     }
     auto normalized_rect = normalize_window_rect(message.rect(), window.type());
@@ -417,7 +417,7 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
         did_misbehave("GetWindowRect: Bad window ID");
         return {};
     }
-    return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
+    return make<Messages::WindowServer::GetWindowRectResponse>(it->value->physical_rect());
 }
 
 OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRectInMenubar& message)

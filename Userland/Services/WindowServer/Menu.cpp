@@ -299,7 +299,7 @@ void Menu::update_for_new_hovered_item(bool make_input)
     if (hovered_item() && hovered_item()->is_submenu()) {
         ASSERT(menu_window());
         MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
-        hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), make_input);
+        hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->physical_rect().location()), make_input);
     } else {
         MenuManager::the().close_everyone_not_in_lineage(*this);
         ensure_menu_window().set_visible(true);

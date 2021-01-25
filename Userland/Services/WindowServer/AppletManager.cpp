@@ -89,7 +89,7 @@ void AppletManager::add_applet(Window& applet)
 
 void AppletManager::calculate_applet_rects(Window& window)
 {
-    auto menubar_rect = window.rect();
+    auto menubar_rect = window.physical_rect();
     int right_edge_x = menubar_rect.width() - 4;
     for (auto& existing_applet : m_applets) {
 

@@ -147,17 +147,17 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::title_bar_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_rect(to_theme_window_type(m_window.type()), m_window.physical_rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_icon_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_icon_rect(to_theme_window_type(m_window.type()), m_window.physical_rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_text_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_text_rect(to_theme_window_type(m_window.type()), m_window.physical_rect(), WindowManager::the().palette());
 }
 
 Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
@@ -179,7 +179,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::WindowTheme::current().paint_notification_frame(painter, m_window.rect(), palette, m_buttons.last().relative_rect());
+    Gfx::WindowTheme::current().paint_notification_frame(painter, m_window.physical_rect(), palette, m_buttons.last().relative_rect());
 }
 
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
@@ -197,7 +197,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     }
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.physical_rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
 }
 
 void WindowFrame::paint(Gfx::Painter& painter)
@@ -224,12 +224,13 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 {
     if (window.is_frameless())
         return rect;
+    
     return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette());
 }
 
 static Gfx::IntRect frame_rect_for_window(Window& window)
 {
-    return frame_rect_for_window(window, window.rect());
+    return frame_rect_for_window(window, window.physical_rect());
 }
 
 Gfx::IntRect WindowFrame::rect() const
@@ -245,7 +246,7 @@ void WindowFrame::invalidate_title_bar()
 void WindowFrame::invalidate(Gfx::IntRect relative_rect)
 {
     auto frame_rect = rect();
-    auto window_rect = m_window.rect();
+    auto window_rect = m_window.physical_rect();
     relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
     m_window.invalidate(relative_rect, true);
 }
@@ -268,7 +269,7 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
 
 void WindowFrame::layout_buttons()
 {
-    auto button_rects = Gfx::WindowTheme::current().layout_buttons(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), m_buttons.size());
+    auto button_rects = Gfx::WindowTheme::current().layout_buttons(to_theme_window_type(m_window.type()), m_window.physical_rect(), WindowManager::the().palette(), m_buttons.size());
     for (size_t i = 0; i < m_buttons.size(); i++)
         m_buttons[i].set_relative_rect(button_rects[i]);
 }
