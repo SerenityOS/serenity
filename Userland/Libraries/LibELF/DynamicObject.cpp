@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLinker.h>
@@ -32,14 +33,6 @@
 #include <LibELF/exec_elf.h>
 #include <stdio.h>
 #include <string.h>
-
-#ifdef DYNAMIC_OBJECT_VERBOSE
-#    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
-#else
-#    define VERBOSE(fmt, ...) \
-        do {                  \
-        } while (0)
-#endif
 
 namespace ELF {
 
@@ -80,8 +73,8 @@ void DynamicObject::dump() const
     if (m_has_soname)
         builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
 
-    VERBOSE("Dynamic section at address %p contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    VERBOSE("%s", builder.to_string().characters());
+    dbgln<DYNAMIC_LOAD_DEBUG>("Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    dbgln<DYNAMIC_LOAD_DEBUG>("{}", builder.string_view());
 }
 
 void DynamicObject::parse()
@@ -175,8 +168,7 @@ void DynamicObject::parse()
             // We handle these in for_each_needed_library
             break;
         default:
-            dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
-            printf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
+            dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{}", name_for_dtag(entry.tag()));
             ASSERT_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
@@ -311,7 +303,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
         if (strcmp(name, symbol.name()) == 0) {
-            VERBOSE("Returning SYSV dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
+            dbgln<DYNAMIC_LOAD_DEBUG>("Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
@@ -356,7 +348,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const 
         hash2 = *(current_chain++);
         const auto symbol = m_dynamic.symbol(current_sym);
         if ((hash1 == (hash2 & ~1)) && strcmp(name, symbol.name()) == 0) {
-            VERBOSE("Returning GNU dynamic symbol with index %zu for %s: %p\n", current_sym, symbol.name(), symbol.address().as_ptr());
+            dbgln<DYNAMIC_LOAD_DEBUG>("Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
         if (hash2 & 1) {
@@ -502,7 +494,7 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 
     u32 symbol_location = res.address;
 
-    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), (void*)symbol_location, (void*)relocation_address);
+    dbgln<DYNAMIC_LOAD_DEBUG>("DynamicLoader: Jump slot relocation: putting {} ({:p}) into PLT at {}", sym.name(), symbol_location, (void*)relocation_address);
 
     *(u32*)relocation_address = symbol_location;
 
@@ -511,12 +503,12 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 
 DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
-    VERBOSE("looking up symbol: %s\n", symbol.name());
+    dbgln<DYNAMIC_LOAD_DEBUG>("looking up symbol: {}", symbol.name());
     if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
         return DynamicLinker::lookup_global_symbol(symbol.name());
 
     if (!symbol.is_undefined()) {
-        VERBOSE("symbol is defined in its object\n");
+        dbgln<DYNAMIC_LOAD_DEBUG>("symbol is defined in its object");
         return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
     }
     return DynamicLinker::lookup_global_symbol(symbol.name());
