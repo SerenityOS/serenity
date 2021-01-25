@@ -144,7 +144,7 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
     switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
     case GenericAddressStructure::AddressSpace::SystemIO: {
         IOAddress address(structure.address);
-        dbgln("ACPI: Sending value {:x} to {:p}", value, address);
+        dbgln("ACPI: Sending value {:x} to {}", value, address);
         switch (structure.access_size) {
         case (u8)GenericAddressStructure::AccessSize::QWord: {
             dbgln("Trying to send QWord to IO port");
