@@ -114,7 +114,7 @@ public:
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) = 0;
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) = 0;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg);
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared);
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared);
     virtual KResult stat(::stat&) const { return EBADF; }
 
     virtual String absolute_path(const FileDescription&) const = 0;

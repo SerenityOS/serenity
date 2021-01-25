@@ -133,16 +133,13 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         return (void*)-EINVAL;
 
     Region* region = nullptr;
-    Optional<Range> range;
-    if (map_noreserve || map_anonymous) {
-        range = allocate_range(VirtualAddress(addr), size, alignment);
-        if (!range.value().is_valid())
-            return (void*)-ENOMEM;
-    }
+    auto range = allocate_range(VirtualAddress(addr), size, alignment);
+    if (!range.is_valid())
+        return (void*)-ENOMEM;
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        auto region_or_error = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
+        auto region_or_error = allocate_region(range, !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error() && (!map_fixed && addr != 0))
             region_or_error = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error())
@@ -169,13 +166,8 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
             if (!validate_inode_mmap_prot(*this, prot, *description->inode(), map_shared))
                 return (void*)-EACCES;
         }
-        auto region_or_error = description->mmap(*this, VirtualAddress(addr), static_cast<size_t>(offset), size, prot, map_shared);
-        if (region_or_error.is_error()) {
-            // Fail if MAP_FIXED or address is 0, retry otherwise
-            if (map_fixed || addr == 0)
-                return (void*)region_or_error.error().error();
-            region_or_error = description->mmap(*this, {}, static_cast<size_t>(offset), size, prot, map_shared);
-        }
+
+        auto region_or_error = description->mmap(*this, range, static_cast<size_t>(offset), prot, map_shared);
         if (region_or_error.is_error())
             return (void*)region_or_error.error().error();
         region = region_or_error.value();
