@@ -510,25 +510,32 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     }
 }
 
-void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, float opacity)
+void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
+    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
     ASSERT(!m_target->has_alpha_channel());
 
     if (!opacity)
         return;
     if (opacity >= 1.0f)
-        return blit(position, source, src_rect);
+        return blit(position, source, a_src_rect);
 
     u8 alpha = 255 * opacity;
 
-    IntRect safe_src_rect = IntRect::intersection(src_rect, source.rect());
-    IntRect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(state().translation);
+    IntRect safe_src_rect = IntRect::intersection(a_src_rect, source.rect());
+    if (scale() != source.scale())
+        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect, opacity);
+
+    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
     auto clipped_rect = IntRect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    int scale = this->scale();
+    auto src_rect = a_src_rect * scale;
+    clipped_rect *= scale;
+    dst_rect *= scale;
+
     const int first_row = clipped_rect.top() - dst_rect.top();
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
@@ -538,6 +545,8 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
     const unsigned src_skip = source.pitch() / sizeof(RGBA32);
 
+    // FIXME: This does the wrong thing if source has an alpha channel: It ignores it and pretends that every pixel in source is fully opaque.
+    // Maybe just punt to draw_scaled_bitmap() in that case too?
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
             Color src_color_with_alpha = Color::from_rgb(src[x]);
