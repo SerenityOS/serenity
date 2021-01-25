@@ -137,6 +137,7 @@ void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
+    ASSERT(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
 
     if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
@@ -205,6 +206,9 @@ void syscall_handler(TrapFrame* trap)
     current_thread->yield_if_stopped();
 
     current_thread->check_dispatch_pending_signal();
+
+    // If the previous mode somehow changed something is seriously messed up...
+    ASSERT(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
