@@ -562,34 +562,58 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
 
 void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, Function<Color(Color)> filter)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    ASSERT((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
     IntRect safe_src_rect = src_rect.intersected(source.rect());
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    int scale = this->scale();
+    clipped_rect *= scale;
+    dst_rect *= scale;
+    safe_src_rect *= source.scale();
+
     const int first_row = clipped_rect.top() - dst_rect.top();
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
     const int last_column = clipped_rect.right() - dst_rect.left();
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-    const size_t src_skip = source.pitch() / sizeof(RGBA32);
 
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int x = 0; x <= (last_column - first_column); ++x) {
-            u8 alpha = Color::from_rgba(src[x]).alpha();
-            if (alpha == 0xff)
-                dst[x] = filter(Color::from_rgba(src[x])).value();
-            else if (!alpha)
-                continue;
-            else
-                dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
+    int s = scale / source.scale();
+    if (s == 1) {
+        const RGBA32* src = source.scanline(safe_src_rect.top() + first_row) + safe_src_rect.left() + first_column;
+        const size_t src_skip = source.pitch() / sizeof(RGBA32);
+
+        for (int row = first_row; row <= last_row; ++row) {
+            for (int x = 0; x <= (last_column - first_column); ++x) {
+                u8 alpha = Color::from_rgba(src[x]).alpha();
+                if (alpha == 0xff)
+                    dst[x] = filter(Color::from_rgba(src[x])).value();
+                else if (!alpha)
+                    continue;
+                else
+                    dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
+            }
+            dst += dst_skip;
+            src += src_skip;
         }
-        dst += dst_skip;
-        src += src_skip;
+    } else {
+        for (int row = first_row; row <= last_row; ++row) {
+            const RGBA32* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
+            for (int x = 0; x <= (last_column - first_column); ++x) {
+                u8 alpha = Color::from_rgba(src[x / s]).alpha();
+                if (alpha == 0xff)
+                    dst[x] = filter(Color::from_rgba(src[x / s])).value();
+                else if (!alpha)
+                    continue;
+                else
+                    dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x / s]))).value();
+            }
+            dst += dst_skip;
+        }
     }
 }
 
@@ -1698,8 +1722,6 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 
 void Painter::blit_disabled(const IntPoint& location, const Gfx::Bitmap& bitmap, const IntRect& rect, const Palette& palette)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
     auto bright_color = palette.threed_highlight();
     auto dark_color = palette.threed_shadow1();
     blit_filtered(location.translated(1, 1), bitmap, rect, [&](auto) {
