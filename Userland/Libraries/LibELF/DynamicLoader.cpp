@@ -58,7 +58,7 @@ void* DynamicLoader::do_mmap(int fd, size_t size, const String& name)
     if (size < sizeof(Elf32_Ehdr))
         return MAP_FAILED;
 
-    String file_mmap_name = String::format("ELF_DYN: %s", name.characters());
+    String file_mmap_name = String::formatted("ELF_DYN: {}", name);
     return mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0, file_mmap_name.characters());
 }
 
@@ -276,7 +276,7 @@ void DynamicLoader::load_program_headers()
         MAP_SHARED,
         m_image_fd,
         region->offset(),
-        String::format("%s: .text", m_filename.characters()).characters());
+        String::formatted("{}: .text", m_filename).characters());
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
@@ -297,7 +297,7 @@ void DynamicLoader::load_program_headers()
         MAP_ANONYMOUS | MAP_PRIVATE,
         0,
         0,
-        String::format("%s: .data", m_filename.characters()).characters());
+        String::formatted("{}: .data", m_filename).characters());
     if (MAP_FAILED == data_segment_begin) {
         ASSERT_NOT_REACHED();
     }
