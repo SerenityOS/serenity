@@ -235,7 +235,9 @@ void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_
     } else {
         new_index = model.index(0, 0);
     }
-    set_cursor(new_index, selection_update);
+    if (new_index.is_valid()) {
+        set_cursor(new_index, selection_update);
+    }
 }
 
 void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
