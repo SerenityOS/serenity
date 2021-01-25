@@ -527,7 +527,7 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
         return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect, opacity);
 
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
-    auto clipped_rect = IntRect::intersection(dst_rect, clip_rect());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
 
@@ -541,8 +541,9 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const int first_column = clipped_rect.left() - dst_rect.left();
     const int last_column = clipped_rect.right() - dst_rect.left();
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const unsigned src_skip = source.pitch() / sizeof(RGBA32);
 
     // FIXME: This does the wrong thing if source has an alpha channel: It ignores it and pretends that every pixel in source is fully opaque.
