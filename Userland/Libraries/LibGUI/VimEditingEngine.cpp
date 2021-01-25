@@ -67,6 +67,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 {
     if (m_previous_key == KeyCode::Key_D) {
         if (event.key() == KeyCode::Key_D) {
+            yank(Line);
             delete_line();
         }
         m_previous_key = {};
@@ -75,6 +76,32 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             move_to_first_line();
         } else if (event.key() == KeyCode::Key_E) {
             move_to_end_of_previous_word();
+        }
+        m_previous_key = {};
+    } else if (m_previous_key == KeyCode::Key_Y) {
+        if (event.key() == KeyCode::Key_Y) {
+            yank(Line);
+        }
+        m_previous_key = {};
+    } else if (m_previous_key == KeyCode::Key_C) {
+        if (event.key() == KeyCode::Key_C) {
+            // Needed because the code to replace the deleted line is called after delete_line() so
+            // what was the second last line before the delete, is now the last line.
+            bool was_second_last_line = m_editor->cursor().line() == m_editor->line_count() - 2;
+            yank(Line);
+            delete_line();
+            if (was_second_last_line || (m_editor->cursor().line() != 0 && m_editor->cursor().line() != m_editor->line_count() - 1)) {
+                move_one_up(event);
+                move_to_line_end(event);
+                m_editor->add_code_point(0x0A);
+            } else if (m_editor->cursor().line() == 0) {
+                move_to_line_beginning(event);
+                m_editor->add_code_point(0x0A);
+                move_one_up(event);
+            } else if (m_editor->cursor().line() == m_editor->line_count() - 1) {
+                m_editor->add_code_point(0x0A);
+            }
+            switch_to_insert_mode();
         }
         m_previous_key = {};
     } else {
@@ -133,6 +160,9 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             }
         }
 
+        // FIXME: H and L movement keys will move to the previous or next line when reaching the beginning or end
+        //  of the line and pressed again.
+
         // No modifier is pressed.
         if (!event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
@@ -142,6 +172,9 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 break;
             case (KeyCode::Key_B):
                 move_to_beginning_of_previous_word();
+                break;
+            case (KeyCode::Key_C):
+                m_previous_key = event.key();
                 break;
             case (KeyCode::Key_Backspace):
             case (KeyCode::Key_H):
@@ -184,6 +217,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_to_beginning_of_next_word();
                 break;
             case (KeyCode::Key_X):
+                yank({ m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 } });
                 delete_char();
                 break;
             case (KeyCode::Key_0):
@@ -192,9 +226,11 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_V):
                 switch_to_visual_mode();
                 break;
-            case (KeyCode::Key_C):
-                m_editor->do_delete();
-                switch_to_insert_mode();
+            case (KeyCode::Key_Y):
+                m_previous_key = event.key();
+                break;
+            case (KeyCode::Key_P):
+                put(event);
                 break;
             default:
                 break;
@@ -280,8 +316,9 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
                 update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_D):
-                // TODO: Yank selected text
+                yank(Selection);
                 m_editor->do_delete();
+                switch_to_normal_mode();
                 break;
             case (KeyCode::Key_E):
                 move_to_end_of_next_word();
@@ -313,8 +350,9 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
                 update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_X):
-                // TODO: Yank selected text
+                yank(Selection);
                 m_editor->do_delete();
+                switch_to_normal_mode();
                 break;
             case (KeyCode::Key_0):
                 move_to_line_beginning(event);
@@ -324,9 +362,13 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
                 switch_to_normal_mode();
                 break;
             case (KeyCode::Key_C):
-                // TODO: Yank selected text
+                yank(Selection);
                 m_editor->do_delete();
                 switch_to_insert_mode();
+                break;
+            case (KeyCode::Key_Y):
+                yank(Selection);
+                switch_to_normal_mode();
                 break;
             default:
                 break;
@@ -390,5 +432,45 @@ void VimEditingEngine::move_half_page_down(const KeyEvent& event)
 {
     move_down(event, 0.5);
 };
+
+void VimEditingEngine::yank(YankType type)
+{
+    m_yank_type = type;
+    if (type == YankType::Line) {
+        m_yank_buffer = m_editor->current_line().to_utf8();
+    } else {
+        m_yank_buffer = m_editor->selected_text();
+    }
+
+    // When putting this, auto indentation (if enabled) will indent as far as
+    // is necessary, then any whitespace captured before the yanked text will be placed
+    // after the indentation, doubling the indentation.
+    if (m_editor->is_automatic_indentation_enabled())
+        m_yank_buffer = m_yank_buffer.trim_whitespace(TrimMode::Left);
+}
+
+void VimEditingEngine::yank(TextRange range)
+{
+    m_yank_type = YankType::Selection;
+    m_yank_buffer = m_editor->document().text_in_range(range);
+}
+
+void VimEditingEngine::put(const GUI::KeyEvent& event)
+{
+    if (m_yank_type == YankType::Line) {
+        move_to_line_end(event);
+        StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
+        sb.append_code_point(0x0A);
+        sb.append(m_yank_buffer);
+        m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
+        m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().first_non_whitespace_column() });
+    } else {
+        // FIXME: If attempting to put on the last column a line,
+        // the buffer will bne placed on the next line due to the move_one_left/right behaviour.
+        move_one_right(event);
+        m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
+        move_one_left(event);
+    }
+}
 
 }

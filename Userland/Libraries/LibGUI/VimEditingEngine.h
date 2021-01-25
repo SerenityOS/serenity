@@ -44,7 +44,18 @@ private:
         Visual
     };
 
+    enum YankType {
+        Line,
+        Selection
+    };
+
     VimMode m_vim_mode { VimMode::Normal };
+
+    YankType m_yank_type {};
+    String m_yank_buffer {};
+    void yank(YankType);
+    void yank(TextRange);
+    void put(const GUI::KeyEvent&);
 
     TextPosition m_selection_start_position {};
     void update_selection_on_cursor_move();
