@@ -24,26 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
-#include <AK/ScopeGuard.h>
-#include <LibC/mman.h>
-#include <LibC/stdio.h>
 #include <LibC/sys/internals.h>
 #include <LibC/unistd.h>
-#include <LibCore/File.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
-#include <LibELF/DynamicLoader.h>
-#include <LibELF/DynamicObject.h>
-#include <LibELF/Image.h>
-#include <LibELF/exec_elf.h>
-#include <dlfcn.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 
