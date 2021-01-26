@@ -40,12 +40,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     Vector<String> lines;
 
+    char* buffer = nullptr;
     for (;;) {
-        char* buffer = nullptr;
-        ssize_t buflen = 0;
-        size_t n;
+        size_t n = 0;
         errno = 0;
-        buflen = getline(&buffer, &n, stdin);
+        ssize_t buflen = getline(&buffer, &n, stdin);
         if (buflen == -1 && errno != 0) {
             perror("getline");
             exit(1);
@@ -54,6 +53,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
             break;
         lines.append({ buffer, AK::ShouldChomp::Chomp });
     }
+    free(buffer);
 
     // Fisher-Yates shuffle
     String tmp;
