@@ -28,11 +28,17 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibPCIDB/Database.h>
 #include <stdio.h>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+static bool flag_show_numerical = false;
+
+static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
+static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
+
+int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
@@ -51,9 +57,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto db = PCIDB::Database::open();
-    if (!db)
-        warnln("Couldn't open PCI ID database");
+    Core::ArgsParser args_parser;
+    args_parser.set_general_help("List PCI devices.");
+    args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
+    args_parser.parse(argc, argv);
+
+    const char* format = flag_show_numerical ? format_numerical : format_textual;
+
+    AK::RefPtr<PCIDB::Database> db;
+    if (!flag_show_numerical) {
+        db = PCIDB::Database::open();
+        if (!db) {
+            warnln("Couldn't open PCI ID database");
+            flag_show_numerical = true;
+        }
+    }
 
     auto proc_pci = Core::File::construct("/proc/pci");
     if (!proc_pci->open(Core::IODevice::ReadOnly)) {
@@ -69,7 +87,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto file_contents = proc_pci->read_all();
     auto json = JsonValue::from_string(file_contents);
     ASSERT(json.has_value());
-    json.value().as_array().for_each([db](auto& value) {
+    json.value().as_array().for_each([db, format](auto& value) {
         auto dev = value.as_object();
         auto seg = dev.get("seg").to_u32();
         auto bus = dev.get("bus").to_u32();
@@ -79,6 +97,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         auto device_id = dev.get("device_id").to_u32();
         auto revision_id = dev.get("revision_id").to_u32();
         auto class_id = dev.get("class").to_u32();
+        auto subclass_id = dev.get("subclass").to_u32();
 
         String vendor_name;
         String device_name;
@@ -91,13 +110,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         }
 
         if (vendor_name.is_empty())
-            vendor_name = String::format("%02x", vendor_id);
+            vendor_name = String::format("%04x", vendor_id);
         if (device_name.is_empty())
-            device_name = String::format("%02x", device_id);
+            device_name = String::format("%04x", device_id);
         if (class_name.is_empty())
-            class_name = String::format("%04x", class_id);
+            class_name = String::format("%02x%02x", class_id, subclass_id);
 
-        outln("{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})", seg, bus, slot, function, class_name, vendor_name, device_name, revision_id);
+        outln(format, seg, bus, slot, function, class_name, vendor_name, device_name, revision_id);
     });
 
     return 0;
