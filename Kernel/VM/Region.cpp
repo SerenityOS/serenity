@@ -378,6 +378,12 @@ bool Region::map(PageDirectory& page_directory)
 {
     ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(page_directory.get_lock());
+
+    // FIXME: Find a better place for this sanity check(?)
+    if (is_user_accessible() && !is_shared()) {
+        ASSERT(!vmobject().is_shared_inode());
+    }
+
     set_page_directory(page_directory);
     size_t page_index = 0;
     while (page_index < page_count()) {
