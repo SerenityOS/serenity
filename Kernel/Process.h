@@ -112,7 +112,7 @@ class Process
 public:
     inline static Process* current()
     {
-        auto current_thread = Processor::current().current_thread();
+        auto current_thread = Processor::current_thread();
         return current_thread ? &current_thread->process() : nullptr;
     }
 

@@ -700,7 +700,7 @@ class Processor {
     AK_MAKE_NONCOPYABLE(Processor);
     AK_MAKE_NONMOVABLE(Processor);
 
-    Processor* m_self; // must be first field (%fs offset 0x0)
+    Processor* m_self;
 
     DescriptorTablePointer m_gdtr;
     Descriptor m_gdt[256];
@@ -812,12 +812,12 @@ public:
 
     ALWAYS_INLINE static Processor& current()
     {
-        return *(Processor*)read_fs_u32(0);
+        return *(Processor*)read_fs_u32(__builtin_offsetof(Processor, m_self));
     }
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(0) != 0;
+        return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
     ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
@@ -850,16 +850,21 @@ public:
         m_idle_thread = &idle_thread;
     }
 
-    ALWAYS_INLINE Thread* current_thread() const
+    ALWAYS_INLINE static Thread* current_thread()
     {
-        // NOTE: NOT safe to call from another processor!
-        ASSERT(&Processor::current() == this);
-        return m_current_thread;
+        // If we were to use Processor::current here, we'd have to
+        // disable interrupts to prevent a race where we may get pre-empted
+        // right after getting the Processor structure and then get moved
+        // to another processor, which would lead us to get the wrong thread.
+        // To avoid having to disable interrupts, we can just read the field
+        // directly in an atomic fashion, similar to Processor::current.
+        return (Thread*)read_fs_u32(__builtin_offsetof(Processor, m_current_thread));
     }
 
-    ALWAYS_INLINE void set_current_thread(Thread& current_thread)
+    ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
-        m_current_thread = &current_thread;
+        // See comment in Processor::current_thread
+        write_fs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
     ALWAYS_INLINE u32 id()
