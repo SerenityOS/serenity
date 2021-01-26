@@ -210,18 +210,18 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
 
-    auto& cancel_button = button_container.add<Button>();
-    cancel_button.set_fixed_width(80);
-    cancel_button.set_text("Cancel");
-    cancel_button.on_click = [this](auto) {
-        done(ExecCancel);
-    };
-
     auto& ok_button = button_container.add<Button>();
     ok_button.set_fixed_width(80);
     ok_button.set_text(ok_button_name(m_mode));
     ok_button.on_click = [this](auto) {
         on_file_return();
+    };
+
+    auto& cancel_button = button_container.add<Button>();
+    cancel_button.set_fixed_width(80);
+    cancel_button.set_text("Cancel");
+    cancel_button.on_click = [this](auto) {
+        done(ExecCancel);
     };
 
     m_view->on_activation = [this](auto& index) {
