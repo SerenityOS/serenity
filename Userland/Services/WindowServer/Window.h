@@ -106,6 +106,8 @@ public:
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
 
+    void set_vertically_maximized();
+
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 

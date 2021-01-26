@@ -83,6 +83,9 @@ WindowFrame::WindowFrame(Window& window)
         auto button = make<Button>(*this, [this](auto&) {
             WindowManager::the().maximize_windows(m_window, !m_window.is_maximized());
         });
+        button->on_middle_click = [&](auto&) {
+            m_window.set_vertically_maximized();
+        };
         m_maximize_button = button.ptr();
         m_buttons.append(move(button));
     }
