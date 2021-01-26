@@ -127,7 +127,8 @@ Range Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignmen
 
 Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    auto& region = add_region(Region::create_user_accessible(this, range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
+    auto& region = add_region(
+        Region::create_user_accessible(this, range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access(), source_region.is_cacheable(), source_region.is_shared()));
     region.set_mmap(source_region.is_mmap());
     region.set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
@@ -144,7 +145,7 @@ KResultOr<Region*> Process::allocate_region(const Range& range, const String& na
     auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
     if (!vmobject)
         return ENOMEM;
-    auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot));
+    auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot), true, false);
     if (!region->map(page_directory()))
         return ENOMEM;
     return &add_region(move(region));
