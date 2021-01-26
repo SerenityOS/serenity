@@ -353,6 +353,8 @@ private:
     String m_dnd_text;
     RefPtr<Core::MimeData> m_dnd_mime_data;
     RefPtr<Gfx::Bitmap> m_dnd_bitmap;
+
+    bool m_previous_event_is_key_down_logo { false };
 };
 
 template<typename Callback>
