@@ -1619,9 +1619,6 @@ RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
         auto cond_job = cond_job_value->job();
 
         shell->block_on_job(cond_job);
-
-        if (cond_job->signaled())
-            return create<ListValue>({}); // Exit early.
     }
     if (shell->last_return_code == 0) {
         if (m_true_branch)
