@@ -637,6 +637,7 @@ private:
 
     bool m_has_promises { false };
     u32 m_promises { 0 };
+    bool m_has_execpromises { false };
     u32 m_execpromises { 0 };
 
     VeilState m_veil_state { VeilState::None };

@@ -544,6 +544,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_environment = environment;
 
     m_promises = m_execpromises;
+    m_has_promises = m_has_execpromises;
+
+    m_execpromises = 0;
+    m_has_execpromises = false;
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
