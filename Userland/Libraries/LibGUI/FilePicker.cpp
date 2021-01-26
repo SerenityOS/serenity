@@ -301,7 +301,7 @@ void FilePicker::on_file_return()
     LexicalPath path(String::formatted("{}/{}", m_model->root_path(), m_filename_textbox->text()));
 
     if (FilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
-        auto result = MessageBox::show(this, "File already exists, overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
+        auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
     }
