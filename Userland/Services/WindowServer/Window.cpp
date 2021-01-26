@@ -360,7 +360,21 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
 }
+void Window::set_vertically_maximized()
+{
+    if (m_maximized)
+        return;
+    if (!is_resizable() || resize_aspect_ratio().has_value())
+        return;
 
+    auto max_rect = WindowManager::the().maximized_window_rect(*this);
+
+    auto new_rect = Gfx::IntRect(
+        Gfx::IntPoint(rect().x(), max_rect.y()),
+        Gfx::IntSize(rect().width(), max_rect.height()));
+    set_rect(new_rect);
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_rect));
+}
 void Window::set_resizable(bool resizable)
 {
     if (m_resizable == resizable)

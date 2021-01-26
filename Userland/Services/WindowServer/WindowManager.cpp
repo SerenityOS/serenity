@@ -579,6 +579,15 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 
+        auto max_rect = maximized_window_rect(*m_resize_window);
+        if (event.y() > max_rect.bottom()) {
+            dbgln<RESIZE_DEBUG>("Should Maximize vertically");
+            m_resize_window->set_vertically_maximized();
+            m_resize_window = nullptr;
+            m_resizing_mouse_button = MouseButton::None;
+            return true;
+        }
+
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate();
         if (m_resize_window->rect().contains(event.position()))
