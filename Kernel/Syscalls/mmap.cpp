@@ -404,10 +404,14 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
         auto old_name = old_region->name();
         auto old_prot = region_access_flags_to_prot(old_region->access());
         NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
+
+        // Unmap without deallocating the VM range since we're going to reuse it.
+        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
         deallocate_region(*old_region);
 
         auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
-        auto new_region_or_error = allocate_region_with_vmobject(range.base(), range.size(), new_vmobject, 0, old_name, old_prot, false);
+
+        auto new_region_or_error = allocate_region_with_vmobject(range, new_vmobject, 0, old_name, old_prot, false);
         if (new_region_or_error.is_error())
             return (void*)new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();
@@ -439,7 +443,11 @@ void* Process::sys$allocate_tls(size_t size)
     });
     ASSERT(main_thread);
 
-    auto region_or_error = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+    auto range = allocate_range({}, size);
+    if (!range.is_valid())
+        return (void*)-ENOMEM;
+
+    auto region_or_error = allocate_region(range, String(), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return (void*)region_or_error.error().error();
 

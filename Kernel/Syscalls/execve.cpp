@@ -184,7 +184,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
                 return IterationDecision::Break;
             }
 
-            auto region_or_error = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+            auto range = allocate_range({}, program_header.size_in_memory());
+            if (!range.is_valid()) {
+                ph_load_result = ENOMEM;
+                return IterationDecision::Break;
+            }
+
+            auto region_or_error = allocate_region(range, String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -219,7 +225,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             if (program_header.is_writable())
                 prot |= PROT_WRITE;
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
-            auto region_or_error = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot, AllocationStrategy::Reserve);
+            auto range = allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
+            if (!range.is_valid()) {
+                ph_load_result = ENOMEM;
+                return IterationDecision::Break;
+            }
+            auto region_or_error = allocate_region(range, region_name, prot, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -251,7 +262,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             prot |= PROT_WRITE;
         if (program_header.is_executable())
             prot |= PROT_EXEC;
-        auto region_or_error = allocate_region_with_vmobject(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), *vmobject, program_header.offset(), elf_name, prot, true);
+        auto range = allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
+        if (!range.is_valid()) {
+            ph_load_result = ENOMEM;
+            return IterationDecision::Break;
+        }
+        auto region_or_error = allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name, prot, true);
         if (region_or_error.is_error()) {
             ph_load_result = region_or_error.error();
             return IterationDecision::Break;
@@ -271,7 +287,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return ENOEXEC;
     }
 
-    auto stack_region_or_error = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+    auto stack_range = allocate_range({}, Thread::default_userspace_stack_size);
+    if (!stack_range.is_valid()) {
+        dbgln("do_exec: Failed to allocate VM range for stack");
+        return ENOMEM;
+    }
+
+    auto stack_region_or_error = allocate_region(stack_range, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
     if (stack_region_or_error.is_error())
         return stack_region_or_error.error();
     auto& stack_region = *stack_region_or_error.value();

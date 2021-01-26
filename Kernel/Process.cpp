@@ -150,14 +150,6 @@ KResultOr<Region*> Process::allocate_region(const Range& range, const String& na
     return &add_region(move(region));
 }
 
-KResultOr<Region*> Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, AllocationStrategy strategy)
-{
-    auto range = allocate_range(vaddr, size);
-    if (!range.is_valid())
-        return ENOMEM;
-    return allocate_region(range, name, prot, strategy);
-}
-
 KResultOr<Region*> Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
 {
     ASSERT(range.is_valid());
@@ -181,14 +173,6 @@ KResultOr<Region*> Process::allocate_region_with_vmobject(const Range& range, No
         return ENOMEM;
     }
     return &region;
-}
-
-KResultOr<Region*> Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
-{
-    auto range = allocate_range(vaddr, size);
-    if (!range.is_valid())
-        return ENOMEM;
-    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, shared);
 }
 
 bool Process::deallocate_region(Region& region)

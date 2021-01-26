@@ -1041,7 +1041,11 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    auto region_or_error = process().allocate_region({}, thread_specific_region_size(), "Thread-specific", PROT_READ | PROT_WRITE);
+    auto range = process().allocate_range({}, thread_specific_region_size());
+    if (!range.is_valid())
+        return ENOMEM;
+
+    auto region_or_error = process().allocate_region(range, "Thread-specific", PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error();
 
