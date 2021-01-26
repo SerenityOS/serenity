@@ -566,7 +566,7 @@ void EditingEngine::move_to_end_of_previous_word()
                 return;
             }
 
-            if (line_index == lines.size() - 1 && column_index == line.length() - 1) {
+            if (line_index == 0 && column_index == 0) {
                 m_editor->set_cursor({ line_index, column_index });
                 return;
             }
@@ -614,9 +614,11 @@ void EditingEngine::move_to_beginning_of_previous_word()
             const u32* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
-            if (column_index == 0 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char)))
+            if (column_index == 0 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
                 return m_editor->set_cursor({ line_index, column_index });
-            else if (column_index == 0) {
+            } else if (line_index == 0 && column_index == 0) {
+                return m_editor->set_cursor({ line_index, column_index });
+            } else if (column_index == 0 && is_first_iteration) {
                 is_first_iteration = false;
                 continue;
             }
@@ -628,10 +630,6 @@ void EditingEngine::move_to_beginning_of_previous_word()
 
             if (!is_first_iteration && vim_ispunct(current_char) && (isspace(next_char) || vim_isalnum(next_char)))
                 return m_editor->set_cursor({ line_index, column_index });
-
-            if (line_index == lines.size() - 1 && column_index == line.length() - 1) {
-                return m_editor->set_cursor({ line_index, column_index });
-            }
 
             is_first_iteration = false;
         }
