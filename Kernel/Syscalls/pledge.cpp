@@ -67,28 +67,25 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
         return true;
     };
 
-    u32 new_promises = 0;
-    u32 new_execpromises = 0;
-
     if (!promises.is_null()) {
+        u32 new_promises = 0;
         if (!parse_pledge(promises, new_promises))
             return -EINVAL;
         if (m_promises && (!new_promises || new_promises & ~m_promises))
             return -EPERM;
+        m_has_promises = true;
+        m_promises = new_promises;
     }
 
     if (!execpromises.is_null()) {
+        u32 new_execpromises = 0;
         if (!parse_pledge(execpromises, new_execpromises))
             return -EINVAL;
         if (m_execpromises && (!new_execpromises || new_execpromises & ~m_execpromises))
             return -EPERM;
+        m_has_execpromises = true;
+        m_execpromises = new_execpromises;
     }
-
-    m_has_promises = m_has_promises || !promises.is_null();
-    m_has_execpromises = m_has_execpromises || !execpromises.is_null();
-
-    m_promises = new_promises;
-    m_execpromises = new_execpromises;
 
     return 0;
 }
