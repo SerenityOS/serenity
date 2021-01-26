@@ -62,22 +62,36 @@ void Button::on_mouse_event(const MouseEvent& event)
 {
     auto& wm = WindowManager::the();
 
-    if (event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right || event.button() == MouseButton::Middle)) {
         m_pressed = true;
         wm.set_cursor_tracking_button(this);
         m_frame.invalidate(m_relative_rect);
         return;
     }
 
-    if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == Event::MouseUp && (event.button() == MouseButton::Left || event.button() == MouseButton::Right || event.button() == MouseButton::Middle)) {
         if (wm.cursor_tracking_button() != this)
             return;
         wm.set_cursor_tracking_button(nullptr);
         bool old_pressed = m_pressed;
         m_pressed = false;
         if (rect().contains(event.position())) {
-            if (on_click)
-                on_click(*this);
+            switch (event.button()) {
+            case MouseButton::Left:
+                if (on_click)
+                    on_click(*this);
+                break;
+
+            case MouseButton::Right:
+                if (on_right_click)
+                    on_right_click(*this);
+                break;
+
+            default:
+                if (on_middle_click)
+                    on_middle_click(*this);
+                break;
+            }
         }
         if (old_pressed != m_pressed) {
             // Would like to compute:
