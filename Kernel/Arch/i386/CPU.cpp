@@ -722,16 +722,19 @@ void handle_interrupt(TrapFrame* trap)
 
 void enter_trap_no_irq(TrapFrame* trap)
 {
+    InterruptDisabler disable;
     Processor::current().enter_trap(*trap, false);
 }
 
 void enter_trap(TrapFrame* trap)
 {
+    InterruptDisabler disable;
     Processor::current().enter_trap(*trap, true);
 }
 
 void exit_trap(TrapFrame* trap)
 {
+    InterruptDisabler disable;
     return Processor::current().exit_trap(*trap);
 }
 
@@ -1066,6 +1069,8 @@ void Processor::early_initialize(u32 cpu)
 
     cpu_setup();
     gdt_init();
+
+    ASSERT(is_initialized()); // sanity check
     ASSERT(&current() == this); // sanity check
 }
 
@@ -1194,8 +1199,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     // to get it. It also won't be entirely accurate and merely
     // reflect the status at the last context switch.
     ScopedSpinLock lock(g_scheduler_lock);
-    auto& proc = Processor::current();
-    if (&thread == proc.current_thread()) {
+    if (&thread == Processor::current_thread()) {
         ASSERT(thread.state() == Thread::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
@@ -1203,19 +1207,19 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         lock.unlock();
         capture_current_thread();
     } else if (thread.is_active()) {
-        ASSERT(thread.cpu() != proc.id());
+        ASSERT(thread.cpu() != Processor::current().id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
+        auto& proc = Processor::current();
         smp_unicast(thread.cpu(),
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::current().id(), proc.id());
                 ProcessPagingScope paging_scope(thread.process());
-                auto& target_proc = Processor::current();
-                ASSERT(&target_proc != &proc);
-                ASSERT(&thread == target_proc.current_thread());
+                ASSERT(&Processor::current() != &proc);
+                ASSERT(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
                 // scheduler lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
@@ -1270,8 +1274,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
     ASSERT(to_thread->state() == Thread::Running);
 
-    auto& processor = Processor::current();
-    processor.set_current_thread(*to_thread);
+    Processor::set_current_thread(*to_thread);
 
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
@@ -1283,6 +1286,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     set_fs(to_tss.fs);
     set_gs(to_tss.gs);
 
+    auto& processor = Processor::current();
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
@@ -1353,6 +1357,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     );
 
     dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+
+    Processor::current().restore_in_critical(to_thread->saved_critical());
 }
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
@@ -1612,16 +1618,18 @@ void Processor::initialize_context_switching(Thread& initial_thread)
 
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
-    InterruptDisabler disabler;
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(&Processor::current() == this);
     trap.prev_irq_level = m_in_irq;
     if (raise_irq)
         m_in_irq++;
-    if (m_current_thread) {
-        auto& current_trap = m_current_thread->current_trap();
+    auto* current_thread = Processor::current_thread();
+    if (current_thread) {
+        auto& current_trap = current_thread->current_trap();
         trap.next_trap = current_trap;
         current_trap = &trap;
         // The cs register of this trap tells us where we will return back to
-        m_current_thread->set_previous_mode(((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+        current_thread->set_previous_mode(((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
     } else {
         trap.next_trap = nullptr;
     }
@@ -1629,7 +1637,8 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 
 void Processor::exit_trap(TrapFrame& trap)
 {
-    InterruptDisabler disabler;
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(&Processor::current() == this);
     ASSERT(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
@@ -1638,18 +1647,20 @@ void Processor::exit_trap(TrapFrame& trap)
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
 
-    if (m_current_thread) {
-        auto& current_trap = m_current_thread->current_trap();
+    auto* current_thread = Processor::current_thread();
+    if (current_thread) {
+        auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
         if (current_trap) {
+            ASSERT(current_trap->regs);
             // If we have another higher level trap then we probably returned
             // from an interrupt or irq handler. The cs register of the
             // new/higher level trap tells us what the mode prior to it was
-            m_current_thread->set_previous_mode(((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+            current_thread->set_previous_mode(((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
         } else {
             // If we don't have a higher level trap then we're back in user mode.
             // Unless we're a kernel process, in which case we're always in kernel mode
-            m_current_thread->set_previous_mode(m_current_thread->process().is_kernel_process() ? Thread::PreviousMode::KernelMode : Thread::PreviousMode::UserMode);
+            current_thread->set_previous_mode(current_thread->process().is_kernel_process() ? Thread::PreviousMode::KernelMode : Thread::PreviousMode::UserMode);
         }
     }
 }
