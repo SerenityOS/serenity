@@ -1087,6 +1087,9 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
+        if (event.type() != Event::MouseMove)
+            m_previous_event_is_key_down_logo = false;
+
         Window* hovered_window = nullptr;
         process_mouse_event(static_cast<MouseEvent&>(event), hovered_window);
         set_hovered_window(hovered_window);
@@ -1114,6 +1117,20 @@ void WindowManager::event(Core::Event& event)
             reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
             Compositor::the().invalidate_screen();
             return;
+        }
+
+        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Logo) {
+            m_previous_event_is_key_down_logo = true;
+        } else if (m_previous_event_is_key_down_logo) {
+            m_previous_event_is_key_down_logo = false;
+            if (key_event.type() == Event::KeyUp && key_event.key() == Key_Logo) {
+                if (MenuManager::the().has_open_menu()) {
+                    MenuManager::the().close_everyone();
+                } else {
+                    MenuManager::the().open_menu(*MenuManager::the().system_menu());
+                }
+                return;
+            }
         }
 
         if (MenuManager::the().current_menu()) {
