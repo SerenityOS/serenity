@@ -87,7 +87,7 @@ class Thread
 public:
     inline static Thread* current()
     {
-        return Processor::current().current_thread();
+        return Processor::current_thread();
     }
 
     explicit Thread(NonnullRefPtr<Process>);
