@@ -84,7 +84,9 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
             return -EPERM;
     }
 
-    m_has_promises = true;
+    m_has_promises = m_has_promises || !promises.is_null();
+    m_has_execpromises = m_has_execpromises || !execpromises.is_null();
+
     m_promises = new_promises;
     m_execpromises = new_execpromises;
 

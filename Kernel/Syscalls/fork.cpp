@@ -43,6 +43,8 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
+    child->m_has_promises = m_has_promises;
+    child->m_has_execpromises = m_has_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
     child->m_fds = m_fds;
