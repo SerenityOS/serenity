@@ -401,7 +401,7 @@ public:
 
     void jam();
 
-private;
+private:
     String m_name;
     int m_frob_count { 0 };
 }
