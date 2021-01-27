@@ -588,19 +588,16 @@ void Scheduler::invoke_async()
 void Scheduler::yield_from_critical()
 {
     auto& proc = Processor::current();
-    auto before_critical = proc.in_critical();
-    ASSERT(before_critical);
+    ASSERT(proc.in_critical());
     ASSERT(!proc.in_irq());
 
     yield(); // Flag a context switch
 
     u32 prev_flags;
-    u32 prev_crit = proc.clear_critical(prev_flags, false);
+    u32 prev_crit = Processor::current().clear_critical(prev_flags, false);
 
     // Note, we may now be on a different CPU!
-    auto& new_proc = Processor::current();
-    new_proc.restore_critical(prev_crit, prev_flags);
-    ASSERT(before_critical == new_proc.in_critical());
+    Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
 void Scheduler::notify_finalizer()
