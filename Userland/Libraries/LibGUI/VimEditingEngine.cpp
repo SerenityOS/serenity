@@ -30,6 +30,11 @@
 
 namespace GUI {
 
+VimEditingEngine::VimEditingEngine()
+{
+    m_editing_engine_type = EditingEngineType::Vim;
+}
+
 CursorWidth VimEditingEngine::cursor_width() const
 {
     return m_vim_mode == VimMode::Insert ? CursorWidth::NARROW : CursorWidth::WIDE;
@@ -101,19 +106,19 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             delete_to.set_column(delete_to.column() + 1);
             m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
         }
-        m_previous_key = {};
+        clear_previous_key();
     } else if (m_previous_key == KeyCode::Key_G) {
         if (event.key() == KeyCode::Key_G) {
             move_to_first_line();
         } else if (event.key() == KeyCode::Key_E) {
             move_to_end_of_previous_word();
         }
-        m_previous_key = {};
+        clear_previous_key();
     } else if (m_previous_key == KeyCode::Key_Y) {
         if (event.key() == KeyCode::Key_Y) {
             yank(Line);
         }
-        m_previous_key = {};
+        clear_previous_key();
     } else if (m_previous_key == KeyCode::Key_C) {
         if (event.key() == KeyCode::Key_C) {
             // Needed because the code to replace the deleted line is called after delete_line() so
@@ -169,7 +174,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             m_editor->delete_text_range(TextRange(adjusted_cursor, delete_to).normalized());
             switch_to_insert_mode();
         }
-        m_previous_key = {};
+        clear_previous_key();
     } else {
         // Handle first any key codes that are to be applied regardless of modifiers.
         switch (event.key()) {
@@ -240,7 +245,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_to_beginning_of_previous_word();
                 break;
             case (KeyCode::Key_C):
-                m_previous_key = event.key();
+                set_previous_key(event);
                 break;
             case (KeyCode::Key_Backspace):
             case (KeyCode::Key_H):
@@ -248,13 +253,13 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_left(event);
                 break;
             case (KeyCode::Key_D):
-                m_previous_key = event.key();
+                set_previous_key(event);
                 break;
             case (KeyCode::Key_E):
                 move_to_end_of_next_word();
                 break;
             case (KeyCode::Key_G):
-                m_previous_key = event.key();
+                set_previous_key(event);
                 break;
             case (KeyCode::Key_Down):
             case (KeyCode::Key_J):
@@ -293,7 +298,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 switch_to_visual_mode();
                 break;
             case (KeyCode::Key_Y):
-                m_previous_key = event.key();
+                set_previous_key(event);
                 break;
             case (KeyCode::Key_P):
                 put(event);
@@ -316,7 +321,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
             move_to_end_of_previous_word();
             update_selection_on_cursor_move();
         }
-        m_previous_key = {};
+        clear_previous_key();
     } else {
         // Handle first any key codes that are to be applied regardless of modifiers.
         switch (event.key()) {
@@ -391,7 +396,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
                 update_selection_on_cursor_move();
                 break;
             case (KeyCode::Key_G):
-                m_previous_key = event.key();
+                set_previous_key(event);
                 break;
             case (KeyCode::Key_Down):
             case (KeyCode::Key_J):
@@ -448,26 +453,32 @@ void VimEditingEngine::switch_to_normal_mode()
 {
     m_vim_mode = VimMode::Normal;
     m_editor->reset_cursor_blink();
-    m_previous_key = {};
+    clear_previous_key();
     clear_visual_mode_data();
+    if (on_mode_change)
+        on_mode_change(m_vim_mode);
 };
 
 void VimEditingEngine::switch_to_insert_mode()
 {
     m_vim_mode = VimMode::Insert;
     m_editor->reset_cursor_blink();
-    m_previous_key = {};
+    clear_previous_key();
     clear_visual_mode_data();
+    if (on_mode_change)
+        on_mode_change(m_vim_mode);
 };
 
 void VimEditingEngine::switch_to_visual_mode()
 {
     m_vim_mode = VimMode::Visual;
     m_editor->reset_cursor_blink();
-    m_previous_key = {};
+    clear_previous_key();
     m_selection_start_position = m_editor->cursor();
     m_editor->selection()->set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
     m_editor->did_update_selection();
+    if (on_mode_change)
+        on_mode_change(m_vim_mode);
 }
 
 void VimEditingEngine::update_selection_on_cursor_move()

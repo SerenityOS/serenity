@@ -33,6 +33,8 @@ namespace GUI {
 class RegularEditingEngine final : public EditingEngine {
 
 public:
+    RegularEditingEngine();
+
     virtual CursorWidth cursor_width() const override;
 
     virtual bool on_key(const KeyEvent& event) override;
