@@ -387,7 +387,7 @@ void EditingEngine::get_selection_line_boundaries(size_t& first_line, size_t& la
         last_line -= 1;
 }
 
-void EditingEngine::move_to_beginning_of_next_word()
+TextPosition EditingEngine::find_beginning_of_next_word()
 {
     /* The rules that have been coded in:
      * Jump to the next punct or alnum after any whitespace
@@ -413,7 +413,7 @@ void EditingEngine::move_to_beginning_of_next_word()
         auto& line = lines.at(line_index);
 
         if (line.is_empty() && !is_first_line) {
-            return m_editor->set_cursor({ line_index, 0 });
+            return { line_index, 0 };
         } else if (line.is_empty()) {
             has_seen_whitespace = true;
         }
@@ -427,24 +427,22 @@ void EditingEngine::move_to_beginning_of_next_word()
             const u32 current_char = line_chars[column_index];
 
             if (started_on_punct && vim_isalnum(current_char)) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             }
 
             if (vim_ispunct(current_char) && !started_on_punct) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             }
 
             if (isspace(current_char))
                 has_seen_whitespace = true;
 
             if (has_seen_whitespace && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
-                m_editor->set_cursor({ line_index, column_index });
-                return;
+                return { line_index, column_index };
             }
 
             if (line_index == lines.size() - 1 && column_index == line.length() - 1) {
-                m_editor->set_cursor({ line_index, column_index });
-                return;
+                return { line_index, column_index };
             }
 
             // Implicit newline
@@ -452,11 +450,16 @@ void EditingEngine::move_to_beginning_of_next_word()
                 has_seen_whitespace = true;
         }
     }
+    ASSERT_NOT_REACHED();
 }
 
-void EditingEngine::move_to_end_of_next_word()
+void EditingEngine::move_to_beginning_of_next_word()
 {
+    m_editor->set_cursor(find_beginning_of_next_word());
+}
 
+TextPosition EditingEngine::find_end_of_next_word()
+{
     /* The rules that have been coded in:
      * If the current_char is alnum and the next is whitespace or punct
      * If the current_char is punct and the next is whitespace or alnum
@@ -479,7 +482,7 @@ void EditingEngine::move_to_end_of_next_word()
         auto& line = lines.at(line_index);
 
         if (line.is_empty() && !is_first_line) {
-            return m_editor->set_cursor({ line_index, 0 });
+            return { line_index, 0 };
         }
 
         is_first_line = false;
@@ -492,7 +495,7 @@ void EditingEngine::move_to_end_of_next_word()
             const u32 current_char = line_chars[column_index];
 
             if (column_index == lines.at(line_index).length() - 1 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char)))
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             else if (column_index == lines.at(line_index).length() - 1) {
                 is_first_iteration = false;
                 continue;
@@ -501,21 +504,28 @@ void EditingEngine::move_to_end_of_next_word()
             const u32 next_char = line_chars[column_index + 1];
 
             if (!is_first_iteration && vim_isalnum(current_char) && (isspace(next_char) || vim_ispunct(next_char)))
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
 
             if (!is_first_iteration && vim_ispunct(current_char) && (isspace(next_char) || vim_isalnum(next_char)))
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
 
             if (line_index == lines.size() - 1 && column_index == line.length() - 1) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             }
 
             is_first_iteration = false;
         }
     }
+    ASSERT_NOT_REACHED();
 }
 
-void EditingEngine::move_to_end_of_previous_word()
+void EditingEngine::move_to_end_of_next_word()
+{
+
+    m_editor->set_cursor(find_end_of_next_word());
+}
+
+TextPosition EditingEngine::find_end_of_previous_word()
 {
     auto vim_isalnum = [](int c) {
         return c == '_' || isalnum(c);
@@ -534,7 +544,7 @@ void EditingEngine::move_to_end_of_previous_word()
         auto& line = lines.at(line_index);
 
         if (line.is_empty() && !is_first_line) {
-            return m_editor->set_cursor({ line_index, 0 });
+            return { line_index, 0 };
         } else if (line.is_empty()) {
             has_seen_whitespace = true;
         }
@@ -550,11 +560,11 @@ void EditingEngine::move_to_end_of_previous_word()
             const u32 current_char = line_chars[column_index];
 
             if (started_on_punct && vim_isalnum(current_char)) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             }
 
             if (vim_ispunct(current_char) && !started_on_punct) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             }
 
             if (isspace(current_char)) {
@@ -562,13 +572,11 @@ void EditingEngine::move_to_end_of_previous_word()
             }
 
             if (has_seen_whitespace && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
-                m_editor->set_cursor({ line_index, column_index });
-                return;
+                return { line_index, column_index };
             }
 
             if (line_index == 0 && column_index == 0) {
-                m_editor->set_cursor({ line_index, column_index });
-                return;
+                return { line_index, column_index };
             }
 
             // Implicit newline when wrapping back up to the end of the previous line.
@@ -576,9 +584,15 @@ void EditingEngine::move_to_end_of_previous_word()
                 has_seen_whitespace = true;
         }
     }
+    ASSERT_NOT_REACHED();
 }
 
-void EditingEngine::move_to_beginning_of_previous_word()
+void EditingEngine::move_to_end_of_previous_word()
+{
+    m_editor->set_cursor(find_end_of_previous_word());
+}
+
+TextPosition EditingEngine::find_beginning_of_previous_word()
 {
     auto vim_isalnum = [](int c) {
         return c == '_' || isalnum(c);
@@ -596,7 +610,7 @@ void EditingEngine::move_to_beginning_of_previous_word()
         auto& line = lines.at(line_index);
 
         if (line.is_empty() && !is_first_iterated_line) {
-            return m_editor->set_cursor({ line_index, 0 });
+            return { line_index, 0 };
         }
 
         is_first_iterated_line = false;
@@ -615,9 +629,9 @@ void EditingEngine::move_to_beginning_of_previous_word()
             const u32 current_char = line_chars[column_index];
 
             if (column_index == 0 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             } else if (line_index == 0 && column_index == 0) {
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
             } else if (column_index == 0 && is_first_iteration) {
                 is_first_iteration = false;
                 continue;
@@ -626,14 +640,20 @@ void EditingEngine::move_to_beginning_of_previous_word()
             const u32 next_char = line_chars[column_index - 1];
 
             if (!is_first_iteration && vim_isalnum(current_char) && (isspace(next_char) || vim_ispunct(next_char)))
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
 
             if (!is_first_iteration && vim_ispunct(current_char) && (isspace(next_char) || vim_isalnum(next_char)))
-                return m_editor->set_cursor({ line_index, column_index });
+                return { line_index, column_index };
 
             is_first_iteration = false;
         }
     }
+    ASSERT_NOT_REACHED();
+}
+
+void EditingEngine::move_to_beginning_of_previous_word()
+{
+    m_editor->set_cursor(find_beginning_of_previous_word());
 }
 
 void EditingEngine::move_selected_lines_up()
