@@ -174,7 +174,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*process);
 
-    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (regs.cs & 3) << ".";
+    klog() << "CRASH: CPU #" << Processor::id() << " " << description << ". Ring " << (regs.cs & 3) << ".";
     dump(regs);
 
     if (!(regs.cs & 3)) {
@@ -232,7 +232,7 @@ void page_fault_handler(TrapFrame* trap)
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();
         dbgln("CPU #{} ring {} {} page fault in PD={:#x}, {}{} {}",
-            Processor::is_initialized() ? Processor::current().id() : 0,
+            Processor::is_initialized() ? Processor::id() : 0,
             regs.cs & 3,
             regs.exception_code & 1 ? "PV" : "NP",
             fault_page_directory,
@@ -1207,7 +1207,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         lock.unlock();
         capture_current_thread();
     } else if (thread.is_active()) {
-        ASSERT(thread.cpu() != Processor::current().id());
+        ASSERT(thread.cpu() != Processor::id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
@@ -1216,7 +1216,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         auto& proc = Processor::current();
         smp_unicast(thread.cpu(),
             [&]() {
-                dbgln("CPU[{}] getting stack for cpu #{}", Processor::current().id(), proc.id());
+                dbgln("CPU[{}] getting stack for cpu #{}", Processor::id(), proc.get_id());
                 ProcessPagingScope paging_scope(thread.process());
                 ASSERT(&Processor::current() != &proc);
                 ASSERT(&thread == Processor::current_thread());
@@ -1294,7 +1294,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     if (from_tss.cr3 != to_tss.cr3)
         write_cr3(to_tss.cr3);
 
-    to_thread->set_cpu(processor.id());
+    to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
 
     asm volatile("fxrstor %0"
@@ -1862,7 +1862,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
+    dbgln<SMP_DEBUG>("SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
 
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
     ASSERT(msg.refs > 0);
@@ -1927,11 +1927,11 @@ void Processor::smp_broadcast(void (*callback)(), bool async)
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 {
     auto& cur_proc = Processor::current();
-    ASSERT(cpu != cur_proc.id());
+    ASSERT(cpu != cur_proc.get_id());
     auto& target_proc = processors()[cpu];
     msg.async = async;
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
+    dbgln<SMP_DEBUG>("SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
 
     atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
     if (target_proc->smp_queue_message(msg)) {

@@ -677,7 +677,7 @@ static bool procfs$cpuinfo(InodeIdentifier, KBufferBuilder& builder)
             JsonArray features;
             for (auto& feature : info.features().split(' '))
                 features.append(feature);
-            obj.add("processor", proc.id());
+            obj.add("processor", proc.get_id());
             obj.add("cpuid", info.cpuid());
             obj.add("family", info.display_family());
             obj.add("features", features);
