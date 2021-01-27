@@ -276,7 +276,7 @@ void DynamicLoader::load_program_headers()
         requested_load_address,
         region->required_load_size(),
         region->mmap_prot(),
-        MAP_SHARED,
+        MAP_SHARED | MAP_FIXED,
         m_image_fd,
         region->offset(),
         String::formatted("{}: .text", m_filename).characters());
@@ -297,7 +297,7 @@ void DynamicLoader::load_program_headers()
         (u8*)text_segment_begin + m_text_segment_size,
         region->required_load_size(),
         region->mmap_prot(),
-        MAP_ANONYMOUS | MAP_PRIVATE,
+        MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
         0,
         0,
         String::formatted("{}: .data", m_filename).characters());
