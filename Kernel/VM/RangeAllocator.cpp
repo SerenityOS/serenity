@@ -36,6 +36,7 @@
 namespace Kernel {
 
 RangeAllocator::RangeAllocator()
+    : m_total_range({}, 0)
 {
 }
 
@@ -105,7 +106,7 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
 }
 
-Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
+Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
     if (!size)
         return {};
@@ -148,7 +149,7 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
     return {};
 }
 
-Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
+Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 {
     if (!size)
         return {};
@@ -178,7 +179,7 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
     return {};
 }
 
-void RangeAllocator::deallocate(Range range)
+void RangeAllocator::deallocate(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
     ASSERT(m_total_range.contains(range));

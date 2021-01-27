@@ -512,7 +512,7 @@ private:
     Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();
 
-    Range allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
+    Optional<Range> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
     Region& add_region(NonnullOwnPtr<Region>);
 
@@ -614,7 +614,7 @@ private:
 
     NonnullOwnPtrVector<Region> m_regions;
     struct RegionLookupCache {
-        Range range;
+        Optional<Range> range;
         WeakPtr<Region> region;
     };
     RegionLookupCache m_region_lookup_cache;

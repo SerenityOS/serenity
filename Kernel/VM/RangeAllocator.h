@@ -38,7 +38,7 @@ class Range {
     friend class RangeAllocator;
 
 public:
-    Range() { }
+    Range() = delete;
     Range(VirtualAddress base, size_t size)
         : m_base(base)
         , m_size(size)
@@ -85,9 +85,9 @@ public:
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(const RangeAllocator&);
 
-    Range allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
-    Range allocate_specific(VirtualAddress, size_t);
-    void deallocate(Range);
+    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
+    Optional<Range> allocate_specific(VirtualAddress, size_t);
+    void deallocate(const Range&);
 
     void dump() const;
 
