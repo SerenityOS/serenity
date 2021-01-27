@@ -37,6 +37,11 @@ enum CursorWidth {
     WIDE
 };
 
+enum EditingEngineType {
+    Regular,
+    Vim
+};
+
 class EditingEngine {
     AK_MAKE_NONCOPYABLE(EditingEngine);
     AK_MAKE_NONMOVABLE(EditingEngine);
@@ -51,10 +56,14 @@ public:
 
     virtual bool on_key(const KeyEvent& event);
 
+    EditingEngineType type() const { return m_editing_engine_type; }
+
 protected:
     EditingEngine() { }
 
     WeakPtr<TextEditor> m_editor;
+
+    EditingEngineType m_editing_engine_type;
 
     void move_one_left(const KeyEvent& event);
     void move_one_right(const KeyEvent& event);

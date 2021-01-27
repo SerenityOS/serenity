@@ -40,6 +40,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
@@ -1625,6 +1626,52 @@ void TextEditor::set_editing_engine(OwnPtr<EditingEngine> editing_engine)
     update_cursor();
     stop_timer();
     start_timer(500);
+
+    if (on_editing_engine_changed)
+        on_editing_engine_changed();
+
+    if (m_editing_engine->type() == EditingEngineType::Vim) {
+        VimEditingEngine* vim = dynamic_cast<VimEditingEngine*>(m_editing_engine.ptr());
+        vim->on_mode_change = [&](VimMode mode) {
+            switch (mode) {
+            case Normal:
+                m_vim_mode_statusbar_message = {};
+                break;
+            case Insert:
+                m_vim_mode_statusbar_message = "-- INSERT --";
+                break;
+            case Visual:
+                m_vim_mode_statusbar_message = "-- VISUAL --";
+                break;
+            default:
+                dbgln("Unhandled vim mode");
+                m_vim_mode_statusbar_message = {};
+            }
+            if (on_vim_statusbar_messages_changed)
+                on_vim_statusbar_messages_changed();
+        };
+
+        // FIXME: Update this method to take multiple previous keys when that is implemented
+        vim->on_previous_keys_change = [&](const VimEditingEngine::PreviousKey& event, bool has_previous_key) {
+            if (has_previous_key) {
+                StringBuilder sb = StringBuilder(1);
+                sb.append_code_point(event.code_point);
+                m_vim_previous_keys_statusbar_message = sb.to_string();
+            } else {
+                m_vim_previous_keys_statusbar_message = {};
+            }
+            if (on_vim_statusbar_messages_changed)
+                on_vim_statusbar_messages_changed();
+        };
+    } else {
+        m_vim_mode_statusbar_message = {};
+        m_vim_previous_keys_statusbar_message = {};
+        if (on_vim_statusbar_messages_changed)
+            on_vim_statusbar_messages_changed();
+        if (on_editing_engine_changed) {
+            on_editing_engine_changed();
+        }
+    }
 }
 
 int TextEditor::line_height() const
