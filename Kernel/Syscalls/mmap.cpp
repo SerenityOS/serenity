@@ -134,14 +134,17 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     Region* region = nullptr;
     auto range = allocate_range(VirtualAddress(addr), size, alignment);
-    if (!range.is_valid())
+    if (!range.is_valid()) {
+        if (addr && !map_fixed) {
+            // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
+            range = allocate_range({}, size, alignment);
+        }
         return (void*)-ENOMEM;
+    }
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         auto region_or_error = allocate_region(range, !name.is_null() ? name : "mmap", prot, strategy);
-        if (region_or_error.is_error() && (!map_fixed && addr != 0))
-            region_or_error = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error())
             return (void*)region_or_error.error().error();
         region = region_or_error.value();
