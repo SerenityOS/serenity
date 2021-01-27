@@ -1130,6 +1130,15 @@ void TextEditor::delete_selection()
     update();
 }
 
+void TextEditor::delete_text_range(TextRange range)
+{
+    auto normalized_range = range.normalized();
+    execute<RemoveTextCommand>(document().text_in_range(normalized_range), normalized_range);
+    did_change();
+    set_cursor(normalized_range.start());
+    update();
+}
+
 void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 {
     ReflowDeferrer defer(*this);

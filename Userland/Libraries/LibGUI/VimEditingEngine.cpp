@@ -65,10 +65,41 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 {
+    // FIXME: changing or deleting word methods don't correctly support 1 letter words.
+    // For example, in the line 'return 0;' with the cursor on the '0',
+    // keys 'cw' will move to the delete '0;' rather than just the '0'.
+
+    // FIXME: Changing or deleting the last word on a line will bring the next line
+    // up to the cursor.
     if (m_previous_key == KeyCode::Key_D) {
         if (event.key() == KeyCode::Key_D) {
             yank(Line);
             delete_line();
+        } else if (event.key() == KeyCode::Key_W) {
+            // If the current char is an alnum or punct, delete from said char, to the
+            // beginning of the next word including any whitespace in between the two words.
+            // If the current char is whitespace, delete from the cursor to the beginning of the next world.
+            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
+            TextPosition delete_to;
+            if (isspace(current_char)) {
+                delete_to = find_beginning_of_next_word();
+            } else {
+                delete_to = find_end_of_next_word();
+                delete_to.set_column(delete_to.column() + 1);
+            }
+            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
+        } else if (event.key() == KeyCode::Key_B) {
+            // Will delete from the current char to the beginning of the previous word regardless of whitespace.
+            // Does not delete the starting char, see note below.
+            TextPosition delete_to = find_beginning_of_previous_word();
+            // NOTE: Intentionally don't adjust m_editor->cursor() for the wide cursor's column
+            // because in the original vim... they don't.
+            m_editor->delete_text_range(TextRange(delete_to, m_editor->cursor()).normalized());
+        } else if (event.key() == KeyCode::Key_E) {
+            // Delete from the current char to the end of the next word regardless of whitespace.
+            TextPosition delete_to = find_end_of_next_word();
+            delete_to.set_column(delete_to.column() + 1);
+            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
         }
         m_previous_key = {};
     } else if (m_previous_key == KeyCode::Key_G) {
@@ -101,6 +132,41 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             } else if (m_editor->cursor().line() == m_editor->line_count() - 1) {
                 m_editor->add_code_point(0x0A);
             }
+            switch_to_insert_mode();
+        } else if (event.key() == KeyCode::Key_W) {
+            // Delete to the end of the next word, if in the middle of a word, this will delete
+            // from the cursor to the said of said word. If the cursor is on whitespace,
+            // any whitespace between the cursor and the beginning of the next word will be deleted.
+            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
+            TextPosition delete_to;
+            if (isspace(current_char)) {
+                delete_to = find_beginning_of_next_word();
+            } else {
+                delete_to = find_end_of_next_word();
+                delete_to.set_column(delete_to.column() + 1);
+            }
+            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
+            switch_to_insert_mode();
+        } else if (event.key() == KeyCode::Key_B) {
+            // Delete to the beginning of the previous word, if in the middle of a word, this will delete
+            // from the cursor to the beginning of said word. If the cursor is on whitespace
+            // it, and the previous word will be deleted.
+            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
+            TextPosition delete_to = find_beginning_of_previous_word();
+            TextPosition adjusted_cursor = m_editor->cursor();
+            // Adjust cursor for the column the wide cursor is covering
+            if (isalnum(current_char) || ispunct(current_char))
+                adjusted_cursor.set_column(adjusted_cursor.column() + 1);
+            m_editor->delete_text_range(TextRange(delete_to, adjusted_cursor).normalized());
+            switch_to_insert_mode();
+        } else if (event.key() == KeyCode::Key_E) {
+            // Delete to the end of the next word, if in the middle of a word, this will delete
+            // from the cursor to the end of said word. If the cursor is on whitespace
+            // it, and the next word will be deleted.
+            TextPosition delete_to = find_end_of_next_word();
+            TextPosition adjusted_cursor = m_editor->cursor();
+            delete_to.set_column(delete_to.column() + 1);
+            m_editor->delete_text_range(TextRange(adjusted_cursor, delete_to).normalized());
             switch_to_insert_mode();
         }
         m_previous_key = {};

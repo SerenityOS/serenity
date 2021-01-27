@@ -68,9 +68,13 @@ protected:
     void move_page_down(const KeyEvent& event);
     void move_to_first_line();
     void move_to_last_line();
+    TextPosition find_beginning_of_next_word();
     void move_to_beginning_of_next_word();
+    TextPosition find_end_of_next_word();
     void move_to_end_of_next_word();
+    TextPosition find_end_of_previous_word();
     void move_to_end_of_previous_word();
+    TextPosition find_beginning_of_previous_word();
     void move_to_beginning_of_previous_word();
 
     void move_up(const KeyEvent& event, double page_height_factor);
