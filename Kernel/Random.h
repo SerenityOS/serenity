@@ -55,8 +55,11 @@ public:
     {
     }
 
-    void get_random_bytes(u8* buffer, size_t n)
+    bool get_random_bytes(u8* buffer, size_t n)
     {
+        ScopedSpinLock lock(m_lock);
+        if (!is_ready())
+            return false;
         if (m_p0_len >= reseed_threshold) {
             this->reseed();
         }
@@ -75,6 +78,7 @@ public:
         // Extract a new key from the prng stream.
         Bytes key_span = m_key.bytes();
         cipher.key_stream(key_span, counter_span, &counter_span);
+        return true;
     }
 
     template<typename T>
@@ -94,8 +98,11 @@ public:
 
     [[nodiscard]] bool is_ready() const
     {
+        ASSERT(m_lock.is_locked());
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
+
+    SpinLock<u8>& get_lock() { return m_lock; }
 
 private:
     void reseed()
@@ -121,6 +128,7 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
+    SpinLock<u8> m_lock;
 };
 
 class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256>> {
@@ -133,6 +141,8 @@ public:
     void wait_for_entropy();
 
     void wake_if_ready();
+
+    SpinLock<u8>& get_lock() { return resource().get_lock(); }
 
 private:
     WaitQueue m_seed_queue;
@@ -165,11 +175,13 @@ public:
     template<typename T>
     void add_random_event(const T& event_data)
     {
+        auto& kernel_rng = KernelRng::the();
+        ScopedSpinLock lock(kernel_rng.get_lock());
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
         Event<T> event = { read_tsc(), m_source, event_data };
-        KernelRng::the().resource().add_random_event(event, m_pool);
+        kernel_rng.resource().add_random_event(event, m_pool);
         m_pool++;
-        KernelRng::the().wake_if_ready();
+        kernel_rng.wake_if_ready();
     }
 
 private:
@@ -182,7 +194,7 @@ private:
 //       The only difference is that get_fast_random is guaranteed not to block.
 
 void get_fast_random_bytes(u8*, size_t);
-void get_good_random_bytes(u8*, size_t);
+bool get_good_random_bytes(u8*, size_t, bool allow_wait = true, bool fallback_to_fast = true);
 
 template<typename T>
 inline T get_fast_random()

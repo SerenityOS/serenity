@@ -88,6 +88,7 @@ KernelRng::KernelRng()
 
 void KernelRng::wait_for_entropy()
 {
+    ScopedSpinLock lock(get_lock());
     if (!resource().is_ready()) {
         dbgln("Entropy starvation...");
         m_seed_queue.wait_on({}, "KernelRng");
@@ -96,6 +97,7 @@ void KernelRng::wait_for_entropy()
 
 void KernelRng::wake_if_ready()
 {
+    ASSERT(get_lock().is_locked());
     if (resource().is_ready()) {
         m_seed_queue.wake_all();
     }
@@ -103,26 +105,9 @@ void KernelRng::wake_if_ready()
 
 size_t EntropySource::next_source { static_cast<size_t>(EntropySource::Static::MaxHardcodedSourceIndex) };
 
-void get_good_random_bytes(u8* buffer, size_t buffer_size)
+static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
 {
-    KernelRng::the().wait_for_entropy();
-
-    // FIXME: What if interrupts are disabled because we're in an interrupt?
-    if (are_interrupts_enabled()) {
-        LOCKER(KernelRng::the().lock());
-        KernelRng::the().resource().get_random_bytes(buffer, buffer_size);
-    } else {
-        KernelRng::the().resource().get_random_bytes(buffer, buffer_size);
-    }
-}
-
-void get_fast_random_bytes(u8* buffer, size_t buffer_size)
-{
-    if (KernelRng::the().resource().is_ready()) {
-        return get_good_random_bytes(buffer, buffer_size);
-    }
-
-    static u32 next = 1;
+    static Atomic<u32, AK::MemoryOrder::memory_order_relaxed> next = 1;
 
     union {
         u8 bytes[4];
@@ -131,12 +116,67 @@ void get_fast_random_bytes(u8* buffer, size_t buffer_size)
     size_t offset = 4;
     for (size_t i = 0; i < buffer_size; ++i) {
         if (offset >= 4) {
-            next = next * 1103515245 + 12345;
-            u.value = next;
+            auto current_next = next.load();
+            for (;;) {
+                auto new_next = current_next * 1103515245 + 12345;
+                if (next.compare_exchange_strong(current_next, new_next)) {
+                    u.value = new_next;
+                    break;
+                }
+            }
             offset = 0;
         }
         buffer[i] = u.bytes[offset++];
     }
+}
+
+bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool fallback_to_fast)
+{
+    bool result = false;
+    auto& kernel_rng = KernelRng::the();
+    // FIXME: What if interrupts are disabled because we're in an interrupt?
+    bool can_wait = are_interrupts_enabled();
+    if (!can_wait && allow_wait) {
+        // If we can't wait but the caller would be ok with it, then we
+        // need to definitely fallback to *something*, even if it's less
+        // secure...
+        fallback_to_fast = true;
+    }
+    if (can_wait && allow_wait) {
+        for (;;) {
+            {
+                LOCKER(KernelRng::the().lock());
+                if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
+                    result = true;
+                    break;
+                }
+            }
+            kernel_rng.wait_for_entropy();
+        }
+    } else {
+        // We can't wait/block here, or we are not allowed to block/wait
+        if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
+            result = true;
+        } else if (fallback_to_fast) {
+            // If interrupts are disabled
+            do_get_fast_random_bytes(buffer, buffer_size);
+            result = true;
+        }
+    }
+
+    // NOTE: The only case where this function should ever return false and
+    // not actually return random data is if fallback_to_fast == false and
+    // allow_wait == false and interrupts are enabled!
+    ASSERT(result || !fallback_to_fast);
+    return result;
+}
+
+void get_fast_random_bytes(u8* buffer, size_t buffer_size)
+{
+    // Try to get good randomness, but don't block if we can't right now
+    // and allow falling back to fast randomness
+    auto result = get_good_random_bytes(buffer, buffer_size, false, true);
+    ASSERT(result);
 }
 
 }
