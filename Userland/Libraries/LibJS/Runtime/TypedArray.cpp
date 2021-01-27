@@ -54,7 +54,7 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
     }
     // FIXME: 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     auto buffer_byte_length = array_buffer.byte_length();
-    size_t new_byte_length;
+    Checked<size_t> new_byte_length;
     if (length.is_undefined()) {
         if (buffer_byte_length % element_size != 0) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayInvalidBufferLength, typed_array.class_name(), element_size, buffer_byte_length);
@@ -64,18 +64,34 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
             vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffset, offset, buffer_byte_length);
             return;
         }
-        new_byte_length = buffer_byte_length - offset;
+        new_byte_length = buffer_byte_length;
+        new_byte_length -= offset;
     } else {
-        new_byte_length = new_length * element_size;
-        if (offset + new_byte_length > buffer_byte_length) {
-            vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, offset + new_byte_length, buffer_byte_length);
+        new_byte_length = new_length;
+        new_byte_length *= element_size;
+
+        Checked<size_t> new_byte_end = new_byte_length;
+        new_byte_end += offset;
+
+        if (new_byte_end.has_overflow()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+            return;
+        }
+
+        if (new_byte_end.value() > buffer_byte_length) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TypedArrayOutOfRangeByteOffsetOrLength, offset, new_byte_end.value(), buffer_byte_length);
             return;
         }
     }
+    if (new_byte_length.has_overflow()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+
     typed_array.set_viewed_array_buffer(&array_buffer);
-    typed_array.set_byte_length(new_byte_length);
+    typed_array.set_byte_length(new_byte_length.value());
     typed_array.set_byte_offset(offset);
-    typed_array.set_array_length(new_byte_length / element_size);
+    typed_array.set_array_length(new_byte_length.value() / element_size);
 }
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
