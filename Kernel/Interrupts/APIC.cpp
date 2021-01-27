@@ -508,7 +508,7 @@ void APIC::init_finished(u32 cpu)
 void APIC::broadcast_ipi()
 {
 #if APIC_SMP_DEBUG
-    klog() << "SMP: Broadcast IPI from cpu #" << Processor::current().id();
+    klog() << "SMP: Broadcast IPI from cpu #" << Processor::id();
 #endif
     wait_for_pending_icr();
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::AllExcludingSelf));
@@ -516,11 +516,10 @@ void APIC::broadcast_ipi()
 
 void APIC::send_ipi(u32 cpu)
 {
-    auto& proc = Processor::current();
 #if APIC_SMP_DEBUG
-    klog() << "SMP: Send IPI from cpu #" << proc.id() << " to cpu #" << cpu;
+    klog() << "SMP: Send IPI from cpu #" << Processor::id() << " to cpu #" << cpu;
 #endif
-    ASSERT(cpu != proc.id());
+    ASSERT(cpu != Processor::id());
     ASSERT(cpu < 8);
     wait_for_pending_icr();
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, 1u << cpu));
@@ -532,7 +531,7 @@ APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
         return nullptr;
 
     // We should only initialize and calibrate the APIC timer once on the BSP!
-    ASSERT(Processor::current().id() == 0);
+    ASSERT(Processor::id() == 0);
     ASSERT(!m_apic_timer);
 
     m_apic_timer = APICTimer::initialize(IRQ_APIC_TIMER, calibration_timer);
@@ -605,7 +604,7 @@ u32 APIC::get_timer_divisor()
 void APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
 {
 #if APIC_SMP_DEBUG
-    klog() << "APIC IPI on cpu #" << Processor::current().id();
+    klog() << "APIC IPI on cpu #" << Processor::id();
 #endif
 }
 
@@ -620,7 +619,7 @@ bool APICIPIInterruptHandler::eoi()
 
 void APICErrInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    klog() << "APIC: SMP error on cpu #" << Processor::current().id();
+    klog() << "APIC: SMP error on cpu #" << Processor::id();
 }
 
 bool APICErrInterruptHandler::eoi()

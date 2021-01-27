@@ -170,7 +170,7 @@ void TimeManagement::initialize(u32 cpu)
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
 {
-    ASSERT(Processor::current().id() == 0); // This should only be called on the BSP!
+    ASSERT(Processor::id() == 0); // This should only be called on the BSP!
     auto original_callback = m_system_timer->set_callback(nullptr);
     m_system_timer->disable();
     timer.set_callback(move(original_callback));
@@ -287,7 +287,7 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
         // Update the time. We don't really care too much about the
         // frequency of the interrupt because we'll query the main
         // counter to get an accurate time.
-        if (Processor::current().id() == 0) {
+        if (Processor::id() == 0) {
             // TODO: Have the other CPUs call system_timer_tick directly
             increment_time_since_boot_hpet();
         }
