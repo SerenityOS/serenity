@@ -193,6 +193,8 @@ public:
     Gfx::IntRect cursor_content_rect() const;
     TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
 
+    void delete_text_range(TextRange);
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
