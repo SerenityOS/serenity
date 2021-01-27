@@ -867,9 +867,20 @@ public:
         write_fs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
-    ALWAYS_INLINE u32 id()
+    ALWAYS_INLINE u32 get_id() const
     {
+        // NOTE: This variant should only be used when iterating over all
+        // Processor instances, or when it's guaranteed that the thread
+        // cannot move to another processor in between calling Processor::current
+        // and Processor::get_id, or if this fact is not important.
+        // All other cases should use Processor::id instead!
         return m_cpu;
+    }
+
+    ALWAYS_INLINE static u32 id()
+    {
+        // See comment in Processor::current_thread
+        return read_fs_u32(__builtin_offsetof(Processor, m_cpu));
     }
 
     ALWAYS_INLINE u32 raise_irq()

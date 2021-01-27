@@ -91,7 +91,7 @@ void Scheduler::start()
     idle_thread.set_initialized(true);
     processor.init_context(idle_thread, false);
     idle_thread.set_state(Thread::Running);
-    ASSERT(idle_thread.affinity() == (1u << processor.id()));
+    ASSERT(idle_thread.affinity() == (1u << processor.get_id()));
     processor.initialize_context_switching(idle_thread);
     ASSERT_NOT_REACHED();
 }
@@ -130,13 +130,13 @@ bool Scheduler::pick_next()
         // transition back to user mode.
 
         if constexpr (SCHEDULER_DEBUG)
-            dbgln("Scheduler[{}]: Thread {} is dying", Processor::current().id(), *current_thread);
+            dbgln("Scheduler[{}]: Thread {} is dying", Processor::id(), *current_thread);
 
         current_thread->set_state(Thread::Dying);
     }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
-        dbgln("Scheduler[{}j]: Non-runnables:", Processor::current().id());
+        dbgln("Scheduler[{}j]: Non-runnables:", Processor::id());
         Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
             if (thread.state() == Thread::Dying) {
                 dbgln("  {:12} {} @ {:04x}:{:08x} Finalizable: {}",
@@ -156,7 +156,7 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         });
 
-        dbgln("Scheduler[{}j]: Runnables:", Processor::current().id());
+        dbgln("Scheduler[{}j]: Runnables:", Processor::id());
         Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
             dbgln("  {:3}/{:2} {:12} @ {:04x}:{:08x}",
                 thread.effective_priority(),
@@ -174,7 +174,7 @@ bool Scheduler::pick_next()
     auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
     Vector<Thread*, 128> sorted_runnables;
     for_each_runnable([&](auto& thread) {
-        if ((thread.affinity() & (1u << Processor::current().id())) == 0)
+        if ((thread.affinity() & (1u << Processor::id())) == 0)
             return IterationDecision::Continue;
         if (thread.state() == Thread::Running && &thread != current_thread)
             return IterationDecision::Continue;
@@ -226,7 +226,7 @@ bool Scheduler::pick_next()
 
     if constexpr (SCHEDULER_DEBUG) {
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
-            Processor::current().id(),
+            Processor::id(),
             *thread_to_schedule,
             thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
     }
@@ -250,7 +250,7 @@ bool Scheduler::yield()
     scheduler_data.m_pending_donate_reason = nullptr;
 
     auto current_thread = Thread::current();
-    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: yielding thread {} in_irq={}", proc.id(), *current_thread, proc.in_irq());
+    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
     ASSERT(current_thread != nullptr);
     if (proc.in_irq() || proc.in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
@@ -264,7 +264,7 @@ bool Scheduler::yield()
         return false;
 
     if constexpr (SCHEDULER_DEBUG)
-        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::current().id(), *current_thread, Processor::current().in_irq());
+        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::current().in_irq());
     return true;
 }
 
@@ -280,7 +280,7 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const
         return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
-    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.id(), ticks_to_donate, *beneficiary, reason);
+    dbgln<SCHEDULER_DEBUG>("Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
     beneficiary->set_ticks_left(ticks_to_donate);
 
     return Scheduler::context_switch(beneficiary);
@@ -343,7 +343,7 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::current().id(), from_thread->tid().value(), thread->tid().value(), thread->priority(), thread->tss().cs, thread->tss().eip);
+        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(), thread->tid().value(), thread->priority(), thread->tss().cs, thread->tss().eip);
 #endif
     }
 
@@ -470,7 +470,7 @@ Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 {
     ASSERT(cpu != 0);
     // This function is called on the bsp, but creates an idle thread for another AP
-    ASSERT(Processor::current().id() == 0);
+    ASSERT(Processor::id() == 0);
 
     ASSERT(s_colonel_process);
     Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
@@ -491,7 +491,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     ASSERT(current_thread->current_trap());
     ASSERT(current_thread->current_trap()->regs == &regs);
 
-    bool is_bsp = Processor::current().id() == 0;
+    bool is_bsp = Processor::id() == 0;
     if (!is_bsp)
         return; // TODO: This prevents scheduling on other CPUs!
     if (current_thread->process().is_profiling()) {
@@ -544,13 +544,13 @@ void Scheduler::notify_finalizer()
 
 void Scheduler::idle_loop(void*)
 {
-    dbgln("Scheduler[{}]: idle loop running", Processor::current().id());
+    dbgln("Scheduler[{}]: idle loop running", Processor::id());
     ASSERT(are_interrupts_enabled());
 
     for (;;) {
         asm("hlt");
 
-        if (Processor::current().id() == 0)
+        if (Processor::id() == 0)
             yield();
     }
 }

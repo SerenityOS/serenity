@@ -378,16 +378,16 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ScopedSpinLock lock(s_mm_lock);
     if (Processor::current().in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
-            Processor::current().id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
+            Processor::id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
 #if PAGE_FAULT_DEBUG
-    dbgln("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current().id(), fault.code(), fault.vaddr());
+    dbgln("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::id(), fault.code(), fault.vaddr());
 #endif
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
-        klog() << "CPU[" << Processor::current().id() << "] NP(error) fault at invalid address " << fault.vaddr();
+        klog() << "CPU[" << Processor::id() << "] NP(error) fault at invalid address " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -745,7 +745,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_mm_lock);
 
-    u32 pte_idx = 8 + Processor::current().id();
+    u32 pte_idx = 8 + Processor::id();
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
 
     auto& pte = boot_pd3_pt1023[pte_idx];
@@ -765,7 +765,7 @@ void MemoryManager::unquickmap_page()
     ScopedSpinLock lock(s_mm_lock);
     auto& mm_data = get_data();
     ASSERT(mm_data.m_quickmap_in_use.is_locked());
-    u32 pte_idx = 8 + Processor::current().id();
+    u32 pte_idx = 8 + Processor::id();
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
     auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
