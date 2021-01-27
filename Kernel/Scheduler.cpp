@@ -36,6 +36,9 @@
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
+// Remove this once SMP is stable and can be enabled by default
+#define SCHEDULE_ON_ALL_PROCESSORS 0
+
 namespace Kernel {
 
 class SchedulerPerProcessorData {
@@ -550,9 +553,11 @@ void Scheduler::timer_tick(const RegisterState& regs)
     ASSERT(current_thread->current_trap());
     ASSERT(current_thread->current_trap()->regs == &regs);
 
+#if !SCHEDULE_ON_ALL_PROCESSORS
     bool is_bsp = Processor::id() == 0;
     if (!is_bsp)
         return; // TODO: This prevents scheduling on other CPUs!
+#endif
     if (current_thread->process().is_profiling()) {
         ASSERT(current_thread->process().perf_events());
         auto& perf_events = *current_thread->process().perf_events();
@@ -616,8 +621,12 @@ void Scheduler::idle_loop(void*)
 
         proc.idle_end();
         ASSERT_INTERRUPTS_ENABLED();
+#if SCHEDULE_ON_ALL_PROCESSORS
+        yield();
+#else
         if (Processor::current().id() == 0)
             yield();
+#endif
     }
 }
 
