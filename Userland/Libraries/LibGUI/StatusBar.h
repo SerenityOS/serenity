@@ -39,9 +39,10 @@ public:
     String text(int index) const;
     void set_text(const StringView&);
     void set_text(int index, const StringView&);
+    NonnullRefPtr<Label> label(int index) const;
 
 protected:
-    explicit StatusBar(int label_count = 1);
+    explicit StatusBar(int label_count = 0);
     virtual void paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
@@ -49,6 +50,12 @@ private:
     NonnullRefPtr<Label> create_label();
     NonnullRefPtrVector<Label> m_labels;
     RefPtr<ResizeCorner> m_corner;
+
+    // Used to initialize the number of labels that should
+    // be created from a GML file as opposed to the constructor.
+    int label_count() const { return m_label_count; }
+    void set_label_count(int);
+    int m_label_count {};
 };
 
 }
