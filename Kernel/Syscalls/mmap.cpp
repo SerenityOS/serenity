@@ -134,17 +134,18 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     Region* region = nullptr;
     auto range = allocate_range(VirtualAddress(addr), size, alignment);
-    if (!range.is_valid()) {
+    if (!range.has_value()) {
         if (addr && !map_fixed) {
             // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
             range = allocate_range({}, size, alignment);
         }
-        return (void*)-ENOMEM;
+        if (!range.has_value())
+            return (void*)-ENOMEM;
     }
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        auto region_or_error = allocate_region(range, !name.is_null() ? name : "mmap", prot, strategy);
+        auto region_or_error = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error())
             return (void*)region_or_error.error().error();
         region = region_or_error.value();
@@ -170,7 +171,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
                 return (void*)-EACCES;
         }
 
-        auto region_or_error = description->mmap(*this, range, static_cast<size_t>(offset), prot, map_shared);
+        auto region_or_error = description->mmap(*this, range.value(), static_cast<size_t>(offset), prot, map_shared);
         if (region_or_error.is_error())
             return (void*)region_or_error.error().error();
         region = region_or_error.value();
@@ -447,10 +448,10 @@ void* Process::sys$allocate_tls(size_t size)
     ASSERT(main_thread);
 
     auto range = allocate_range({}, size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return (void*)-ENOMEM;
 
-    auto region_or_error = allocate_region(range, String(), PROT_READ | PROT_WRITE);
+    auto region_or_error = allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return (void*)region_or_error.error().error();
 

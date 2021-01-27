@@ -1059,10 +1059,10 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
         return KSuccess;
 
     auto range = process().allocate_range({}, thread_specific_region_size());
-    if (!range.is_valid())
+    if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = process().allocate_region(range, "Thread-specific", PROT_READ | PROT_WRITE);
+    auto region_or_error = process().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error();
 

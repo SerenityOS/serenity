@@ -116,7 +116,7 @@ bool Process::in_group(gid_t gid) const
     return m_gid == gid || m_extra_gids.contains_slow(gid);
 }
 
-Range Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
+Optional<Range> Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
@@ -195,7 +195,7 @@ bool Process::deallocate_region(Region& region)
 Region* Process::find_region_from_range(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
-    if (m_region_lookup_cache.range == range && m_region_lookup_cache.region)
+    if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
         return m_region_lookup_cache.region.unsafe_ptr();
 
     size_t size = PAGE_ROUND_UP(range.size());

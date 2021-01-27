@@ -399,10 +399,10 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, con
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return {};
     auto vmobject = ContiguousVMObject::create_with_size(size);
-    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, AllocationStrategy strategy, bool cacheable)
@@ -410,12 +410,12 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return {};
     auto vmobject = AnonymousVMObject::create_with_size(size, strategy);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range, vmobject.release_nonnull(), name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject.release_nonnull(), name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
@@ -423,12 +423,12 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return {};
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range, *vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
@@ -436,12 +436,12 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress pa
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().identity_range_allocator().allocate_specific(VirtualAddress(paddr.get()), size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return {};
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range, *vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access, bool cacheable)
@@ -467,9 +467,9 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
-    if (!range.is_valid())
+    if (!range.has_value())
         return {};
-    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, user_accessible, cacheable);
 }
 
 bool MemoryManager::commit_user_physical_pages(size_t page_count)
