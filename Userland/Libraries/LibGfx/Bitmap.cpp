@@ -301,7 +301,7 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 
 ByteBuffer Bitmap::serialize_to_byte_buffer() const
 {
-    auto buffer = ByteBuffer::create_uninitialized(4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(RGBA32) * palette_size(m_format) + size_in_bytes());
+    auto buffer = ByteBuffer::create_uninitialized(5 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(RGBA32) * palette_size(m_format) + size_in_bytes());
     OutputMemoryStream stream { buffer };
 
     auto write = [&]<typename T>(T value) {
