@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,6 +71,8 @@ void RangeAllocator::dump() const
 
 Vector<Range, 2> Range::carve(const Range& taken)
 {
+    ASSERT((taken.size() % PAGE_SIZE) == 0);
+
     Vector<Range, 2> parts;
     if (taken == *this)
         return {};
@@ -107,6 +109,8 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
     if (!size)
         return {};
+
+    ASSERT((size % PAGE_SIZE) == 0);
 
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
@@ -149,6 +153,8 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
     if (!size)
         return {};
 
+    ASSERT((size % PAGE_SIZE) == 0);
+
     Range allocated_range(base, size);
     ScopedSpinLock lock(m_lock);
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
@@ -177,6 +183,7 @@ void RangeAllocator::deallocate(Range range)
     ScopedSpinLock lock(m_lock);
     ASSERT(m_total_range.contains(range));
     ASSERT(range.size());
+    ASSERT((range.size() % PAGE_SIZE) == 0);
     ASSERT(range.base() < range.end());
 
     if constexpr (VRA_DEBUG) {
