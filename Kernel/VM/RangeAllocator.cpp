@@ -112,6 +112,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         return {};
 
     ASSERT((size % PAGE_SIZE) == 0);
+    ASSERT((alignment % PAGE_SIZE) == 0);
 
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
