@@ -554,8 +554,10 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
             } else if (m_move_window->tiled() == WindowTileType::None) {
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
-                // "Bounce back" the window it it would end up too far outside the screen:
-                m_move_window->normalize_rect();
+                // "Bounce back" the window if it would end up too far outside the screen.
+                // If the user has let go of Mod_Logo, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
+                bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Logo);
+                m_move_window->normalize_rect(force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
                 m_move_window->set_untiled(event.position());
                 m_move_origin = event.position();
