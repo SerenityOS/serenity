@@ -677,7 +677,7 @@ void Process::die()
     m_tty = nullptr;
 
     for_each_thread([&](auto& thread) {
-        m_threads_for_coredump.append(&thread);
+        m_threads_for_coredump.append(thread);
         return IterationDecision::Continue;
     });
 

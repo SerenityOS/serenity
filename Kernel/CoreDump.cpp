@@ -240,7 +240,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 {
     ByteBuffer threads_data;
 
-    m_process->for_each_thread([&](Thread& thread) {
+    for (auto& thread : m_process->threads_for_coredump({})) {
         ByteBuffer entry_buff;
 
         ELF::Core::ThreadInfo info {};
@@ -251,9 +251,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
         entry_buff.append((void*)&info, sizeof(info));
 
         threads_data += entry_buff;
-
-        return IterationDecision::Continue;
-    });
+    }
     return threads_data;
 }
 
