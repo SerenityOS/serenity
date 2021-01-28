@@ -19,6 +19,7 @@ interface Document : Node {
     ArrayFromVector querySelectorAll(DOMString selectors);
 
     Element createElement(DOMString tagName);
+    Element createElementNS(DOMString? namespace, DOMString qualifiedName);
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);

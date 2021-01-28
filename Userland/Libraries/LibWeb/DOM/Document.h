@@ -146,6 +146,7 @@ public:
     JS::Value run_javascript(const StringView&);
 
     NonnullRefPtr<Element> create_element(const String& tag_name);
+    NonnullRefPtr<Element> create_element_ns(const String& namespace_, const String& qualifed_name);
     NonnullRefPtr<DocumentFragment> create_document_fragment();
     NonnullRefPtr<Text> create_text_node(const String& data);
     NonnullRefPtr<Comment> create_comment(const String& data);
