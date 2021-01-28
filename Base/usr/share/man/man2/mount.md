@@ -90,6 +90,8 @@ launch the initial userspace process.
   file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is
   specified in flags.
 * `ENOTDIR`: If `target` is not a directory.
+* `ENOTBLK`: If the `source_fd` is not a block device, but one is required (i.e.
+  when `fs_type` is `Ext2FS`)
 
 All of the usual path resolution errors may also occur.
 

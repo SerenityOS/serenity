@@ -91,6 +91,8 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         if (description.is_null())
             return -EBADF;
+        if (!description->file().is_block_device())
+            return -ENOTBLK;
         if (!description->file().is_seekable()) {
             dbgln("mount: this is not a seekable file");
             return -ENODEV;
