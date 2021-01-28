@@ -700,22 +700,11 @@ inline void Process::for_each_child(Callback callback)
 template<typename Callback>
 inline IterationDecision Process::for_each_thread(Callback callback) const
 {
-    if (pid() == 0) {
-        // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
-        Processor::for_each(
-            [&](Processor& proc) -> IterationDecision {
-                auto idle_thread = proc.idle_thread();
-                if (idle_thread != nullptr)
-                    return callback(*idle_thread);
-                return IterationDecision::Continue;
-            });
-    } else {
-        ScopedSpinLock thread_list_lock(m_thread_list_lock);
-        for (auto& thread : m_thread_list) {
-            IterationDecision decision = callback(thread);
-            if (decision != IterationDecision::Continue)
-                return decision;
-        }
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    for (auto& thread : m_thread_list) {
+        IterationDecision decision = callback(thread);
+        if (decision != IterationDecision::Continue)
+            return decision;
     }
     return IterationDecision::Continue;
 }
