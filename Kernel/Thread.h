@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
@@ -87,11 +88,16 @@ class Thread
     friend class Scheduler;
     friend class ThreadReadyQueue;
 
+    static SpinLock<u8> g_tid_map_lock;
+    static HashMap<ThreadID, Thread*>* g_tid_map;
+
 public:
     inline static Thread* current()
     {
         return Processor::current_thread();
     }
+
+    static void initialize();
 
     explicit Thread(NonnullRefPtr<Process>);
     ~Thread();
@@ -1090,8 +1096,6 @@ public:
     template<typename Callback>
     static IterationDecision for_each_in_state(State, Callback);
     template<typename Callback>
-    static IterationDecision for_each_living(Callback);
-    template<typename Callback>
     static IterationDecision for_each(Callback);
 
     [[nodiscard]] static bool is_runnable_state(Thread::State state)
@@ -1166,10 +1170,8 @@ public:
 
 private:
     IntrusiveListNode m_process_thread_list_node;
-    IntrusiveListNode m_runnable_list_node;
     int m_runnable_priority { -1 };
 
-    friend struct SchedulerData;
     friend class WaitQueue;
 
     class JoinBlockCondition : public BlockCondition {
@@ -1304,99 +1306,37 @@ private:
     void yield_without_holding_big_lock();
     void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);
     void yield_while_not_holding_big_lock();
-    void update_state_for_thread(Thread::State previous_state);
     void drop_thread_count(bool);
 };
 
 template<typename Callback>
-inline IterationDecision Thread::for_each_living(Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    return Thread::for_each([callback](Thread& thread) -> IterationDecision {
-        if (thread.state() != Thread::State::Dead && thread.state() != Thread::State::Dying)
-            return callback(thread);
-        return IterationDecision::Continue;
-    });
-}
-
-template<typename Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(g_scheduler_lock);
-    auto ret = Scheduler::for_each_runnable(callback);
-    if (ret == IterationDecision::Break)
-        return ret;
-    return Scheduler::for_each_nonrunnable(callback);
+    ScopedSpinLock lock(g_tid_map_lock);
+    for (auto& it : *g_tid_map) {
+        IterationDecision decision = callback(*it.value);
+        if (decision != IterationDecision::Continue)
+            return decision;
+    }
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(g_scheduler_lock);
-    auto new_callback = [=](Thread& thread) -> IterationDecision {
-        if (thread.state() == state)
-            return callback(thread);
-        return IterationDecision::Continue;
-    };
-    if (is_runnable_state(state))
-        return Scheduler::for_each_runnable(new_callback);
-    return Scheduler::for_each_nonrunnable(new_callback);
+    ScopedSpinLock lock(g_tid_map_lock);
+    for (auto& it : *g_tid_map) {
+        auto& thread = *it.value;
+        if (thread.state() != state)
+            continue;
+        IterationDecision decision = callback(thread);
+        if (decision != IterationDecision::Continue)
+            return decision;
+    }
+    return IterationDecision::Continue;
 }
 
 const LogStream& operator<<(const LogStream&, const Thread&);
-
-struct SchedulerData {
-    typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> ThreadList;
-
-    ThreadList m_runnable_threads;
-    ThreadList m_nonrunnable_threads;
-
-    bool has_thread(Thread& thread) const
-    {
-        return m_runnable_threads.contains(thread) || m_nonrunnable_threads.contains(thread);
-    }
-
-    ThreadList& thread_list_for_state(Thread::State state)
-    {
-        if (Thread::is_runnable_state(state))
-            return m_runnable_threads;
-        return m_nonrunnable_threads;
-    }
-};
-
-template<typename Callback>
-inline IterationDecision Scheduler::for_each_runnable(Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.own_lock());
-    auto& tl = g_scheduler_data->m_runnable_threads;
-    for (auto it = tl.begin(); it != tl.end();) {
-        auto& thread = *it;
-        it = ++it;
-        if (callback(thread) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.own_lock());
-    auto& tl = g_scheduler_data->m_nonrunnable_threads;
-    for (auto it = tl.begin(); it != tl.end();) {
-        auto& thread = *it;
-        it = ++it;
-        if (callback(thread) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    return IterationDecision::Continue;
-}
 
 }
 
