@@ -183,6 +183,12 @@ RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
     return node;
 }
 
+RefPtr<Node> Node::remove_child(NonnullRefPtr<Node> node)
+{
+    TreeNode<Node>::remove_child(node);
+    return node;
+}
+
 RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify)
 {
     if (!child)

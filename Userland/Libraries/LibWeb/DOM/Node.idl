@@ -11,6 +11,6 @@ interface Node : EventTarget {
 
     Node appendChild(Node node);
     Node insertBefore(Node node, Node? child);
-
+    Node removeChild(Node child);
 };
 
