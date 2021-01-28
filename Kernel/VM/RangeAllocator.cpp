@@ -106,6 +106,31 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
 }
 
+Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignment)
+{
+    if (!size)
+        return {};
+
+    ASSERT((size % PAGE_SIZE) == 0);
+    ASSERT((alignment % PAGE_SIZE) == 0);
+
+    // FIXME: I'm sure there's a smarter way to do this.
+    static constexpr size_t maximum_randomization_attempts = 1000;
+    for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
+        VirtualAddress random_address { get_good_random<FlatPtr>() };
+        random_address.mask(PAGE_MASK);
+
+        if (!m_total_range.contains(random_address))
+            continue;
+
+        auto range = allocate_specific(random_address, size);
+        if (range.has_value())
+            return range;
+    }
+
+    return allocate_anywhere(size, alignment);
+}
+
 Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
     if (!size)
