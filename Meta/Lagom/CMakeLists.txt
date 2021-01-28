@@ -9,7 +9,7 @@ endif()
 
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed -Wno-overloaded-virtual")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overloaded-virtual")
 
     if (ENABLE_ADDRESS_SANITIZER)
         add_definitions(-fsanitize=address -fno-omit-frame-pointer)
