@@ -120,6 +120,7 @@ public:
 
     Gfx::IntRect menubar_rect() const;
     Gfx::IntRect desktop_rect() const;
+    Gfx::IntRect arena_rect_for_type(WindowType) const;
 
     const Cursor& active_cursor() const;
     const Cursor& hidden_cursor() const { return *m_hidden_cursor; }
