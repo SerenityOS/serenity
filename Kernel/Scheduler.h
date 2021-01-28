@@ -40,12 +40,10 @@ class Process;
 class Thread;
 class WaitQueue;
 struct RegisterState;
-struct SchedulerData;
 
 extern Thread* g_finalizer;
 extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
-extern SchedulerData* g_scheduler_data;
 extern RecursiveSpinLock g_scheduler_lock;
 
 class Scheduler {
@@ -73,14 +71,6 @@ public:
     static Thread& pull_next_runnable_thread();
     static bool dequeue_runnable_thread(Thread&, bool = false);
     static void queue_runnable_thread(Thread&);
-
-    template<typename Callback>
-    static inline IterationDecision for_each_runnable(Callback);
-
-    template<typename Callback>
-    static inline IterationDecision for_each_nonrunnable(Callback);
-
-    static void init_thread(Thread& thread);
 };
 
 }

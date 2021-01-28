@@ -53,14 +53,7 @@ public:
     bool m_in_scheduler { true };
 };
 
-SchedulerData* g_scheduler_data;
 RecursiveSpinLock g_scheduler_lock;
-
-void Scheduler::init_thread(Thread& thread)
-{
-    ASSERT(g_scheduler_data);
-    g_scheduler_data->m_nonrunnable_threads.append(thread);
-}
 
 static u32 time_slice_for(const Thread& thread)
 {
@@ -238,33 +231,26 @@ bool Scheduler::pick_next()
     }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
-        dbgln("Scheduler[{}j]: Non-runnables:", Processor::id());
-        Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
-            if (thread.state() == Thread::Dying) {
+        dbgln("Scheduler thread list:", Processor::id());
+        Thread::for_each([&](Thread& thread) -> IterationDecision {
+            switch (thread.state()) {
+            case Thread::Dying:
                 dbgln("  {:12} {} @ {:04x}:{:08x} Finalizable: {}",
                     thread.state_string(),
                     thread,
                     thread.tss().cs,
                     thread.tss().eip,
                     thread.is_finalizable());
-            } else {
-                dbgln("  {:12} {} @ {:04x}:{:08x}",
+                break;
+            default:
+                dbgln("  {:12} Pr:{:2} {} @ {:04x}:{:08x}",
                     thread.state_string(),
+                    thread.priority(),
                     thread,
                     thread.tss().cs,
                     thread.tss().eip);
+                break;
             }
-
-            return IterationDecision::Continue;
-        });
-
-        dbgln("Scheduler[{}j]: Runnables:", Processor::id());
-        Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
-            dbgln("  {:2} {:12} @ {:04x}:{:08x}",
-                thread.priority(),
-                thread.state_string(),
-                thread.tss().cs,
-                thread.tss().eip);
 
             return IterationDecision::Continue;
         });
@@ -507,7 +493,6 @@ void Scheduler::initialize()
     ASSERT(&Processor::current() != nullptr); // sanity check
 
     RefPtr<Thread> idle_thread;
-    g_scheduler_data = new SchedulerData;
     g_finalizer_wait_queue = new WaitQueue;
     g_ready_queues = new ThreadReadyQueue[g_ready_queue_buckets];
 

@@ -45,6 +45,14 @@
 
 namespace Kernel {
 
+SpinLock<u8> Thread::g_tid_map_lock;
+HashMap<ThreadID, Thread*>* Thread::g_tid_map;
+
+void Thread::initialize()
+{
+    g_tid_map = new HashMap<ThreadID, Thread*>();
+}
+
 Thread::Thread(NonnullRefPtr<Process> process)
     : m_process(move(process))
     , m_name(m_process->name())
@@ -58,6 +66,11 @@ Thread::Thread(NonnullRefPtr<Process> process)
         m_tid = m_process->pid().value();
     } else {
         m_tid = Process::allocate_pid().value();
+    }
+    {
+        ScopedSpinLock lock(g_tid_map_lock);
+        auto result = g_tid_map->set(m_tid, this);
+        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
     if constexpr (THREAD_DEBUG)
         dbgln("Created new thread {}({}:{})", m_process->name(), m_process->pid().value(), m_tid.value());
@@ -115,9 +128,6 @@ Thread::Thread(NonnullRefPtr<Process> process)
     // thread is ready to be cleaned up.
     ref();
     guard.disarm();
-
-    if (m_process->pid() != 0)
-        Scheduler::init_thread(*this);
 }
 
 Thread::~Thread()
@@ -131,11 +141,14 @@ Thread::~Thread()
         // the middle of being destroyed.
         ScopedSpinLock lock(g_scheduler_lock);
         ASSERT(!m_process_thread_list_node.is_in_list());
-        g_scheduler_data->thread_list_for_state(m_state).remove(*this);
 
         // We shouldn't be queued
         ASSERT(m_runnable_priority < 0);
-        ASSERT(!m_runnable_list_node.is_in_list());
+    }
+    {
+        ScopedSpinLock lock(g_tid_map_lock);
+        auto result = g_tid_map->remove(m_tid);
+        ASSERT(result);
     }
 }
 
@@ -903,11 +916,6 @@ void Thread::set_state(State new_state, u8 stop_signal)
         dbgln<THREAD_DEBUG>("Set thread {} state to {}", *this, state_string());
     }
 
-    if (m_process->pid() != 0) {
-        update_state_for_thread(previous_state);
-        ASSERT(g_scheduler_data->has_thread(*this));
-    }
-
     if (previous_state == Runnable) {
         Scheduler::dequeue_runnable_thread(*this);
     } else if (previous_state == Stopped) {
@@ -950,24 +958,6 @@ void Thread::set_state(State new_state, u8 stop_signal)
             Scheduler::notify_finalizer();
         }
     }
-}
-
-void Thread::update_state_for_thread(Thread::State previous_state)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_data);
-    ASSERT(g_scheduler_lock.own_lock());
-    auto& previous_list = g_scheduler_data->thread_list_for_state(previous_state);
-    auto& list = g_scheduler_data->thread_list_for_state(state());
-
-    if (&previous_list != &list) {
-        previous_list.remove(*this);
-    }
-
-    if (list.contains(*this))
-        return;
-
-    list.append(*this);
 }
 
 String Thread::backtrace()
@@ -1093,14 +1083,12 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
     RefPtr<Thread> found_thread;
-    ScopedSpinLock lock(g_scheduler_lock);
-    Thread::for_each([&](auto& thread) {
-        if (thread.tid() == tid) {
-            found_thread = &thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
+    {
+        ScopedSpinLock lock(g_tid_map_lock);
+        auto it = g_tid_map->find(tid);
+        if (it != g_tid_map->end())
+            found_thread = it->value;
+    }
     return found_thread;
 }
 

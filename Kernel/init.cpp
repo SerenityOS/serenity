@@ -162,6 +162,7 @@ extern "C" [[noreturn]] void init()
     }
     VirtualConsole::switch_to(0);
 
+    Thread::initialize();
     Process::initialize();
     Scheduler::initialize();
 
