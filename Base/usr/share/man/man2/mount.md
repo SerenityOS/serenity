@@ -89,6 +89,7 @@ launch the initial userspace process.
 * `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a
   file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is
   specified in flags.
+* `ENOTDIR`: If `target` is not a directory.
 
 All of the usual path resolution errors may also occur.
 
