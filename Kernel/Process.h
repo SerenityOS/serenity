@@ -206,6 +206,9 @@ public:
     template<typename Callback>
     IterationDecision for_each_thread(Callback) const;
 
+    template<typename Callback>
+    IterationDecision for_each_thread_in_coredump(Callback) const;
+
     void die();
     void finalize();
 
@@ -500,6 +503,8 @@ public:
     HashMap<String, String>& coredump_metadata() { return m_coredump_metadata; }
     const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
 
+    const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<CoreDump>) const { return m_threads_for_coredump; }
+
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
 private:
@@ -662,7 +667,7 @@ private:
 
     HashMap<String, String> m_coredump_metadata;
 
-    Vector<RefPtr<Thread>> m_threads_for_coredump;
+    NonnullRefPtrVector<Thread> m_threads_for_coredump;
 };
 
 extern InlineLinkedList<Process>* g_processes;

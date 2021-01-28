@@ -785,6 +785,7 @@ public:
     u32 stack_ptr() const { return m_tss.esp; }
 
     RegisterState& get_register_dump_from_stack();
+    const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
     TSS32& tss() { return m_tss; }
     const TSS32& tss() const { return m_tss; }
