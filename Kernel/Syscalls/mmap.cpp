@@ -119,6 +119,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     bool map_stack = flags & MAP_STACK;
     bool map_fixed = flags & MAP_FIXED;
     bool map_noreserve = flags & MAP_NORESERVE;
+    bool map_randomized = flags & MAP_RANDOMIZED;
 
     if (map_shared && map_private)
         return (void*)-EINVAL;
@@ -133,15 +134,22 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         return (void*)-EINVAL;
 
     Region* region = nullptr;
-    auto range = allocate_range(VirtualAddress(addr), size, alignment);
-    if (!range.has_value()) {
-        if (addr && !map_fixed) {
-            // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-            range = allocate_range({}, size, alignment);
+    Optional<Range> range;
+
+    if (map_randomized) {
+        range = page_directory().range_allocator().allocate_randomized(size, alignment);
+    } else {
+        range = allocate_range(VirtualAddress(addr), size, alignment);
+        if (!range.has_value()) {
+            if (addr && !map_fixed) {
+                // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
+                range = allocate_range({}, size, alignment);
+            }
         }
-        if (!range.has_value())
-            return (void*)-ENOMEM;
     }
+
+    if (!range.has_value())
+        return (void*)-ENOMEM;
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
