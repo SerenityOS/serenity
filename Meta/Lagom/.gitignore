@@ -1,5 +1,5 @@
-liblagom.a
 CMakeCache.txt
 CMakeFiles
-Makefile
+build
 cmake_install.cmake
+liblagom.a

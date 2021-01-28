@@ -1,7 +1,7 @@
+# Ignore all files without extension
 *
 !*.*
 !*/
-!Makefile
 !LICENSE
 !Base/**
 
@@ -22,13 +22,9 @@
 *.cflags
 *.cxxflags
 *.autosave
-Meta/Lagom/build
 Build
 build
 CMakeFiles
-Toolchain/Tarballs
-Toolchain/Build
-Toolchain/Local
 .vscode
 .ccls-cache
 .DS_Store
