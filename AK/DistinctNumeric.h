@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -64,9 +65,9 @@ namespace AK {
  * There are many more operators that do not make sense for numerical types,
  * or cannot be overloaded in the first place. Naturally, they are not implemented.
  */
-template<typename T, bool Incr, bool Cmp, bool Bool, bool Flags, bool Shift, bool Arith, typename X>
+template<typename T, typename X, bool Incr, bool Cmp, bool Bool, bool Flags, bool Shift, bool Arith>
 class DistinctNumeric {
-    using Self = DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, X>;
+    using Self = DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>;
 
 public:
     DistinctNumeric(T value)
@@ -301,8 +302,14 @@ private:
 }
 
 #define TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, Incr, Cmp, Bool, Flags, Shift, Arith, NAME) \
-    using NAME = DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, struct __##NAME##_tag>;
+    using NAME = DistinctNumeric<T, struct __##NAME##_tag, Incr, Cmp, Bool, Flags, Shift, Arith>;
 #define TYPEDEF_DISTINCT_ORDERED_ID(T, NAME) TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, false, true, true, false, false, false, NAME)
 // TODO: Further type aliases?
+
+template<typename T, typename X, auto... Args>
+struct AK::Traits<AK::DistinctNumeric<T, X, Args...>> : public AK::GenericTraits<AK::DistinctNumeric<T, X, Args...>> {
+    static constexpr bool is_trivial() { return true; }
+    static constexpr auto hash(const AK::DistinctNumeric<T, X, Args...>& d) { return AK::Traits<T>::hash(d.value()); }
+};
 
 using AK::DistinctNumeric;
