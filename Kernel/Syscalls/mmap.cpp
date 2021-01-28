@@ -27,6 +27,7 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/Region.h>
@@ -137,7 +138,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     Optional<Range> range;
 
     if (map_randomized) {
-        range = page_directory().range_allocator().allocate_randomized(size, alignment);
+        range = page_directory().range_allocator().allocate_randomized(PAGE_ROUND_UP(size), alignment);
     } else {
         range = allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.has_value()) {
