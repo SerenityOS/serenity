@@ -161,7 +161,7 @@ void Scheduler::queue_runnable_thread(Thread& thread)
     ASSERT(g_scheduler_lock.own_lock());
     if (&thread == Processor::current().idle_thread())
         return;
-    auto priority = thread_priority_to_priority_index(thread.effective_priority());
+    auto priority = thread_priority_to_priority_index(thread.priority());
 
     ScopedSpinLock lock(g_ready_queues_lock);
     ASSERT(thread.m_runnable_priority < 0);
@@ -260,8 +260,7 @@ bool Scheduler::pick_next()
 
         dbgln("Scheduler[{}j]: Runnables:", Processor::id());
         Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
-            dbgln("  {:3}/{:2} {:12} @ {:04x}:{:08x}",
-                thread.effective_priority(),
+            dbgln("  {:2} {:12} @ {:04x}:{:08x}",
                 thread.priority(),
                 thread.state_string(),
                 thread.tss().cs,

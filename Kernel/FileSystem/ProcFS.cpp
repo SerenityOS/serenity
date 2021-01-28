@@ -795,7 +795,6 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
             thread_object.add("state", thread.state_string());
             thread_object.add("cpu", thread.cpu());
             thread_object.add("priority", thread.priority());
-            thread_object.add("effective_priority", thread.effective_priority());
             thread_object.add("syscall_count", thread.syscall_count());
             thread_object.add("inode_faults", thread.inode_faults());
             thread_object.add("zero_faults", thread.zero_faults());
