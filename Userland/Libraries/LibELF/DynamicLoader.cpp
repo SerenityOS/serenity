@@ -42,6 +42,8 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 {
     return mmap(addr, length, prot, flags, fd, offset);
 }
+
+#    define MAP_RANDOMIZED 0
 #endif
 
 namespace ELF {
@@ -270,13 +272,28 @@ void DynamicLoader::load_program_headers()
     auto* region = text_region_ptr;
     void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : region->desired_load_address().as_ptr();
 
+    int text_mmap_flags = MAP_SHARED;
+
+    if (m_elf_image.is_dynamic())
+        text_mmap_flags |= MAP_RANDOMIZED;
+    else
+        text_mmap_flags |= MAP_FIXED;
+
     ASSERT(!region->is_writable());
+
+    // First, we map the text *and* data segments, in order to allocate enough VM
+    // to hold both contiguously in the address space.
+
+    Checked<size_t> total_mapping_size;
+    total_mapping_size = text_region_ptr->required_load_size();
+    total_mapping_size += data_region_ptr->required_load_size();
+    ASSERT(!total_mapping_size.has_overflow());
 
     void* text_segment_begin = mmap_with_name(
         requested_load_address,
-        region->required_load_size(),
+        total_mapping_size.value(),
         region->mmap_prot(),
-        MAP_SHARED | MAP_FIXED,
+        text_mmap_flags,
         m_image_fd,
         region->offset(),
         String::formatted("{}: .text", m_filename).characters());
@@ -287,14 +304,23 @@ void DynamicLoader::load_program_headers()
     m_text_segment_size = region->required_load_size();
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
+    // Then, we unmap the data segment part of the above combined VM allocation.
+    auto* data_segment_address = (u8*)text_segment_begin + text_region_ptr->required_load_size();
+    if (munmap(data_segment_address, data_region_ptr->required_load_size()) < 0) {
+        perror("munmap");
+        ASSERT_NOT_REACHED();
+    }
+
     if (m_elf_image.is_dynamic())
         m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
 
     region = data_region_ptr;
+
+    // Finally, we remap the data segment, this time privately.
     void* data_segment_begin = mmap_with_name(
-        (u8*)text_segment_begin + m_text_segment_size,
+        data_segment_address,
         region->required_load_size(),
         region->mmap_prot(),
         MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
@@ -302,6 +328,7 @@ void DynamicLoader::load_program_headers()
         0,
         String::formatted("{}: .data", m_filename).characters());
     if (MAP_FAILED == data_segment_begin) {
+        perror("mmap data segment");
         ASSERT_NOT_REACHED();
     }
     VirtualAddress data_segment_actual_addr;
