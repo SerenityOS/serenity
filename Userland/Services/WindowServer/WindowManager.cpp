@@ -1043,13 +1043,32 @@ Gfx::IntRect WindowManager::menubar_rect() const
 Gfx::IntRect WindowManager::desktop_rect() const
 {
     if (active_fullscreen_window())
-        return {};
+        return Screen::the().rect();
     return {
         0,
         menubar_rect().bottom() + 1,
         Screen::the().width(),
         Screen::the().height() - menubar_rect().height() - 28
     };
+}
+
+Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
+{
+    switch (type) {
+    case WindowType::Desktop:
+    case WindowType::Normal:
+        return desktop_rect();
+    case WindowType::Menu:
+    case WindowType::WindowSwitcher:
+    case WindowType::Taskbar:
+    case WindowType::Tooltip:
+    case WindowType::Menubar:
+    case WindowType::MenuApplet:
+    case WindowType::Notification:
+        return Screen::the().rect();
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 void WindowManager::event(Core::Event& event)
