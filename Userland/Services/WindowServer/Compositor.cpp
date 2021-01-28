@@ -741,8 +741,19 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_damage_rect)
         int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
         geometry_string = String::formatted("{} ({}x{})", geometry_string, width_steps, height_steps);
     }
+
     auto geometry_label_rect = Gfx::IntRect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
+    auto desktop_rect = wm.desktop_rect();
+    if (geometry_label_rect.left() < desktop_rect.left())
+        geometry_label_rect.set_left(desktop_rect.left());
+    if (geometry_label_rect.top() < desktop_rect.top())
+        geometry_label_rect.set_top(desktop_rect.top());
+    if (geometry_label_rect.right() > desktop_rect.right())
+        geometry_label_rect.set_right_without_resize(desktop_rect.right());
+    if (geometry_label_rect.bottom() > desktop_rect.bottom())
+        geometry_label_rect.set_bottom_without_resize(desktop_rect.bottom());
+
     auto& back_painter = *m_back_painter;
     back_painter.fill_rect(geometry_label_rect.translated(1, 1), Color(Color::Black).with_alpha(80));
     Gfx::StylePainter::paint_button(back_painter, geometry_label_rect.translated(-1, -1), wm.palette(), Gfx::ButtonStyle::Normal, false);
