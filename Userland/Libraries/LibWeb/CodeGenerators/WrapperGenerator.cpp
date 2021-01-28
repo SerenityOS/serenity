@@ -56,7 +56,7 @@ static String snake_name(const StringView& title_name)
 
 static String make_input_acceptable_cpp(const String& input)
 {
-    if (input.is_one_of("class", "template", "for", "default", "char")) {
+    if (input.is_one_of("class", "template", "for", "default", "char", "namespace")) {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
@@ -1031,7 +1031,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
     auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false) {
         auto scoped_generator = generator.fork();
-        scoped_generator.set("cpp_name", cpp_name);
+        scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
         scoped_generator.set("js_name", js_name);
         scoped_generator.set("js_suffix", js_suffix);
         scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
@@ -1109,7 +1109,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         Vector<String> parameter_names;
         size_t argument_index = 0;
         for (auto& parameter : parameters) {
-            parameter_names.append(snake_name(parameter.name));
+            parameter_names.append(make_input_acceptable_cpp(snake_name(parameter.name)));
             arguments_generator.set("argument.index", String::number(argument_index));
 
             arguments_generator.append(R"~~~(
