@@ -63,7 +63,7 @@ LexicalEnvironment::~LexicalEnvironment()
 
 void LexicalEnvironment::visit_edges(Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_this_value);
     visitor.visit(m_home_object);
     visitor.visit(m_new_target);
