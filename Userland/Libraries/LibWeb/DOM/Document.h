@@ -42,6 +42,7 @@
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/HTML/HTMLScriptElement.h>
 
 namespace Web::DOM {
 
@@ -220,6 +221,13 @@ public:
 
     const NonnullRefPtr<DOMImplementation> implementation() const { return m_implementation; }
 
+    RefPtr<HTML::HTMLScriptElement> current_script() const { return m_current_script; }
+    void set_current_script(Badge<HTML::HTMLScriptElement>, RefPtr<HTML::HTMLScriptElement> script) { m_current_script = script; }
+
+    u32 ignore_destructive_writes_counter() const { return m_ignore_destructive_writes_counter; }
+    void increment_ignore_destructive_writes_counter() { m_ignore_destructive_writes_counter++; }
+    void decrement_ignore_destructive_writes_counter() { m_ignore_destructive_writes_counter--; }
+
     virtual EventTarget* get_parent(const Event&) override;
 
 private:
@@ -289,8 +297,11 @@ private:
     bool m_ready_for_post_load_tasks { false };
 
     NonnullRefPtr<DOMImplementation> m_implementation;
+    RefPtr<HTML::HTMLScriptElement> m_current_script;
 
     bool m_should_invalidate_styles_on_attribute_changes { true };
+
+    u32 m_ignore_destructive_writes_counter { 0 };
 };
 
 }

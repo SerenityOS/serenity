@@ -62,6 +62,13 @@ private:
     bool m_ready_to_be_parser_executed { false };
     bool m_failed_to_load { false };
 
+    enum class ScriptType {
+        Classic,
+        Module
+    };
+
+    ScriptType m_script_type { ScriptType::Classic };
+
     Function<void()> m_script_ready_callback;
 
     String m_script_source;

@@ -65,6 +65,7 @@
 #cmakedefine01 HEAP_DEBUG
 #cmakedefine01 HEX_DEBUG
 #cmakedefine01 HIGHLIGHT_FOCUSED_FRAME_DEBUG
+#cmakedefine01 HTML_SCRIPT_DEBUG
 #cmakedefine01 HTTPSJOB_DEBUG
 #cmakedefine01 HUNKS_DEBUG
 #cmakedefine01 ICO_DEBUG
