@@ -155,6 +155,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     if (!size)
         return {};
 
+    ASSERT(base.is_page_aligned());
     ASSERT((size % PAGE_SIZE) == 0);
 
     Range allocated_range(base, size);
