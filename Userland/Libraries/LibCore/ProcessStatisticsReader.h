@@ -51,7 +51,6 @@ struct ThreadStatistics {
     String state;
     u32 cpu;
     u32 priority;
-    u32 effective_priority;
     String name;
 };
 

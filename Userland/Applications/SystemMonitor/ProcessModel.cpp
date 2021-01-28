@@ -102,8 +102,6 @@ String ProcessModel::column_name(int column) const
         return "User";
     case Column::Priority:
         return "Pr";
-    case Column::EffectivePriority:
-        return "EPr";
     case Column::Virtual:
         return "Virtual";
     case Column::Physical:
@@ -175,7 +173,6 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::PGID:
         case Column::SID:
         case Column::Priority:
-        case Column::EffectivePriority:
         case Column::Virtual:
         case Column::Physical:
         case Column::DirtyPrivate:
@@ -223,8 +220,6 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return thread.current_state.user;
         case Column::Priority:
             return thread.current_state.priority;
-        case Column::EffectivePriority:
-            return thread.current_state.effective_priority;
         case Column::Virtual:
             return (int)thread.current_state.amount_virtual;
         case Column::Physical:
@@ -296,8 +291,6 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return thread.current_state.user;
         case Column::Priority:
             return thread.current_state.priority;
-        case Column::EffectivePriority:
-            return thread.current_state.effective_priority;
         case Column::Virtual:
             return pretty_byte_size(thread.current_state.amount_virtual);
         case Column::Physical:
@@ -398,7 +391,6 @@ void ProcessModel::update()
                 state.cpu = thread.cpu;
                 state.cpu_percent = 0;
                 state.priority = thread.priority;
-                state.effective_priority = thread.effective_priority;
                 state.state = thread.state;
                 sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
                 sum_ticks_scheduled_kernel += thread.ticks_kernel;

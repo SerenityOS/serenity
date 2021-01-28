@@ -105,8 +105,6 @@ public:
     void set_priority(u32 p) { m_priority = p; }
     u32 priority() const { return m_priority; }
 
-    u32 effective_priority() const { return m_priority; }
-
     void detach()
     {
         ScopedSpinLock lock(m_lock);
