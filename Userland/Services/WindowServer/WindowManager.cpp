@@ -107,6 +107,7 @@ void WindowManager::reload_config()
     m_drag_cursor = get_cursor("Drag");
     m_wait_cursor = get_cursor("Wait");
     m_crosshair_cursor = get_cursor("Crosshair");
+    m_drag_to_top_maximizes_window = m_config->read_bool_entry("Behavior", "DragToTopMaximizesWindow", false);
 }
 
 const Gfx::Font& WindowManager::font() const
@@ -548,7 +549,11 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 else
                     m_move_window->set_tiled(WindowTileType::Right);
             } else if (is_resizable && event.y() <= secondary_deadzone + desktop.top()) {
-                m_move_window->set_tiled(WindowTileType::Top);
+                if (m_drag_to_top_maximizes_window) {
+                    m_move_window->set_maximized(true);
+                } else {
+                    m_move_window->set_tiled(WindowTileType::Top);
+                }
             } else if (is_resizable && event.y() >= desktop.bottom() - secondary_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Bottom);
             } else if (m_move_window->tiled() == WindowTileType::None) {

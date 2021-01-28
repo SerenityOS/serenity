@@ -353,6 +353,8 @@ private:
     String m_dnd_text;
     RefPtr<Core::MimeData> m_dnd_mime_data;
     RefPtr<Gfx::Bitmap> m_dnd_bitmap;
+
+    bool m_drag_to_top_maximizes_window { false };
 };
 
 template<typename Callback>
