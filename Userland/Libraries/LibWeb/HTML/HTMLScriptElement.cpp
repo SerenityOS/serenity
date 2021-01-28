@@ -24,10 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Parser.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -56,16 +59,68 @@ void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blo
 
 void HTMLScriptElement::execute_script()
 {
-    document().run_javascript(m_script_source);
+    if (m_preparation_time_document.ptr() != &document()) {
+        dbgln("HTMLScriptElement: Refusing to run script because the preparation time document is not the same as the node document.");
+        return;
+    }
 
-    if (has_attribute(HTML::AttributeNames::src))
-        dispatch_event(DOM::Event::create(EventNames::load));
+    if (m_script_source.is_null()) {
+        dbgln("HTMLScriptElement: Refusing to run script because the script source is null.");
+        dispatch_event(DOM::Event::create(HTML::EventNames::error));
+        return;
+    }
+
+    bool incremented_destructive_writes_counter = false;
+
+    if (m_from_an_external_file || m_script_type == ScriptType::Module) {
+        document().increment_ignore_destructive_writes_counter();
+        incremented_destructive_writes_counter = true;
+    }
+
+    if (m_script_type == ScriptType::Classic) {
+        auto old_current_script = document().current_script();
+        if (!is<DOM::ShadowRoot>(root()))
+            document().set_current_script({}, this);
+        else
+            document().set_current_script({}, nullptr);
+
+        if (m_from_an_external_file)
+            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
+        else
+            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running inline script");
+
+        document().run_javascript(m_script_source);
+
+        document().set_current_script({}, old_current_script);
+    } else {
+        ASSERT(!document().current_script());
+        TODO();
+    }
+
+    if (incremented_destructive_writes_counter)
+        document().decrement_ignore_destructive_writes_counter();
+
+    if (m_from_an_external_file)
+        dispatch_event(DOM::Event::create(HTML::EventNames::load));
 }
 
+// https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
+static bool is_javascript_mime_type_essence_match(const String& mime_type)
+{
+    // FIXME: This operates on the whole mime type, instead of just the essence. https://mimesniff.spec.whatwg.org/#mime-type-essence
+    //        It'd probably be best to make a helper class for mime types, since there is a whole spec about mime types.
+    auto lowercase_mime_type = mime_type.to_lowercase();
+    return lowercase_mime_type.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
+}
+
+// https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 {
-    if (m_already_started)
+    if (m_already_started) {
+        dbgln("HTMLScriptElement: Refusing to run script because it has already started.");
         return;
+    }
+
     RefPtr<DOM::Document> parser_document = m_parser_document.ptr();
     m_parser_document = nullptr;
 
@@ -74,13 +129,37 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     }
 
     auto source_text = child_text_content();
-    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty())
+    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty()) {
+        dbgln("HTMLScriptElement: Refusing to run empty script.");
         return;
+    }
 
-    if (!is_connected())
+    if (!is_connected()) {
+        dbgln("HTMLScriptElement: Refusing to run script because the element is not connected.");
         return;
+    }
 
-    // FIXME: Check the "type" and "language" attributes
+    String script_block_type;
+    bool has_type = has_attribute(HTML::AttributeNames::type);
+    bool has_language = has_attribute(HTML::AttributeNames::language);
+    if ((has_type && attribute(HTML::AttributeNames::type).is_empty())
+        || (!has_type && has_language && attribute(HTML::AttributeNames::language).is_empty())
+        || (!has_type && !has_language)) {
+        script_block_type = "text/javascript";
+    } else if (has_type) {
+        script_block_type = attribute(HTML::AttributeNames::type).trim_whitespace();
+    } else if (!attribute(HTML::AttributeNames::language).is_empty()) {
+        script_block_type = String::formatted("text/{}", attribute(HTML::AttributeNames::language));
+    }
+
+    if (is_javascript_mime_type_essence_match(script_block_type)) {
+        m_script_type = ScriptType::Classic;
+    } else if (script_block_type.equals_ignoring_case("module")) {
+        m_script_type = ScriptType::Module;
+    } else {
+        dbgln("HTMLScriptElement: Refusing to run script because the type '{}' is not recognized.", script_block_type);
+        return;
+    }
 
     if (parser_document) {
         m_parser_document = *parser_document;
@@ -91,13 +170,34 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     m_preparation_time_document = document();
 
     if (parser_document && parser_document.ptr() != m_preparation_time_document.ptr()) {
+        dbgln("HTMLScriptElement: Refusing to run script because the parser document is not the same as the preparation time document.");
         return;
     }
 
     // FIXME: Check if scripting is disabled, if so return
-    // FIXME: Check the "nomodule" content attribute
+
+    if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::nomodule)) {
+        dbgln("HTMLScriptElement: Refusing to run classic script because it has the nomodule attribute.");
+        return;
+    }
+
     // FIXME: Check CSP
-    // FIXME: Check "event" and "for" attributes
+
+    if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::event) && has_attribute(HTML::AttributeNames::for_)) {
+        auto for_ = attribute(HTML::AttributeNames::for_).trim_whitespace();
+        auto event = attribute(HTML::AttributeNames::event).trim_whitespace();
+
+        if (!for_.equals_ignoring_case("window")) {
+            dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'for' attribute is not equal to 'window'");
+            return;
+        }
+
+        if (!event.equals_ignoring_case("onload") && !event.equals_ignoring_case("onload()")) {
+            dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'event' attribute is not equal to 'onload' or 'onload()'");
+            return;
+        }
+    }
+
     // FIXME: Check "charset" attribute
     // FIXME: Check CORS
     // FIXME: Module script credentials mode
@@ -112,59 +212,82 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     if (has_attribute(HTML::AttributeNames::src)) {
         auto src = attribute(HTML::AttributeNames::src);
         if (src.is_empty()) {
-            // FIXME: Fire an "error" event at the element and return
-            ASSERT_NOT_REACHED();
+            dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
+            // FIXME: Queue a task to do this.
+            dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            return;
         }
         m_from_an_external_file = true;
 
         auto url = document().complete_url(src);
         if (!url.is_valid()) {
-            // FIXME: Fire an "error" event at the element and return
-            ASSERT_NOT_REACHED();
+            dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
+            // FIXME: Queue a task to do this.
+            dispatch_event(DOM::Event::create(HTML::EventNames::error));
+            return;
         }
 
-        // FIXME: Check classic vs. module script type
-
-        // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
-        ResourceLoader::the().load_sync(
-            url,
-            [this, url](auto data, auto&) {
-                if (data.is_null()) {
-                    dbgln("HTMLScriptElement: Failed to load {}", url);
-                    return;
-                }
-                m_script_source = String::copy(data);
-                script_became_ready();
-            },
-            [this](auto&) {
-                m_failed_to_load = true;
-            });
+        if (m_script_type == ScriptType::Classic) {
+            // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
+            ResourceLoader::the().load_sync(
+                url,
+                [this, url](auto data, auto&) {
+                    if (data.is_null()) {
+                        dbgln("HTMLScriptElement: Failed to load {}", url);
+                        return;
+                    }
+                    m_script_source = String::copy(data);
+                    script_became_ready();
+                },
+                [this](auto&) {
+                    m_failed_to_load = true;
+                });
+        } else {
+            TODO();
+        }
     } else {
-        // FIXME: Check classic vs. module script type
-        m_script_source = source_text;
-        script_became_ready();
+        if (m_script_type == ScriptType::Classic) {
+            m_script_source = source_text;
+            script_became_ready();
+        } else {
+            TODO();
+        }
     }
 
-    // FIXME: Check classic vs. module
-    if (has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
+    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))
+        || (m_script_type == ScriptType::Module && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))) {
         document().add_script_to_execute_when_parsing_has_finished({}, *this);
+        when_the_script_is_ready([this] {
+            m_ready_to_be_parser_executed = true;
+        });
     }
 
-    else if (has_attribute(HTML::AttributeNames::src) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
-
+    else if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
         document().set_pending_parsing_blocking_script({}, this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
         });
     }
 
-    else if (has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking) {
-        ASSERT_NOT_REACHED();
+    else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
+        || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
+        TODO();
     }
 
-    else if (has_attribute(HTML::AttributeNames::src)) {
+    else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src)) || m_script_type == ScriptType::Module) {
+        // FIXME: This should add to a set, not a list.
         m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
+        // FIXME: When the script is ready, execute the script block and then remove the element
+        //        from the set of scripts that will execute as soon as possible.
     }
+
+    // FIXME: If the element does not have a src attribute, and the element is "parser-inserted",
+    //        and either the parser that created the script is an XML parser or it's an HTML parser
+    //        whose script nesting level is not greater than one, and the element's parser document
+    //        has a style sheet that is blocking scripts:
+    //        The element is the pending parsing-blocking script of its parser document.
+    //        (There can only be one such script per Document at a time.)
+    //        Set the element's "ready to be parser-executed" flag. The parser will handle executing the script.
 
     else {
         // Immediately execute the script block, even if other scripts are already executing.

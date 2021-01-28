@@ -30,6 +30,7 @@ interface Document : Node {
     readonly attribute Element? documentElement;
     attribute HTMLElement? body;
     readonly attribute HTMLHeadElement? head;
+    readonly attribute HTMLScriptElement? currentScript;
 
     readonly attribute DOMString readyState;
 

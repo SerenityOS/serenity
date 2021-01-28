@@ -170,6 +170,7 @@ void HTMLDocumentParser::run(const URL& url)
 
     auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
     for (auto& script : scripts_to_execute_when_parsing_has_finished) {
+        // FIXME: Spin the event loop until the script is ready to be parser executed and there's no style sheets blocking scripts.
         script.execute_script();
     }
 
@@ -177,6 +178,8 @@ void HTMLDocumentParser::run(const URL& url)
     content_loaded_event->set_bubbles(true);
     m_document->dispatch_event(content_loaded_event);
 
+    // FIXME: The document parser shouldn't execute these, it should just spin the event loop until the list becomes empty.
+    // FIXME: Once the set has been added, also spin the event loop until the set becomes empty.
     auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
     for (auto& script : scripts_to_execute_as_soon_as_possible) {
         script.execute_script();
@@ -583,7 +586,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
         script_element.set_non_blocking({}, false);
 
         if (m_parsing_fragment) {
-            TODO();
+            script_element.set_already_started({}, true);
         }
 
         if (m_invoked_via_document_write) {

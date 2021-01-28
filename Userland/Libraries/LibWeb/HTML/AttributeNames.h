@@ -98,6 +98,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(ismap)           \
     __ENUMERATE_HTML_ATTRIBUTE(label)           \
     __ENUMERATE_HTML_ATTRIBUTE(lang)            \
+    __ENUMERATE_HTML_ATTRIBUTE(language)        \
     __ENUMERATE_HTML_ATTRIBUTE(link)            \
     __ENUMERATE_HTML_ATTRIBUTE(longdesc)        \
     __ENUMERATE_HTML_ATTRIBUTE(loop)            \
