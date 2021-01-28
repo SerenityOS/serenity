@@ -44,10 +44,6 @@ void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
     m_total_range = { base, size };
     m_available_ranges.append({ base, size });
-#if VRA_DEBUG
-    ScopedSpinLock lock(m_lock);
-    dump();
-#endif
 }
 
 void RangeAllocator::initialize_from_parent(const RangeAllocator& parent_allocator)
@@ -81,18 +77,6 @@ Vector<Range, 2> Range::carve(const Range& taken)
         parts.append({ base(), taken.base().get() - base().get() });
     if (taken.end() < end())
         parts.append({ taken.end(), end().get() - taken.end().get() });
-
-    if constexpr (VRA_DEBUG) {
-        dbgln("VRA: carve: take {:x}-{:x} from {:x}-{:x}",
-            taken.base().get(),
-            taken.end().get() - 1,
-            base().get(),
-            end().get() - 1);
-
-        for (size_t i = 0; i < parts.size(); ++i)
-            dbgln("        {:x}-{:x}", parts[i].base().get(), parts[i].end().get() - 1);
-    }
-
     return parts;
 }
 
@@ -160,18 +144,13 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 
         Range allocated_range(VirtualAddress(aligned_base), size);
         if (available_range == allocated_range) {
-            dbgln<VRA_DEBUG>("VRA: Allocated perfect-fit anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
             m_available_ranges.remove(i);
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
-        if constexpr (VRA_DEBUG) {
-            dbgln<VRA_DEBUG>("VRA: Allocated anywhere({}, {}): {}", size, alignment, allocated_range.base().get());
-            dump();
-        }
         return allocated_range;
     }
-    klog() << "VRA: Failed to allocate anywhere: " << size << ", " << alignment;
+    klog() << "RangeAllocator: Failed to allocate anywhere: " << size << ", " << alignment;
     return {};
 }
 
@@ -194,15 +173,8 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
             return allocated_range;
         }
         carve_at_index(i, allocated_range);
-
-        if constexpr (VRA_DEBUG) {
-            dbgln("VRA: Allocated specific({}): {}", size, available_range.base().get());
-            dump();
-        }
-
         return allocated_range;
     }
-    dbgln("VRA: Failed to allocate specific range: {}({})", base, size);
     return {};
 }
 
@@ -213,12 +185,6 @@ void RangeAllocator::deallocate(const Range& range)
     ASSERT(range.size());
     ASSERT((range.size() % PAGE_SIZE) == 0);
     ASSERT(range.base() < range.end());
-
-    if constexpr (VRA_DEBUG) {
-        dbgln("VRA: Deallocate: {}({})", range.base().get(), range.size());
-        dump();
-    }
-
     ASSERT(!m_available_ranges.is_empty());
 
     size_t nearby_index = 0;
@@ -250,10 +216,6 @@ void RangeAllocator::deallocate(const Range& range)
             return;
         }
     }
-#if VRA_DEBUG
-    dbgln("VRA: After deallocate");
-    dump();
-#endif
 }
 
 }
