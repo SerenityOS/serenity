@@ -128,6 +128,9 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (!map_shared && !map_private)
         return (void*)-EINVAL;
 
+    if (map_fixed && map_randomized)
+        return (void*)-EINVAL;
+
     if (!validate_mmap_prot(prot, map_stack))
         return (void*)-EINVAL;
 
