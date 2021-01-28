@@ -183,7 +183,7 @@ void Window::normalize_rect()
     // For example, the windows that make the desktop rect smaller
     // than the display resolution (e.g. the TaskBar).
     auto min_visible = -1;
-    auto desktop = WindowManager::the().desktop_rect();
+    auto desktop = WindowManager::the().arena_rect_for_type(type())
     auto min_y = 0;
     if (type() == WindowType::Normal) {
         min_size = 50;
