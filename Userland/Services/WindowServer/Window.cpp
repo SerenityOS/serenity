@@ -176,7 +176,7 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
-void Window::normalize_rect()
+void Window::normalize_rect(bool force_titlebar_visible)
 {
     Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(type());
     auto min_size = 1;
@@ -201,7 +201,7 @@ void Window::normalize_rect()
 
     // Make sure that at least half of the titlebar is visible.
     auto min_frame_y = arena.top() - (y() - old_frame_rect.y()) / 2;
-    if (new_frame_rect.y() < min_frame_y) {
+    if (force_titlebar_visible && new_frame_rect.y() < min_frame_y) {
         new_frame_rect.set_y(min_frame_y);
     }
 
