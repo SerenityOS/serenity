@@ -159,7 +159,8 @@ public:
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
-    void normalize_rect(bool force_titlebar_visible = true);
+    void apply_minimum_size(Gfx::IntRect&);
+    void nudge_into_desktop(bool force_titlebar_visible = true);
 
     void set_taskbar_rect(const Gfx::IntRect&);
     const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }

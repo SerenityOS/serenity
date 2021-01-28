@@ -176,27 +176,30 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
-void Window::normalize_rect(bool force_titlebar_visible)
+void Window::apply_minimum_size(Gfx::IntRect& rect)
+{
+    Gfx::IntSize minimum_size { 1, 1 };
+    if (type() == WindowType::Normal)
+        minimum_size = { 50, 50 };
+
+    rect.set_width(max(minimum_size.width(), rect.width()));
+    rect.set_height(max(minimum_size.height(), rect.height()));
+}
+
+void Window::nudge_into_desktop(bool force_titlebar_visible)
 {
     Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(type());
-    auto min_size = 1;
     auto min_visible = 1;
-    if (type() == WindowType::Normal) {
-        min_size = 50;
+    if (type() == WindowType::Normal)
         min_visible = 30;
-    }
-
-    // Blow up to the appropriate size.
-    auto new_width = max(min_size, width());
-    auto new_height = max(min_size, height());
 
     // Push the frame around such that at least `min_visible` pixels of the *frame* are in the desktop rect.
     auto old_frame_rect = frame().rect();
     Gfx::IntRect new_frame_rect = {
-        clamp(old_frame_rect.x(), arena.left() + min_visible - new_width, arena.right() - min_visible),
-        clamp(old_frame_rect.y(), arena.top() + min_visible - new_height, arena.bottom() - min_visible),
-        old_frame_rect.width() + new_width - width(),
-        old_frame_rect.height() + new_height - height(),
+        clamp(old_frame_rect.x(), arena.left() + min_visible - width(), arena.right() - min_visible),
+        clamp(old_frame_rect.y(), arena.top() + min_visible - height(), arena.bottom() - min_visible),
+        old_frame_rect.width(),
+        old_frame_rect.height(),
     };
 
     // Make sure that at least half of the titlebar is visible.
@@ -209,8 +212,8 @@ void Window::normalize_rect(bool force_titlebar_visible)
     Gfx::IntRect new_window_rect = {
         x() + new_frame_rect.x() - old_frame_rect.x(),
         y() + new_frame_rect.y() - old_frame_rect.y(),
-        width() + new_frame_rect.width() - old_frame_rect.width(),
-        height() + new_frame_rect.height() - old_frame_rect.height(),
+        width(),
+        height(),
     };
     set_rect(new_window_rect);
 }

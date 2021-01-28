@@ -557,7 +557,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 // "Bounce back" the window if it would end up too far outside the screen.
                 // If the user has let go of Mod_Logo, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
                 bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Logo);
-                m_move_window->normalize_rect(force_titlebar_visible);
+                m_move_window->nudge_into_desktop(force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
                 m_move_window->set_untiled(event.position());
                 m_move_origin = event.position();
@@ -633,10 +633,9 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     auto new_rect = m_resize_window_original_rect;
 
     // First, size the new rect.
-    Gfx::IntSize minimum_size { 50, 50 };
-
-    new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
-    new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
+    new_rect.set_width(new_rect.width() + change_w);
+    new_rect.set_height(new_rect.height() + change_h);
+    m_resize_window->apply_minimum_size(new_rect);
 
     if (!m_resize_window->size_increment().is_null()) {
         int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();

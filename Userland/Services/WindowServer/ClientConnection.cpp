@@ -394,8 +394,10 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
     if (message.rect().location() != window.rect().location()) {
         window.set_default_positioned(false);
     }
-    window.set_rect(message.rect());
-    window.normalize_rect();
+    auto rect = message.rect();
+    window.apply_minimum_size(rect);
+    window.set_rect(rect);
+    window.nudge_into_desktop();
     window.request_update(window.rect());
     return make<Messages::WindowServer::SetWindowRectResponse>(window.rect());
 }
@@ -452,8 +454,9 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
             rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
             window->set_default_positioned(true);
         }
+        window->apply_minimum_size(rect);
         window->set_rect(rect);
-        window->normalize_rect();
+        window->nudge_into_desktop();
     }
     if (window->type() == WindowType::Desktop) {
         window->set_rect(WindowManager::the().desktop_rect());
