@@ -178,28 +178,41 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
 
 void Window::normalize_rect()
 {
+    Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(type());
     auto min_size = 1;
-    // Must be -1 to allow windows just outside the desktop rect.
-    // For example, the windows that make the desktop rect smaller
-    // than the display resolution (e.g. the TaskBar).
-    auto min_visible = -1;
-    auto desktop = WindowManager::the().arena_rect_for_type(type())
-    auto min_y = 0;
+    auto min_visible = 1;
     if (type() == WindowType::Normal) {
         min_size = 50;
-        min_visible = 50;
-        // 5 pixels is the amount of frame decoration that can be sacrificed before starting to become an issue.
-        min_y = desktop.top() - 5;
+        min_visible = 30;
     }
-    auto new_width = max(width(), min_size);
-    auto new_height = max(height(), min_size);
-    Gfx::IntRect normalized_rect = {
-        clamp(x(), -new_width + min_visible, desktop.width() - min_visible),
-        clamp(y(), min_y, desktop.bottom() - min_visible),
-        new_width,
-        new_height,
+
+    // Blow up to the appropriate size.
+    auto new_width = max(min_size, width());
+    auto new_height = max(min_size, height());
+
+    // Push the frame around such that at least `min_visible` pixels of the *frame* are in the desktop rect.
+    auto old_frame_rect = frame().rect();
+    Gfx::IntRect new_frame_rect = {
+        clamp(old_frame_rect.x(), arena.left() + min_visible - new_width, arena.right() - min_visible),
+        clamp(old_frame_rect.y(), arena.top() + min_visible - new_height, arena.bottom() - min_visible),
+        old_frame_rect.width() + new_width - width(),
+        old_frame_rect.height() + new_height - height(),
     };
-    set_rect(normalized_rect);
+
+    // Make sure that at least half of the titlebar is visible.
+    auto min_frame_y = arena.top() - (y() - old_frame_rect.y()) / 2;
+    if (new_frame_rect.y() < min_frame_y) {
+        new_frame_rect.set_y(min_frame_y);
+    }
+
+    // Deduce new window rect:
+    Gfx::IntRect new_window_rect = {
+        x() + new_frame_rect.x() - old_frame_rect.x(),
+        y() + new_frame_rect.y() - old_frame_rect.y(),
+        width() + new_frame_rect.width() - old_frame_rect.width(),
+        height() + new_frame_rect.height() - old_frame_rect.height(),
+    };
+    set_rect(new_window_rect);
 }
 
 void Window::handle_mouse_event(const MouseEvent& event)
