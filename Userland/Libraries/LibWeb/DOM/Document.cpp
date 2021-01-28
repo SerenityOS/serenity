@@ -566,10 +566,19 @@ JS::Value Document::run_javascript(const StringView& source)
     return result;
 }
 
+// https://dom.spec.whatwg.org/#dom-document-createelement
+// FIXME: This only implements step 6 of the algorithm and does not take in options.
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 {
     // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
     return DOM::create_element(*this, tag_name, Namespace::HTML);
+}
+
+// https://dom.spec.whatwg.org/#internal-createelementns-steps
+// FIXME: This only implements step 4 of the algorithm and does not take in options.
+NonnullRefPtr<Element> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+{
+    return DOM::create_element(*this, qualified_name, namespace_);
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
