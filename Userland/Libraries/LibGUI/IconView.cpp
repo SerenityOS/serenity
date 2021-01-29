@@ -431,7 +431,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
     item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.glyph_height() };
     item_data.wrapped_text_lines.clear();
 
-    if ((unwrapped_text_width > available_width) && (item_data.selected || m_hovered_index == item_data.index || cursor_index() == item_data.index)) {
+    if ((unwrapped_text_width > available_width) && (item_data.selected || m_hovered_index == item_data.index || cursor_index() == item_data.index || m_always_wrap_item_labels)) {
         int current_line_width = 0;
         int current_line_start = 0;
         int widest_line_width = 0;
