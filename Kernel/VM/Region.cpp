@@ -44,7 +44,7 @@ Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offs
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(name)
-    , m_access(access)
+    , m_access(access | ((access & 0x7) << 4))
     , m_shared(shared)
     , m_cacheable(cacheable)
     , m_kernel(kernel)
