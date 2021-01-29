@@ -1112,6 +1112,8 @@ public:
         return m_handling_page_fault;
     }
     void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
+    void set_idle_thread() { m_is_idle_thread = true; }
+    bool is_idle_thread() const { return m_is_idle_thread; }
 
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
@@ -1248,6 +1250,7 @@ private:
     bool m_should_die { false };
     bool m_initialized { false };
     bool m_in_block { false };
+    bool m_is_idle_thread { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     void yield_without_holding_big_lock();
