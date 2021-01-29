@@ -125,7 +125,22 @@ ln -s checksum mnt/bin/sha256sum
 ln -s checksum mnt/bin/sha512sum
 echo "done"
 
+if [ -f "${SERENITY_ROOT}/Kernel/sync-local.sh" ] || [ -f "${SERENITY_ROOT}/Build/sync-local.sh" ]; then
+    # TODO: Deprecated on 2021-01-30. In a few months, remove this 'if'.
+    tput setaf 1
+    echo
+    echo "   +-----------------------------------------------------------------------------+"
+    echo "   |                                                                             |"
+    echo "   |  WARNING: sync-local.sh, previously located in Kernel/ and later Build/     |"
+    echo "   |           must be moved to \$SERENITY_ROOT!                                  |"
+    echo "   |           See https://github.com/SerenityOS/serenity/pull/5172 for details. |"
+    echo "   |                                                                             |"
+    echo "   +-----------------------------------------------------------------------------+"
+    echo
+    tput sgr 0
+fi
+
 # Run local sync script, if it exists
-if [ -f sync-local.sh ]; then
-    sh sync-local.sh
+if [ -f "$SERENITY_ROOT}/sync-local.sh" ]; then
+    sh "${SERENITY_ROOT}/sync-local.sh"
 fi
