@@ -51,8 +51,13 @@ public:
         Slave
     };
 
+    enum class InterfaceType : u8 {
+        ATA,
+        ATAPI,
+    };
+
 public:
-    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, u8, u8, u8, int major, int minor);
+    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16, int major, int minor);
     virtual ~PATADiskDevice() override;
 
     // ^StorageDevice
@@ -64,7 +69,7 @@ public:
     virtual String device_name() const override;
 
 private:
-    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, u8, u8, u8, int major, int minor);
+    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16, int major, int minor);
 
     // ^DiskDevice
     virtual const char* class_name() const override;
@@ -75,8 +80,10 @@ private:
     u16 m_cylinders { 0 };
     u16 m_heads { 0 };
     u16 m_sectors_per_track { 0 };
+    u16 m_capabilities { 0 };
     IDEChannel& m_channel;
     DriveType m_drive_type { DriveType::Master };
+    InterfaceType m_interface_type { InterfaceType::ATA };
 };
 
 }
