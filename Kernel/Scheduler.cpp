@@ -39,7 +39,7 @@ RecursiveSpinLock g_scheduler_lock;
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 4ms (assuming 250 ticks/second)
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return 1;
     return 2;
 }
@@ -105,12 +105,12 @@ Thread& Scheduler::pull_next_runnable_thread()
         }
         priority_mask &= ~(1u << priority);
     }
-    return *Processor::current().idle_thread();
+    return *Processor::idle_thread();
 }
 
 bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 {
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return true;
     ScopedSpinLock lock(g_ready_queues_lock);
     auto priority = thread.m_runnable_priority;
@@ -134,7 +134,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 void Scheduler::queue_runnable_thread(Thread& thread)
 {
     VERIFY(g_scheduler_lock.own_lock());
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return;
     auto priority = thread_priority_to_priority_index(thread.priority());
 
@@ -160,9 +160,8 @@ UNMAP_AFTER_INIT void Scheduler::start()
     auto& processor = Processor::current();
     processor.set_scheduler_data(*new SchedulerPerProcessorData());
     VERIFY(processor.is_initialized());
-    auto& idle_thread = *processor.idle_thread();
+    auto& idle_thread = *Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
-    VERIFY(processor.idle_thread() == &idle_thread);
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
@@ -467,6 +466,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 
 UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
+    idle_thread->set_idle_thread();
     Processor::current().set_idle_thread(*idle_thread);
     Processor::current().set_current_thread(*idle_thread);
 }
