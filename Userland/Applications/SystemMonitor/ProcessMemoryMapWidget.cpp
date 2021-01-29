@@ -93,7 +93,12 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             builder.append('T');
         return builder.to_string();
     });
-    pid_vm_fields.empend("vmobject", "VMObject type", Gfx::TextAlignment::CenterLeft);
+    pid_vm_fields.empend("VMObject type", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+        auto type = object.get("vmobject").to_string();
+        if (type.ends_with("VMObject"))
+            type = type.substring(0, type.length() - 8);
+        return type;
+    });
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (object.get("volatile").to_bool())
             return "Volatile";
