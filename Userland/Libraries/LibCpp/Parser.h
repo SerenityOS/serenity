@@ -104,6 +104,7 @@ private:
     NonnullRefPtr<ForStatement> parse_for_statement(ASTNode& parent);
     NonnullRefPtr<BlockStatement> parse_block_statement(ASTNode& parent);
     NonnullRefPtr<Comment> parse_comment(ASTNode& parent);
+    NonnullRefPtr<IfStatement> parse_if_statement(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);

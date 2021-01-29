@@ -186,6 +186,10 @@ NonnullRefPtr<Statement> Parser::parse_statement(ASTNode& parent)
     if (match_keyword("for")) {
         consume_semicolumn.disarm();
         return parse_for_statement(parent);
+    }
+    if (match_keyword("if")) {
+        consume_semicolumn.disarm();
+        return parse_if_statement(parent);
     } else {
         error("unexpected statement type");
         consume_semicolumn.disarm();
@@ -995,6 +999,25 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement(ASTNode& parent)
     for_statement->m_body = parse_statement(*for_statement);
     for_statement->set_end(for_statement->m_body->end());
     return for_statement;
+}
+
+NonnullRefPtr<IfStatement> Parser::parse_if_statement(ASTNode& parent)
+{
+    SCOPE_LOGGER();
+    auto if_statement = create_ast_node<IfStatement>(parent, position(), {});
+    consume(Token::Type::Keyword);
+    consume(Token::Type::LeftParen);
+    if_statement->m_predicate = parse_expression(*if_statement);
+    consume(Token::Type::RightParen);
+    if_statement->m_then = parse_statement(*if_statement);
+    if (match_keyword("else")) {
+        consume(Token::Type::Keyword);
+        if_statement->m_else = parse_statement(*if_statement);
+        if_statement->set_end(if_statement->m_else->end());
+    } else {
+        if_statement->set_end(if_statement->m_then->end());
+    }
+    return if_statement;
 }
 
 }
