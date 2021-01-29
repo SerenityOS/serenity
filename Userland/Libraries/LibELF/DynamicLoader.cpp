@@ -209,18 +209,14 @@ void DynamicLoader::do_main_relocations(size_t total_tls_size)
 
 RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_tls_size)
 {
-
     do_lazy_relocations(total_tls_size);
     if (flags & RTLD_LAZY) {
         setup_plt_trampoline();
     }
 
-    // Clean up our setting of .text to PROT_READ | PROT_WRITE
-    if (m_dynamic_object->has_text_relocations()) {
-        if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_EXEC)) {
-            perror("mprotect .text: PROT_READ | PROT_EXEC"); // FIXME: dlerror?
-            return nullptr;
-        }
+    if (mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_EXEC) < 0) {
+        perror("mprotect .text: PROT_READ | PROT_EXEC"); // FIXME: dlerror?
+        return nullptr;
     }
 
     call_object_init_functions();
@@ -296,7 +292,7 @@ void DynamicLoader::load_program_headers()
     auto* text_segment_begin = (u8*)mmap_with_name(
         requested_load_address,
         total_mapping_size.value(),
-        text_region->mmap_prot(),
+        PROT_READ,
         text_mmap_flags,
         m_image_fd,
         text_region->offset(),
