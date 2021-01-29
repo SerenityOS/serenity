@@ -137,9 +137,8 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
     if (!this_object)
         return {};
 
-    // FIXME: This is obnoxious - we should have an easier way of looking up %RegExp.prototype%.
-    auto& regexp_prototype = global_object.get(vm.names.RegExp).as_object().get(vm.names.prototype).as_object();
-    if (this_object == &regexp_prototype)
+    auto* regexp_prototype = global_object.regexp_prototype();
+    if (this_object == regexp_prototype)
         return js_string(vm, "(?:)");
 
     auto regexp_object = regexp_object_from(vm, global_object);
