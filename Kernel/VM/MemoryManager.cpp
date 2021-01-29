@@ -121,6 +121,45 @@ void MemoryManager::protect_kernel_image()
     }
 }
 
+void MemoryManager::register_reserved_ranges()
+{
+    ASSERT(!m_physical_memory_ranges.is_empty());
+    ContiguousReservedMemoryRange range;
+    for (auto& current_range : m_physical_memory_ranges) {
+        if (current_range.type != PhysicalMemoryRangeType::Reserved) {
+            if (range.start.is_null())
+                continue;
+            m_reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, current_range.start.get() - range.start.get() });
+            range.start.set((FlatPtr) nullptr);
+            continue;
+        }
+        if (!range.start.is_null()) {
+            continue;
+        }
+        range.start = current_range.start;
+    }
+    if (m_physical_memory_ranges.last().type != PhysicalMemoryRangeType::Reserved)
+        return;
+    if (range.start.is_null())
+        return;
+    m_reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, m_physical_memory_ranges.last().start.get() + m_physical_memory_ranges.last().length - range.start.get() });
+}
+
+bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, const Range& range) const
+{
+    ASSERT(!m_reserved_memory_ranges.is_empty());
+    for (auto& current_range : m_reserved_memory_ranges) {
+        if (!(current_range.start <= start_address))
+            continue;
+        if (!(current_range.start.offset(current_range.length) > start_address))
+            continue;
+        if (!(current_range.length >= range.size()))
+            return false;
+        return true;
+    }
+    return false;
+}
+
 void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> region;
@@ -148,6 +187,31 @@ void MemoryManager::parse_memory_map()
 
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         klog() << "MM: Multiboot mmap: address = " << String::format("0x%016llx", mmap->addr) << ", length = " << String::format("0x%016llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+
+        auto start_address = PhysicalAddress(mmap->addr);
+        size_t length = static_cast<size_t>(mmap->len);
+        switch (mmap->type) {
+        case (MULTIBOOT_MEMORY_AVAILABLE):
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
+            break;
+        case (MULTIBOOT_MEMORY_RESERVED):
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
+            break;
+        case (MULTIBOOT_MEMORY_ACPI_RECLAIMABLE):
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_address, length });
+            break;
+        case (MULTIBOOT_MEMORY_NVS):
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_address, length });
+            break;
+        case (MULTIBOOT_MEMORY_BADRAM):
+            klog() << "MM: Warning, detected bad memory range!";
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_address, length });
+            break;
+        default:
+            dbgln("MM: Unknown range!");
+            m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_address, length });
+            break;
+        }
 
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
@@ -216,6 +280,10 @@ void MemoryManager::parse_memory_map()
 
     // We start out with no committed pages
     m_user_physical_pages_uncommitted = m_user_physical_pages.load();
+    register_reserved_ranges();
+    for (auto& range : m_reserved_memory_ranges) {
+        dmesgln("MM: Contiguous reserved range from {}, length is {}", range.start, range.length);
+    }
 }
 
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
