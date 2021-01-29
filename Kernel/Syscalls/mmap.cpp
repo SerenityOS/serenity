@@ -84,7 +84,7 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     return true;
 }
 
-static bool validate_mmap_prot(int prot, bool map_stack, const Region* region = nullptr, bool* is_making_executable_exception_for_dynamic_loader = nullptr)
+static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, const Region* region = nullptr, bool* is_making_executable_exception_for_dynamic_loader = nullptr)
 {
     if (is_making_executable_exception_for_dynamic_loader)
         *is_making_executable_exception_for_dynamic_loader = false;
@@ -92,6 +92,9 @@ static bool validate_mmap_prot(int prot, bool map_stack, const Region* region = 
     bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
+
+    if (map_anonymous && make_executable)
+        return false;
 
     if (make_writable && make_executable)
         return false;
@@ -197,7 +200,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (map_fixed && map_randomized)
         return (void*)-EINVAL;
 
-    if (!validate_mmap_prot(prot, map_stack))
+    if (!validate_mmap_prot(prot, map_anonymous, map_stack))
         return (void*)-EINVAL;
 
     if (map_stack && (!map_private || !map_anonymous))
@@ -283,7 +286,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (!whole_region->is_mmap())
             return -EPERM;
         bool is_making_executable_exception_for_dynamic_loader = false;
-        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region, &is_making_executable_exception_for_dynamic_loader))
+        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region, &is_making_executable_exception_for_dynamic_loader))
             return -EINVAL;
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
@@ -307,7 +310,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         if (!old_region->is_mmap())
             return -EPERM;
         bool is_making_executable_exception_for_dynamic_loader = false;
-        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region, &is_making_executable_exception_for_dynamic_loader))
+        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region, &is_making_executable_exception_for_dynamic_loader))
             return -EINVAL;
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
