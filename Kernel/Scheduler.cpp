@@ -264,7 +264,7 @@ bool Scheduler::yield()
     auto current_thread = Thread::current();
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
     VERIFY(current_thread != nullptr);
-    if (proc.in_irq() || proc.in_critical()) {
+    if (proc.in_irq() || Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
@@ -284,15 +284,14 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const
 {
     VERIFY(g_scheduler_lock.own_lock());
 
-    auto& proc = Processor::current();
-    VERIFY(proc.in_critical() == 1);
+    VERIFY(Processor::in_critical() == 1);
 
     unsigned ticks_left = Thread::current()->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
+    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", Processor::id(), ticks_to_donate, *beneficiary, reason);
     beneficiary->set_ticks_left(ticks_to_donate);
 
     return Scheduler::context_switch(beneficiary);
@@ -323,7 +322,7 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
 
     VERIFY(!proc.in_irq());
 
-    if (proc.in_critical() > 1) {
+    if (Processor::in_critical() > 1) {
         scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
         scheduler_data.m_pending_donate_reason = reason;
         proc.invoke_scheduler_async();
@@ -526,17 +525,16 @@ void Scheduler::invoke_async()
 
 void Scheduler::yield_from_critical()
 {
-    auto& proc = Processor::current();
-    VERIFY(proc.in_critical());
-    VERIFY(!proc.in_irq());
+    VERIFY(Processor::in_critical());
+    VERIFY(!Processor::current().in_irq());
 
     yield(); // Flag a context switch
 
     u32 prev_flags;
-    u32 prev_crit = Processor::current().clear_critical(prev_flags, false);
+    u32 prev_crit = Processor::clear_critical(prev_flags, false);
 
     // Note, we may now be on a different CPU!
-    Processor::current().restore_critical(prev_crit, prev_flags);
+    Processor::restore_critical(prev_crit, prev_flags);
 }
 
 void Scheduler::notify_finalizer()

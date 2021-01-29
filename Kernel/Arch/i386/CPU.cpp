@@ -1442,7 +1442,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    processor.restore_in_critical(in_critical);
+    Processor::restore_in_critical(in_critical);
 
     asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
@@ -1525,7 +1525,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::current().restore_in_critical(in_critical);
+    Processor::restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1567,8 +1567,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
-        m_in_critical--; // leave it without triggering anything or restoring flags
-        VERIFY(in_critical() == 1);
+        VERIFY(in_critical() == 2);
+        m_in_critical = 1; // leave it without triggering anything or restoring flags
     }
 
     u32 kernel_stack_top = thread.kernel_stack_top();
@@ -1716,7 +1716,7 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
-    VERIFY(Processor::current().in_critical() == 2);
+    VERIFY(in_critical() == 2);
 #if ARCH(I386)
     do_assume_context(&thread, flags);
 #elif ARCH(X86_64)
@@ -1820,7 +1820,7 @@ void Processor::exit_trap(TrapFrame& trap)
     // to trigger a context switch while we're executing this function
     // See the comment at the end of the function why we don't use
     // ScopedCritical here.
-    m_in_critical++;
+    AK::atomic_fetch_add(&m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed);
 
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
@@ -1847,17 +1847,17 @@ void Processor::exit_trap(TrapFrame& trap)
     // Leave the critical section without actually enabling interrupts.
     // We don't want context switches to happen until we're explicitly
     // triggering a switch in check_invoke_scheduler.
-    auto new_critical = m_in_critical.fetch_sub(1) - 1;
+    auto new_critical = AK::atomic_fetch_sub(&m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed) - 1;
     if (!m_in_irq && !new_critical)
         check_invoke_scheduler();
 }
 
 void Processor::check_invoke_scheduler()
 {
-    VERIFY(!m_in_irq);
-    VERIFY(!m_in_critical);
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
+    VERIFY(!m_in_irq);
+    VERIFY(!m_in_critical);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
@@ -1929,7 +1929,7 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    VERIFY(Processor::current().in_critical());
+    VERIFY(in_critical());
     VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;

@@ -850,9 +850,9 @@ public:
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
             VERIFY(!g_scheduler_lock.own_lock());
-            VERIFY(Processor::current().in_critical());
+            VERIFY(Processor::in_critical());
             yield_while_not_holding_big_lock();
-            VERIFY(Processor::current().in_critical());
+            VERIFY(Processor::in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
