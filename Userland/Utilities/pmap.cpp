@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     printf("%s:\n", pid);
 
     if (extended) {
-        printf("Address         Size   Resident      Dirty Access VMObject Type          Purgeable   CoW Pages Name\n");
+        printf("Address         Size   Resident      Dirty Access VMObject Type  Purgeable   CoW Pages Name\n");
     } else {
         printf("Address         Size Access Name\n");
     }
@@ -94,12 +94,14 @@ int main(int argc, char** argv)
             auto resident = map.get("amount_resident").to_string();
             auto dirty = map.get("amount_dirty").to_string();
             auto vmobject = map.get("vmobject").to_string();
+            if (vmobject.ends_with("VMObject"))
+                vmobject = vmobject.substring(0, vmobject.length() - 8);
             auto purgeable = map.get("purgeable").to_string();
             auto cow_pages = map.get("cow_pages").to_string();
             printf("%10s ", resident.characters());
             printf("%10s ", dirty.characters());
             printf("%-6s ", access.characters());
-            printf("%-22s ", vmobject.characters());
+            printf("%-14s ", vmobject.characters());
             printf("%-10s ", purgeable.characters());
             printf("%10s ", cow_pages.characters());
         } else {
