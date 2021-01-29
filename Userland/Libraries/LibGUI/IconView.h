@@ -53,6 +53,9 @@ public:
 
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
 
+    bool always_wrap_item_labels() const { return m_always_wrap_item_labels; }
+    void set_always_wrap_item_labels(bool value) { m_always_wrap_item_labels = value; }
+
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
@@ -156,6 +159,8 @@ private:
     int m_visual_row_count { 0 };
 
     Gfx::IntSize m_effective_item_size { 80, 80 };
+
+    bool m_always_wrap_item_labels { false };
 
     bool m_rubber_banding { false };
     bool m_rubber_banding_store_selection { false };
