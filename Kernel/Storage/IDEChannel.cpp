@@ -100,9 +100,15 @@ namespace Kernel {
 #define ATA_REG_HDDEVSEL 0x06
 #define ATA_REG_COMMAND 0x07
 #define ATA_REG_STATUS 0x07
+#define ATA_REG_SECCOUNT1 0x08
+#define ATA_REG_LBA3 0x09
+#define ATA_REG_LBA4 0x0A
+#define ATA_REG_LBA5 0x0B
 #define ATA_CTL_CONTROL 0x00
 #define ATA_CTL_ALTSTATUS 0x00
 #define ATA_CTL_DEVADDRESS 0x01
+
+#define ATA_CAP_LBA 0x200
 
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
@@ -116,6 +122,7 @@ RefPtr<StorageDevice> IDEChannel::master_device() const
 {
     return m_master;
 }
+
 RefPtr<StorageDevice> IDEChannel::slave_device() const
 {
     return m_slave;
@@ -123,12 +130,13 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
 
 IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
     : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
-    , m_channel_number((type == ChannelType::Primary ? 0 : 1))
+    , m_channel_type(type)
     , m_io_group(io_group)
     , m_parent_controller(controller)
 {
     disable_irq();
 
+    // FIXME: The device may not be capable of DMA.
     m_dma_enabled.resource() = !force_pio;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
@@ -141,12 +149,12 @@ IDEChannel::~IDEChannel()
 {
 }
 
-void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave)
+void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave, u16 capabilities)
 {
     ScopedSpinLock lock(m_request_lock);
-#if PATA_DEBUG
-    dbgln("IDEChannel::start_request");
-#endif
+
+    dbgln<PATA_DEBUG>("IDEChannel::start_request");
+
     m_current_request = &request;
     m_current_request_block_index = 0;
     m_current_request_uses_dma = use_dma;
@@ -154,14 +162,14 @@ void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, b
 
     if (request.request_type() == AsyncBlockDeviceRequest::Read) {
         if (use_dma)
-            ata_read_sectors_with_dma(is_slave);
+            ata_read_sectors_with_dma(is_slave, capabilities);
         else
-            ata_read_sectors(is_slave);
+            ata_read_sectors(is_slave, capabilities);
     } else {
         if (use_dma)
-            ata_write_sectors_with_dma(is_slave);
+            ata_write_sectors_with_dma(is_slave, capabilities);
         else
-            ata_write_sectors(is_slave);
+            ata_write_sectors(is_slave, capabilities);
     }
 }
 
@@ -202,8 +210,13 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
 void IDEChannel::initialize(bool force_pio)
 {
     m_parent_controller->enable_pin_based_interrupts();
+
+    dbgln<PATA_DEBUG>("IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
+    dbgln<PATA_DEBUG>("IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
+    dbgln<PATA_DEBUG>("IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base());
+
     if (force_pio) {
-        klog() << "IDEChannel: Requested to force PIO mode; not setting up DMA";
+        dbgln("IDEChannel: Requested to force PIO mode; not setting up DMA");
         return;
     }
 
@@ -212,12 +225,46 @@ void IDEChannel::initialize(bool force_pio)
     m_prdt_page = MM.allocate_supervisor_physical_page();
     prdt().end_of_table = 0x8000;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-    klog() << "IDEChannel: Bus master IDE: " << m_io_group.bus_master_base();
 }
 
 static void print_ide_status(u8 status)
 {
     klog() << "IDEChannel: print_ide_status: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0) << " DSC=" << ((status & ATA_SR_DSC) != 0) << " DF=" << ((status & ATA_SR_DF) != 0) << " CORR=" << ((status & ATA_SR_CORR) != 0) << " IDX=" << ((status & ATA_SR_IDX) != 0) << " ERR=" << ((status & ATA_SR_ERR) != 0);
+}
+
+void IDEChannel::try_disambiguate_error()
+{
+    dbgln("IDEChannel: Error cause:");
+
+    switch (m_device_error) {
+    case ATA_ER_BBK:
+        dbgln("IDEChannel: - Bad block");
+        break;
+    case ATA_ER_UNC:
+        dbgln("IDEChannel: - Uncorrectable data");
+        break;
+    case ATA_ER_MC:
+        dbgln("IDEChannel: - Media changed");
+        break;
+    case ATA_ER_IDNF:
+        dbgln("IDEChannel: - ID mark not found");
+        break;
+    case ATA_ER_MCR:
+        dbgln("IDEChannel: - Media change request");
+        break;
+    case ATA_ER_ABRT:
+        dbgln("IDEChannel: - Command aborted");
+        break;
+    case ATA_ER_TK0NF:
+        dbgln("IDEChannel: - Track 0 not found");
+        break;
+    case ATA_ER_AMNF:
+        dbgln("IDEChannel: - No address mark");
+        break;
+    default:
+        dbgln("IDEChannel: - No one knows");
+        break;
+    }
 }
 
 void IDEChannel::handle_irq(const RegisterState&)
@@ -229,9 +276,7 @@ void IDEChannel::handle_irq(const RegisterState&)
     u8 bstatus = m_io_group.bus_master_base().offset(2).in<u8>();
     if (!(bstatus & 0x4)) {
         // interrupt not from this device, ignore
-#if PATA_DEBUG
-        klog() << "IDEChannel: ignore interrupt";
-#endif
+        dbgln<PATA_DEBUG>("IDEChannel: ignore interrupt");
         return;
     }
 
@@ -253,6 +298,7 @@ void IDEChannel::handle_irq(const RegisterState&)
         print_ide_status(status);
         m_device_error = m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
         dbgln("IDEChannel: Error {:#02x}!", (u8)m_device_error);
+        try_disambiguate_error();
         complete_current_request(AsyncDeviceRequest::Failure);
         return;
     }
@@ -303,17 +349,32 @@ static void io_delay()
         IO::in8(0x3f6);
 }
 
+void IDEChannel::wait_until_not_busy()
+{
+    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+        ;
+}
+
+String IDEChannel::channel_type_string() const
+{
+    if (m_channel_type == ChannelType::Primary)
+        return "Primary";
+
+    return "Secondary";
+}
+
 void IDEChannel::detect_disks()
 {
+    auto channel_string = [](u8 i) -> const char* {
+        if (i == 0)
+            return "master";
+
+        return "slave";
+    };
+
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
         m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (i << 4)); // First, we need to select the drive itself
-
-        // Apparently these need to be 0 before sending IDENTIFY?!
-        m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0x00);
-        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0x00);
-        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0x00);
-        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0x00);
 
         m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
 
@@ -322,10 +383,40 @@ void IDEChannel::detect_disks()
             ;
 
         if (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() == 0x00) {
-#if PATA_DEBUG
-            klog() << "IDEChannel: No " << (i == 0 ? "master" : "slave") << " disk detected!";
-#endif
+            dbgln<PATA_DEBUG>("IDEChannel: No {} {} disk detected!", channel_type_string().to_lowercase(), channel_string(i));
             continue;
+        }
+
+        bool check_for_atapi = false;
+        PATADiskDevice::InterfaceType interface_type = PATADiskDevice::InterfaceType::ATA;
+
+        for (;;) {
+            u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+            if (status & ATA_SR_ERR) {
+                dbgln<PATA_DEBUG>("IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
+                check_for_atapi = true;
+                break;
+            }
+
+            if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
+                dbgln<PATA_DEBUG>("IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
+                interface_type = PATADiskDevice::InterfaceType::ATA;
+                break;
+            }
+        }
+
+        if (check_for_atapi) {
+            u8 cl = m_io_group.io_base().offset(ATA_REG_LBA1).in<u8>();
+            u8 ch = m_io_group.io_base().offset(ATA_REG_LBA2).in<u8>();
+
+            if ((cl == 0x14 && ch == 0xEB) || (cl == 0x69 && ch == 0x96)) {
+                interface_type = PATADiskDevice::InterfaceType::ATAPI;
+                dbgln("IDEChannel: {} {} device appears to be ATAPI. We're going to ignore it for now as we don't support it.", channel_type_string(), channel_string(i));
+                continue;
+            } else {
+                dbgln("IDEChannel: {} {} device doesn't appear to be ATA or ATAPI. Ignoring it.", channel_type_string(), channel_string(i));
+                continue;
+            }
         }
 
         ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
@@ -345,22 +436,90 @@ void IDEChannel::detect_disks()
         for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
             bbuf[i] = 0;
 
-        u8 cyls = wbufbase[1];
-        u8 heads = wbufbase[3];
-        u8 spt = wbufbase[6];
+        u16 cyls = wbufbase[ATA_IDENT_CYLINDERS / sizeof(u16)];
+        u16 heads = wbufbase[ATA_IDENT_HEADS / sizeof(u16)];
+        u16 spt = wbufbase[ATA_IDENT_SECTORS / sizeof(u16)];
+        u16 capabilities = wbufbase[ATA_IDENT_CAPABILITIES / sizeof(u16)];
         if (cyls == 0 || heads == 0 || spt == 0)
             continue;
-        klog() << "IDEChannel: Name=" << ((char*)bbuf.data() + 54) << ", C/H/Spt=" << cyls << "/" << heads << "/" << spt;
+        dbgln("IDEChannel: {} {} device found: Type={}, Name={}, C/H/Spt={}/{}/{}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), cyls, heads, spt, capabilities);
 
         if (i == 0) {
-            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, cyls, heads, spt, 3, (m_channel_number == 0) ? 0 : 2);
+            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, cyls, heads, spt, capabilities, 3, (m_channel_type == ChannelType::Primary) ? 0 : 2);
         } else {
-            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, cyls, heads, spt, 3, (m_channel_number == 0) ? 1 : 3);
+            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, cyls, heads, spt, capabilities, 3, (m_channel_type == ChannelType::Primary) ? 1 : 3);
         }
     }
 }
 
-void IDEChannel::ata_read_sectors_with_dma(bool slave_request)
+void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8 block_count, u16 capabilities, bool use_dma)
+{
+    LBAMode lba_mode;
+    u8 head = 0;
+    u8 sector = 0;
+    u16 cylinder = 0;
+
+    if (lba >= 0x10000000) {
+        ASSERT(capabilities & ATA_CAP_LBA);
+        lba_mode = LBAMode::FortyEightBit;
+        head = 0;
+    } else if (capabilities & ATA_CAP_LBA) {
+        lba_mode = LBAMode::TwentyEightBit;
+        head = (lba & 0xF000000) >> 24;
+    } else {
+        lba_mode = LBAMode::None;
+        sector = (lba % 63) + 1;
+        cylinder = (lba + 1 - sector) / (16 * 63);
+        head = (lba + 1 - sector) % (16 * 63) / (63);
+    }
+
+    wait_until_not_busy();
+
+    if (lba_mode == LBAMode::None)
+        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (static_cast<u8>(slave_request) << 4) | head);
+    else
+        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);
+
+    if (lba_mode == LBAMode::FortyEightBit) {
+        m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA3).out<u8>((lba & 0xFF000000) >> 24);
+        m_io_group.io_base().offset(ATA_REG_LBA4).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA5).out<u8>(0);
+    }
+
+    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(block_count);
+    if (lba_mode == LBAMode::FortyEightBit || lba_mode == LBAMode::TwentyEightBit) {
+        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000FF) >> 0);
+        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000FF00) >> 8);
+        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00FF0000) >> 16);
+    } else {
+        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(sector);
+        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((cylinder >> 0) & 0xFF);
+        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((cylinder >> 8) & 0xFF);
+    }
+
+    for (;;) {
+        auto status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
+            break;
+    }
+
+    if (lba_mode != LBAMode::FortyEightBit) {
+        if (use_dma)
+            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA : ATA_CMD_WRITE_DMA);
+        else
+            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO : ATA_CMD_WRITE_PIO);
+    } else {
+        if (use_dma)
+            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA_EXT : ATA_CMD_WRITE_DMA_EXT);
+        else
+            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO_EXT : ATA_CMD_WRITE_PIO_EXT);
+    }
+
+    enable_irq();
+}
+
+void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
@@ -383,35 +542,8 @@ void IDEChannel::ata_read_sectors_with_dma(bool slave_request)
     // Set transfer direction
     m_io_group.bus_master_base().out<u8>(0x8);
 
-    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
-        ;
+    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities, true);
 
-    m_io_group.control_base().offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0x40 | (static_cast<u8>(slave_request) << 4));
-    io_delay();
-
-    m_io_group.io_base().offset(ATA_REG_FEATURES).out<u16>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
-
-    for (;;) {
-        auto status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
-        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
-            break;
-    }
-
-    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_DMA_EXT);
-    io_delay();
-
-    enable_irq();
     // Start bus master
     m_io_group.bus_master_base().out<u8>(0x9);
 }
@@ -433,53 +565,21 @@ bool IDEChannel::ata_do_read_sector()
     return true;
 }
 
-void IDEChannel::ata_read_sectors(bool slave_request)
+// FIXME: This doesn't quite work and locks up reading LBA 3.
+void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
     ASSERT(request.block_count() <= 256);
-#if PATA_DEBUG
-    dbgln("IDEChannel::ata_read_sectors");
-#endif
-
-    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
-        ;
+    dbgln<PATA_DEBUG>("IDEChannel::ata_read_sectors");
 
     auto lba = request.block_index();
-#if PATA_DEBUG
-    klog() << "IDEChannel: Reading " << request.block_count() << " sector(s) @ LBA " << lba;
-#endif
+    dbgln<PATA_DEBUG>("IDEChannel: Reading {} sector(s) @ LBA {}", request.block_count(), lba);
 
-    u8 devsel = 0xe0;
-    if (slave_request)
-        devsel |= 0x10;
-
-    m_io_group.control_base().offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4) | 0x40);
-    io_delay();
-
-    m_io_group.io_base().offset(ATA_REG_FEATURES).out<u8>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
-
-    for (;;) {
-        auto status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
-        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
-            break;
-    }
-
-    enable_irq();
-    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
+    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities, false);
+    ata_do_read_sector();
 }
 
-void IDEChannel::ata_write_sectors_with_dma(bool slave_request)
+void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
     u32 lba = request.block_index();
@@ -504,35 +604,8 @@ void IDEChannel::ata_write_sectors_with_dma(bool slave_request)
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
 
-    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
-        ;
+    ata_access(Direction::Write, slave_request, lba, request.block_count(), capabilities, true);
 
-    m_io_group.control_base().offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0x40 | (static_cast<u8>(slave_request) << 4));
-    io_delay();
-
-    m_io_group.io_base().offset(ATA_REG_FEATURES).out<u16>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
-
-    for (;;) {
-        auto status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
-        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
-            break;
-    }
-
-    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_WRITE_DMA_EXT);
-    io_delay();
-
-    enable_irq();
     // Start bus master
     m_io_group.bus_master_base().out<u8>(0x1);
 }
@@ -549,9 +622,7 @@ void IDEChannel::ata_do_write_sector()
     ASSERT(status & ATA_SR_DRQ);
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
-#ifndef PATA_DEBUG
-    dbgln("IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
-#endif
+    dbgln<PATA_DEBUG>("IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
     ssize_t nread = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](const u8* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
             IO::out16(m_io_group.io_base().offset(ATA_REG_DATA).get(), *(const u16*)&buffer[i]);
@@ -561,45 +632,17 @@ void IDEChannel::ata_do_write_sector()
         complete_current_request(AsyncDeviceRequest::MemoryFault);
 }
 
-void IDEChannel::ata_write_sectors(bool slave_request)
+// FIXME: I'm assuming this doesn't work based on the fact PIO read doesn't work.
+void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
 
     ASSERT(request.block_count() <= 256);
     u32 start_sector = request.block_index();
     u32 count = request.block_count();
-#if PATA_DEBUG
-    klog() << "IDEChannel::ata_write_sectors request (" << count << " sector(s) @ " << start_sector << ")";
-#endif
+    dbgln<PATA_DEBUG>("IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);
 
-    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
-        ;
-
-#if PATA_DEBUG
-    klog() << "IDEChannel: Writing " << count << " sector(s) @ LBA " << start_sector;
-#endif
-
-    u8 devsel = 0xe0;
-    if (slave_request)
-        devsel |= 0x10;
-
-    m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(count == 256 ? 0 : LSB(count));
-    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(start_sector & 0xff);
-    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((start_sector >> 8) & 0xff);
-    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((start_sector >> 16) & 0xff);
-    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(devsel | ((start_sector >> 24) & 0xf));
-
-    IO::out8(0x3F6, 0x08);
-    while (!(m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRDY))
-        ;
-
-    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_WRITE_PIO);
-
-    io_delay();
-    while ((m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
-        ;
-
-    enable_irq();
+    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities, true);
     ata_do_write_sector();
 }
 

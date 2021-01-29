@@ -33,18 +33,20 @@
 
 namespace Kernel {
 
-NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, u8 cylinders, u8 heads, u8 spt, int major, int minor)
+NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
 {
-    return adopt(*new PATADiskDevice(controller, channel, type, cylinders, heads, spt, major, minor));
+    return adopt(*new PATADiskDevice(controller, channel, type, interface_type, cylinders, heads, spt, capabilities, major, minor));
 }
 
-PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& channel, DriveType type, u8 cylinders, u8 heads, u8 spt, int major, int minor)
+PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
     : StorageDevice(controller, major, minor, 512, 0)
     , m_cylinders(cylinders)
     , m_heads(heads)
     , m_sectors_per_track(spt)
+    , m_capabilities(capabilities)
     , m_channel(channel)
     , m_drive_type(type)
+    , m_interface_type(interface_type)
 {
 }
 
@@ -60,7 +62,7 @@ const char* PATADiskDevice::class_name() const
 void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
     bool use_dma = !m_channel.m_io_group.bus_master_base().is_null() && m_channel.m_dma_enabled.resource();
-    m_channel.start_request(request, use_dma, is_slave());
+    m_channel.start_request(request, use_dma, is_slave(), m_capabilities);
 }
 
 String PATADiskDevice::device_name() const

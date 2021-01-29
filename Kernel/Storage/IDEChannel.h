@@ -117,21 +117,37 @@ private:
     //^ IRQHandler
     virtual void handle_irq(const RegisterState&) override;
 
+    enum class LBAMode : u8 {
+        None, // CHS
+        TwentyEightBit,
+        FortyEightBit,
+    };
+
+    enum class Direction : u8 {
+        Read,
+        Write,
+    };
+
     void initialize(bool force_pio);
     void detect_disks();
+    String channel_type_string() const;
 
-    void start_request(AsyncBlockDeviceRequest&, bool, bool);
+    void try_disambiguate_error();
+    void wait_until_not_busy();
+
+    void start_request(AsyncBlockDeviceRequest&, bool, bool, u16);
     void complete_current_request(AsyncDeviceRequest::RequestResult);
 
-    void ata_read_sectors_with_dma(bool);
-    void ata_read_sectors(bool);
+    void ata_access(Direction, bool, u32, u8, u16, bool);
+    void ata_read_sectors_with_dma(bool, u16);
+    void ata_read_sectors(bool, u16);
     bool ata_do_read_sector();
-    void ata_write_sectors_with_dma(bool);
-    void ata_write_sectors(bool);
+    void ata_write_sectors_with_dma(bool, u16);
+    void ata_write_sectors(bool, u16);
     void ata_do_write_sector();
 
     // Data members
-    u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
+    ChannelType m_channel_type { ChannelType::Primary };
 
     volatile u8 m_device_error { 0 };
 
