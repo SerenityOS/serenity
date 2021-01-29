@@ -379,4 +379,32 @@ NonnullRefPtrVector<Declaration> BlockStatement::declarations() const
     return declarations;
 }
 
+void IfStatement::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    if (m_predicate) {
+        print_indent(indent + 1);
+        dbgprintf("Predicate:\n");
+        m_predicate->dump(indent + 1);
+    }
+    if (m_then) {
+        print_indent(indent + 1);
+        dbgprintf("Then:\n");
+        m_then->dump(indent + 1);
+    }
+    if (m_else) {
+        print_indent(indent + 1);
+        dbgprintf("Else:\n");
+        m_else->dump(indent + 1);
+    }
+}
+
+NonnullRefPtrVector<Declaration> IfStatement::declarations() const
+{
+    NonnullRefPtrVector<Declaration> declarations;
+    declarations.append(m_predicate->declarations());
+    declarations.append(m_then->declarations());
+    declarations.append(m_else->declarations());
+    return declarations;
+}
 }
