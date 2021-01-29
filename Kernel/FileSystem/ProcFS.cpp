@@ -1176,6 +1176,14 @@ InodeMetadata ProcFSInode::metadata() const
     case FI_PID_stacks:
         metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR;
         break;
+    case FI_Root_smbios_entry_point:
+        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+        metadata.size = DMIExpose::the().entry_point_length();
+        break;
+    case FI_Root_dmi:
+        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+        metadata.size = DMIExpose::the().structure_table_length();
+        break;
     default:
         metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
         break;

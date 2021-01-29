@@ -70,6 +70,15 @@ DMIExpose& DMIExpose::the()
     return *s_the;
 }
 
+size_t DMIExpose::entry_point_length() const
+{
+    return m_entry_point_length;
+}
+size_t DMIExpose::structure_table_length() const
+{
+    return m_structure_table_length;
+}
+
 void DMIExpose::initialize_exposer()
 {
     ASSERT(!(m_entry_point.is_null()));

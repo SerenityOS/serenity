@@ -85,6 +85,8 @@ public:
     bool is_available() const { return m_available; }
     OwnPtr<KBuffer> entry_point() const;
     OwnPtr<KBuffer> structure_table() const;
+    size_t entry_point_length() const;
+    size_t structure_table_length() const;
 
 private:
     void set_64_bit_entry_initialization_values();
