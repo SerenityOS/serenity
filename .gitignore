@@ -40,3 +40,4 @@ compile_commands.json
 Ports/packages.db
 .idea/
 cmake-build-debug/
+sync-local.sh
