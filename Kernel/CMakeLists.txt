@@ -18,6 +18,7 @@ set(KERNEL_SOURCES
     CommandLine.cpp
     Console.cpp
     CoreDump.cpp
+    DMI.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
