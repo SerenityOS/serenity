@@ -779,11 +779,6 @@ public:
         return *m_mm_data;
     }
 
-    ALWAYS_INLINE Thread* idle_thread() const
-    {
-        return m_idle_thread;
-    }
-
     ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
     {
         m_idle_thread = &idle_thread;
@@ -804,6 +799,12 @@ public:
     {
         // See comment in Processor::current_thread
         write_fs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
+    }
+
+    ALWAYS_INLINE static Thread* idle_thread()
+    {
+        // See comment in Processor::current_thread
+        return (Thread*)read_fs_u32(__builtin_offsetof(Processor, m_idle_thread));
     }
 
     ALWAYS_INLINE u32 get_id() const
