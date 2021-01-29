@@ -25,6 +25,7 @@
  */
 
 #include <AK/BinarySearch.h>
+#include <AK/Checked.h>
 #include <AK/QuickSort.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Random.h>
@@ -85,9 +86,12 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
     ASSERT(m_lock.is_locked());
     auto remaining_parts = m_available_ranges[index].carve(range);
     ASSERT(remaining_parts.size() >= 1);
+    ASSERT(m_total_range.contains(remaining_parts[0]));
     m_available_ranges[index] = remaining_parts[0];
-    if (remaining_parts.size() == 2)
+    if (remaining_parts.size() == 2) {
+        ASSERT(m_total_range.contains(remaining_parts[1]));
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
+    }
 }
 
 Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignment)
@@ -125,12 +129,18 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
+    if (Checked<size_t>::addition_would_overflow(size, PAGE_SIZE * 2))
+        return {};
+
     size_t effective_size = size + PAGE_SIZE * 2;
     size_t offset_from_effective_base = PAGE_SIZE;
 #else
     size_t effective_size = size;
     size_t offset_from_effective_base = 0;
 #endif
+
+    if (Checked<size_t>::addition_would_overflow(effective_size, alignment))
+        return {};
 
     ScopedSpinLock lock(m_lock);
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
@@ -143,6 +153,8 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
         Range allocated_range(VirtualAddress(aligned_base), size);
+        ASSERT(m_total_range.contains(allocated_range));
+
         if (available_range == allocated_range) {
             m_available_ranges.remove(i);
             return allocated_range;
@@ -166,6 +178,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     ScopedSpinLock lock(m_lock);
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
+        ASSERT(m_total_range.contains(allocated_range));
         if (!available_range.contains(base, size))
             continue;
         if (available_range == allocated_range) {
