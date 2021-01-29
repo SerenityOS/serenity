@@ -243,9 +243,9 @@ void DynamicLoader::load_program_headers()
 {
     Vector<ProgramHeaderRegion> program_headers;
 
-    ProgramHeaderRegion* text_region_ptr = nullptr;
-    ProgramHeaderRegion* data_region_ptr = nullptr;
-    ProgramHeaderRegion* tls_region_ptr = nullptr;
+    ProgramHeaderRegion* text_region = nullptr;
+    ProgramHeaderRegion* data_region = nullptr;
+    ProgramHeaderRegion* tls_region = nullptr;
     VirtualAddress dynamic_region_desired_vaddr;
 
     m_elf_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
@@ -253,24 +253,28 @@ void DynamicLoader::load_program_headers()
         new_region.set_program_header(program_header.raw_header());
         program_headers.append(move(new_region));
         auto& region = program_headers.last();
-        if (region.is_tls_template())
-            tls_region_ptr = &region;
-        else if (region.is_load()) {
-            if (region.is_executable())
-                text_region_ptr = &region;
-            else
-                data_region_ptr = &region;
+        if (region.is_tls_template()) {
+            ASSERT(!tls_region);
+            tls_region = &region;
+        } else if (region.is_load()) {
+            if (region.is_executable()) {
+                ASSERT(!text_region);
+                text_region = &region;
+            } else {
+                ASSERT(!data_region);
+                data_region = &region;
+            }
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
         }
         return IterationDecision::Continue;
     });
 
-    ASSERT(text_region_ptr && data_region_ptr);
+    ASSERT(text_region);
+    ASSERT(data_region);
 
     // Process regions in order: .text, .data, .tls
-    auto* region = text_region_ptr;
-    void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : region->desired_load_address().as_ptr();
+    void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : text_region->desired_load_address().as_ptr();
 
     int text_mmap_flags = MAP_SHARED;
 
@@ -279,35 +283,37 @@ void DynamicLoader::load_program_headers()
     else
         text_mmap_flags |= MAP_FIXED;
 
-    ASSERT(!region->is_writable());
+    ASSERT(!text_region->is_writable());
 
     // First, we map the text *and* data segments, in order to allocate enough VM
     // to hold both contiguously in the address space.
 
     Checked<size_t> total_mapping_size;
-    total_mapping_size = text_region_ptr->required_load_size();
-    total_mapping_size += data_region_ptr->required_load_size();
+    total_mapping_size = text_region->required_load_size();
+    total_mapping_size += data_region->required_load_size();
     ASSERT(!total_mapping_size.has_overflow());
 
-    void* text_segment_begin = mmap_with_name(
+    auto* text_segment_begin = (u8*)mmap_with_name(
         requested_load_address,
         total_mapping_size.value(),
-        region->mmap_prot(),
+        text_region->mmap_prot(),
         text_mmap_flags,
         m_image_fd,
-        region->offset(),
+        text_region->offset(),
         String::formatted("{}: .text", m_filename).characters());
+
     if (MAP_FAILED == text_segment_begin) {
         perror("mmap text / initial segment");
         ASSERT_NOT_REACHED();
     }
+
     ASSERT(requested_load_address == nullptr || requested_load_address == text_segment_begin);
-    m_text_segment_size = region->required_load_size();
+    m_text_segment_size = text_region->required_load_size();
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
     // Then, we unmap the data segment part of the above combined VM allocation.
-    auto* data_segment_address = (u8*)text_segment_begin + text_region_ptr->required_load_size();
-    if (munmap(data_segment_address, data_region_ptr->required_load_size()) < 0) {
+    auto* data_segment_address = (u8*)text_segment_begin + text_region->required_load_size();
+    if (munmap(data_segment_address, data_region->required_load_size()) < 0) {
         perror("munmap");
         ASSERT_NOT_REACHED();
     }
@@ -317,28 +323,29 @@ void DynamicLoader::load_program_headers()
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
 
-    region = data_region_ptr;
-
     // Finally, we remap the data segment, this time privately.
-    void* data_segment_begin = mmap_with_name(
+    auto* data_segment = (u8*)mmap_with_name(
         data_segment_address,
-        region->required_load_size(),
-        region->mmap_prot(),
+        data_region->required_load_size(),
+        data_region->mmap_prot(),
         MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
         0,
         0,
         String::formatted("{}: .data", m_filename).characters());
-    if (MAP_FAILED == data_segment_begin) {
+
+    if (MAP_FAILED == data_segment) {
         perror("mmap data segment");
         ASSERT_NOT_REACHED();
     }
-    VirtualAddress data_segment_actual_addr;
-    if (m_elf_image.is_dynamic()) {
-        data_segment_actual_addr = region->desired_load_address().offset((FlatPtr)text_segment_begin);
-    } else {
-        data_segment_actual_addr = region->desired_load_address();
-    }
-    memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
+
+    VirtualAddress data_segment_start;
+    if (m_elf_image.is_dynamic())
+        data_segment_start = data_region->desired_load_address().offset((FlatPtr)text_segment_begin);
+    else
+        data_segment_start = data_region->desired_load_address();
+
+    memcpy(data_segment_start.as_ptr(), (u8*)m_file_mapping + data_region->offset(), data_region->size_in_image());
+
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
