@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
-#include <LibGfx/Painter.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -289,6 +289,22 @@ static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
     memcpy(dest.scanline(0), src.scanline(0), dest.size_in_bytes());
 }
 
+static void clear_rect(Bitmap& bitmap, const IntRect& rect, Color color)
+{
+    if (rect.is_empty())
+        return;
+
+    ASSERT(bitmap.rect().contains(rect));
+
+    RGBA32* dst = bitmap.scanline(rect.top()) + rect.left();
+    const size_t dst_skip = bitmap.pitch() / sizeof(RGBA32);
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        fast_u32_fill(dst, color.value(), rect.width());
+        dst += dst_skip;
+    }
+}
+
 static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
@@ -333,8 +349,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             // background color of the GIF itself. It appears that all major browsers and most other
             // GIF decoders adhere to the former interpretation, therefore we will do the same by
             // clearing the entire frame buffer to transparent.
-            Painter painter(*context.frame_buffer);
-            painter.clear_rect(context.images.at(i - 1).rect(), Color::Transparent);
+            clear_rect(*context.frame_buffer, context.images.at(i - 1).rect(), Color::Transparent);
         } else if (i > 0 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
             // Previous frame indicated that once disposed, it should be restored to *its* previous
             // underlying image contents, therefore we restore the saved previous frame buffer.
