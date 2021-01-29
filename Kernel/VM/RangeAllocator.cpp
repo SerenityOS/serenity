@@ -108,7 +108,7 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
         VirtualAddress random_address { get_good_random<FlatPtr>() };
         random_address.mask(PAGE_MASK);
 
-        if (!m_total_range.contains(random_address))
+        if (!m_total_range.contains(random_address, size))
             continue;
 
         auto range = allocate_specific(random_address, size);
