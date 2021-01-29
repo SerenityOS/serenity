@@ -298,6 +298,7 @@ void DynamicLoader::load_program_headers()
         region->offset(),
         String::formatted("{}: .text", m_filename).characters());
     if (MAP_FAILED == text_segment_begin) {
+        perror("mmap text / initial segment");
         ASSERT_NOT_REACHED();
     }
     ASSERT(requested_load_address == nullptr || requested_load_address == text_segment_begin);
