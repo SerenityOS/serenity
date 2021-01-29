@@ -50,10 +50,16 @@ class Region final
 
     MAKE_SLAB_ALLOCATED(Region)
 public:
-    enum Access {
+    // 76543210
+    // eXWR xwr
+    enum Access : u8 {
         Read = 1,
         Write = 2,
         Execute = 4,
+        HasBeenReadable = 16,
+        HasBeenWritable = 32,
+        HasBeenExecutable = 64,
+        HasMadeExecutableExceptionForDynamicLoader = 128,
     };
 
     static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable, bool shared);
@@ -67,6 +73,18 @@ public:
     bool is_readable() const { return m_access & Access::Read; }
     bool is_writable() const { return m_access & Access::Write; }
     bool is_executable() const { return m_access & Access::Execute; }
+
+    bool has_been_readable() const { return m_access & Access::HasBeenReadable; }
+    bool has_been_writable() const { return m_access & Access::HasBeenWritable; }
+    bool has_been_executable() const { return m_access & Access::HasBeenExecutable; }
+
+    bool has_made_executable_exception_for_dynamic_loader() const { return m_access & Access::HasMadeExecutableExceptionForDynamicLoader; }
+    void set_has_made_executable_exception_for_dynamic_loader()
+    {
+        ASSERT(!has_made_executable_exception_for_dynamic_loader());
+        m_access |= Access::HasMadeExecutableExceptionForDynamicLoader;
+    }
+
     bool is_cacheable() const { return m_cacheable; }
     const String& name() const { return m_name; }
     unsigned access() const { return m_access; }
@@ -245,7 +263,7 @@ private:
     void set_access_bit(Access access, bool b)
     {
         if (b)
-            m_access |= access;
+            m_access |= access | (access << 4);
         else
             m_access &= ~access;
     }
