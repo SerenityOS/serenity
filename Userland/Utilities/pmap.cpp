@@ -63,9 +63,9 @@ int main(int argc, char** argv)
     printf("%s:\n", pid);
 
     if (extended) {
-        printf("Address   Size       Resident   Dirty      Access  VMObject Type          Purgeable  CoW Pages    Name\n");
+        printf("Address         Size   Resident      Dirty Access VMObject Type          Purgeable   CoW Pages Name\n");
     } else {
-        printf("Address   Size       Access  Name\n");
+        printf("Address         Size Access Name\n");
     }
 
     auto file_contents = file->read_all();
@@ -82,30 +82,31 @@ int main(int argc, char** argv)
         auto address = map.get("address").to_int();
         auto size = map.get("size").to_string();
 
-        auto readable = map.get("readable").to_bool();
-        auto writable = map.get("writable").to_bool();
-        auto executable = map.get("executable").to_bool();
-        auto access = String::format("%s%s%s", (readable ? "r" : "-"), (writable ? "w" : "-"), (executable ? "x" : "-"));
+        auto access = String::format("%s%s%s%s",
+            (map.get("readable").to_bool() ? "r" : "-"),
+            (map.get("writable").to_bool() ? "w" : "-"),
+            (map.get("executable").to_bool() ? "x" : "-"),
+            (map.get("shared").to_bool() ? "s" : "-"));
 
         printf("%08x  ", address);
-        printf("%-10s ", size.characters());
+        printf("%10s ", size.characters());
         if (extended) {
             auto resident = map.get("amount_resident").to_string();
             auto dirty = map.get("amount_dirty").to_string();
             auto vmobject = map.get("vmobject").to_string();
             auto purgeable = map.get("purgeable").to_string();
             auto cow_pages = map.get("cow_pages").to_string();
-            printf("%-10s ", resident.characters());
-            printf("%-10s ", dirty.characters());
-            printf("%-6s  ", access.characters());
+            printf("%10s ", resident.characters());
+            printf("%10s ", dirty.characters());
+            printf("%-6s ", access.characters());
             printf("%-22s ", vmobject.characters());
             printf("%-10s ", purgeable.characters());
-            printf("%-12s ", cow_pages.characters());
+            printf("%10s ", cow_pages.characters());
         } else {
-            printf("%-6s  ", access.characters());
+            printf("%-6s ", access.characters());
         }
         auto name = map.get("name").to_string();
-        printf("%-20s ", name.characters());
+        printf("%-20s", name.characters());
         printf("\n");
     }
 
