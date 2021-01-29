@@ -1,24 +1,23 @@
---- neofetch-7.0.0/neofetch	2020-03-08 10:23:36.000000000 +0000
-+++ neofetch-7.0.0/neofetch	2020-07-12 00:42:11.171106931 +0100
-@@ -775,7 +775,7 @@
- #       PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix, Raspbian,
- #       Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan, Regata,
- #       Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific, Septor,
--#       SharkLinux, Siduction, Slackware, SliTaz, SmartOS, Solus,
-+#       SerenityOS, SharkLinux, Siduction, Slackware, SliTaz, SmartOS, Solus,
- #       Source_Mage, Sparky, Star, SteamOS, SunOS, openSUSE_Leap,
- #       openSUSE_Tumbleweed, openSUSE, SwagArch, Tails, Trisquel,
- #       Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio, Ubuntu,
-@@ -923,6 +923,8 @@
-             : Windows
-         ;;
+--- neofetch-7.1.0/neofetch	2021-01-29 22:24:13.954000000 +0100
++++ neofetch-7.1.0/neofetch	2021-01-29 22:25:14.498712940 +0100
+@@ -794,7 +794,7 @@
+ #       popos, Porteus, PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix,
+ #       Raspbian, Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan,
+ #       Regata, Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific,
+-#       Septor, SereneLinux, SharkLinux, Siduction, Slackware, SliTaz,
++#       Septor, SereneLinux, SerenityOS, SharkLinux, Siduction, Slackware, SliTaz,
+ #       SmartOS, Solus, Source_Mage, Sparky, Star, SteamOS, SunOS,
+ #       openSUSE_Leap, openSUSE_Tumbleweed, openSUSE, SwagArch, Tails,
+ #       Trisquel, Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio,
+@@ -929,6 +929,7 @@
+         AIX)      os=AIX ;;
+         IRIX*)    os=IRIX ;;
+         FreeMiNT) os=FreeMiNT ;;
++        SerenityOS) os=SerenityOS ;;
  
-+        SerenityOS): SerenityOS ;;
-+
-         *)
-             printf '%s\n' "Unknown OS detected: '$kernel_name', aborting..." >&2
-             printf '%s\n' "Open an issue on GitHub to add support for your OS." >&2
-@@ -1142,6 +1144,10 @@
+         Linux|GNU*)
+             os=Linux
+@@ -1185,6 +1186,10 @@
          FreeMiNT)
              distro=FreeMiNT
          ;;
@@ -29,7 +28,7 @@
      esac
  
      distro=${distro//Enterprise Server}
-@@ -1306,7 +1312,7 @@
+@@ -1356,7 +1361,7 @@
  
  get_kernel() {
      # Since these OS are integrated systems, it's better to skip this function altogether
@@ -38,7 +37,7 @@
  
      # Haiku uses 'uname -v' and not - 'uname -r'.
      [[ $os == Haiku ]] && {
-@@ -1327,17 +1333,17 @@
+@@ -1377,17 +1382,17 @@
      esac
  
      # Hide kernel info if it's identical to the distro info.
@@ -62,28 +61,16 @@
              if [[ -r /proc/uptime ]]; then
                  s=$(< /proc/uptime)
                  s=${s/.*}
-@@ -1396,7 +1402,10 @@
- 
-     uptime=${d:+$d, }${h:+$h, }$m
-     uptime=${uptime%', '}
--    uptime=${uptime:-$seconds secs}
-+    # s/$seconds/$s
-+    # Note: this was fixed upstream already but not released yet
-+    # https://github.com/dylanaraps/neofetch/commit/e960c5168654211a8429e8089ba160e3cc89dc37
-+    uptime=${uptime:-$s secs}
- 
-     # Make the output of uptime smaller.
-     case $uptime_shorthand in
-@@ -1577,6 +1586,8 @@
+@@ -1628,6 +1633,8 @@
          off) shell="${SHELL##*/} " ;;
      esac
  
-+    [[ $os == SerenityOS ]] && shell="SerenityOS Shell"
++    [[ "$os" == SerenityOS ]] && shell="SerenityOS Shell"
 +
      [[ $shell_version != on ]] && return
  
      case ${shell_name:=${SHELL##*/}} in
-@@ -2030,13 +2041,13 @@
+@@ -2096,13 +2103,13 @@
              speed_dir="/sys/devices/system/cpu/cpu0/cpufreq"
  
              # Select the right temperature file.
@@ -104,7 +91,7 @@
  
              # Get CPU speed.
              if [[ -d "$speed_dir" ]]; then
-@@ -2201,6 +2212,13 @@
+@@ -2268,6 +2275,13 @@
              cpu="$(awk -F':' '/CPU:/ {printf $2}' /kern/cpuinfo)"
              speed="$(awk -F '[:.M]' '/Clocking:/ {printf $2}' /kern/cpuinfo)"
          ;;
@@ -118,7 +105,7 @@
      esac
  
      # Remove un-needed patterns from cpu output.
-@@ -2585,6 +2603,15 @@
+@@ -2646,6 +2660,15 @@
              mem_used="$((mem_used / 1024))"
          ;;
  
@@ -134,46 +121,40 @@
      esac
  
      [[ "$memory_percent" == "on" ]] && ((mem_perc=mem_used * 100 / mem_total))
-@@ -3027,6 +3054,13 @@
-             theme="${theme/ '[Plasma]'}"
-         fi
-     fi
-+
+@@ -2980,6 +3003,13 @@
+     # Fix weird output when the function is run multiple times.
+     unset gtk2_theme gtk3_theme theme path
+ 
 +    if [[ "$os" == "SerenityOS" ]]; then
 +        theme=$(ini /etc/WindowServer/WindowServer.ini Theme Name)
 +        if [ -z "$theme" ]; then
 +            theme="Default"
 +        fi
 +    fi
- }
- 
- get_theme() {
-@@ -3035,6 +3069,7 @@
-     gconf="gtk_theme"
-     xfconf="/Net/ThemeName"
-     kde="Name"
-+    serenity=
- 
-     get_style
- }
-@@ -3045,6 +3080,7 @@
-     gconf="icon_theme"
++
+     if [[ "$DISPLAY" && $os != "Mac OS X" && $os != "macOS" ]]; then
+         # Get DE if user has disabled the function.
+         ((de_run != 1)) && get_de
+@@ -3130,8 +3160,7 @@
      xfconf="/Net/IconThemeName"
      kde="Theme"
-+    serenity=
  
-     get_style
-     icons="$theme"
-@@ -3074,6 +3110,8 @@
+-    get_style
+-    icons="$theme"
++    icons=
+ }
+ 
+ get_font() {
+@@ -3158,6 +3187,8 @@
          *)              term="${TERM_PROGRAM/\.app}" ;;
      esac
  
-+    [[ $os == SerenityOS ]] && term="SerenityOS Terminal"
++    [[ "$os" == SerenityOS ]] && term="SerenityOS Terminal"
 +
      # Most likely TosWin2 on FreeMiNT - quick check
      [[ "$TERM" == "tw52" || "$TERM" == "tw100" ]] && term="TosWin2"
      [[ "$SSH_CONNECTION" ]] && term="$SSH_TTY"
-@@ -3637,10 +3675,10 @@
+@@ -3722,10 +3753,10 @@
  }
  
  get_public_ip() {
@@ -188,7 +169,7 @@
  
      if [[ -z "$public_ip" ]] && type -p drill >/dev/null; then
          public_ip="$(drill myip.opendns.com @resolver1.opendns.com | \
-@@ -3785,13 +3823,13 @@
+@@ -3871,13 +3902,13 @@
  }
  
  print_ascii() {
@@ -209,7 +190,7 @@
  
      # Set locale to get correct padding.
      LC_ALL="$sys_locale"
-@@ -4549,8 +4587,8 @@
+@@ -4650,8 +4681,8 @@
              padding=${xrdb/*internalBorder:}
              padding=${padding/$'\n'*}
  
@@ -220,16 +201,16 @@
          ;;
      esac
  }
-@@ -4834,7 +4872,7 @@
-                                 PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix, Raspbian,
-                                 Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan, Regata,
-                                 Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific, Septor,
--                                SharkLinux, Siduction, Slackware, SliTaz, SmartOS, Solus,
-+                                SerenityOS, SharkLinux, Siduction, Slackware, SliTaz, SmartOS, Solus,
-                                 Source_Mage, Sparky, Star, SteamOS, SunOS, openSUSE_Leap,
-                                 openSUSE_Tumbleweed, openSUSE, SwagArch, Tails, Trisquel,
-                                 Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio, Ubuntu,
-@@ -9097,6 +9135,34 @@
+@@ -4936,7 +4967,7 @@
+                                 Porteus, PostMarketOS, Proxmox, Puppy, PureOS, Qubes, Radix,
+                                 Raspbian, Reborn_OS, Redstar, Redcore, Redhat, Refracted_Devuan,
+                                 Regata, Rosa, sabotage, Sabayon, Sailfish, SalentOS, Scientific,
+-                                Septor, SereneLinux, SharkLinux, Siduction, Slackware, SliTaz,
++                                Septor, SereneLinux, SerenityOS, SharkLinux, Siduction, Slackware, SliTaz,
+                                 SmartOS, Solus, Source_Mage, Sparky, Star, SteamOS, SunOS,
+                                 openSUSE_Leap, openSUSE_Tumbleweed, openSUSE, SwagArch, Tails,
+                                 Trisquel, Ubuntu-Budgie, Ubuntu-GNOME, Ubuntu-MATE, Ubuntu-Studio,
+@@ -9513,6 +9544,34 @@
  EOF
          ;;
  

@@ -44,7 +44,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`nano`](nano/)                | GNU nano                                      | 4.5               | https://www.nano-editor.org/                          |
 | [`nasm`](nasm/)                | Netwide Assembler (NASM)                      | 2.14.02           | https://www.nasm.us/                                  |
 | [`ncurses`](ncurses/)          | ncurses                                       | 6.2               | https://invisible-island.net/ncurses/announce.html    |
-| [`neofetch`](neofetch/)        | neofetch                                      | 7.0.0             | https://github.com/dylanaraps/neofetch                |
+| [`neofetch`](neofetch/)        | neofetch                                      | 7.1.0             | https://github.com/dylanaraps/neofetch                |
 | [`nesalizer`](nesalizer/)      | Nesalizer                                     |                   | https://github.com/SerenityOS/nesalizer               |
 | [`ninja`](ninja/)              | Ninja                                         | 1.8.2             | https://ninja-build.org/                              |
 | [`nyancat`](nyancat/)          | Nyancat                                       |                   | https://github.com/klange/nyancat                     |
