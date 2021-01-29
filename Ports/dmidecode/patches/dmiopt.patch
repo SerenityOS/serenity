@@ -1,0 +1,22 @@
+diff --git a/dmiopt.c b/dmiopt.c
+index da42546..8d43119 100644
+--- a/dmiopt.c
++++ b/dmiopt.c
+@@ -259,7 +259,7 @@ int parse_command_line(int argc, char * const argv[])
+ 		{ "dump-bin", required_argument, NULL, 'B' },
+ 		{ "from-dump", required_argument, NULL, 'F' },
+ 		{ "oem-string", required_argument, NULL, 'O' },
+-		{ "no-sysfs", no_argument, NULL, 'S' },
++		{ "no-procfs", no_argument, NULL, 'S' },
+ 		{ "version", no_argument, NULL, 'V' },
+ 		{ NULL, 0, NULL, 0 }
+ 	};
+@@ -353,7 +353,7 @@ void print_help(void)
+ 		" -u, --dump             Do not decode the entries\n"
+ 		"     --dump-bin FILE    Dump the DMI data to a binary file\n"
+ 		"     --from-dump FILE   Read the DMI data from a binary file\n"
+-		"     --no-sysfs         Do not attempt to read DMI data from sysfs files\n"
++		"     --no-procfs        Do not attempt to read DMI data from procfs files\n"
+ 		"     --oem-string N     Only display the value of the given OEM string\n"
+ 		" -V, --version          Display the version and exit\n";
+ 
