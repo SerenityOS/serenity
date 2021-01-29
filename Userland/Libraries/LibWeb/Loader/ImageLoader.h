@@ -38,7 +38,8 @@ public:
 
     void load(const URL&);
 
-    const Gfx::Bitmap* bitmap() const;
+    const Gfx::Bitmap* bitmap(size_t index) const;
+    size_t current_frame_index() const { return m_current_frame_index; }
 
     bool has_image() const;
 

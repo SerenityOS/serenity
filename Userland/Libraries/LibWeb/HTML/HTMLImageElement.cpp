@@ -94,7 +94,7 @@ RefPtr<Layout::Node> HTMLImageElement::create_layout_node()
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const
 {
-    return m_image_loader.bitmap();
+    return m_image_loader.bitmap(m_image_loader.current_frame_index());
 }
 
 }

@@ -46,20 +46,30 @@ void Client::handle(const Messages::ImageDecoderClient::Dummy&)
 {
 }
 
-RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
+Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
 {
     if (encoded_data.is_empty())
-        return nullptr;
+        return {};
 
     auto encoded_buffer = Core::AnonymousBuffer::create_with_size(encoded_data.size());
     if (!encoded_buffer.is_valid()) {
         dbgln("Could not allocate encoded buffer");
-        return nullptr;
+        return {};
     }
 
     memcpy(encoded_buffer.data<void>(), encoded_data.data(), encoded_data.size());
     auto response = send_sync<Messages::ImageDecoderServer::DecodeImage>(move(encoded_buffer));
-    return response->bitmap().bitmap();
+
+    DecodedImage image;
+    image.is_animated = response->is_animated();
+    image.loop_count = response->loop_count();
+    image.frames.resize(response->bitmaps().size());
+    for (size_t i = 0; i < image.frames.size(); ++i) {
+        auto& frame = image.frames[i];
+        frame.bitmap = response->bitmaps()[i].bitmap();
+        frame.duration = response->durations()[i];
+    }
+    return move(image);
 }
 
 }

@@ -41,43 +41,51 @@ ImageResource::~ImageResource()
 {
 }
 
-bool ImageResource::should_decode_in_process() const
+int ImageResource::frame_duration(size_t frame_index) const
 {
-    return mime_type() == "image/gif";
+    decode_if_needed();
+    if (frame_index >= m_decoded_frames.size())
+        return 0;
+    return m_decoded_frames[frame_index].duration;
 }
 
-Gfx::ImageDecoder& ImageResource::ensure_decoder()
+void ImageResource::decode_if_needed() const
 {
-    if (!m_decoder)
-        m_decoder = Gfx::ImageDecoder::create(encoded_data());
-    return *m_decoder;
+    if (!has_encoded_data())
+        return;
+
+    if (m_has_attempted_decode)
+        return;
+
+    if (!m_decoded_frames.is_empty())
+        return;
+
+    auto image_decoder_client = ImageDecoderClient::Client::construct();
+    auto image = image_decoder_client->decode_image(encoded_data());
+    if (image.has_value()) {
+        m_loop_count = image.value().loop_count;
+        m_animated = image.value().is_animated;
+        m_decoded_frames.resize(image.value().frames.size());
+        for (size_t i = 0; i < m_decoded_frames.size(); ++i) {
+            auto& frame = m_decoded_frames[i];
+            frame.bitmap = image.value().frames[i].bitmap;
+            frame.duration = image.value().frames[i].duration;
+        }
+    }
+
+    m_has_attempted_decode = true;
 }
 
 const Gfx::Bitmap* ImageResource::bitmap(size_t frame_index) const
 {
-    if (!has_encoded_data())
+    decode_if_needed();
+    if (frame_index >= m_decoded_frames.size())
         return nullptr;
-
-    if (should_decode_in_process()) {
-        if (!m_decoder)
-            return nullptr;
-        if (m_decoder->is_animated())
-            m_decoded_image = m_decoder->frame(frame_index).image;
-        else
-            m_decoded_image = m_decoder->bitmap();
-    } else if (!m_decoded_image && !m_has_attempted_decode) {
-        auto image_decoder_client = ImageDecoderClient::Client::construct();
-        m_decoded_image = image_decoder_client->decode_image(encoded_data());
-        m_has_attempted_decode = true;
-    }
-    return m_decoded_image;
+    return m_decoded_frames[frame_index].bitmap;
 }
 
 void ImageResource::update_volatility()
 {
-    if (!m_decoder)
-        return;
-
     bool visible_in_viewport = false;
     for_each_client([&](auto& client) {
         if (static_cast<const ImageResourceClient&>(client).is_visible_in_viewport())
@@ -85,15 +93,28 @@ void ImageResource::update_volatility()
     });
 
     if (!visible_in_viewport) {
-        m_decoder->set_volatile();
+        for (auto& frame : m_decoded_frames) {
+            if (frame.bitmap)
+                frame.bitmap->set_volatile();
+        }
         return;
     }
 
-    bool still_has_decoded_image = m_decoder->set_nonvolatile();
+    bool still_has_decoded_image = true;
+    for (auto& frame : m_decoded_frames) {
+        if (!frame.bitmap) {
+            still_has_decoded_image = false;
+        } else {
+            bool still_has_frame = frame.bitmap->set_nonvolatile();
+            if (!still_has_frame)
+                still_has_decoded_image = false;
+        }
+    }
     if (still_has_decoded_image)
         return;
 
-    m_decoder = nullptr;
+    m_decoded_frames.clear();
+    m_has_attempted_decode = false;
 }
 
 ImageResourceClient::~ImageResourceClient()
