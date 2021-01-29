@@ -36,6 +36,7 @@
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/I8042Controller.h>
 #include <Kernel/Devices/MBVGADevice.h>
+#include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
@@ -262,6 +263,7 @@ void init_stage2(void*)
 
     Syscall::initialize();
 
+    new MemoryDevice;
     new ZeroDevice;
     new FullDevice;
     new RandomDevice;

@@ -85,6 +85,26 @@ struct UsedMemoryRange {
     PhysicalAddress end;
 };
 
+struct ContiguousReservedMemoryRange {
+    PhysicalAddress start;
+    size_t length;
+};
+
+enum class PhysicalMemoryRangeType {
+    Usable = 0,
+    Reserved,
+    ACPI_Reclaimable,
+    ACPI_NVS,
+    BadMemory,
+    Unknown
+};
+
+struct PhysicalMemoryRange {
+    PhysicalMemoryRangeType type;
+    PhysicalAddress start;
+    size_t length;
+};
+
 const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value);
 
 #define MM Kernel::MemoryManager::the()
@@ -187,10 +207,13 @@ public:
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
     const Vector<UsedMemoryRange>& used_memory_ranges() { return m_used_memory_ranges; }
+    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, const Range&) const;
 
 private:
     MemoryManager();
     ~MemoryManager();
+
+    void register_reserved_ranges();
 
     enum class AccessSpace { Kernel,
         User };
@@ -245,6 +268,8 @@ private:
     InlineLinkedList<Region> m_user_regions;
     InlineLinkedList<Region> m_kernel_regions;
     Vector<UsedMemoryRange> m_used_memory_ranges;
+    Vector<PhysicalMemoryRange> m_physical_memory_ranges;
+    Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
     InlineLinkedList<VMObject> m_vmobjects;
 
