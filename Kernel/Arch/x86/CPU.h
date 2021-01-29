@@ -835,6 +835,7 @@ public:
 
     ALWAYS_INLINE void restore_irq(u32 prev_irq)
     {
+        VERIFY(&Processor::current() == this);
         VERIFY(prev_irq <= m_in_irq);
         if (!prev_irq) {
             u32 prev_critical = 0;

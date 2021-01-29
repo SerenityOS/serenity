@@ -1439,7 +1439,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         write_cr3(to_tss.cr3);
 
     to_thread->set_cpu(processor.get_id());
-    processor.restore_in_critical(to_thread->saved_critical());
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    processor.restore_in_critical(in_critical);
 
     asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
@@ -1455,6 +1458,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     VERIFY(is_kernel_mode());
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+
+    // m_in_critical is restored in enter_thread_context
     from_thread->save_critical(m_in_critical);
 
 #if ARCH(I386)
@@ -1505,8 +1510,6 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 #endif
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
-
-    Processor::current().restore_in_critical(to_thread->saved_critical());
 }
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
@@ -1519,6 +1522,10 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     VERIFY(to_thread == Thread::current());
 
     Scheduler::enter_current(*from_thread, true);
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    Processor::current().restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1807,13 +1814,18 @@ void Processor::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
+
+    // Temporarily enter a critical section. This is to prevent critical
+    // sections entered and left within e.g. smp_process_pending_messages
+    // to trigger a context switch while we're executing this function
+    // See the comment at the end of the function why we don't use
+    // ScopedCritical here.
+    m_in_critical++;
+
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
     smp_process_pending_messages();
-
-    if (!m_in_irq && !m_in_critical)
-        check_invoke_scheduler();
 
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
@@ -1831,12 +1843,21 @@ void Processor::exit_trap(TrapFrame& trap)
             current_thread->set_previous_mode(current_thread->process().is_kernel_process() ? Thread::PreviousMode::KernelMode : Thread::PreviousMode::UserMode);
         }
     }
+
+    // Leave the critical section without actually enabling interrupts.
+    // We don't want context switches to happen until we're explicitly
+    // triggering a switch in check_invoke_scheduler.
+    auto new_critical = m_in_critical.fetch_sub(1) - 1;
+    if (!m_in_irq && !new_critical)
+        check_invoke_scheduler();
 }
 
 void Processor::check_invoke_scheduler()
 {
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
