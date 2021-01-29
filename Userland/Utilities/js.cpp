@@ -467,7 +467,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         interpreter.run(interpreter.global_object(), *program);
     }
 
-    if (vm->exception()) {
+    auto handle_exception = [&] {
         out("Uncaught exception: ");
         print(vm->exception()->value());
         auto trace = vm->exception()->trace();
@@ -493,10 +493,15 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
             }
         }
         vm->clear_exception();
-        return false;
-    }
-    if (s_print_last_result)
+    };
+    if (vm->exception())
+        handle_exception();
+
+    if (s_print_last_result) {
         print(vm->last_value());
+        if (vm->exception())
+            handle_exception();
+    }
     return true;
 }
 
