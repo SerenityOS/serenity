@@ -581,4 +581,22 @@ public:
     virtual ~Comment() override = default;
     virtual const char* class_name() const override { return "Comment"; }
 };
+
+class IfStatement : public Statement {
+public:
+    IfStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end)
+        : Statement(parent, start, end)
+    {
+    }
+
+    virtual ~IfStatement() override = default;
+    virtual const char* class_name() const override { return "IfStatement"; }
+    virtual void dump(size_t indent) const override;
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+
+    RefPtr<Expression> m_predicate;
+    RefPtr<Statement> m_then;
+    RefPtr<Statement> m_else;
+};
+
 }
