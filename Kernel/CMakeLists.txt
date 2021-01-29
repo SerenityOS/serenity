@@ -28,6 +28,7 @@ set(KERNEL_SOURCES
     Devices/I8042Controller.cpp
     Devices/KeyboardDevice.cpp
     Devices/MBVGADevice.cpp
+    Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/PS2MouseDevice.cpp
