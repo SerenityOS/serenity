@@ -163,6 +163,10 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     int fd = params.fd;
     int offset = params.offset;
 
+    if (prot & PROT_EXEC) {
+        REQUIRE_PROMISE(prot_exec);
+    }
+
     if (alignment & ~PAGE_MASK)
         return (void*)-EINVAL;
 
@@ -273,6 +277,10 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
+
+    if (prot & PROT_EXEC) {
+        REQUIRE_PROMISE(prot_exec);
+    }
 
     if (!size)
         return -EINVAL;
