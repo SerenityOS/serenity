@@ -12,6 +12,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`curl`](curl/)                | curl                                          | 7.65.3            | https://curl.se/                                      |
 | [`dash`](dash/)                | DASH                                          | 0.5.10.2          | http://gondor.apana.org.au/~herbert/dash              |
 | [`diffutils`](diffutils/)      | GNU Diffutils                                 | 3.5               | https://www.gnu.org/software/diffutils/               |
+| [`dmidecode`](dmidecode/)      | dmidecode                                     | 3.1               | https://github.com/mirror/dmidecode                   |
 | [`doom`](doom/)                | DOOM                                          |                   | https://github.com/SerenityOS/SerenityDOOM            |
 | [`dropbear`](dropbear/)        | Dropbear SSH                                  | 2019.78           | https://dropbear.nl/mirror/dropbear.html              |
 | [`ed`](ed/)                    | GNU ed                                        | 1.15              | https://www.gnu.org/software/ed/                      |
