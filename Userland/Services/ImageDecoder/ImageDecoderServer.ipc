@@ -2,5 +2,5 @@ endpoint ImageDecoderServer = 7001
 {
     Greet(i32 client_pid) => (i32 client_id, i32 server_pid)
 
-    DecodeImage(Core::AnonymousBuffer data) => (Gfx::ShareableBitmap bitmap)
+    DecodeImage(Core::AnonymousBuffer data) => (bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> bitmaps, Vector<u32> durations)
 }

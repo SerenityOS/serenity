@@ -80,15 +80,10 @@ void ImageLoader::resource_did_load()
         }
     }
 
-    if (resource()->should_decode_in_process()) {
-        auto& decoder = resource()->ensure_decoder();
-
-        if (decoder.is_animated() && decoder.frame_count() > 1) {
-            const auto& first_frame = decoder.frame(0);
-            m_timer->set_interval(first_frame.duration);
-            m_timer->on_timeout = [this] { animate(); };
-            m_timer->start();
-        }
+    if (resource()->is_animated() && resource()->frame_count() > 1) {
+        m_timer->set_interval(resource()->frame_duration(0));
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
     }
 
     if (on_load)
@@ -100,18 +95,16 @@ void ImageLoader::animate()
     if (!m_visible_in_viewport)
         return;
 
-    auto& decoder = resource()->ensure_decoder();
+    m_current_frame_index = (m_current_frame_index + 1) % resource()->frame_count();
+    auto current_frame_duration = resource()->frame_duration(m_current_frame_index);
 
-    m_current_frame_index = (m_current_frame_index + 1) % decoder.frame_count();
-    const auto& current_frame = decoder.frame(m_current_frame_index);
-
-    if (current_frame.duration != m_timer->interval()) {
-        m_timer->restart(current_frame.duration);
+    if (current_frame_duration != m_timer->interval()) {
+        m_timer->restart(current_frame_duration);
     }
 
-    if (m_current_frame_index == decoder.frame_count() - 1) {
+    if (m_current_frame_index == resource()->frame_count() - 1) {
         ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == decoder.loop_count()) {
+        if (m_loops_completed > 0 && m_loops_completed == resource()->loop_count()) {
             m_timer->stop();
         }
     }
@@ -132,34 +125,28 @@ bool ImageLoader::has_image() const
 {
     if (!resource())
         return false;
-    if (resource()->should_decode_in_process())
-        return const_cast<ImageResource*>(resource())->ensure_decoder().bitmap();
-    return true;
+    return bitmap(0);
 }
 
 unsigned ImageLoader::width() const
 {
     if (!resource())
         return 0;
-    if (resource()->should_decode_in_process())
-        return const_cast<ImageResource*>(resource())->ensure_decoder().width();
-    return bitmap() ? bitmap()->width() : 0;
+    return bitmap(0) ? bitmap(0)->width() : 0;
 }
 
 unsigned ImageLoader::height() const
 {
     if (!resource())
         return 0;
-    if (resource()->should_decode_in_process())
-        return const_cast<ImageResource*>(resource())->ensure_decoder().height();
-    return bitmap() ? bitmap()->height() : 0;
+    return bitmap(0) ? bitmap(0)->height() : 0;
 }
 
-const Gfx::Bitmap* ImageLoader::bitmap() const
+const Gfx::Bitmap* ImageLoader::bitmap(size_t frame_index) const
 {
     if (!resource())
         return nullptr;
-    return resource()->bitmap(m_current_frame_index);
+    return resource()->bitmap(frame_index);
 }
 
 }

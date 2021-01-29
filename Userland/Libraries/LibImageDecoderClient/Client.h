@@ -33,6 +33,17 @@
 
 namespace ImageDecoderClient {
 
+struct Frame {
+    RefPtr<Gfx::Bitmap> bitmap;
+    u32 duration { 0 };
+};
+
+struct DecodedImage {
+    bool is_animated { false };
+    u32 loop_count { 0 };
+    Vector<Frame> frames;
+};
+
 class Client
     : public IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
     , public ImageDecoderClientEndpoint {
@@ -41,7 +52,7 @@ class Client
 public:
     virtual void handshake() override;
 
-    RefPtr<Gfx::Bitmap> decode_image(const ByteBuffer&);
+    Optional<DecodedImage> decode_image(const ByteBuffer&);
 
 private:
     Client();
