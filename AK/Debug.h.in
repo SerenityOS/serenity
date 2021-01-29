@@ -81,6 +81,8 @@
 #cmakedefine01 LOOKUPSERVER_DEBUG
 #cmakedefine01 MALLOC_DEBUG
 #cmakedefine01 MARKDOWN_DEBUG
+#cmakedefine01 MATROSKA_DEBUG
+#cmakedefine01 MATROSKA_TRACE
 #cmakedefine01 MEMORY_DEBUG
 #cmakedefine01 MENU_DEBUG
 #cmakedefine01 MENUS_DEBUG
