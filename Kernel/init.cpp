@@ -31,6 +31,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/DMI.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/I8042Controller.h>
@@ -252,6 +253,7 @@ void init_stage2(void*)
     }
 
     USB::UHCIController::detect();
+    DMIExpose::initialize();
 
     E1000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();
