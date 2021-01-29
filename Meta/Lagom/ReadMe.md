@@ -18,7 +18,7 @@ Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildli
 
     # From the root of the SerenityOS checkout:
     mkdir BuildLagom && cd BuildLagom
-    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ ..
+    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ ..
     ninja Meta/Lagom/all
     # Or as a handy rebuild-rerun line:
     ninja FuzzJs && Meta/Lagom/Fuzzers/FuzzJs
@@ -110,3 +110,15 @@ __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
 50	../sysdeps/unix/sysv/linux/raise.c: File or directory not found.
 (gdb)
 ```
+
+UBSan doesn't always give useful information. use something like `export UBSAN_OPTIONS=print_stacktrace=1` to always print stacktraces.
+
+You may run into annoying issues with the stacktrace:
+
+```
+==123456==WARNING: invalid path to external symbolizer!
+==123456==WARNING: Failed to use and restart external symbolizer!
+```
+
+That means it couldn't find the executable `llvm-symbolizer`, which could be in your OS's package `llvm`.
+`llvm-symbolizer-11` will [not be recognized](https://stackoverflow.com/a/42845444/).
