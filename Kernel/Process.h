@@ -81,7 +81,8 @@ extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
     __ENUMERATE_PLEDGE_PROMISE(accept)    \
     __ENUMERATE_PLEDGE_PROMISE(settime)   \
     __ENUMERATE_PLEDGE_PROMISE(sigaction) \
-    __ENUMERATE_PLEDGE_PROMISE(setkeymap)
+    __ENUMERATE_PLEDGE_PROMISE(setkeymap) \
+    __ENUMERATE_PLEDGE_PROMISE(prot_exec)
 
 enum class Pledge : u32 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) x,
