@@ -288,7 +288,7 @@ static bool print_filesystem_object(const String& path, const String& name, cons
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    printf(" %u", st.st_nlink);
+    printf(" %3u", st.st_nlink);
 
     auto username = users.get(st.st_uid);
     if (!flag_print_numeric && username.has_value()) {
