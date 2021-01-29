@@ -58,8 +58,7 @@ bool VP9Decoder::parse_frame(const ByteBuffer& frame_data)
     m_probability_tables->load_probs(m_frame_context_idx);
     m_probability_tables->load_probs2(m_frame_context_idx);
     m_syntax_element_counter->clear_counts();
-    dbgln("Header has {}", m_header_size_in_bytes);
-    dbgln("Whole bitstream has {}", m_bit_stream->bytes_remaining());
+
     if (!m_bit_stream->init_bool(m_header_size_in_bytes))
         return false;
     dbgln("Reading compressed header");
