@@ -7,6 +7,7 @@
 /home	/home	bind	bind,nodev,nosuid
 /root	/root	bind	bind,nodev,nosuid
 /var	/var	bind	bind,nodev,nosuid
+/www	/www	bind	bind,nodev,nosuid
 
 none	/proc	proc	nosuid
 none	/tmp	tmp	nodev,nosuid
