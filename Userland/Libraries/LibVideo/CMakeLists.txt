@@ -8,6 +8,7 @@ set(SOURCES
     VP9/ProbabilityTables.cpp
     VP9/Symbols.h
     VP9/SyntaxElementCounter.cpp
+    VP9/TreeParser.cpp
 )
 
 serenity_lib(LibVideo video)

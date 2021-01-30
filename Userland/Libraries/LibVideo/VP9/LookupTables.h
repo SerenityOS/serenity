@@ -12,7 +12,7 @@
 namespace Video::VP9 {
 
 static constexpr InterpolationFilter literal_to_type[4] = { EightTapSmooth, EightTap, EightTapSharp, Bilinear };
-static constexpr TXSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX4x4, TX8x8, TX16x16, TX32x32, TX32x32 };
+static constexpr TXSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX_4x4, TX_8x8, TX_16x16, TX_32x32, TX_32x32 };
 static constexpr u8 segmentation_feature_bits[SEG_LVL_MAX] = { 8, 6, 2, 0 };
 static constexpr bool segmentation_feature_signed[SEG_LVL_MAX] = { true, true, false, false };
 static constexpr u8 inv_map_table[MAX_PROB] = {
@@ -30,7 +30,6 @@ static constexpr u8 inv_map_table[MAX_PROB] = {
     226, 227, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 242, 243, 244, 245, 246,
     247, 248, 249, 250, 251, 252, 253, 253
 };
-static constexpr u8 num_8x8_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8 };
 static constexpr BlockSubsize subsize_lookup[PARTITION_TYPES][BLOCK_SIZES] = {
     {
         // PARTITION_NONE
@@ -97,5 +96,92 @@ static constexpr BlockSubsize subsize_lookup[PARTITION_TYPES][BLOCK_SIZES] = {
         Block_32x32,
     }
 };
+
+static constexpr int partition_tree[6] = {
+    -PartitionNone, 2,
+    -PartitionHorizontal, 4,
+    -PartitionVertical, -PartitionSplit
+};
+static constexpr int cols_partition_tree[2] = { -PartitionHorizontal, -PartitionSplit };
+static constexpr int rows_partition_tree[2] = { -PartitionVertical, -PartitionSplit };
+static constexpr int intra_mode_tree[18] = {
+    -DcPred, 2,
+    -TmPred, 4,
+    -VPred, 6,
+    8, 12,
+    -HPred, 10,
+    -D135Pred, -D117Pred,
+    -D45Pred, 14,
+    -D63Pred, 16,
+    -D153Pred, -D207Pred
+};
+static constexpr int segment_tree[14] = {
+    2, 4, 6, 8, 10, 12,
+    0, -1, -2, -3, -4, -5, -6, -7
+};
+static constexpr int binary_tree[2] = { 0, -1 };
+static constexpr int tx_size_32_tree[6] = {
+    -TX_4x4, 2,
+    -TX_8x8, 4,
+    -TX_16x16, -TX_32x32
+};
+static constexpr int tx_size_16_tree[4] = {
+    -TX_4x4, 2,
+    -TX_8x8, -TX_16x16
+};
+static constexpr int tx_size_8_tree[2] = { -TX_4x4, -TX_8x8 };
+static constexpr int inter_mode_tree[6] = {
+    -(ZeroMv - NearestMv), 2,
+    -(NearestMv - NearestMv), 4,
+    -(NearMv - NearestMv), -(NewMv - NearestMv)
+};
+static constexpr int interp_filter_tree[4] = {
+    -EightTap, 2,
+    -EightTapSmooth, -EightTapSharp
+};
+static constexpr int mv_joint_tree[6] = {
+    -MvJointZero, 2,
+    -MvJointHnzvz, 4,
+    -MvJointHzvnz, -MvJointHnzvnz
+};
+static constexpr int mv_class_tree[20] = {
+    -MvClass0, 2,
+    -MvClass1, 4,
+    6, 8,
+    -MvClass2, -MvClass3,
+    10, 12,
+    -MvClass4, -MvClass5,
+    -MvClass6, 14,
+    16, 18,
+    -MvClass7, -MvClass8,
+    -MvClass9, -MvClass10
+};
+static constexpr int mv_fr_tree[6] = {
+    -0, 2,
+    -1, 4,
+    -2, -3
+};
+static constexpr int token_tree[20] = {
+    -ZeroToken, 2,
+    -OneToken, 4,
+    6, 10,
+    -TwoToken, 8,
+    -ThreeToken, -FourToken,
+    12, 14,
+    -DctValCat1, -DctValCat2,
+    16, 18,
+    -DctValCat3, -DctValCat4,
+    -DctValCat5, -DctValCat6
+};
+
+static constexpr u8 b_width_log2_lookup[BLOCK_SIZES] = { 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+static constexpr u8 b_height_log2_lookup[BLOCK_SIZES] = { 0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4 };
+static constexpr u8 num_4x4_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16 };
+static constexpr u8 num_4x4_blocks_high_lookup[BLOCK_SIZES] = { 1, 2, 1, 2, 4, 2, 4, 8, 4, 8, 16, 8, 16 };
+static constexpr u8 mi_width_log2_lookup[BLOCK_SIZES] = { 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3 };
+static constexpr u8 num_8x8_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8 };
+static constexpr u8 mi_height_log2_lookup[BLOCK_SIZES] = { 0, 0, 0, 0, 1, 0, 1, 2, 1, 2, 3, 2, 3 };
+static constexpr u8 num_8x8_blocks_high_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 2, 1, 2, 4, 2, 4, 8, 4, 8 };
+static constexpr u8 size_group_lookup[BLOCK_SIZES] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
 
 }
