@@ -140,13 +140,6 @@ void KeyboardMapperWidget::create_frame()
     };
 
     bottom_widget.layout()->add_spacer();
-
-    auto& ok_button = bottom_widget.add<GUI::Button>();
-    ok_button.set_text("Save");
-    ok_button.set_fixed_width(80);
-    ok_button.on_click = [this](auto) {
-        save();
-    };
 }
 
 void KeyboardMapperWidget::load_from_file(String file_name)
