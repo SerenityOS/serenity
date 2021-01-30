@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     }));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Calendar", app_icon));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Calendar", app_icon, window));
 
     app->set_menubar(move(menubar));
     window->show();
