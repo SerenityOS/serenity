@@ -132,6 +132,7 @@ set(KERNEL_SOURCES
     Syscalls/getuid.cpp
     Syscalls/hostname.cpp
     Syscalls/ioctl.cpp
+    Syscalls/keymap.cpp
     Syscalls/kill.cpp
     Syscalls/link.cpp
     Syscalls/lseek.cpp
@@ -157,7 +158,6 @@ set(KERNEL_SOURCES
     Syscalls/sched.cpp
     Syscalls/select.cpp
     Syscalls/sendfd.cpp
-    Syscalls/setkeymap.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
     Syscalls/shutdown.cpp

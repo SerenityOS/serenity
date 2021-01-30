@@ -56,6 +56,7 @@ public:
 
     void set_client(KeyboardClient* client) { m_client = client; }
     void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
+    const Keyboard::CharacterMapData& character_maps() const { return m_character_map.character_map_data(); }
 
     const String keymap_name() { return m_character_map.character_map_name(); }
 

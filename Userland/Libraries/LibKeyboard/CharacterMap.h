@@ -45,6 +45,7 @@ public:
     void set_character_map_data(CharacterMapData character_map_data);
     void set_character_map_name(const String& character_map_name);
 
+    const CharacterMapData& character_map_data() const { return m_character_map_data; };
     const String character_map_name();
 
 private:
