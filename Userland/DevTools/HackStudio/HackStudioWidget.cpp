@@ -190,7 +190,6 @@ void HackStudioWidget::open_project(const String& root_path)
     ASSERT(m_project);
     if (m_project_tree_view) {
         m_project_tree_view->set_model(m_project->model());
-        m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
         m_project_tree_view->update();
     }
     if (Debugger::is_initialized()) {
