@@ -46,6 +46,7 @@ private:
     Timer* m_next { nullptr };
     Timer* m_prev { nullptr };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_queued { false };
+    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_done { false };
 
     bool operator<(const Timer& rhs) const
     {
@@ -61,6 +62,7 @@ private:
     }
     bool is_queued() const { return m_queued; }
     void set_queued(bool queued) { m_queued = queued; }
+    bool set_done() { return m_done.exchange(true); }
     Time now(bool) const;
 };
 
