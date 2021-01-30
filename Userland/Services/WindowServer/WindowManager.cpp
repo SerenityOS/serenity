@@ -1133,8 +1133,10 @@ void WindowManager::event(Core::Event& event)
                         return;
                     }
                     if (key_event.key() == Key_Left) {
+                        if (m_active_input_window->tiled() == WindowTileType::Left)
+                            return;
                         if (m_active_input_window->tiled() != WindowTileType::None) {
-                            m_active_input_window->set_tiled(WindowTileType::None);
+                            m_active_input_window->set_untiled();
                             return;
                         }
                         if (m_active_input_window->is_maximized())
@@ -1143,8 +1145,10 @@ void WindowManager::event(Core::Event& event)
                         return;
                     }
                     if (key_event.key() == Key_Right) {
+                        if (m_active_input_window->tiled() == WindowTileType::Right)
+                            return;
                         if (m_active_input_window->tiled() != WindowTileType::None) {
-                            m_active_input_window->set_tiled(WindowTileType::None);
+                            m_active_input_window->set_untiled();
                             return;
                         }
                         if (m_active_input_window->is_maximized())
