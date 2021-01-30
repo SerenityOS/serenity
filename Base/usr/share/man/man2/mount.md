@@ -89,7 +89,6 @@ launch the initial userspace process.
 * `EBADF`: If the `source_fd` is not valid, and either `fs_type` specifies a
   file-backed filesystem (and not a pseudo filesystem), or `MS_BIND` is
   specified in flags.
-* `ENOTDIR`: If `target` is not a directory.
 * `ENOTBLK`: If the `source_fd` is not a block device, but one is required (i.e.
   when `fs_type` is `Ext2FS`)
 
