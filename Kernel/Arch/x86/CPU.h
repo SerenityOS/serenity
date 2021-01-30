@@ -870,14 +870,11 @@ public:
     ALWAYS_INLINE static void enter_critical(u32& prev_flags)
     {
         prev_flags = cpu_flags();
-        cli();
-        // NOTE: Up until this point we *could* have been pre-empted!
-        // Now interrupts are disabled, so calling current() is safe
-        AK::atomic_fetch_add(&current().m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed);
+        write_fs_u32(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
     }
 
 private:
-    ALWAYS_INLINE void do_leave_critical(u32 prev_flags)
+    ALWAYS_INLINE void do_leave_critical(u32)
     {
         VERIFY(m_in_critical > 0);
         if (m_in_critical == 1) {
@@ -891,52 +888,31 @@ private:
         } else {
             m_in_critical = m_in_critical - 1;
         }
-        if (prev_flags & 0x200)
-            sti();
-        else
-            cli();
     }
 
 public:
     ALWAYS_INLINE static void leave_critical(u32 prev_flags)
     {
-        cli(); // Need to prevent IRQs from interrupting us here!
-        // NOTE: Up until this point we *could* have been pre-empted!
-        // Now interrupts are disabled, so calling current() is safe
         current().do_leave_critical(prev_flags);
     }
 
-    ALWAYS_INLINE static u32 clear_critical(u32& prev_flags, bool enable_interrupts)
+    ALWAYS_INLINE static u32 clear_critical(u32& prev_flags, bool)
     {
         prev_flags = cpu_flags();
-        cli();
-        // NOTE: Up until this point we *could* have been pre-empted!
-        // Now interrupts are disabled, so calling current() is safe
-        // This doesn't have to be atomic, and it's also fine if we
-        // were to be preempted in between these steps (which should
-        // not happen due to the cli call), but if we moved to another
-        // processors m_in_critical would move along with us
-        auto prev_crit = read_fs_u32(__builtin_offsetof(Processor, m_in_critical));
+        auto prev_crit = in_critical();
         write_fs_u32(__builtin_offsetof(Processor, m_in_critical), 0);
         if (!in_irq())
             check_invoke_scheduler();
-        if (enable_interrupts || (prev_flags & 0x200))
-            sti();
         return prev_crit;
     }
 
-    ALWAYS_INLINE static void restore_critical(u32 prev_crit, u32 prev_flags)
+    ALWAYS_INLINE static void restore_critical(u32 prev_crit, u32)
     {
         // NOTE: This doesn't have to be atomic, and it's also fine if we
         // get preempted in between these steps. If we move to another
         // processors m_in_critical will move along with us. And if we
         // are preempted, we would resume with the same flags.
         write_fs_u32(__builtin_offsetof(Processor, m_in_critical), prev_crit);
-        VERIFY(!prev_crit || !(prev_flags & 0x200));
-        if (prev_flags & 0x200)
-            sti();
-        else
-            cli();
     }
 
     ALWAYS_INLINE static u32 in_critical()

@@ -25,6 +25,7 @@ public:
     {
         u32 prev_flags;
         Processor::enter_critical(prev_flags);
+        cli();
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0) {
             Processor::wait_check();
         }
@@ -35,6 +36,10 @@ public:
     {
         VERIFY(is_locked());
         m_lock.store(0, AK::memory_order_release);
+        if (prev_flags & 0x200)
+            sti();
+        else
+            cli();
         Processor::leave_critical(prev_flags);
     }
 
@@ -63,6 +68,7 @@ public:
     {
         u32 prev_flags;
         Processor::enter_critical(prev_flags);
+        cli();
         auto& proc = Processor::current();
         FlatPtr cpu = FlatPtr(&proc);
         FlatPtr expected = 0;
@@ -82,6 +88,10 @@ public:
         VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
+        if (prev_flags & 0x200)
+            sti();
+        else
+            cli();
         Processor::leave_critical(prev_flags);
     }
 

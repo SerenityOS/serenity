@@ -1815,13 +1815,6 @@ void Processor::exit_trap(TrapFrame& trap)
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
 
-    // Temporarily enter a critical section. This is to prevent critical
-    // sections entered and left within e.g. smp_process_pending_messages
-    // to trigger a context switch while we're executing this function
-    // See the comment at the end of the function why we don't use
-    // ScopedCritical here.
-    AK::atomic_fetch_add(&m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed);
-
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
@@ -1844,18 +1837,14 @@ void Processor::exit_trap(TrapFrame& trap)
         }
     }
 
-    // Leave the critical section without actually enabling interrupts.
-    // We don't want context switches to happen until we're explicitly
-    // triggering a switch in check_invoke_scheduler.
-    auto new_critical = AK::atomic_fetch_sub(&m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed) - 1;
     VERIFY_INTERRUPTS_DISABLED(); // Interrupts should still be disabled
-    if (!m_in_irq && !new_critical)
+    if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
 }
 
 void Processor::check_invoke_scheduler()
 {
-    VERIFY_INTERRUPTS_DISABLED();
+    InterruptDisabler disable;
     VERIFY(!in_irq());
     VERIFY(!in_critical());
     auto& proc = current();
@@ -1930,7 +1919,7 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    VERIFY(in_critical());
+    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;
@@ -2014,8 +2003,7 @@ void Processor::smp_cleanup_message(ProcessorMessage& msg)
 bool Processor::smp_process_pending_messages()
 {
     bool did_process = false;
-    u32 prev_flags;
-    enter_critical(prev_flags);
+    InterruptDisabler disable;
 
     if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
@@ -2082,7 +2070,6 @@ bool Processor::smp_process_pending_messages()
         halt_this();
     }
 
-    leave_critical(prev_flags);
     return did_process;
 }
 
