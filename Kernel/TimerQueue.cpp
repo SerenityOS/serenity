@@ -181,6 +181,16 @@ bool TimerQueue::cancel_timer(Timer& timer)
     auto& timer_queue = queue_for_timer(timer);
     ScopedSpinLock lock(g_timerqueue_lock);
     if (!timer_queue.list.contains_slow(&timer)) {
+        if (!timer.set_done()) {
+            // The timer was queued to execute but hasn't had a chance
+            // to run. In this case, it should still be in m_timers_executing
+            // and we don't need to spin. It still holds a reference
+            // that will be dropped when it does get a chance to run,
+            // but since we called set_done it will only drop its reference
+            VERIFY(m_timers_executing.contains_slow(&timer));
+            m_timers_executing.remove(&timer);
+            return true;
+        }
         // The timer may be executing right now, if it is then it should
         // be in m_timers_executing. If it is then release the lock
         // briefly to allow it to finish by removing itself
@@ -191,6 +201,10 @@ bool TimerQueue::cancel_timer(Timer& timer)
             // Also, the timers should execute pretty quickly, so it
             // should not loop here for very long. But we can't yield.
             lock.unlock();
+            // NOTE: We may still be in a critical section here. But that's
+            // ok because then the callback was only queued but won't be
+            // run and we would have bailed already because set_done
+            // would have returned false.
             Processor::wait_check();
             lock.lock();
         }
@@ -242,9 +256,14 @@ void TimerQueue::fire()
 
             // Defer executing the timer outside of the irq handler
             Processor::deferred_call_queue([this, timer]() {
-                timer->m_callback();
-                ScopedSpinLock lock(g_timerqueue_lock);
-                m_timers_executing.remove(timer);
+                // Check if we were cancelled in between being triggered
+                // by the timer irq handler and now. If so, just drop
+                // our reference and don't execute the callback.
+                if (!timer->set_done()) {
+                    timer->m_callback();
+                    ScopedSpinLock lock(g_timerqueue_lock);
+                    m_timers_executing.remove(timer);
+                }
                 // Drop the reference we added when queueing the timer
                 timer->unref();
             });
