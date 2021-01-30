@@ -57,7 +57,7 @@ void Download::stream_into(OutputStream& stream)
     };
 
     notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
-        constexpr size_t buffer_size = 1 * KiB;
+        constexpr size_t buffer_size = PAGE_SIZE;
         static char buf[buffer_size];
         auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
         if (!stream.write_or_error({ buf, nread })) {
