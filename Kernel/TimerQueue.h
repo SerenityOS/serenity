@@ -43,7 +43,8 @@ private:
     Time m_expires;
     Time m_remaining {};
     Function<void()> m_callback;
-    Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_queued { false };
+    Atomic<bool> m_cancelled { false };
+    Atomic<bool> m_callback_finished { false };
 
     bool operator<(const Timer& rhs) const
     {
@@ -57,9 +58,14 @@ private:
     {
         return m_id == rhs.m_id;
     }
-    bool is_queued() const { return m_queued; }
-    void set_queued(bool queued) { m_queued = queued; }
+    void clear_cancelled() { return m_cancelled.store(false, AK::memory_order_release); }
+    bool set_cancelled() { return m_cancelled.exchange(true, AK::memory_order_acq_rel); }
+    bool is_callback_finished() const { return m_callback_finished.load(AK::memory_order_acquire); }
+    void clear_callback_finished() { m_callback_finished.store(false, AK::memory_order_release); }
+    void set_callback_finished() { m_callback_finished.store(true, AK::memory_order_release); }
     Time now(bool) const;
+
+    bool is_queued() const { return m_list_node.is_in_list(); }
 
 public:
     IntrusiveListNode<Timer> m_list_node;
