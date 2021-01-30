@@ -39,6 +39,7 @@ public:
 
     void create_frame();
     void load_from_file(const String);
+    void load_from_system();
     void save();
     void save_to_file(const StringView&);
 
