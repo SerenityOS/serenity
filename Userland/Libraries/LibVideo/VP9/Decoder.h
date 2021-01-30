@@ -75,7 +75,13 @@ private:
     u8 update_mv_prob(u8 prob);
     bool setup_compound_reference_mode();
 
-    u64 m_start_bit_pos { 0 };
+    bool decode_tiles();
+    bool clear_above_context();
+    u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
+    bool decode_tile();
+    bool clear_left_context();
+    bool decode_partition(u32 row, u32 col, u8 block_subsize);
+
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
     u16 m_header_size_in_bytes { 0 };
@@ -100,15 +106,15 @@ private:
     ColorRange m_color_range;
     bool m_subsampling_x { false };
     bool m_subsampling_y { false };
-    u16 m_frame_width { 0 };
-    u16 m_frame_height { 0 };
+    u32 m_frame_width { 0 };
+    u32 m_frame_height { 0 };
     u16 m_render_width { 0 };
     u16 m_render_height { 0 };
     bool m_render_and_frame_size_different { false };
-    u16 m_mi_cols { 0 };
-    u16 m_mi_rows { 0 };
-    u16 m_sb64_cols { 0 };
-    u16 m_sb64_rows { 0 };
+    u32 m_mi_cols { 0 };
+    u32 m_mi_rows { 0 };
+    u32 m_sb64_cols { 0 };
+    u32 m_sb64_rows { 0 };
     InterpolationFilter m_interpolation_filter;
     bool m_lossless { false };
     u8 m_segmentation_tree_probs[7];
@@ -120,6 +126,11 @@ private:
     u16 m_tile_rows_log2 { 0 };
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
+
+    u32 m_mi_row_start { 0 };
+    u32 m_mi_row_end { 0 };
+    u32 m_mi_col_start { 0 };
+    u32 m_mi_col_end { 0 };
 
     TXMode m_tx_mode;
     ReferenceMode m_reference_mode;
