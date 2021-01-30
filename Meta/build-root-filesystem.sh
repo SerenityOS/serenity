@@ -141,6 +141,6 @@ if [ -f "${SERENITY_ROOT}/Kernel/sync-local.sh" ] || [ -f "${SERENITY_ROOT}/Buil
 fi
 
 # Run local sync script, if it exists
-if [ -f "$SERENITY_ROOT}/sync-local.sh" ]; then
+if [ -f "${SERENITY_ROOT}/sync-local.sh" ]; then
     sh "${SERENITY_ROOT}/sync-local.sh"
 fi
