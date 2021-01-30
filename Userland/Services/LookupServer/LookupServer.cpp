@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -263,7 +263,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
     Vector<String, 8> responses;
     Vector<DNSAnswer, 8> cacheable_answers;
     for (auto& answer : response.answers()) {
-        if (answer.type() != T_A)
+        if (answer.type() != record_type)
             continue;
         responses.append(answer.record_data());
         if (!answer.has_expired())
