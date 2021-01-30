@@ -169,3 +169,23 @@ Later on, when you `git pull` to get the latest changes, there's (usually) no ne
 
 #### Ports
 To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **make image** from the `Build/` directory to update the disk image. The next time you start Serenity with **make run**, `curl` will be available.
+
+#### Keymap
+
+Create a file with the exact name `sync-local.sh` in the project root (the same directory as `.clang-format`), with content like this:
+
+```
+#!/bin/sh
+
+set -e
+
+cat << 'EOF' >> mnt/etc/SystemServer.ini
+
+[keymap]
+Executable=/bin/keymap
+Arguments=de
+User=anon
+EOF
+```
+
+This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list.
