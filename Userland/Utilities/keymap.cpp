@@ -49,13 +49,26 @@ int main(int argc, char** argv)
 
     const char* path = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "The mapping file to be used", "file");
+    args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    dbgln("path is at {:p}, and contains {}", path, path);
+
+    if (!path) {
+        auto keymap = Keyboard::CharacterMap::fetch_system_map();
+        if (keymap.is_error()) {
+            warnln("getkeymap: {}", keymap.error());
+            return 1;
+        }
+
+        outln("{}", keymap.value().character_map_name());
+        return 0;
+    }
 
     Keyboard::CharacterMap character_map(path);
     int rc = character_map.set_system_map();
     if (rc != 0)
-        fprintf(stderr, "%s\n", strerror(-rc));
+        perror("setkeymap");
 
     return rc;
 }
