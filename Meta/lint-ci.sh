@@ -20,6 +20,7 @@ for cmd in \
         Meta/check-style.sh \
         Meta/lint-executable-resources.sh \
         Meta/lint-ipc-ids.sh \
+        Meta/lint-keymaps.py \
         Meta/lint-shell-scripts.sh \
         Meta/lint-prettier.sh \
         Meta/lint-python.sh; do
