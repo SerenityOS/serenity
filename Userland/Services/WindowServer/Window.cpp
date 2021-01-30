@@ -702,7 +702,7 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
     }
 }
 
-bool Window::set_untiled(const Gfx::IntPoint& fixed_point)
+bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
 {
     if (m_tiled == WindowTileType::None)
         return false;
@@ -710,9 +710,13 @@ bool Window::set_untiled(const Gfx::IntPoint& fixed_point)
 
     m_tiled = WindowTileType::None;
 
-    auto new_rect = Gfx::IntRect(m_rect);
-    new_rect.set_size_around(m_untiled_rect.size(), fixed_point);
-    set_rect(new_rect);
+    if (fixed_point.has_value()) {
+        auto new_rect = Gfx::IntRect(m_rect);
+        new_rect.set_size_around(m_untiled_rect.size(), fixed_point.value());
+        set_rect(new_rect);
+    } else {
+        set_rect(m_untiled_rect);
+    }
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 
