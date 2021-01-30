@@ -89,7 +89,8 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
     Time timer_expiration = timer->m_expires;
 
-    VERIFY(!timer->is_queued());
+    timer->clear_cancelled();
+    timer->clear_callback_finished();
 
     auto& queue = queue_for_timer(*timer);
     if (queue.list.is_empty()) {
@@ -148,67 +149,76 @@ bool TimerQueue::cancel_timer(TimerId id)
         };
     }
 
-    if (!found_timer) {
-        // The timer may be executing right now, if it is then it should
-        // be in m_timers_executing. If it is then release the lock
-        // briefly to allow it to finish by removing itself
-        // NOTE: This can only happen with multiple processors!
-        while (true) {
-            for (auto& timer : m_timers_executing) {
-                if (timer.m_id == id) {
-                    found_timer = &timer;
-                    break;
-                }
-            }
+    if (found_timer) {
+        VERIFY(timer_queue);
+        remove_timer_locked(*timer_queue, *found_timer);
+        return true;
+    }
 
-            if (found_timer) {
-                // NOTE: This isn't the most efficient way to wait, but
-                // it should only happen when multiple processors are used.
-                // Also, the timers should execute pretty quickly, so it
-                // should not loop here for very long. But we can't yield.
-                lock.unlock();
-                Processor::wait_check();
-                lock.lock();
-                found_timer = nullptr;
-            } else {
-                // We were not able to cancel the timer, but at this point
-                // the handler should have completed if it was running!
-                return false;
-            }
+    // The timer may be executing right now, if it is then it should
+    // be in m_timers_executing. This is the case when the deferred
+    // call has been queued but not yet executed.
+    for (auto& timer : m_timers_executing) {
+        if (timer.m_id == id) {
+            found_timer = &timer;
+            break;
         }
     }
 
-    VERIFY(found_timer);
-    VERIFY(timer_queue);
-    remove_timer_locked(*timer_queue, *found_timer);
+    if (!found_timer)
+        return false;
+
+    // Keep a reference while we unlock
+    NonnullRefPtr<Timer> executing_timer(*found_timer);
+    lock.unlock();
+
+    if (!found_timer->set_cancelled()) {
+        // We cancelled it even though the deferred call has been queued already.
+        // We do not unref the timer here because the deferred call is still going
+        // too need it!
+        lock.lock();
+        VERIFY(m_timers_executing.contains(*found_timer));
+        m_timers_executing.remove(*found_timer);
+        return true;
+    }
+
+    // At this point the deferred call is queued and is being executed
+    // on another processor. We need to wait until it's complete!
+    while (!found_timer->is_callback_finished())
+        Processor::wait_check();
+
     return true;
 }
 
 bool TimerQueue::cancel_timer(Timer& timer)
 {
+    bool did_already_run = timer.set_cancelled();
     auto& timer_queue = queue_for_timer(timer);
-    ScopedSpinLock lock(g_timerqueue_lock);
-    if (!timer_queue.list.contains(timer)) {
-        // The timer may be executing right now, if it is then it should
-        // be in m_timers_executing. If it is then release the lock
-        // briefly to allow it to finish by removing itself
-        // NOTE: This can only happen with multiple processors!
-        while (m_timers_executing.contains(timer)) {
-            // NOTE: This isn't the most efficient way to wait, but
-            // it should only happen when multiple processors are used.
-            // Also, the timers should execute pretty quickly, so it
-            // should not loop here for very long. But we can't yield.
-            lock.unlock();
-            Processor::wait_check();
-            lock.lock();
+
+    if (!did_already_run) {
+        ScopedSpinLock lock(g_timerqueue_lock);
+        if (timer_queue.list.contains(timer)) {
+            // The timer has not fired, remove it
+            VERIFY(timer.ref_count() > 1);
+            remove_timer_locked(timer_queue, timer);
+            return true;
         }
-        // We were not able to cancel the timer, but at this point
-        // the handler should have completed if it was running!
-        return false;
+
+        // The timer was queued to execute but hasn't had a chance
+        // to run. In this case, it should still be in m_timers_executing
+        // and we don't need to spin. It still holds a reference
+        // that will be dropped when it does get a chance to run,
+        // but since we called set_cancelled it will only drop its reference
+        VERIFY(m_timers_executing.contains(timer));
+        m_timers_executing.remove(timer);
+        return true;
     }
 
-    VERIFY(timer.ref_count() > 1);
-    remove_timer_locked(timer_queue, timer);
+    // At this point the deferred call is queued and is being executed
+    // on another processor. We need to wait until it's complete!
+    while (!timer.is_callback_finished())
+        Processor::wait_check();
+
     return true;
 }
 
@@ -216,7 +226,6 @@ void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
 {
     bool was_next_timer = (queue.list.first() == &timer);
     queue.list.remove(timer);
-    timer.set_queued(false);
     auto now = timer.now(false);
     if (timer.m_expires > now)
         timer.m_remaining = timer.m_expires - now;
@@ -240,7 +249,6 @@ void TimerQueue::fire()
 
         while (timer && timer->now(true) > timer->m_expires) {
             queue.list.remove(*timer);
-            timer->set_queued(false);
 
             m_timers_executing.append(*timer);
 
@@ -249,10 +257,16 @@ void TimerQueue::fire()
             lock.unlock();
 
             // Defer executing the timer outside of the irq handler
-            Processor::current().deferred_call_queue([this, timer]() {
-                timer->m_callback();
-                ScopedSpinLock lock(g_timerqueue_lock);
-                m_timers_executing.remove(*timer);
+            Processor::deferred_call_queue([this, timer]() {
+                // Check if we were cancelled in between being triggered
+                // by the timer irq handler and now. If so, just drop
+                // our reference and don't execute the callback.
+                if (!timer->set_cancelled()) {
+                    timer->m_callback();
+                    ScopedSpinLock lock(g_timerqueue_lock);
+                    m_timers_executing.remove(*timer);
+                }
+                timer->set_callback_finished();
                 // Drop the reference we added when queueing the timer
                 timer->unref();
             });
