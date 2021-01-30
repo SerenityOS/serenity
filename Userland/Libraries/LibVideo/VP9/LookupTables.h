@@ -30,5 +30,72 @@ static constexpr u8 inv_map_table[MAX_PROB] = {
     226, 227, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 242, 243, 244, 245, 246,
     247, 248, 249, 250, 251, 252, 253, 253
 };
+static constexpr u8 num_8x8_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8 };
+static constexpr BlockSubsize subsize_lookup[PARTITION_TYPES][BLOCK_SIZES] = {
+    {
+        // PARTITION_NONE
+        Block_4x4,
+        Block_4x8,
+        Block_8x4,
+        Block_8x8,
+        Block_8x16,
+        Block_16x8,
+        Block_16x16,
+        Block_16x32,
+        Block_32x16,
+        Block_32x32,
+        Block_32x64,
+        Block_64x32,
+        Block_64x64,
+    },
+    {
+        // PARTITION_HORZ
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x4,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_32x16,
+        Block_Invalid,
+        Block_Invalid,
+        Block_64x32,
+    },
+    {
+        // PARTITION_VERT
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_4x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x16,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x32,
+        Block_Invalid,
+        Block_Invalid,
+        Block_32x64,
+    },
+    {
+        // PARTITION_SPLIT
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_4x4,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x16,
+        Block_Invalid,
+        Block_Invalid,
+        Block_32x32,
+    }
+};
 
 }

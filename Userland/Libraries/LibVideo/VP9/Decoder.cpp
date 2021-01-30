@@ -22,7 +22,6 @@ bool Decoder::parse_frame(const ByteBuffer& frame_data)
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
 
-    m_start_bit_pos = m_bit_stream->get_position();
     if (!uncompressed_header())
         return false;
     dbgln("Finished reading uncompressed header");
@@ -48,6 +47,8 @@ bool Decoder::parse_frame(const ByteBuffer& frame_data)
     if (!m_bit_stream->exit_bool())
         return false;
     dbgln("Finished reading frame!");
+
+    decode_tiles();
     return true;
 }
 
@@ -366,8 +367,8 @@ bool Decoder::tile_info()
 
 u16 Decoder::calc_min_log2_tile_cols()
 {
-    auto min_log_2 = 0;
-    while ((MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
+    auto min_log_2 = 0u;
+    while ((u8)(MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
         min_log_2++;
     return min_log_2;
 }
@@ -389,8 +390,8 @@ bool Decoder::setup_past_independence()
         }
     }
     m_segmentation_abs_or_delta_update = false;
-    for (auto row = 0; row < m_mi_rows; row++) {
-        for (auto col = 0; col < m_mi_cols; col++) {
+    for (auto row = 0u; row < m_mi_rows; row++) {
+        for (auto col = 0u; col < m_mi_cols; col++) {
             // TODO: m_prev_segment_ids[row][col] = 0;
         }
     }
@@ -710,6 +711,86 @@ bool Decoder::setup_compound_reference_mode()
         m_comp_var_ref[0] = GoldenFrame;
         m_comp_var_ref[1] = AltRefFrame;
     }
+    return true;
+}
+
+bool Decoder::decode_tiles()
+{
+    auto tile_cols = 1 << m_tile_cols_log2;
+    auto tile_rows = 1 << m_tile_rows_log2;
+    if (!clear_above_context())
+        return false;
+    for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
+        for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
+            auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
+            // FIXME: Spec has `sz -= tile_size + 4`, but I think we don't need this because our bit stream manages how much data we have left?
+            auto tile_size = last_tile ? m_bit_stream->bytes_remaining() : m_bit_stream->read_f(32);
+            m_mi_row_start = get_tile_offset(tile_row, m_mi_rows, m_tile_rows_log2);
+            m_mi_row_end = get_tile_offset(tile_row + 1, m_mi_rows, m_tile_rows_log2);
+            m_mi_col_start = get_tile_offset(tile_col, m_mi_cols, m_tile_cols_log2);
+            m_mi_col_end = get_tile_offset(tile_col + 1, m_mi_cols, m_tile_cols_log2);
+            m_bit_stream->init_bool(tile_size);
+            decode_tile();
+            m_bit_stream->exit_bool();
+        }
+    }
+
+    return true;
+}
+
+bool Decoder::clear_above_context()
+{
+    // FIXME
+    // When this function is invoked the arrays AboveNonzeroContext, AbovePartitionContext, AboveSegPredContext should be set equal to 0.
+    // AboveNonzeroContext[0..2][0..MiCols*2-1] = 0
+    // AboveSegPredContext[0..MiCols-1] = 0
+    // AbovePartitionContext[0..Sb64Cols*8-1] = 0
+    return true;
+}
+
+u32 Decoder::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
+{
+    u32 super_blocks = (mis + 7) >> 3u;
+    u32 offset = ((tile_num * super_blocks) >> tile_size_log2) << 3u;
+    return min(offset, mis);
+}
+
+bool Decoder::decode_tile()
+{
+    for (auto row = m_mi_row_start; row < m_mi_row_end; row += 8) {
+        if (!clear_left_context())
+            return false;
+        for (auto col = m_mi_col_start; col < m_mi_col_end; col += 8) {
+            if (!decode_partition(row, col, Block_64x64))
+                return false;
+        }
+    }
+    return true;
+}
+
+bool Decoder::clear_left_context()
+{
+    // FIXME
+    // When this function is invoked the arrays LeftNonzeroContext, LeftPartitionContext, LeftSegPredContext should be set equal to 0.
+    // LeftNonzeroContext[0..2][0..MiRows*2-1] = 0
+    // LeftSegPredContext[0..MiRows-1] = 0
+    // LeftPartitionContext[0..Sb64Rows*8-1] = 0
+    return true;
+}
+
+bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
+{
+    if (row >= m_mi_rows || col >= m_mi_cols)
+        return false;
+    auto num_8x8 = num_8x8_blocks_wide_lookup[block_subsize];
+    auto half_block_8x8 = num_8x8 >> 1;
+    auto has_rows = (row + half_block_8x8) < m_mi_rows;
+    auto has_cols = (col + half_block_8x8) < m_mi_cols;
+
+    // FIXME: Parse partition (type: T) as specified by spec in section 9.3
+    (void)has_rows;
+    (void)has_cols;
+
     return true;
 }
 
