@@ -110,7 +110,7 @@ public:
 
     WindowTileType tiled() const { return m_tiled; }
     void set_tiled(WindowTileType);
-    bool set_untiled(const Gfx::IntPoint& fixed_point);
+    bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
