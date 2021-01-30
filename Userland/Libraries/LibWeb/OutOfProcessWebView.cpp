@@ -26,6 +26,8 @@
 
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
+#include <AK/String.h>
+#include <AK/URLParser.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -60,14 +62,14 @@ void OutOfProcessWebView::create_client()
         handle_resize();
         StringBuilder builder;
         builder.append("<html><head><title>Crashed: ");
-        builder.append(m_url.to_string());
+        builder.append(escape_html_entities(m_url.to_string()));
         builder.append("</title></head><body>");
         builder.append("<h1>Web page crashed");
         if (!m_url.host().is_empty()) {
-            builder.appendff(" on {}", m_url.host());
+            builder.appendff(" on {}", escape_html_entities(m_url.host()));
         }
         builder.append("</h1>");
-        builder.appendff("The web page <a href='{}'>{}</a> has crashed.<br><br>You can reload the page to try again.", m_url, m_url);
+        builder.appendff("The web page <a href='{}'>{}</a> has crashed.<br><br>You can reload the page to try again.", AK::urlencode(m_url.to_string()), escape_html_entities(m_url.to_string()));
         builder.append("</body></html>");
         load_html(builder.to_string(), m_url);
     };
