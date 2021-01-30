@@ -26,95 +26,370 @@
 
 #pragma once
 
+#ifndef AUTOCOMPLETE_DEBUG
 #cmakedefine01 AUTOCOMPLETE_DEBUG
+#endif
+
+#ifndef AWAVLOADER_DEBUG
 #cmakedefine01 AWAVLOADER_DEBUG
+#endif
+
+#ifndef BMP_DEBUG
 #cmakedefine01 BMP_DEBUG
+#endif
+
+#ifndef CACHE_DEBUG
 #cmakedefine01 CACHE_DEBUG
+#endif
+
+#ifndef CALLBACK_MACHINE_DEBUG
 #cmakedefine01 CALLBACK_MACHINE_DEBUG
+#endif
+
+#ifndef CHTTPJOB_DEBUG
 #cmakedefine01 CHTTPJOB_DEBUG
+#endif
+
+#ifndef CNETWORKJOB_DEBUG
 #cmakedefine01 CNETWORKJOB_DEBUG
+#endif
+
+#ifndef COMPOSE_DEBUG
 #cmakedefine01 COMPOSE_DEBUG
+#endif
+
+#ifndef COPY_DEBUG
 #cmakedefine01 COPY_DEBUG
+#endif
+
+#ifndef CPP_LANGUAGE_SERVER_DEBUG
 #cmakedefine01 CPP_LANGUAGE_SERVER_DEBUG
+#endif
+
+#ifndef CRYPTO_DEBUG
 #cmakedefine01 CRYPTO_DEBUG
+#endif
+
+#ifndef CSOCKET_DEBUG
 #cmakedefine01 CSOCKET_DEBUG
+#endif
+
+#ifndef CURSOR_TOOL_DEBUG
 #cmakedefine01 CURSOR_TOOL_DEBUG
+#endif
+
+#ifndef DEFERRED_INVOKE_DEBUG
 #cmakedefine01 DEFERRED_INVOKE_DEBUG
+#endif
+
+#ifndef DHCPV4CLIENT_DEBUG
 #cmakedefine01 DHCPV4CLIENT_DEBUG
+#endif
+
+#ifndef DHCPV4_DEBUG
 #cmakedefine01 DHCPV4_DEBUG
+#endif
+
+#ifndef DIFF_DEBUG
 #cmakedefine01 DIFF_DEBUG
+#endif
+
+#ifndef DISASM_DUMP_DEBUG
 #cmakedefine01 DISASM_DUMP_DEBUG
+#endif
+
+#ifndef DOUBLECLICK_DEBUG
 #cmakedefine01 DOUBLECLICK_DEBUG
+#endif
+
+#ifndef DWARF_DEBUG
 #cmakedefine01 DWARF_DEBUG
+#endif
+
+#ifndef DYNAMIC_LOAD_DEBUG
 #cmakedefine01 DYNAMIC_LOAD_DEBUG
+#endif
+
+#ifndef EDITOR_DEBUG
 #cmakedefine01 EDITOR_DEBUG
+#endif
+
+#ifndef ELF_IMAGE_DEBUG
 #cmakedefine01 ELF_IMAGE_DEBUG
+#endif
+
+#ifndef EMOJI_DEBUG
 #cmakedefine01 EMOJI_DEBUG
+#endif
+
+#ifndef EVENT_DEBUG
 #cmakedefine01 EVENT_DEBUG
+#endif
+
+#ifndef EVENTLOOP_DEBUG
 #cmakedefine01 EVENTLOOP_DEBUG
+#endif
+
+#ifndef FILE_CONTENT_DEBUG
 #cmakedefine01 FILE_CONTENT_DEBUG
+#endif
+
+#ifndef FILL_PATH_DEBUG
 #cmakedefine01 FILL_PATH_DEBUG
+#endif
+
+#ifndef GEMINI_DEBUG
 #cmakedefine01 GEMINI_DEBUG
+#endif
+
+#ifndef GEMINIJOB_DEBUG
 #cmakedefine01 GEMINIJOB_DEBUG
+#endif
+
+#ifndef GENERATE_DEBUG
 #cmakedefine01 GENERATE_DEBUG
+#endif
+
+#ifndef GHASH_PROCESS_DEBUG
 #cmakedefine01 GHASH_PROCESS_DEBUG
+#endif
+
+#ifndef GIF_DEBUG
 #cmakedefine01 GIF_DEBUG
+#endif
+
+#ifndef GLOBAL_DTORS_DEBUG
 #cmakedefine01 GLOBAL_DTORS_DEBUG
+#endif
+
+#ifndef GMENU_DEBUG
 #cmakedefine01 GMENU_DEBUG
+#endif
+
+#ifndef GZIP_DEBUG
 #cmakedefine01 GZIP_DEBUG
+#endif
+
+#ifndef HEAP_DEBUG
 #cmakedefine01 HEAP_DEBUG
+#endif
+
+#ifndef HEX_DEBUG
 #cmakedefine01 HEX_DEBUG
+#endif
+
+#ifndef HIGHLIGHT_FOCUSED_FRAME_DEBUG
 #cmakedefine01 HIGHLIGHT_FOCUSED_FRAME_DEBUG
+#endif
+
+#ifndef HTML_SCRIPT_DEBUG
 #cmakedefine01 HTML_SCRIPT_DEBUG
+#endif
+
+#ifndef HTTPSJOB_DEBUG
 #cmakedefine01 HTTPSJOB_DEBUG
+#endif
+
+#ifndef HUNKS_DEBUG
 #cmakedefine01 HUNKS_DEBUG
+#endif
+
+#ifndef ICO_DEBUG
 #cmakedefine01 ICO_DEBUG
+#endif
+
+#ifndef IMAGE_DECODER_DEBUG
 #cmakedefine01 IMAGE_DECODER_DEBUG
+#endif
+
+#ifndef IMAGE_LOADER_DEBUG
 #cmakedefine01 IMAGE_LOADER_DEBUG
+#endif
+
+#ifndef IRC_DEBUG
 #cmakedefine01 IRC_DEBUG
+#endif
+
+#ifndef ITEM_RECTS_DEBUG
 #cmakedefine01 ITEM_RECTS_DEBUG
+#endif
+
+#ifndef JOB_DEBUG
 #cmakedefine01 JOB_DEBUG
+#endif
+
+#ifndef JPG_DEBUG
 #cmakedefine01 JPG_DEBUG
+#endif
+
+#ifndef KEYBOARD_SHORTCUTS_DEBUG
 #cmakedefine01 KEYBOARD_SHORTCUTS_DEBUG
+#endif
+
+#ifndef LEXER_DEBUG
 #cmakedefine01 LEXER_DEBUG
+#endif
+
+#ifndef LOG_DEBUG
 #cmakedefine01 LOG_DEBUG
+#endif
+
+#ifndef LOOKUPSERVER_DEBUG
 #cmakedefine01 LOOKUPSERVER_DEBUG
+#endif
+
+#ifndef MALLOC_DEBUG
 #cmakedefine01 MALLOC_DEBUG
+#endif
+
+#ifndef MARKDOWN_DEBUG
 #cmakedefine01 MARKDOWN_DEBUG
+#endif
+
+#ifndef MEMORY_DEBUG
 #cmakedefine01 MEMORY_DEBUG
+#endif
+
+#ifndef MENU_DEBUG
 #cmakedefine01 MENU_DEBUG
+#endif
+
+#ifndef MENUS_DEBUG
 #cmakedefine01 MENUS_DEBUG
+#endif
+
+#ifndef MINIMIZE_ANIMATION_DEBUG
 #cmakedefine01 MINIMIZE_ANIMATION_DEBUG
+#endif
+
+#ifndef MOVE_DEBUG
 #cmakedefine01 MOVE_DEBUG
+#endif
+
+#ifndef NT_DEBUG
 #cmakedefine01 NT_DEBUG
+#endif
+
+#ifndef OBJECT_DEBUG
 #cmakedefine01 OBJECT_DEBUG
+#endif
+
+#ifndef OCCLUSIONS_DEBUG
 #cmakedefine01 OCCLUSIONS_DEBUG
+#endif
+
+#ifndef PARSER_DEBUG
 #cmakedefine01 PARSER_DEBUG
+#endif
+
+#ifndef PATH_DEBUG
 #cmakedefine01 PATH_DEBUG
+#endif
+
+#ifndef PNG_DEBUG
 #cmakedefine01 PNG_DEBUG
+#endif
+
+#ifndef PORTABLE_IMAGE_LOADER_DEBUG
 #cmakedefine01 PORTABLE_IMAGE_LOADER_DEBUG
+#endif
+
+#ifndef PTHREAD_DEBUG
 #cmakedefine01 PTHREAD_DEBUG
+#endif
+
+#ifndef REACHABLE_DEBUG
 #cmakedefine01 REACHABLE_DEBUG
+#endif
+
+#ifndef REGEX_DEBUG
 #cmakedefine01 REGEX_DEBUG
+#endif
+
+#ifndef RESIZE_DEBUG
 #cmakedefine01 RESIZE_DEBUG
+#endif
+
+#ifndef RESOURCE_DEBUG
 #cmakedefine01 RESOURCE_DEBUG
+#endif
+
+#ifndef SAFE_SYSCALL_DEBUG
 #cmakedefine01 SAFE_SYSCALL_DEBUG
+#endif
+
+#ifndef SERVICE_DEBUG
 #cmakedefine01 SERVICE_DEBUG
+#endif
+
+#ifndef SH_DEBUG
 #cmakedefine01 SH_DEBUG
+#endif
+
+#ifndef SH_LANGUAGE_SERVER_DEBUG
 #cmakedefine01 SH_LANGUAGE_SERVER_DEBUG
+#endif
+
+#ifndef SPAM_DEBUG
 #cmakedefine01 SPAM_DEBUG
+#endif
+
+#ifndef STRINGIMPL_DEBUG
 #cmakedefine01 STRINGIMPL_DEBUG
+#endif
+
+#ifndef SYNTAX_HIGHLIGHTING_DEBUG
 #cmakedefine01 SYNTAX_HIGHLIGHTING_DEBUG
+#endif
+
+#ifndef SYSTEM_MENU_DEBUG
 #cmakedefine01 SYSTEM_MENU_DEBUG
+#endif
+
+#ifndef SYSTEMSERVER_DEBUG
 #cmakedefine01 SYSTEMSERVER_DEBUG
+#endif
+
+#ifndef TERMCAP_DEBUG
 #cmakedefine01 TERMCAP_DEBUG
+#endif
+
+#ifndef TERMINAL_DEBUG
 #cmakedefine01 TERMINAL_DEBUG
+#endif
+
+#ifndef TEXTEDITOR_DEBUG
 #cmakedefine01 TEXTEDITOR_DEBUG
+#endif
+
+#ifndef TLS_DEBUG
 #cmakedefine01 TLS_DEBUG
+#endif
+
+#ifndef TOKENIZER_TRACE_DEBUG
 #cmakedefine01 TOKENIZER_TRACE_DEBUG
+#endif
+
+#ifndef UCI_DEBUG
 #cmakedefine01 UCI_DEBUG
+#endif
+
+#ifndef UPDATE_COALESCING_DEBUG
 #cmakedefine01 UPDATE_COALESCING_DEBUG
+#endif
+
+#ifndef WINDOWMANAGER_DEBUG
 #cmakedefine01 WINDOWMANAGER_DEBUG
+#endif
+
+#ifndef WRAPPER_GENERATOR_DEBUG
 #cmakedefine01 WRAPPER_GENERATOR_DEBUG
+#endif
+
+#ifndef WSMESSAGELOOP_DEBUG
 #cmakedefine01 WSMESSAGELOOP_DEBUG
+#endif
+
+#ifndef WSSCREEN_DEBUG
 #cmakedefine01 WSSCREEN_DEBUG
+#endif
