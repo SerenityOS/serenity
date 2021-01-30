@@ -7,6 +7,7 @@ set(SOURCES
     VPX/LookupTables.h
     VPX/ProbabilityTables.cpp
     VPX/SyntaxElementCounter.cpp
+    VPX/TreeParser.cpp
     VPX/VP9Decoder.cpp
 )
 
