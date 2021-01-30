@@ -59,5 +59,7 @@ namespace Video {
 #define MAX_PROB 255
 #define TX_MODES 5
 #define REFS_PER_FRAME 3
+#define BLOCK_SIZES 13
+#define BLOCK_INVALID 14
 
 }
