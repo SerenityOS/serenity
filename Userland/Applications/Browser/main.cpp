@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 namespace Browser {
 
 String g_home_url;
-bool g_multi_process = false;
+static bool s_single_process = false;
 
 static String bookmarks_file_path()
 {
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(Browser::g_multi_process, "Multi-process mode", "multi-process", 'm');
+    args_parser.add_option(Browser::s_single_process, "Single-process mode", "single-process", 's');
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
-        auto type = Browser::g_multi_process ? Browser::Tab::Type::OutOfProcessWebView : Browser::Tab::Type::InProcessWebView;
+        auto type = Browser::s_single_process ? Browser::Tab::Type::InProcessWebView : Browser::Tab::Type::OutOfProcessWebView;
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab", type);
 
         tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
