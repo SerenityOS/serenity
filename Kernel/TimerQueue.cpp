@@ -241,7 +241,7 @@ void TimerQueue::fire()
             lock.unlock();
 
             // Defer executing the timer outside of the irq handler
-            Processor::current().deferred_call_queue([this, timer]() {
+            Processor::deferred_call_queue([this, timer]() {
                 timer->m_callback();
                 ScopedSpinLock lock(g_timerqueue_lock);
                 m_timers_executing.remove(timer);

@@ -229,7 +229,7 @@ void page_fault_handler(TrapFrame* trap)
 
     bool faulted_in_kernel = !(regs.cs & 3);
 
-    if (faulted_in_kernel && Processor::current().in_irq()) {
+    if (faulted_in_kernel && Processor::in_irq()) {
         // If we're faulting in an IRQ handler, first check if we failed
         // due to safe_memcpy, safe_strnlen, or safe_memset. If we did,
         // gracefully continue immediately. Because we're in an IRQ handler
@@ -1848,6 +1848,7 @@ void Processor::exit_trap(TrapFrame& trap)
     // We don't want context switches to happen until we're explicitly
     // triggering a switch in check_invoke_scheduler.
     auto new_critical = AK::atomic_fetch_sub(&m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed) - 1;
+    VERIFY_INTERRUPTS_DISABLED(); // Interrupts should still be disabled
     if (!m_in_irq && !new_critical)
         check_invoke_scheduler();
 }
@@ -1855,11 +1856,11 @@ void Processor::exit_trap(TrapFrame& trap)
 void Processor::check_invoke_scheduler()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
-    VERIFY(!m_in_irq);
-    VERIFY(!m_in_critical);
-    if (m_invoke_scheduler_async && m_scheduler_initialized) {
-        m_invoke_scheduler_async = false;
+    VERIFY(!in_irq());
+    VERIFY(!in_critical());
+    auto& proc = current();
+    if (proc.m_invoke_scheduler_async && proc.m_scheduler_initialized) {
+        proc.m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
     }
 }
@@ -1940,7 +1941,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
         VERIFY(wake_count > 0);
     }
 
-    u32 current_id = Processor::current().id();
+    u32 current_id = Processor::id();
 
     u32 did_wake_count = 0;
     auto& apic = APIC::the();

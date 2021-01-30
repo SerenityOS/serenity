@@ -120,7 +120,7 @@ protected:
 
     void evaluate_block_conditions()
     {
-        if (Processor::current().in_irq()) {
+        if (Processor::in_irq()) {
             // If called from an IRQ handler we need to delay evaluation
             // and unblocking of waiting threads. Note that this File
             // instance may be deleted until the deferred call is executed!
@@ -136,7 +136,7 @@ protected:
 private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
-        VERIFY(!Processor::current().in_irq());
+        VERIFY(!Processor::in_irq());
         block_condition().unblock();
     }
 

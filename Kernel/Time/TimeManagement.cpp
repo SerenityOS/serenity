@@ -372,7 +372,7 @@ void TimeManagement::increment_time_since_boot()
 
 void TimeManagement::system_timer_tick(const RegisterState& regs)
 {
-    if (Processor::current().in_irq() <= 1) {
+    if (Processor::in_irq() <= 1) {
         // Don't expire timers while handling IRQs
         TimerQueue::the().fire();
     }

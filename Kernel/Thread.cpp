@@ -150,8 +150,8 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         if (!should_be_stopped() && !is_stopped())
             unblock();
     };
-    if (Processor::current().in_irq()) {
-        Processor::current().deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+    if (Processor::in_irq()) {
+        Processor::deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
         });
@@ -162,7 +162,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 
 void Thread::unblock(u8 signal)
 {
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     VERIFY(g_scheduler_lock.own_lock());
     VERIFY(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
@@ -1038,7 +1038,7 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
 
 void Thread::reset_fpu_state()
 {
-    memcpy(m_fpu_state, &Processor::current().clean_fpu_state(), sizeof(FPUState));
+    memcpy(m_fpu_state, &Processor::clean_fpu_state(), sizeof(FPUState));
 }
 
 bool Thread::should_be_stopped() const

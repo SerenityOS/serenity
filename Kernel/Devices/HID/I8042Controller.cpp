@@ -131,7 +131,7 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
 
 void I8042Controller::irq_process_input_buffer(HIDDevice::Type)
 {
-    VERIFY(Processor::current().in_irq());
+    VERIFY(Processor::in_irq());
 
     u8 status = IO::in8(I8042_STATUS);
     if (!(status & I8042_BUFFER_FULL))
@@ -165,7 +165,7 @@ bool I8042Controller::do_reset_device(HIDDevice::Type device)
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     if (do_send_command(device, 0xff) != I8042_ACK)
         return false;
     // Wait until we get the self-test result
@@ -177,7 +177,7 @@ u8 I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
 
     return do_write_to_device(device, command);
 }
@@ -187,7 +187,7 @@ u8 I8042Controller::do_send_command(HIDDevice::Type device, u8 command, u8 data)
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
 
     u8 response = do_write_to_device(device, command);
     if (response == I8042_ACK)
@@ -200,7 +200,7 @@ u8 I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
     VERIFY(device != HIDDevice::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
 
     int attempts = 0;
     u8 response;

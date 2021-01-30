@@ -21,7 +21,7 @@ void Lock::lock(Mode mode)
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     VERIFY(mode != Mode::Unlocked);
     auto current_thread = Thread::current();
     ScopedCritical critical; // in case we're not in a critical section already
@@ -117,7 +117,7 @@ void Lock::unlock()
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     auto current_thread = Thread::current();
     ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
@@ -186,7 +186,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     auto current_thread = Thread::current();
     ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {
@@ -269,7 +269,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
 {
     VERIFY(mode != Mode::Unlocked);
     VERIFY(lock_count > 0);
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
     auto current_thread = Thread::current();
     ScopedCritical critical; // in case we're not in a critical section already
     for (;;) {

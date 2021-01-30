@@ -302,6 +302,13 @@ inline void write_fs_u32(u32 offset, u32 val)
         : "memory");
 }
 
+inline void write_fs_u8(u32 offset, u8 val)
+{
+    asm volatile(
+        "movb %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
+        : "memory");
+}
+
 inline bool are_interrupts_enabled()
 {
     return cpu_flags() & 0x200;
@@ -764,9 +771,10 @@ public:
         m_scheduler_data = &scheduler_data;
     }
 
-    ALWAYS_INLINE SchedulerPerProcessorData& get_scheduler_data() const
+    ALWAYS_INLINE static SchedulerPerProcessorData& get_scheduler_data()
     {
-        return *m_scheduler_data;
+        // See comment in Processor::current_thread
+        return *(SchedulerPerProcessorData*)read_fs_u32(__builtin_offsetof(Processor, m_scheduler_data));
     }
 
     ALWAYS_INLINE void set_mm_data(MemoryManagerData& mm_data)
@@ -828,11 +836,6 @@ public:
         return Processor::id() == 0;
     }
 
-    ALWAYS_INLINE u32 raise_irq()
-    {
-        return m_in_irq++;
-    }
-
     ALWAYS_INLINE void restore_irq(u32 prev_irq)
     {
         VERIFY(&Processor::current() == this);
@@ -853,9 +856,10 @@ public:
         }
     }
 
-    ALWAYS_INLINE u32& in_irq()
+    ALWAYS_INLINE static u32 in_irq()
     {
-        return m_in_irq;
+        // See comment in Processor::current_thread
+        return read_fs_u32(__builtin_offsetof(Processor, m_in_irq));
     }
 
     ALWAYS_INLINE static void restore_in_critical(u32 critical)
@@ -914,9 +918,8 @@ public:
         // processors m_in_critical would move along with us
         auto prev_crit = read_fs_u32(__builtin_offsetof(Processor, m_in_critical));
         write_fs_u32(__builtin_offsetof(Processor, m_in_critical), 0);
-        auto& proc = current();
-        if (!proc.m_in_irq)
-            proc.check_invoke_scheduler();
+        if (!in_irq())
+            check_invoke_scheduler();
         if (enable_interrupts || (prev_flags & 0x200))
             sti();
         return prev_crit;
@@ -942,7 +945,7 @@ public:
         return read_fs_u32(__builtin_offsetof(Processor, m_in_critical));
     }
 
-    ALWAYS_INLINE const FPUState& clean_fpu_state() const
+    ALWAYS_INLINE static const FPUState& clean_fpu_state()
     {
         return s_clean_fpu_state;
     }
@@ -1007,8 +1010,11 @@ public:
         return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
     }
 
-    void check_invoke_scheduler();
-    void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
+    static void check_invoke_scheduler();
+    ALWAYS_INLINE static void invoke_scheduler_async()
+    {
+        write_fs_u8(__builtin_offsetof(Processor, m_invoke_scheduler_async), true);
+    }
 
     void enter_trap(TrapFrame& trap, bool raise_irq);
 

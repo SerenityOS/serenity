@@ -441,9 +441,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_mm_lock);
-    if (Processor::current().in_irq()) {
+    if (auto irq_level = Processor::in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
-            Processor::id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
+            Processor::id(), fault.code(), fault.vaddr(), irq_level);
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }

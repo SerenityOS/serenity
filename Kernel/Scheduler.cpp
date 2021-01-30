@@ -72,7 +72,7 @@ static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 
 Thread& Scheduler::pull_next_runnable_thread()
 {
-    auto affinity_mask = 1u << Processor::current().id();
+    auto affinity_mask = 1u << Processor::id();
 
     ScopedSpinLock lock(g_ready_queues_lock);
     auto priority_mask = g_ready_queues_mask;
@@ -119,7 +119,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
         return false;
     }
 
-    if (check_affinity && !(thread.affinity() & (1 << Processor::current().id())))
+    if (check_affinity && !(thread.affinity() & (1 << Processor::id())))
         return false;
 
     VERIFY(g_ready_queues_mask & (1u << priority));
@@ -182,13 +182,13 @@ bool Scheduler::pick_next()
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     ScopedCritical critical;
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
     scheduler_data.m_in_scheduler = true;
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
             // back to this thread!
-            auto& scheduler_data = Processor::current().get_scheduler_data();
+            auto& scheduler_data = Processor::get_scheduler_data();
             VERIFY(scheduler_data.m_in_scheduler);
             scheduler_data.m_in_scheduler = false;
         });
@@ -254,21 +254,20 @@ bool Scheduler::pick_next()
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
-    auto& proc = Processor::current();
-    auto& scheduler_data = proc.get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
 
     // Clear any pending beneficiary
     scheduler_data.m_pending_beneficiary = nullptr;
     scheduler_data.m_pending_donate_reason = nullptr;
 
     auto current_thread = Thread::current();
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
+    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", Processor::id(), *current_thread, Processor::in_irq());
     VERIFY(current_thread != nullptr);
-    if (proc.in_irq() || Processor::in_critical()) {
+    if (Processor::in_irq() || Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
-        proc.invoke_scheduler_async();
+        Processor::invoke_scheduler_async();
         return false;
     }
 
@@ -276,7 +275,7 @@ bool Scheduler::yield()
         return false;
 
     if constexpr (SCHEDULER_DEBUG)
-        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::current().in_irq());
+        dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::in_irq());
     return true;
 }
 
@@ -308,24 +307,23 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     ScopedCritical critical;
-    auto& proc = Processor::current();
-    auto& scheduler_data = proc.get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
     scheduler_data.m_in_scheduler = true;
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
             // back to this thread!
-            auto& scheduler_data = Processor::current().get_scheduler_data();
+            auto& scheduler_data = Processor::get_scheduler_data();
             VERIFY(scheduler_data.m_in_scheduler);
             scheduler_data.m_in_scheduler = false;
         });
 
-    VERIFY(!proc.in_irq());
+    VERIFY(!Processor::in_irq());
 
     if (Processor::in_critical() > 1) {
         scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
         scheduler_data.m_pending_donate_reason = reason;
-        proc.invoke_scheduler_async();
+        Processor::invoke_scheduler_async();
         return false;
     }
 
@@ -413,7 +411,7 @@ void Scheduler::leave_on_first_switch(u32 flags)
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
     g_scheduler_lock.unlock(flags);
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
     VERIFY(scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = false;
 }
@@ -423,7 +421,7 @@ void Scheduler::prepare_after_exec()
     // This is called after exec() when doing a context "switch" into
     // the new process. This is called from Processor::assume_context
     VERIFY(g_scheduler_lock.own_lock());
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
     VERIFY(!scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = true;
 }
@@ -434,7 +432,7 @@ void Scheduler::prepare_for_idle_loop()
     // and is about to run it. We need to acquire he scheduler lock
     VERIFY(!g_scheduler_lock.own_lock());
     g_scheduler_lock.lock();
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = Processor::get_scheduler_data();
     VERIFY(!scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = true;
 }
@@ -485,7 +483,7 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 void Scheduler::timer_tick(const RegisterState& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_irq());
+    VERIFY(Processor::in_irq());
 
     auto current_thread = Processor::current_thread();
     if (!current_thread)
@@ -506,27 +504,26 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return;
 
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_irq());
-    Processor::current().invoke_scheduler_async();
+    VERIFY(Processor::in_irq());
+    Processor::invoke_scheduler_async();
 }
 
 void Scheduler::invoke_async()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    auto& proc = Processor::current();
-    VERIFY(!proc.in_irq());
+    VERIFY(!Processor::in_irq());
 
     // Since this function is called when leaving critical sections (such
     // as a SpinLock), we need to check if we're not already doing this
     // to prevent recursion
-    if (!proc.get_scheduler_data().m_in_scheduler)
+    if (!Processor::get_scheduler_data().m_in_scheduler)
         pick_next();
 }
 
 void Scheduler::yield_from_critical()
 {
     VERIFY(Processor::in_critical());
-    VERIFY(!Processor::current().in_irq());
+    VERIFY(!Processor::in_irq());
 
     yield(); // Flag a context switch
 
@@ -558,7 +555,7 @@ void Scheduler::idle_loop(void*)
 #if SCHEDULE_ON_ALL_PROCESSORS
         yield();
 #else
-        if (Processor::current().id() == 0)
+        if (Processor::id() == 0)
             yield();
 #endif
     }
