@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Checked.h>
 #include <AK/String.h>
 #include <LibELF/Validation.h>
 #include <LibELF/exec_elf.h>
@@ -141,25 +143,47 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
-    if (end_of_last_program_header > file_size) {
+    Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
+    total_size_of_program_headers *= elf_header.e_phentsize;
+
+    Checked<size_t> end_of_last_program_header = elf_header.e_phoff;
+    end_of_last_program_header += total_size_of_program_headers;
+
+    if (end_of_last_program_header.has_overflow()) {
         if (verbose)
-            dbgln("SHENANIGANS! End of last program header ({}) is past the end of the file!", end_of_last_program_header);
+            dbgln("SHENANIGANS! Integer overflow in program header validation");
         return false;
     }
 
-    if (elf_header.e_shoff != SHN_UNDEF && elf_header.e_shoff < end_of_last_program_header) {
+    if (end_of_last_program_header > file_size) {
+        if (verbose)
+            dbgln("SHENANIGANS! End of last program header ({}) is past the end of the file!", end_of_last_program_header.value());
+        return false;
+    }
+
+    if (elf_header.e_shoff != SHN_UNDEF && elf_header.e_shoff < end_of_last_program_header.value()) {
         if (verbose) {
             dbgln("SHENANIGANS! Section header table begins at file offset {}, which is within program headers [ {} - {} ]!",
-                elf_header.e_shoff, elf_header.e_phoff, end_of_last_program_header);
+                elf_header.e_shoff, elf_header.e_phoff, end_of_last_program_header.value());
         }
         return false;
     }
 
-    size_t end_of_last_section_header = elf_header.e_shoff + (elf_header.e_shnum * elf_header.e_shentsize);
+    Checked<size_t> total_size_of_section_headers = elf_header.e_shnum;
+    total_size_of_section_headers *= elf_header.e_shentsize;
+
+    Checked<size_t> end_of_last_section_header = elf_header.e_shoff;
+    end_of_last_section_header += total_size_of_section_headers;
+
+    if (end_of_last_section_header.has_overflow()) {
+        if (verbose)
+            dbgln("SHENANIGANS! Integer overflow in section header validation");
+        return false;
+    }
+
     if (end_of_last_section_header > file_size) {
         if (verbose)
-            dbgln("SHENANIGANS! End of last section header ({}) is past the end of the file!", end_of_last_section_header);
+            dbgln("SHENANIGANS! End of last section header ({}) is past the end of the file!", end_of_last_section_header.value());
         return false;
     }
 
@@ -174,12 +198,22 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
 
 bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, const u8* buffer, size_t buffer_size, String* interpreter_path, bool verbose)
 {
+    Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
+    total_size_of_program_headers *= elf_header.e_phentsize;
+
+    Checked<size_t> end_of_last_program_header = elf_header.e_phoff;
+    end_of_last_program_header += total_size_of_program_headers;
+
+    if (end_of_last_program_header.has_overflow()) {
+        if (verbose)
+            dbgln("SHENANIGANS! Integer overflow in program header validation");
+        return false;
+    }
+
     // Can we actually parse all the program headers in the given buffer?
-    size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
     if (end_of_last_program_header > buffer_size) {
         if (verbose)
-            dbgln("Unable to parse program headers from buffer, buffer too small! Buffer size: {}, End of program headers {}",
-                buffer_size, end_of_last_program_header);
+            dbgln("Unable to parse program headers from buffer, buffer too small! Buffer size: {}, End of program headers {}", buffer_size, end_of_last_program_header.value());
         return false;
     }
 
@@ -217,6 +251,11 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
         switch (program_header.p_type) {
         case PT_INTERP:
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
+            if (Checked<size_t>::addition_would_overflow(program_header.p_offset, program_header.p_filesz)) {
+                if (verbose)
+                    dbgln("Integer overflow while validating PT_INTERP header");
+                return false;
+            }
             if (program_header.p_offset + program_header.p_filesz > buffer_size) {
                 if (verbose)
                     dbgln("Found PT_INTERP header ({}), but the .interp section was not within the buffer :(", header_index);
@@ -235,6 +274,11 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
         case PT_NOTE:
         case PT_PHDR:
         case PT_TLS:
+            if (Checked<size_t>::addition_would_overflow(program_header.p_offset, program_header.p_filesz)) {
+                if (verbose)
+                    dbgln("Integer overflow while validating a program header");
+                return false;
+            }
             if (program_header.p_offset + program_header.p_filesz > file_size) {
                 if (verbose)
                     dbgln("SHENANIGANS! Program header {} segment leaks beyond end of file!", header_index);
