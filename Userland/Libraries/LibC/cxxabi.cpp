@@ -25,29 +25,59 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/LogStream.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/internals.h>
+#include <sys/mman.h>
 
 extern "C" {
 
-struct __exit_entry {
-    AtExitFunction method;
-    void* parameter;
-    void* dso_handle;
-    bool has_been_called;
+struct AtExitEntry {
+    AtExitFunction method { nullptr };
+    void* parameter { nullptr };
+    void* dso_handle { nullptr };
+    bool has_been_called { false };
 };
 
-static __exit_entry __exit_entries[1024] {};
-static int __exit_entry_count = 0;
+static constexpr size_t max_atexit_entry_count = PAGE_SIZE / sizeof(AtExitEntry);
+
+static AtExitEntry* atexit_entries;
+static size_t atexit_entry_count = 0;
+
+static void lock_atexit_handlers()
+{
+    if (mprotect(atexit_entries, PAGE_SIZE, PROT_READ) < 0) {
+        perror("lock_atexit_handlers");
+        _exit(1);
+    }
+}
+
+static void unlock_atexit_handlers()
+{
+    if (mprotect(atexit_entries, PAGE_SIZE, PROT_READ | PROT_WRITE) < 0) {
+        perror("unlock_atexit_handlers");
+        _exit(1);
+    }
+}
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle)
 {
-    if (__exit_entry_count >= 1024)
+    if (atexit_entry_count >= max_atexit_entry_count)
         return -1;
 
-    __exit_entries[__exit_entry_count++] = { exit_function, parameter, dso_handle, false };
+    if (!atexit_entries) {
+        atexit_entries = (AtExitEntry*)mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        if (atexit_entries == MAP_FAILED) {
+            perror("__cxa_atexit mmap");
+            _exit(1);
+        }
+    }
+
+    unlock_atexit_handlers();
+    atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle, false };
+    lock_atexit_handlers();
 
     return 0;
 }
@@ -61,21 +91,19 @@ void __cxa_finalize(void* dso_handle)
     // Multiple calls to __cxa_finalize shall not result in calling termination function entries multiple times;
     // the implementation may either remove entries or mark them finished.
 
-    int entry_index = __exit_entry_count;
+    ssize_t entry_index = atexit_entry_count;
 
-#if GLOBAL_DTORS_DEBUG
-    dbgprintf("__cxa_finalize: %d entries in the finalizer list\n", entry_index);
-#endif
+    dbgln<GLOBAL_DTORS_DEBUG>("__cxa_finalize: {} entries in the finalizer list", entry_index);
 
     while (--entry_index >= 0) {
-        auto& exit_entry = __exit_entries[entry_index];
+        auto& exit_entry = atexit_entries[entry_index];
         bool needs_calling = !exit_entry.has_been_called && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
-#if GLOBAL_DTORS_DEBUG
-            dbgprintf("__cxa_finalize: calling entry[%d] %p(%p) dso: %p\n", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
-#endif
+            dbgln<GLOBAL_DTORS_DEBUG>("__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
             exit_entry.method(exit_entry.parameter);
+            unlock_atexit_handlers();
             exit_entry.has_been_called = true;
+            lock_atexit_handlers();
         }
     }
 }
