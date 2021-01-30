@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Symbols.h"
+#include <AK/Types.h>
 
 namespace Video::VP9 {
 
@@ -47,18 +48,18 @@ enum ReferenceFrame {
 };
 
 enum TXMode {
-    Only4x4 = 0,
-    Allow8x8 = 1,
-    Allow16x16 = 2,
-    Allow32x32 = 3,
+    Only_4x4 = 0,
+    Allow_8x8 = 1,
+    Allow_16x16 = 2,
+    Allow_32x32 = 3,
     TXModeSelect = 4,
 };
 
 enum TXSize {
-    TX4x4 = 0,
-    TX8x8 = 1,
-    TX16x16 = 2,
-    TX32x32 = 3,
+    TX_4x4 = 0,
+    TX_8x8 = 1,
+    TX_16x16 = 2,
+    TX_32x32 = 3,
 };
 
 enum ReferenceMode {
@@ -82,6 +83,68 @@ enum BlockSubsize : u8 {
     Block_64x32 = 11,
     Block_64x64 = 12,
     Block_Invalid = BLOCK_INVALID
+};
+
+enum Partition : u8 {
+    PartitionNone = 0,
+    PartitionHorizontal = 1,
+    PartitionVertical = 2,
+    PartitionSplit = 3,
+};
+
+enum IntraMode : u8 {
+    DcPred = 0,
+    VPred = 1,
+    HPred = 2,
+    D45Pred = 3,
+    D135Pred = 4,
+    D117Pred = 5,
+    D153Pred = 6,
+    D207Pred = 7,
+    D63Pred = 8,
+    TmPred = 9,
+};
+
+enum InterMode : u8 {
+    NearestMv = 0,
+    NearMv = 1,
+    ZeroMv = 2,
+    NewMv = 3,
+};
+
+enum MvJoint : u8 {
+    MvJointZero = 0,
+    MvJointHnzvz = 1,
+    MvJointHzvnz = 2,
+    MvJointHnzvnz = 3,
+};
+
+enum MvClass : u8 {
+    MvClass0 = 0,
+    MvClass1 = 1,
+    MvClass2 = 2,
+    MvClass3 = 3,
+    MvClass4 = 4,
+    MvClass5 = 5,
+    MvClass6 = 6,
+    MvClass7 = 7,
+    MvClass8 = 8,
+    MvClass9 = 9,
+    MvClass10 = 10,
+};
+
+enum Token : u8 {
+    ZeroToken = 0,
+    OneToken = 1,
+    TwoToken = 2,
+    ThreeToken = 3,
+    FourToken = 4,
+    DctValCat1 = 5,
+    DctValCat2 = 6,
+    DctValCat3 = 7,
+    DctValCat4 = 8,
+    DctValCat5 = 9,
+    DctValCat6 = 10,
 };
 
 }
