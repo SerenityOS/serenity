@@ -42,17 +42,22 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    dbgln("path is at {:p}, and contains {}", path, path);
+    if (path && path[0] == '/') {
+        if (unveil(path, "r") < 0) {
+            perror("unveil path");
+            return 1;
+        }
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     if (!path) {
         auto keymap = Keyboard::CharacterMap::fetch_system_map();
