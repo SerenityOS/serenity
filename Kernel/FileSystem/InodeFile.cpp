@@ -32,6 +32,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
+#include <LibC/errno_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -67,6 +69,36 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, 
     if (nwritten < 0)
         return KResult((ErrnoCode)-nwritten);
     return nwritten;
+}
+
+int InodeFile::ioctl(FileDescription& description, unsigned request, FlatPtr arg)
+{
+    (void)description;
+
+    switch (request) {
+    case FIBMAP: {
+        if (!Process::current()->is_superuser())
+            return -EPERM;
+
+        int block_number = 0;
+        if (!copy_from_user(&block_number, (int*)arg))
+            return -EFAULT;
+
+        if (block_number < 0)
+            return -EINVAL;
+
+        auto block_address = inode().get_block_address(block_number);
+        if (block_address.is_error())
+            return block_address.error();
+
+        if (!copy_to_user((int*)arg, &block_address.value()))
+            return -EFAULT;
+
+        return 0;
+    }
+    default:
+        return -EINVAL;
+    }
 }
 
 KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, const Range& range, size_t offset, int prot, bool shared)
