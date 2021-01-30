@@ -174,7 +174,8 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
         JsonArray items;
         for (int i = 0; i < 90; i++) {
             AK::StringBuilder sb;
-            sb.append(values[i]);
+            if (values[i])
+                sb.append_code_point(values[i]);
 
             JsonValue val(sb.to_string());
             items.append(move(val));
