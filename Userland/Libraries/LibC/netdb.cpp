@@ -123,7 +123,7 @@ hostent* gethostbyname(const char* name)
         close(fd);
     });
 
-    auto line = String::format("L%s\n", name);
+    auto line = String::formatted("L{}\n", name);
     int nsent = write(fd, line.characters(), line.length());
     if (nsent < 0) {
         perror("write");
@@ -189,7 +189,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     IPv4Address ipv4_address((const u8*)&((const in_addr*)addr)->s_addr);
 
-    auto line = String::format("R%d.%d.%d.%d.in-addr.arpa\n",
+    auto line = String::formatted("R{}.{}.{}.{}.in-addr.arpa\n",
         ipv4_address[3],
         ipv4_address[2],
         ipv4_address[1],
