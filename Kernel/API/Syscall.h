@@ -156,6 +156,7 @@ namespace Kernel {
     S(get_process_name)       \
     S(fchdir)                 \
     S(getrandom)              \
+    S(getkeymap)              \
     S(setkeymap)              \
     S(clock_gettime)          \
     S(clock_settime)          \
@@ -328,6 +329,15 @@ struct SC_setkeymap_params {
     const u32* altgr_map;
     const u32* shift_altgr_map;
     StringArgument map_name;
+};
+
+struct SC_getkeymap_params {
+    u32* map;
+    u32* shift_map;
+    u32* alt_map;
+    u32* altgr_map;
+    u32* shift_altgr_map;
+    MutableBufferArgument<char, size_t> map_name;
 };
 
 struct SC_create_thread_params {
