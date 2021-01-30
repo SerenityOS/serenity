@@ -164,6 +164,8 @@ set(CPP_DEBUG ON)
 set(DEBUG_SPAM ON)
 set(DEBUG_CPP_LANGUAGE_SERVER ON)
 set(DEBUG_AUTOCOMPLETE ON)
+set(MATROSKA_DEBUG ON)
+set(MATROSKA_TRACE ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)

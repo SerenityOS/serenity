@@ -63,9 +63,9 @@ int main(int, char**)
             printf("\tCluster has %zu blocks\n", cluster.blocks().size());
             for (const auto& block : cluster.blocks()) {
                 (void)block;
-//                printf("\t\tBlock for track #%llu has %llu frames\n", block.track_number(), block.frame_count());
-//                printf("\t\tBlock's timestamp is %d\n", block.timestamp());
-//                printf("\t\tBlock has lacing %d\n", block.lacing());
+                printf("\t\tBlock for track #%llu has %llu frames\n", block.track_number(), block.frame_count());
+                printf("\t\tBlock's timestamp is %d\n", block.timestamp());
+                printf("\t\tBlock has lacing %d\n", block.lacing());
             }
         }
     } else {

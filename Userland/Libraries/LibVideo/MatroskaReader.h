@@ -31,7 +31,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <LibM/math.h>
+#include <math.h>
 
 namespace Video {
 
