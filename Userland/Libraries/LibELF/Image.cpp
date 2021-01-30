@@ -207,7 +207,7 @@ StringView Image::table_string(unsigned table_index, unsigned offset) const
             dbgln("SHENANIGANS! Image::table_string() computed offset outside image.");
         return {};
     }
-    size_t max_length = m_size - computed_offset;
+    size_t max_length = min(m_size - computed_offset, (size_t)PAGE_SIZE);
     size_t length = strnlen(raw_data(sh.sh_offset + offset), max_length);
     return { raw_data(sh.sh_offset + offset), length };
 }
