@@ -37,6 +37,12 @@ WebContentClient::WebContentClient(OutOfProcessWebView& view)
     handshake();
 }
 
+void WebContentClient::die()
+{
+    ASSERT(on_web_content_process_crash);
+    on_web_content_process_crash();
+}
+
 void WebContentClient::handshake()
 {
     auto response = send_sync<Messages::WebContentServer::Greet>(getpid());

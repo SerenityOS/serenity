@@ -35,7 +35,7 @@ namespace Web {
 
 class OutOfProcessWebView;
 
-class WebContentClient
+class WebContentClient final
     : public IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>
     , public WebContentClientEndpoint {
     C_OBJECT(WebContentClient);
@@ -43,8 +43,12 @@ class WebContentClient
 public:
     virtual void handshake() override;
 
+    Function<void()> on_web_content_process_crash;
+
 private:
     WebContentClient(OutOfProcessWebView&);
+
+    virtual void die() override;
 
     virtual void handle(const Messages::WebContentClient::DidPaint&) override;
     virtual void handle(const Messages::WebContentClient::DidFinishLoading&) override;
