@@ -31,6 +31,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
+#include <LibKeyboard/CharacterMap.h>
 #include <LibKeyboard/CharacterMapFile.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -145,12 +146,27 @@ void KeyboardMapperWidget::create_frame()
 void KeyboardMapperWidget::load_from_file(String file_name)
 {
     auto result = Keyboard::CharacterMapFile::load_from_file(file_name);
-    if (!result.has_value()) {
-        ASSERT_NOT_REACHED();
-    }
+    ASSERT(result.has_value());
 
     m_file_name = file_name;
     m_character_map = result.value();
+    set_current_map("map");
+
+    for (Widget* widget : m_map_group->child_widgets()) {
+        auto radio_button = (GUI::RadioButton*)widget;
+        radio_button->set_checked(radio_button->name() == "map");
+    }
+
+    update_window_title();
+}
+
+void KeyboardMapperWidget::load_from_system()
+{
+    auto result = Keyboard::CharacterMap::fetch_system_map();
+    ASSERT(!result.is_error());
+
+    m_file_name = String::formatted("/res/keymaps/{}.json", result.value().character_map_name());
+    m_character_map = result.value().character_map_data();
     set_current_map("map");
 
     for (Widget* widget : m_map_group->child_widgets()) {

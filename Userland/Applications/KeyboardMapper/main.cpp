@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     if (path != nullptr) {
         keyboard_mapper_widget->load_from_file(path);
     } else {
-        keyboard_mapper_widget->load_from_file("/res/keymaps/en.json");
+        keyboard_mapper_widget->load_from_system();
     }
 
     // Actions
@@ -84,8 +84,8 @@ int main(int argc, char** argv)
         });
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        String m_name = "Unnamed";
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, m_name, "json");
+        String name = "Unnamed";
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
         if (!save_path.has_value())
             return;
 
