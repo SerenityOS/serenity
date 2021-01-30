@@ -52,9 +52,11 @@ LookupServer::LookupServer()
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
         auto socket = m_local_server->accept();
+        if (!socket)
+            return;
         socket->on_ready_to_read = [this, socket]() {
-            service_client(socket);
-            RefPtr<Core::LocalSocket> keeper = socket;
+            service_client(*socket);
+            NonnullRefPtr keeper = *socket;
             const_cast<Core::LocalSocket&>(*socket).on_ready_to_read = [] {};
         };
     };
@@ -97,7 +99,7 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
+void LookupServer::service_client(NonnullRefPtr<Core::LocalSocket> socket)
 {
     u8 client_buffer[1024];
     int nrecv = socket->read(client_buffer, sizeof(client_buffer) - 1);
