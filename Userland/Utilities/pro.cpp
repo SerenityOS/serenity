@@ -213,7 +213,9 @@ int main(int argc, char** argv)
     }
 
     u32 previous_downloaded_size { 0 };
-    timeval prev_time, current_time, time_diff;
+    u32 previous_midpoint_downloaded_size { 0 };
+    timeval prev_time, prev_midpoint_time, current_time, time_diff;
+    static constexpr auto download_speed_rolling_average_time_in_ms = 4000;
     gettimeofday(&prev_time, nullptr);
 
     bool received_actual_headers = false;
@@ -235,8 +237,13 @@ int main(int argc, char** argv)
 
         fprintf(stderr, " at %s/s", human_readable_size(((float)size_diff / (float)time_diff_ms) * 1000).characters());
 
-        previous_downloaded_size = downloaded_size;
-        prev_time = current_time;
+        if (time_diff_ms >= download_speed_rolling_average_time_in_ms) {
+            previous_downloaded_size = previous_midpoint_downloaded_size;
+            prev_time = prev_midpoint_time;
+        } else if (time_diff_ms >= download_speed_rolling_average_time_in_ms / 2) {
+            previous_midpoint_downloaded_size = downloaded_size;
+            prev_midpoint_time = current_time;
+        }
     };
 
     if (save_at_provided_name) {
