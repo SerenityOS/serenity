@@ -85,6 +85,8 @@ public:
     virtual KResult truncate(u64) { return KSuccess; }
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const;
 
+    virtual KResultOr<int> get_block_address(int) { return -ENOTSUP; }
+
     LocalSocket* socket() { return m_socket.ptr(); }
     const LocalSocket* socket() const { return m_socket.ptr(); }
     bool bind_socket(LocalSocket&);
