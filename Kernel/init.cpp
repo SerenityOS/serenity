@@ -55,6 +55,7 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/NE2000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
@@ -257,6 +258,7 @@ void init_stage2(void*)
     DMIExpose::initialize();
 
     E1000NetworkAdapter::detect();
+    NE2000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();
 
     LoopbackAdapter::the();

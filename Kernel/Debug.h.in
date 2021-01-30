@@ -182,6 +182,10 @@
 #cmakedefine01 MULTIPROCESSOR_DEBUG
 #endif
 
+#ifndef NE2000_DEBUG
+#cmakedefine01 NE2000_DEBUG
+#endif
+
 #ifndef NETWORK_TASK_DEBUG
 #cmakedefine01 NETWORK_TASK_DEBUG
 #endif
