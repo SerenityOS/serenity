@@ -111,7 +111,7 @@ void KeyboardMapperWidget::create_frame()
     // Map Selection
     m_map_group = bottom_widget.add<GUI::Widget>();
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
-    m_map_group->set_fixed_width(250);
+    m_map_group->set_fixed_width(450);
 
     auto& radio_map = m_map_group->add<GUI::RadioButton>("Default");
     radio_map.set_name("map");
