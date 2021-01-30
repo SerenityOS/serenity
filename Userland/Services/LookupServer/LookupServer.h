@@ -40,7 +40,7 @@ private:
     LookupServer();
 
     void load_etc_hosts();
-    void service_client(RefPtr<Core::LocalSocket>);
+    void service_client(NonnullRefPtr<Core::LocalSocket>);
     Vector<String> lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
