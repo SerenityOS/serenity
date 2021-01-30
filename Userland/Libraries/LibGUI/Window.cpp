@@ -196,15 +196,17 @@ void Window::hide()
         }
     }
 
-    bool app_has_visible_windows = false;
-    for (auto& window : *all_windows) {
-        if (window->is_visible()) {
-            app_has_visible_windows = true;
-            break;
+    if (auto* app = Application::the()) {
+        bool app_has_visible_windows = false;
+        for (auto& window : *all_windows) {
+            if (window->is_visible()) {
+                app_has_visible_windows = true;
+                break;
+            }
         }
+        if (!app_has_visible_windows)
+            app->did_delete_last_window({});
     }
-    if (!app_has_visible_windows)
-        Application::the()->did_delete_last_window({});
 }
 
 void Window::set_title(const StringView& title)
