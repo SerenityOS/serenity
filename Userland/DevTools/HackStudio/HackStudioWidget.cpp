@@ -308,7 +308,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_action()
             GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filename), "Error", GUI::MessageBox::Type::Error);
             return;
         }
-        m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
         open_file(filename);
     });
 }
