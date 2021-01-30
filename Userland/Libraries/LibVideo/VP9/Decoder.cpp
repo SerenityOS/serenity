@@ -13,14 +13,16 @@ namespace Video::VP9 {
     return false
 
 Decoder::Decoder()
+    : m_probability_tables(make<ProbabilityTables>())
+    , m_tree_parser(make<TreeParser>(*m_probability_tables))
 {
-    m_probability_tables = make<ProbabilityTables>();
 }
 
 bool Decoder::parse_frame(const ByteBuffer& frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
+    m_tree_parser->set_bit_stream(m_bit_stream);
 
     if (!uncompressed_header())
         return false;
@@ -125,6 +127,8 @@ bool Decoder::uncompressed_header()
             read_interpolation_filter();
         }
     }
+
+    m_tree_parser->set_frame_is_intra(m_frame_is_intra);
 
     if (!m_error_resilient_mode) {
         m_refresh_frame_context = m_bit_stream->read_bit();
@@ -440,10 +444,10 @@ bool Decoder::compressed_header()
 bool Decoder::read_tx_mode()
 {
     if (m_lossless) {
-        m_tx_mode = Only4x4;
+        m_tx_mode = Only_4x4;
     } else {
         auto tx_mode = m_bit_stream->read_literal(2);
-        if (tx_mode == Allow32x32) {
+        if (tx_mode == Allow_32x32) {
             tx_mode += m_bit_stream->read_literal(1);
         }
         m_tx_mode = static_cast<TXMode>(tx_mode);
@@ -456,17 +460,17 @@ bool Decoder::tx_mode_probs()
     auto& tx_probs = m_probability_tables->tx_probs();
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 3; j++) {
-            tx_probs[TX8x8][i][j] = diff_update_prob(tx_probs[TX8x8][i][j]);
+            tx_probs[TX_8x8][i][j] = diff_update_prob(tx_probs[TX_8x8][i][j]);
         }
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 2; j++) {
-            tx_probs[TX16x16][i][j] = diff_update_prob(tx_probs[TX16x16][i][j]);
+            tx_probs[TX_16x16][i][j] = diff_update_prob(tx_probs[TX_16x16][i][j]);
         }
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
         for (auto j = 0; j < TX_SIZES - 1; j++) {
-            tx_probs[TX32x32][i][j] = diff_update_prob(tx_probs[TX32x32][i][j]);
+            tx_probs[TX_32x32][i][j] = diff_update_prob(tx_probs[TX_32x32][i][j]);
         }
     }
     return true;
@@ -517,7 +521,8 @@ u8 Decoder::inv_recenter_nonneg(u8 v, u8 m)
 bool Decoder::read_coef_probs()
 {
     auto max_tx_size = tx_mode_to_biggest_tx_size[m_tx_mode];
-    for (auto tx_size = TX4x4; tx_size <= max_tx_size; tx_size = static_cast<TXSize>(static_cast<int>(tx_size) + 1)) {
+    m_tree_parser->set_max_tx_size(max_tx_size);
+    for (auto tx_size = TX_4x4; tx_size <= max_tx_size; tx_size = static_cast<TXSize>(static_cast<int>(tx_size) + 1)) {
         auto update_probs = m_bit_stream->read_literal(1);
         if (update_probs == 1) {
             for (auto i = 0; i < 2; i++) {
@@ -760,7 +765,9 @@ bool Decoder::decode_tile()
     for (auto row = m_mi_row_start; row < m_mi_row_end; row += 8) {
         if (!clear_left_context())
             return false;
+        m_tree_parser->set_row(row);
         for (auto col = m_mi_col_start; col < m_mi_col_end; col += 8) {
+            m_tree_parser->set_col(col);
             if (!decode_partition(row, col, Block_64x64))
                 return false;
         }
@@ -787,9 +794,15 @@ bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
     auto has_rows = (row + half_block_8x8) < m_mi_rows;
     auto has_cols = (col + half_block_8x8) < m_mi_cols;
 
-    // FIXME: Parse partition (type: T) as specified by spec in section 9.3
-    (void)has_rows;
-    (void)has_cols;
+    m_tree_parser->set_has_rows(has_rows);
+    m_tree_parser->set_has_cols(has_cols);
+    m_tree_parser->set_block_subsize(block_subsize);
+    m_tree_parser->set_num_8x8(num_8x8);
+
+    auto partition = m_tree_parser->parse_tree(SyntaxElementType::Partition);
+    dbgln("Parsed partition value {}", partition);
+
+    // FIXME: Finish implementing partition decoding
 
     return true;
 }
