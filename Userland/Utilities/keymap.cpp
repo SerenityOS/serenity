@@ -65,10 +65,17 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    Keyboard::CharacterMap character_map(path);
-    int rc = character_map.set_system_map();
-    if (rc != 0)
+    auto character_map = Keyboard::CharacterMap::load_from_file(path);
+    if (!character_map.has_value()) {
+        warnln("Cannot read keymap {}", path);
+        warnln("Hint: Must be either a keymap name (e.g. 'en') or a full path.");
+        return 1;
+    }
+
+    int rc = character_map.value().set_system_map();
+    if (rc != 0) {
         perror("setkeymap");
+    }
 
     return rc;
 }

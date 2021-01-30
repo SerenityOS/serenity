@@ -27,24 +27,22 @@
 #include "CharacterMap.h"
 #include <AK/StringBuilder.h>
 #include <Kernel/API/Syscall.h>
-#ifndef KERNEL
-#    include <LibKeyboard/CharacterMapFile.h>
-#endif
+#include <LibKeyboard/CharacterMapFile.h>
 
 namespace Keyboard {
 
-CharacterMap::CharacterMap(const String& map_name)
+#ifndef KERNEL
+// The Kernel explicitly and exclusively links only this file into it.
+// Thus, we cannot even include a reference to the symbol `CharacterMapFile::load_from_file`.
+Optional<CharacterMap> CharacterMap::load_from_file(const String& map_name)
 {
-#ifdef KERNEL
-    m_character_map_data = default_character_map;
-#else
     auto result = CharacterMapFile::load_from_file(map_name);
-    ASSERT(result.has_value());
+    if (!result.has_value())
+        return {};
 
-    m_character_map_data = result.value();
-#endif
-    m_character_map_name = map_name;
+    return CharacterMap(map_name, result.value());
 }
+#endif
 
 CharacterMap::CharacterMap(const String& map_name, const CharacterMapData& map_data)
     : m_character_map_data(map_data)
