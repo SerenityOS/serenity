@@ -39,8 +39,8 @@ namespace Keyboard {
 class CharacterMap {
 
 public:
-    CharacterMap(const String& map_name);
     CharacterMap(const String& map_name, const CharacterMapData& map_data);
+    static Optional<CharacterMap> load_from_file(const String& file_name);
 
 #ifndef KERNEL
     int set_system_map();

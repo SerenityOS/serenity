@@ -105,7 +105,7 @@ private:
     bool m_has_e0_prefix { false };
     EntropySource m_entropy_source;
 
-    Keyboard::CharacterMap m_character_map = Keyboard::CharacterMap("en");
+    Keyboard::CharacterMap m_character_map = Keyboard::CharacterMap("en", Keyboard::default_character_map);
 };
 
 class KeyboardClient {
