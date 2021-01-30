@@ -81,6 +81,10 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
     if (type() == "checkbox")
         return adopt(*new Layout::CheckBox(document(), *this, move(style)));
 
+    // FIXME: Implement <input type=text> in terms of LibWeb primitives.
+    if (page.client().is_multi_process())
+        return nullptr;
+
     auto& text_box = page_view.add<GUI::TextBox>();
     text_box.set_text(value());
     text_box.on_change = [this] {

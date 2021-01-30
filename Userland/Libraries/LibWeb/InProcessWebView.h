@@ -85,6 +85,7 @@ private:
 
     // ^Web::PageClient
     virtual Gfx::Palette palette() const override { return GUI::ScrollableWidget::palette(); }
+    virtual bool is_multi_process() const override { return false; }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;

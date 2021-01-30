@@ -50,6 +50,7 @@ public:
 
 private:
     // ^PageClient
+    virtual bool is_multi_process() const override { return true; }
     virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
