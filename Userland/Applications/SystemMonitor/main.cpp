@@ -498,6 +498,8 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
         auto& pci_table_view = self.add<GUI::TableView>();
 
         auto db = PCIDB::Database::open();
+        if (!db)
+            warnln("Couldn't open PCI ID database!");
 
         Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
         pci_fields.empend(
@@ -513,23 +515,23 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
             "Class", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto class_id = object.get("class").to_u32();
-                String class_name = db->get_class(class_id);
-                return class_name == "" ? String::formatted("{:04x}", class_id) : class_name;
+                String class_name = db ? db->get_class(class_id) : nullptr;
+                return class_name.is_empty() ? String::formatted("{:04x}", class_id) : class_name;
             });
         pci_fields.empend(
             "Vendor", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto vendor_id = object.get("vendor_id").to_u32();
-                String vendor_name = db->get_vendor(vendor_id);
-                return vendor_name == "" ? String::formatted("{:02x}", vendor_id) : vendor_name;
+                String vendor_name = db ? db->get_vendor(vendor_id) : nullptr;
+                return vendor_name.is_empty() ? String::formatted("{:02x}", vendor_id) : vendor_name;
             });
         pci_fields.empend(
             "Device", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto vendor_id = object.get("vendor_id").to_u32();
                 auto device_id = object.get("device_id").to_u32();
-                String device_name = db->get_device(vendor_id, device_id);
-                return device_name == "" ? String::formatted("{:02x}", device_id) : device_name;
+                String device_name = db ? db->get_device(vendor_id, device_id) : nullptr;
+                return device_name.is_empty() ? String::formatted("{:02x}", device_id) : device_name;
             });
         pci_fields.empend(
             "Revision", Gfx::TextAlignment::CenterRight,
