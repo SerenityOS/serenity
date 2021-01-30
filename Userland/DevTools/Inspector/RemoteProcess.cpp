@@ -152,7 +152,11 @@ void RemoteProcess::update()
 
         u32 length;
         int nread = m_socket->read((u8*)&length, sizeof(length));
-        ASSERT(nread == sizeof(length));
+        if (nread != sizeof(length)) {
+            dbgln("Disconnected from PID {}", m_pid);
+            m_socket->close();
+            return;
+        }
 
         ByteBuffer data;
         size_t remaining_bytes = length;
