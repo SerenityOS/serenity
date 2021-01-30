@@ -47,6 +47,14 @@ public:
     static NonnullRefPtr<Frame> create(Page& page) { return adopt(*new Frame(page)); }
     ~Frame();
 
+    class ViewportClient {
+    public:
+        virtual ~ViewportClient() { }
+        virtual void frame_did_set_viewport_rect(const Gfx::IntRect&) = 0;
+    };
+    void register_viewport_client(ViewportClient&);
+    void unregister_viewport_client(ViewportClient&);
+
     bool is_main_frame() const { return this == &m_main_frame; }
     bool is_focused_frame() const;
 
@@ -116,6 +124,8 @@ private:
     DOM::Position m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
+
+    HashTable<ViewportClient*> m_viewport_clients;
 };
 
 }

@@ -30,6 +30,7 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/ImageBox.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
@@ -37,10 +38,12 @@ ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
     : ReplacedBox(document, element, move(style))
     , m_image_loader(image_loader)
 {
+    frame().register_viewport_client(*this);
 }
 
 ImageBox::~ImageBox()
 {
+    frame().unregister_viewport_client(*this);
 }
 
 int ImageBox::preferred_width() const
@@ -127,9 +130,9 @@ bool ImageBox::renders_as_alt_text() const
     return false;
 }
 
-void ImageBox::set_visible_in_viewport(Badge<Layout::InitialContainingBlockBox>, bool visible_in_viewport)
+void ImageBox::frame_did_set_viewport_rect(const Gfx::IntRect& viewport_rect)
 {
-    m_image_loader.set_visible_in_viewport(visible_in_viewport);
+    m_image_loader.set_visible_in_viewport(viewport_rect.to<float>().intersects(absolute_rect()));
 }
 
 }

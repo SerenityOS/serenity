@@ -47,8 +47,6 @@ public:
     void set_selection(const LayoutRange&);
     void set_selection_end(const LayoutPosition&);
 
-    void did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect&);
-
     void build_stacking_context_tree();
 
     void recompute_selection_states();
