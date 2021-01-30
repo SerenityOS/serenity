@@ -29,7 +29,7 @@
 #include "Constants.h"
 #include <AK/Types.h>
 
-namespace Video {
+namespace Video::VP9 {
 
 enum class SyntaxElementType {
     Partition,

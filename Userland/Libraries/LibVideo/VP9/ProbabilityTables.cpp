@@ -27,7 +27,7 @@
 #include "ProbabilityTables.h"
 #include <AK/LogStream.h>
 
-namespace Video {
+namespace Video::VP9 {
 
 static constexpr pareto_table_t constant_pareto_table = {
     { 3, 86, 128, 6, 86, 23, 88, 29 },

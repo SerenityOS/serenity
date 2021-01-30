@@ -26,7 +26,7 @@
 
 #include "SyntaxElementCounter.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 void SyntaxElementCounter::clear_counts()
 {

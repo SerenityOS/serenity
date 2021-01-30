@@ -26,7 +26,7 @@
 
 #include "BitStream.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 u8 BitStream::read_byte()
 {

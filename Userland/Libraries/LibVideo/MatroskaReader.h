@@ -27,10 +27,10 @@
 #pragma once
 
 #include "MatroskaDocument.h"
+#include <AK/Debug.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/Debug.h>
 #include <LibM/math.h>
 
 namespace Video {
@@ -62,7 +62,7 @@ private:
 
         u8 read_octet()
         {
-                ASSERT(m_size_remaining >= 1);
+            ASSERT(m_size_remaining >= 1);
             m_size_remaining--;
             m_octets_read.last()++;
             return *(m_data_ptr++);
@@ -148,7 +148,7 @@ private:
 
         void drop_octets(size_t num_octets)
         {
-                ASSERT(m_size_remaining >= num_octets);
+            ASSERT(m_size_remaining >= num_octets);
             m_size_remaining -= num_octets;
             m_octets_read.last() += num_octets;
             m_data_ptr += num_octets;

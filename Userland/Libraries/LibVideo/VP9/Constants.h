@@ -26,44 +26,40 @@
 
 #pragma once
 
-#include <AK/Types.h>
-#include <AK/Optional.h>
+namespace Video::VP9 {
 
-namespace Video {
-
-class BitStream {
-public:
-    BitStream(const u8* data, size_t size)
-        : m_data_ptr(data)
-        , m_bytes_remaining(size)
-    {
-    }
-
-    u8 read_byte();
-    bool read_bit();
-    u8 read_f(size_t n);
-    i8 read_s(size_t n);
-    u8 read_f8();
-    u16 read_f16();
-    u8 read_literal(size_t n);
-
-    u64 get_position();
-    size_t bytes_remaining();
-    size_t bits_remaining();
-
-    bool init_bool(size_t bytes);
-    bool read_bool(u8 probability);
-    bool exit_bool();
-private:
-    const u8* m_data_ptr { nullptr };
-    size_t m_bytes_remaining { 0 };
-    Optional<u8> m_current_byte;
-    i8 m_current_bit_position { 0 };
-    u64 m_bytes_read { 0 };
-
-    u8 m_bool_value { 0 };
-    u8 m_bool_range { 0 };
-    u64 m_bool_max_bits { 0 };
-};
+#define PARTITION_CONTEXTS 16
+#define PARTITION_TYPES 4
+#define INTRA_MODES 10
+#define BLOCK_SIZE_GROUPS 4
+#define SKIP_CONTEXTS 3
+#define IS_INTER_CONTEXTS 4
+#define COMP_MODE_CONTEXTS 5
+#define REF_CONTEXTS 5
+#define MV_OFFSET_BITS 10
+#define TX_SIZES 4
+#define TX_SIZE_CONTEXTS 2
+#define INTER_MODES 4
+#define INTER_MODE_CONTEXTS 7
+#define INTERP_FILTER_CONTEXTS 4
+#define SWITCHABLE_FILTERS 3
+#define MV_CLASSES 11
+#define CLASS0_SIZE 2
+#define BLOCK_TYPES 2
+#define COEF_BANDS 6
+#define PREV_COEF_CONTEXTS 6
+#define REF_TYPES 2
+#define UNCONSTRAINED_NODES 3
+#define MIN_TILE_WIDTH_B64 4
+#define MAX_TILE_WIDTH_B64 64
+#define MAX_SEGMENTS 8
+#define SEG_LVL_MAX 4
+#define MV_JOINTS 4
+#define MV_FR_SIZE 4
+#define MAX_PROB 255
+#define TX_MODES 5
+#define REFS_PER_FRAME 3
+#define BLOCK_SIZES 13
+#define BLOCK_INVALID 14
 
 }

@@ -30,7 +30,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
-namespace Video {
+namespace Video::VP9 {
 
 typedef u8 pareto_table_t[128][8];
 typedef u8 kf_partition_probs_t[PARTITION_CONTEXTS][PARTITION_TYPES - 1];

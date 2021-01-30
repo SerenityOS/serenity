@@ -24,21 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "VP9Decoder.h"
+#include "Decoder.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 #define RESERVED_ZERO                  \
     if (m_bit_stream->read_bit() != 0) \
     return false
 
-VP9Decoder::VP9Decoder()
+Decoder::Decoder()
 {
     m_probability_tables = make<ProbabilityTables>();
     m_tree_parser = make<TreeParser>(*m_probability_tables);
 }
 
-bool VP9Decoder::parse_frame(const ByteBuffer& frame_data)
+bool Decoder::parse_frame(const ByteBuffer& frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
@@ -74,7 +74,7 @@ bool VP9Decoder::parse_frame(const ByteBuffer& frame_data)
     return true;
 }
 
-bool VP9Decoder::uncompressed_header()
+bool Decoder::uncompressed_header()
 {
     auto frame_marker = m_bit_stream->read_f(2);
     if (frame_marker != 2)
@@ -181,7 +181,7 @@ bool VP9Decoder::uncompressed_header()
     return true;
 }
 
-bool VP9Decoder::frame_sync_code()
+bool Decoder::frame_sync_code()
 {
     if (m_bit_stream->read_byte() != 0x49)
         return false;
@@ -190,7 +190,7 @@ bool VP9Decoder::frame_sync_code()
     return m_bit_stream->read_byte() == 0x42;
 }
 
-bool VP9Decoder::color_config()
+bool Decoder::color_config()
 {
     if (m_profile >= 2) {
         m_bit_depth = m_bit_stream->read_bit() ? 12 : 10;
@@ -224,7 +224,7 @@ bool VP9Decoder::color_config()
     return true;
 }
 
-bool VP9Decoder::frame_size()
+bool Decoder::frame_size()
 {
     m_frame_width = m_bit_stream->read_f16() + 1;
     m_frame_height = m_bit_stream->read_f16() + 1;
@@ -232,7 +232,7 @@ bool VP9Decoder::frame_size()
     return true;
 }
 
-bool VP9Decoder::render_size()
+bool Decoder::render_size()
 {
     if (m_bit_stream->read_bit()) {
         m_render_width = m_bit_stream->read_f16() + 1;
@@ -244,7 +244,7 @@ bool VP9Decoder::render_size()
     return true;
 }
 
-bool VP9Decoder::frame_size_with_refs()
+bool Decoder::frame_size_with_refs()
 {
     bool found_ref;
     for (auto i = 0; i < 3; i++) {
@@ -266,7 +266,7 @@ bool VP9Decoder::frame_size_with_refs()
     return true;
 }
 
-bool VP9Decoder::compute_image_size()
+bool Decoder::compute_image_size()
 {
     m_mi_cols = (m_frame_width + 7u) >> 3u;
     m_mi_rows = (m_frame_height + 7u) >> 3u;
@@ -275,7 +275,7 @@ bool VP9Decoder::compute_image_size()
     return true;
 }
 
-bool VP9Decoder::read_interpolation_filter()
+bool Decoder::read_interpolation_filter()
 {
     if (m_bit_stream->read_bit()) {
         m_interpolation_filter = SWITCHABLE;
@@ -285,7 +285,7 @@ bool VP9Decoder::read_interpolation_filter()
     return true;
 }
 
-bool VP9Decoder::loop_filter_params()
+bool Decoder::loop_filter_params()
 {
     m_loop_filter_level = m_bit_stream->read_f(6);
     m_loop_filter_sharpness = m_bit_stream->read_f(3);
@@ -307,7 +307,7 @@ bool VP9Decoder::loop_filter_params()
     return true;
 }
 
-bool VP9Decoder::quantization_params()
+bool Decoder::quantization_params()
 {
     auto base_q_idx = m_bit_stream->read_byte();
     auto delta_q_y_dc = read_delta_q();
@@ -317,7 +317,7 @@ bool VP9Decoder::quantization_params()
     return true;
 }
 
-i8 VP9Decoder::read_delta_q()
+i8 Decoder::read_delta_q()
 {
     if (m_bit_stream->read_bit())
         return m_bit_stream->read_s(4);
@@ -342,7 +342,7 @@ static constexpr u8 inv_map_table[MAX_PROB] = {
     247, 248, 249, 250, 251, 252, 253, 253
 };
 
-bool VP9Decoder::segmentation_params()
+bool Decoder::segmentation_params()
 {
     auto segmentation_enabled = m_bit_stream->read_bit();
     if (!segmentation_enabled)
@@ -382,14 +382,14 @@ bool VP9Decoder::segmentation_params()
     return true;
 }
 
-u8 VP9Decoder::read_prob()
+u8 Decoder::read_prob()
 {
     if (m_bit_stream->read_bit())
         return m_bit_stream->read_byte();
     return 255;
 }
 
-bool VP9Decoder::tile_info()
+bool Decoder::tile_info()
 {
     auto min_log2_tile_cols = calc_min_log2_tile_cols();
     auto max_log2_tile_cols = calc_max_log2_tile_cols();
@@ -407,7 +407,7 @@ bool VP9Decoder::tile_info()
     return true;
 }
 
-u16 VP9Decoder::calc_min_log2_tile_cols()
+u16 Decoder::calc_min_log2_tile_cols()
 {
     auto min_log_2 = 0u;
     while ((u8)(MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
@@ -415,7 +415,7 @@ u16 VP9Decoder::calc_min_log2_tile_cols()
     return min_log_2;
 }
 
-u16 VP9Decoder::calc_max_log2_tile_cols()
+u16 Decoder::calc_max_log2_tile_cols()
 {
     auto max_log_2 = 1;
     while ((m_sb64_cols >> max_log_2) >= MIN_TILE_WIDTH_B64)
@@ -423,7 +423,7 @@ u16 VP9Decoder::calc_max_log2_tile_cols()
     return max_log_2 - 1;
 }
 
-bool VP9Decoder::setup_past_independence()
+bool Decoder::setup_past_independence()
 {
     for (auto i = 0; i < 8; i++) {
         for (auto j = 0; j < 4; j++) {
@@ -449,14 +449,14 @@ bool VP9Decoder::setup_past_independence()
     return true;
 }
 
-bool VP9Decoder::trailing_bits()
+bool Decoder::trailing_bits()
 {
     while (m_bit_stream->get_position() & 7u)
         RESERVED_ZERO;
     return true;
 }
 
-bool VP9Decoder::compressed_header()
+bool Decoder::compressed_header()
 {
     read_tx_mode();
     if (m_tx_mode == TXModeSelect) {
@@ -479,7 +479,7 @@ bool VP9Decoder::compressed_header()
     return true;
 }
 
-bool VP9Decoder::read_tx_mode()
+bool Decoder::read_tx_mode()
 {
     if (m_lossless) {
         m_tx_mode = Only_4x4;
@@ -493,7 +493,7 @@ bool VP9Decoder::read_tx_mode()
     return true;
 }
 
-bool VP9Decoder::tx_mode_probs()
+bool Decoder::tx_mode_probs()
 {
     auto& tx_probs = m_probability_tables->tx_probs();
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
@@ -514,7 +514,7 @@ bool VP9Decoder::tx_mode_probs()
     return true;
 }
 
-u8 VP9Decoder::diff_update_prob(u8 prob)
+u8 Decoder::diff_update_prob(u8 prob)
 {
     if (m_bit_stream->read_bool(252)) {
         auto delta_prob = decode_term_subexp();
@@ -523,7 +523,7 @@ u8 VP9Decoder::diff_update_prob(u8 prob)
     return prob;
 }
 
-u8 VP9Decoder::decode_term_subexp()
+u8 Decoder::decode_term_subexp()
 {
     if (m_bit_stream->read_literal(1) == 0)
         return m_bit_stream->read_literal(4);
@@ -538,7 +538,7 @@ u8 VP9Decoder::decode_term_subexp()
     return (v << 1u) - 1 + m_bit_stream->read_literal(1);
 }
 
-u8 VP9Decoder::inv_remap_prob(u8 delta_prob, u8 prob)
+u8 Decoder::inv_remap_prob(u8 delta_prob, u8 prob)
 {
     u8 m = prob - 1;
     auto v = inv_map_table[delta_prob];
@@ -548,7 +548,7 @@ u8 VP9Decoder::inv_remap_prob(u8 delta_prob, u8 prob)
     return 255 - inv_recenter_nonneg(v, 254 - m);
 }
 
-u8 VP9Decoder::inv_recenter_nonneg(u8 v, u8 m)
+u8 Decoder::inv_recenter_nonneg(u8 v, u8 m)
 {
     if (v > 2 * m)
         return v;
@@ -557,7 +557,7 @@ u8 VP9Decoder::inv_recenter_nonneg(u8 v, u8 m)
     return m + (v >> 1u);
 }
 
-bool VP9Decoder::read_coef_probs()
+bool Decoder::read_coef_probs()
 {
     auto max_tx_size = tx_mode_to_biggest_tx_size[m_tx_mode];
     m_tree_parser->set_max_tx_size(max_tx_size);
@@ -582,7 +582,7 @@ bool VP9Decoder::read_coef_probs()
     return true;
 }
 
-bool VP9Decoder::read_skip_prob()
+bool Decoder::read_skip_prob()
 {
     for (auto i = 0; i < SKIP_CONTEXTS; i++) {
         m_probability_tables->skip_prob()[i] = diff_update_prob(m_probability_tables->skip_prob()[i]);
@@ -590,7 +590,7 @@ bool VP9Decoder::read_skip_prob()
     return true;
 }
 
-bool VP9Decoder::read_inter_mode_probs()
+bool Decoder::read_inter_mode_probs()
 {
     for (auto i = 0; i < INTER_MODE_CONTEXTS; i++) {
         for (auto j = 0; j < INTER_MODES - 1; j++) {
@@ -600,7 +600,7 @@ bool VP9Decoder::read_inter_mode_probs()
     return true;
 }
 
-bool VP9Decoder::read_interp_filter_probs()
+bool Decoder::read_interp_filter_probs()
 {
     for (auto i = 0; i < INTERP_FILTER_CONTEXTS; i++) {
         for (auto j = 0; j < SWITCHABLE_FILTERS - 1; j++) {
@@ -610,7 +610,7 @@ bool VP9Decoder::read_interp_filter_probs()
     return true;
 }
 
-bool VP9Decoder::read_is_inter_probs()
+bool Decoder::read_is_inter_probs()
 {
     for (auto i = 0; i < IS_INTER_CONTEXTS; i++) {
         m_probability_tables->is_inter_prob()[i] = diff_update_prob(m_probability_tables->is_inter_prob()[i]);
@@ -618,7 +618,7 @@ bool VP9Decoder::read_is_inter_probs()
     return true;
 }
 
-bool VP9Decoder::frame_reference_mode()
+bool Decoder::frame_reference_mode()
 {
     auto compound_reference_allowed = false;
     for (auto i = 0; i < REFS_PER_FRAME; i++) {
@@ -643,7 +643,7 @@ bool VP9Decoder::frame_reference_mode()
     return true;
 }
 
-bool VP9Decoder::frame_reference_mode_probs()
+bool Decoder::frame_reference_mode_probs()
 {
     if (m_reference_mode == ReferenceModeSelect) {
         for (auto i = 0; i < COMP_MODE_CONTEXTS; i++) {
@@ -667,7 +667,7 @@ bool VP9Decoder::frame_reference_mode_probs()
     return true;
 }
 
-bool VP9Decoder::read_y_mode_probs()
+bool Decoder::read_y_mode_probs()
 {
     for (auto i = 0; i < BLOCK_SIZE_GROUPS; i++) {
         for (auto j = 0; j < INTRA_MODES - 1; j++) {
@@ -678,7 +678,7 @@ bool VP9Decoder::read_y_mode_probs()
     return true;
 }
 
-bool VP9Decoder::read_partition_probs()
+bool Decoder::read_partition_probs()
 {
     for (auto i = 0; i < PARTITION_CONTEXTS; i++) {
         for (auto j = 0; j < PARTITION_TYPES - 1; j++) {
@@ -689,7 +689,7 @@ bool VP9Decoder::read_partition_probs()
     return true;
 }
 
-bool VP9Decoder::mv_probs()
+bool Decoder::mv_probs()
 {
     for (auto j = 0; j < MV_JOINTS - 1; j++) {
         auto& mv_joint_probs = m_probability_tables->mv_joint_probs();
@@ -736,7 +736,7 @@ bool VP9Decoder::mv_probs()
     return true;
 }
 
-u8 VP9Decoder::update_mv_prob(u8 prob)
+u8 Decoder::update_mv_prob(u8 prob)
 {
     if (m_bit_stream->read_bool(252)) {
         return (m_bit_stream->read_literal(7) << 1u) | 1u;
@@ -744,7 +744,7 @@ u8 VP9Decoder::update_mv_prob(u8 prob)
     return prob;
 }
 
-bool VP9Decoder::setup_compound_reference_mode()
+bool Decoder::setup_compound_reference_mode()
 {
     if (m_ref_frame_sign_bias[LAST_FRAME] == m_ref_frame_sign_bias[GOLDEN_FRAME]) {
         m_comp_fixed_ref = ALTREF_FRAME;
@@ -762,7 +762,7 @@ bool VP9Decoder::setup_compound_reference_mode()
     return true;
 }
 
-bool VP9Decoder::decode_tiles()
+bool Decoder::decode_tiles()
 {
     auto tile_cols = 1 << m_tile_cols_log2;
     auto tile_rows = 1 << m_tile_rows_log2;
@@ -786,7 +786,7 @@ bool VP9Decoder::decode_tiles()
     return true;
 }
 
-bool VP9Decoder::clear_above_context()
+bool Decoder::clear_above_context()
 {
     // FIXME
     // When this function is invoked the arrays AboveNonzeroContext, AbovePartitionContext, AboveSegPredContext should be set equal to 0.
@@ -796,14 +796,14 @@ bool VP9Decoder::clear_above_context()
     return true;
 }
 
-u32 VP9Decoder::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
+u32 Decoder::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
 {
     u32 super_blocks = (mis + 7) >> 3u;
     u32 offset = ((tile_num * super_blocks) >> tile_size_log2) << 3;
     return min(offset, mis);
 }
 
-bool VP9Decoder::decode_tile()
+bool Decoder::decode_tile()
 {
     for (auto row = m_mi_row_start; row < m_mi_row_end; row += 8) {
         if (!clear_left_context())
@@ -818,7 +818,7 @@ bool VP9Decoder::decode_tile()
     return true;
 }
 
-bool VP9Decoder::clear_left_context()
+bool Decoder::clear_left_context()
 {
     // FIXME
     // When this function is invoked the arrays LeftNonzeroContext, LeftPartitionContext, LeftSegPredContext should be set equal to 0.
@@ -828,7 +828,7 @@ bool VP9Decoder::clear_left_context()
     return true;
 }
 
-bool VP9Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
+bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
 {
     if (row >= m_mi_rows || col >= m_mi_cols)
         return false;
@@ -850,7 +850,7 @@ bool VP9Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
     return true;
 }
 
-void VP9Decoder::dump_info()
+void Decoder::dump_info()
 {
     dbgln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
     dbgln("Render dimensions: {}x{}", m_render_width, m_render_height);

@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LookupTables.h"
 #include "TreeParser.h"
+#include "LookupTables.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 int TreeParser::parse_tree(SyntaxElementType type)
 {

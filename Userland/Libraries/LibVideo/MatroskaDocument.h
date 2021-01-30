@@ -91,13 +91,15 @@ public:
     void set_language(String language) { m_language = move(language); }
     FlyString codec_id() const { return m_codec_id; }
     void set_codec_id(String codec_id) { m_codec_id = move(codec_id); }
-    Optional<VideoTrack> video_track() const {
+    Optional<VideoTrack> video_track() const
+    {
         if (track_type() != Video)
             return {};
         return m_video_track;
     }
     void set_video_track(VideoTrack video_track) { m_video_track = video_track; }
-    Optional<AudioTrack> audio_track() const {
+    Optional<AudioTrack> audio_track() const
+    {
         if (track_type() != Audio)
             return {};
         return m_audio_track;

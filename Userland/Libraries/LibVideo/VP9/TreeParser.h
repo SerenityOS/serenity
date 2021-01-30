@@ -30,11 +30,14 @@
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 class TreeParser {
 public:
-    explicit TreeParser(ProbabilityTables& probability_tables) : m_probability_tables(probability_tables) {}
+    explicit TreeParser(ProbabilityTables& probability_tables)
+        : m_probability_tables(probability_tables)
+    {
+    }
 
     class TreeSelection {
     public:
@@ -49,6 +52,7 @@ public:
         bool is_single_value() const { return m_is_single_value; }
         int get_single_value() const { return m_value.m_value; }
         const int* get_tree_value() const { return m_value.m_tree; }
+
     private:
         bool m_is_single_value;
         TreeSelectionValue m_value;

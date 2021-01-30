@@ -34,11 +34,11 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 
-namespace Video {
+namespace Video::VP9 {
 
-class VP9Decoder {
+class Decoder {
 public:
-    VP9Decoder();
+    Decoder();
     bool parse_frame(const ByteBuffer&);
     void dump_info();
 

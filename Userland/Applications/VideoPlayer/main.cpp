@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibVideo/MatroskaReader.h>
-#include <LibVideo/VPX/VP9Decoder.h>
+#include <LibVideo/VP9/Decoder.h>
 
 int main(int argc, char** argv)
 {
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     image_widget.set_fixed_size(video_track.pixel_height, video_track.pixel_width);
     main_widget.add_child(image_widget);
 
-    Video::VP9Decoder vp9_decoder;
+    Video::VP9::Decoder vp9_decoder;
     for (const auto& cluster : document->clusters()) {
         for (const auto& block : cluster.blocks()) {
             if (block.track_number() != track.track_number())

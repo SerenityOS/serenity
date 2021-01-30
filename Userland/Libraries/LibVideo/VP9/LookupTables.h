@@ -28,34 +28,73 @@
 
 #include "Enums.h"
 
-namespace Video {
+namespace Video::VP9 {
 
 static constexpr InterpolationFilter literal_to_type[4] = { EIGHTTAP_SMOOTH, EIGHTTAP, EIGHTTAP_SHARP, BILINEAR };
 static constexpr TXSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX_4x4, TX_8x8, TX_16x16, TX_32x32, TX_32x32 };
 static constexpr BlockSubsize subsize_lookup[PARTITION_TYPES][BLOCK_SIZES] = {
-    {  // PARTITION_NONE
-        Block_4x4,   Block_4x8,   Block_8x4,
-        Block_8x8,   Block_8x16,  Block_16x8,
-        Block_16x16, Block_16x32, Block_32x16,
-        Block_32x32, Block_32x64, Block_64x32,
-        Block_64x64,
-    }, {  // PARTITION_HORZ
-        Block_Invalid, Block_Invalid, Block_Invalid,
-        Block_8x4,     Block_Invalid, Block_Invalid,
-        Block_16x8,    Block_Invalid, Block_Invalid,
-        Block_32x16,   Block_Invalid, Block_Invalid,
-        Block_64x32,
-    }, {  // PARTITION_VERT
-        Block_Invalid, Block_Invalid, Block_Invalid,
-        Block_4x8,     Block_Invalid, Block_Invalid,
-        Block_8x16,    Block_Invalid, Block_Invalid,
-        Block_16x32,   Block_Invalid, Block_Invalid,
+    {
+        // PARTITION_NONE
+        Block_4x4,
+        Block_4x8,
+        Block_8x4,
+        Block_8x8,
+        Block_8x16,
+        Block_16x8,
+        Block_16x16,
+        Block_16x32,
+        Block_32x16,
+        Block_32x32,
         Block_32x64,
-    }, {  // PARTITION_SPLIT
-        Block_Invalid, Block_Invalid, Block_Invalid,
-        Block_4x4,     Block_Invalid, Block_Invalid,
-        Block_8x8,     Block_Invalid, Block_Invalid,
-        Block_16x16,   Block_Invalid, Block_Invalid,
+        Block_64x32,
+        Block_64x64,
+    },
+    {
+        // PARTITION_HORZ
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x4,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_32x16,
+        Block_Invalid,
+        Block_Invalid,
+        Block_64x32,
+    },
+    {
+        // PARTITION_VERT
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_4x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x16,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x32,
+        Block_Invalid,
+        Block_Invalid,
+        Block_32x64,
+    },
+    {
+        // PARTITION_SPLIT
+        Block_Invalid,
+        Block_Invalid,
+        Block_Invalid,
+        Block_4x4,
+        Block_Invalid,
+        Block_Invalid,
+        Block_8x8,
+        Block_Invalid,
+        Block_Invalid,
+        Block_16x16,
+        Block_Invalid,
+        Block_Invalid,
         Block_32x32,
     }
 };
@@ -138,12 +177,12 @@ static constexpr int token_tree[20] = {
 };
 
 static constexpr u8 b_width_log2_lookup[BLOCK_SIZES] = { 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-static constexpr u8 b_height_log2_lookup[BLOCK_SIZES] = {0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4 };
-static constexpr u8 num_4x4_blocks_wide_lookup[BLOCK_SIZES] = {1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16 };
-static constexpr u8 num_4x4_blocks_high_lookup[BLOCK_SIZES] = {1, 2, 1, 2, 4, 2, 4, 8, 4, 8, 16, 8, 16 };
-static constexpr u8 mi_width_log2_lookup[BLOCK_SIZES] = {0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3 };
-static constexpr u8 num_8x8_blocks_wide_lookup[BLOCK_SIZES] = {1, 1, 1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8 };
-static constexpr u8 mi_height_log2_lookup[BLOCK_SIZES] = {0, 0, 0, 0, 1, 0, 1, 2, 1, 2, 3, 2, 3 };
+static constexpr u8 b_height_log2_lookup[BLOCK_SIZES] = { 0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4 };
+static constexpr u8 num_4x4_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16 };
+static constexpr u8 num_4x4_blocks_high_lookup[BLOCK_SIZES] = { 1, 2, 1, 2, 4, 2, 4, 8, 4, 8, 16, 8, 16 };
+static constexpr u8 mi_width_log2_lookup[BLOCK_SIZES] = { 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3 };
+static constexpr u8 num_8x8_blocks_wide_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8 };
+static constexpr u8 mi_height_log2_lookup[BLOCK_SIZES] = { 0, 0, 0, 0, 1, 0, 1, 2, 1, 2, 3, 2, 3 };
 static constexpr u8 num_8x8_blocks_high_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 2, 1, 2, 4, 2, 4, 8, 4, 8 };
 static constexpr u8 size_group_lookup[BLOCK_SIZES] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
 

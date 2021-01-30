@@ -1,14 +1,14 @@
 set(SOURCES
     MatroskaDocument.h
     MatroskaReader.cpp
-    VPX/BitStream.cpp
-    VPX/Constants.h
-    VPX/Enums.h
-    VPX/LookupTables.h
-    VPX/ProbabilityTables.cpp
-    VPX/SyntaxElementCounter.cpp
-    VPX/TreeParser.cpp
-    VPX/VP9Decoder.cpp
+    VP9/BitStream.cpp
+    VP9/Constants.h
+    VP9/Decoder.cpp
+    VP9/Enums.h
+    VP9/LookupTables.h
+    VP9/ProbabilityTables.cpp
+    VP9/SyntaxElementCounter.cpp
+    VP9/TreeParser.cpp
 )
 
 serenity_lib(LibVideo video)
