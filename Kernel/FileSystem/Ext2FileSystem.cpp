@@ -1694,6 +1694,19 @@ KResult Ext2FSInode::truncate(u64 size)
     return KSuccess;
 }
 
+KResultOr<int> Ext2FSInode::get_block_address(int index)
+{
+    LOCKER(m_lock);
+
+    if (m_block_list.is_empty())
+        m_block_list = fs().block_list_for_inode(m_raw_inode);
+
+    if (index < 0 || (size_t)index >= m_block_list.size())
+        return 0;
+
+    return m_block_list[index];
+}
+
 unsigned Ext2FS::total_block_count() const
 {
     LOCKER(m_lock);
