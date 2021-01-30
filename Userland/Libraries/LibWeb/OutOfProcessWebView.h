@@ -81,18 +81,22 @@ private:
     virtual void did_scroll() override;
 
     void request_repaint();
+    void handle_resize();
 
+    void create_client();
     WebContentClient& client();
 
     URL m_url;
 
-    RefPtr<WebContentClient> m_client;
-    RefPtr<Gfx::Bitmap> m_front_bitmap;
-    RefPtr<Gfx::Bitmap> m_back_bitmap;
-    i32 m_front_bitmap_id { -1 };
-    i32 m_back_bitmap_id { -1 };
-    i32 m_next_bitmap_id { 0 };
-    bool m_has_usable_bitmap { false };
+    struct ClientState {
+        RefPtr<WebContentClient> client;
+        RefPtr<Gfx::Bitmap> front_bitmap;
+        RefPtr<Gfx::Bitmap> back_bitmap;
+        i32 front_bitmap_id { -1 };
+        i32 back_bitmap_id { -1 };
+        i32 next_bitmap_id { 0 };
+        bool has_usable_bitmap { false };
+    } m_client_state;
 };
 
 }
