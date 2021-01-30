@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -150,7 +150,7 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 
 int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
-    REQUIRE_PROMISE(thread);
+    REQUIRE_PROMISE(stdio);
     auto name = copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
         return -EFAULT;
