@@ -87,6 +87,7 @@ set(KERNEL_SOURCES
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
+    Net/NE2000NetworkAdapter.cpp
     Net/NetworkAdapter.cpp
     Net/NetworkTask.cpp
     Net/RTL8139NetworkAdapter.cpp
