@@ -26,76 +26,294 @@
 
 #pragma once
 
+#ifndef ACPI_DEBUG
 #cmakedefine01 ACPI_DEBUG
+#endif
+
+#ifndef APIC_DEBUG
 #cmakedefine01 APIC_DEBUG
+#endif
+
+#ifndef APIC_SMP_DEBUG
 #cmakedefine01 APIC_SMP_DEBUG
+#endif
+
+#ifndef ARP_DEBUG
 #cmakedefine01 ARP_DEBUG
+#endif
+
+#ifndef BBFS_DEBUG
 #cmakedefine01 BBFS_DEBUG
+#endif
+
+#ifndef BXVGA_DEBUG
 #cmakedefine01 BXVGA_DEBUG
+#endif
+
+#ifndef COMMIT_DEBUG
 #cmakedefine01 COMMIT_DEBUG
+#endif
+
+#ifndef CONTEXT_SWITCH_DEBUG
 #cmakedefine01 CONTEXT_SWITCH_DEBUG
+#endif
+
+#ifndef CONTIGUOUS_VMOBJECT_DEBUG
 #cmakedefine01 CONTIGUOUS_VMOBJECT_DEBUG
+#endif
+
+#ifndef E1000_DEBUG
 #cmakedefine01 E1000_DEBUG
+#endif
+
+#ifndef ETHERNET_DEBUG
 #cmakedefine01 ETHERNET_DEBUG
+#endif
+
+#ifndef ETHERNET_VERY_DEBUG
 #cmakedefine01 ETHERNET_VERY_DEBUG
+#endif
+
+#ifndef EXEC_DEBUG
 #cmakedefine01 EXEC_DEBUG
+#endif
+
+#ifndef EXT2_DEBUG
 #cmakedefine01 EXT2_DEBUG
+#endif
+
+#ifndef EXT2_VERY_DEBUG
 #cmakedefine01 EXT2_VERY_DEBUG
+#endif
+
+#ifndef FIFO_DEBUG
 #cmakedefine01 FIFO_DEBUG
+#endif
+
+#ifndef FILEDESCRIPTION_DEBUG
 #cmakedefine01 FILEDESCRIPTION_DEBUG
+#endif
+
+#ifndef FORK_DEBUG
 #cmakedefine01 FORK_DEBUG
+#endif
+
+#ifndef FUTEX_DEBUG
 #cmakedefine01 FUTEX_DEBUG
+#endif
+
+#ifndef FUTEXQUEUE_DEBUG
 #cmakedefine01 FUTEXQUEUE_DEBUG
+#endif
+
+#ifndef GPT_DEBUG
 #cmakedefine01 GPT_DEBUG
+#endif
+
+#ifndef HPET_COMPARATOR_DEBUG
 #cmakedefine01 HPET_COMPARATOR_DEBUG
+#endif
+
+#ifndef HPET_DEBUG
 #cmakedefine01 HPET_DEBUG
+#endif
+
+#ifndef ICMP_DEBUG
 #cmakedefine01 ICMP_DEBUG
+#endif
+
+#ifndef INTERRUPT_DEBUG
 #cmakedefine01 INTERRUPT_DEBUG
+#endif
+
+#ifndef IOAPIC_DEBUG
 #cmakedefine01 IOAPIC_DEBUG
+#endif
+
+#ifndef IO_DEBUG
 #cmakedefine01 IO_DEBUG
+#endif
+
+#ifndef IPV4_DEBUG
 #cmakedefine01 IPV4_DEBUG
+#endif
+
+#ifndef IPV4_SOCKET_DEBUG
 #cmakedefine01 IPV4_SOCKET_DEBUG
+#endif
+
+#ifndef IRQ_DEBUG
 #cmakedefine01 IRQ_DEBUG
+#endif
+
+#ifndef KEYBOARD_DEBUG
 #cmakedefine01 KEYBOARD_DEBUG
+#endif
+
+#ifndef KMALLOC_DEBUG
 #cmakedefine01 KMALLOC_DEBUG
+#endif
+
+#ifndef LOCAL_SOCKET_DEBUG
 #cmakedefine01 LOCAL_SOCKET_DEBUG
+#endif
+
+#ifndef LOCK_DEBUG
 #cmakedefine01 LOCK_DEBUG
+#endif
+
+#ifndef LOCK_RESTORE_DEBUG
 #cmakedefine01 LOCK_RESTORE_DEBUG
+#endif
+
+#ifndef LOCK_TRACE_DEBUG
 #cmakedefine01 LOCK_TRACE_DEBUG
+#endif
+
+#ifndef MASTERPTY_DEBUG
 #cmakedefine01 MASTERPTY_DEBUG
+#endif
+
+#ifndef MBR_DEBUG
 #cmakedefine01 MBR_DEBUG
+#endif
+
+#ifndef MULTIPROCESSOR_DEBUG
 #cmakedefine01 MULTIPROCESSOR_DEBUG
+#endif
+
+#ifndef NETWORK_TASK_DEBUG
 #cmakedefine01 NETWORK_TASK_DEBUG
+#endif
+
+#ifndef OFFD_DEBUG
 #cmakedefine01 OFFD_DEBUG
+#endif
+
+#ifndef PAGE_FAULT_DEBUG
 #cmakedefine01 PAGE_FAULT_DEBUG
+#endif
+
+#ifndef PATA_DEBUG
 #cmakedefine01 PATA_DEBUG
+#endif
+
+#ifndef PCI_DEBUG
 #cmakedefine01 PCI_DEBUG
+#endif
+
+#ifndef POLL_SELECT_DEBUG
 #cmakedefine01 POLL_SELECT_DEBUG
+#endif
+
+#ifndef PROCESS_DEBUG
 #cmakedefine01 PROCESS_DEBUG
+#endif
+
+#ifndef PROCFS_DEBUG
 #cmakedefine01 PROCFS_DEBUG
+#endif
+
+#ifndef PS2MOUSE_DEBUG
 #cmakedefine01 PS2MOUSE_DEBUG
+#endif
+
+#ifndef PTMX_DEBUG
 #cmakedefine01 PTMX_DEBUG
+#endif
+
+#ifndef ROUTING_DEBUG
 #cmakedefine01 ROUTING_DEBUG
+#endif
+
+#ifndef RTL8139_DEBUG
 #cmakedefine01 RTL8139_DEBUG
+#endif
+
+#ifndef SB16_DEBUG
 #cmakedefine01 SB16_DEBUG
+#endif
+
+#ifndef SCHEDULER_DEBUG
 #cmakedefine01 SCHEDULER_DEBUG
+#endif
+
+#ifndef SCHEDULER_RUNNABLE_DEBUG
 #cmakedefine01 SCHEDULER_RUNNABLE_DEBUG
+#endif
+
+#ifndef SIGNAL_DEBUG
 #cmakedefine01 SIGNAL_DEBUG
+#endif
+
+#ifndef SLAVEPTY_DEBUG
 #cmakedefine01 SLAVEPTY_DEBUG
+#endif
+
+#ifndef SMP_DEBUG
 #cmakedefine01 SMP_DEBUG
+#endif
+
+#ifndef SOCKET_DEBUG
 #cmakedefine01 SOCKET_DEBUG
+#endif
+
+#ifndef STORAGE_DEVICE_DEBUG
 #cmakedefine01 STORAGE_DEVICE_DEBUG
+#endif
+
+#ifndef TCP_DEBUG
 #cmakedefine01 TCP_DEBUG
+#endif
+
+#ifndef TCP_SOCKET_DEBUG
 #cmakedefine01 TCP_SOCKET_DEBUG
+#endif
+
+#ifndef THREAD_DEBUG
 #cmakedefine01 THREAD_DEBUG
+#endif
+
+#ifndef TTY_DEBUG
 #cmakedefine01 TTY_DEBUG
+#endif
+
+#ifndef UDP_DEBUG
 #cmakedefine01 UDP_DEBUG
+#endif
+
+#ifndef UHCI_DEBUG
 #cmakedefine01 UHCI_DEBUG
+#endif
+
+#ifndef UHCI_VERBOSE_DEBUG
 #cmakedefine01 UHCI_VERBOSE_DEBUG
+#endif
+
+#ifndef VFS_DEBUG
 #cmakedefine01 VFS_DEBUG
+#endif
+
+#ifndef VMWARE_BACKDOOR_DEBUG
 #cmakedefine01 VMWARE_BACKDOOR_DEBUG
+#endif
+
+#ifndef VOLATILE_PAGE_RANGES_DEBUG
 #cmakedefine01 VOLATILE_PAGE_RANGES_DEBUG
+#endif
+
+#ifndef VRA_DEBUG
 #cmakedefine01 VRA_DEBUG
+#endif
+
+#ifndef WAITBLOCK_DEBUG
 #cmakedefine01 WAITBLOCK_DEBUG
+#endif
+
+#ifndef WAITQUEUE_DEBUG
 #cmakedefine01 WAITQUEUE_DEBUG
+#endif
+
+#ifndef KMALLOC_DEBUG_LARGE_ALLOCATIONS
 #cmakedefine01 KMALLOC_DEBUG_LARGE_ALLOCATIONS
+#endif
