@@ -368,8 +368,14 @@ static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
             continue;
         }
         int trailing_zeros = count_trailing_zeroes_32(mask);
-        int size = count_trailing_zeroes_32(~(mask >> trailing_zeros));
-        mask_shifts.append(trailing_zeros - 8);
+        // If mask is exactly `0xFFFFFFFF`, then we might try to count the trailing zeros of 0x00000000 here, so we need the safe version:
+        int size = count_trailing_zeroes_32_safe(~(mask >> trailing_zeros));
+        if (size > 8) {
+            // Drop lowest bits if mask is longer than 8 bits.
+            trailing_zeros += size - 8;
+            size = 8;
+        }
+        mask_shifts.append(size + trailing_zeros - 8);
         mask_sizes.append(size);
     }
 }

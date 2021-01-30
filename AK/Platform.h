@@ -81,9 +81,16 @@ ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
     }
     return 0;
 #endif
+}
+
+ALWAYS_INLINE int count_trailing_zeroes_32_safe(unsigned int val)
+{
+    if (val == 0)
+        return 32;
+    return count_trailing_zeroes_32(val);
+}
 
 #ifdef AK_OS_BSD_GENERIC
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif
-}
