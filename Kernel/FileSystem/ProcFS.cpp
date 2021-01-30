@@ -1449,7 +1449,11 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
 
 KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
-    // The only links are in pid directories, so it's safe to ignore
+    if (FI_Root_self == to_proc_file_type(identifier())) {
+        return VFS::the().resolve_path(String::number(Process::current()->pid().value()), base, out_parent, options, symlink_recursion_level);
+    }
+
+    // The only other links are in pid directories, so it's safe to ignore
     // unrelated files and the thread-specific stacks/ directory.
     if (!is_process_related_file(identifier()))
         return Inode::resolve_as_link(base, out_parent, options, symlink_recursion_level);
