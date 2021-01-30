@@ -33,17 +33,23 @@
 
 namespace Keyboard {
 
-CharacterMap::CharacterMap(const String& file_name)
+CharacterMap::CharacterMap(const String& map_name)
 {
 #ifdef KERNEL
     m_character_map_data = default_character_map;
 #else
-    auto result = CharacterMapFile::load_from_file(file_name);
+    auto result = CharacterMapFile::load_from_file(map_name);
     ASSERT(result.has_value());
 
     m_character_map_data = result.value();
 #endif
-    m_character_map_name = file_name;
+    m_character_map_name = map_name;
+}
+
+CharacterMap::CharacterMap(const String& map_name, const CharacterMapData& map_data)
+    : m_character_map_data(map_data)
+    , m_character_map_name(map_name)
+{
 }
 
 #ifndef KERNEL
@@ -52,6 +58,26 @@ int CharacterMap::set_system_map()
 {
     Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, m_character_map_data.shift_altgr_map, { m_character_map_name.characters(), m_character_map_name.length() } };
     return syscall(SC_setkeymap, &params);
+}
+
+Result<CharacterMap, OSError> CharacterMap::fetch_system_map()
+{
+    CharacterMapData map_data;
+    char keymap_name[50 + 1] = { 0 };
+
+    Syscall::SC_getkeymap_params params {
+        map_data.map, map_data.shift_map,
+        map_data.alt_map,
+        map_data.altgr_map,
+        map_data.shift_altgr_map,
+        { keymap_name, sizeof(keymap_name) }
+    };
+    int rc = syscall(SC_getkeymap, &params);
+    if (rc < 0) {
+        return OSError(-rc);
+    }
+
+    return CharacterMap { keymap_name, map_data };
 }
 
 #endif

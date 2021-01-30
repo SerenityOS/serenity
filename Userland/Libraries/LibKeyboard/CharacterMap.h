@@ -26,6 +26,10 @@
 
 #pragma once
 
+#ifndef KERNEL
+#    include <AK/OSError.h>
+#    include <AK/Result.h>
+#endif
 #include <AK/String.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibKeyboard/CharacterMapData.h>
@@ -35,10 +39,12 @@ namespace Keyboard {
 class CharacterMap {
 
 public:
-    CharacterMap(const String& file_name);
+    CharacterMap(const String& map_name);
+    CharacterMap(const String& map_name, const CharacterMapData& map_data);
 
 #ifndef KERNEL
     int set_system_map();
+    static Result<CharacterMap, OSError> fetch_system_map();
 #endif
 
     u32 get_char(KeyEvent);

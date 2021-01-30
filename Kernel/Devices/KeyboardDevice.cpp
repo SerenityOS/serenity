@@ -407,7 +407,7 @@ void KeyboardDevice::set_maps(const Keyboard::CharacterMapData& character_map_da
 {
     m_character_map.set_character_map_data(character_map_data);
     m_character_map.set_character_map_name(character_map_name);
-    dbgln("New Character map '{}' passing to client.", character_map_name);
+    dbgln("New Character map '{}' passed in by client.", character_map_name);
 }
 
 }
