@@ -194,7 +194,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (map_fixed && map_randomized)
         return (void*)-EINVAL;
 
-    if (!validate_mmap_prot(prot, map_anonymous, map_stack))
+    if (!validate_mmap_prot(prot, map_stack, map_anonymous))
         return (void*)-EINVAL;
 
     if (map_stack && (!map_private || !map_anonymous))
