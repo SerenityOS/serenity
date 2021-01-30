@@ -79,7 +79,7 @@ void* dlopen(const char* filename, int flags)
 
     int fd = open(filename, O_RDONLY);
     if (!fd) {
-        g_dlerror_msg = String::format("Unable to open file %s", filename);
+        g_dlerror_msg = String::formatted("Unable to open file {}", filename);
         return nullptr;
     }
 
@@ -90,21 +90,21 @@ void* dlopen(const char* filename, int flags)
 
     int ret = fstat(fd, &file_stats);
     if (ret < 0) {
-        g_dlerror_msg = String::format("Unable to stat file %s", filename);
+        g_dlerror_msg = String::formatted("Unable to stat file {}", filename);
         return nullptr;
     }
 
     auto loader = ELF::DynamicLoader::construct(filename, fd, file_stats.st_size);
 
     if (!loader->is_valid()) {
-        g_dlerror_msg = String::format("%s is not a valid ELF dynamic shared object!", filename);
+        g_dlerror_msg = String::formatted("{} is not a valid ELF dynamic shared object!", filename);
         return nullptr;
     }
 
     if (!loader->load_from_image(flags,
             0 // total_tls_size = 0, FIXME: Support TLS when using dlopen()
             )) {
-        g_dlerror_msg = String::format("Failed to load ELF object %s", filename);
+        g_dlerror_msg = String::formatted("Failed to load ELF object {}", filename);
         return nullptr;
     }
 

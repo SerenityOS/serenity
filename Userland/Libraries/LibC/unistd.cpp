@@ -129,7 +129,7 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
         path = "/bin:/usr/bin";
     auto parts = path.split(':');
     for (auto& part : parts) {
-        auto candidate = String::format("%s/%s", part.characters(), filename);
+        auto candidate = String::formatted("{}/{}", part, filename);
         int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
             errno_rollback.set_override_rollback_value(errno);
