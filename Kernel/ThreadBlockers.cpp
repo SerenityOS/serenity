@@ -142,6 +142,40 @@ bool Thread::QueueBlocker::unblock()
     return true;
 }
 
+#if LOCK_DEBUG
+Thread::LockBlocker::LockBlocker(Lock& lock, LockMode requested_mode, u32 locks = 1, const char* block_reason, const SourceLocation& location)
+#else
+Thread::LockBlocker::LockBlocker(Lock& lock, LockMode requested_mode, u32 locks = 1, const char* block_reason)
+#endif
+    : m_block_reason(block_reason)
+    , m_requested_mode(requested_mode)
+    , m_locks(locks)
+#if LOCK_DEBUG
+    , m_source_location(location)
+#endif
+{
+    VERIFY(requested_mode != LockMode::Unlocked);
+    if (!set_block_condition(lock, Thread::current()))
+        m_should_block = false;
+}
+
+Thread::LockBlocker::~LockBlocker()
+{
+}
+
+bool Thread::LockBlocker::unblock()
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        if (m_did_unblock)
+            return false;
+        m_did_unblock = true;
+    }
+
+    unblock_from_blocker();
+    return true;
+}
+
 Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
     : m_bitset(bitset)
 {

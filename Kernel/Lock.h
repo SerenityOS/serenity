@@ -15,9 +15,13 @@
 #include <Kernel/LockMode.h>
 #include <Kernel/WaitQueue.h>
 
+#define MEASURE_LOCK_TIME 1
+
 namespace Kernel {
 
-class Lock {
+class Timer;
+
+class Lock : public Thread::BlockCondition {
     AK_MAKE_NONCOPYABLE(Lock);
     AK_MAKE_NONMOVABLE(Lock);
 
@@ -28,7 +32,13 @@ public:
         : m_name(name)
     {
     }
-    ~Lock() = default;
+
+    ~Lock()
+    {
+#if MEASURE_LOCK_TIME
+        VERIFY(!m_lock_hold_timer);
+#endif
+    }
 
 #if LOCK_DEBUG
     void lock(Mode mode = Mode::Exclusive, const SourceLocation& location = SourceLocation::current());
@@ -59,15 +69,27 @@ public:
         }
     }
 
+protected:
+    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
+
 private:
-    Atomic<bool> m_lock { false };
+    void did_unlock();
+
     const char* m_name { nullptr };
-    WaitQueue m_queue;
-    Atomic<Mode, AK::MemoryOrder::memory_order_relaxed> m_mode { Mode::Unlocked };
+    Mode m_mode { Mode::Unlocked };
 
     // When locked exclusively, only the thread already holding the lock can
     // lock it again. When locked in shared mode, any thread can do that.
     u32 m_times_locked { 0 };
+
+#if MEASURE_LOCK_TIME
+    void start_locked_timer();
+    void stop_locked_timer();
+    void set_hold_timer(Time);
+
+    Time m_lock_hold_start_time;
+    RefPtr<Timer> m_lock_hold_timer;
+#endif
 
     // One of the threads that hold this lock, or nullptr. When locked in shared
     // mode, this is stored on best effort basis: nullptr value does *not* mean

@@ -426,7 +426,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
             remap_vmobject_page(translate_to_vmobject_page(page_index_in_region));
             return PageFaultResponse::Continue;
         }
-        return handle_zero_fault(page_index_in_region);
+        return handle_zero_fault(page_index_in_region, mm_lock);
 #else
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
         return PageFaultResponse::ShouldCrash;
@@ -438,7 +438,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_zero_fault(page_index_in_region);
+            return handle_zero_fault(page_index_in_region, mm_lock);
         }
         return handle_cow_fault(page_index_in_region);
     }
@@ -446,12 +446,24 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
     return PageFaultResponse::ShouldCrash;
 }
 
-PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
+PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
-    Locker locker(vmobject().m_paging_lock);
+    if (Thread::current() && !g_scheduler_lock.own_lock()) {
+        // TODO: This seems rather weird. If we don't have a current thread
+        // then we're in the Kernel in early initialization still. So we
+        // can't actually wait on the paging lock. And if we currently
+        // own the scheduler lock and we trigger zero faults, we also
+        // can't really wait. But do we actually need to wait here?
+        mm_lock.unlock();
+        VERIFY(!s_mm_lock.own_lock());
+
+        Locker locker(vmobject().m_paging_lock);
+
+        mm_lock.lock();
+    }
 
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);

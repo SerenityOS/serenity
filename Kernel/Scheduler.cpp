@@ -18,7 +18,7 @@
 #include <Kernel/TimerQueue.h>
 
 // Remove this once SMP is stable and can be enabled by default
-#define SCHEDULE_ON_ALL_PROCESSORS 0
+#define SCHEDULE_ON_ALL_PROCESSORS 1
 
 namespace Kernel {
 

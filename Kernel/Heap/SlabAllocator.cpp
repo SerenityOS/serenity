@@ -108,10 +108,11 @@ private:
 static SlabAllocator<16> s_slab_allocator_16;
 static SlabAllocator<32> s_slab_allocator_32;
 static SlabAllocator<64> s_slab_allocator_64;
-static SlabAllocator<128> s_slab_allocator_128;
+//static SlabAllocator<128> s_slab_allocator_128;
+static SlabAllocator<192> s_slab_allocator_192;
 
 #if ARCH(I386)
-static_assert(sizeof(Region) <= s_slab_allocator_128.slab_size());
+static_assert(sizeof(Region) <= s_slab_allocator_192.slab_size());
 #endif
 
 template<typename Callback>
@@ -120,7 +121,8 @@ void for_each_allocator(Callback callback)
     callback(s_slab_allocator_16);
     callback(s_slab_allocator_32);
     callback(s_slab_allocator_64);
-    callback(s_slab_allocator_128);
+    //callback(s_slab_allocator_128);
+    callback(s_slab_allocator_192);
 }
 
 UNMAP_AFTER_INIT void slab_alloc_init()
@@ -128,7 +130,8 @@ UNMAP_AFTER_INIT void slab_alloc_init()
     s_slab_allocator_16.init(128 * KiB);
     s_slab_allocator_32.init(128 * KiB);
     s_slab_allocator_64.init(512 * KiB);
-    s_slab_allocator_128.init(512 * KiB);
+    //s_slab_allocator_128.init(512 * KiB);
+    s_slab_allocator_192.init(512 * KiB);
 }
 
 void* slab_alloc(size_t slab_size)
@@ -139,8 +142,10 @@ void* slab_alloc(size_t slab_size)
         return s_slab_allocator_32.alloc();
     if (slab_size <= 64)
         return s_slab_allocator_64.alloc();
-    if (slab_size <= 128)
-        return s_slab_allocator_128.alloc();
+    //if (slab_size <= 128)
+    //    return s_slab_allocator_128.alloc();
+    if (slab_size <= 192)
+        return s_slab_allocator_192.alloc();
     VERIFY_NOT_REACHED();
 }
 
@@ -152,8 +157,10 @@ void slab_dealloc(void* ptr, size_t slab_size)
         return s_slab_allocator_32.dealloc(ptr);
     if (slab_size <= 64)
         return s_slab_allocator_64.dealloc(ptr);
-    if (slab_size <= 128)
-        return s_slab_allocator_128.dealloc(ptr);
+    //if (slab_size <= 128)
+    //    return s_slab_allocator_128.dealloc(ptr);
+    if (slab_size <= 192)
+        return s_slab_allocator_192.dealloc(ptr);
     VERIFY_NOT_REACHED();
 }
 
