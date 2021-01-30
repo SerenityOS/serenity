@@ -42,7 +42,7 @@ private:
     Client(NonnullRefPtr<Core::TCPSocket>, const String&, Core::Object* parent);
 
     void handle_request(ReadonlyBytes);
-    void send_response(StringView, const HTTP::HttpRequest&, const String& content_type);
+    void send_response(InputStream&, const HTTP::HttpRequest&, const String& content_type);
     void send_redirect(StringView redirect, const HTTP::HttpRequest& request);
     void send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest&);
     void die();

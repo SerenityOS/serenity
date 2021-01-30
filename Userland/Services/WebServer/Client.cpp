@@ -28,11 +28,13 @@
 #include <AK/Base64.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/URLParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <stdio.h>
@@ -125,10 +127,12 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     }
 
-    send_response(file->read_all(), request, Core::guess_mime_type_based_on_filename(real_path));
+    Core::InputFileStream stream { file };
+
+    send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path));
 }
 
-void Client::send_response(StringView response, const HTTP::HttpRequest& request, const String& content_type)
+void Client::send_response(InputStream& response, const HTTP::HttpRequest& request, const String& content_type)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
@@ -139,9 +143,16 @@ void Client::send_response(StringView response, const HTTP::HttpRequest& request
     builder.append("\r\n");
 
     m_socket->write(builder.to_string());
-    m_socket->write(response);
-
     log_response(200, request);
+
+    char buffer[PAGE_SIZE];
+    do {
+        auto size = response.read({ buffer, sizeof(buffer) });
+        if (response.unreliable_eof() && size == 0)
+            break;
+
+        m_socket->write({ buffer, size });
+    } while (true);
 }
 
 void Client::send_redirect(StringView redirect_path, const HTTP::HttpRequest& request)
@@ -240,7 +251,9 @@ void Client::handle_directory_listing(const String& requested_path, const String
     builder.append("</body>\n");
     builder.append("</html>\n");
 
-    send_response(builder.to_string(), request, "text/html");
+    auto response = builder.to_string();
+    InputMemoryStream stream { response.bytes() };
+    send_response(stream, request, "text/html");
 }
 
 void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
