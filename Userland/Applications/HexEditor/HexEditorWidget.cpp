@@ -227,7 +227,7 @@ HexEditorWidget::HexEditorWidget()
     }));
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("Hex Editor"), window()));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hexeditor"), window()));
 
     GUI::Application::the()->set_menubar(move(menubar));
 
