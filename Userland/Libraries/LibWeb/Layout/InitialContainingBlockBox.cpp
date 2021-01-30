@@ -63,15 +63,6 @@ void InitialContainingBlockBox::build_stacking_context_tree()
     });
 }
 
-void InitialContainingBlockBox::did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect& a_viewport_rect)
-{
-    Gfx::FloatRect viewport_rect(a_viewport_rect.x(), a_viewport_rect.y(), a_viewport_rect.width(), a_viewport_rect.height());
-    for_each_in_subtree_of_type<ImageBox>([&](auto& layout_image) {
-        const_cast<ImageBox&>(layout_image).set_visible_in_viewport({}, viewport_rect.intersects(layout_image.absolute_rect()));
-        return IterationDecision::Continue;
-    });
-}
-
 void InitialContainingBlockBox::paint_all_phases(PaintContext& context)
 {
     paint(context, PaintPhase::Background);

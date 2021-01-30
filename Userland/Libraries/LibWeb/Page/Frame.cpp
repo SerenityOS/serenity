@@ -110,11 +110,11 @@ void Frame::set_size(const Gfx::IntSize& size)
     if (m_size == size)
         return;
     m_size = size;
-    if (m_document) {
+    if (m_document)
         m_document->update_layout();
-        if (m_document->layout_node())
-            m_document->layout_node()->did_set_viewport_rect({}, viewport_rect());
-    }
+
+    for (auto* client : m_viewport_clients)
+        client->frame_did_set_viewport_rect(viewport_rect());
 }
 
 void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
@@ -123,8 +123,8 @@ void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
         return;
     m_viewport_scroll_offset = offset;
 
-    if (m_document && m_document->layout_node())
-        m_document->layout_node()->did_set_viewport_rect({}, viewport_rect());
+    for (auto* client : m_viewport_clients)
+        client->frame_did_set_viewport_rect(viewport_rect());
 }
 
 void Frame::set_needs_display(const Gfx::IntRect& rect)
@@ -272,6 +272,18 @@ String Frame::selected_text() const
     }
 
     return builder.to_string();
+}
+
+void Frame::register_viewport_client(ViewportClient& client)
+{
+    auto result = m_viewport_clients.set(&client);
+    ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Frame::unregister_viewport_client(ViewportClient& client)
+{
+    bool was_removed = m_viewport_clients.remove(&client);
+    ASSERT(was_removed);
 }
 
 }
