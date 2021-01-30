@@ -46,10 +46,6 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
 
     // The exception is only made if all the following criteria is fulfilled:
 
-    // This exception has not been made for the same region already
-    if (region.has_made_executable_exception_for_dynamic_loader())
-        return false;
-
     // The region must be RW
     if (!(region.is_readable() && region.is_writable() && !region.is_executable()))
         return false;
@@ -84,11 +80,8 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     return true;
 }
 
-static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, const Region* region = nullptr, bool* is_making_executable_exception_for_dynamic_loader = nullptr)
+static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, const Region* region = nullptr)
 {
-    if (is_making_executable_exception_for_dynamic_loader)
-        *is_making_executable_exception_for_dynamic_loader = false;
-
     bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
@@ -111,11 +104,8 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, con
             return false;
 
         if (make_executable && region->has_been_writable()) {
-            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region)) {
-                ASSERT(is_making_executable_exception_for_dynamic_loader);
-                *is_making_executable_exception_for_dynamic_loader = true;
+            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
                 return true;
-            }
 
             return false;
         }
@@ -293,8 +283,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     if (auto* whole_region = find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return -EPERM;
-        bool is_making_executable_exception_for_dynamic_loader = false;
-        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region, &is_making_executable_exception_for_dynamic_loader))
+        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
             return -EINVAL;
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
@@ -306,9 +295,6 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         whole_region->set_writable(prot & PROT_WRITE);
         whole_region->set_executable(prot & PROT_EXEC);
 
-        if (is_making_executable_exception_for_dynamic_loader)
-            whole_region->set_has_made_executable_exception_for_dynamic_loader();
-
         whole_region->remap();
         return 0;
     }
@@ -317,8 +303,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     if (auto* old_region = find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return -EPERM;
-        bool is_making_executable_exception_for_dynamic_loader = false;
-        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region, &is_making_executable_exception_for_dynamic_loader))
+        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
             return -EINVAL;
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
@@ -336,9 +321,6 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         new_region.set_readable(prot & PROT_READ);
         new_region.set_writable(prot & PROT_WRITE);
         new_region.set_executable(prot & PROT_EXEC);
-
-        if (is_making_executable_exception_for_dynamic_loader)
-            new_region.set_has_made_executable_exception_for_dynamic_loader();
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
