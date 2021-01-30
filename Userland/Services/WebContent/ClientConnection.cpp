@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <WebContent/ClientConnection.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
+#include <pthread.h>
 
 namespace WebContent {
 
@@ -81,6 +82,15 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
     dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadURL: url={}", message.url());
+
+    String process_name;
+    if (message.url().host().is_empty())
+        process_name = "WebContent";
+    else
+        process_name = String::formatted("WebContent: {}", message.url().host());
+
+    pthread_setname_np(pthread_self(), process_name.characters());
+
     page().load(message.url());
 }
 
