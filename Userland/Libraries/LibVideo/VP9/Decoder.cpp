@@ -43,6 +43,7 @@ bool Decoder::parse_frame(const ByteBuffer& frame_data)
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
     m_tree_parser->set_bit_stream(m_bit_stream);
+    m_tree_parser->set_syntax_element_counter(m_syntax_element_counter);
 
     if (!uncompressed_header())
         return false;
@@ -788,11 +789,24 @@ bool Decoder::decode_tiles()
 
 bool Decoder::clear_above_context()
 {
-    // FIXME
-    // When this function is invoked the arrays AboveNonzeroContext, AbovePartitionContext, AboveSegPredContext should be set equal to 0.
-    // AboveNonzeroContext[0..2][0..MiCols*2-1] = 0
-    // AboveSegPredContext[0..MiCols-1] = 0
-    // AbovePartitionContext[0..Sb64Cols*8-1] = 0
+    if (!m_above_nonzero_context) {
+        m_above_nonzero_context = static_cast<u8**>(malloc(sizeof(u8) * 3 * m_mi_cols * 2));
+    } else {
+        __builtin_memset(m_above_nonzero_context, 0, sizeof(u8) * 3 * m_mi_cols * 2);
+    }
+
+    if (!m_above_seg_pred_context) {
+        m_above_seg_pred_context = static_cast<u8*>(malloc(sizeof(u8) * m_mi_cols));
+    } else {
+        __builtin_memset(m_above_seg_pred_context, 0, sizeof(u8) * m_mi_cols);
+    }
+
+    if (!m_above_partition_context) {
+        m_above_partition_context = static_cast<u8*>(malloc(sizeof(u8) * m_sb64_cols * 8));
+        m_tree_parser->set_above_partition_context(m_above_partition_context);
+    } else {
+        __builtin_memset(m_above_partition_context, 0, sizeof(u8) * m_sb64_cols * 8);
+    }
     return true;
 }
 
@@ -820,11 +834,24 @@ bool Decoder::decode_tile()
 
 bool Decoder::clear_left_context()
 {
-    // FIXME
-    // When this function is invoked the arrays LeftNonzeroContext, LeftPartitionContext, LeftSegPredContext should be set equal to 0.
-    // LeftNonzeroContext[0..2][0..MiRows*2-1] = 0
-    // LeftSegPredContext[0..MiRows-1] = 0
-    // LeftPartitionContext[0..Sb64Rows*8-1] = 0
+    if (!m_left_nonzero_context) {
+        m_left_nonzero_context = static_cast<u8**>(malloc(sizeof(u8) * 3 * m_mi_rows * 2));
+    } else {
+        __builtin_memset(m_left_nonzero_context, 0, sizeof(u8) * 3 * m_mi_rows * 2);
+    }
+
+    if (!m_left_seg_pred_context) {
+        m_left_seg_pred_context = static_cast<u8*>(malloc(sizeof(u8) * m_mi_rows));
+    } else {
+        __builtin_memset(m_left_seg_pred_context, 0, sizeof(u8) * m_mi_rows);
+    }
+
+    if (!m_left_partition_context) {
+        m_left_partition_context = static_cast<u8*>(malloc(sizeof(u8) * m_sb64_rows * 8));
+        m_tree_parser->set_left_partition_context(m_left_partition_context);
+    } else {
+        __builtin_memset(m_left_partition_context, 0, sizeof(u8) * m_sb64_rows * 8);
+    }
     return true;
 }
 
@@ -856,6 +883,22 @@ void Decoder::dump_info()
     dbgln("Render dimensions: {}x{}", m_render_width, m_render_height);
     dbgln("Bit depth: {}", m_bit_depth);
     dbgln("Interpolation filter: {}", (u8)m_interpolation_filter);
+}
+
+Decoder::~Decoder()
+{
+    if (m_above_nonzero_context)
+        free(m_above_nonzero_context);
+    if (m_left_nonzero_context)
+        free(m_left_nonzero_context);
+    if (m_above_seg_pred_context)
+        free(m_above_seg_pred_context);
+    if (m_left_seg_pred_context)
+        free(m_left_seg_pred_context);
+    if (m_above_partition_context)
+        free(m_above_partition_context);
+    if (m_left_partition_context)
+        free(m_left_partition_context);
 }
 
 }
