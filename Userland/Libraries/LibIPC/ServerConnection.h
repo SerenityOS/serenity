@@ -45,14 +45,9 @@ public:
         }
 
         ASSERT(this->socket().is_connected());
-
-        this->initialize_peer_info();
     }
 
     virtual void handshake() = 0;
-
-    pid_t server_pid() const { return this->peer_pid(); }
-    void set_server_pid(pid_t pid) { this->set_peer_pid(pid); }
 
     void set_my_client_id(int id) { m_my_client_id = id; }
     int my_client_id() const { return m_my_client_id; }
