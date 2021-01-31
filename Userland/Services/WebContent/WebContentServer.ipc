@@ -18,4 +18,6 @@ endpoint WebContentServer = 89
     MouseUp(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
 
     KeyDown(i32 key, unsigned modifiers, u32 code_point) =|
+
+    DebugRequest(String request, String argument) =|
 }
