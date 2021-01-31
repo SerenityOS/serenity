@@ -42,8 +42,7 @@ namespace ELF {
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static NonnullRefPtr<DynamicLoader> construct(const char* filename, int fd, size_t file_size);
-
+    static RefPtr<DynamicLoader> try_create(int fd, String filename);
     ~DynamicLoader();
 
     bool is_valid() const { return m_valid; }
@@ -79,6 +78,8 @@ public:
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
 private:
+    DynamicLoader(int fd, String filename, void* file_data, size_t file_size);
+
     class ProgramHeaderRegion {
     public:
         void set_program_header(const Elf32_Phdr& header) { m_program_header = header; }
@@ -105,10 +106,7 @@ private:
         Elf32_Phdr m_program_header; // Explicitly a copy of the PHDR in the image
     };
 
-    static void* do_mmap(int fd, size_t size, const String& name);
     const DynamicObject& dynamic_object() const;
-
-    explicit DynamicLoader(const char* filename, int fd, size_t file_size);
 
     // Stage 1
     void load_program_headers();
@@ -137,7 +135,7 @@ private:
     String m_program_interpreter;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
-    void* m_file_mapping { MAP_FAILED };
+    void* m_file_data { nullptr };
     ELF::Image m_elf_image;
     bool m_valid { true };
 

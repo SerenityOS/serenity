@@ -35,16 +35,14 @@
 #include <LibC/stdio.h>
 #include <LibC/sys/internals.h>
 #include <LibC/unistd.h>
-#include <LibCore/File.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
-#include <LibELF/exec_elf.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 
 namespace ELF {
@@ -84,14 +82,14 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
 
 static void map_library(const String& name, int fd)
 {
-    struct stat lib_stat;
-    int rc = fstat(fd, &lib_stat);
-    ASSERT(!rc);
-
-    auto loader = ELF::DynamicLoader::construct(name.characters(), fd, lib_stat.st_size);
+    auto loader = ELF::DynamicLoader::try_create(fd, name);
+    if (!loader) {
+        dbgln("Failed to create ELF::DynamicLoader for fd={}, name={}", fd, name);
+        ASSERT_NOT_REACHED();
+    }
     loader->set_tls_offset(g_current_tls_offset);
 
-    g_loaders.set(name, loader);
+    g_loaders.set(name, *loader);
 
     g_current_tls_offset += loader->tls_size();
 }

@@ -24,14 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <mman.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/RefPtr.h>
@@ -39,6 +31,11 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
+#include <assert.h>
+#include <dlfcn.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // NOTE: The string here should never include a trailing newline (according to POSIX)
 String g_dlerror_msg;
@@ -85,18 +82,8 @@ void* dlopen(const char* filename, int flags)
 
     ScopeGuard close_fd_guard([fd]() { close(fd); });
 
-    struct stat file_stats {
-    };
-
-    int ret = fstat(fd, &file_stats);
-    if (ret < 0) {
-        g_dlerror_msg = String::formatted("Unable to stat file {}", filename);
-        return nullptr;
-    }
-
-    auto loader = ELF::DynamicLoader::construct(filename, fd, file_stats.st_size);
-
-    if (!loader->is_valid()) {
+    auto loader = ELF::DynamicLoader::try_create(fd, filename);
+    if (!loader || !loader->is_valid()) {
         g_dlerror_msg = String::formatted("{} is not a valid ELF dynamic shared object!", filename);
         return nullptr;
     }
