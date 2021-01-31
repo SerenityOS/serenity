@@ -38,7 +38,7 @@ If the process later attempts to use any system functionality it has previously 
 * `exec`: The [`exec(2)`](exec.md) syscall
 * `unix`: UNIX local domain sockets
 * `inet`: IPv4 domain sockets
-* `accept`: May use [`accept(2)`](accept.md) to accept incoming socket connections on already listening sockets. It also allows [`getsockopt(2)`](getsockopt.md) with `SOL_SOCKET` and `SO_PEERCRED` on local sockets (\*)
+* `accept`: May use [`accept(2)`](accept.md) to accept incoming socket connections on already listening sockets (\*)
 * `rpath`: "Read" filesystem access
 * `wpath`: "Write" filesystem access
 * `cpath`: "Create" filesystem access
