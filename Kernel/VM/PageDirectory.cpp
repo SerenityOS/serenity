@@ -135,13 +135,6 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
         MM.unquickmap_page();
     }
 
-    // Clone bottom 2 MiB of mappings from kernel_page_directory
-    PageDirectoryEntry buffer;
-    auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
-    memcpy(&buffer, kernel_pd, sizeof(PageDirectoryEntry));
-    auto* new_pd = MM.quickmap_pd(*this, 0);
-    memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
-
     // If we got here, we successfully created it. Set m_process now
     m_process = &process;
 
