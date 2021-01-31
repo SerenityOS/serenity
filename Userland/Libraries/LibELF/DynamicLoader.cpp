@@ -145,6 +145,8 @@ void* DynamicLoader::symbol_for_name(const char* name)
 
 RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t total_tls_size)
 {
+    ASSERT(!m_dynamic_object);
+
     if (!m_valid) {
         dbgln("DynamicLoader::load_from_image failed: image is invalid");
         return nullptr;
