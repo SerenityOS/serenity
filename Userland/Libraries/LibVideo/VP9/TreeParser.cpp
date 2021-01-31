@@ -5,6 +5,7 @@
  */
 
 #include "TreeParser.h"
+#include "Decoder.h"
 #include "LookupTables.h"
 
 namespace Video::VP9 {
@@ -19,7 +20,7 @@ int TreeParser::parse_tree(SyntaxElementType type)
         auto tree = tree_selection.get_tree_value();
         int n = 0;
         do {
-            n = tree[n + m_bit_stream->read_bool(select_tree_probability(type, n >> 1))];
+            n = tree[n + m_decoder.m_bit_stream->read_bool(select_tree_probability(type, n >> 1))];
         } while (n > 0);
         value = -n;
     }
@@ -34,11 +35,11 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
     case SyntaxElementType::Partition:
-        if (m_has_rows && m_has_cols)
+        if (m_decoder.m_has_rows && m_decoder.m_has_cols)
             return { partition_tree };
-        if (m_has_cols)
+        if (m_decoder.m_has_cols)
             return { cols_partition_tree };
-        if (m_has_rows)
+        if (m_decoder.m_has_rows)
             return { rows_partition_tree };
         return { PartitionSplit };
     case SyntaxElementType::DefaultIntraMode:
@@ -62,9 +63,9 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
     case SyntaxElementType::MoreCoefs:
         return { binary_tree };
     case SyntaxElementType::TXSize:
-        if (m_max_tx_size == TX_32x32)
+        if (m_decoder.m_max_tx_size == TX_32x32)
             return { tx_size_32_tree };
-        if (m_max_tx_size == TX_16x16)
+        if (m_decoder.m_max_tx_size == TX_16x16)
             return { tx_size_16_tree };
         return { tx_size_8_tree };
     case SyntaxElementType::InterMode:
@@ -80,7 +81,7 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
         return { mv_fr_tree };
     case SyntaxElementType::MVClass0HP:
     case SyntaxElementType::MVHP:
-        if (m_use_hp)
+        if (m_decoder.m_use_hp)
             return { binary_tree };
         return { 1 };
     case SyntaxElementType::Token:
@@ -108,7 +109,7 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::UVMode:
         break;
     case SyntaxElementType::SegmentID:
-        return m_segmentation_tree_probs[node];
+        return m_decoder.m_segmentation_tree_probs[node];
     case SyntaxElementType::Skip:
         return calculate_skip_probability();
     case SyntaxElementType::SegIDPredicted:
@@ -158,9 +159,9 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 u8 TreeParser::calculate_partition_probability(u8 node)
 {
     int node2;
-    if (m_has_rows && m_has_cols) {
+    if (m_decoder.m_has_rows && m_decoder.m_has_cols) {
         node2 = node;
-    } else if (m_has_cols) {
+    } else if (m_decoder.m_has_cols) {
         node2 = 1;
     } else {
         node2 = 2;
@@ -168,37 +169,37 @@ u8 TreeParser::calculate_partition_probability(u8 node)
 
     u32 above = 0;
     u32 left = 0;
-    auto bsl = mi_width_log2_lookup[m_block_subsize];
+    auto bsl = mi_width_log2_lookup[m_decoder.m_block_subsize];
     auto block_offset = mi_width_log2_lookup[Block_64x64] - bsl;
-    for (auto i = 0; i < m_num_8x8; i++) {
-        above |= m_above_partition_context[m_col + i];
-        left |= m_left_partition_context[m_row + i];
+    for (auto i = 0; i < m_decoder.m_num_8x8; i++) {
+        above |= m_decoder.m_above_partition_context[m_decoder.m_col + i];
+        left |= m_decoder.m_left_partition_context[m_decoder.m_row + i];
     }
     above = (above & (1 << block_offset)) > 0;
     left = (left & (1 << block_offset)) > 0;
     m_ctx = bsl * 4 + left * 2 + above;
-    if (m_frame_is_intra)
-        return m_probability_tables.kf_partition_probs()[m_ctx][node2];
-    return m_probability_tables.partition_probs()[m_ctx][node2];
+    if (m_decoder.m_frame_is_intra)
+        return m_decoder.m_probability_tables->kf_partition_probs()[m_ctx][node2];
+    return m_decoder.m_probability_tables->partition_probs()[m_ctx][node2];
 }
 
 u8 TreeParser::calculate_skip_probability()
 {
     m_ctx = 0;
-    if (m_available_u) {
+    if (m_decoder.m_available_u) {
         // FIXME: m_ctx += m_skips[m_mi_row - 1][m_mi_col];
     }
-    if (m_available_l) {
+    if (m_decoder.m_available_l) {
         // FIXME: m_ctx += m_skips[m_mi_row][m_mi_col - 1];
     }
-    return m_probability_tables.skip_prob()[m_ctx];
+    return m_decoder.m_probability_tables->skip_prob()[m_ctx];
 }
 
 void TreeParser::count_syntax_element(SyntaxElementType type, int value)
 {
     switch (type) {
     case SyntaxElementType::Partition:
-        m_syntax_element_counter->m_counts_partition[m_ctx][value]++;
+        m_decoder.m_syntax_element_counter->m_counts_partition[m_ctx][value]++;
         break;
     case SyntaxElementType::IntraMode:
         break;
@@ -207,7 +208,7 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::UVMode:
         break;
     case SyntaxElementType::Skip:
-        m_syntax_element_counter->m_counts_skip[m_ctx][value]++;
+        m_decoder.m_syntax_element_counter->m_counts_skip[m_ctx][value]++;
         break;
     case SyntaxElementType::IsInter:
         break;
