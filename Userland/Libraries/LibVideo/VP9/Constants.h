@@ -28,6 +28,8 @@
 
 namespace Video::VP9 {
 
+// FIXME: Sort into order given in section 3
+
 #define PARTITION_CONTEXTS 16
 #define PARTITION_TYPES 4
 #define INTRA_MODES 10
@@ -61,5 +63,6 @@ namespace Video::VP9 {
 #define REFS_PER_FRAME 3
 #define BLOCK_SIZES 13
 #define BLOCK_INVALID 14
+#define SEG_LVL_SKIP 3
 
 }

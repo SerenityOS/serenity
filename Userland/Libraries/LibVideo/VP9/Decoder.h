@@ -103,6 +103,15 @@ private:
     bool decode_tile();
     bool clear_left_context();
     bool decode_partition(u32 row, u32 col, u8 block_subsize);
+    bool decode_block(u32 row, u32 col, u8 subsize);
+    bool mode_info();
+    bool intra_frame_mode_info();
+    bool intra_segment_id();
+    bool read_skip();
+    bool seg_feature_active(u8 feature);
+    bool read_tx_size(bool allow_select);
+
+    bool inter_frame_mode_info();
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -143,6 +152,9 @@ private:
     u8 m_segmentation_pred_prob[3];
     bool m_feature_enabled[8][4];
     u8 m_feature_data[8][4];
+    bool m_segmentation_enabled { false };
+    bool m_segmentation_update_map { false };
+    bool m_segmentation_temporal_update { false };
     bool m_segmentation_abs_or_delta_update { false };
     u16 m_tile_cols_log2 { 0 };
     u16 m_tile_rows_log2 { 0 };
@@ -159,6 +171,13 @@ private:
     u32 m_mi_row_end { 0 };
     u32 m_mi_col_start { 0 };
     u32 m_mi_col_end { 0 };
+    u32 m_mi_row { 0 };
+    u32 m_mi_col { 0 };
+    u32 m_mi_size { 0 };
+    bool m_available_u { false };
+    bool m_available_l { false };
+    int m_segment_id { 0 };
+    int m_skip { false };
 
     bool m_use_hp { false }; // FIXME: When writing to this, write to tree_parser too
 
