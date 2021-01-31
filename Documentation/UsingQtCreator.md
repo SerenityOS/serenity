@@ -24,9 +24,11 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
 Userland/Services/
 Userland/Libraries/
 Userland/Libraries/LibC/
-Userland/Libraries/LibPthread/
 Userland/Libraries/LibM/
+Userland/Libraries/LibPthread/
 Toolchain/Local/i686/i686-pc-serenity/include/c++/10.2.0
+Build/
+Build/Userland/
 Build/Userland/Services/
 Build/Userland/Libraries/
 AK/
