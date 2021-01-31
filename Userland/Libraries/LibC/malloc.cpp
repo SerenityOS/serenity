@@ -29,6 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <LibThread/Lock.h>
 #include <assert.h>
 #include <mallocdefs.h>
@@ -430,13 +431,14 @@ void* realloc(void* ptr, size_t size)
 void __malloc_init()
 {
     new (&malloc_lock()) LibThread::Lock();
-    if (getenv("LIBC_NOSCRUB_MALLOC"))
+
+    if (secure_getenv("LIBC_NOSCRUB_MALLOC"))
         s_scrub_malloc = false;
-    if (getenv("LIBC_NOSCRUB_FREE"))
+    if (secure_getenv("LIBC_NOSCRUB_FREE"))
         s_scrub_free = false;
-    if (getenv("LIBC_LOG_MALLOC"))
+    if (secure_getenv("LIBC_LOG_MALLOC"))
         s_log_malloc = true;
-    if (getenv("LIBC_PROFILE_MALLOC"))
+    if (secure_getenv("LIBC_PROFILE_MALLOC"))
         s_profiling = true;
 
     for (size_t i = 0; i < num_size_classes; ++i) {
