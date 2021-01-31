@@ -30,13 +30,13 @@
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Validation.h>
-
 #include <assert.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 #ifndef __serenity__
 static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, const char*)
@@ -51,36 +51,43 @@ namespace ELF {
 
 static bool s_always_bind_now = false;
 
-NonnullRefPtr<DynamicLoader> DynamicLoader::construct(const char* filename, int fd, size_t size)
+RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
 {
-    return adopt(*new DynamicLoader(filename, fd, size));
-}
-
-void* DynamicLoader::do_mmap(int fd, size_t size, const String& name)
-{
-    if (size < sizeof(Elf32_Ehdr))
-        return MAP_FAILED;
-
-    String file_mmap_name = String::formatted("ELF_DYN: {}", name);
-    return mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0, file_mmap_name.characters());
-}
-
-DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
-    : m_filename(filename)
-    , m_file_size(size)
-    , m_image_fd(fd)
-    , m_file_mapping(do_mmap(m_image_fd, m_file_size, m_filename))
-    , m_elf_image((u8*)m_file_mapping, m_file_size)
-{
-
-    if (m_file_mapping == MAP_FAILED) {
-        m_valid = false;
-        return;
+    struct stat stat;
+    if (fstat(fd, &stat) < 0) {
+        perror("DynamicLoader::try_create fstat");
+        return {};
     }
 
-    m_tls_size = calculate_tls_size();
+    ASSERT(stat.st_size >= 0);
+    size_t size = static_cast<size_t>(stat.st_size);
+    if (size < sizeof(Elf32_Ehdr))
+        return {};
 
+    String file_mmap_name = String::formatted("ELF_DYN: {}", filename);
+    auto* data = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0, file_mmap_name.characters());
+    if (data == MAP_FAILED) {
+        perror("DynamicLoader::try_create mmap");
+        return {};
+    }
+
+    return adopt(*new DynamicLoader(fd, move(filename), data, size));
+}
+
+DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
+    : m_filename(move(filename))
+    , m_file_size(size)
+    , m_image_fd(fd)
+    , m_file_data(data)
+    , m_elf_image((u8*)m_file_data, m_file_size)
+{
+    m_tls_size = calculate_tls_size();
     m_valid = validate();
+}
+
+DynamicLoader::~DynamicLoader()
+{
+    munmap(m_file_data, m_file_size);
 }
 
 const DynamicObject& DynamicLoader::dynamic_object() const
@@ -115,15 +122,8 @@ size_t DynamicLoader::calculate_tls_size() const
 
 bool DynamicLoader::validate()
 {
-    auto* elf_header = (Elf32_Ehdr*)m_file_mapping;
-    return validate_elf_header(*elf_header, m_file_size) && validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, &m_program_interpreter);
-}
-
-DynamicLoader::~DynamicLoader()
-{
-    if (MAP_FAILED != m_file_mapping)
-        munmap(m_file_mapping, m_file_size);
-    close(m_image_fd);
+    auto* elf_header = (Elf32_Ehdr*)m_file_data;
+    return validate_elf_header(*elf_header, m_file_size) && validate_program_headers(*elf_header, m_file_size, (u8*)m_file_data, m_file_size, &m_program_interpreter);
 }
 
 void* DynamicLoader::symbol_for_name(const char* name)
@@ -338,7 +338,7 @@ void DynamicLoader::load_program_headers()
     else
         data_segment_start = data_region.value().desired_load_address();
 
-    memcpy(data_segment_start.as_ptr(), (u8*)m_file_mapping + data_region.value().offset(), data_region.value().size_in_image());
+    memcpy(data_segment_start.as_ptr(), (u8*)m_file_data + data_region.value().offset(), data_region.value().size_in_image());
 
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
