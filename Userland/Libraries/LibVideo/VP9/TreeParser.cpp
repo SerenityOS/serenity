@@ -108,9 +108,9 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::UVMode:
         break;
     case SyntaxElementType::SegmentID:
-        break;
+        return m_segmentation_tree_probs[node];
     case SyntaxElementType::Skip:
-        break;
+        return calculate_skip_probability();
     case SyntaxElementType::SegIDPredicted:
         break;
     case SyntaxElementType::IsInter:
@@ -182,6 +182,18 @@ u8 TreeParser::calculate_partition_probability(u8 node)
     return m_probability_tables.partition_probs()[m_ctx][node2];
 }
 
+u8 TreeParser::calculate_skip_probability()
+{
+    m_ctx = 0;
+    if (m_available_u) {
+        // FIXME: m_ctx += m_skips[m_mi_row - 1][m_mi_col];
+    }
+    if (m_available_l) {
+        // FIXME: m_ctx += m_skips[m_mi_row][m_mi_col - 1];
+    }
+    return m_probability_tables.skip_prob()[m_ctx];
+}
+
 void TreeParser::count_syntax_element(SyntaxElementType type, int value)
 {
     switch (type) {
@@ -195,6 +207,7 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::UVMode:
         break;
     case SyntaxElementType::Skip:
+        m_syntax_element_counter->m_counts_skip[m_ctx][value]++;
         break;
     case SyntaxElementType::IsInter:
         break;

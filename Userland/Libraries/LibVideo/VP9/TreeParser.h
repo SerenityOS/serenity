@@ -57,9 +57,15 @@ public:
     void set_row(u32 row) { m_row = row; }
     void set_frame_is_intra(bool frame_is_intra) { m_frame_is_intra = frame_is_intra; }
     void set_syntax_element_counter(SyntaxElementCounter* syntax_element_counter) { m_syntax_element_counter = syntax_element_counter; }
+    void set_segmentation_tree_probs(u8* segmentation_tree_probs) { m_segmentation_tree_probs = segmentation_tree_probs; }
+    void set_available_u(bool available_u) { m_available_u = available_u; }
+    void set_available_l(bool available_l) { m_available_l = available_l; }
+    void set_mi_row(u32 mi_row) { m_mi_row = mi_row; }
+    void set_mi_col(u32 mi_col) { m_mi_col = mi_col; }
 
 private:
     u8 calculate_partition_probability(u8 node);
+    u8 calculate_skip_probability();
 
     ProbabilityTables& m_probability_tables;
     BitStream* m_bit_stream { nullptr };
@@ -79,6 +85,11 @@ private:
     u32 m_col { 0 };
     u32 m_row { 0 };
     bool m_frame_is_intra { false };
+    u8* m_segmentation_tree_probs { nullptr };
+    bool m_available_u { false };
+    bool m_available_l { false };
+    u32 m_mi_col { 0 };
+    u32 m_mi_row { 0 };
 };
 
 }
