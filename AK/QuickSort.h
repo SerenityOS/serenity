@@ -86,35 +86,50 @@ void dual_pivot_quick_sort(Collection& col, int start, int end, LessThan less_th
 }
 
 template<typename Iterator, typename LessThan>
-void quick_sort(Iterator start, Iterator end, LessThan less_than)
+void single_pivot_quick_sort(Iterator start, Iterator end, LessThan less_than)
 {
-    int size = end - start;
-    if (size <= 1)
-        return;
+    for (;;) {
+        int size = end - start;
+        if (size <= 1)
+            return;
 
-    int pivot_point = size / 2;
-    auto pivot = *(start + pivot_point);
+        int pivot_point = size / 2;
+        if (pivot_point)
+            swap(*(start + pivot_point), *start);
 
-    if (pivot_point)
-        swap(*(start + pivot_point), *start);
+        auto&& pivot = *start;
 
-    int i = 1;
-    for (int j = 1; j < size; ++j) {
-        if (less_than(*(start + j), pivot)) {
-            swap(*(start + j), *(start + i));
-            ++i;
+        int i = 1;
+        for (int j = 1; j < size; ++j) {
+            if (less_than(*(start + j), pivot)) {
+                swap(*(start + j), *(start + i));
+                ++i;
+            }
+        }
+
+        swap(*start, *(start + i - 1));
+        // Recur into the shorter part of the remaining data
+        // to ensure a stack depth of at most log(n).
+        if (i > size / 2) {
+            single_pivot_quick_sort(start + i, end, less_than);
+            end = start + i - 1;
+        } else {
+            single_pivot_quick_sort(start, start + i - 1, less_than);
+            start = start + i;
         }
     }
-
-    swap(*start, *(start + i - 1));
-    quick_sort(start, start + i - 1, less_than);
-    quick_sort(start + i, end, less_than);
 }
 
 template<typename Iterator>
 void quick_sort(Iterator start, Iterator end)
 {
-    quick_sort(start, end, [](auto& a, auto& b) { return a < b; });
+    single_pivot_quick_sort(start, end, [](auto& a, auto& b) { return a < b; });
+}
+
+template<typename Iterator, typename LessThan>
+void quick_sort(Iterator start, Iterator end, LessThan less_than)
+{
+    single_pivot_quick_sort(start, end, move(less_than));
 }
 
 template<typename Collection, typename LessThan>
