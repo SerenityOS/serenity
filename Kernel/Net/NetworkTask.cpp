@@ -282,7 +282,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
         // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
         auto response_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&response);
-        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, response_buffer, buffer.size(), 64);
+        [[maybe_unused]] auto result = adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, response_buffer, buffer.size(), 64);
     }
 }
 

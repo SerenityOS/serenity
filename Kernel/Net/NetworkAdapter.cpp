@@ -101,7 +101,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_raw({ (const u8*)eth, size_in_bytes });
 }
 
-int NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     if (ipv4_packet_size > mtu())
@@ -127,12 +127,12 @@ int NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addre
     m_bytes_out += ethernet_frame_size;
 
     if (!payload.read(ipv4.payload(), payload_size))
-        return -EFAULT;
+        return EFAULT;
     send_raw({ (const u8*)&eth, ethernet_frame_size });
-    return 0;
+    return KSuccess;
 }
 
-int NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     // packets must be split on the 64-bit boundary
     auto packet_boundary_size = (mtu() - sizeof(IPv4Packet) - sizeof(EthernetFrameHeader)) & 0xfffffff8;
@@ -166,10 +166,10 @@ int NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, cons
         m_packets_out++;
         m_bytes_out += ethernet_frame_size;
         if (!payload.read(ipv4.payload(), packet_index * packet_boundary_size, packet_payload_size))
-            return -EFAULT;
+            return EFAULT;
         send_raw({ (const u8*)&eth, ethernet_frame_size });
     }
-    return 0;
+    return KSuccess;
 }
 
 void NetworkAdapter::did_receive(ReadonlyBytes payload)

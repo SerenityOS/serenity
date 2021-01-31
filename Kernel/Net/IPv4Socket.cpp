@@ -225,9 +225,9 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
 #endif
 
     if (type() == SOCK_RAW) {
-        int err = routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), data, data_length, m_ttl);
-        if (err < 0)
-            return KResult((ErrnoCode)-err);
+        auto result = routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), data, data_length, m_ttl);
+        if (result.is_error())
+            return result;
         return data_length;
     }
 
