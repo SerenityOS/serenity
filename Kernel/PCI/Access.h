@@ -41,9 +41,9 @@ public:
 
     void enumerate(Function<void(Address, ID)>&) const;
 
-    void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&);
-    void enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback);
-    void enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback);
+    void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&, bool recursive);
+    void enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive);
+    void enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive);
 
     static Access& the();
     static bool is_initialized();

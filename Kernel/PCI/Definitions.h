@@ -96,14 +96,14 @@ public:
     Address(u16 seg)
         : m_seg(seg)
         , m_bus(0)
-        , m_slot(0)
+        , m_device(0)
         , m_function(0)
     {
     }
-    Address(u16 seg, u8 bus, u8 slot, u8 function)
+    Address(u16 seg, u8 bus, u8 device, u8 function)
         : m_seg(seg)
         , m_bus(bus)
-        , m_slot(slot)
+        , m_device(device)
         , m_function(function)
     {
     }
@@ -111,12 +111,12 @@ public:
     Address(const Address& address)
         : m_seg(address.seg())
         , m_bus(address.bus())
-        , m_slot(address.slot())
+        , m_device(address.device())
         , m_function(address.function())
     {
     }
 
-    bool is_null() const { return !m_bus && !m_slot && !m_function; }
+    bool is_null() const { return !m_bus && !m_device && !m_function; }
     operator bool() const { return !is_null(); }
 
     // Disable default implementations that would use surprising integer promotion.
@@ -128,24 +128,24 @@ public:
 
     u16 seg() const { return m_seg; }
     u8 bus() const { return m_bus; }
-    u8 slot() const { return m_slot; }
+    u8 device() const { return m_device; }
     u8 function() const { return m_function; }
 
     u32 io_address_for_field(u8 field) const
     {
-        return 0x80000000u | (m_bus << 16u) | (m_slot << 11u) | (m_function << 8u) | (field & 0xfc);
+        return 0x80000000u | (m_bus << 16u) | (m_device << 11u) | (m_function << 8u) | (field & 0xfc);
     }
 
 protected:
     u32 m_seg { 0 };
     u8 m_bus { 0 };
-    u8 m_slot { 0 };
+    u8 m_device { 0 };
     u8 m_function { 0 };
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Address value)
 {
-    return stream << "PCI [" << String::formatted("{:04x}:{:02x}:{:02x}:{:02x}", value.seg(), value.bus(), value.slot(), value.function()) << "]";
+    return stream << "PCI [" << String::formatted("{:04x}:{:02x}:{:02x}:{:02x}", value.seg(), value.bus(), value.device(), value.function()) << "]";
 }
 
 struct ChangeableAddress : public Address {
@@ -157,17 +157,17 @@ struct ChangeableAddress : public Address {
         : Address(seg)
     {
     }
-    ChangeableAddress(u16 seg, u8 bus, u8 slot, u8 function)
-        : Address(seg, bus, slot, function)
+    ChangeableAddress(u16 seg, u8 bus, u8 device, u8 function)
+        : Address(seg, bus, device, function)
     {
     }
     void set_seg(u16 seg) { m_seg = seg; }
     void set_bus(u8 bus) { m_bus = bus; }
-    void set_slot(u8 slot) { m_slot = slot; }
+    void set_device(u8 device) { m_device = device; }
     void set_function(u8 function) { m_function = function; }
     bool operator==(const Address& address)
     {
-        if (m_seg == address.seg() && m_bus == address.bus() && m_slot == address.slot() && m_function == address.function())
+        if (m_seg == address.seg() && m_bus == address.bus() && m_device == address.device() && m_function == address.function())
             return true;
         else
             return false;
@@ -176,7 +176,7 @@ struct ChangeableAddress : public Address {
     {
         set_seg(address.seg());
         set_bus(address.bus());
-        set_slot(address.slot());
+        set_device(address.device());
         set_function(address.function());
         return *this;
     }
@@ -252,6 +252,6 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
     {
         return Formatter<FormatString>::format(
             builder,
-            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.seg(), value.bus(), value.slot(), value.function());
+            "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.seg(), value.bus(), value.device(), value.function());
     }
 };

@@ -91,15 +91,15 @@ void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 #endif
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
-        enumerate_bus(-1, 0, callback);
+        enumerate_bus(-1, 0, callback, true);
         return;
     }
 
     // Multiple PCI host controllers.
-    for (u8 function = 0; function < 8; ++function) {
-        if (read16_field(Address(0, 0, 0, function), PCI_VENDOR_ID) == PCI_NONE)
+    for (int bus = 0; bus < 256; ++bus) {
+        if (read16_field(Address(0, 0, 0, bus), PCI_VENDOR_ID) == PCI_NONE)
             break;
-        enumerate_bus(-1, function, callback);
+        enumerate_bus(-1, bus, callback, false);
     }
 }
 
