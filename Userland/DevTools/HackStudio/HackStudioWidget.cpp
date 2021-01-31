@@ -45,6 +45,7 @@
 #include "TerminalWrapper.h"
 #include "WidgetTool.h"
 #include "WidgetTreeModel.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
@@ -286,18 +287,20 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
 NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu()
 {
     m_open_selected_action = create_open_selected_action();
-    m_new_action = create_new_action();
+    m_new_file_action = create_new_file_action();
+    m_new_directory_action = create_new_directory_action();
     m_delete_action = create_delete_action();
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     // TODO: Rename, cut, copy, duplicate with new name, show containing folder ...
     project_tree_view_context_menu->add_separator();
-    project_tree_view_context_menu->add_action(*m_new_action);
+    project_tree_view_context_menu->add_action(*m_new_file_action);
+    project_tree_view_context_menu->add_action(*m_new_directory_action);
     project_tree_view_context_menu->add_action(*m_delete_action);
     return project_tree_view_context_menu;
 }
 
-NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_action()
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 {
     return GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         String filename;
@@ -309,6 +312,21 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_action()
             return;
         }
         open_file(filename);
+    });
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
+{
+    return GUI::Action::create("Add new directory to project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
+        String directory_name;
+        if (GUI::InputBox::show(directory_name, window(), "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
+            return;
+        auto formatted_dir_name = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_project->model().root_path(), directory_name));
+        int rc = mkdir(formatted_dir_name.characters(), 0755);
+        if (rc < 0) {
+            GUI::MessageBox::show(window(), "Failed to create new directory", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
     });
 }
 
@@ -758,7 +776,8 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 {
     auto& toolbar = parent.add<GUI::ToolBar>();
-    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_new_file_action);
+    toolbar.add_action(*m_new_directory_action);
     toolbar.add_action(*m_save_action);
     toolbar.add_action(*m_delete_action);
     toolbar.add_separator();
@@ -838,7 +857,8 @@ void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
 void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
 {
     auto& project_menu = menubar.add_menu("Project");
-    project_menu.add_action(*m_new_action);
+    project_menu.add_action(*m_new_file_action);
+    project_menu.add_action(*m_new_directory_action);
     project_menu.add_action(*create_set_autocomplete_mode_action());
 }
 
