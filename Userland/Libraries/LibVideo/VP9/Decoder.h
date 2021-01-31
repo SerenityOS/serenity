@@ -19,6 +19,7 @@ namespace Video::VP9 {
 class Decoder {
 public:
     Decoder();
+    ~Decoder();
     bool parse_frame(const ByteBuffer&);
     void dump_info();
 
@@ -128,6 +129,12 @@ private:
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
 
+    u8** m_above_nonzero_context { nullptr };
+    u8** m_left_nonzero_context { nullptr };
+    u8* m_above_seg_pred_context { nullptr };
+    u8* m_left_seg_pred_context { nullptr };
+    u8* m_above_partition_context { nullptr };
+    u8* m_left_partition_context { nullptr };
     u32 m_mi_row_start { 0 };
     u32 m_mi_row_end { 0 };
     u32 m_mi_col_start { 0 };
