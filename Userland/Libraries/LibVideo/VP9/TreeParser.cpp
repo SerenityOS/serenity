@@ -12,14 +12,19 @@ namespace Video::VP9 {
 int TreeParser::parse_tree(SyntaxElementType type)
 {
     auto tree_selection = select_tree(type);
-    if (tree_selection.is_single_value())
-        return tree_selection.get_single_value();
-    auto tree = tree_selection.get_tree_value();
-    int n = 0;
-    do {
-        n = tree[n + m_bit_stream->read_bool(select_tree_probability(type, n >> 1))];
-    } while (n > 0);
-    return -n;
+    int value;
+    if (tree_selection.is_single_value()) {
+        value = tree_selection.get_single_value();
+    } else {
+        auto tree = tree_selection.get_tree_value();
+        int n = 0;
+        do {
+            n = tree[n + m_bit_stream->read_bool(select_tree_probability(type, n >> 1))];
+        } while (n > 0);
+        value = -n;
+    }
+    count_syntax_element(type, value);
+    return value;
 }
 
 /*
@@ -171,10 +176,70 @@ u8 TreeParser::calculate_partition_probability(u8 node)
     }
     above = (above & (1 << block_offset)) > 0;
     left = (left & (1 << block_offset)) > 0;
-    auto ctx = bsl * 4 + left * 2 + above;
+    m_ctx = bsl * 4 + left * 2 + above;
     if (m_frame_is_intra)
-        return m_probability_tables.kf_partition_probs()[ctx][node2];
-    return m_probability_tables.partition_probs()[ctx][node2];
+        return m_probability_tables.kf_partition_probs()[m_ctx][node2];
+    return m_probability_tables.partition_probs()[m_ctx][node2];
+}
+
+void TreeParser::count_syntax_element(SyntaxElementType type, int value)
+{
+    switch (type) {
+    case SyntaxElementType::Partition:
+        m_syntax_element_counter->m_counts_partition[m_ctx][value]++;
+        break;
+    case SyntaxElementType::IntraMode:
+        break;
+    case SyntaxElementType::SubIntraMode:
+        break;
+    case SyntaxElementType::UVMode:
+        break;
+    case SyntaxElementType::Skip:
+        break;
+    case SyntaxElementType::IsInter:
+        break;
+    case SyntaxElementType::CompMode:
+        break;
+    case SyntaxElementType::CompRef:
+        break;
+    case SyntaxElementType::SingleRefP1:
+        break;
+    case SyntaxElementType::SingleRefP2:
+        break;
+    case SyntaxElementType::MVSign:
+        break;
+    case SyntaxElementType::MVClass0Bit:
+        break;
+    case SyntaxElementType::MVBit:
+        break;
+    case SyntaxElementType::TXSize:
+        break;
+    case SyntaxElementType::InterMode:
+        break;
+    case SyntaxElementType::InterpFilter:
+        break;
+    case SyntaxElementType::MVJoint:
+        break;
+    case SyntaxElementType::MVClass:
+        break;
+    case SyntaxElementType::MVClass0FR:
+        break;
+    case SyntaxElementType::MVClass0HP:
+        break;
+    case SyntaxElementType::MVFR:
+        break;
+    case SyntaxElementType::MVHP:
+        break;
+    case SyntaxElementType::Token:
+        break;
+    case SyntaxElementType::MoreCoefs:
+        break;
+    case SyntaxElementType::DefaultIntraMode:
+    case SyntaxElementType::DefaultUVMode:
+    case SyntaxElementType::SegmentID:
+    case SyntaxElementType::SegIDPredicted:
+        break;
+    }
 }
 
 TreeParser::TreeSelection::TreeSelection(const int* values)
