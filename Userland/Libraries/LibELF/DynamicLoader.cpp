@@ -122,8 +122,15 @@ size_t DynamicLoader::calculate_tls_size() const
 
 bool DynamicLoader::validate()
 {
+    if (!m_elf_image.is_valid())
+        return false;
+
     auto* elf_header = (Elf32_Ehdr*)m_file_data;
-    return validate_elf_header(*elf_header, m_file_size) && validate_program_headers(*elf_header, m_file_size, (u8*)m_file_data, m_file_size, &m_program_interpreter);
+    if (!validate_elf_header(*elf_header, m_file_size))
+        return false;
+    if (!validate_program_headers(*elf_header, m_file_size, (u8*)m_file_data, m_file_size, &m_program_interpreter))
+        return false;
+    return true;
 }
 
 void* DynamicLoader::symbol_for_name(const char* name)
@@ -138,9 +145,6 @@ void* DynamicLoader::symbol_for_name(const char* name)
 
 RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t total_tls_size)
 {
-
-    m_valid = m_elf_image.is_valid();
-
     if (!m_valid) {
         dbgln("DynamicLoader::load_from_image failed: image is invalid");
         return nullptr;
