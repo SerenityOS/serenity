@@ -534,7 +534,8 @@ Color Document::visited_link_color() const
     return page()->palette().visited_link();
 }
 
-static JS::VM& main_thread_vm()
+JS::VM& main_thread_vm();
+JS::VM& main_thread_vm()
 {
     static RefPtr<JS::VM> vm;
     if (!vm) {

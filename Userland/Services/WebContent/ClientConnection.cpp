@@ -28,10 +28,20 @@
 #include <AK/Debug.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/VM.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Page/Frame.h>
 #include <WebContent/ClientConnection.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <pthread.h>
+
+namespace Web::DOM {
+extern JS::VM& main_thread_vm();
+}
 
 namespace WebContent {
 
@@ -163,6 +173,39 @@ void ClientConnection::handle(const Messages::WebContentServer::MouseUp& message
 void ClientConnection::handle(const Messages::WebContentServer::KeyDown& message)
 {
     page().handle_keydown((KeyCode)message.key(), message.modifiers(), message.code_point());
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& message)
+{
+    if (message.request() == "dump-dom-tree") {
+        if (auto* doc = page().main_frame().document())
+            Web::dump_tree(*doc);
+    }
+
+    if (message.request() == "dump-layout-tree") {
+        if (auto* doc = page().main_frame().document()) {
+            if (auto* icb = doc->layout_node())
+                Web::dump_tree(*icb);
+        }
+    }
+
+    if (message.request() == "dump-style-sheets") {
+        if (auto* doc = page().main_frame().document()) {
+            for (auto& sheet : doc->style_sheets().sheets()) {
+                Web::dump_sheet(sheet);
+            }
+        }
+    }
+
+    if (message.request() == "collect-garbage") {
+        ::Web::DOM::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+    }
+
+    if (message.request() == "set-line-box-borders") {
+        bool state = message.argument() == "on";
+        m_page_host->set_should_show_line_box_borders(state);
+        page().main_frame().set_needs_display(page().main_frame().viewport_rect());
+    }
 }
 
 }

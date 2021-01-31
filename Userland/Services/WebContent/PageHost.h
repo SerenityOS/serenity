@@ -48,6 +48,8 @@ public:
     void set_palette_impl(const Gfx::PaletteImpl&);
     void set_viewport_rect(const Gfx::IntRect&);
 
+    void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
+
 private:
     // ^PageClient
     virtual bool is_multi_process() const override { return true; }
@@ -75,6 +77,7 @@ private:
     ClientConnection& m_client;
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
+    bool m_should_show_line_box_borders { false };
 };
 
 }

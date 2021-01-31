@@ -93,6 +93,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
     painter.translate(-content_rect.x(), -content_rect.y());
 
     Web::PaintContext context(painter, palette(), Gfx::IntPoint());
+    context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(content_rect);
     layout_root->paint_all_phases(context);
 }
