@@ -32,7 +32,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio setkeymap rpath", nullptr) < 0) {
+    if (pledge("stdio setkeymap getkeymap rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

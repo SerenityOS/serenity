@@ -69,7 +69,7 @@ int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_p
 
 int Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
 {
-    REQUIRE_PROMISE(stdio);
+    REQUIRE_PROMISE(getkeymap);
 
     Syscall::SC_getkeymap_params params;
     if (!copy_from_user(&params, user_params))
