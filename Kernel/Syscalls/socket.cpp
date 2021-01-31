@@ -362,11 +362,7 @@ int Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user
         return -ENOTSOCK;
     auto& socket = *description->socket();
 
-    if (has_promised(Pledge::accept) && socket.is_local() && level == SOL_SOCKET && option == SO_PEERCRED) {
-        // We make an exception for SOL_SOCKET::SO_PEERCRED on local sockets if you've pledged "accept"
-    } else {
-        REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    }
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.getsockopt(*description, level, option, user_value, user_value_size);
 }
 
