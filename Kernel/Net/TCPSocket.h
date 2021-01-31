@@ -148,7 +148,7 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
-    [[nodiscard]] int send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
+    KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
     void send_outgoing_packets();
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
