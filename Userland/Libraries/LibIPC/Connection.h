@@ -60,8 +60,6 @@ public:
         };
     }
 
-    pid_t peer_pid() const { return m_peer_pid; }
-
     template<typename MessageType>
     OwnPtr<MessageType> wait_for_specific_message()
     {
@@ -141,7 +139,6 @@ public:
 
 protected:
     Core::LocalSocket& socket() { return *m_socket; }
-    void set_peer_pid(pid_t pid) { m_peer_pid = pid; }
 
     template<typename MessageType, typename Endpoint>
     OwnPtr<MessageType> wait_for_specific_endpoint_message()
@@ -257,17 +254,6 @@ protected:
     }
 
 protected:
-    void initialize_peer_info()
-    {
-        ucred creds;
-        socklen_t creds_size = sizeof(creds);
-        if (getsockopt(this->socket().fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
-            // FIXME: We should handle this more gracefully.
-            ASSERT_NOT_REACHED();
-        }
-        m_peer_pid = creds.pid;
-    }
-
     LocalEndpoint& m_local_endpoint;
     NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
@@ -275,7 +261,6 @@ protected:
     RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;
-    pid_t m_peer_pid { -1 };
 };
 
 }

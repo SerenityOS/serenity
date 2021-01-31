@@ -45,9 +45,8 @@ void WebContentClient::die()
 
 void WebContentClient::handshake()
 {
-    auto response = send_sync<Messages::WebContentServer::Greet>(getpid());
+    auto response = send_sync<Messages::WebContentServer::Greet>();
     set_my_client_id(response->client_id());
-    set_server_pid(response->server_pid());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidPaint& message)

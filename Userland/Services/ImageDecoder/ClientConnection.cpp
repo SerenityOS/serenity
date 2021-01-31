@@ -51,10 +51,9 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::ImageDecoderServer::GreetResponse> ClientConnection::handle(const Messages::ImageDecoderServer::Greet& message)
+OwnPtr<Messages::ImageDecoderServer::GreetResponse> ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
 {
-    set_client_pid(message.client_pid());
-    return make<Messages::ImageDecoderServer::GreetResponse>(client_id(), getpid());
+    return make<Messages::ImageDecoderServer::GreetResponse>(client_id());
 }
 
 OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
