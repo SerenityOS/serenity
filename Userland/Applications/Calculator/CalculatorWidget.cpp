@@ -26,8 +26,8 @@
  */
 
 #include "CalculatorWidget.h"
-#include "Applications/Calculator/CalculatorGML.h"
 #include <AK/Assertions.h>
+#include <Applications/Calculator/CalculatorGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>

@@ -49,7 +49,7 @@
 #include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
-#include <Libraries/LibELF/exec_elf.h>
+#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 

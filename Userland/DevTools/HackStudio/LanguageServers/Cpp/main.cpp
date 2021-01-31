@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "ClientConnection.h"
 #include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/ClientConnection.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
