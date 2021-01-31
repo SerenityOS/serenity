@@ -25,9 +25,9 @@
  */
 
 #include "LanguageClient.h"
-#include "DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 
 namespace HackStudio {
 
