@@ -78,6 +78,13 @@ public:
     constexpr const ValueType* operator->() const { return &m_container[m_index]; }
     constexpr ValueType* operator->() { return &m_container[m_index]; }
 
+    SimpleIterator& operator=(const SimpleIterator& other)
+    {
+        m_index = other.m_index;
+        return *this;
+    }
+    SimpleIterator(const SimpleIterator& obj) = default;
+
 private:
     static constexpr SimpleIterator begin(Container& container) { return { container, 0 }; }
     static constexpr SimpleIterator end(Container& container)
