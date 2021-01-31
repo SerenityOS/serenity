@@ -37,6 +37,8 @@
 namespace Video::VP9 {
 
 class Decoder {
+    friend class TreeParser;
+
 public:
     Decoder();
     virtual ~Decoder();
@@ -178,6 +180,13 @@ private:
     bool m_available_l { false };
     int m_segment_id { 0 };
     int m_skip { false };
+    u8 m_num_8x8 { 0 };
+    bool m_has_rows { false };
+    bool m_has_cols { false };
+    TXSize m_max_tx_size { TX_4x4 };
+    u8 m_block_subsize { 0 };
+    u32 m_row { 0 };
+    u32 m_col { 0 };
 
     bool m_use_hp { false }; // FIXME: When writing to this, write to tree_parser too
 
