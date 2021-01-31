@@ -91,7 +91,7 @@ int main(int argc, char** argv)
         auto dev = value.as_object();
         auto seg = dev.get("seg").to_u32();
         auto bus = dev.get("bus").to_u32();
-        auto slot = dev.get("slot").to_u32();
+        auto device = dev.get("device").to_u32();
         auto function = dev.get("function").to_u32();
         auto vendor_id = dev.get("vendor_id").to_u32();
         auto device_id = dev.get("device_id").to_u32();
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         if (class_name.is_empty())
             class_name = String::format("%02x%02x", class_id, subclass_id);
 
-        outln(format, seg, bus, slot, function, class_name, vendor_name, device_name, revision_id);
+        outln(format, seg, bus, device, function, class_name, vendor_name, device_name, revision_id);
     });
 
     return 0;

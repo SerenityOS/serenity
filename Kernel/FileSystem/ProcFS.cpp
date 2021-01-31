@@ -363,7 +363,7 @@ static bool procfs$pci(InodeIdentifier, KBufferBuilder& builder)
         auto obj = array.add_object();
         obj.add("seg", address.seg());
         obj.add("bus", address.bus());
-        obj.add("slot", address.device());
+        obj.add("device", address.device());
         obj.add("function", address.function());
         obj.add("vendor_id", id.vendor_id);
         obj.add("device_id", id.device_id);

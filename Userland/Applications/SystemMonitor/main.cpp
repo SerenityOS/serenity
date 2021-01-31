@@ -507,9 +507,9 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
             [](const JsonObject& object) {
                 auto seg = object.get("seg").to_u32();
                 auto bus = object.get("bus").to_u32();
-                auto slot = object.get("slot").to_u32();
+                auto device = object.get("device").to_u32();
                 auto function = object.get("function").to_u32();
-                return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, slot, function);
+                return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, device, function);
             });
         pci_fields.empend(
             "Class", Gfx::TextAlignment::CenterLeft,
