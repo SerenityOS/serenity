@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "Types.h"
+#include <AK/Types.h>
 
 constexpr unsigned int_hash(u32 key)
 {
