@@ -16,6 +16,7 @@ Decoder::Decoder()
     : m_probability_tables(make<ProbabilityTables>())
     , m_tree_parser(make<TreeParser>(*m_probability_tables))
 {
+    m_tree_parser->set_segmentation_tree_probs(m_segmentation_tree_probs);
 }
 
 bool Decoder::parse_frame(const ByteBuffer& frame_data)
@@ -307,18 +308,18 @@ i8 Decoder::read_delta_q()
 
 bool Decoder::segmentation_params()
 {
-    auto segmentation_enabled = m_bit_stream->read_bit();
-    if (!segmentation_enabled)
+    m_segmentation_enabled = m_bit_stream->read_bit();
+    if (!m_segmentation_enabled)
         return true;
 
-    auto segmentation_update_map = m_bit_stream->read_bit();
-    if (segmentation_update_map) {
+    m_segmentation_update_map = m_bit_stream->read_bit();
+    if (m_segmentation_update_map) {
         for (auto i = 0; i < 7; i++) {
             m_segmentation_tree_probs[i] = read_prob();
         }
-        auto segmentation_temporal_update = m_bit_stream->read_bit();
+        m_segmentation_temporal_update = m_bit_stream->read_bit();
         for (auto i = 0; i < 3; i++) {
-            m_segmentation_pred_prob[i] = segmentation_temporal_update ? read_prob() : 255;
+            m_segmentation_pred_prob[i] = m_segmentation_temporal_update ? read_prob() : 255;
         }
     }
 
@@ -808,8 +809,91 @@ bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
     auto partition = m_tree_parser->parse_tree(SyntaxElementType::Partition);
     dbgln("Parsed partition value {}", partition);
 
+    auto subsize = subsize_lookup[partition][block_subsize];
+    if (subsize < Block_8x8 || partition == PartitionNone) {
+        if (!decode_block(row, col, subsize))
+            return false;
+    } else if (partition == PartitionHorizontal) {
+        if (!decode_block(row, col, subsize))
+            return false;
+        // FIXME: if (hasRows)
+        //            decode_block(r + halfBlock8x8, c, subsize)
+    }
     // FIXME: Finish implementing partition decoding
 
+    return true;
+}
+
+bool Decoder::decode_block(u32 row, u32 col, u8 subsize)
+{
+    m_mi_row = row;
+    m_tree_parser->set_mi_row(m_mi_row);
+    m_mi_col = col;
+    m_tree_parser->set_mi_col(m_mi_col);
+    m_mi_size = subsize;
+    m_available_u = row > 0;
+    m_tree_parser->set_available_u(m_available_u);
+    m_available_l = col > m_mi_col_start;
+    m_tree_parser->set_available_l(m_available_l);
+    if (!mode_info())
+        return false;
+    // FIXME: Finish implementing
+    return true;
+}
+
+bool Decoder::mode_info()
+{
+    if (m_frame_is_intra)
+        return intra_frame_mode_info();
+    return inter_frame_mode_info();
+}
+
+bool Decoder::intra_frame_mode_info()
+{
+    if (!intra_segment_id())
+        return false;
+    if (!read_skip())
+        return false;
+    if (!read_tx_size(true))
+        return false;
+    // FIXME: Finish implementing
+    return true;
+}
+
+bool Decoder::intra_segment_id()
+{
+    if (m_segmentation_enabled && m_segmentation_update_map) {
+        m_segment_id = m_tree_parser->parse_tree(SyntaxElementType::SegmentID);
+    } else {
+        m_segment_id = 0;
+    }
+    return true;
+}
+
+bool Decoder::read_skip()
+{
+    if (seg_feature_active(SEG_LVL_SKIP)) {
+        m_skip = 1;
+    } else {
+        m_skip = m_tree_parser->parse_tree(SyntaxElementType::Skip);
+    }
+    return true;
+}
+
+bool Decoder::seg_feature_active(u8 feature)
+{
+    return m_segmentation_enabled && m_feature_enabled[m_segment_id][feature];
+}
+
+bool Decoder::read_tx_size(bool allow_select)
+{
+    // FIXME: Implement
+    (void)allow_select;
+    return true;
+}
+
+bool Decoder::inter_frame_mode_info()
+{
     return true;
 }
 
