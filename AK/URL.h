@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <AK/URLParser.h>
 
 namespace AK {
 
@@ -63,6 +64,11 @@ public:
 
     String basename() const;
     String to_string() const;
+    String to_string_encoded() const
+    {
+        // Exclusion character set is the same JS's encodeURI() uses
+        return urlencode(to_string(), "#$&+,/:;=?@");
+    }
 
     URL complete_url(const String&) const;
 
