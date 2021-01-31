@@ -55,7 +55,7 @@ DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_
 {
     PhysicalAddress segment_lower_addr = mmio_segment.get_paddr();
     PhysicalAddress device_physical_mmio_space = segment_lower_addr.offset(
-        PCI_MMIO_CONFIG_SPACE_SIZE * m_device_address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * m_device_address.slot() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS) * (m_device_address.bus() - mmio_segment.get_start_bus()));
+        PCI_MMIO_CONFIG_SPACE_SIZE * m_device_address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * m_device_address.device() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS) * (m_device_address.bus() - mmio_segment.get_start_bus()));
     m_mapped_region->physical_page_slot(0) = PhysicalPage::create(device_physical_mmio_space, false, false);
     m_mapped_region->remap();
 }
@@ -139,7 +139,7 @@ Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address addr
         dbgln<PCI_DEBUG>("PCI Device Configuration Space Mapping: Check if {} was requested", checked_address);
         if (address.seg() == checked_address.seg()
             && address.bus() == checked_address.bus()
-            && address.slot() == checked_address.slot()
+            && address.device() == checked_address.device()
             && address.function() == checked_address.function()) {
             dbgln<PCI_DEBUG>("PCI Device Configuration Space Mapping: Found {}", checked_address);
             return mapping.vaddr();
@@ -202,7 +202,7 @@ void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
         dbgln<PCI_DEBUG>("PCI: Enumerating Memory mapped IO segment {}", seg);
         // Single PCI host controller.
         if ((early_read8_field(Address(seg), PCI_HEADER_TYPE) & 0x80) == 0) {
-            enumerate_bus(-1, 0, callback);
+            enumerate_bus(-1, 0, callback, true);
             return;
         }
 
@@ -210,7 +210,7 @@ void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
         for (u8 function = 0; function < 8; ++function) {
             if (early_read16_field(Address(seg, 0, 0, function), PCI_VENDOR_ID) == PCI_NONE)
                 break;
-            enumerate_bus(-1, function, callback);
+            enumerate_bus(-1, function, callback, false);
         }
     }
 }

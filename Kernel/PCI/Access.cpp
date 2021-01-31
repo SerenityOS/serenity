@@ -64,7 +64,7 @@ PhysicalID Access::get_physical_id(Address address) const
     for (auto physical_id : m_physical_ids) {
         if (physical_id.address().seg() == address.seg()
             && physical_id.address().bus() == address.bus()
-            && physical_id.address().slot() == address.slot()
+            && physical_id.address().device() == address.device()
             && physical_id.address().function() == address.function()) {
             return physical_id;
         }
@@ -99,43 +99,43 @@ u16 Access::early_read_type(Address address)
     return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
 }
 
-void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
+void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive)
 {
-    dbgln<PCI_DEBUG>("PCI: Enumerating function type={}, bus={}, slot={}, function={}", type, bus, slot, function);
-    Address address(0, bus, slot, function);
+    dbgln<PCI_DEBUG>("PCI: Enumerating function type={}, bus={}, device={}, function={}", type, bus, device, function);
+    Address address(0, bus, device, function);
     if (type == -1 || type == early_read_type(address))
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
-    if (early_read_type(address) == PCI_TYPE_BRIDGE) {
+    if (early_read_type(address) == PCI_TYPE_BRIDGE && recursive) {
         u8 secondary_bus = early_read8_field(address, PCI_SECONDARY_BUS);
 #if PCI_DEBUG
         klog() << "PCI: Found secondary bus: " << secondary_bus;
 #endif
         ASSERT(secondary_bus != bus);
-        enumerate_bus(type, secondary_bus, callback);
+        enumerate_bus(type, secondary_bus, callback, recursive);
     }
 }
 
-void Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
+void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive)
 {
-    dbgln<PCI_DEBUG>("PCI: Enumerating slot type={}, bus={}, slot={}", type, bus, slot);
-    Address address(0, bus, slot, 0);
+    dbgln<PCI_DEBUG>("PCI: Enumerating device type={}, bus={}, device={}", type, bus, device);
+    Address address(0, bus, device, 0);
     if (early_read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
         return;
-    enumerate_functions(type, bus, slot, 0, callback);
+    enumerate_functions(type, bus, device, 0, callback, recursive);
     if (!(early_read8_field(address, PCI_HEADER_TYPE) & 0x80))
         return;
     for (u8 function = 1; function < 8; ++function) {
-        Address address(0, bus, slot, function);
+        Address address(0, bus, device, function);
         if (early_read16_field(address, PCI_VENDOR_ID) != PCI_NONE)
-            enumerate_functions(type, bus, slot, function, callback);
+            enumerate_functions(type, bus, device, function, callback, recursive);
     }
 }
 
-void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
+void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback, bool recursive)
 {
     dbgln<PCI_DEBUG>("PCI: Enumerating bus type={}, bus={}", type, bus);
-    for (u8 slot = 0; slot < 32; ++slot)
-        enumerate_slot(type, bus, slot, callback);
+    for (u8 device = 0; device < 32; ++device)
+        enumerate_device(type, bus, device, callback, recursive);
 }
 
 void Access::enumerate(Function<void(Address, ID)>& callback) const
