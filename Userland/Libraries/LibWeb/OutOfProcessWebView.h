@@ -49,6 +49,8 @@ public:
     void load_html(const StringView&, const URL&);
     void load_empty_document();
 
+    void debug_request(const String& request, const String& argument = {});
+
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id);
     void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);

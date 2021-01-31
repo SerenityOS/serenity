@@ -299,4 +299,9 @@ WebContentClient& OutOfProcessWebView::client()
     return *m_client_state.client;
 }
 
+void OutOfProcessWebView::debug_request(const String& request, const String& argument)
+{
+    client().post_message(Messages::WebContentServer::DebugRequest(request, argument));
+}
+
 }

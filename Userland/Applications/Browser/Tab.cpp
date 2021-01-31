@@ -362,7 +362,7 @@ Tab::Tab(Type type)
             if (m_type == Type::InProcessWebView) {
                 Web::dump_tree(*m_page_view->document());
             } else {
-                TODO();
+                m_web_content_view->debug_request("dump-dom-tree");
             }
         },
         this));
@@ -371,7 +371,7 @@ Tab::Tab(Type type)
             if (m_type == Type::InProcessWebView) {
                 Web::dump_tree(*m_page_view->document()->layout_node());
             } else {
-                TODO();
+                m_web_content_view->debug_request("dump-layout-tree");
             }
         },
         this));
@@ -382,7 +382,7 @@ Tab::Tab(Type type)
                     Web::dump_sheet(sheet);
                 }
             } else {
-                TODO();
+                m_web_content_view->debug_request("dump-style-sheets");
             }
         },
         this));
@@ -396,7 +396,7 @@ Tab::Tab(Type type)
                 m_page_view->set_should_show_line_box_borders(action.is_checked());
                 m_page_view->update();
             } else {
-                TODO();
+                m_web_content_view->debug_request("set-line-box-borders", action.is_checked() ? "on" : "off");
             }
         },
         this);
@@ -410,7 +410,7 @@ Tab::Tab(Type type)
                 document->interpreter().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
             }
         } else {
-            TODO();
+            m_web_content_view->debug_request("collect-garbage");
         }
     }));
 
