@@ -32,7 +32,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <cstdio>
+#include <stdio.h>
 #include <sys/stat.h>
 
 static bool flag_show_hidden_files = false;
