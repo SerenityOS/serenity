@@ -90,11 +90,11 @@ static inline bool in_userinfo_set(u32 c)
     return in_path_set(c) || c == '/' || c == ':' || c == ';' || c == '=' || c == '@' || (c >= '[' && c <= '^') || c == '|';
 }
 
-String urlencode(const StringView& input)
+String urlencode(const StringView& input, const StringView& exclude)
 {
     StringBuilder builder;
     for (unsigned char ch : input) {
-        if (in_userinfo_set((u8)ch)) {
+        if (in_userinfo_set((u8)ch) && !exclude.contains(ch)) {
             builder.append('%');
             builder.appendff("{:02X}", ch);
         } else {
