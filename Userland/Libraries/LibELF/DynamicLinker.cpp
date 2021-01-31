@@ -181,6 +181,10 @@ static void load_elf(const String& name)
 {
     dbgln<DYNAMIC_LOAD_DEBUG>("load_elf: {}", name);
     auto loader = g_loaders.get(name).value();
+
+    auto dynamic_object = loader->map();
+    ASSERT(dynamic_object);
+
     for (const auto& needed_name : get_dependencies(name)) {
         dbgln<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name);
         String library_name = get_library_name(needed_name);
@@ -189,8 +193,8 @@ static void load_elf(const String& name)
         }
     }
 
-    auto dynamic_object = loader->load_from_image(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
-    ASSERT(dynamic_object);
+    bool success = loader->link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
+    ASSERT(success);
 
     g_loaded_objects.set(name, *dynamic_object);
     g_global_objects.append(*dynamic_object);

@@ -49,7 +49,10 @@ public:
 
     // Load a full ELF image from file into the current process and create an DynamicObject
     // from the SHT_DYNAMIC in the file.
-    RefPtr<DynamicObject> load_from_image(unsigned flags, size_t total_tls_size);
+    // Note that the DynamicObject will not be linked yet. Callers are responsible for calling link() to finish it.
+    RefPtr<DynamicObject> map();
+
+    bool link(unsigned flags, size_t total_tls_size);
 
     // Stage 2 of loading: dynamic object loading and primary relocations
     bool load_stage_2(unsigned flags, size_t total_tls_size);
