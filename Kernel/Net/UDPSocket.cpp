@@ -107,7 +107,9 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     if (!data.read(udp_packet.payload(), data_length))
         return EFAULT;
 
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, UserOrKernelBuffer::for_kernel_buffer(buffer), buffer_size, ttl());
+    auto result = routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, UserOrKernelBuffer::for_kernel_buffer(buffer), buffer_size, ttl());
+    if (result.is_error())
+        return result;
     return data_length;
 }
 
