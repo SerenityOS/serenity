@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <Kernel/API/Syscall.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
@@ -195,11 +196,27 @@ inline int generate_unique_filename(char* pattern, Callback callback)
 
 extern "C" {
 
+long getauxval(long type)
+{
+    errno = 0;
+    char** env;
+    for (env = environ; *env; ++env) {
+    }
+
+    auxv_t* auxvp = (auxv_t*)++env;
+    for (; auxvp->a_type != AT_NULL; ++auxvp) {
+        if (auxvp->a_type == type)
+            return auxvp->a_un.a_val;
+    }
+    errno = ENOENT;
+    return 0;
+}
+
 void exit(int status)
 {
     __cxa_finalize(nullptr);
 
-    if (getenv("LIBC_DUMP_MALLOC_STATS"))
+    if (secure_getenv("LIBC_DUMP_MALLOC_STATS"))
         serenity_dump_malloc_stats();
 
     extern void _fini();
@@ -254,6 +271,13 @@ char* getenv(const char* name)
         }
     }
     return nullptr;
+}
+
+char* secure_getenv(const char* name)
+{
+    if (getauxval(AT_SECURE))
+        return nullptr;
+    return getenv(name);
 }
 
 int unsetenv(const char* name)

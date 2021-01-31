@@ -45,6 +45,7 @@ void serenity_dump_malloc_stats(void);
 void free(void*);
 __attribute__((alloc_size(2))) void* realloc(void* ptr, size_t);
 char* getenv(const char* name);
+char* secure_getenv(const char* name);
 int putenv(char*);
 int unsetenv(const char*);
 int clearenv(void);
@@ -105,5 +106,7 @@ ldiv_t ldiv(long, long);
 int posix_openpt(int flags);
 int grantpt(int fd);
 int unlockpt(int fd);
+
+long getauxval(long type);
 
 __END_DECLS
