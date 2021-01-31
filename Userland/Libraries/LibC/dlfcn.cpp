@@ -78,7 +78,7 @@ void* dlopen(const char* filename, int flags)
     }
 
     int fd = open(filename, O_RDONLY);
-    if (!fd) {
+    if (fd < 0) {
         g_dlerror_msg = String::formatted("Unable to open file {}", filename);
         return nullptr;
     }
