@@ -79,7 +79,8 @@ private:
     void set_edit_mode(EditMode);
 
     NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
-    NonnullRefPtr<GUI::Action> create_new_action();
+    NonnullRefPtr<GUI::Action> create_new_file_action();
+    NonnullRefPtr<GUI::Action> create_new_directory_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_action();
@@ -152,7 +153,8 @@ private:
     RefPtr<LibThread::Thread> m_debugger_thread;
     RefPtr<EditorWrapper> m_current_editor_in_execution;
 
-    RefPtr<GUI::Action> m_new_action;
+    RefPtr<GUI::Action> m_new_file_action;
+    RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
