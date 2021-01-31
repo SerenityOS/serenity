@@ -69,7 +69,7 @@ void OutOfProcessWebView::create_client()
             builder.appendff(" on {}", escape_html_entities(m_url.host()));
         }
         builder.append("</h1>");
-        builder.appendff("The web page <a href='{}'>{}</a> has crashed.<br><br>You can reload the page to try again.", AK::urlencode(m_url.to_string()), escape_html_entities(m_url.to_string()));
+        builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escape_html_entities(m_url.to_string_encoded()), escape_html_entities(m_url.to_string()));
         builder.append("</body></html>");
         load_html(builder.to_string(), m_url);
     };
