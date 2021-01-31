@@ -42,6 +42,7 @@ public:
     int parse_tree(SyntaxElementType type);
     TreeSelection select_tree(SyntaxElementType type);
     u8 select_tree_probability(SyntaxElementType type, u8 node);
+    void count_syntax_element(SyntaxElementType type, int value);
 
     void set_bit_stream(BitStream* bit_stream) { m_bit_stream = bit_stream; }
     void set_has_rows(bool has_rows) { m_has_rows = has_rows; }
@@ -55,12 +56,17 @@ public:
     void set_col(u32 col) { m_col = col; }
     void set_row(u32 row) { m_row = row; }
     void set_frame_is_intra(bool frame_is_intra) { m_frame_is_intra = frame_is_intra; }
+    void set_syntax_element_counter(SyntaxElementCounter* syntax_element_counter) { m_syntax_element_counter = syntax_element_counter; }
 
 private:
     u8 calculate_partition_probability(u8 node);
 
     ProbabilityTables& m_probability_tables;
     BitStream* m_bit_stream { nullptr };
+    SyntaxElementCounter* m_syntax_element_counter { nullptr };
+
+    // m_ctx is a member variable because it is required for syntax element counting (section 9.3.4)
+    u8 m_ctx { 0 };
 
     bool m_has_rows { false };
     bool m_has_cols { false };
