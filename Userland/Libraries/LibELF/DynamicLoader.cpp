@@ -143,12 +143,12 @@ void* DynamicLoader::symbol_for_name(const char* name)
     return m_dynamic_object->base_address().offset(symbol.value()).as_ptr();
 }
 
-RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t total_tls_size)
+RefPtr<DynamicObject> DynamicLoader::map()
 {
     ASSERT(!m_dynamic_object);
 
     if (!m_valid) {
-        dbgln("DynamicLoader::load_from_image failed: image is invalid");
+        dbgln("DynamicLoader::map failed: image is invalid");
         return nullptr;
     }
 
@@ -158,12 +158,12 @@ RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t tota
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size);
 
-    auto rc = load_stage_2(flags, total_tls_size);
-    if (!rc) {
-        dbgln("DynamicLoader::load_from_image failed at load_stage_2");
-        return nullptr;
-    }
     return m_dynamic_object;
+}
+
+bool DynamicLoader::link(unsigned flags, size_t total_tls_size)
+{
+    return load_stage_2(flags, total_tls_size);
 }
 
 bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
