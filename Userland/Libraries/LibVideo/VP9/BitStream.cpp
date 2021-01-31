@@ -126,6 +126,7 @@ bool BitStream::read_bool(u8 probability)
         m_bool_range = split;
         return_bool = false;
     } else {
+        m_bool_range -= split;
         m_bool_value -= split;
         return_bool = true;
     }

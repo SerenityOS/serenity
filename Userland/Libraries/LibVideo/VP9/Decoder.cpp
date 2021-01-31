@@ -414,7 +414,7 @@ u16 Decoder::calc_min_log2_tile_cols()
 
 u16 Decoder::calc_max_log2_tile_cols()
 {
-    auto max_log_2 = 1;
+    u16 max_log_2 = 1;
     while ((m_sb64_cols >> max_log_2) >= MIN_TILE_WIDTH_B64)
         max_log_2++;
     return max_log_2 - 1;
@@ -617,7 +617,7 @@ bool Decoder::read_is_inter_probs()
 bool Decoder::frame_reference_mode()
 {
     auto compound_reference_allowed = false;
-    for (auto i = 0; i < REFS_PER_FRAME; i++) {
+    for (auto i = 1; i < REFS_PER_FRAME; i++) {
         if (m_ref_frame_sign_bias[i + 1] != m_ref_frame_sign_bias[1])
             compound_reference_allowed = true;
     }
@@ -807,7 +807,7 @@ bool Decoder::clear_above_context()
 u32 Decoder::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
 {
     u32 super_blocks = (mis + 7) >> 3u;
-    u32 offset = ((tile_num * super_blocks) >> tile_size_log2) << 3;
+    u32 offset = ((tile_num * super_blocks) >> tile_size_log2) << 3u;
     return min(offset, mis);
 }
 
