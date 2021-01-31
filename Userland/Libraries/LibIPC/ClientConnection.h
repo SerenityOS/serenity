@@ -45,7 +45,6 @@ public:
     {
         ASSERT(this->socket().is_connected());
         this->socket().on_ready_to_read = [this] { this->drain_messages_from_peer(); };
-        this->initialize_peer_info();
     }
 
     virtual ~ClientConnection() override
@@ -54,20 +53,17 @@ public:
 
     void did_misbehave()
     {
-        dbgln("{} (id={}, pid={}) misbehaved, disconnecting.", *this, m_client_id, client_pid());
+        dbgln("{} (id={}) misbehaved, disconnecting.", *this, m_client_id);
         this->shutdown();
     }
 
     void did_misbehave(const char* message)
     {
-        dbgln("{} (id={}, pid={}) misbehaved ({}), disconnecting.", *this, m_client_id, client_pid(), message);
+        dbgln("{} (id={}) misbehaved ({}), disconnecting.", *this, m_client_id, message);
         this->shutdown();
     }
 
     int client_id() const { return m_client_id; }
-
-    pid_t client_pid() const { return this->peer_pid(); }
-    void set_client_pid(pid_t pid) { this->set_peer_pid(pid); }
 
     virtual void die() = 0;
 

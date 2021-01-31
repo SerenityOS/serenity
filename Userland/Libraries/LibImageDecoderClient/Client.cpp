@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,8 @@ Client::Client()
 
 void Client::handshake()
 {
-    auto response = send_sync<Messages::ImageDecoderServer::Greet>(getpid());
+    auto response = send_sync<Messages::ImageDecoderServer::Greet>();
     set_my_client_id(response->client_id());
-    set_server_pid(response->server_pid());
 }
 
 void Client::handle(const Messages::ImageDecoderClient::Dummy&)
