@@ -1205,7 +1205,7 @@ void Editor::refresh_display()
         auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
 
         auto c = m_buffer[i];
-        bool should_print_caret = iscntrl(c) && c != '\n';
+        bool should_print_caret = isascii(c) && iscntrl(c) && c != '\n';
 
         if (ends.size() || anchored_ends.size()) {
             Style style;
@@ -1560,7 +1560,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             current_line.length = 0;
             return state;
         }
-        if (iscntrl(c) && c != '\n')
+        if (isascii(c) && iscntrl(c) && c != '\n')
             current_line.masked_chars.append({ index, 1, 2 });
         // FIXME: This will not support anything sophisticated
         ++current_line.length;
