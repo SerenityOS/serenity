@@ -36,8 +36,7 @@ ClientConnection::ClientConnection()
 
 void ClientConnection::handshake()
 {
-    auto response = send_sync<Messages::AudioServer::Greet>();
-    set_my_client_id(response->client_id());
+    send_sync<Messages::AudioServer::Greet>();
 }
 
 void ClientConnection::enqueue(const Buffer& buffer)

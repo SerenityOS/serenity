@@ -722,7 +722,7 @@ void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowMinimize
 
 OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
 {
-    return make<Messages::WindowServer::GreetResponse>(client_id(), Screen::the().rect(), Gfx::current_system_theme_buffer());
+    return make<Messages::WindowServer::GreetResponse>(Screen::the().rect(), Gfx::current_system_theme_buffer());
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)

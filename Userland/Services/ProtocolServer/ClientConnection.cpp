@@ -122,7 +122,7 @@ void ClientConnection::did_request_certificates(Badge<Download>, Download& downl
 
 OwnPtr<Messages::ProtocolServer::GreetResponse> ClientConnection::handle(const Messages::ProtocolServer::Greet&)
 {
-    return make<Messages::ProtocolServer::GreetResponse>(client_id());
+    return make<Messages::ProtocolServer::GreetResponse>();
 }
 
 OwnPtr<Messages::ProtocolServer::SetCertificateResponse> ClientConnection::handle(const Messages::ProtocolServer::SetCertificate& message)

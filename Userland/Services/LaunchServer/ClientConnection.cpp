@@ -50,7 +50,7 @@ void ClientConnection::die()
 
 OwnPtr<Messages::LaunchServer::GreetResponse> ClientConnection::handle(const Messages::LaunchServer::Greet&)
 {
-    return make<Messages::LaunchServer::GreetResponse>(client_id());
+    return make<Messages::LaunchServer::GreetResponse>();
 }
 
 OwnPtr<Messages::LaunchServer::OpenURLResponse> ClientConnection::handle(const Messages::LaunchServer::OpenURL& request)

@@ -81,7 +81,7 @@ void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
 
 OwnPtr<Messages::AudioServer::GreetResponse> ClientConnection::handle(const Messages::AudioServer::Greet&)
 {
-    return make<Messages::AudioServer::GreetResponse>(client_id());
+    return make<Messages::AudioServer::GreetResponse>();
 }
 
 OwnPtr<Messages::AudioServer::GetMainMixVolumeResponse> ClientConnection::handle(const Messages::AudioServer::GetMainMixVolume&)

@@ -57,7 +57,7 @@ void ClientConnection::die()
 
 OwnPtr<Messages::ClipboardServer::GreetResponse> ClientConnection::handle(const Messages::ClipboardServer::Greet&)
 {
-    return make<Messages::ClipboardServer::GreetResponse>(client_id());
+    return make<Messages::ClipboardServer::GreetResponse>();
 }
 
 OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)

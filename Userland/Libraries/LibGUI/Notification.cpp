@@ -37,8 +37,7 @@ class NotificationServerConnection : public IPC::ServerConnection<NotificationCl
 public:
     virtual void handshake() override
     {
-        auto response = send_sync<Messages::NotificationServer::Greet>();
-        set_my_client_id(response->client_id());
+        send_sync<Messages::NotificationServer::Greet>();
     }
 
 private:

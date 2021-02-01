@@ -38,8 +38,7 @@ Client::Client()
 
 void Client::handshake()
 {
-    auto response = send_sync<Messages::ProtocolServer::Greet>();
-    set_my_client_id(response->client_id());
+    send_sync<Messages::ProtocolServer::Greet>();
 }
 
 bool Client::is_supported_protocol(const String& protocol)
