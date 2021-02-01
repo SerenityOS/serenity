@@ -101,23 +101,23 @@ static String double_to_string(double d)
 
     size_t start_index = 0;
     size_t end_index = 0;
-    size_t intpart_end = 0;
+    size_t int_part_end = 0;
 
     // generate integer part (reversed)
-    double intPart;
+    double int_part;
     double frac_part;
-    frac_part = modf(d, &intPart);
-    while (intPart > 0) {
-        number_string_builder.append('0' + (int)fmod(intPart, 10));
+    frac_part = modf(d, &int_part);
+    while (int_part > 0) {
+        number_string_builder.append('0' + (int)fmod(int_part, 10));
         end_index++;
-        intPart = floor(intPart / 10);
+        int_part = floor(int_part / 10);
     }
 
     auto reversed_integer_part = number_string_builder.to_string().reverse();
     number_string_builder.clear();
     number_string_builder.append(reversed_integer_part);
 
-    intpart_end = end_index;
+    int_part_end = end_index;
 
     int exponent = 0;
 
@@ -125,10 +125,10 @@ static String double_to_string(double d)
     while (frac_part > 0) {
         double old_frac_part = frac_part;
         frac_part *= 10;
-        frac_part = modf(frac_part, &intPart);
+        frac_part = modf(frac_part, &int_part);
         if (old_frac_part == frac_part)
             break;
-        number_string_builder.append('0' + (int)intPart);
+        number_string_builder.append('0' + (int)int_part);
         end_index++;
         exponent--;
     }
@@ -138,9 +138,9 @@ static String double_to_string(double d)
     // FIXME: Remove this hack.
     // FIXME: Instead find the shortest round-trippable representation.
     // Remove decimals after the 15th position
-    if (end_index > intpart_end + 15) {
-        exponent += end_index - intpart_end - 15;
-        end_index = intpart_end + 15;
+    if (end_index > int_part_end + 15) {
+        exponent += end_index - int_part_end - 15;
+        end_index = int_part_end + 15;
     }
 
     // remove leading zeroes
