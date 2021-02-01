@@ -233,10 +233,17 @@ ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, u32 number,
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot)
+ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot, size_t fraction_length, bool has_fraction)
 {
+    if (has_fraction)
+        len = min(len, fraction_length);
+
     if (!dot && (!field_width || field_width < len))
         field_width = len;
+
+    if (has_fraction && !field_width)
+        field_width = len;
+
     size_t pad_amount = field_width > len ? field_width - len : 0;
 
     if (!left_pad) {
@@ -292,7 +299,7 @@ struct PrintfImpl {
         const char* sp = NextArgument<const char*>()(ap);
         if (!sp)
             sp = "(null)";
-        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot);
+        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot, state.fraction_length, state.has_fraction_length);
     }
     ALWAYS_INLINE int format_d(const ModifierState& state, ArgumentListRefT ap) const
     {
@@ -367,7 +374,7 @@ struct PrintfImpl {
     ALWAYS_INLINE int format_c(const ModifierState& state, ArgumentListRefT ap) const
     {
         char c = NextArgument<int>()(ap);
-        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot);
+        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot, state.fraction_length, state.has_fraction_length);
     }
     ALWAYS_INLINE int format_unrecognized(char format_op, const char* fmt, const ModifierState&, ArgumentListRefT) const
     {
@@ -422,7 +429,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 if (*(p + 1))
                     goto one_more;
             }
-            if (!state.zero_pad && !state.field_width && *p == '0') {
+            if (!state.zero_pad && !state.field_width && !state.has_fraction_length && *p == '0') {
                 state.zero_pad = true;
                 if (*(p + 1))
                     goto one_more;
