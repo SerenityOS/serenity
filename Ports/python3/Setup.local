@@ -1,0 +1,76 @@
+# Build most modules that are usually built as shared objects statically as importing such modules
+# currently asserts in the dynamic loader (may or may not be related to https://github.com/SerenityOS/serenity/issues/4642):
+#
+#     ASSERTION FAILED: flags & RTLD_GLOBAL
+#     ../Userland/Libraries/LibELF/DynamicLoader.cpp:171 (as of 2020-02-01 at least)
+#
+# This means we otherwise couldn't import any of these nor anything that imports them, which is quite limiting.
+#
+# The list is mostly copied from Modules/Setup, with some minor tweaks (include paths, added a bunch of other modules).
+# As a result of static linking, a build failure in any of these modules will fail the build of Python itself,
+# instead of just not building that specific .so - obviously. If this stops working, tweak the list accordingly.
+#
+# Some stuff is neither under *static* nor *disabled*, so lib-dynload isn't entirely empty - mostly _test* modules though.
+#
+# Python itself is still linked dynamically, which works fine - it's just module imports that blow up.
+# This file can simply be removed, along with post_configure() in package.sh, once the issue mentioned above is resolved.
+
+*static*
+
+_asyncio _asynciomodule.c
+_bisect _bisectmodule.c
+_blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
+_codecs_cn cjkcodecs/_codecs_cn.c
+_codecs_hk cjkcodecs/_codecs_hk.c
+_codecs_iso2022 cjkcodecs/_codecs_iso2022.c
+_codecs_jp cjkcodecs/_codecs_jp.c
+_codecs_kr cjkcodecs/_codecs_kr.c
+_codecs_tw cjkcodecs/_codecs_tw.c
+_contextvars _contextvarsmodule.c
+_crypt _cryptmodule.c
+_csv _csv.c
+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/cfield.c _ctypes/malloc_closure.c _ctypes/stgdict.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include $(SERENITY_ROOT)/Build/Root/usr/local/lib/libffi.a
+_datetime _datetimemodule.c
+_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c
+_heapq _heapqmodule.c
+_json -I$(srcdir)/Include/internal -DPy_BUILD_CORE_BUILTIN _json.c
+_md5 md5module.c
+_multibytecodec cjkcodecs/multibytecodec.c
+_opcode _opcode.c
+_pickle _pickle.c
+_posixsubprocess _posixsubprocess.c
+_queue _queuemodule.c
+_random _randommodule.c -DPy_BUILD_CORE_MODULE
+_sha1 sha1module.c
+_sha256 sha256module.c -DPy_BUILD_CORE_BUILTIN
+_sha3 _sha3/sha3module.c
+_sha512 sha512module.c -DPy_BUILD_CORE_BUILTIN
+_statistics _statisticsmodule.c
+_struct _struct.c
+_weakref _weakref.c
+_xxsubinterpreters _xxsubinterpretersmodule.c
+_zoneinfo _zoneinfo.c
+array arraymodule.c
+audioop audioop.c
+binascii binascii.c
+cmath cmathmodule.c _math.c -DPy_BUILD_CORE_MODULE
+fcntl fcntlmodule.c
+grp grpmodule.c
+math mathmodule.c _math.c -DPy_BUILD_CORE_MODULE
+parser parsermodule.c
+pyexpat expat/xmlparse.c expat/xmlrole.c expat/xmltok.c pyexpat.c -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI
+select selectmodule.c
+syslog syslogmodule.c
+unicodedata unicodedata.c
+xxlimited xxlimited.c
+xxsubtype xxsubtype.c
+
+*disabled*
+# Not building, patch Python some more or fix LibC...
+_decimal _socket mmap resource spwd termios
+
+# Linker errors
+_lsprof _multiprocessing
+
+# Lots and lots of linker errors, although these flags should be correct:
+_curses _cursesmodule.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include/ncurses -L$(SERENITY_ROOT)/Build/Root/usr/local/lib -lncurses -ltermcap
