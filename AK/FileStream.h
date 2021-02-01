@@ -28,7 +28,6 @@
 
 #include <AK/Stream.h>
 #ifndef KERNEL
-#    include <AK/LogStream.h>
 #    include <errno.h>
 #    include <stdio.h>
 
