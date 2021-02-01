@@ -673,6 +673,19 @@ void ClientConnection::handle(const Messages::WindowServer::WM_PopupWindowMenu& 
     }
 }
 
+void ClientConnection::handle(const Messages::WindowServer::StartWindowResize& request)
+{
+    auto it = m_windows.find(request.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("WM_StartWindowResize: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
+    //        Maybe the client should be allowed to specify what initiated this request?
+    WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
+}
+
 void ClientConnection::handle(const Messages::WindowServer::WM_StartWindowResize& request)
 {
     auto* client = ClientConnection::from_client_id(request.client_id());
