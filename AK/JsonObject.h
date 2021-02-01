@@ -31,7 +31,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>
-#include <AK/StringImpl.h>
 
 namespace AK {
 

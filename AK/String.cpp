@@ -34,10 +34,6 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-#ifndef KERNEL
-#    include <inttypes.h>
-#endif
-
 namespace AK {
 
 String::String(const StringView& view)
