@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/CircularQueue.h>
 #include <AK/Types.h>
 

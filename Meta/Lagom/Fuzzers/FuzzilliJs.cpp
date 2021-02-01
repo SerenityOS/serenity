@@ -32,7 +32,6 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <signal.h>
 
 #include <stddef.h>
 #include <stdint.h>

@@ -27,7 +27,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <AK/Memory.h>
 #include <ctype.h>
 
 namespace AK {

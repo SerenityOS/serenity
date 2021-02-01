@@ -28,7 +28,6 @@
 
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 
 // NOTE: We can't include <initializer_list> during the toolchain bootstrap,
