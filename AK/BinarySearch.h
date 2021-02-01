@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
