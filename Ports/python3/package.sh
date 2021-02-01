@@ -25,6 +25,10 @@ configopts="--build=${BUILD} --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_f
 
 export BLDSHARED="${CC} -shared"
 
+post_configure() {
+    run cp "${SERENITY_ROOT}/Ports/${port}/Setup.local" "Modules/Setup.local"
+}
+
 if [ -x "$(command -v python3)" ]; then
     # Check if major and minor version of python3 are matching
     if ! python3 -c "import sys; major, minor, _ = map(int, '${PYTHON_VERSION}'.split('.')); sys.exit(not (sys.version_info.major == major and sys.version_info.minor == minor))"; then
