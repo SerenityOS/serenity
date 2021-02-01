@@ -102,27 +102,7 @@ def run_here():
     return run_with(list_files_here())
 
 
-def display_for(filename, index):
-    with open(filename, 'r') as fp:
-        fullmap = json.load(fp)
-    for name in PERMITTED_MAPS:
-        c = None
-        if name in fullmap:
-            m = fullmap[name]
-            if len(m) > index and m[index]:
-                c = m[index]
-        if c is None:
-            print('{}: None'.format(name))
-        else:
-            print('{}: "{}"'.format(name, c))
-
-
 if __name__ == '__main__':
     os.chdir(os.path.dirname(__file__) + "/../Base/res/keymaps/")
-    if len(sys.argv) == 1:
-        exit(0 if run_here() else 1)
-    elif len(sys.argv) == 3:
-        display_for('{}.json'.format(sys.argv[1]), int(sys.argv[2], 0))
-    else:
-        print('USAGE: {} [mapcode index]'.format(sys.argv[0]), file=sys.stderr)
+    if not run_here():
         exit(1)
