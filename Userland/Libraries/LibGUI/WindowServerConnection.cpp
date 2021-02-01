@@ -63,7 +63,6 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
 void WindowServerConnection::handshake()
 {
     auto response = send_sync<Messages::WindowServer::Greet>();
-    set_my_client_id(response->client_id());
     set_system_theme_from_anonymous_buffer(response->theme_buffer());
     Desktop::the().did_receive_screen_rect({}, response->screen_rect());
 }

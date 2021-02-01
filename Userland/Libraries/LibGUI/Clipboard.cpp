@@ -39,8 +39,7 @@ class ClipboardServerConnection : public IPC::ServerConnection<ClipboardClientEn
 public:
     virtual void handshake() override
     {
-        auto response = send_sync<Messages::ClipboardServer::Greet>();
-        set_my_client_id(response->client_id());
+        send_sync<Messages::ClipboardServer::Greet>();
     }
 
 private:

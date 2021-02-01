@@ -1,7 +1,7 @@
 endpoint ProtocolServer = 9
 {
     // Basic protocol
-    Greet() => (i32 client_id)
+    Greet() => ()
 
     // Test if a specific protocol is supported, e.g "http"
     IsSupportedProtocol(String protocol) => (bool supported)

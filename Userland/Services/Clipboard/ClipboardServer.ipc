@@ -1,6 +1,6 @@
 endpoint ClipboardServer = 802
 {
-    Greet() => (i32 client_id)
+    Greet() => ()
 
     GetClipboardData() => (Core::AnonymousBuffer data, [UTF8] String mime_type, IPC::Dictionary metadata)
     SetClipboardData(Core::AnonymousBuffer data, [UTF8] String mime_type, IPC::Dictionary metadata) => ()

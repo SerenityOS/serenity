@@ -78,7 +78,7 @@ const Web::Page& ClientConnection::page() const
 
 OwnPtr<Messages::WebContentServer::GreetResponse> ClientConnection::handle(const Messages::WebContentServer::Greet&)
 {
-    return make<Messages::WebContentServer::GreetResponse>(client_id());
+    return make<Messages::WebContentServer::GreetResponse>();
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemTheme& message)

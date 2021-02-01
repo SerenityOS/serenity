@@ -1,6 +1,6 @@
 endpoint LaunchServer = 101
 {
-    Greet() => (i32 client_id)
+    Greet() => ()
     OpenURL(URL url, String handler_name) => (bool response)
     GetHandlersForURL(URL url) => (Vector<String> handlers)
     GetHandlersWithDetailsForURL(URL url) => (Vector<String> handlers_details)

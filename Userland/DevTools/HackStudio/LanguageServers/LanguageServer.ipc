@@ -1,6 +1,6 @@
 endpoint LanguageServer = 8001
 {
-    Greet() => (i32 client_id)
+    Greet() => ()
 
     FileOpened(String file_name, IPC::File file) =|
     FileEditInsertText(String file_name, String text, i32 start_line, i32 start_column) =|

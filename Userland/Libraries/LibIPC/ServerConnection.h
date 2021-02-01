@@ -49,17 +49,11 @@ public:
 
     virtual void handshake() = 0;
 
-    void set_my_client_id(int id) { m_my_client_id = id; }
-    int my_client_id() const { return m_my_client_id; }
-
     virtual void die() override
     {
         // Override this function if you don't want your app to exit if it loses the connection.
         exit(0);
     }
-
-private:
-    int m_my_client_id { -1 };
 };
 
 }

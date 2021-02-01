@@ -37,8 +37,7 @@ Client::Client()
 
 void Client::handshake()
 {
-    auto response = send_sync<Messages::ImageDecoderServer::Greet>();
-    set_my_client_id(response->client_id());
+    send_sync<Messages::ImageDecoderServer::Greet>();
 }
 
 void Client::handle(const Messages::ImageDecoderClient::Dummy&)

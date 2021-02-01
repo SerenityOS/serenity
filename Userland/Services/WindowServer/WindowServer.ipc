@@ -1,6 +1,6 @@
 endpoint WindowServer = 2
 {
-    Greet() => (i32 client_id, Gfx::IntRect screen_rect, Core::AnonymousBuffer theme_buffer)
+    Greet() => (Gfx::IntRect screen_rect, Core::AnonymousBuffer theme_buffer)
 
     CreateMenubar() => (i32 menubar_id)
     DestroyMenubar(i32 menubar_id) => ()
