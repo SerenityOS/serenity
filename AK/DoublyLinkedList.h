@@ -29,7 +29,6 @@
 #include <AK/Assertions.h>
 #include <AK/Find.h>
 #include <AK/StdLibExtras.h>
-#include <AK/Traits.h>
 
 namespace AK {
 
