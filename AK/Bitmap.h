@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>

@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/SinglyLinkedList.h>
-#include <AK/StdLibExtras.h>
 
 namespace AK {
 
