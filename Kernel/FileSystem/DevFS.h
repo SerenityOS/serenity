@@ -113,7 +113,7 @@ private:
     virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
     virtual KResult chown(uid_t, gid_t) override;
 
-    NonnullRefPtr<Device> m_attached_device;
+    const Device* m_attached_device;
     String m_cached_name;
 
     uid_t m_uid { 0 };

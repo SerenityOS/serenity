@@ -63,9 +63,17 @@ size_t DevFS::get_new_inode_index()
     return 1 + (++m_inode_index);
 }
 
-void DevFS::notify_device_removal(Device&)
+void DevFS::notify_device_removal(Device& device)
 {
-    TODO();
+    LOCKER(m_lock);
+    auto check_match = [&](NonnullRefPtr<DevFSDeviceInode> match) {
+        if (match->m_attached_device == &device)
+            return true;
+        return false;
+    };
+
+    m_nodes.remove_first_matching(check_match);
+    m_root_inode->m_devices.remove_first_matching(check_match);
 }
 
 DevFS::~DevFS()
@@ -334,7 +342,7 @@ KResultOr<size_t> DevFSRootDirectoryInode::directory_entry_count() const
 
 DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, const Device& device)
     : DevFSInode(fs)
-    , m_attached_device(device)
+    , m_attached_device(&device)
 {
 }
 DevFSDeviceInode::~DevFSDeviceInode()

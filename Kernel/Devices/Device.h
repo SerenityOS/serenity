@@ -93,6 +93,7 @@ protected:
 private:
     unsigned m_major { 0 };
     unsigned m_minor { 0 };
+    bool m_has_devfs_node { false };
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
 

@@ -56,6 +56,7 @@ Device* Device::get_device(unsigned major, unsigned minor)
 Device::Device(unsigned major, unsigned minor, bool create_devfs_node)
     : m_major(major)
     , m_minor(minor)
+    , m_has_devfs_node(create_devfs_node)
 {
     u32 device_id = encoded_device(major, minor);
     auto it = all_devices().find(device_id);
@@ -72,6 +73,9 @@ Device::Device(unsigned major, unsigned minor, bool create_devfs_node)
 Device::~Device()
 {
     all_devices().remove(encoded_device(m_major, m_minor));
+
+    if (m_has_devfs_node)
+        DevFS::the().notify_device_removal(*this);
 }
 
 String Device::absolute_path() const
