@@ -126,7 +126,7 @@ public:
     virtual void close();
     void move_to_front();
 
-    void start_wm_resize();
+    void start_interactive_resize();
 
     Widget* main_widget() { return m_main_widget; }
     const Widget* main_widget() const { return m_main_widget; }

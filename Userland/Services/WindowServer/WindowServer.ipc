@@ -60,6 +60,8 @@ endpoint WindowServer = 2
 
     GetWindowRectInMenubar(i32 window_id) => (Gfx::IntRect rect)
 
+    StartWindowResize(i32 window_id) =|
+
     IsMaximized(i32 window_id) => (bool maximized)
 
     InvalidateRect(i32 window_id, Vector<Gfx::IntRect> rects, bool ignore_occlusion) =|

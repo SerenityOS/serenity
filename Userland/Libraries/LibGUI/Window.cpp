@@ -774,9 +774,9 @@ void Window::apply_icon()
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->to_shareable_bitmap());
 }
 
-void Window::start_wm_resize()
+void Window::start_interactive_resize()
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::WM_StartWindowResize(WindowServerConnection::the().my_client_id(), m_window_id));
+    WindowServerConnection::the().post_message(Messages::WindowServer::StartWindowResize(m_window_id));
 }
 
 Vector<Widget*> Window::focusable_widgets(FocusSource source) const
