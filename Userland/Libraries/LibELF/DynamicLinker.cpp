@@ -26,6 +26,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
@@ -43,14 +44,17 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 
 namespace ELF {
 
 namespace {
-HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> g_loaders;
-HashMap<String, NonnullRefPtr<ELF::DynamicObject>> g_loaded_objects;
-Vector<NonnullRefPtr<ELF::DynamicObject>> g_global_objects;
+static HashMap<FlyString, NonnullRefPtr<ELF::DynamicLoader>> g_loaders;
+static HashMap<FlyString, NonnullRefPtr<ELF::DynamicObject>> g_loaded_objects;
+static Vector<NonnullRefPtr<ELF::DynamicObject>> g_global_objects;
+static int g_dlfcn_error { 0 };
+static HashMap<FlyString, DynamicObject::SymbolLookupResult> g_loader_internals;
 
 using MainFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
@@ -62,6 +66,27 @@ LibCExitFunction g_libc_exit = nullptr;
 
 bool g_allowed_to_check_environment_variables { false };
 bool g_do_breakpoint_trap_before_entry { false };
+}
+
+static void* dlfcn_dlopen(const char* name, int flags);
+static void* dlfcn_dlsym(void* handle, const char* symbol);
+static int dlfcn_dlclose(void* handle);
+static const char* dlfcn_dlerror();
+enum DlfcnErrors {
+    NoHandle = 1,
+    NoSymbol = 2,
+};
+
+static Optional<DynamicObject::SymbolLookupResult> loader_internal(StringView name)
+{
+    if (g_loader_internals.is_empty()) {
+        g_loader_internals.set("dlopen", { 0, (FlatPtr)&dlfcn_dlopen, STB_GLOBAL, nullptr });
+        g_loader_internals.set("dlclose", { 0, (FlatPtr)&dlfcn_dlclose, STB_GLOBAL, nullptr });
+        g_loader_internals.set("dlerror", { 0, (FlatPtr)&dlfcn_dlerror, STB_GLOBAL, nullptr });
+        g_loader_internals.set("dlsym", { 0, (FlatPtr)&dlfcn_dlsym, STB_GLOBAL, nullptr });
+    }
+
+    return g_loader_internals.get(name);
 }
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const char* symbol_name)
@@ -77,30 +102,41 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
             weak_result = res;
         // We don't want to allow local symbols to be pulled in to other modules
     }
+
+    if (auto option = loader_internal(symbol_name); option.has_value())
+        return option;
+
     return weak_result;
 }
 
-static void map_library(const String& name, int fd)
+static bool map_library(const String& name, int fd)
 {
     auto loader = ELF::DynamicLoader::try_create(fd, name);
     if (!loader) {
-        dbgln("Failed to create ELF::DynamicLoader for fd={}, name={}", fd, name);
-        ASSERT_NOT_REACHED();
+        g_dlfcn_error = -errno;
+        return false;
     }
+
     loader->set_tls_offset(g_current_tls_offset);
 
     g_loaders.set(name, *loader);
 
     g_current_tls_offset += loader->tls_size();
+    return true;
 }
 
-static void map_library(const String& name)
+static bool map_library(const String& name)
 {
     // TODO: Do we want to also look for libs in other paths too?
-    String path = String::formatted("/usr/lib/{}", name);
+    LexicalPath lexical_path { name };
+    String path = lexical_path.is_absolute() ? lexical_path.string() : String::formatted("/usr/lib/{}", name);
     int fd = open(path.characters(), O_RDONLY);
-    ASSERT(fd >= 0);
-    map_library(name, fd);
+    if (fd < 0) {
+        g_dlfcn_error = -errno;
+        return false;
+    }
+
+    return map_library(name, fd);
 }
 
 static String get_library_name(const StringView& path)
@@ -177,10 +213,10 @@ static void initialize_libc(DynamicObject& libc)
     ((libc_init_func*)res.value().address)();
 }
 
-static void load_elf(const String& name)
+static void load_elf(const String& name, int flags = RTLD_GLOBAL | RTLD_LAZY)
 {
     dbgln<DYNAMIC_LOAD_DEBUG>("load_elf: {}", name);
-    auto loader = g_loaders.get(name).value();
+    NonnullRefPtr loader = *g_loaders.get(name).value();
 
     auto dynamic_object = loader->map();
     ASSERT(dynamic_object);
@@ -189,15 +225,16 @@ static void load_elf(const String& name)
         dbgln<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name);
         String library_name = get_library_name(needed_name);
         if (!g_loaded_objects.contains(library_name)) {
-            load_elf(library_name);
+            load_elf(library_name, flags);
         }
     }
 
-    bool success = loader->link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
+    bool success = loader->link(flags, g_total_tls_size);
     ASSERT(success);
 
     g_loaded_objects.set(name, *dynamic_object);
-    g_global_objects.append(*dynamic_object);
+    if (flags & RTLD_GLOBAL)
+        g_global_objects.append(*dynamic_object);
 
     dbgln<DYNAMIC_LOAD_DEBUG>("load_elf: done {}", name);
 }
@@ -221,6 +258,128 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
     return loader;
 }
 
+static bool dlfcn_map(const FlyString& key, const StringView& library_name, int flags)
+{
+    auto load_and_commit = [flags](auto library_name) {
+        dbgln("dlopen loading {}", library_name);
+        // FIXME: Not everything is global.
+        load_elf(library_name, flags | RTLD_GLOBAL);
+
+        dbgln("dlopen comitting {}", library_name);
+        commit_elf(library_name);
+    };
+
+    if (!g_loaded_objects.contains(key)) {
+        dbgln("dlopen mapping {}", library_name);
+        if (!map_library(library_name)) {
+            dbgln("dlopen {} FAILED", library_name);
+            return false;
+        }
+
+        dbgln("dlopen mapping deps for {}", library_name);
+
+        for (const auto& needed_name : get_dependencies(library_name)) {
+            dbgln<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name.characters());
+            String library_name = get_library_name(needed_name);
+
+            if (!g_loaded_objects.contains(library_name)) {
+                dlfcn_map(library_name, library_name, flags);
+                load_and_commit(library_name);
+            }
+        }
+
+        load_and_commit(library_name);
+    }
+    // FIXME: The else case here should increment the refcount of the mapped library.
+
+    g_dlfcn_error = 0;
+    return true;
+}
+
+void* dlfcn_dlopen(const char* name, int flags)
+{
+    dbgln("dlopen {}", name);
+
+    LexicalPath path { name };
+    String library_name;
+    if (!path.is_absolute()) {
+        if (path.parts().size() == 1 && !path.has_extension("so"))
+            library_name = String::formatted("{}.so", path.parts()[0]);
+        else if (path.parts().size() == 1)
+            library_name = path.parts()[0];
+        else
+            library_name = path.string();
+    } else {
+        library_name = path.string();
+    }
+
+    FlyString key { library_name };
+    if (!dlfcn_map(key, library_name, flags))
+        return nullptr;
+
+    auto result = (void*)const_cast<StringImpl*>(key.impl());
+    dbgln("dlopen {} = {:p}", name, result);
+    return result;
+}
+
+void* dlfcn_dlsym(void* handle, const char* symbol)
+{
+    dbgln("dlsym lookup {} in {:p}", symbol, handle);
+
+    // FIXME: Add support for RTLD_NEXT and RTLD_DEFAULT
+    //        as per https://pubs.opengroup.org/onlinepubs/009696699/functions/dlsym.html
+    if (!handle)
+        TODO();
+
+    FlyString impl = StringView { (StringImpl*)handle };
+    dbgln("impl = {}", impl);
+    for (auto& entry : g_loaded_objects)
+        dbgln("{} = {}", entry.key, entry.value.ptr());
+    auto option = g_loaded_objects.get(impl);
+    if (!option.has_value()) {
+        dbgln("dlsym {} handle invalid", symbol);
+        g_dlfcn_error = DlfcnErrors::NoHandle;
+        return nullptr;
+    }
+
+    auto sym_result = option.value()->lookup_symbol(symbol);
+    if (!sym_result.has_value()) {
+        dbgln("dlsym {} not found", symbol);
+        g_dlfcn_error = DlfcnErrors::NoSymbol;
+        return nullptr;
+    }
+
+    // No error.
+    g_dlfcn_error = 0;
+
+    dbgln("dlsym {} = {:p}", symbol, sym_result.value().address);
+    return (void*)sym_result.value().address;
+}
+
+int dlfcn_dlclose(void*)
+{
+    // FIXME: Implement this
+    //        - Decrement refcount.
+    //        - call global destructors if needed.
+    //        - remove objects if needed.
+    return 0;
+}
+
+const char* dlfcn_dlerror()
+{
+    if (g_dlfcn_error < 0)
+        return strerror(-g_dlfcn_error);
+
+    switch (g_dlfcn_error) {
+    case DlfcnErrors::NoHandle:
+        return "Invalid handle";
+    case DlfcnErrors::NoSymbol:
+        return "Unknown symbol referenced";
+    default:
+        return "No error";
+    }
+}
+
 static void read_environment_variables()
 {
     for (char** env = g_envp; *env; ++env) {
@@ -242,6 +401,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     map_dependencies(main_program_name);
 
     dbgln<DYNAMIC_LOAD_DEBUG>("loaded all dependencies");
+
     for ([[maybe_unused]] auto& lib : g_loaders) {
         dbgln<DYNAMIC_LOAD_DEBUG>("{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size(), lib.value->tls_offset());
     }

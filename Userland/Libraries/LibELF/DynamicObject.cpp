@@ -507,6 +507,11 @@ Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const E
     if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
         return DynamicLinker::lookup_global_symbol(symbol.name());
 
+    if (symbol.bind() == STB_GLOBAL) {
+        if (auto res = DynamicLinker::lookup_global_symbol(symbol.name()); res.has_value())
+            return res;
+    }
+
     if (!symbol.is_undefined()) {
         dbgln<DYNAMIC_LOAD_DEBUG>("symbol is defined in its object");
         return SymbolLookupResult { symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };

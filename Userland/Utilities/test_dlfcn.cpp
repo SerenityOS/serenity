@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,43 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
-#include <AK/RefPtr.h>
-#include <AK/ScopeGuard.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <LibELF/DynamicLoader.h>
-#include <assert.h>
 #include <dlfcn.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-extern "C" {
+extern char* xcrypt(const char* key, const char* salt);
 
-__attribute__((__weak__)) int dlclose(void*)
+int main()
 {
-    dbgln("weak dlclose stub called\n");
-    ASSERT_NOT_REACHED();
-}
+    auto handle = dlopen("libcrypt", RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle)
+        return 1;
 
-__attribute__((__weak__)) char* dlerror()
-{
-    dbgln("weak dlerror stub called\n");
-    ASSERT_NOT_REACHED();
-}
+    auto crypt_sym = dlsym(handle, "crypt");
+    if (!crypt_sym)
+        return 2;
 
-__attribute__((__weak__)) void* dlopen(const char*, int)
-{
-    dbgln("weak dlopen stub called\n");
-    ASSERT_NOT_REACHED();
+    auto crypt = (decltype(&xcrypt))crypt_sym;
+    auto retval = crypt("foobar", "test");
+    printf("%p\n", retval);
+    return 0;
 }
-
-__attribute__((__weak__)) void* dlsym(void*, const char*)
-{
-    dbgln("weak dlsym stub called\n");
-    ASSERT_NOT_REACHED();
-}
-
-} // extern "C"

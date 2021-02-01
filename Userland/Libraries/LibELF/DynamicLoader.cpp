@@ -28,6 +28,7 @@
 #include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
@@ -373,7 +374,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         dbgln<DYNAMIC_LOAD_DEBUG>("Absolute relocation: name: '{}', value: {}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK)
+            if (symbol.bind() == STB_WEAK || symbol.bind() == STB_GLOBAL)
                 return RelocationResult::ResolveLater;
             dbgln("ERROR: symbol not found: {}.", symbol.name());
             ASSERT_NOT_REACHED();
@@ -406,10 +407,11 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
                 break;
             }
 
-            if (symbol.bind() == STB_WEAK)
+            if (symbol.bind() == STB_WEAK || symbol.bind() == STB_GLOBAL)
                 return RelocationResult::ResolveLater;
 
             // Symbol not found
+            dbgln("Symbol {} with bind {} not found locally, and wasn't global", symbol.name(), symbol.bind());
             return RelocationResult::Failed;
         }
         dbgln<DYNAMIC_LOAD_DEBUG>("symbol found, location: {:#08x}", res.value().address);
