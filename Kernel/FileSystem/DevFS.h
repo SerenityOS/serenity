@@ -46,8 +46,11 @@ class DevFS final : public FS {
     friend class DevFSRootDirectoryInode;
 
 public:
+    static void setup();
+    static DevFS& the();
+
+    DevFS();
     virtual ~DevFS() override;
-    static NonnullRefPtr<DevFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override { return "DevFS"; }
@@ -58,7 +61,6 @@ public:
     virtual NonnullRefPtr<Inode> root_inode() const override;
 
 private:
-    DevFS();
     RefPtr<Inode> get_inode(InodeIdentifier) const;
     size_t get_new_inode_index();
 

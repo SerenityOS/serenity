@@ -32,9 +32,16 @@
 
 namespace Kernel {
 
-NonnullRefPtr<DevFS> DevFS::create()
+static AK::Singleton<DevFS> s_the;
+
+void DevFS::setup()
 {
-    return adopt(*new DevFS);
+    s_the.ensure_instance();
+}
+
+DevFS& DevFS::the()
+{
+    return *s_the;
 }
 
 DevFS::DevFS()

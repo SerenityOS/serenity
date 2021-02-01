@@ -44,6 +44,7 @@
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/SlabAllocator.h>
@@ -270,6 +271,7 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
     new SB16;
     VMWareBackdoor::the(); // don't wait until first mouse packet
+    DevFS::setup();
 
     bool force_pio = kernel_command_line().contains("force_pio");
 
