@@ -64,6 +64,7 @@ syslog syslogmodule.c
 unicodedata unicodedata.c
 xxlimited xxlimited.c
 xxsubtype xxsubtype.c
+zlib zlibmodule.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include -L$(SERENITY_ROOT)/Build/Root/usr/local/lib -lz
 
 *disabled*
 # Not building, patch Python some more or fix LibC...
