@@ -28,7 +28,6 @@
 #include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
 #include <AK/StdLibExtras.h>
-#include <AK/Traits.h>
 
 namespace AK {
 
