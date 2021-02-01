@@ -26,6 +26,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <LibC/errno_numbers.h>
 
@@ -52,7 +53,7 @@ Device* Device::get_device(unsigned major, unsigned minor)
     return it->value;
 }
 
-Device::Device(unsigned major, unsigned minor)
+Device::Device(unsigned major, unsigned minor, bool create_devfs_node)
     : m_major(major)
     , m_minor(minor)
 {
@@ -63,6 +64,9 @@ Device::Device(unsigned major, unsigned minor)
     }
     ASSERT(!all_devices().contains(device_id));
     all_devices().set(device_id, this);
+
+    if (create_devfs_node)
+        DevFS::the().notify_new_device(*this);
 }
 
 Device::~Device()

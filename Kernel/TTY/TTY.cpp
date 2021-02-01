@@ -34,8 +34,8 @@
 
 namespace Kernel {
 
-TTY::TTY(unsigned major, unsigned minor)
-    : CharacterDevice(major, minor)
+TTY::TTY(unsigned major, unsigned minor, bool create_devfs_node)
+    : CharacterDevice(major, minor, create_devfs_node)
 {
     set_default_termios();
 }

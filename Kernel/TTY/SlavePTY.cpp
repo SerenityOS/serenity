@@ -33,7 +33,7 @@
 namespace Kernel {
 
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
-    : TTY(201, index)
+    : TTY(201, index, false)
     , m_master(master)
     , m_index(index)
 {

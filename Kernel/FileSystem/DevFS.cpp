@@ -47,13 +47,6 @@ DevFS& DevFS::the()
 DevFS::DevFS()
     : m_root_inode(adopt(*new DevFSRootDirectoryInode(*this)))
 {
-    LOCKER(m_lock);
-    Device::for_each([&](Device& device) {
-        // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
-        if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
-            return;
-        notify_new_device(device);
-    });
 }
 
 void DevFS::notify_new_device(Device& device)

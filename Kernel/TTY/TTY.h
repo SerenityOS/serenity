@@ -74,7 +74,7 @@ protected:
     virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
-    TTY(unsigned major, unsigned minor);
+    TTY(unsigned major, unsigned minor, bool create_devfs_node = true);
     void emit(u8, bool do_evaluate_block_conditions = false);
     virtual void echo(u8) = 0;
 

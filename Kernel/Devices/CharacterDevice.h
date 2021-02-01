@@ -35,8 +35,8 @@ public:
     virtual ~CharacterDevice() override;
 
 protected:
-    CharacterDevice(unsigned major, unsigned minor)
-        : Device(major, minor)
+    CharacterDevice(unsigned major, unsigned minor, bool create_devfs_node = true)
+        : Device(major, minor, create_devfs_node)
     {
     }
 

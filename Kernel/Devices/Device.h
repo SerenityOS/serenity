@@ -84,7 +84,7 @@ public:
     }
 
 protected:
-    Device(unsigned major, unsigned minor);
+    Device(unsigned major, unsigned minor, bool create_devfs_node = true);
     void set_uid(uid_t uid) { m_uid = uid; }
     void set_gid(gid_t gid) { m_gid = gid; }
 

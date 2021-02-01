@@ -83,8 +83,8 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) = 0;
 
 protected:
-    BlockDevice(unsigned major, unsigned minor, size_t block_size = PAGE_SIZE)
-        : Device(major, minor)
+    BlockDevice(unsigned major, unsigned minor, size_t block_size = PAGE_SIZE, bool create_devfs_node = true)
+        : Device(major, minor, create_devfs_node)
         , m_block_size(block_size)
     {
     }

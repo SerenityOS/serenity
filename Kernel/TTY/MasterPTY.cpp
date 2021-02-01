@@ -36,7 +36,7 @@
 namespace Kernel {
 
 MasterPTY::MasterPTY(unsigned index)
-    : CharacterDevice(200, index)
+    : CharacterDevice(200, index, false)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {

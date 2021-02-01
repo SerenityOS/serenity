@@ -142,28 +142,13 @@ extern "C" [[noreturn]] void init()
     ACPI::initialize();
 
     VFS::initialize();
-    I8042Controller::initialize();
-    Console::initialize();
+    DevFS::setup();
 
     klog() << "Starting SerenityOS...";
 
     TimeManagement::initialize(0);
 
     __stack_chk_guard = get_fast_random<u32>();
-
-    NullDevice::initialize();
-    if (!get_serial_debug())
-        new SerialDevice(SERIAL_COM1_ADDR, 64);
-    new SerialDevice(SERIAL_COM2_ADDR, 65);
-    new SerialDevice(SERIAL_COM3_ADDR, 66);
-    new SerialDevice(SERIAL_COM4_ADDR, 67);
-
-    VirtualConsole::initialize();
-    tty0 = new VirtualConsole(0);
-    for (unsigned i = 1; i < s_max_virtual_consoles; i++) {
-        new VirtualConsole(i);
-    }
-    VirtualConsole::switch_to(0);
 
     Thread::initialize();
     Process::initialize();
@@ -223,6 +208,23 @@ void init_stage2(void*)
         APIC::the().boot_aps();
     }
 
+    I8042Controller::initialize();
+    Console::initialize();
+
+    NullDevice::initialize();
+    if (!get_serial_debug())
+        new SerialDevice(SERIAL_COM1_ADDR, 64);
+    new SerialDevice(SERIAL_COM2_ADDR, 65);
+    new SerialDevice(SERIAL_COM3_ADDR, 66);
+    new SerialDevice(SERIAL_COM4_ADDR, 67);
+
+    VirtualConsole::initialize();
+    tty0 = new VirtualConsole(0);
+    for (unsigned i = 1; i < s_max_virtual_consoles; i++) {
+        new VirtualConsole(i);
+    }
+    VirtualConsole::switch_to(0);
+
     SyncTask::spawn();
     FinalizerTask::spawn();
 
@@ -271,7 +273,6 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
     new SB16;
     VMWareBackdoor::the(); // don't wait until first mouse packet
-    DevFS::setup();
 
     bool force_pio = kernel_command_line().contains("force_pio");
 
