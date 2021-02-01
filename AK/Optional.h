@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>

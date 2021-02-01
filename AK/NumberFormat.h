@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <AK/String.h>
 
 namespace AK {
