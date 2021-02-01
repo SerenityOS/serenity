@@ -29,7 +29,6 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/LogStream.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/i386/CPU.h>
