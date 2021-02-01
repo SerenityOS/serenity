@@ -3,7 +3,7 @@ set -eu
 
 SCRIPT=`dirname $0`
 export SERENITY_ROOT=`realpath $SCRIPT/../`
-prefix=$SERENITY_ROOT/Ports
+packagesdb="$SERENITY_ROOT/Build/packages.db"
 
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
@@ -186,18 +186,18 @@ func_defined clean_all || clean_all() {
     done
 }
 addtodb() {
-    if [ ! -f "$prefix"/packages.db ]; then
-        echo "Note: $prefix/packages.db does not exist. Creating."
-        touch "$prefix"/packages.db
+    if [ ! -f "$packagesdb" ]; then
+        echo "Note: $packagesdb does not exist. Creating."
+        touch "$packagesdb"
     fi
-    if ! grep -E "^(auto|manual) $port $version" "$prefix"/packages.db > /dev/null; then
+    if ! grep -E "^(auto|manual) $port $version" "$packagesdb" > /dev/null; then
         echo "Adding $port $version to database of installed ports!"
         if [ "${1:-}" = "--auto" ]; then
-            echo "auto $port $version" >> "$prefix"/packages.db
+            echo "auto $port $version" >> "$packagesdb"
         else
-            echo "manual $port $version" >> "$prefix"/packages.db
+            echo "manual $port $version" >> "$packagesdb"
             if [ ! -z "${dependlist:-}" ]; then
-                echo "dependency $port$dependlist" >> "$prefix/packages.db"
+                echo "dependency $port$dependlist" >> "$packagesdb"
             fi
         fi
     else
@@ -209,13 +209,13 @@ installdepends() {
         dependlist="${dependlist:-} $depend"
     done
     for depend in $depends; do
-        if ! grep "$depend" "$prefix"/packages.db > /dev/null; then
+        if ! grep "$depend" "$packagesdb" > /dev/null; then
             (cd "../$depend" && ./package.sh --auto)
         fi
     done
 }
 uninstall() {
-    if grep "^manual $port " "$prefix"/packages.db > /dev/null; then
+    if grep "^manual $port " "$packagesdb" > /dev/null; then
         if [ -f plist ]; then
             for f in `cat plist`; do
                 case $f in
@@ -228,8 +228,8 @@ uninstall() {
                 esac
             done
             # Without || true, mv will not be executed if you are uninstalling your only remaining port.
-            grep -v "^manual $port " "$prefix"/packages.db > packages.dbtmp || true
-            mv packages.dbtmp "$prefix"/packages.db
+            grep -v "^manual $port " "$packagesdb" > packages.db.tmp || true
+            mv packages.db.tmp "$packagesdb"
         else
             >&2 echo "Error: This port does not have a plist yet. Cannot uninstall."
         fi
