@@ -127,7 +127,7 @@ Thread::~Thread()
         // Specifically, if this is the last thread of a process, checking
         // block conditions would access m_process, which would be in
         // the middle of being destroyed.
-        ScopedSpinLock lock(g_scheduler_lock);
+        ScopedSpinLock lock(process().thread_list_lock());
         VERIFY(!m_process_thread_list_node.is_in_list());
 
         // We shouldn't be queued
@@ -143,8 +143,7 @@ Thread::~Thread()
 void Thread::unblock_from_blocker(Blocker& blocker)
 {
     auto do_unblock = [&]() {
-        ScopedSpinLock scheduler_lock(g_scheduler_lock);
-        ScopedSpinLock block_lock(m_block_lock);
+        ScopedSpinLock lock(m_lock);
         if (m_blocker != &blocker)
             return;
         if (!should_be_stopped() && !is_stopped())
@@ -163,8 +162,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 void Thread::unblock(u8 signal)
 {
     VERIFY(!Processor::in_irq());
-    VERIFY(g_scheduler_lock.own_lock());
-    VERIFY(m_block_lock.own_lock());
+    VERIFY(m_lock.own_lock());
     if (m_state != Thread::Blocked)
         return;
     VERIFY(m_blocker);
@@ -194,11 +192,9 @@ void Thread::set_should_die()
         dbgln("{} Should already die", *this);
         return;
     }
-    ScopedCritical critical;
-
     // Remember that we should die instead of returning to
     // the userspace.
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
     m_should_die = true;
 
     // NOTE: Even the current thread can technically be in "Stopped"
@@ -213,7 +209,6 @@ void Thread::set_should_die()
         resume_from_stopped();
     }
     if (is_blocked()) {
-        ScopedSpinLock block_lock(m_block_lock);
         if (m_blocker) {
             // We're blocked in the kernel.
             m_blocker->set_interrupted_by_death();
@@ -262,36 +257,39 @@ void Thread::exit(void* exit_value)
 
 void Thread::yield_while_not_holding_big_lock()
 {
-    VERIFY(!g_scheduler_lock.own_lock());
+    VERIFY(!m_lock.own_lock());
+    VERIFY(Thread::current() == this);
+    Scheduler::yield(); // Flag a context switch
     u32 prev_flags;
     u32 prev_crit = Processor::clear_critical(prev_flags, true);
-    Scheduler::yield();
+    // CONTEXT SWITCH MAY HAPPEN HERE!
     // NOTE: We may be on a different CPU now!
     Processor::restore_critical(prev_crit, prev_flags);
 }
 
 void Thread::yield_without_holding_big_lock()
 {
-    VERIFY(!g_scheduler_lock.own_lock());
+    VERIFY(!m_lock.own_lock());
+    VERIFY(Thread::current() == this);
+    ScopedCritical critical;
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
-    // NOTE: Even though we call Scheduler::yield here, unless we happen
-    // to be outside of a critical section, the yield will be postponed
-    // until leaving it in relock_process.
-    Scheduler::yield();
-    relock_process(previous_locked, lock_count_to_restore);
+    yield_while_not_holding_big_lock();
+    // CONTEXT SWITCH MAY HAPPEN HERE (unless we were still in a
+    if (previous_locked != LockMode::Unlocked)
+        relock_process(previous_locked, lock_count_to_restore);
 }
 
 void Thread::donate_without_holding_big_lock(RefPtr<Thread>& thread, const char* reason)
 {
-    VERIFY(!g_scheduler_lock.own_lock());
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
     // NOTE: Even though we call Scheduler::yield here, unless we happen
     // to be outside of a critical section, the yield will be postponed
     // until leaving it in relock_process.
     Scheduler::donate_to(thread, reason);
-    relock_process(previous_locked, lock_count_to_restore);
+    if (previous_locked != LockMode::Unlocked)
+        relock_process(previous_locked, lock_count_to_restore);
 }
 
 LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
@@ -301,22 +299,10 @@ LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 
 void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 {
-    // Clearing the critical section may trigger the context switch
-    // flagged by calling Scheduler::donate_to or Scheduler::yield
-    // above. We have to do it this way because we intentionally
-    // leave the critical section here to be able to switch contexts.
-    u32 prev_flags;
-    u32 prev_crit = Processor::clear_critical(prev_flags, true);
+    VERIFY(previous_locked != LockMode::Unlocked);
 
-    // CONTEXT SWITCH HAPPENS HERE!
-
-    // NOTE: We may be on a different CPU now!
-    Processor::restore_critical(prev_crit, prev_flags);
-
-    if (previous_locked != LockMode::Unlocked) {
-        // We've unblocked, relock the process if needed and carry on.
-        process().big_lock().restore_lock(previous_locked, lock_count_to_restore);
-    }
+    // We've unblocked, relock the process if needed and carry on.
+    process().big_lock().restore_lock(previous_locked, lock_count_to_restore);
 }
 
 auto Thread::sleep(clockid_t clock_id, const Time& duration, Time* remaining_time) -> BlockResult
@@ -347,7 +333,7 @@ const char* Thread::state_string() const
     case Thread::Stopped:
         return "Stopped";
     case Thread::Blocked: {
-        ScopedSpinLock block_lock(m_block_lock);
+        ScopedSpinLock lock(m_lock);
         VERIFY(m_blocker != nullptr);
         return m_blocker->state_string();
     }
@@ -360,8 +346,9 @@ void Thread::finalize()
     VERIFY(Thread::current() == g_finalizer);
     VERIFY(Thread::current() != this);
 
-#if LOCK_DEBUG
     VERIFY(!m_lock.own_lock());
+
+#if LOCK_DEBUG
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
@@ -374,7 +361,7 @@ void Thread::finalize()
 #endif
 
     {
-        ScopedSpinLock lock(g_scheduler_lock);
+        ScopedSpinLock lock(m_lock);
         dbgln_if(THREAD_DEBUG, "Finalizing thread {}", *this);
         set_state(Thread::State::Dead);
         m_join_condition.thread_finalizing();
@@ -400,7 +387,6 @@ void Thread::finalize_dying_threads()
     VERIFY(Thread::current() == g_finalizer);
     Vector<Thread*, 32> dying_threads;
     {
-        ScopedSpinLock lock(g_scheduler_lock);
         for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
             if (thread.is_finalizable())
                 dying_threads.append(&thread);
@@ -433,11 +419,9 @@ void Thread::check_dispatch_pending_signal()
 {
     auto result = DispatchSignalResult::Continue;
     {
-        ScopedSpinLock scheduler_lock(g_scheduler_lock);
-        if (pending_signals_for_state()) {
-            ScopedSpinLock lock(m_lock);
+        ScopedSpinLock lock(m_lock);
+        if (pending_signals_for_state())
             result = dispatch_one_pending_signal();
-        }
     }
 
     switch (result) {
@@ -454,13 +438,12 @@ void Thread::check_dispatch_pending_signal()
 
 u32 Thread::pending_signals() const
 {
-    ScopedSpinLock lock(g_scheduler_lock);
     return pending_signals_for_state();
 }
 
 u32 Thread::pending_signals_for_state() const
 {
-    VERIFY(g_scheduler_lock.own_lock());
+    ScopedSpinLock lock(m_lock);
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
     if (is_handling_page_fault())
         return 0;
@@ -470,7 +453,7 @@ u32 Thread::pending_signals_for_state() const
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     VERIFY(signal < 32);
-    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
@@ -489,13 +472,11 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
 
     if (m_state == Stopped) {
-        ScopedSpinLock lock(m_lock);
         if (pending_signals_for_state()) {
             dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
             resume_from_stopped();
         }
     } else {
-        ScopedSpinLock block_lock(m_block_lock);
         dbgln_if(SIGNAL_DEBUG, "Signal: Unblocking {} to deliver signal {}", *this, signal);
         unblock(signal);
     }
@@ -503,7 +484,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
 u32 Thread::update_signal_mask(u32 signal_mask)
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
     auto previous_signal_mask = m_signal_mask;
     m_signal_mask = signal_mask;
     m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
@@ -512,13 +493,13 @@ u32 Thread::update_signal_mask(u32 signal_mask)
 
 u32 Thread::signal_mask() const
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
     return m_signal_mask;
 }
 
 u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
     auto previous_signal_mask = m_signal_mask;
     if (block)
         m_signal_mask &= ~signal_set;
@@ -530,7 +511,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
 
 void Thread::clear_signals()
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
     m_signal_mask = 0;
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
@@ -548,7 +529,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
     VERIFY(Thread::current() == this);
     DispatchSignalResult result;
     {
-        ScopedSpinLock lock(g_scheduler_lock);
+        ScopedSpinLock lock(m_lock);
         result = dispatch_signal(signal);
     }
     if (result == DispatchSignalResult::Yield)
@@ -574,7 +555,6 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
 DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
 {
     VERIFY(signal != 0);
-    ScopedSpinLock scheduler_lock(g_scheduler_lock);
     ScopedSpinLock lock(m_lock);
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if (!(signal_candidates & (1 << (signal - 1))))
@@ -663,9 +643,8 @@ void Thread::resume_from_stopped()
 {
     VERIFY(is_stopped());
     VERIFY(m_stop_state != State::Invalid);
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(m_lock.own_lock());
     if (m_stop_state == Blocked) {
-        ScopedSpinLock block_lock(m_block_lock);
         if (m_blocker) {
             // Hasn't been unblocked yet
             set_state(Blocked, 0);
@@ -681,7 +660,7 @@ void Thread::resume_from_stopped()
 DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(m_lock.own_lock());
     VERIFY(signal > 0 && signal <= 32);
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
@@ -865,24 +844,21 @@ RefPtr<Thread> Thread::clone(Process& process)
 void Thread::set_state(State new_state, u8 stop_signal)
 {
     State previous_state;
-    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(m_lock.own_lock());
     if (new_state == m_state)
         return;
 
-    {
-        ScopedSpinLock thread_lock(m_lock);
-        previous_state = m_state;
-        if (previous_state == Invalid) {
-            // If we were *just* created, we may have already pending signals
-            if (has_unmasked_pending_signals()) {
-                dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
-                dispatch_one_pending_signal();
-            }
+    previous_state = m_state;
+    if (previous_state == Invalid) {
+        // If we were *just* created, we may have already pending signals
+        if (has_unmasked_pending_signals()) {
+            dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
+            dispatch_one_pending_signal();
         }
-
-        m_state = new_state;
-        dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
     }
+
+    m_state = new_state;
+    dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
 
     if (previous_state == Runnable) {
         Scheduler::dequeue_runnable_thread(*this);
@@ -970,7 +946,7 @@ String Thread::backtrace()
 
     auto& process = const_cast<Process&>(this->process());
     auto stack_trace = Processor::capture_stack_trace(*this);
-    VERIFY(!g_scheduler_lock.own_lock());
+
     ProcessPagingScope paging_scope(process);
     for (auto& frame : stack_trace) {
         if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {

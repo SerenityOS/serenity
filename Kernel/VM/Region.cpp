@@ -451,7 +451,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedS
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
-    if (Thread::current() && !g_scheduler_lock.own_lock()) {
+    if (Thread::current()) {
         // TODO: This seems rather weird. If we don't have a current thread
         // then we're in the Kernel in early initialization still. So we
         // can't actually wait on the paging lock. And if we currently
@@ -522,7 +522,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
 
     mm_lock.unlock();
     VERIFY(!s_mm_lock.own_lock());
-    VERIFY(!g_scheduler_lock.own_lock());
 
     Locker locker(vmobject().m_paging_lock);
 

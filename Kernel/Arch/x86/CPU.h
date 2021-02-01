@@ -295,6 +295,16 @@ inline FlatPtr read_fs_ptr(u32 offset)
     return read_fs_u32(offset);
 }
 
+inline u8 read_fs_u8(u32 offset)
+{
+    u8 val;
+    asm volatile(
+        "movl %%fs:%a[off], %k[val]"
+        : [val] "=r"(val)
+        : [off] "ir"(offset));
+    return val;
+}
+
 inline void write_fs_u32(u32 offset, u32 val)
 {
     asm volatile(
@@ -574,7 +584,6 @@ static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
 static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
 
 class ProcessorInfo;
-class SchedulerPerProcessorData;
 struct MemoryManagerData;
 struct ProcessorMessageEntry;
 
@@ -654,12 +663,12 @@ class Processor {
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
-    SchedulerPerProcessorData* m_scheduler_data;
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
     volatile ProcessorMessageEntry* m_message_queue; // atomic, LIFO
 
+    bool m_in_scheduler;
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
     Atomic<bool> m_halt_requested;
@@ -766,17 +775,6 @@ public:
         return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
-    ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
-    {
-        m_scheduler_data = &scheduler_data;
-    }
-
-    ALWAYS_INLINE static SchedulerPerProcessorData& get_scheduler_data()
-    {
-        // See comment in Processor::current_thread
-        return *(SchedulerPerProcessorData*)read_fs_u32(__builtin_offsetof(Processor, m_scheduler_data));
-    }
-
     ALWAYS_INLINE void set_mm_data(MemoryManagerData& mm_data)
     {
         m_mm_data = &mm_data;
@@ -828,7 +826,7 @@ public:
     ALWAYS_INLINE static u32 id()
     {
         // See comment in Processor::current_thread
-        return read_fs_ptr(__builtin_offsetof(Processor, m_cpu));
+        return read_fs_u32(__builtin_offsetof(Processor, m_cpu));
     }
 
     ALWAYS_INLINE static bool is_bootstrap_processor()
@@ -990,6 +988,15 @@ public:
     ALWAYS_INLINE static void invoke_scheduler_async()
     {
         write_fs_u8(__builtin_offsetof(Processor, m_invoke_scheduler_async), true);
+    }
+
+    ALWAYS_INLINE static void set_in_scheduler(bool in_scheduler)
+    {
+        write_fs_u8(__builtin_offsetof(Processor, m_in_scheduler), in_scheduler);
+    }
+    ALWAYS_INLINE static bool in_scheduler()
+    {
+        return read_fs_u8(__builtin_offsetof(Processor, m_in_scheduler));
     }
 
     void enter_trap(TrapFrame& trap, bool raise_irq);

@@ -830,7 +830,6 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
         });
     };
 
-    ScopedSpinLock lock(g_scheduler_lock);
     auto processes = Process::all_processes();
     build_process(*Scheduler::colonel());
     for (auto& process : processes)

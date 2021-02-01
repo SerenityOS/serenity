@@ -312,6 +312,7 @@ public:
         {
             m_block_condition = block_condition;
         }
+        BlockCondition* block_condition() const { return m_block_condition; }
 
         mutable RecursiveSpinLock m_lock;
 
@@ -502,6 +503,7 @@ public:
         }
 
         bool unblock();
+        bool is_big_lock(Process&) const;
 
         LockMode requested_mode() const { return m_requested_mode; }
         u32 requested_locks() const { return m_locks; }
@@ -776,7 +778,7 @@ public:
     [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
     [[nodiscard]] bool is_in_block() const
     {
-        ScopedSpinLock lock(m_block_lock);
+        ScopedSpinLock lock(m_lock);
         return m_in_block;
     }
 
@@ -810,10 +812,13 @@ public:
         // mode.
         ScopedSpinLock lock(m_lock);
         while (state() == Thread::Stopped) {
+            dbgln("yield_if_stopped -->");
             lock.unlock();
+            VERIFY(!m_lock.own_lock());
             // We shouldn't be holding the big lock here
             yield_while_not_holding_big_lock();
             lock.lock();
+            dbgln("<-- yield_if_stopped");
         }
     }
 
@@ -824,14 +829,13 @@ public:
         VERIFY(this == Thread::current());
         ScopedCritical critical;
         VERIFY(!s_mm_lock.own_lock());
-
-        ScopedSpinLock block_lock(m_block_lock);
-        // We need to hold m_block_lock so that nobody can unblock a blocker as soon
+        
+        ScopedSpinLock lock(m_lock);
+        // We need to hold m_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
         BlockerType blocker(forward<Args>(args)...);
 
-        ScopedSpinLock scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
         // synchronize on the spin locks already.
         Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
@@ -863,17 +867,17 @@ public:
                 // threads to die. In that case
                 timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
                     VERIFY(!Processor::in_irq());
-                    VERIFY(!g_scheduler_lock.own_lock());
-                    VERIFY(!m_block_lock.own_lock());
+                    VERIFY(!m_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
-                    ScopedSpinLock scheduler_lock(g_scheduler_lock);
-                    ScopedSpinLock block_lock(m_block_lock);
+                    ScopedSpinLock lock(m_lock);
                     if (m_blocker && timeout_unblocked.exchange(true) == false)
                         unblock();
                 });
                 if (!timer) {
                     // Timeout is already in the past
+                    VERIFY(m_lock.own_lock());
                     blocker.not_blocking(true);
+
                     m_blocker = nullptr;
                     m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
@@ -885,28 +889,36 @@ public:
             set_state(Thread::Blocked);
         }
 
-        scheduler_lock.unlock();
-        block_lock.unlock();
+        lock.unlock();
 
         dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
         bool did_timeout = false;
         u32 lock_count_to_restore = 0;
-        auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
+        auto previous_locked = LockMode::Unlocked;
+        if (blocker.blocker_type() != Blocker::Type::Lock) {
+            previous_locked = unlock_process_if_locked(lock_count_to_restore);
+        } else {
+            constexpr bool is_lock_blocker = requires() {
+                blocker.is_big_lock(process());
+            };
+            if constexpr(is_lock_blocker) {
+                if (!blocker.is_big_lock(process()))
+                    previous_locked = unlock_process_if_locked(lock_count_to_restore);
+            }
+        }
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
-            VERIFY(!g_scheduler_lock.own_lock());
             VERIFY(Processor::in_critical());
             yield_while_not_holding_big_lock();
             VERIFY(Processor::in_critical());
 
-            ScopedSpinLock block_lock2(m_block_lock);
+            ScopedSpinLock lock2(m_lock);
             if (should_be_stopped() || state() == Stopped) {
                 dbgln("Thread should be stopped, current state: {}", state_string());
                 set_state(Thread::Blocked);
                 continue;
             }
             if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
-                block_lock2.unlock();
                 dbgln("Thread should not be unblocking, current state: {}", state_string());
                 set_state(Thread::Blocked);
                 continue;
@@ -925,7 +937,6 @@ public:
         }
 
         if (blocker.was_interrupted_by_signal()) {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             ScopedSpinLock lock(m_lock);
             dispatch_one_pending_signal();
         }
@@ -1068,6 +1079,8 @@ public:
 
     u32 saved_critical() const { return m_saved_critical; }
     void save_critical(u32 critical) { m_saved_critical = critical; }
+    u32 saved_flags() const { return m_saved_flags; }
+    void save_flags(u32 flags) { m_saved_flags = flags; }
 
     [[nodiscard]] bool is_active() const { return m_is_active; }
 
@@ -1159,6 +1172,31 @@ public:
     void set_idle_thread() { m_is_idle_thread = true; }
     bool is_idle_thread() const { return m_is_idle_thread; }
 
+    void clear_pending_beneficiary()
+    {
+        VERIFY(m_lock.own_lock());
+        m_pending_beneficiary = nullptr;
+        m_pending_donate_reason = nullptr;
+    }
+    void set_pending_beneficiary(Thread& beneficiary, const char* reason)
+    {
+        VERIFY(m_lock.own_lock());
+        m_pending_beneficiary = beneficiary;
+        m_pending_donate_reason = reason;
+    }
+    RefPtr<Thread> take_pending_beneficiary()
+    {
+        VERIFY(m_lock.own_lock());
+        auto pending_beneficiary = move(m_pending_beneficiary);
+        return pending_beneficiary.strong_ref();
+    }
+    const char* take_pending_donate_reason() {
+        VERIFY(m_lock.own_lock());
+        return exchange(m_pending_donate_reason, nullptr);
+    }
+
+    String backtrace();
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
 
@@ -1225,17 +1263,16 @@ private:
 
     LockMode unlock_process_if_locked(u32&);
     void relock_process(LockMode, u32);
-    String backtrace();
     void reset_fpu_state();
 
     mutable RecursiveSpinLock m_lock;
-    mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS m_tss {};
     DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
-    u32 m_saved_critical { 1 };
+    u32 m_saved_critical { 2 };
+    u32 m_saved_flags { 0 };
     IntrusiveListNode<Thread> m_ready_queue_node;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
@@ -1251,6 +1288,9 @@ private:
     VirtualAddress m_thread_specific_data;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
+
+    WeakPtr<Thread> m_pending_beneficiary;
+    const char* m_pending_donate_reason { nullptr };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {

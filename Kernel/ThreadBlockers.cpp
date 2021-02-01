@@ -176,6 +176,11 @@ bool Thread::LockBlocker::unblock()
     return true;
 }
 
+bool Thread::LockBlocker::is_big_lock(Process& process) const
+{
+    return block_condition() == &process.big_lock();
+}
+
 Thread::FutexBlocker::FutexBlocker(FutexQueue& futex_queue, u32 bitset)
     : m_bitset(bitset)
 {
@@ -772,8 +777,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     } else {
         siginfo_t siginfo {};
         {
-            ScopedSpinLock lock(g_scheduler_lock);
-            // We need to gather the information before we release the scheduler lock!
+            // We need to gather the information before we release the sheduler lock!
             siginfo.si_signo = SIGCHLD;
             siginfo.si_pid = process.pid().value();
             siginfo.si_uid = process.uid();

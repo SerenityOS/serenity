@@ -24,7 +24,6 @@ struct RegisterState;
 extern Thread* g_finalizer;
 extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
-extern RecursiveSpinLock g_scheduler_lock;
 
 class Scheduler {
 public:
@@ -39,8 +38,8 @@ public:
     static bool donate_to_and_switch(Thread*, const char* reason);
     static bool donate_to(RefPtr<Thread>&, const char* reason);
     static bool context_switch(Thread*);
-    static void enter_current(Thread& prev_thread, bool is_first);
-    static void leave_on_first_switch(u32 flags);
+    static void enter_current(Thread&, Thread&, bool is_first);
+    static void leave_context_switch(Thread&, Thread&, bool is_first);
     static void prepare_after_exec();
     static void prepare_for_idle_loop();
     static Process* colonel();

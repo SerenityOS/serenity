@@ -213,8 +213,6 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
-
-    VERIFY(!g_scheduler_lock.own_lock());
 }
 
 }

@@ -40,13 +40,13 @@ KResultOr<int> Process::sys$sched_setparam(int pid, Userspace<const struct sched
         return EINVAL;
 
     auto* peer = Thread::current();
-    ScopedSpinLock lock(g_scheduler_lock);
     if (pid != 0)
         peer = Thread::from_tid(pid);
 
     if (!peer)
         return ESRCH;
 
+    ScopedSpinLock lock(peer->get_lock());
     if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
         return EPERM;
 
@@ -60,7 +60,6 @@ KResultOr<int> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_par
     int priority;
     {
         auto* peer = Thread::current();
-        ScopedSpinLock lock(g_scheduler_lock);
         if (pid != 0) {
             // FIXME: PID/TID BUG
             // The entire process is supposed to be affected.
@@ -70,6 +69,7 @@ KResultOr<int> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_par
         if (!peer)
             return ESRCH;
 
+        ScopedSpinLock lock(peer->get_lock());
         if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
             return EPERM;
 

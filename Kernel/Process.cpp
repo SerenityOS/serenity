@@ -187,7 +187,7 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
         process->ref();
     }
 
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock lock(first_thread->get_lock());
     first_thread->set_affinity(affinity);
     first_thread->set_state(Thread::State::Runnable);
     return process;
@@ -609,6 +609,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
         return {};
 
     auto thread = thread_or_error.release_value();
+    ScopedSpinLock lock(thread->get_lock());
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
@@ -619,7 +620,6 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     tss.eip = (FlatPtr)entry;
     tss.esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
 
-    ScopedSpinLock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);
     return thread;
 }

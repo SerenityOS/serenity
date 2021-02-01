@@ -239,6 +239,8 @@ public:
     void die();
     void finalize();
 
+    ALWAYS_INLINE RecursiveSpinLock& thread_list_lock() { return m_thread_list_lock; }
+
     ThreadTracer* tracer() { return m_tracer.ptr(); }
     bool is_traced() const { return !!m_tracer; }
     KResult start_tracing_from(ProcessID tracer);

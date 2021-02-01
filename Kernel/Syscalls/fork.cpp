@@ -87,9 +87,11 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
 
     PerformanceManager::add_process_created_event(*child);
 
-    ScopedSpinLock lock(g_scheduler_lock);
-    child_first_thread->set_affinity(Thread::current()->affinity());
-    child_first_thread->set_state(Thread::State::Runnable);
+    {
+        ScopedSpinLock lock(child_first_thread->get_lock());
+        child_first_thread->set_affinity(Thread::current()->affinity());
+        child_first_thread->set_state(Thread::State::Runnable);
+    }
 
     auto child_pid = child->pid().value();
     // We need to leak one reference so we don't destroy the Process,

@@ -1181,13 +1181,13 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_in_irq = 0;
     m_in_critical = 0;
 
+    m_in_scheduler = false;
     m_invoke_scheduler_async = false;
     m_scheduler_initialized = false;
 
     m_message_queue = nullptr;
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
-    m_scheduler_data = nullptr;
     m_mm_data = nullptr;
     m_info = nullptr;
 
@@ -1327,14 +1327,11 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         walk_stack(frame_ptr);
     };
 
-    // Since the thread may be running on another processor, there
-    // is a chance a context switch may happen while we're trying
-    // to get it. It also won't be entirely accurate and merely
-    // reflect the status at the last context switch.
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedCritical critical;
+    ScopedSpinLock lock(thread.get_lock());
     if (&thread == Processor::current_thread()) {
         VERIFY(thread.state() == Thread::Running);
-        // Leave the scheduler lock. If we trigger page faults we may
+        // Leave the lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
         lock.unlock();
@@ -1355,12 +1352,12 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 VERIFY(&Processor::current() != &proc);
                 VERIFY(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
-                // scheduler lock while waiting for this callback to finish,
+                // lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
 
-                // TODO: What to do about page faults here? We might deadlock
-                //       because the other processor is still holding the
-                //       scheduler lock...
+                smp_unicast(proc.get_id(), [&]() {
+                    lock.unlock();
+                }, false);
                 capture_current_thread();
             },
             false);
@@ -1454,12 +1451,16 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!in_irq());
-    VERIFY(m_in_critical == 1);
     VERIFY(is_kernel_mode());
+    VERIFY(from_thread->get_lock().own_lock());
+    VERIFY(from_thread->get_lock().own_recursions() == 1);
+    VERIFY(to_thread->get_lock().own_lock());
+    VERIFY(to_thread->get_lock().own_recursions() == 1);
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     // m_in_critical is restored in enter_thread_context
+    VERIFY(m_in_critical == 2); // we're holding the lock for from_thread and to_thread
     from_thread->save_critical(m_in_critical);
 
 #if ARCH(I386)
@@ -1517,15 +1518,10 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     VERIFY(!are_interrupts_enabled());
     VERIFY(is_kernel_mode());
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} (locked: {}) to {} {} (locked: {}) (context_first_init)", VirtualAddress(from_thread), *from_thread, from_thread->get_lock().own_recursions(), VirtualAddress(to_thread), *to_thread, to_thread->get_lock().own_lock());
 
+    VERIFY(to_thread->get_lock().own_lock());
     VERIFY(to_thread == Thread::current());
-
-    Scheduler::enter_current(*from_thread, true);
-
-    auto in_critical = to_thread->saved_critical();
-    VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1533,7 +1529,9 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // the scheduler lock. We don't want to enable interrupts at this point
     // as we're still in the middle of a context switch. Doing so could
     // trigger a context switch within a context switch, leading to a crash.
-    Scheduler::leave_on_first_switch(trap->regs->eflags & ~0x200);
+    Scheduler::leave_context_switch(*from_thread, *to_thread, true);
+
+    VERIFY(!to_thread->get_lock().own_lock());
 }
 
 extern "C" void thread_context_first_enter(void);
@@ -1563,7 +1561,7 @@ void exit_kernel_thread(void)
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
-    VERIFY(g_scheduler_lock.is_locked());
+    VERIFY(thread.get_lock().own_lock());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
@@ -1728,15 +1726,6 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
 
 extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
-    VERIFY(g_scheduler_lock.own_lock());
-
-    // Because init_finished() will wait on the other APs, we need
-    // to release the scheduler lock so that the other APs can also get
-    // to this point
-
-    // The target flags will get restored upon leaving the trap
-    u32 prev_flags = cpu_flags();
-    Scheduler::leave_on_first_switch(prev_flags);
 }
 
 extern "C" UNMAP_AFTER_INIT void post_init_finished(void)
