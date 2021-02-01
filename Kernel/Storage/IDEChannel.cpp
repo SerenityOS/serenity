@@ -292,8 +292,6 @@ void IDEChannel::handle_irq(const RegisterState&)
         return;
     }
 
-    bool received_all_irqs = m_current_request_uses_dma || m_current_request_block_index + 1 >= m_current_request->block_count();
-
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = m_io_group.io_base().offset(ATA_REG_ERROR).in<u8>();
@@ -302,45 +300,44 @@ void IDEChannel::handle_irq(const RegisterState&)
         complete_current_request(AsyncDeviceRequest::Failure);
         return;
     }
-
     m_device_error = 0;
-    if (received_all_irqs) {
+    if (m_current_request_uses_dma) {
         complete_current_request(AsyncDeviceRequest::Success);
-    } else {
-        ASSERT(!m_current_request_uses_dma);
+        return;
+    }
 
-        // Now schedule reading/writing the buffer as soon as we leave the irq handler.
-        // This is important so that we can safely access the buffers, which could
-        // trigger page faults
-        Processor::deferred_call_queue([this]() {
-            if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-                dbgln("IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
-                if (ata_do_read_sector()) {
-                    if (++m_current_request_block_index >= m_current_request->block_count()) {
-                        complete_current_request(AsyncDeviceRequest::Success);
-                        return;
-                    }
-                    // Wait for the next block
-                    enable_irq();
+    // Now schedule reading/writing the buffer as soon as we leave the irq handler.
+    // This is important so that we can safely access the buffers, which could
+    // trigger page faults
+    Processor::deferred_call_queue([this]() {
+        ScopedSpinLock lock(m_request_lock);
+        if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
+            dbgln<PATA_DEBUG>("IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
+            if (ata_do_read_sector()) {
+                if (++m_current_request_block_index >= m_current_request->block_count()) {
+                    complete_current_request(AsyncDeviceRequest::Success);
+                    return;
+                }
+                // Wait for the next block
+                enable_irq();
+            }
+        } else {
+            if (!m_current_request_flushing_cache) {
+                dbgln<PATA_DEBUG>("IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
+                if (++m_current_request_block_index >= m_current_request->block_count()) {
+                    // We read the last block, flush cache
+                    ASSERT(!m_current_request_flushing_cache);
+                    m_current_request_flushing_cache = true;
+                    m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
+                } else {
+                    // Read next block
+                    ata_do_write_sector();
                 }
             } else {
-                if (!m_current_request_flushing_cache) {
-                    dbgln("IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
-                    if (++m_current_request_block_index >= m_current_request->block_count()) {
-                        // We read the last block, flush cache
-                        ASSERT(!m_current_request_flushing_cache);
-                        m_current_request_flushing_cache = true;
-                        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
-                    } else {
-                        // Read next block
-                        ata_do_write_sector();
-                    }
-                } else {
-                    complete_current_request(AsyncDeviceRequest::Success);
-                }
+                complete_current_request(AsyncDeviceRequest::Success);
             }
-        });
-    }
+        }
+    });
 }
 
 static void io_delay()
@@ -351,7 +348,7 @@ static void io_delay()
 
 void IDEChannel::wait_until_not_busy()
 {
-    while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY)
         ;
 }
 
@@ -379,10 +376,10 @@ void IDEChannel::detect_disks()
         m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
 
         // Wait for the BSY flag to be reset
-        while (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+        while (m_io_group.control_base().in<u8>() & ATA_SR_BSY)
             ;
 
-        if (m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() == 0x00) {
+        if (m_io_group.control_base().in<u8>() == 0x00) {
             dbgln<PATA_DEBUG>("IDEChannel: No {} {} disk detected!", channel_type_string().to_lowercase(), channel_string(i));
             continue;
         }
@@ -391,7 +388,7 @@ void IDEChannel::detect_disks()
         PATADiskDevice::InterfaceType interface_type = PATADiskDevice::InterfaceType::ATA;
 
         for (;;) {
-            u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+            u8 status = m_io_group.control_base().in<u8>();
             if (status & ATA_SR_ERR) {
                 dbgln<PATA_DEBUG>("IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
                 check_for_atapi = true;
@@ -499,7 +496,7 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8
     }
 
     for (;;) {
-        auto status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+        auto status = m_io_group.control_base().in<u8>();
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
             break;
     }
@@ -515,7 +512,6 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8
         else
             m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO_EXT : ATA_CMD_WRITE_PIO_EXT);
     }
-
     enable_irq();
 }
 
@@ -550,6 +546,7 @@ void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
 
 bool IDEChannel::ata_do_read_sector()
 {
+    dbgln<PATA_DEBUG>("IDEChannel::ata_do_read_sector");
     auto& request = *m_current_request;
     auto out_buffer = request.buffer().offset(m_current_request_block_index * 512);
     ssize_t nwritten = request.write_to_buffer_buffered<512>(out_buffer, 512, [&](u8* buffer, size_t buffer_bytes) {
@@ -576,7 +573,6 @@ void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     dbgln<PATA_DEBUG>("IDEChannel: Reading {} sector(s) @ LBA {}", request.block_count(), lba);
 
     ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities, false);
-    ata_do_read_sector();
 }
 
 void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities)
@@ -615,10 +611,10 @@ void IDEChannel::ata_do_write_sector()
     auto& request = *m_current_request;
 
     io_delay();
-    while ((m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
+    while ((m_io_group.control_base().in<u8>() & ATA_SR_BSY) || !(m_io_group.control_base().in<u8>() & ATA_SR_DRQ))
         ;
 
-    u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
+    u8 status = m_io_group.control_base().in<u8>();
     ASSERT(status & ATA_SR_DRQ);
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
@@ -642,8 +638,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     u32 count = request.block_count();
     dbgln<PATA_DEBUG>("IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);
 
-    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities, true);
+    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities, false);
     ata_do_write_sector();
 }
-
 }
