@@ -404,7 +404,7 @@ KeyboardDevice::KeyboardDevice()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
     , m_controller(I8042Controller::the())
-    , m_character_map("en", DEFAULT_CHARACTER_MAP)
+    , m_character_map("en-us", DEFAULT_CHARACTER_MAP)
 {
 }
 

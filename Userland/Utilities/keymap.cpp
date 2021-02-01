@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     auto character_map = Keyboard::CharacterMap::load_from_file(path);
     if (!character_map.has_value()) {
         warnln("Cannot read keymap {}", path);
-        warnln("Hint: Must be either a keymap name (e.g. 'en') or a full path.");
+        warnln("Hint: Must be either a keymap name (e.g. 'en-us') or a full path.");
         return 1;
     }
 
