@@ -29,7 +29,6 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
 
 namespace AK {
 

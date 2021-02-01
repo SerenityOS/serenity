@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "Applications/Piano/Music.h"
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
