@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    return this_object->invoke("toString");
+    return this_object->invoke(vm.names.toString);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)

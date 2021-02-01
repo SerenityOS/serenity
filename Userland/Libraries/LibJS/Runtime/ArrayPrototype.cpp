@@ -309,7 +309,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         auto* value_object = value.to_object(global_object);
         if (!value_object)
             return {};
-        auto locale_string_result = value_object->invoke("toLocaleString");
+        auto locale_string_result = value_object->invoke(vm.names.toLocaleString);
         if (vm.exception())
             return {};
         auto string = locale_string_result.to_string(global_object);
