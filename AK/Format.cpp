@@ -35,7 +35,6 @@
 #    include <Kernel/Thread.h>
 #else
 #    include <stdio.h>
-#    include <unistd.h>
 #endif
 
 namespace AK {

@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonPath.h>
 #include <AK/JsonValue.h>
