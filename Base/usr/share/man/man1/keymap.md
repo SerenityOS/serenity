@@ -5,7 +5,7 @@ keymap - load a keyboard layout
 ## Synopsis
 
 ```**sh
-# keymap <name|file>
+# keymap [name|file]
 ```
 
 ## Description
@@ -16,13 +16,19 @@ Loading by name will search for keyboard layout files in `/res/keymaps/*.json`.
 
 ## Examples
 
+Get name of the currently loaded keymap:
+```sh
+$ keymap
+en-us
+```
+
 Load a keyboard layout by name:
 ```sh
-# keymap en-us
+$ keymap en-us
 ```
 
 Load a keyboard layout using a file:
 ```sh
-# keymap /res/keymaps/en-us.json
-# keymap ./map.json
+$ keymap /res/keymaps/en-us.json
+$ keymap ./map.json
 ```
