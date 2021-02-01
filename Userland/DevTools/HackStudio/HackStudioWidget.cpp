@@ -209,6 +209,9 @@ Vector<String> HackStudioWidget::selected_file_names() const
 
 void HackStudioWidget::open_file(const String& filename)
 {
+    if (Core::File::is_directory(filename))
+        return;
+
     if (!currently_open_file().is_empty()) {
         // Since the file is previously open, it should always be in m_open_files.
         ASSERT(m_open_files.find(currently_open_file()) != m_open_files.end());
