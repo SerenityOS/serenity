@@ -12,9 +12,9 @@ auth_type="sig"
 auth_import_key="E3FF2839C048B25C084DEBE9B26995E310250568"
 auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
 
-# We could also add `ncurses`, `openssl`, and `zlib` here, but neither of the _curses, _ssl, and zlib
+# We could also add `ncurses`/`termcap` and `openssl` here, but neither of the _curses nor _ssl
 # modules build at the moment even with those available, so it's pointless.
-depends="libffi"
+depends="libffi zlib"
 
 # FIXME: the --build value is detected correctly by the configure script (via config.guess in the Python source root),
 # but still needs to be set explicitly when cross compiling. Figure out how to not hardcode this.
