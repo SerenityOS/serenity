@@ -20,7 +20,10 @@ configuration/compilation options, and some other things (see
 
 To install a certain port, `cd` into its directory and run `./package.sh`
 
-Installed ports are being tracked in `Ports/packages.db` (a simple text file).
+Installed ports are being tracked in `Build/packages.db` (a simple text file).
+You can delete this file at any time, in fact it must be edited or removed
+when clearing the build directory as port dependencies may not be installed
+again otherwise.
 
 Not giving an option is equivalent to `installdepends`, `fetch`, `patch`,
 `configure`, `build` and `install`, in that order. This is recommended for a
