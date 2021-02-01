@@ -28,7 +28,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
