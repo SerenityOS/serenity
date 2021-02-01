@@ -54,7 +54,7 @@ void ClientConnection::die()
 
 OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet&)
 {
-    return make<Messages::LanguageServer::GreetResponse>(client_id());
+    return make<Messages::LanguageServer::GreetResponse>();
 }
 
 class DefaultDocumentClient final : public GUI::TextDocument::Client {

@@ -1,6 +1,6 @@
 endpoint WebContentServer = 89
 {
-    Greet() => (i32 client_id)
+    Greet() => ()
 
     UpdateSystemTheme(Core::AnonymousBuffer theme_buffer) =|
 

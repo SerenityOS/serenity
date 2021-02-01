@@ -60,8 +60,7 @@ class LaunchServerConnection : public IPC::ServerConnection<LaunchClientEndpoint
 public:
     virtual void handshake() override
     {
-        auto response = send_sync<Messages::LaunchServer::Greet>();
-        set_my_client_id(response->client_id());
+        send_sync<Messages::LaunchServer::Greet>();
     }
 
 private:

@@ -50,7 +50,7 @@ void ClientConnection::die()
 
 OwnPtr<Messages::NotificationServer::GreetResponse> ClientConnection::handle(const Messages::NotificationServer::Greet&)
 {
-    return make<Messages::NotificationServer::GreetResponse>(client_id());
+    return make<Messages::NotificationServer::GreetResponse>();
 }
 
 OwnPtr<Messages::NotificationServer::ShowNotificationResponse> ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
