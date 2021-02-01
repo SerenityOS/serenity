@@ -35,10 +35,6 @@
 #    include <Kernel/Thread.h>
 #endif
 
-#if !defined(KERNEL)
-#    include <stdio.h>
-#endif
-
 namespace AK {
 
 const LogStream& operator<<(const LogStream& stream, const String& value)

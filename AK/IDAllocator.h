@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/HashTable.h>
-#include <stdlib.h>
 
 namespace AK {
 
