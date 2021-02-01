@@ -2,7 +2,6 @@
 
 import json
 import os
-import sys
 
 
 PERMITTED_MAPS = ['map', 'shift_map', 'alt_map', 'altgr_map', 'shift_altgr_map']
