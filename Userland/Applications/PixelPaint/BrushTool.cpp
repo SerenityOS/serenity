@@ -34,7 +34,6 @@
 #include <LibGUI/Slider.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
-#include <utility>
 
 namespace PixelPaint {
 

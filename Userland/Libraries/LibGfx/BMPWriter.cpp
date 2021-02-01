@@ -27,7 +27,6 @@
 #include <AK/Vector.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
-#include <cstring>
 
 namespace Gfx {
 
