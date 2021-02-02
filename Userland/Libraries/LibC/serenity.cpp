@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <serenity.h>
+#include <string.h>
 
 extern "C" {
 
@@ -116,6 +117,16 @@ int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size)
 int anon_create(size_t size, int options)
 {
     int rc = syscall(SC_anon_create, size, options);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size)
+{
+    Syscall::SC_readlink_params small_params {
+        { path, path_length },
+        { buffer, buffer_size }
+    };
+    int rc = syscall(SC_readlink, &small_params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

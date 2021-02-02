@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -102,6 +103,8 @@ int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 
 int anon_create(size_t size, int options);
+
+int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size);
 
 #ifdef __i386__
 ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t data1, uintptr_t data2, uintptr_t data3)
