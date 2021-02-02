@@ -44,15 +44,15 @@ StatusBar::StatusBar(int label_count)
     layout()->set_margins({ 0, 0, 0, 0 });
     layout()->set_spacing(2);
 
-    if (label_count > 0) {
-        for (auto i = 0; i < label_count; i++)
-            m_labels.append(create_label());
+    if (label_count < 1)
+        label_count = 1;
 
-        m_corner = add<ResizeCorner>();
-    }
+    for (auto i = 0; i < label_count; i++)
+        m_labels.append(create_label());
+
+    m_corner = add<ResizeCorner>();
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
-    REGISTER_INT_PROPERTY("label_count", label_count, set_label_count);
 }
 
 StatusBar::~StatusBar()
@@ -102,21 +102,6 @@ void StatusBar::resize_event(ResizeEvent& event)
         m_corner->set_visible(window()->is_maximized() ? false : true);
 
     Widget::resize_event(event);
-}
-
-void StatusBar::set_label_count(int label_count)
-{
-    ASSERT(m_labels.is_empty());
-    m_label_count = label_count;
-    for (auto i = 0; i < label_count; ++i) {
-        m_labels.append(create_label());
-    }
-    m_corner = add<ResizeCorner>();
-}
-
-NonnullRefPtr<Label> StatusBar::label(int index) const
-{
-    return m_labels.at(index);
 }
 
 }
