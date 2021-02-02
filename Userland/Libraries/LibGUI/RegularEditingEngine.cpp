@@ -30,11 +30,6 @@
 
 namespace GUI {
 
-RegularEditingEngine::RegularEditingEngine()
-{
-    m_editing_engine_type = EditingEngineType::Regular;
-}
-
 CursorWidth RegularEditingEngine::cursor_width() const
 {
     return CursorWidth::NARROW;
