@@ -47,6 +47,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_has_execpromises = m_has_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
+    child->m_enforces_syscall_regions = m_enforces_syscall_regions;
     child->m_fds = m_fds;
     child->m_sid = m_sid;
     child->m_pg = m_pg;

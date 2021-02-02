@@ -549,6 +549,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_execpromises = 0;
     m_has_execpromises = false;
 
+    m_enforces_syscall_regions = false;
+
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
 

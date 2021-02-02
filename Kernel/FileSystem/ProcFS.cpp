@@ -327,6 +327,7 @@ static bool procfs$pid_vm(InodeIdentifier identifier, KBufferBuilder& builder)
             region_object.add("executable", region.is_executable());
             region_object.add("stack", region.is_stack());
             region_object.add("shared", region.is_shared());
+            region_object.add("syscall", region.is_syscall_region());
             region_object.add("user_accessible", region.is_user_accessible());
             region_object.add("purgeable", region.vmobject().is_anonymous());
             if (region.vmobject().is_anonymous()) {
