@@ -1044,8 +1044,8 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
 KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     if (::is_directory(mode))
-        return fs().create_directory(identifier(), name, mode, uid, gid);
-    return fs().create_inode(identifier(), name, mode, dev, uid, gid);
+        return fs().create_directory(*this, name, mode, uid, gid);
+    return fs().create_inode(*this, name, mode, dev, uid, gid);
 }
 
 KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
@@ -1426,13 +1426,12 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     return true;
 }
 
-KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid)
+KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, mode_t mode, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
-    ASSERT(parent_id.fsid() == fsid());
     ASSERT(is_directory(mode));
 
-    auto inode_or_error = create_inode(parent_id, name, mode, 0, uid, gid);
+    auto inode_or_error = create_inode(parent_inode, name, mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
 
@@ -1444,14 +1443,13 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
 
     Vector<Ext2FSDirectoryEntry> entries;
     entries.empend(".", inode->identifier(), static_cast<u8>(EXT2_FT_DIR));
-    entries.empend("..", parent_id, static_cast<u8>(EXT2_FT_DIR));
+    entries.empend("..", parent_inode.identifier(), static_cast<u8>(EXT2_FT_DIR));
 
     auto result = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     if (result.is_error())
         return result;
 
-    auto parent_inode = get_inode(parent_id);
-    result = parent_inode->increment_link_count();
+    result = parent_inode.increment_link_count();
     if (result.is_error())
         return result;
 
@@ -1462,21 +1460,18 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
-    ASSERT(parent_id.fsid() == fsid());
-    auto parent_inode = get_inode(parent_id);
-    ASSERT(parent_inode);
 
-    if (static_cast<const Ext2FSInode&>(*parent_inode).m_raw_inode.i_links_count == 0)
+    if (parent_inode.m_raw_inode.i_links_count == 0)
         return ENOENT;
 
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
 
 #if EXT2_DEBUG
-    dbgln("Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode->index());
+    dbgln("Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
 #endif
 
     // NOTE: This doesn't commit the inode allocation just yet!
@@ -1523,7 +1518,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
 
     auto inode = get_inode({ fsid(), inode_id });
 
-    auto result = parent_inode->add_child(*inode, name, mode);
+    auto result = parent_inode.add_child(*inode, name, mode);
     if (result.is_error())
         return result;
 
