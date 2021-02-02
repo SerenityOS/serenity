@@ -550,4 +550,22 @@ void* Process::sys$allocate_tls(size_t size)
     return m_master_tls_region.unsafe_ptr()->vaddr().as_ptr();
 }
 
+int Process::sys$msyscall(void* address)
+{
+    if (m_enforces_syscall_regions)
+        return -EPERM;
+
+    if (!address) {
+        m_enforces_syscall_regions = true;
+        return 0;
+    }
+
+    auto* region = find_region_containing(Range { VirtualAddress { address }, 1 });
+    if (!region)
+        return -EINVAL;
+
+    region->set_syscall_region(true);
+    return 0;
+}
+
 }

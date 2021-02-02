@@ -129,6 +129,7 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
 {
     auto& region = add_region(
         Region::create_user_accessible(this, range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access(), source_region.is_cacheable(), source_region.is_shared()));
+    region.set_syscall_region(source_region.is_syscall_region());
     region.set_mmap(source_region.is_mmap());
     region.set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
@@ -423,6 +424,7 @@ void create_signal_trampolines()
     InterruptDisabler disabler;
     // NOTE: We leak this region.
     auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write | Region::Access::Execute, false).leak_ptr();
+    trampoline_region->set_syscall_region(true);
     g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
 
     u8* trampoline = (u8*)asm_signal_trampoline;

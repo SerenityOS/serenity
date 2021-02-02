@@ -247,6 +247,9 @@ public:
 
     RefPtr<Process> get_owner();
 
+    bool is_syscall_region() const { return m_syscall_region; }
+    void set_syscall_region(bool b) { m_syscall_region = b; }
+
 private:
     bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
 
@@ -282,6 +285,7 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_kernel : 1 { false };
+    bool m_syscall_region : 1 { false };
     WeakPtr<Process> m_owner;
 };
 

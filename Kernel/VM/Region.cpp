@@ -105,6 +105,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
             region->copy_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
+        region->set_syscall_region(is_syscall_region());
         return region;
     }
 
@@ -127,6 +128,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
         ASSERT(vmobject().is_anonymous());
         clone_region->set_stack(true);
     }
+    clone_region->set_syscall_region(is_syscall_region());
     clone_region->set_mmap(m_mmap);
     return clone_region;
 }

@@ -189,6 +189,12 @@ void syscall_handler(TrapFrame* trap)
         ASSERT_NOT_REACHED();
     }
 
+    if (process.enforces_syscall_regions() && !calling_region->is_syscall_region()) {
+        dbgln("Syscall from non-syscall region");
+        handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
+        ASSERT_NOT_REACHED();
+    }
+
     process.big_lock().lock();
     u32 function = regs.eax;
     u32 arg1 = regs.edx;
