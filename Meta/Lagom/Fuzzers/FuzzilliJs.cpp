@@ -37,7 +37,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <string>
 #include <sys/mman.h>
 
 #include <fcntl.h>
