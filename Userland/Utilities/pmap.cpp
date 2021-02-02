@@ -63,9 +63,9 @@ int main(int argc, char** argv)
     printf("%s:\n", pid);
 
     if (extended) {
-        printf("Address         Size   Resident      Dirty Access VMObject Type  Purgeable   CoW Pages Name\n");
+        printf("Address         Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name\n");
     } else {
-        printf("Address         Size Access Name\n");
+        printf("Address         Size Access  Name\n");
     }
 
     auto file_contents = file->read_all();
@@ -82,11 +82,12 @@ int main(int argc, char** argv)
         auto address = map.get("address").to_int();
         auto size = map.get("size").to_string();
 
-        auto access = String::format("%s%s%s%s",
+        auto access = String::formatted("{}{}{}{}{}",
             (map.get("readable").to_bool() ? "r" : "-"),
             (map.get("writable").to_bool() ? "w" : "-"),
             (map.get("executable").to_bool() ? "x" : "-"),
-            (map.get("shared").to_bool() ? "s" : "-"));
+            (map.get("shared").to_bool() ? "s" : "-"),
+            (map.get("syscall").to_bool() ? "c" : "-"));
 
         printf("%08x  ", address);
         printf("%10s ", size.characters());
