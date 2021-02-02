@@ -908,6 +908,7 @@ struct HistorySelector {
         WordSelectorKind kind { Index };
         size_t selector { 0 };
         Position position;
+        RefPtr<AST::SyntaxError> syntax_error_node;
 
         size_t resolve(size_t size) const
         {
