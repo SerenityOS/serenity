@@ -36,9 +36,17 @@ public:
         return peek(buffer, size);
     }
 
-    bool is_empty() const { return m_empty; }
+    bool is_empty() const
+    {
+        ScopedSharedSpinLock meta_lock(m_meta_lock);
+        return m_empty;
+    }
 
-    size_t space_for_writing() const { return m_space_for_writing; }
+    size_t space_for_writing() const
+    {
+        ScopedSharedSpinLock meta_lock(m_meta_lock);
+        return m_space_for_writing;
+    }
 
     void set_unblock_callback(Function<void()> callback)
     {
@@ -67,6 +75,7 @@ private:
     size_t m_space_for_writing { 0 };
     bool m_empty { true };
     mutable Lock m_lock { "DoubleBuffer" };
+    mutable SharedSpinLock m_meta_lock;
 };
 
 }

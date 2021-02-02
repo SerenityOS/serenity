@@ -11,7 +11,7 @@ namespace Kernel {
 
 inline void DoubleBuffer::compute_lockfree_metadata()
 {
-    InterruptDisabler disabler;
+    ScopedExclusiveSpinLock meta_lock(m_meta_lock);
     m_empty = m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size == 0;
     m_space_for_writing = m_capacity - m_write_buffer->size;
 }
