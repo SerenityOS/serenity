@@ -987,7 +987,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     return KSuccess;
 }
 
-bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
+KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 {
     LOCKER(m_lock);
 
@@ -1034,9 +1034,11 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
     ssize_t nwritten = write_bytes(0, stream.size(), buffer, nullptr);
     if (nwritten < 0)
-        return false;
+        return KResult((ErrnoCode)-nwritten);
     set_metadata_dirty(true);
-    return static_cast<size_t>(nwritten) == directory_data.size();
+    if (static_cast<size_t>(nwritten) != directory_data.size())
+        return EIO;
+    return KSuccess;
 }
 
 KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
@@ -1082,10 +1084,11 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
         return result;
 
     entries.empend(name, child.identifier(), to_ext2_file_type(mode));
-    bool success = write_directory(entries);
-    if (success)
-        m_lookup_cache.set(name, child.index());
+    result = write_directory(entries);
+    if (result.is_error())
+        return result;
 
+    m_lookup_cache.set(name, child.index());
     did_add_child(child.identifier());
     return KSuccess;
 }
@@ -1118,11 +1121,9 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     if (result.is_error())
         return result;
 
-    bool success = write_directory(entries);
-    if (!success) {
-        // FIXME: Plumb error from write_directory().
-        return EIO;
-    }
+    result = write_directory(entries);
+    if (result.is_error())
+        return result;
 
     m_lookup_cache.remove(name);
 
@@ -1455,11 +1456,12 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     entries.empend(".", inode->identifier(), static_cast<u8>(EXT2_FT_DIR));
     entries.empend("..", parent_id, static_cast<u8>(EXT2_FT_DIR));
 
-    bool success = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
-    ASSERT(success);
+    auto result = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
+    if (result.is_error())
+        return result;
 
     auto parent_inode = get_inode(parent_id);
-    auto result = parent_inode->increment_link_count();
+    result = parent_inode->increment_link_count();
     if (result.is_error())
         return result;
 

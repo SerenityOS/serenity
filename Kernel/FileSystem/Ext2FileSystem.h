@@ -79,7 +79,7 @@ private:
 
     virtual KResultOr<int> get_block_address(int) override;
 
-    bool write_directory(const Vector<Ext2FSDirectoryEntry>&);
+    KResult write_directory(const Vector<Ext2FSDirectoryEntry>&);
     bool populate_lookup_cache() const;
     KResult resize(u64);
 
