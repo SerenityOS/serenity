@@ -27,10 +27,15 @@ KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> io
         return ENOMEM;
     if (!copy_n_from_user(vecs.data(), iov, iov_count))
         return EFAULT;
+    Vector<UserOrKernelBufferWithSize, 32> buffers;
     for (auto& vec : vecs) {
         total_length += vec.iov_len;
         if (total_length > NumericLimits<i32>::max())
             return EINVAL;
+        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
+        if (!buffer.has_value())
+            return EFAULT;
+        buffers.append({ buffer.release_value(), vec.iov_len });
     }
 
     auto description = file_description(fd);
@@ -40,62 +45,20 @@ KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     if (!description->is_writable())
         return EBADF;
 
-    int nwritten = 0;
-    for (auto& vec : vecs) {
-        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
-        if (!buffer.has_value())
-            return EFAULT;
-        auto result = do_write(*description, buffer.value(), vec.iov_len);
-        if (result.is_error()) {
-            if (nwritten == 0)
-                return result.error();
-            return nwritten;
-        }
-        nwritten += result.value();
-    }
-
-    return nwritten;
-}
-
-KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
-{
-    ssize_t total_nwritten = 0;
-    if (!description.is_blocking()) {
-        if (!description.can_write())
-            return EAGAIN;
-    }
-
-    if (description.should_append() && description.file().is_seekable()) {
-        auto seek_result = description.seek(0, SEEK_END);
+    // TODO: Move into WriteBlocker
+    if (description->should_append() && description->file().is_seekable()) {
+        auto seek_result = description->seek(0, SEEK_END);
         if (seek_result.is_error())
             return seek_result.error();
     }
 
-    while ((size_t)total_nwritten < data_size) {
-        if (!description.can_write()) {
-            if (!description.is_blocking()) {
-                // Short write: We can no longer write to this non-blocking description.
-                VERIFY(total_nwritten > 0);
-                return total_nwritten;
-            }
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted()) {
-                if (total_nwritten == 0)
-                    return EINTR;
-            }
-            // TODO: handle exceptions in unblock_flags
-        }
-        auto nwritten_or_error = description.write(data.offset(total_nwritten), data_size - total_nwritten);
-        if (nwritten_or_error.is_error()) {
-            if (total_nwritten)
-                return total_nwritten;
-            return nwritten_or_error.error();
-        }
-        if (nwritten_or_error.value() == 0)
-            break;
-        total_nwritten += nwritten_or_error.value();
-    }
-    return total_nwritten;
+    auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+    KResultOr<size_t> write_result(KSuccess);
+    if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags, buffers.data(), buffers.size(), write_result).was_interrupted())
+        return EINTR;
+    if (write_result.is_error())
+        return write_result.error();
+    return (ssize_t)write_result.value();
 }
 
 KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t size)
@@ -113,10 +76,24 @@ KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t
     if (!description->is_writable())
         return EBADF;
 
-    auto buffer = UserOrKernelBuffer::for_user_buffer(data, static_cast<size_t>(size));
-    if (!buffer.has_value())
+    auto user_buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>(data.unsafe_userspace_ptr()), (size_t)size);
+    if (!user_buffer.has_value())
         return EFAULT;
-    return do_write(*description, buffer.value(), size);
+    UserOrKernelBufferWithSize buffer { user_buffer.release_value(), (size_t)size };
+    // TODO: Move into WriteBlocker
+    if (description->should_append()) {
+        auto seek_result = description->seek(0, SEEK_END);
+        if (seek_result.is_error())
+            return seek_result.error();
+    }
+
+    auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+    KResultOr<size_t> write_result(KSuccess);
+    if (Thread::current()->block<Thread::WriteBlocker>({}, *description, unblock_flags, &buffer, 1, write_result).was_interrupted())
+        return EINTR;
+    if (write_result.is_error())
+        return write_result.error();
+    return (ssize_t)write_result.value();
 }
 
 }

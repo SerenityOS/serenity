@@ -10,6 +10,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/ProcessPagingScope.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -50,8 +52,6 @@ void Thread::Blocker::begin_blocking(Badge<Thread>)
 {
     ScopedSpinLock lock(m_lock);
     VERIFY(!m_is_blocking);
-    VERIFY(!m_blocked_thread);
-    m_blocked_thread = Thread::current();
     m_is_blocking = true;
 }
 
@@ -227,20 +227,27 @@ bool Thread::FutexBlocker::unblock(bool force)
     return true;
 }
 
-Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags)
-    : m_blocked_description(description)
+Thread::FileDescriptionBlocker::FileDescriptionBlocker(FileDescription& description, BlockFlags flags, BlockFlags& unblocked_flags, bool allow_block, FileBlockType file_block_type)
+    : FileBlocker(file_block_type)
+    , m_blocked_description(description)
     , m_flags(flags)
     , m_unblocked_flags(unblocked_flags)
+    , m_allow_block(allow_block)
 {
     m_unblocked_flags = BlockFlags::None;
-    if (!set_block_condition(description.block_condition()))
+}
+
+void Thread::FileDescriptionBlocker::try_add_blocker()
+{
+    if (!set_block_condition(m_blocked_description->block_condition()))
         m_should_block = false;
 }
 
 bool Thread::FileDescriptionBlocker::unblock(bool from_add_blocker, void*)
 {
+    bool is_blocking = m_blocked_description->is_blocking() && m_allow_block;
     auto unblock_flags = m_blocked_description->should_unblock(m_flags);
-    if (unblock_flags == BlockFlags::None)
+    if (unblock_flags == BlockFlags::None && is_blocking)
         return false;
 
     {
@@ -278,24 +285,32 @@ void Thread::FileDescriptionBlocker::not_blocking(bool timeout_in_past)
     unblock(false, nullptr);
 }
 
-const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
+Thread::AcceptBlocker::AcceptBlocker(FileDescription& description, BlockFlags& unblocked_flags, bool allow_block)
+    : FileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags, allow_block)
 {
-    return m_blocked_description;
+    try_add_blocker();
 }
 
-Thread::AcceptBlocker::AcceptBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags)
+Thread::ConnectBlocker::ConnectBlocker(FileDescription& description, BlockFlags& unblocked_flags, bool allow_block)
+    : FileDescriptionBlocker(description, BlockFlags::Connect | BlockFlags::Exception, unblocked_flags, allow_block)
 {
+    try_add_blocker();
 }
 
-Thread::ConnectBlocker::ConnectBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Connect | BlockFlags::Exception, unblocked_flags)
+static bool in_target_context(const UserOrKernelBuffer& buffer, const Thread& blocked_thread)
 {
+    if (buffer.is_kernel_buffer())
+        return true;
+    return Process::current() == &blocked_thread.process();
 }
 
-Thread::WriteBlocker::WriteBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Write | BlockFlags::Exception, unblocked_flags)
+Thread::WriteBlocker::WriteBlocker(FileDescription& description, BlockFlags& unblocked_flags, UserOrKernelBufferWithSize* buffers, size_t buffers_count, KResultOr<size_t>& result, bool allow_block)
+    : FileDescriptionBlocker(description, BlockFlags::Write | BlockFlags::Exception, unblocked_flags, allow_block, FileBlockType::Write)
+    , m_buffers(buffers)
+    , m_buffers_count(buffers_count)
+    , m_result(result)
 {
+    try_add_blocker();
 }
 
 auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
@@ -313,9 +328,67 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     return timeout;
 }
 
-Thread::ReadBlocker::ReadBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, BlockFlags::Read | BlockFlags::Exception, unblocked_flags)
+bool Thread::WriteBlocker::unblock(bool from_add_blocker, void* data)
 {
+    // NOTE: We intentionally don't pass from_add_blocker to the base implementation
+    // because we do *not* want to be unblocked until we completed the write!
+    if (FileDescriptionBlocker::unblock(true, data)) {
+        if (from_add_blocker) {
+            if (m_unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+                m_result = EAGAIN;
+        } else {
+            VERIFY(m_unblocked_flags != Thread::FileBlocker::BlockFlags::None);
+        }
+        // Even though we don't want to be atually unblocked, we do want to
+        // be removed from the BlockCondition, so return true. Note that
+        // this means we will be removed from the BlockCondition's thread
+        // list, but m_list_node will remain in the FileBlockCondition's
+        // pending write list until the write is completed!
+        g_io_work->queue([](void* b) {
+            VERIFY(b);
+            reinterpret_cast<WriteBlocker*>(b)->async_write();
+        }, this, nullptr);
+        return true;
+    }
+    return false;
+}
+
+void Thread::WriteBlocker::async_write()
+{
+    for (size_t i = 0; i < m_buffers_count; i++) {
+        auto& buffer_with_size = m_buffers[i];
+        KResultOr<size_t> result(KSuccess);
+        if (in_target_context(buffer_with_size.buffer, blocked_thread())) {
+            result = blocked_description().write(buffer_with_size.buffer, buffer_with_size.size);
+        } else {
+            ProcessPagingScope paging_scope(blocked_thread().process());
+            result = blocked_description().write(buffer_with_size.buffer, buffer_with_size.size);
+        }
+        if (result.is_error()) {
+            m_result = result.error();
+            break;
+        }
+        m_result.value() += result.value();
+    }
+
+    auto& file_block_condition = reinterpret_cast<FileBlockCondition&>(blocked_description().block_condition());
+    file_block_condition.async_write_complete(*this);
+    unblock_from_blocker();
+}
+
+void Thread::WriteBlocker::was_unblocked(bool did_timeout)
+{
+    if (did_timeout)
+        return;
+}
+
+Thread::ReadBlocker::ReadBlocker(FileDescription& description, BlockFlags& unblocked_flags, UserOrKernelBufferWithSize* buffers, size_t buffers_count, KResultOr<size_t>& result, bool allow_block)
+    : FileDescriptionBlocker(description, BlockFlags::Read | BlockFlags::Exception, unblocked_flags, allow_block, FileBlockType::Read)
+    , m_buffers(buffers)
+    , m_buffers_count(buffers_count)
+    , m_result(result)
+{
+    try_add_blocker();
 }
 
 auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
@@ -331,6 +404,80 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
         }
     }
     return timeout;
+}
+
+bool Thread::ReadBlocker::unblock(bool from_add_blocker, void* data)
+{
+    // NOTE: We intentionally don't pass from_add_blocker to the base implementation
+    // because we do *not* want to be unblocked until we completed the read!
+    if (FileDescriptionBlocker::unblock(true, data)) {
+        if (from_add_blocker) {
+            if (m_unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+                m_result = EAGAIN;
+        } else {
+            VERIFY(m_unblocked_flags != Thread::FileBlocker::BlockFlags::None);
+        }
+        // Even though we don't want to be actually unblocked, we do want to
+        // be removed from the BlockCondition, so return true. Note that
+        // this means we will be removed from the BlockCondition's thread
+        // list, but m_list_node will remain in the FileBlockCondition's
+        // pending read list until the read is completed!
+        g_io_work->queue([](void* b) {
+            VERIFY(b);
+            reinterpret_cast<ReadBlocker*>(b)->async_read();
+        }, this, nullptr);
+        return true;
+    }
+    return false;
+}
+
+KResultOr<size_t> Thread::ReadBlocker::do_read(UserOrKernelBuffer& buffer, size_t buffer_size)
+{
+    return blocked_description().read(buffer, buffer_size);
+}
+
+void Thread::ReadBlocker::async_read()
+{
+    for (size_t i = 0; i < m_buffers_count; i++) {
+        auto& buffer_with_size = m_buffers[i];
+        KResultOr<size_t> result(KSuccess);
+        if (in_target_context(buffer_with_size.buffer, blocked_thread())) {
+            m_result = do_read(buffer_with_size.buffer, buffer_with_size.size);
+        } else {
+            ProcessPagingScope paging_scope(blocked_thread().process());
+            m_result = do_read(buffer_with_size.buffer, buffer_with_size.size);
+        }
+        if (result.is_error()) {
+            m_result = result.error();
+            break;
+        }
+        m_result.value() += result.value();
+    }
+
+    auto& file_block_condition = reinterpret_cast<FileBlockCondition&>(blocked_description().block_condition());
+    file_block_condition.async_read_complete(*this);
+    unblock_from_blocker();
+}
+
+void Thread::ReadBlocker::was_unblocked(bool did_timeout)
+{
+    if (did_timeout)
+        return;
+}
+
+Thread::RecvFromBlocker::RecvFromBlocker(FileDescription& description, FileDescriptionBlocker::BlockFlags& block_flags, UserOrKernelBufferWithSize* buffers, size_t buffers_count, int flags, KResultOr<size_t>& result, Time& timestamp, Optional<UserOrKernelBufferWithSize>& address, bool allow_block)
+    : ReadBlocker(description, block_flags, buffers, buffers_count, result, allow_block)
+    , m_flags(flags)
+    , m_timestamp(timestamp)
+    , m_address(address)
+{
+    VERIFY(description.is_socket());
+}
+
+KResultOr<size_t> Thread::RecvFromBlocker::do_read(UserOrKernelBuffer& buffer, size_t buffer_size)
+{
+    auto& socket = *blocked_description().socket();
+    return socket.recvfrom(blocked_description(), buffer, buffer_size, m_flags, m_address, m_timestamp);
 }
 
 Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, Time* remaining)
@@ -381,7 +528,8 @@ Thread::BlockResult Thread::SleepBlocker::block_result()
 }
 
 Thread::SelectBlocker::SelectBlocker(FDVector& fds)
-    : m_fds(fds)
+    : FileBlocker(Thread::FileBlocker::FileBlockType::Select)
+    , m_fds(fds)
 {
     for (auto& fd_entry : m_fds) {
         fd_entry.unblocked_flags = FileBlocker::BlockFlags::None;

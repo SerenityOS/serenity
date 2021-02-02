@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Panic.h>
@@ -133,6 +134,19 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
+    bool do_log = current_thread->name().contains("WindowServer");
+    Time start_time;
+    if (do_log) {
+        start_time = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        //dbgln("syscall #{} -->", regs.eax);
+    }
+    ScopeGuard guard([&, function = regs.eax]() {
+        if (do_log) {
+            auto duration_ms = (TimeManagement::the().monotonic_time(TimePrecision::Precise) - start_time).to_milliseconds();
+            if (duration_ms > 250)
+                dbgln("syscall #{} ({}) took {}ms", function, Syscall::to_string((Syscall::Function)function), duration_ms);
+        }
+    });
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
 

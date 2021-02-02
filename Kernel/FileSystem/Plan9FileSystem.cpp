@@ -509,13 +509,11 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
     }
 
     while (size > 0) {
-        if (!description.can_write()) {
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted())
-                return EINTR;
-        }
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
-        auto nwritten_or_error = description.write(data_buffer, size);
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        UserOrKernelBufferWithSize data_buffer { UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data)), size };
+        KResultOr<size_t> nwritten_or_error(KSuccess);
+        if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags, &data_buffer, 1, nwritten_or_error).was_interrupted())
+            return EINTR;
         if (nwritten_or_error.is_error())
             return nwritten_or_error.error();
         auto nwritten = nwritten_or_error.value();
@@ -530,13 +528,11 @@ KResult Plan9FS::do_read(u8* data, size_t size)
 {
     auto& description = file_description();
     while (size > 0) {
-        if (!description.can_read()) {
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
-                return EINTR;
-        }
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
-        auto nread_or_error = description.read(data_buffer, size);
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        UserOrKernelBufferWithSize data_buffer { UserOrKernelBuffer::for_kernel_buffer(data), size };
+        KResultOr<size_t> nread_or_error(KSuccess);
+        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags, &data_buffer, 1, nread_or_error).was_interrupted())
+            return EINTR;
         if (nread_or_error.is_error())
             return nread_or_error.error();
         auto nread = nread_or_error.value();

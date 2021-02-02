@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+using BlockFlags = Thread::FileBlocker::BlockFlags;
+
 #define REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain) \
     do {                                          \
         if (domain == AF_INET)                    \
@@ -210,14 +212,30 @@ KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
 
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
+    u64 total_length = 0;
     Vector<iovec, 1> iovs;
     if (!iovs.try_resize(msg.msg_iovlen))
         return ENOMEM;
     if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
         return EFAULT;
+    Vector<UserOrKernelBufferWithSize, 32> buffers;
+    for (auto& vec : iovs) {
+        total_length += vec.iov_len;
+        if (total_length > NumericLimits<i32>::max())
+            return EINVAL;
+        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
+        if (!buffer.has_value())
+            return EFAULT;
+        buffers.append({ buffer.release_value(), vec.iov_len });
+    }
 
-    Userspace<sockaddr*> user_addr((FlatPtr)msg.msg_name);
-    Userspace<socklen_t*> user_addr_length(msg.msg_name ? (FlatPtr)&user_msg.unsafe_userspace_ptr()->msg_namelen : 0);
+    Optional<UserOrKernelBufferWithSize> address_buffer;
+    if (msg.msg_name) {
+        auto name_buffer = UserOrKernelBuffer::for_user_buffer((u8*)msg.msg_name, msg.msg_namelen);
+        if (!name_buffer.has_value())
+            return EFAULT;
+        address_buffer = UserOrKernelBufferWithSize{ name_buffer.release_value(), msg.msg_namelen };
+    }
 
     auto description = file_description(sockfd);
     if (!description)
@@ -229,21 +247,24 @@ KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
     if (socket.is_shut_down_for_reading())
         return 0;
 
-    bool original_blocking = description->is_blocking();
-    if (flags & MSG_DONTWAIT)
-        description->set_blocking(false);
-
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
-    if (!data_buffer.has_value())
-        return EFAULT;
-    Time timestamp {};
-    auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp);
-    if (flags & MSG_DONTWAIT)
-        description->set_blocking(original_blocking);
-
+    auto unblock_flags = BlockFlags::None;
+    Time timestamp;
+    KResultOr<size_t> result(KSuccess);
+    if (Thread::current()->block<Thread::RecvFromBlocker>({}, *description, unblock_flags, buffers.data(), buffers.size(), flags, result, timestamp, address_buffer, !(flags & MSG_DONTWAIT)).was_interrupted())
+        return EINTR;
     if (result.is_error())
         return result.error();
+    if (!has_flag(unblock_flags, BlockFlags::Read))
+        return EAGAIN;
+    // TODO: handle exceptions in unblock_flags
 
+    if (address_buffer.has_value()) {
+        if (address_buffer.value().size != msg.msg_namelen) {
+            socklen_t new_namelen = msg.msg_namelen;
+            if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_namelen, &new_namelen))
+                return EFAULT;
+        }
+    }
     int msg_flags = 0;
 
     if (result.value() > iovs[0].iov_len) {

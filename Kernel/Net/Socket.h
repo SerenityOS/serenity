@@ -87,7 +87,7 @@ public:
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
     virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Optional<UserOrKernelBufferWithSize>& address, Time&) = 0;
 
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);

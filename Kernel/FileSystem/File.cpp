@@ -11,6 +11,7 @@
 namespace Kernel {
 
 File::File()
+    : m_block_condition(*this)
 {
 }
 

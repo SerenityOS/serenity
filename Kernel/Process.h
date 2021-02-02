@@ -512,7 +512,6 @@ private:
     void delete_perf_events_buffer();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
-    KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& elf_header, int nread, size_t file_size);
 

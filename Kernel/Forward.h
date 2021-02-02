@@ -53,6 +53,7 @@ class TTY;
 class Thread;
 class UDPSocket;
 class UserOrKernelBuffer;
+struct UserOrKernelBufferWithSize;
 class VFS;
 class VMObject;
 class WaitQueue;

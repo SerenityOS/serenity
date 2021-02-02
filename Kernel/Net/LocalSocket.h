@@ -47,7 +47,7 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Optional<UserOrKernelBufferWithSize>& address, Time&) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual KResult chown(FileDescription&, uid_t, gid_t) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
@@ -63,12 +63,12 @@ private:
     NonnullRefPtrVector<FileDescription>& sendfd_queue_for(const FileDescription&);
     NonnullRefPtrVector<FileDescription>& recvfd_queue_for(const FileDescription&);
 
-    void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
+    void set_connect_side_role(ScopedFileStateUpdateLock& update_lock, Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
         auto previous = m_connect_side_role;
         m_connect_side_role = connect_side_role;
         if (previous != m_connect_side_role || force_evaluate_block_conditions)
-            evaluate_block_conditions();
+            update_lock.did_change_state();
     }
 
     // An open socket file on the filesystem.
@@ -87,6 +87,7 @@ private:
 
     virtual Role role(const FileDescription& description) const override
     {
+        ScopedSharedSpinLock lock(this->state_lock());
         if (m_connect_side_fd == &description)
             return m_connect_side_role;
         return m_role;

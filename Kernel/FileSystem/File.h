@@ -22,25 +22,144 @@ namespace Kernel {
 class File;
 
 class FileBlockCondition : public Thread::BlockCondition {
+    friend class Thread::ReadBlocker;
+    friend class Thread::WriteBlocker;
 public:
-    FileBlockCondition() { }
+    FileBlockCondition(File& file)
+        : m_file(file)
+    {
+    }
 
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
     {
+        VERIFY(m_lock.is_locked());
         VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
         auto& blocker = static_cast<Thread::FileBlocker&>(b);
-        return !blocker.unblock(true, data);
+        // If this is a ReadBlocker or a WriteBlocker, check if there is
+        // one pending already. If so, block until those are done.
+        switch (blocker.file_block_type()) {
+        case Thread::FileBlocker::FileBlockType::Select:
+        case Thread::FileBlocker::FileBlockType::FileDescription:
+            break;
+        case Thread::FileBlocker::FileBlockType::Read: {
+            auto& read_blocker = static_cast<Thread::ReadBlocker&>(blocker);
+            VERIFY(!read_blocker.m_list_node.is_in_list());
+            if (!m_pending_readers.is_empty())
+                return true;
+            break;
+        }
+        case Thread::FileBlocker::FileBlockType::Write: {
+            auto& write_blocker = static_cast<Thread::WriteBlocker&>(blocker);
+            VERIFY(!write_blocker.m_list_node.is_in_list());
+            if (!m_pending_writers.is_empty())
+                return true;
+            break;
+        }
+        }
+
+        bool should_add = !blocker.unblock(true, data);
+        switch (blocker.file_block_type()) {
+        case Thread::FileBlocker::FileBlockType::Select:
+        case Thread::FileBlocker::FileBlockType::FileDescription:
+            break;
+        case Thread::FileBlocker::FileBlockType::Read: {
+            VERIFY(!should_add);
+            auto& read_blocker = static_cast<Thread::ReadBlocker&>(blocker);
+            // A read by the blocked thread is now pending
+            VERIFY(!read_blocker.m_list_node.is_in_list());
+            m_pending_readers.append(read_blocker);
+            break;
+        }
+        case Thread::FileBlocker::FileBlockType::Write: {
+            VERIFY(!should_add);
+            auto& write_blocker = static_cast<Thread::WriteBlocker&>(blocker);
+            // A write by the blocked thread is now pending
+            VERIFY(!write_blocker.m_list_node.is_in_list());
+            m_pending_writers.append(write_blocker);
+            break;
+        }
+        }
+        return should_add;
     }
 
     void unblock()
     {
+        VERIFY(!m_state_lock.own_exclusive());
         ScopedSpinLock lock(m_lock);
+        unblock_locked();
+    }
+
+    ALWAYS_INLINE RecursiveSharedSpinLock& state_lock() { return m_state_lock; }
+
+protected:
+    void unblock_locked()
+    {
+        bool unblocked_reader = !m_pending_readers.is_empty();
+        bool unblocked_writer = !m_pending_writers.is_empty();
+        
         do_unblock([&](auto& b, void* data, bool&) {
             VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
             auto& blocker = static_cast<Thread::FileBlocker&>(b);
-            return blocker.unblock(false, data);
+            switch (blocker.file_block_type()) {
+            case Thread::FileBlocker::FileBlockType::Select:
+            case Thread::FileBlocker::FileBlockType::FileDescription:
+                break;
+            case Thread::FileBlocker::FileBlockType::Read:
+                // If a read is already in progress, don't unblock more readers
+                if (unblocked_reader)
+                    return false;
+                break;
+            case Thread::FileBlocker::FileBlockType::Write:
+                // If a write is already in progress, don't unblock more writers
+                if (unblocked_writer)
+                    return false;
+                break;
+            }
+            if (blocker.unblock(false, data)) {
+                switch (blocker.file_block_type()) {
+                case Thread::FileBlocker::FileBlockType::Select:
+                case Thread::FileBlocker::FileBlockType::FileDescription:
+                    break;
+                case Thread::FileBlocker::FileBlockType::Read:
+                    // We unblocked one reader
+                    unblocked_reader = true;
+                    VERIFY(m_pending_readers.contains(static_cast<Thread::ReadBlocker&>(blocker)));
+                    break;
+                case Thread::FileBlocker::FileBlockType::Write:
+                    // We unblocked one writer
+                    unblocked_writer = true;
+                    VERIFY(m_pending_writers.contains(static_cast<Thread::WriteBlocker&>(blocker)));
+                    break;
+                }
+                return true;
+            }
+            return false;
         });
     }
+
+    void async_read_complete(Thread::ReadBlocker& blocker)
+    {
+        ScopedSpinLock lock(m_lock);
+        VERIFY(m_pending_readers.contains(blocker));
+        VERIFY(m_pending_readers.first() == &blocker);
+        m_pending_readers.remove(blocker);
+        unblock_locked();
+    }
+
+    void async_write_complete(Thread::WriteBlocker& blocker)
+    {
+        ScopedSpinLock lock(m_lock);
+        VERIFY(m_pending_writers.contains(blocker));
+        VERIFY(m_pending_writers.first() == &blocker);
+        m_pending_writers.remove(blocker);
+        unblock_locked();
+    }
+
+private:
+    File& m_file;
+    IntrusiveList<Thread::ReadBlocker, RawPtr<Thread::ReadBlocker>, &Thread::ReadBlocker::m_list_node> m_pending_readers;
+    IntrusiveList<Thread::WriteBlocker, RawPtr<Thread::WriteBlocker>, &Thread::WriteBlocker::m_list_node> m_pending_writers;
+    RecursiveSharedSpinLock m_state_lock;
 };
 
 // File is the base class for anything that can be referenced by a FileDescription.
@@ -73,6 +192,9 @@ public:
 class File
     : public RefCounted<File>
     , public Weakable<File> {
+    
+    friend class ScopedFileStateUpdateLock;
+
 public:
     virtual ~File();
 
@@ -111,7 +233,12 @@ public:
     virtual bool is_socket() const { return false; }
     virtual bool is_inode_watcher() const { return false; }
 
-    virtual FileBlockCondition& block_condition() { return m_block_condition; }
+    virtual FileBlockCondition& block_condition() const { return m_block_condition; }
+
+    ALWAYS_INLINE RecursiveSharedSpinLock& state_lock() const
+    {
+        return block_condition().state_lock();
+    }
 
     size_t attach_count() const { return m_attach_count; }
 
@@ -140,8 +267,53 @@ private:
         block_condition().unblock();
     }
 
-    FileBlockCondition m_block_condition;
+    mutable FileBlockCondition m_block_condition;
     size_t m_attach_count { 0 };
+};
+
+
+class ScopedFileStateUpdateLock {
+    AK_MAKE_NONCOPYABLE(ScopedFileStateUpdateLock);
+    AK_MAKE_NONMOVABLE(ScopedFileStateUpdateLock);
+public:
+    ScopedFileStateUpdateLock(File& file)
+        : m_file(file)
+        , m_state_lock(file.state_lock())
+    {
+    }
+
+    ~ScopedFileStateUpdateLock()
+    {
+        if (m_state_changed) {
+            m_state_lock.unlock();
+            m_file.evaluate_block_conditions();
+        }
+    }
+
+    ALWAYS_INLINE void lock()
+    {
+        m_state_lock.lock();
+    }
+
+    ALWAYS_INLINE void unlock()
+    {
+        m_state_lock.unlock();
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool own_lock() const
+    {
+        return m_state_lock.own_lock();
+    }
+
+    ALWAYS_INLINE void did_change_state()
+    {
+        VERIFY(own_lock());
+        m_state_changed = true;
+    }
+private:
+    File& m_file;
+    ScopedExclusiveSpinLock<RecursiveSharedSpinLock> m_state_lock;
+    bool m_state_changed { false };
 };
 
 }

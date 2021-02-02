@@ -158,4 +158,9 @@ private:
     u8* m_buffer;
 };
 
+struct UserOrKernelBufferWithSize {
+    UserOrKernelBuffer buffer;
+    size_t size { 0 };
+};
+
 }

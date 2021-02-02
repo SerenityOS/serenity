@@ -269,6 +269,11 @@ public:
         BlockResult end_blocking(Badge<Thread>, bool);
 
     protected:
+        Blocker()
+            : m_blocked_thread(Thread::current())
+        {
+        }
+
         void do_set_interrupted_by_death()
         {
             m_was_interrupted_by_death = true;
@@ -313,13 +318,14 @@ public:
             m_block_condition = block_condition;
         }
         BlockCondition* block_condition() const { return m_block_condition; }
+        Thread& blocked_thread() const { return *m_blocked_thread; }
 
         mutable RecursiveSpinLock m_lock;
 
     private:
         BlockCondition* m_block_condition { nullptr };
         void* m_block_data { nullptr };
-        Thread* m_blocked_thread { nullptr };
+        Thread* m_blocked_thread;
         u8 m_was_interrupted_by_signal { 0 };
         bool m_is_blocking { false };
         bool m_was_interrupted_by_death { false };
@@ -560,6 +566,12 @@ public:
 
     class FileBlocker : public Blocker {
     public:
+        enum class FileBlockType : u8 {
+            Select = 0,
+            FileDescription,
+            Read,
+            Write
+        };
         enum class BlockFlags : u16 {
             None = 0,
 
@@ -579,6 +591,7 @@ public:
         };
 
         virtual Type blocker_type() const override { return Type::File; }
+        FileBlockType file_block_type() const { return m_file_block_type; }
 
         virtual bool should_block() override
         {
@@ -588,56 +601,96 @@ public:
         virtual bool unblock(bool, void*) = 0;
 
     protected:
+        FileBlocker(FileBlockType file_block_type)
+            : m_file_block_type(file_block_type)
+        {
+        }
+
+        const FileBlockType m_file_block_type;
         bool m_should_block { true };
     };
 
     class FileDescriptionBlocker : public FileBlocker {
     public:
-        const FileDescription& blocked_description() const;
+        const FileDescription& blocked_description() const { return m_blocked_description; }
+        FileDescription& blocked_description() { return m_blocked_description; }
 
         virtual bool unblock(bool, void*) override;
         virtual void not_blocking(bool) override;
 
     protected:
-        explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&);
+        explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&, bool allow_block = true, FileBlockType = FileBlockType::FileDescription);
+        void try_add_blocker();
 
-    private:
         NonnullRefPtr<FileDescription> m_blocked_description;
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
+        bool m_allow_block { true };
     };
 
     class AcceptBlocker final : public FileDescriptionBlocker {
     public:
-        explicit AcceptBlocker(FileDescription&, BlockFlags&);
+        explicit AcceptBlocker(FileDescription&, BlockFlags&, bool allow_block = true);
         virtual const char* state_string() const override { return "Accepting"; }
     };
 
     class ConnectBlocker final : public FileDescriptionBlocker {
     public:
-        explicit ConnectBlocker(FileDescription&, BlockFlags&);
+        explicit ConnectBlocker(FileDescription&, BlockFlags&, bool allow_block = true);
         virtual const char* state_string() const override { return "Connecting"; }
     };
 
     class WriteBlocker final : public FileDescriptionBlocker {
+        friend class FileBlockCondition;
     public:
-        explicit WriteBlocker(FileDescription&, BlockFlags&);
+        explicit WriteBlocker(FileDescription&, BlockFlags&, UserOrKernelBufferWithSize*, size_t, KResultOr<size_t>&, bool allow_block = true);
         virtual const char* state_string() const override { return "Writing"; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
-
+        virtual bool unblock(bool, void*) override;
+        virtual void was_unblocked(bool) override;
     private:
+        void async_write();
+
         BlockTimeout m_timeout;
+        UserOrKernelBufferWithSize* m_buffers;
+        size_t m_buffers_count;
+        KResultOr<size_t>& m_result;
+        IntrusiveListNode<WriteBlocker> m_list_node;
     };
 
-    class ReadBlocker final : public FileDescriptionBlocker {
+    class ReadBlocker : public FileDescriptionBlocker {
+        friend class FileBlockCondition;
     public:
-        explicit ReadBlocker(FileDescription&, BlockFlags&);
+        explicit ReadBlocker(FileDescription&, BlockFlags&, UserOrKernelBufferWithSize*, size_t, KResultOr<size_t>&, bool allow_block = true);
         virtual const char* state_string() const override { return "Reading"; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
+        virtual bool unblock(bool, void*) override;
+        virtual void was_unblocked(bool) override;
+    protected:
+        virtual KResultOr<size_t> do_read(UserOrKernelBuffer&, size_t);
+        void async_read();
 
-    private:
         BlockTimeout m_timeout;
+        UserOrKernelBufferWithSize* m_buffers;
+        size_t m_buffers_count;
+        KResultOr<size_t>& m_result;
+        IntrusiveListNode<ReadBlocker> m_list_node;
+    };
+
+    class RecvFromBlocker final : public ReadBlocker {
+        friend class FileBlockCondition;
+    public:
+        explicit RecvFromBlocker(FileDescription&, FileDescriptionBlocker::BlockFlags&, UserOrKernelBufferWithSize*, size_t, int, KResultOr<size_t>&, Time&, Optional<UserOrKernelBufferWithSize>&, bool allow_block = true);
+        virtual const char* state_string() const override { return "RecvFrom"; }
+    protected:
+        virtual KResultOr<size_t> do_read(UserOrKernelBuffer&, size_t) override;
+    private:
+        void async_read();
+
+        const int m_flags;
+        Time& m_timestamp;
+        Optional<UserOrKernelBufferWithSize>& m_address;
     };
 
     class SleepBlocker final : public Blocker {

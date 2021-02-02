@@ -89,6 +89,10 @@ KResult FileDescription::attach()
 Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
 {
     using BlockFlags = Thread::FileBlocker::BlockFlags;
+    // We need to hold the state lock throughout this function. Note that
+    // an exclusive lock may already be held for ReadBlocker and WriteBlocker,
+    // so that the subsequent read/write operation can be guaranteed!
+    ScopedSharedSpinLock lock(m_file->state_lock());
     BlockFlags unblock_flags = BlockFlags::None;
     if (has_flag(block_flags, BlockFlags::Read) && can_read())
         unblock_flags |= BlockFlags::Read;

@@ -229,7 +229,8 @@ KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBu
     if (is_shut_down_for_reading())
         return 0;
     Time t {};
-    return recvfrom(description, buffer, size, 0, {}, 0, t);
+    Optional<UserOrKernelBufferWithSize> address_buffer;
+    return recvfrom(description, buffer, size, 0, address_buffer, t);
 }
 
 KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)

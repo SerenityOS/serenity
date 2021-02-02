@@ -124,8 +124,11 @@ KResult IPv4Socket::listen(size_t backlog)
     if (auto result = allocate_local_port_if_needed(); result.is_error() && result.error() != -ENOPROTOOPT)
         return result.error();
 
-    set_backlog(backlog);
-    m_role = Role::Listener;
+    {
+        ScopedExclusiveSpinLock lock(state_lock());
+        set_backlog(backlog);
+        m_role = Role::Listener;
+    }
     evaluate_block_conditions();
 
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) listening with backlog={}", this, backlog);
@@ -231,30 +234,16 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     return nsent_or_error;
 }
 
-KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
+KResultOr<size_t> IPv4Socket::receive_byte_buffered(UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Optional<UserOrKernelBufferWithSize>&)
 {
     Locker locker(lock());
     if (m_receive_buffer.is_empty()) {
         if (protocol_is_disconnected())
             return 0;
-        if (!description.is_blocking())
-            return EAGAIN;
-
-        locker.unlock();
-        auto unblocked_flags = BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
-        locker.lock();
-
-        if (!has_flag(unblocked_flags, BlockFlags::Read)) {
-            if (res.was_interrupted())
-                return EINTR;
-
-            // Unblocked due to timeout.
-            return EAGAIN;
-        }
+        // NOTE: Thread::WriteBlocker is checking description.is_blocking()!
+        // If this was a blocking write then we should have data and not get here
+        return EAGAIN;
     }
-
-    VERIFY(!m_receive_buffer.is_empty());
 
     int nreceived;
     if (flags & MSG_PEEK)
@@ -269,86 +258,57 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     return nreceived;
 }
 
-KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Optional<UserOrKernelBufferWithSize>& address, Time& packet_timestamp)
 {
     Locker locker(lock());
-    ReceivedPacket packet;
-    {
-        if (m_receive_queue.is_empty()) {
-            // FIXME: Shouldn't this return -ENOTCONN instead of EOF?
-            //        But if so, we still need to deliver at least one EOF read to userspace.. right?
-            if (protocol_is_disconnected())
-                return 0;
-            if (!description.is_blocking())
-                return EAGAIN;
-        }
-
-        if (!m_receive_queue.is_empty()) {
-            if (flags & MSG_PEEK)
-                packet = m_receive_queue.first();
-            else
-                packet = m_receive_queue.take_first();
-
-            set_can_read(!m_receive_queue.is_empty());
-
-            dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
-                this,
-                packet.data.value().size(),
-                m_receive_queue.size());
-        }
+    if (m_receive_queue.is_empty()) {
+        // FIXME: Shouldn't this return -ENOTCONN instead of EOF?
+        //        But if so, we still need to deliver at least one EOF read to userspace.. right?
+        if (protocol_is_disconnected())
+            return 0;
+        // NOTE: Thread::ReadBlocker is checking description.is_blocking()!
+        // If this was a blocking read then we should have data and not get here
+        return EAGAIN;
     }
+
+    ReceivedPacket packet;
+    if (flags & MSG_PEEK)
+        packet = m_receive_queue.first();
+    else
+        packet = m_receive_queue.take_first();
+
+    set_can_read(!m_receive_queue.is_empty());
+
+    dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
+        this,
+        packet.data.value().size(),
+        m_receive_queue.size());
     if (!packet.data.has_value()) {
         if (protocol_is_disconnected()) {
             dbgln("IPv4Socket({}) is protocol-disconnected, returning 0 in recvfrom!", this);
             return 0;
         }
 
-        locker.unlock();
-        auto unblocked_flags = BlockFlags::None;
-        auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
-        locker.lock();
-
-        if (!has_flag(unblocked_flags, BlockFlags::Read)) {
-            if (res.was_interrupted())
-                return EINTR;
-
-            // Unblocked due to timeout.
-            return EAGAIN;
-        }
-        VERIFY(m_can_read);
-        VERIFY(!m_receive_queue.is_empty());
-
-        if (flags & MSG_PEEK)
-            packet = m_receive_queue.first();
-        else
-            packet = m_receive_queue.take_first();
-
-        set_can_read(!m_receive_queue.is_empty());
-
-        dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
-            this,
-            packet.data.value().size(),
-            m_receive_queue.size());
+        dbgln("IPv4Socket({}) does not have any data!", this);
+        // If this was a blocking read then we should have data and not get here
+        return EAGAIN;
     }
     VERIFY(packet.data.has_value());
 
     packet_timestamp = packet.timestamp;
 
-    if (addr) {
+    if (address.has_value()) {
         dbgln_if(IPV4_SOCKET_DEBUG, "Incoming packet is from: {}:{}", packet.peer_address, packet.peer_port);
 
         sockaddr_in out_addr {};
         memcpy(&out_addr.sin_addr, &packet.peer_address, sizeof(IPv4Address));
         out_addr.sin_port = htons(packet.peer_port);
         out_addr.sin_family = AF_INET;
-        Userspace<sockaddr_in*> dest_addr = addr.ptr();
-        if (!copy_to_user(dest_addr, &out_addr))
+        if (address.value().size < sizeof(out_addr))
             return EFAULT;
-
-        socklen_t out_length = sizeof(sockaddr_in);
-        VERIFY(addr_length);
-        if (!copy_to_user(addr_length, &out_length))
+        if (!address.value().buffer.write(&out_addr, sizeof(out_addr)))
             return EFAULT;
+        address.value().size = sizeof(sockaddr_in);
     }
 
     if (type() == SOCK_RAW) {
@@ -361,23 +321,15 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     return protocol_receive(ReadonlyBytes { packet.data.value().data(), packet.data.value().size() }, buffer, buffer_length, flags);
 }
 
-KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
+KResultOr<size_t> IPv4Socket::recvfrom(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Optional<UserOrKernelBufferWithSize>& address, Time& packet_timestamp)
 {
-    if (user_addr_length) {
-        socklen_t addr_length;
-        if (!copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()))
-            return EFAULT;
-        if (addr_length < sizeof(sockaddr_in))
-            return EINVAL;
-    }
-
     dbgln_if(IPV4_SOCKET_DEBUG, "recvfrom: type={}, local_port={}", type(), local_port());
 
     KResultOr<size_t> nreceived = 0;
     if (buffer_mode() == BufferMode::Bytes)
-        nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
+        nreceived = receive_byte_buffered(buffer, buffer_length, flags, address);
     else
-        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length, packet_timestamp);
+        nreceived = receive_packet_buffered(buffer, buffer_length, flags, address, packet_timestamp);
 
     if (!nreceived.is_error())
         Thread::current()->did_ipv4_socket_read(nreceived.value());
