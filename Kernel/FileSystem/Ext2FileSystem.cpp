@@ -1045,7 +1045,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mo
 {
     if (::is_directory(mode))
         return fs().create_directory(identifier(), name, mode, uid, gid);
-    return fs().create_inode(identifier(), name, mode, 0, dev, uid, gid);
+    return fs().create_inode(identifier(), name, mode, dev, uid, gid);
 }
 
 KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
@@ -1231,28 +1231,20 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
     return blocks;
 }
 
-unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_size)
+unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
 {
-    ASSERT(expected_size >= 0);
-
     LOCKER(m_lock);
 #if EXT2_DEBUG
-    dbgln("Ext2FS: find_a_free_inode(preferred_group: {}, expected_size: {})", preferred_group, expected_size);
-#endif
-
-    unsigned needed_blocks = ceil_div(static_cast<size_t>(expected_size), block_size());
-
-#if EXT2_DEBUG
-    dbgln("Ext2FS: minimum needed blocks: {}", needed_blocks);
+    dbgln("Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
 #endif
 
     unsigned group_index = 0;
 
     // FIXME: We shouldn't refuse to allocate an inode if there is no group that can house the whole thing.
     //        In those cases we should just spread it across multiple groups.
-    auto is_suitable_group = [this, needed_blocks](GroupIndex group_index) {
+    auto is_suitable_group = [this](GroupIndex group_index) {
         auto& bgd = group_descriptor(group_index);
-        return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= needed_blocks;
+        return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= 1;
     };
 
     if (preferred_group && is_suitable_group(preferred_group)) {
@@ -1265,12 +1257,12 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_si
     }
 
     if (!group_index) {
-        klog() << "Ext2FS: find_a_free_inode: no suitable group found for new inode with " << needed_blocks << " blocks needed :(";
+        dmesgln("Ext2FS: find_a_free_inode: no suitable group found for new inode");
         return 0;
     }
 
 #if EXT2_DEBUG
-    dbgln("Ext2FS: find_a_free_inode: found suitable group [{}] for new inode with {} blocks needed :^)", group_index, needed_blocks);
+    dbgln("Ext2FS: find_a_free_inode: found suitable group [{}] for new inode :^)", group_index);
 #endif
 
     auto& bgd = group_descriptor(group_index);
@@ -1440,9 +1432,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     ASSERT(parent_id.fsid() == fsid());
     ASSERT(is_directory(mode));
 
-    // NOTE: When creating a new directory, make the size 1 block.
-    //       There's probably a better strategy here, but this works for now.
-    auto inode_or_error = create_inode(parent_id, name, mode, block_size(), 0, uid, gid);
+    auto inode_or_error = create_inode(parent_id, name, mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
 
@@ -1472,10 +1462,9 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
-    ASSERT(size >= 0);
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
     ASSERT(parent_inode);
@@ -1490,21 +1479,12 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     dbgln("Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode->index());
 #endif
 
-    size_t needed_blocks = ceil_div(static_cast<size_t>(size), block_size());
-    if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
-        dbgln("Ext2FS: create_inode: not enough free blocks");
-        return ENOSPC;
-    }
-
     // NOTE: This doesn't commit the inode allocation just yet!
-    auto inode_id = find_a_free_inode(0, size);
+    auto inode_id = find_a_free_inode();
     if (!inode_id) {
         klog() << "Ext2FS: create_inode: allocate_inode failed";
         return ENOSPC;
     }
-
-    auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
-    ASSERT(blocks.size() == needed_blocks);
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
     bool success = set_inode_allocation_state(inode_id, true);
@@ -1517,7 +1497,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     e2inode.i_mode = mode;
     e2inode.i_uid = uid;
     e2inode.i_gid = gid;
-    e2inode.i_size = size;
+    e2inode.i_size = 0;
     e2inode.i_atime = now.tv_sec;
     e2inode.i_ctime = now.tv_sec;
     e2inode.i_mtime = now.tv_sec;
@@ -1531,10 +1511,6 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     else if (is_block_device(mode))
         e2inode.i_block[1] = dev;
 
-    auto result = write_block_list_for_inode(inode_id, e2inode, blocks);
-    if (result.is_error())
-        return result;
-
 #if EXT2_DEBUG
     dbgln("Ext2FS: writing initial metadata for inode {}", inode_id);
 #endif
@@ -1546,10 +1522,8 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     m_inode_cache.remove(inode_id);
 
     auto inode = get_inode({ fsid(), inode_id });
-    // If we've already computed a block list, no sense in throwing it away.
-    static_cast<Ext2FSInode&>(*inode).m_block_list = move(blocks);
 
-    result = parent_inode->add_child(*inode, name, mode);
+    auto result = parent_inode->add_child(*inode, name, mode);
     if (result.is_error())
         return result;
 
