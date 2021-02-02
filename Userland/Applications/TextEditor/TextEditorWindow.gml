@@ -84,6 +84,5 @@
 
     @GUI::StatusBar {
         name: "statusbar"
-        label_count: 3
     }
 }

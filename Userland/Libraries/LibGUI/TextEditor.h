@@ -150,8 +150,6 @@ public:
     Function<void()> on_down_pressed;
     Function<void()> on_pageup_pressed;
     Function<void()> on_pagedown_pressed;
-    Function<void()> on_vim_statusbar_messages_changed;
-    Function<void()> on_editing_engine_changed;
 
     Action& undo_action() { return *m_undo_action; }
     Action& redo_action() { return *m_redo_action; }
@@ -196,9 +194,6 @@ public:
     TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
 
     void delete_text_range(TextRange);
-
-    String vim_mode_statusbar_message() const { return m_vim_mode_statusbar_message; }
-    String vim_previous_keys_statusbar_message() const { return m_vim_previous_keys_statusbar_message; }
 
 protected:
     explicit TextEditor(Type = Type::MultiLine);
@@ -356,9 +351,6 @@ private:
     Gfx::IntPoint m_last_mousemove_position;
 
     RefPtr<Gfx::Bitmap> m_icon;
-
-    String m_vim_mode_statusbar_message {};
-    String m_vim_previous_keys_statusbar_message {};
 };
 
 }
