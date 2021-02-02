@@ -864,7 +864,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm2 = stream.read32();
         break;
     default:
-        ASSERT_NOT_REACHED();
+        ASSERT(imm2_bytes == 0);
+        break;
     }
 
     switch (imm1_bytes) {
@@ -878,7 +879,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm1 = stream.read32();
         break;
     default:
-        ASSERT_NOT_REACHED();
+        ASSERT(imm1_bytes == 0);
+        break;
     }
 
     m_extra_bytes = prefix_bytes + imm1_bytes + imm2_bytes;
