@@ -1364,6 +1364,10 @@ HistoryEvent::HistoryEvent(Position position, HistorySelector selector)
     : Node(move(position))
     , m_selector(move(selector))
 {
+    if (m_selector.word_selector_range.start.syntax_error_node)
+        set_is_syntax_error(*m_selector.word_selector_range.start.syntax_error_node);
+    else if (m_selector.word_selector_range.end.has_value() && m_selector.word_selector_range.end->syntax_error_node)
+        set_is_syntax_error(*m_selector.word_selector_range.end->syntax_error_node);
 }
 
 HistoryEvent::~HistoryEvent()
