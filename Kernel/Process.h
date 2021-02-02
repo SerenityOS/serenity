@@ -266,6 +266,7 @@ public:
     int sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
+    int sys$msyscall(void*);
     int sys$purge(int mode);
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(Userspace<const Syscall::SC_poll_params*>);
@@ -510,6 +511,8 @@ public:
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
+    bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -647,6 +650,8 @@ private:
     mutable SpinLock<u32> m_lock;
 
     RefPtr<Timer> m_alarm_timer;
+
+    bool m_enforces_syscall_regions { false };
 
     bool m_has_promises { false };
     u32 m_promises { 0 };
