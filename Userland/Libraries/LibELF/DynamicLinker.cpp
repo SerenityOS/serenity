@@ -31,6 +31,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <AK/ScopeGuard.h>
+#include <Kernel/API/Syscall.h>
 #include <LibC/mman.h>
 #include <LibC/stdio.h>
 #include <LibC/sys/internals.h>
@@ -214,6 +215,14 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
 
     auto object = loader->load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
     ASSERT(object);
+
+
+    if (name.is_one_of("libc.so", "libpthread.so")) {
+        if (syscall(SC_msyscall, object->base_address().as_ptr())) {
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     if (name == "libc.so") {
         initialize_libc(*object);
     }
@@ -263,7 +272,13 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     if (g_do_breakpoint_trap_before_entry) {
         asm("int3");
     }
-    int rc = main_function(argc, argv, envp);
+
+    int rc = syscall(SC_msyscall, nullptr);
+    if (rc < 0) {
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = main_function(argc, argv, envp);
     dbgln<DYNAMIC_LOAD_DEBUG>("rc: {}", rc);
     if (g_libc_exit != nullptr) {
         g_libc_exit(rc);
