@@ -89,6 +89,8 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             builder.append('X');
         if (object.get("shared").to_bool())
             builder.append('S');
+        if (object.get("syscall").to_bool())
+            builder.append('C');
         if (object.get("stack").to_bool())
             builder.append('T');
         return builder.to_string();
