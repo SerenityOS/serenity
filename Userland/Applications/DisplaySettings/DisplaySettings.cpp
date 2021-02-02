@@ -272,10 +272,41 @@ void DisplaySettingsWidget::load_current_settings()
 
 void DisplaySettingsWidget::send_settings_to_window_server()
 {
+    // Store the current screen resolution and scale factor in case the user wants to revert to it.
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    Gfx::IntSize current_resolution;
+    current_resolution.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
+    current_resolution.set_height(ws_config->read_num_entry("Screen", "Height", 768));
+    int current_scale_factor = ws_config->read_num_entry("Screen", "ScaleFactor", 1);
+    if (current_scale_factor != 1 && current_scale_factor != 2) {
+        dbgln("unexpected ScaleFactor {}, setting to 1", current_scale_factor);
+        current_scale_factor = 1;
+    }
+
     auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
     if (!result->success()) {
         GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
             "Unable to set resolution", GUI::MessageBox::Type::Error);
+    } else {
+        auto box = GUI::MessageBox::construct(window(), String::formatted("Do you want to keep the new settings? They will be reverted after 10 seconds."),
+            String::formatted("New screen resolution: {}x{} @ {}x", m_monitor_widget->desktop_resolution().width(), m_monitor_widget->desktop_resolution().height(),
+                m_monitor_widget->desktop_scale_factor()),
+            GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+        box->set_icon(window()->icon());
+
+        // If after 10 seconds the user doesn't close the message box, just close it.
+        auto timer = Core::Timer::construct(10000, [&] {
+            box->close();
+        });
+
+        // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
+        if (box->exec() != GUI::MessageBox::ExecYes) {
+            result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(current_resolution, current_scale_factor);
+            if (!result->success()) {
+                GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
+                    "Unable to set resolution", GUI::MessageBox::Type::Error);
+            }
+        }
     }
 
     if (!m_monitor_widget->wallpaper().is_empty()) {
