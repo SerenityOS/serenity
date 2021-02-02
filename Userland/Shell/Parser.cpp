@@ -1377,9 +1377,16 @@ RefPtr<AST::Node> Parser::parse_history_designator()
     selector.event.kind = AST::HistorySelector::EventKind::StartingStringLookup;
     selector.event.text_position = { m_offset, m_offset, m_line, m_line };
     selector.word_selector_range = {
-        { AST::HistorySelector::WordSelectorKind::Index, 0, { m_offset, m_offset, m_line, m_line } },
         AST::HistorySelector::WordSelector {
-            AST::HistorySelector::WordSelectorKind::Last, 0, { m_offset, m_offset, m_line, m_line } },
+            AST::HistorySelector::WordSelectorKind::Index,
+            0,
+            { m_offset, m_offset, m_line, m_line },
+            nullptr },
+        AST::HistorySelector::WordSelector {
+            AST::HistorySelector::WordSelectorKind::Last,
+            0,
+            { m_offset, m_offset, m_line, m_line },
+            nullptr }
     };
 
     switch (peek()) {
@@ -1433,10 +1440,19 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         if (isdigit(c)) {
             auto num = consume_while(is_digit);
             auto value = num.to_uint();
+            if (!value.has_value()) {
+                return AST::HistorySelector::WordSelector {
+                    AST::HistorySelector::WordSelectorKind::Index,
+                    0,
+                    { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+                    create<AST::SyntaxError>("Word selector value invalid or out of range")
+                };
+            }
             return AST::HistorySelector::WordSelector {
                 AST::HistorySelector::WordSelectorKind::Index,
                 value.value(),
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+                nullptr
             };
         }
         if (c == '^') {
@@ -1444,7 +1460,8 @@ RefPtr<AST::Node> Parser::parse_history_designator()
             return AST::HistorySelector::WordSelector {
                 AST::HistorySelector::WordSelectorKind::Index,
                 0,
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+                nullptr
             };
         }
         if (c == '$') {
@@ -1452,7 +1469,8 @@ RefPtr<AST::Node> Parser::parse_history_designator()
             return AST::HistorySelector::WordSelector {
                 AST::HistorySelector::WordSelectorKind::Last,
                 0,
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }
+                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+                nullptr
             };
         }
         return {};
