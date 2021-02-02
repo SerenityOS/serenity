@@ -30,48 +30,20 @@
 
 namespace GUI {
 
-enum VimMode {
-    Normal,
-    Insert,
-    Visual
-};
-
 class VimEditingEngine final : public EditingEngine {
 
 public:
-    VimEditingEngine();
-
     virtual CursorWidth cursor_width() const override;
 
     virtual bool on_key(const KeyEvent& event) override;
 
-    class PreviousKey {
-    public:
-        PreviousKey() = default;
-        PreviousKey(const KeyEvent& event)
-            : key(event.key())
-            , code_point(event.code_point())
-        {
-        }
-
-        bool operator==(const KeyCode& key) const
-        {
-            return this->key == key;
-        }
-
-        bool operator==(const u32& code_point) const
-        {
-            return this->code_point == code_point;
-        }
-
-        KeyCode key {};
-        u32 code_point {};
+private:
+    enum VimMode {
+        Normal,
+        Insert,
+        Visual
     };
 
-    Function<void(VimMode)> on_mode_change;
-    Function<void(const PreviousKey&, bool has_previous_key)> on_previous_keys_change;
-
-private:
     enum YankType {
         Line,
         Selection
@@ -89,26 +61,7 @@ private:
     void update_selection_on_cursor_move();
     void clear_visual_mode_data();
 
-    // FIXME Support multiple previous keys, this is a temporary measure.
-    PreviousKey m_previous_key {};
-    bool has_previous_key { false };
-
-    void set_previous_key(PreviousKey event)
-    {
-        m_previous_key = event;
-        has_previous_key = true;
-        if (on_previous_keys_change)
-            on_previous_keys_change(m_previous_key, has_previous_key);
-    }
-
-    void clear_previous_key()
-    {
-        m_previous_key = {};
-        has_previous_key = false;
-        if (on_previous_keys_change)
-            on_previous_keys_change(m_previous_key, has_previous_key);
-    }
-
+    KeyCode m_previous_key {};
     void switch_to_normal_mode();
     void switch_to_insert_mode();
     void switch_to_visual_mode();

@@ -91,9 +91,6 @@ private:
     RefPtr<GUI::Action> m_html_preview_action;
 
     RefPtr<GUI::StatusBar> m_statusbar;
-    const int m_cursor_position_statusbar_index = 0;
-    const int m_vim_mode_statusbar_index = 1;
-    const int m_vim_previous_keys_statusbar_index = 2;
 
     RefPtr<GUI::TextBox> m_find_textbox;
     RefPtr<GUI::TextBox> m_replace_textbox;

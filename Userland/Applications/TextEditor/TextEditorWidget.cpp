@@ -39,13 +39,11 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
-#include <LibGUI/EditingEngine.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
@@ -59,7 +57,6 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <string.h>
@@ -303,21 +300,6 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
     m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
-
-    m_statusbar->label(m_vim_mode_statusbar_index)->set_visible(m_editor->editing_engine()->type() == GUI::EditingEngineType::Vim);
-    m_statusbar->label(m_vim_mode_statusbar_index)->set_font(Gfx::FontDatabase::default_bold_font());
-
-    m_statusbar->label(m_vim_previous_keys_statusbar_index)->set_visible(m_editor->editing_engine()->type() == GUI::EditingEngineType::Vim);
-
-    m_editor->on_vim_statusbar_messages_changed = [this] {
-        m_statusbar->set_text(m_vim_mode_statusbar_index, m_editor->vim_mode_statusbar_message());
-        m_statusbar->set_text(m_vim_previous_keys_statusbar_index, m_editor->vim_previous_keys_statusbar_message());
-    };
-
-    m_editor->on_editing_engine_changed = [this]() {
-        m_statusbar->label(m_vim_mode_statusbar_index)->set_visible(m_editor->editing_engine()->type() == GUI::EditingEngineType::Vim);
-        m_statusbar->label(m_vim_previous_keys_statusbar_index)->set_visible(m_editor->editing_engine()->type() == GUI::EditingEngineType::Vim);
-    };
 
     m_editor->on_cursor_change = [this] { update_statusbar_cursor_position(); };
 
@@ -684,5 +666,5 @@ void TextEditorWidget::update_statusbar_cursor_position()
 {
     StringBuilder builder;
     builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
-    m_statusbar->set_text(m_cursor_position_statusbar_index, builder.to_string());
+    m_statusbar->set_text(builder.to_string());
 }
