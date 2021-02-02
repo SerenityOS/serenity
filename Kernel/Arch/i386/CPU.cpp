@@ -1161,9 +1161,10 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
 
     auto walk_stack = [&](FlatPtr stack_ptr)
     {
+        static constexpr size_t max_stack_frames = 4096;
         stack_trace.append(eip);
         size_t count = 1;
-        while (stack_ptr) {
+        while (stack_ptr && stack_trace.size() < max_stack_frames) {
             FlatPtr retaddr;
 
             count++;
