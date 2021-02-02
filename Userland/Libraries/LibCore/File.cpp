@@ -26,6 +26,7 @@
 
 #ifdef __serenity__
 #    include <Kernel/API/Syscall.h>
+#    include <serenity.h>
 #endif
 #include <AK/ScopeGuard.h>
 #include <LibCore/File.h>
@@ -172,15 +173,11 @@ String File::read_link(const StringView& link_path)
 {
     // First, try using a 64-byte buffer, that ought to be enough for anybody.
     char small_buffer[64];
-    Syscall::SC_readlink_params small_params {
-        { link_path.characters_without_null_termination(), link_path.length() },
-        { small_buffer, sizeof(small_buffer) }
-    };
-    int rc = syscall(SC_readlink, &small_params);
-    if (rc < 0) {
-        errno = -rc;
+
+    int rc = serenity_readlink(link_path.characters_without_null_termination(), link_path.length(), small_buffer, sizeof(small_buffer));
+    if (rc < 0)
         return {};
-    }
+
     size_t size = rc;
     // If the call was successful, the syscall (unlike the LibC wrapper)
     // returns the full size of the link. Let's see if our small buffer
@@ -190,15 +187,11 @@ String File::read_link(const StringView& link_path)
     // Nope, but at least now we know the right size.
     char* large_buffer_ptr;
     auto large_buffer = StringImpl::create_uninitialized(size, large_buffer_ptr);
-    Syscall::SC_readlink_params large_params {
-        { link_path.characters_without_null_termination(), link_path.length() },
-        { large_buffer_ptr, (size_t)size }
-    };
-    rc = syscall(SC_readlink, &large_params);
-    if (rc < 0) {
-        errno = -rc;
+
+    rc = serenity_readlink(link_path.characters_without_null_termination(), link_path.length(), large_buffer_ptr, size);
+    if (rc < 0)
         return {};
-    }
+
     size_t new_size = rc;
     if (new_size == size)
         return { *large_buffer };
