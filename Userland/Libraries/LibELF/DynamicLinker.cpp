@@ -217,7 +217,7 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
     ASSERT(object);
 
 
-    if (name.is_one_of("libc.so", "libpthread.so")) {
+    if (name.is_one_of("libc.so", "libpthread.so", "libkeyboard.so", "/bin/UserspaceEmulator")) {
         if (syscall(SC_msyscall, object->base_address().as_ptr())) {
             ASSERT_NOT_REACHED();
         }
