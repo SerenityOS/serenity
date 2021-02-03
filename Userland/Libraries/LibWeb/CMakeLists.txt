@@ -3,6 +3,7 @@ set(SOURCES
     Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
     Bindings/LocationObject.cpp
+    Bindings/MainThreadVM.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/ScriptExecutionContext.cpp

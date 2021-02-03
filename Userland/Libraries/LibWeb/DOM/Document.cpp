@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Comment.h>
@@ -534,21 +534,10 @@ Color Document::visited_link_color() const
     return page()->palette().visited_link();
 }
 
-JS::VM& main_thread_vm();
-JS::VM& main_thread_vm()
-{
-    static RefPtr<JS::VM> vm;
-    if (!vm) {
-        vm = JS::VM::create();
-        vm->set_should_log_exceptions(true);
-    }
-    return *vm;
-}
-
 JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter)
-        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(main_thread_vm(), *m_window);
+        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(Bindings::main_thread_vm(), *m_window);
     return *m_interpreter;
 }
 
