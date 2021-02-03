@@ -25,11 +25,17 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web::HTML {
 
@@ -136,6 +142,19 @@ bool HTMLElement::cannot_navigate() const
 {
     // FIXME: Return true if element's node document is not fully active
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
+}
+
+void HTMLElement::parse_attribute(const FlyString& name, const String& value)
+{
+    Element::parse_attribute(name, value);
+
+#undef __ENUMERATE
+#define __ENUMERATE(attribute_name, event_name)                          \
+    if (name == HTML::AttributeNames::attribute_name) {                  \
+        set_event_handler_attribute(event_name, EventHandler { value }); \
+    }
+    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
 }
 
 }

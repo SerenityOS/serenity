@@ -904,6 +904,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/NavigationTiming/PerformanceTiming.h>
 #include <LibWeb/Origin.h>
@@ -1097,6 +1098,18 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
     if (vm.exception())
         @return_statement@
 )~~~");
+        } else if (parameter.type.name == "EventHandler") {
+            // x.onfoo = function() { ... }
+            scoped_generator.append(R"~~~(
+    HTML::EventHandler @cpp_name@;
+    if (@js_name@@js_suffix@.is_function()) {
+        @cpp_name@.callback = JS::make_handle(&@js_name@@js_suffix@.as_function());
+    } else if (@js_name@@js_suffix@.is_string()) {
+        @cpp_name@.string = @js_name@@js_suffix@.as_string().string();
+    } else {
+        @return_statement@
+    }
+)~~~");
         } else {
             dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
             ASSERT_NOT_REACHED();
@@ -1173,6 +1186,10 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         } else if (return_type.name == "Uint8ClampedArray") {
             scoped_generator.append(R"~~~(
     return retval;
+)~~~");
+        } else if (return_type.name == "EventHandler") {
+            scoped_generator.append(R"~~~(
+    return retval.callback.cell();
 )~~~");
         } else {
             scoped_generator.append(R"~~~(

@@ -55,6 +55,7 @@ enum class QuirksMode {
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
+    , public HTML::GlobalEventHandlers
     , public Bindings::ScriptExecutionContext {
 public:
     using WrapperType = Bindings::DocumentWrapper;
@@ -233,7 +234,11 @@ public:
 private:
     explicit Document(const URL&);
 
+    // ^DOM::Node
     virtual RefPtr<Layout::Node> create_layout_node() override;
+
+    // ^HTML::GlobalEventHandlers
+    virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
 
     void tear_down_layout_tree();
 

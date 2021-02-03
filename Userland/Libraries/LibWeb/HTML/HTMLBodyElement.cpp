@@ -27,6 +27,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 
 namespace Web::HTML {
@@ -76,6 +77,12 @@ void HTMLBodyElement::parse_attribute(const FlyString& name, const String& value
     } else if (name.equals_ignoring_case("background")) {
         m_background_style_value = CSS::ImageStyleValue::create(document().complete_url(value), const_cast<DOM::Document&>(document()));
     }
+}
+
+DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target()
+{
+    // NOTE: This is a little weird, but IIUC document.body.onload actually refers to window.onload
+    return document().window();
 }
 
 }
