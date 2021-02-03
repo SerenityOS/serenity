@@ -117,12 +117,6 @@ static void load_kernel_sybols_from_data(const KBuffer& buffer)
 NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksyms)
 {
     SmapDisabler disabler;
-#if 0
-    if (!current) {
-        //hang();
-        return;
-    }
-#endif
     if (use_ksyms && !g_kernel_symbols_available) {
         Processor::halt();
         return;
