@@ -380,7 +380,7 @@ String JSONObject::quote_json_string(String string)
             break;
         default:
             if (ch < 0x20) {
-                builder.append("\\u%#08x", ch);
+                builder.appendff("\\u{:04x}", ch);
             } else {
                 builder.append(ch);
             }
