@@ -48,6 +48,29 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
     return append_with_eip_and_ebp(eip, ebp, type, arg1, arg2);
 }
 
+static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr ebp, FlatPtr eip)
+{
+    Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
+    backtrace.append(eip);
+    FlatPtr stack_ptr_copy;
+    FlatPtr stack_ptr = (FlatPtr)ebp;
+    // FIXME: Figure out how to remove this SmapDisabler without breaking profile stacks.
+    SmapDisabler disabler;
+    while (stack_ptr) {
+        void* fault_at;
+        if (!safe_memcpy(&stack_ptr_copy, (void*)stack_ptr, sizeof(FlatPtr), fault_at))
+            break;
+        FlatPtr retaddr;
+        if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
+            break;
+        backtrace.append(retaddr);
+        if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
+            break;
+        stack_ptr = stack_ptr_copy;
+    }
+    return backtrace;
+}
+
 KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2)
 {
     if (count() >= capacity())
@@ -70,12 +93,7 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
         return EINVAL;
     }
 
-    auto current_thread = Thread::current();
-    Vector<FlatPtr> backtrace;
-    {
-        SmapDisabler disabler;
-        backtrace = current_thread->raw_backtrace(ebp, eip);
-    }
+    auto backtrace = raw_backtrace(ebp, eip);
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 

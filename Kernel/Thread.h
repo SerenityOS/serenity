@@ -127,7 +127,6 @@ public:
     const Process& process() const { return m_process; }
 
     String backtrace();
-    Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
     String name() const
     {
