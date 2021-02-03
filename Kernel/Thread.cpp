@@ -1017,30 +1017,6 @@ String Thread::backtrace_impl()
     return builder.to_string();
 }
 
-Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
-{
-    InterruptDisabler disabler;
-    auto& process = const_cast<Process&>(this->process());
-    ProcessPagingScope paging_scope(process);
-    Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
-    backtrace.append(eip);
-    FlatPtr stack_ptr_copy;
-    FlatPtr stack_ptr = (FlatPtr)ebp;
-    while (stack_ptr) {
-        void* fault_at;
-        if (!safe_memcpy(&stack_ptr_copy, (void*)stack_ptr, sizeof(FlatPtr), fault_at))
-            break;
-        FlatPtr retaddr;
-        if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
-            break;
-        backtrace.append(retaddr);
-        if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
-            break;
-        stack_ptr = stack_ptr_copy;
-    }
-    return backtrace;
-}
-
 size_t Thread::thread_specific_region_alignment() const
 {
     return max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
