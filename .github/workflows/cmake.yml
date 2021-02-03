@@ -83,7 +83,6 @@ jobs:
         key: ${{ runner.os }}-toolchain-i686-${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}
     - name: Restore or regenerate Toolchain
       run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
-
     # TODO: ccache
     # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
     # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
@@ -97,12 +96,6 @@ jobs:
         cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
 
     # === ACTUALLY BUILD AND TEST ===
-
-    - name: Initialize CodeQL Static Analysis for C++
-      uses: github/codeql-action/init@v1
-      with:
-        languages: cpp
-        config-file: ./.github/codeql/config.yml
 
     - name: Build Serenity and Tests
       working-directory: ${{ github.workspace }}/Build
@@ -120,10 +113,6 @@ jobs:
     - name: Run LibCompress tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
       run: ./test-compress
-
-     # Run analysis last, so contributors get lint/test feedback ASAP.
-    - name: Perform post build CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
 
     # === NOTIFICATIONS ===
 
