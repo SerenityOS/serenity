@@ -286,25 +286,38 @@ void DynamicLoader::load_program_headers()
 
     ASSERT(!text_region.value().is_writable());
 
-    // First, we map the text *and* data segments, in order to allocate enough VM
-    // to hold both contiguously in the address space.
+    // First, we make a dummy reservation mapping, in order to allocate enough VM
+    // to hold both text+data contiguously in the address space.
 
     Checked<size_t> total_mapping_size;
     total_mapping_size = text_region.value().required_load_size();
     total_mapping_size += data_region.value().required_load_size();
     ASSERT(!total_mapping_size.has_overflow());
 
+    auto* reservation = mmap(requested_load_address, total_mapping_size.value(), PROT_NONE, MAP_ANON | MAP_PRIVATE | MAP_NORESERVE, 0, 0);
+    if (reservation == MAP_FAILED) {
+        perror("mmap reservation");
+        ASSERT_NOT_REACHED();
+    }
+
+    // Then we unmap the reservation.
+    if (munmap(reservation, total_mapping_size.value()) < 0) {
+        perror("munmap reservation");
+        ASSERT_NOT_REACHED();
+    }
+
+    // Now we can map the text segment at the reserved address.
     auto* text_segment_begin = (u8*)mmap_with_name(
-        requested_load_address,
-        total_mapping_size.value(),
+        reservation,
+        text_region.value().required_load_size(),
         PROT_READ,
         text_mmap_flags,
         m_image_fd,
         text_region.value().offset(),
         String::formatted("{}: .text", m_filename).characters());
 
-    if (MAP_FAILED == text_segment_begin) {
-        perror("mmap text / initial segment");
+    if (text_segment_begin == MAP_FAILED) {
+        perror("mmap text");
         ASSERT_NOT_REACHED();
     }
 
@@ -312,19 +325,13 @@ void DynamicLoader::load_program_headers()
     m_text_segment_size = text_region.value().required_load_size();
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
-    // Then, we unmap the data segment part of the above combined VM allocation.
-    auto* data_segment_address = (u8*)text_segment_begin + text_region.value().required_load_size();
-    if (munmap(data_segment_address, data_region.value().required_load_size()) < 0) {
-        perror("munmap");
-        ASSERT_NOT_REACHED();
-    }
-
     if (m_elf_image.is_dynamic())
         m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
 
-    // Finally, we remap the data segment, this time privately.
+    // Finally, we make an anonymous mapping for the data segment. Contents are then copied from the file.
+    auto* data_segment_address = (u8*)text_segment_begin + text_region.value().required_load_size();
     auto* data_segment = (u8*)mmap_with_name(
         data_segment_address,
         data_region.value().required_load_size(),
@@ -335,7 +342,7 @@ void DynamicLoader::load_program_headers()
         String::formatted("{}: .data", m_filename).characters());
 
     if (MAP_FAILED == data_segment) {
-        perror("mmap data segment");
+        perror("mmap data");
         ASSERT_NOT_REACHED();
     }
 
