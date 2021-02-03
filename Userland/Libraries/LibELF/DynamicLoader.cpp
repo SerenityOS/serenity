@@ -277,12 +277,11 @@ void DynamicLoader::load_program_headers()
     // Process regions in order: .text, .data, .tls
     void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : text_region.value().desired_load_address().as_ptr();
 
-    int text_mmap_flags = MAP_SHARED;
-
+    int reservation_mmap_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
     if (m_elf_image.is_dynamic())
-        text_mmap_flags |= MAP_RANDOMIZED;
+        reservation_mmap_flags |= MAP_RANDOMIZED;
     else
-        text_mmap_flags |= MAP_FIXED;
+        reservation_mmap_flags |= MAP_FIXED;
 
     ASSERT(!text_region.value().is_writable());
 
@@ -294,7 +293,7 @@ void DynamicLoader::load_program_headers()
     total_mapping_size += data_region.value().required_load_size();
     ASSERT(!total_mapping_size.has_overflow());
 
-    auto* reservation = mmap(requested_load_address, total_mapping_size.value(), PROT_NONE, MAP_ANON | MAP_PRIVATE | MAP_NORESERVE, 0, 0);
+    auto* reservation = mmap(requested_load_address, total_mapping_size.value(), PROT_NONE, reservation_mmap_flags, 0, 0);
     if (reservation == MAP_FAILED) {
         perror("mmap reservation");
         ASSERT_NOT_REACHED();
@@ -311,7 +310,7 @@ void DynamicLoader::load_program_headers()
         reservation,
         text_region.value().required_load_size(),
         PROT_READ,
-        text_mmap_flags,
+        MAP_FILE | MAP_SHARED | MAP_FIXED,
         m_image_fd,
         text_region.value().offset(),
         String::formatted("{}: .text", m_filename).characters());
