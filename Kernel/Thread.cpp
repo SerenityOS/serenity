@@ -1003,7 +1003,7 @@ String Thread::backtrace_impl()
     ProcessPagingScope paging_scope(process);
     for (auto& frame : stack_trace) {
         if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
-            recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });
+            recognized_symbols.append({ frame });
         } else {
             recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });
         }
