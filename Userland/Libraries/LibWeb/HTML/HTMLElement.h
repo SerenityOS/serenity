@@ -27,10 +27,14 @@
 #pragma once
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web::HTML {
 
-class HTMLElement : public DOM::Element {
+class HTMLElement
+    : public DOM::Element
+    , public HTML::GlobalEventHandlers {
 public:
     using WrapperType = Bindings::HTMLElementWrapper;
 
@@ -48,7 +52,13 @@ public:
 
     bool cannot_navigate() const;
 
+protected:
+    virtual void parse_attribute(const FlyString& name, const String& value) override;
+
 private:
+    // ^HTML::GlobalEventHandlers
+    virtual EventTarget& global_event_handlers_to_event_target() override { return *this; }
+
     enum class ContentEditableState {
         True,
         False,
