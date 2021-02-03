@@ -48,6 +48,9 @@ InodeFile::~InodeFile()
 
 KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, UserOrKernelBuffer& buffer, size_t count)
 {
+    if (Checked<off_t>::addition_would_overflow(offset, count))
+        return EOVERFLOW;
+
     ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
     if (nread > 0) {
         Thread::current()->did_file_read(nread);
@@ -60,6 +63,9 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, U
 
 KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, const UserOrKernelBuffer& data, size_t count)
 {
+    if (Checked<off_t>::addition_would_overflow(offset, count))
+        return EOVERFLOW;
+
     ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
     if (nwritten > 0) {
         m_inode->set_mtime(kgettimeofday().tv_sec);
