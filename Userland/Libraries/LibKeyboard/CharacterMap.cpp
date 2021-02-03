@@ -29,6 +29,10 @@
 #include <Kernel/API/Syscall.h>
 #include <LibKeyboard/CharacterMapFile.h>
 
+#ifndef KERNEL
+#    include <serenity.h>
+#endif
+
 namespace Keyboard {
 
 #ifndef KERNEL
@@ -54,8 +58,7 @@ CharacterMap::CharacterMap(const String& map_name, const CharacterMapData& map_d
 
 int CharacterMap::set_system_map()
 {
-    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, m_character_map_data.shift_altgr_map, { m_character_map_name.characters(), m_character_map_name.length() } };
-    return syscall(SC_setkeymap, &params);
+    return setkeymap(m_character_map_name.characters(), m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, m_character_map_data.shift_altgr_map);
 }
 
 Result<CharacterMap, OSError> CharacterMap::fetch_system_map()
@@ -63,16 +66,8 @@ Result<CharacterMap, OSError> CharacterMap::fetch_system_map()
     CharacterMapData map_data;
     char keymap_name[50 + 1] = { 0 };
 
-    Syscall::SC_getkeymap_params params {
-        map_data.map, map_data.shift_map,
-        map_data.alt_map,
-        map_data.altgr_map,
-        map_data.shift_altgr_map,
-        { keymap_name, sizeof(keymap_name) }
-    };
-    int rc = syscall(SC_getkeymap, &params);
-    if (rc < 0) {
-        return OSError(-rc);
+    if (getkeymap(keymap_name, sizeof(keymap_name), map_data.map, map_data.shift_map, map_data.alt_map, map_data.altgr_map, map_data.shift_altgr_map) < 0) {
+        return OSError(errno);
     }
 
     return CharacterMap { keymap_name, map_data };
