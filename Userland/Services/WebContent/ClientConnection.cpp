@@ -30,6 +30,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
@@ -38,10 +39,6 @@
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <pthread.h>
-
-namespace Web::DOM {
-extern JS::VM& main_thread_vm();
-}
 
 namespace WebContent {
 
@@ -197,7 +194,7 @@ void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& me
     }
 
     if (message.request() == "collect-garbage") {
-        ::Web::DOM::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+        Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
     }
 
     if (message.request() == "set-line-box-borders") {
