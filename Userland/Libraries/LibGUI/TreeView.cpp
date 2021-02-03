@@ -418,19 +418,7 @@ void TreeView::did_update_selection()
     auto index = selection().first();
     if (!index.is_valid())
         return;
-#if 0
-    bool opened_any = false;
-    for (auto current = index; current.is_valid(); current = current.parent()) {
-        auto& metadata_for_ancestor = ensure_metadata_for_index(current);
-        if (!metadata_for_ancestor.open) {
-            metadata_for_ancestor.open = true;
-            opened_any = true;
-        }
-    }
-    if (opened_any)
-        update_content_size();
-    update();
-#endif
+
     if (activates_on_selection())
         activate(index);
 }
