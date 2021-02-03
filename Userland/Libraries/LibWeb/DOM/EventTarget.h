@@ -61,6 +61,7 @@ public:
         NonnullRefPtr<EventListener> listener;
     };
 
+    Vector<EventListenerRegistration>& listeners() { return m_listeners; }
     const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
 
     Function<void(const Event&)> activation_behaviour;

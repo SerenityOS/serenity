@@ -62,6 +62,7 @@ enum class QuirksMode;
 
 namespace Web::HTML {
 class CanvasRenderingContext2D;
+class EventHandler;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;

@@ -41,6 +41,9 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
 private:
+    // ^HTML::GlobalEventHandlers
+    virtual EventTarget& global_event_handlers_to_event_target() override;
+
     RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };
 

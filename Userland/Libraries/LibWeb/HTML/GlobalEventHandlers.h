@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+#include <LibWeb/Forward.h>
+
 #define ENUMERATE_GLOBAL_EVENT_HANDLERS(E)                    \
     E(onabort, HTML::EventNames::abort)                       \
     E(onauxclick, "auxclick")                                 \
@@ -93,3 +96,25 @@
     E(onwebkitanimationstart, "webkitanimationstart")         \
     E(onwebkittransitionend, "webkittransitionend")           \
     E(onwheel, "wheel")
+
+namespace Web::HTML {
+
+class GlobalEventHandlers {
+public:
+    virtual ~GlobalEventHandlers();
+
+#undef __ENUMERATE
+#define __ENUMERATE(attribute_name, event_name)    \
+    void set_##attribute_name(HTML::EventHandler); \
+    HTML::EventHandler attribute_name();
+    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
+
+    void set_event_handler_attribute(const FlyString& name, HTML::EventHandler);
+    HTML::EventHandler get_event_handler_attribute(const FlyString& name);
+
+protected:
+    virtual DOM::EventTarget& global_event_handlers_to_event_target() = 0;
+};
+
+}
