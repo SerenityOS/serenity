@@ -106,6 +106,9 @@ int anon_create(size_t size, int options);
 
 int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size);
 
+int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_map, u32* alt_map, u32* altgr_map, u32* shift_altgr_map);
+int setkeymap(const char* name, const u32* map, u32* const shift_map, const u32* alt_map, const u32* altgr_map, const u32* shift_altgr_map);
+
 #ifdef __i386__
 ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t data1, uintptr_t data2, uintptr_t data3)
 {
