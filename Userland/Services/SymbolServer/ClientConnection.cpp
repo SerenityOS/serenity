@@ -25,6 +25,7 @@
  */
 
 #include <AK/MappedFile.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <SymbolServer/ClientConnection.h>
 #include <SymbolServer/SymbolClientEndpoint.h>
@@ -33,7 +34,7 @@ namespace SymbolServer {
 
 struct CachedELF {
     NonnullRefPtr<MappedFile> mapped_file;
-    ELF::Image elf;
+    Debug::DebugInfo debug_info;
 };
 
 static HashMap<String, OwnPtr<CachedELF>> s_cache;
@@ -69,13 +70,14 @@ OwnPtr<Messages::SymbolServer::SymbolicateResponse> ClientConnection::handle(con
             s_cache.set(path, {});
             return make<Messages::SymbolServer::SymbolicateResponse>(false, String {}, 0, String {}, 0);
         }
-        auto elf = ELF::Image(mapped_file.value()->bytes());
-        if (!elf.is_valid()) {
+        auto elf = make<ELF::Image>(mapped_file.value()->bytes());
+        if (!elf->is_valid()) {
             dbgln("ELF not valid: {}", path);
             s_cache.set(path, {});
             return make<Messages::SymbolServer::SymbolicateResponse>(false, String {}, 0, String {}, 0);
         }
-        auto cached_elf = make<CachedELF>(mapped_file.release_value(), move(elf));
+        Debug::DebugInfo debug_info(move(elf));
+        auto cached_elf = make<CachedELF>(mapped_file.release_value(), move(debug_info));
         s_cache.set(path, move(cached_elf));
     }
 
@@ -87,9 +89,16 @@ OwnPtr<Messages::SymbolServer::SymbolicateResponse> ClientConnection::handle(con
         return make<Messages::SymbolServer::SymbolicateResponse>(false, String {}, 0, String {}, 0);
 
     u32 offset = 0;
-    auto symbol = cached_elf->elf.symbolicate(message.address(), &offset);
+    auto symbol = cached_elf->debug_info.elf().symbolicate(message.address(), &offset);
+    auto source_position = cached_elf->debug_info.get_source_position(message.address());
+    String filename;
+    u32 line_number = 0;
+    if (source_position.has_value()) {
+        filename = source_position.value().file_path;
+        line_number = source_position.value().line_number;
+    }
 
-    return make<Messages::SymbolServer::SymbolicateResponse>(true, symbol, offset, String {}, 0);
+    return make<Messages::SymbolServer::SymbolicateResponse>(true, symbol, offset, filename, line_number);
 }
 
 }
