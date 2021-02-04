@@ -29,6 +29,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
+namespace LookupServer {
+
 class DNSAnswer {
 public:
     DNSAnswer(const String& name, u16 type, u16 class_code, u32 ttl, const String& record_data);
@@ -49,3 +51,5 @@ private:
     time_t m_expiration_time { 0 };
     String m_record_data;
 };
+
+}

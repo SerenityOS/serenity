@@ -37,6 +37,8 @@
 #define T_PTR 12
 #define T_MX 15
 
+namespace LookupServer {
+
 enum class ShouldRandomizeCase {
     No = 0,
     Yes
@@ -63,3 +65,5 @@ private:
     u16 m_id { 0 };
     Vector<DNSQuestion> m_questions;
 };
+
+}

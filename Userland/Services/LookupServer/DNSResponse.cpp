@@ -31,6 +31,8 @@
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
 
+namespace LookupServer {
+
 static String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
 class [[gnu::packed]] DNSRecordWithoutName {
@@ -150,4 +152,6 @@ String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t 
         offset += ch + 1;
     }
     return String::copy(buf);
+}
+
 }

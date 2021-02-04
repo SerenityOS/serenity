@@ -41,6 +41,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+namespace LookupServer {
+
 LookupServer::LookupServer()
 {
     auto config = Core::ConfigFile::get_for_system("LookupServer");
@@ -276,4 +278,6 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         m_lookup_cache.set(hostname, { request.questions()[0], move(cacheable_answers) });
     }
     return responses;
+}
+
 }

@@ -29,6 +29,8 @@
 #include <AK/Endian.h>
 #include <AK/Types.h>
 
+namespace LookupServer {
+
 class [[gnu::packed]] DNSPacket {
 public:
     DNSPacket()
@@ -113,3 +115,5 @@ private:
 };
 
 static_assert(sizeof(DNSPacket) == 12);
+
+}

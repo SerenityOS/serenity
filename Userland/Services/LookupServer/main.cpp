@@ -37,7 +37,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
 
     Core::EventLoop event_loop;
-    auto server = LookupServer::construct();
+    auto server = LookupServer::LookupServer::construct();
 
     if (pledge("stdio accept inet", nullptr) < 0) {
         perror("pledge");
