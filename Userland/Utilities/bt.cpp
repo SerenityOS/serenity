@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -67,7 +68,12 @@ int main(int argc, char** argv)
     // FIXME: Support multiple threads in the same process!
     auto symbols = SymbolClient::symbolicate_thread(pid, pid);
     for (auto& symbol : symbols) {
-        outln("{:p}  {}", symbol.address, symbol.name);
+        out("{:p}  ", symbol.address);
+        if (!symbol.name.is_empty())
+            out("{} ", symbol.name);
+        if (!symbol.filename.is_empty())
+            out("(\033[34;1m{}\033[0m:{})", LexicalPath(symbol.filename).basename(), symbol.line_number);
+        outln("");
     }
     return 0;
 }
