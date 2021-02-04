@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(SymbolServer)
-target_link_libraries(SymbolServer LibIPC)
+target_link_libraries(SymbolServer LibIPC LibDebug)
