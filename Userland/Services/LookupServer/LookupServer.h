@@ -30,6 +30,8 @@
 #include "DNSResponse.h"
 #include <LibCore/Object.h>
 
+namespace LookupServer {
+
 class DNSAnswer;
 
 class LookupServer final : public Core::Object {
@@ -53,3 +55,5 @@ private:
     HashMap<String, String> m_etc_hosts;
     HashMap<String, CachedLookup> m_lookup_cache;
 };
+
+}

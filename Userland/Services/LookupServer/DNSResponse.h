@@ -32,6 +32,8 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
+namespace LookupServer {
+
 class DNSResponse {
 public:
     static Optional<DNSResponse> from_raw_response(const u8*, size_t);
@@ -75,3 +77,5 @@ private:
     Vector<DNSQuestion> m_questions;
     Vector<DNSAnswer> m_answers;
 };
+
+}

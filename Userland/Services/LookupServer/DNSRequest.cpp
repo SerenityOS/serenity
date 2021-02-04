@@ -32,6 +32,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+namespace LookupServer {
+
 const u16 C_IN = 1;
 
 DNSRequest::DNSRequest()
@@ -93,4 +95,6 @@ ByteBuffer DNSRequest::to_byte_buffer() const
     }
 
     return stream.copy_into_contiguous_buffer();
+}
+
 }
