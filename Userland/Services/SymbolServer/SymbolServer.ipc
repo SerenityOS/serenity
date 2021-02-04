@@ -2,5 +2,5 @@ endpoint SymbolServer = 4541510
 {
     Greet() => ()
 
-    Symbolicate(String path, Vector<u32> addresses) => (bool success, Vector<String> symbols)
+    Symbolicate(String path, u32 address) => (bool success, String name, u32 offset, String filename, u32 line)
 }

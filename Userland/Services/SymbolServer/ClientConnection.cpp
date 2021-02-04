@@ -66,12 +66,12 @@ OwnPtr<Messages::SymbolServer::SymbolicateResponse> ClientConnection::handle(con
         auto mapped_file = MappedFile::map(path);
         if (mapped_file.is_error()) {
             dbgln("Failed to map {}: {}", path, mapped_file.error().string());
-            return make<Messages::SymbolServer::SymbolicateResponse>(false, Vector<String> {});
+            return make<Messages::SymbolServer::SymbolicateResponse>(false, String {}, 0, String {}, 0);
         }
         auto elf = ELF::Image(mapped_file.value()->bytes());
         if (!elf.is_valid()) {
             dbgln("ELF not valid: {}", path);
-            return make<Messages::SymbolServer::SymbolicateResponse>(false, Vector<String> {});
+            return make<Messages::SymbolServer::SymbolicateResponse>(false, String {}, 0, String {}, 0);
         }
         auto cached_elf = CachedELF { mapped_file.release_value(), move(elf) };
         s_cache.set(path, move(cached_elf));
@@ -81,16 +81,10 @@ OwnPtr<Messages::SymbolServer::SymbolicateResponse> ClientConnection::handle(con
     ASSERT(it != s_cache.end());
     auto& cached_elf = it->value;
 
-    Vector<String> symbols;
-    symbols.ensure_capacity(message.addresses().size());
+    u32 offset = 0;
+    auto symbol = cached_elf.elf.symbolicate(message.address(), &offset);
 
-    for (auto address : message.addresses()) {
-        u32 offset = 0;
-        auto symbol = cached_elf.elf.symbolicate(address, &offset);
-        symbols.append(move(symbol));
-    }
-
-    return make<Messages::SymbolServer::SymbolicateResponse>(true, move(symbols));
+    return make<Messages::SymbolServer::SymbolicateResponse>(true, symbol, offset, String {}, 0);
 }
 
 }
