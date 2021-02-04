@@ -11,4 +11,5 @@ window:x:13:anon,notify
 clipboard:x:14:anon,notify
 webcontent:x:15:anon
 image:x:16:anon,webcontent
+symbol:x:17:anon
 users:x:100:anon

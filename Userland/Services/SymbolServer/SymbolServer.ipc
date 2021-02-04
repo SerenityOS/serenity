@@ -1,0 +1,6 @@
+endpoint SymbolServer = 4541510
+{
+    Greet() => ()
+
+    Symbolicate(String path, Vector<u32> addresses) => (bool success, Vector<String> symbols)
+}
