@@ -34,11 +34,13 @@ namespace SymbolClient {
 
 struct Symbol {
     FlatPtr address { 0 };
-    String name;
+    String name {};
     u32 offset { 0 };
-    String filename;
+    String filename {};
     u32 line_number { 0 };
 };
+
+Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid);
 
 class Client
     : public IPC::ServerConnection<SymbolClientEndpoint, SymbolServerEndpoint>

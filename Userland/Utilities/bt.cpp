@@ -24,9 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LogStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -63,118 +60,14 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     pid_t pid = 0;
     args_parser.add_positional_argument(pid, "PID", "pid");
-
     args_parser.parse(argc, argv);
-
-    struct RegionWithSymbols {
-        FlatPtr base { 0 };
-        size_t size { 0 };
-        String path;
-        bool is_relative { true };
-    };
-
-    Vector<FlatPtr> stack;
-    Vector<RegionWithSymbols> regions;
-
-    regions.append(RegionWithSymbols {
-        .base = 0xc0000000,
-        .size = 0x3fffffff,
-        .path = "/boot/Kernel",
-        .is_relative = false });
-
-    {
-        // FIXME: Support multiple threads in the same process!
-        auto stack_path = String::formatted("/proc/{}/stacks/{}", pid, pid);
-        auto file_or_error = Core::File::open(stack_path, Core::IODevice::ReadOnly);
-        if (file_or_error.is_error()) {
-            warnln("Could not open {}: {}", stack_path, file_or_error.error());
-            return 1;
-        }
-
-        auto json = JsonValue::from_string(file_or_error.value()->read_all());
-        if (!json.has_value() || !json.value().is_array()) {
-            warnln("Invalid contents in {}", stack_path);
-            return 1;
-        }
-
-        stack.ensure_capacity(json.value().as_array().size());
-        for (auto& value : json.value().as_array().values()) {
-            stack.append(value.to_u32());
-        }
-    }
-
-    {
-        auto vm_path = String::formatted("/proc/{}/vm", pid);
-        auto file_or_error = Core::File::open(vm_path, Core::IODevice::ReadOnly);
-        if (file_or_error.is_error()) {
-            warnln("Could not open {}: {}", vm_path, file_or_error.error());
-            return 1;
-        }
-
-        auto json = JsonValue::from_string(file_or_error.value()->read_all());
-        if (!json.has_value() || !json.value().is_array()) {
-            warnln("Invalid contents in {}", vm_path);
-            return 1;
-        }
-
-        for (auto& region_value : json.value().as_array().values()) {
-            auto& region = region_value.as_object();
-            auto name = region.get("name").to_string();
-            auto address = region.get("address").to_u32();
-            auto size = region.get("size").to_u32();
-
-            String path;
-            if (name == "/usr/lib/Loader.so") {
-                path = name;
-            } else if (name.ends_with(": .text")) {
-                auto parts = name.split_view(':');
-                path = parts[0];
-                if (!path.starts_with('/'))
-                    path = String::formatted("/usr/lib/{}", path);
-            } else {
-                continue;
-            }
-
-            RegionWithSymbols r;
-            r.base = address;
-            r.size = size;
-            r.path = path;
-            regions.append(move(r));
-        }
-    }
 
     Core::EventLoop loop;
 
-    auto client = SymbolClient::Client::construct();
-
-    for (auto address : stack) {
-        const RegionWithSymbols* found_region = nullptr;
-        for (auto& region : regions) {
-            if (address >= region.base && address < (region.base + region.size)) {
-                found_region = &region;
-                break;
-            }
-        }
-
-        if (!found_region) {
-            outln("{:p}  ??", address);
-            continue;
-        }
-
-        Vector<FlatPtr> addresses;
-        if (found_region->is_relative)
-            addresses.append(address - found_region->base);
-        else
-            addresses.append(address);
-
-        auto symbols = client->symbolicate(found_region->path, addresses);
-        if (symbols.is_empty()) {
-            outln("{:p}  ??", address);
-            continue;
-        }
-
-        outln("{:p}  {}", address, symbols[0].name);
+    // FIXME: Support multiple threads in the same process!
+    auto symbols = SymbolClient::symbolicate_thread(pid, pid);
+    for (auto& symbol : symbols) {
+        outln("{:p}  {}", symbol.address, symbol.name);
     }
-
     return 0;
 }
