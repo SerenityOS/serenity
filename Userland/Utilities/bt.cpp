@@ -53,8 +53,19 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/usr/src", "b") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
+        return 1;
+    }
+
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) < 0) {
+        perror("gethostname");
         return 1;
     }
 
@@ -62,7 +73,6 @@ int main(int argc, char** argv)
     pid_t pid = 0;
     args_parser.add_positional_argument(pid, "PID", "pid");
     args_parser.parse(argc, argv);
-
     Core::EventLoop loop;
 
     // FIXME: Support multiple threads in the same process!
@@ -71,8 +81,26 @@ int main(int argc, char** argv)
         out("{:p}  ", symbol.address);
         if (!symbol.name.is_empty())
             out("{} ", symbol.name);
-        if (!symbol.filename.is_empty())
-            out("(\033[34;1m{}\033[0m:{})", LexicalPath(symbol.filename).basename(), symbol.line_number);
+        if (!symbol.filename.is_empty()) {
+            bool linked = false;
+
+            out("(");
+
+            // See if we can find the sources in /usr/src
+            // FIXME: I'm sure this can be improved!
+            auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/{}", symbol.filename));
+            if (access(full_path.characters(), F_OK) == 0) {
+                linked = true;
+                out("\033]8;;file://{}{}\033\\", hostname, full_path);
+            }
+
+            out("\033[34;1m{}\033[0m:{}", LexicalPath(symbol.filename).basename(), symbol.line_number);
+
+            if (linked)
+                out("\033]8;;\033\\");
+
+            out(")");
+        }
         outln("");
     }
     return 0;
