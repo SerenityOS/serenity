@@ -50,7 +50,7 @@ class Client
 public:
     virtual void handshake() override;
 
-    Vector<Symbol> symbolicate(const String& path, const Vector<FlatPtr>& addresses);
+    Optional<Symbol> symbolicate(const String& path, FlatPtr address);
 
 private:
     Client();

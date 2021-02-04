@@ -47,19 +47,19 @@ void Client::handle(const Messages::SymbolClient::Dummy&)
 {
 }
 
-Vector<Symbol> Client::symbolicate(const String& path, const Vector<FlatPtr>& addresses)
+Optional<Symbol> Client::symbolicate(const String& path, FlatPtr address)
 {
-    auto response = send_sync<Messages::SymbolServer::Symbolicate>(path, addresses);
+    auto response = send_sync<Messages::SymbolServer::Symbolicate>(path, address);
     if (!response->success())
         return {};
 
-    Vector<Symbol> symbols;
-    for (auto& symbol : response->symbols()) {
-        Symbol s;
-        s.name = symbol;
-        symbols.append(move(s));
-    }
-    return symbols;
+    return Symbol {
+        .address = address,
+        .name = response->name(),
+        .offset = response->offset(),
+        .filename = response->filename(),
+        .line_number = response->line()
+    };
 }
 
 Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
@@ -159,23 +159,21 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             continue;
         }
 
-        Vector<FlatPtr> addresses;
+        FlatPtr adjusted_address;
         if (found_region->is_relative)
-            addresses.append(address - found_region->base);
+            adjusted_address = address - found_region->base;
         else
-            addresses.append(address);
+            adjusted_address = address;
 
-        auto result = client->symbolicate(found_region->path, addresses);
-        if (result.is_empty()) {
+        auto result = client->symbolicate(found_region->path, adjusted_address);
+        if (!result.has_value()) {
             symbols.append(Symbol {
                 .address = address,
             });
             continue;
         }
 
-        symbols.append(Symbol {
-            .address = address,
-            .name = result[0].name });
+        symbols.append(result.value());
     }
     return symbols;
 }
