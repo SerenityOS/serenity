@@ -9,20 +9,13 @@ env:
   SERENITY_ROOT: ${{ github.workspace }}
 
 jobs:
-  build_and_test:
+  build_and_test_serenity:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-20.04
-            allow-test-failure: false
-            # There sure is a lot of logic here, is there a better way?
-            # TODO: Make IRC notifications its own job/workflow?
-            should-notify-irc: ${{ github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master')) }}
-          - os: macos-10.15
-            allow-test-failure: true
-            should-notify-irc: false
+        debug-macros: ['ALL_DEBUG', 'NORMAL_DEBUG']
+        os: [ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -37,7 +30,6 @@ jobs:
     - name: Purge interfering packages
       # Remove GCC 9 and clang-format 10 (installed by default)
       run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev clang-format-10
-      if: ${{ runner.os == 'Linux' }}
     - name: "Install Ubuntu dependencies"
       # These packages are already part of the ubuntu-20.04 image:
       # cmake gcc-10 g++-10 shellcheck libgmp-dev
@@ -46,17 +38,9 @@ jobs:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
         sudo apt-get update
-        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm
-      # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
-      # e2fsprogs qemu-system-i386 qemu-utils
-      if: ${{ runner.os == 'Linux' }}
+        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-      if: ${{ runner.os == 'Linux' }}
-
-    - name: Install macOS dependencies
-      run: brew install coreutils ninja
-      if: ${{ runner.os == 'macOS' }}
 
     - name: Install JS dependencies
       run: sudo npm install -g prettier
@@ -72,7 +56,6 @@ jobs:
 
     - name: Lint (Phase 1/2)
       run: ${{ github.workspace }}/Meta/lint-ci.sh
-      if: ${{ runner.os == 'Linux' }}
     - name: Toolchain cache
       uses: actions/cache@v2
       with:
@@ -86,6 +69,15 @@ jobs:
     # TODO: ccache
     # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
     # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: Create build environment with debug macros
+      working-directory: ${{ github.workspace }}
+      # Build the entire project with debug macros turned on, to prevent code rot.
+      # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      if: ${{ matrix.debug-macros == 'ALL_DEBUG' }}
     - name: Create build environment
       working-directory: ${{ github.workspace }}
       # Note that this needs to run *even if* the Toolchain was built,
@@ -93,9 +85,10 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG' }}
 
-    # === ACTUALLY BUILD AND TEST ===
+    # === ACTUALLY BUILD ===
 
     - name: Build Serenity and Tests
       working-directory: ${{ github.workspace }}/Build
@@ -103,16 +96,106 @@ jobs:
     - name: Lint (Phase 2/2)
       working-directory: ${{ github.workspace }}/Meta
       run: ./check-symbols.sh
-    - name: Run CMake tests
+
+    - name: Create Serenity Rootfs
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
+      run: ninja install && ninja image
+
+    - name: Run On-Target Tests
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
+      working-directory: ${{ github.workspace }}/Build
+      env:
+        SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
+        SERENITY_RUN: "ci"
+      run: ninja run
+      timeout-minutes: 10
+    - name: Print target logs
+      if: ${{ !cancelled() && matrix.debug-macros == 'NORMAL_DEBUG'}}
+      working-directory: ${{ github.workspace }}/Build
+      run: cat ./debug.log
+
+  build_and_test_lagom:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - with-fuzzers: FUZZ
+            os: ubuntu-20.04
+            allow-test-failure: false
+          - with-fuzzers: NO_FUZZ
+            os: ubuntu-20.04
+            allow-test-failure: false
+          - with-fuzzers: NO_FUZZ
+            os: macos-10.15
+            allow-test-failure: true
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # === OS SETUP ===
+    #
+    - name: Install Ubuntu dependencies
+      run: sudo apt-get install ninja-build
+      if: ${{ runner.os == 'Linux' }}
+    - name: Install macOS dependencies
+      run: brew install ninja
+      if: ${{ runner.os == 'macOS' }}
+    - name: Check versions
+      run: set +e; clang --version; clang++ --version; ninja --version
+
+    # === PREPARE FOR BUILDING ===
+
+    # TODO: ccache
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: Create build environment (fuzz)
+      working-directory: ${{ github.workspace }}/Meta/Lagom
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+      if: ${{ matrix.with-fuzzers == 'FUZZ' }}
+
+    - name: Create build environment (no fuzz)
+      working-directory: ${{ github.workspace }}/Meta/Lagom
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake -GNinja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
+
+    # === ACTUALLY BUILD AND TEST ===
+
+    - name: Build Lagom
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: cmake --build .
+
+    - name: Run CMake tests
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
       run: CTEST_OUTPUT_ON_FAILURE=1 ninja test || ${{ matrix.allow-test-failure }}
       timeout-minutes: 2
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
     - name: Run JS tests
-      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
       run: DISABLE_DBG_OUTPUT=1 ./test-js || ${{ matrix.allow-test-failure }}
     - name: Run LibCompress tests
-      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
       run: ./test-compress
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
+
+  notify_irc:
+    needs: [build_and_test_serenity, build_and_test_lagom]
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+
+    steps:
+    - uses: actions/checkout@v2
+    # Sets environment variable env.WORKFLOW_CONCLUSION to one of [neutral, success, skipped, cancelled, timed_out, action_required, failure]
+    # depending on result of all needs jobs
+    - uses: technote-space/workflow-conclusion-action@v2
 
     # === NOTIFICATIONS ===
 
@@ -122,43 +205,13 @@ jobs:
       run: |
         cat <<"EOF"
         ${{ toJSON(github.event) }}
+        ${{ toJSON(needs) }}
         EOF
     - name: Generate IRC message
-      if: matrix.should-notify-irc == true && !cancelled()
+      if: always()
       run: |
         ${{ github.workspace }}/Meta/notify_irc.py <<"EOF"
-        ["${{ github.actor }}", ${{ github.run_id }}, "${{ job.status }}",
+        ["${{ github.actor }}", ${{ github.run_id }}, "${{ env.WORKFLOW_CONCLUSION }}",
         ${{ toJSON(github.event) }}
         ]
         EOF
-
-  build_lagom_with_fuzzers:
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v2
-
-    # === OS SETUP ===
-    #
-    - name: Install dependencies
-      run: sudo apt-get install ninja-build
-    - name: Check versions
-      run: set +e; clang --version; clang++ --version; ninja --version
-
-    # === PREPARE FOR BUILDING ===
-
-    # TODO: ccache
-    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
-    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
-    - name: Create build environment
-      working-directory: ${{ github.workspace }}/Meta/Lagom
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
-
-    # === ACTUALLY BUILD ===
-
-    - name: Build Lagom with Fuzzers
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: cmake --build .
