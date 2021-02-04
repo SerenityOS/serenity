@@ -17,6 +17,7 @@ endforeach()
 
 target_link_libraries(aplay LibAudio)
 target_link_libraries(avol LibAudio)
+target_link_libraries(bt LibSymbolClient)
 target_link_libraries(checksum LibCrypto)
 target_link_libraries(chres LibGUI)
 target_link_libraries(copy LibGUI)
