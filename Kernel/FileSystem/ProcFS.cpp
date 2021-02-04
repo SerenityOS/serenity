@@ -615,8 +615,16 @@ static bool procfs$tid_stack(InodeIdentifier identifier, KBufferBuilder& builder
     auto thread = Thread::from_tid(to_tid(identifier));
     if (!thread)
         return false;
-    builder.appendf("Thread %d (%s):\n", thread->tid().value(), thread->name().characters());
-    builder.append(thread->backtrace());
+
+    JsonArraySerializer array { builder };
+    bool show_kernel_addresses = Process::current()->is_superuser();
+    for (auto address : Processor::capture_stack_trace(*thread, 1024)) {
+        if (!show_kernel_addresses && !is_user_address(VirtualAddress { address }))
+            address = 0xdeadc0de;
+        array.add(JsonValue(address));
+    }
+
+    array.finish();
     return true;
 }
 
