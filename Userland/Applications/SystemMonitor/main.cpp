@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio proc recvfd sendfd accept rpath exec", nullptr) < 0) {
+    if (pledge("stdio proc recvfd sendfd accept rpath exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -133,6 +133,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/dev", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/symbol", "rw") < 0) {
         perror("unveil");
         return 1;
     }

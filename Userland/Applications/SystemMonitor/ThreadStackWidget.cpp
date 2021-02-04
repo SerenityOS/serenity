@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibSymbolClient/Client.h>
 
 ThreadStackWidget::ThreadStackWidget()
 {
@@ -55,14 +56,18 @@ void ThreadStackWidget::set_ids(pid_t pid, pid_t tid)
 
 void ThreadStackWidget::refresh()
 {
-    auto file = Core::File::construct(String::formatted("/proc/{}/stacks/{}", m_pid, m_tid));
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        m_stack_editor->set_text(String::formatted("Unable to open {}", file->filename()));
-        return;
+    auto symbols = SymbolClient::symbolicate_thread(m_pid, m_tid);
+
+    StringBuilder builder;
+
+    for (auto& symbol : symbols) {
+        builder.appendff("{:p}", symbol.address);
+        if (!symbol.name.is_empty())
+            builder.appendff("  {}", symbol.name);
+        builder.append('\n');
     }
 
-    auto new_text = file->read_all();
-    if (m_stack_editor->text() != new_text) {
-        m_stack_editor->set_text(new_text);
+    if (m_stack_editor->text() != builder.string_view()) {
+        m_stack_editor->set_text(builder.string_view());
     }
 }
