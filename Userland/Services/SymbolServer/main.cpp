@@ -49,6 +49,14 @@ int main(int, char**)
         return 1;
     }
 
+    // NOTE: Developers can opt into kernel symbolication by making /boot/Kernel accessible to the "symbol" user.
+    if (access("/boot/Kernel", F_OK) == 0) {
+        if (unveil("/boot/Kernel", "r") < 0) {
+            perror("unveil");
+            return 1;
+        }
+    }
+
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;

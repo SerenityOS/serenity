@@ -70,10 +70,17 @@ int main(int argc, char** argv)
         FlatPtr base { 0 };
         size_t size { 0 };
         String path;
+        bool is_relative { true };
     };
 
     Vector<FlatPtr> stack;
     Vector<RegionWithSymbols> regions;
+
+    regions.append(RegionWithSymbols {
+        .base = 0xc0000000,
+        .size = 0x3fffffff,
+        .path = "/boot/Kernel",
+        .is_relative = false });
 
     {
         // FIXME: Support multiple threads in the same process!
@@ -141,7 +148,6 @@ int main(int argc, char** argv)
     auto client = SymbolClient::Client::construct();
 
     for (auto address : stack) {
-
         const RegionWithSymbols* found_region = nullptr;
         for (auto& region : regions) {
             if (address >= region.base && address < (region.base + region.size)) {
@@ -156,7 +162,10 @@ int main(int argc, char** argv)
         }
 
         Vector<FlatPtr> addresses;
-        addresses.append(address - found_region->base);
+        if (found_region->is_relative)
+            addresses.append(address - found_region->base);
+        else
+            addresses.append(address);
 
         auto symbols = client->symbolicate(found_region->path, addresses);
         if (symbols.is_empty()) {
