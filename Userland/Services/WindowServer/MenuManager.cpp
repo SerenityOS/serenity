@@ -242,6 +242,13 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
             }
 
             if (mouse_event.type() == Event::MouseDown) {
+                for (auto& menu : m_open_menu_stack) {
+                    if (!menu)
+                        continue;
+                    if (!menu->menu_window()->rect().contains(mouse_event.position()))
+                        continue;
+                    return;
+                }
                 close_bar();
                 topmost_menu->set_window_menu_open(false);
             }
