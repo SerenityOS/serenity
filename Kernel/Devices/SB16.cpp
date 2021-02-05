@@ -89,6 +89,19 @@ SB16::~SB16()
 {
 }
 
+void SB16::detect()
+{
+    IO::out8(0x226, 1);
+    IO::delay(32);
+    IO::out8(0x226, 0);
+
+    auto data = dsp_read();
+    if (data != 0xaa) {
+        return;
+    }
+    SB16::create();
+}
+
 void SB16::create()
 {
     s_the.ensure_instance();
