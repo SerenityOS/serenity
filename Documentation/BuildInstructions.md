@@ -109,9 +109,10 @@ Notes:
 - coreutils is needed to build gcc cross compiler
 - qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
+- Installing osxfuse for the first time requires enabling its system extension in System Preferences and then restarting your machine. The output from installing osxfuse with brew says this, but it's easy to miss.
 - bash is needed because the default version installed on macOS doesn't support globstar
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
-- As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/`, `rm -rf *`, then run `cmake .. -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`, then continue with `make install` as usual.
+- As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/`, `rm -rf *`, then run `cmake .. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`, then continue with `ninja install` as usual.
 
 #### OpenBSD prerequisites
 ```
