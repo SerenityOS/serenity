@@ -40,6 +40,9 @@ test("basic numeric and", () => {
     expect(5 & 3).toBe(1);
     expect(5 & 4).toBe(4);
     expect(5 & 5).toBe(5);
+
+    expect(0xffffffff & 0).toBe(0);
+    expect(0xffffffff & 0xffffffff).toBe(-1);
 });
 
 test("and with non-numeric values", () => {

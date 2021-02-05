@@ -40,6 +40,11 @@ test("basic numeric shifting", () => {
     expect(5 << 3).toBe(40);
     expect(5 << 4).toBe(80);
     expect(5 << 5).toBe(160);
+
+    expect(0xffffffff << 0).toBe(-1);
+    expect(0xffffffff << 16).toBe(-65536);
+    expect(0xffff0000 << 16).toBe(0);
+    expect(0xffff0000 << 15).toBe(-2147483648);
 });
 
 test("shifting with non-numeric values", () => {
