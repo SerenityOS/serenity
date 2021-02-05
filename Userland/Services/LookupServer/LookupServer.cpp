@@ -25,6 +25,7 @@
  */
 
 #include "LookupServer.h"
+#include "ClientConnection.h"
 #include "DNSRequest.h"
 #include "DNSResponse.h"
 #include <AK/ByteBuffer.h>
@@ -43,8 +44,19 @@
 
 namespace LookupServer {
 
+static LookupServer* s_the;
+
+LookupServer& LookupServer::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 LookupServer::LookupServer()
 {
+    ASSERT(s_the == nullptr);
+    s_the = this;
+
     auto config = Core::ConfigFile::get_for_system("LookupServer");
     dbgln("Using network config file at {}", config->file_name());
     m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
@@ -54,13 +66,13 @@ LookupServer::LookupServer()
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
         auto socket = m_local_server->accept();
-        if (!socket)
+        if (!socket) {
+            dbgln("Failed to accept a client connection");
             return;
-        socket->on_ready_to_read = [this, socket]() {
-            service_client(*socket);
-            NonnullRefPtr keeper = *socket;
-            const_cast<Core::LocalSocket&>(*socket).on_ready_to_read = [] {};
-        };
+        }
+        static int s_next_client_id = 0;
+        int client_id = ++s_next_client_id;
+        IPC::new_client_connection<ClientConnection>(socket.release_nonnull(), client_id);
     };
     bool ok = m_local_server->take_over_from_system_server();
     ASSERT(ok);
@@ -101,32 +113,17 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-void LookupServer::service_client(NonnullRefPtr<Core::LocalSocket> socket)
+Vector<String> LookupServer::lookup(const String& name, unsigned short record_type)
 {
-    u8 client_buffer[1024];
-    int nrecv = socket->read(client_buffer, sizeof(client_buffer) - 1);
-    if (nrecv < 0) {
-        perror("read");
-        return;
-    }
-
-    client_buffer[nrecv] = '\0';
-
-    char lookup_type = client_buffer[0];
-    if (lookup_type != 'L' && lookup_type != 'R') {
-        dbgln("Invalid lookup_type '{}'", lookup_type);
-        return;
-    }
-    auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
 #if LOOKUPSERVER_DEBUG
-    dbgln("Got request for '{}'", hostname);
+    dbgln("Got request for '{}'", name);
 #endif
 
     Vector<String> responses;
 
-    if (auto known_host = m_etc_hosts.get(hostname); known_host.has_value()) {
+    if (auto known_host = m_etc_hosts.get(name); known_host.has_value()) {
         responses.append(known_host.value());
-    } else if (!hostname.is_empty()) {
+    } else if (!name.is_empty()) {
         for (auto& nameserver : m_nameservers) {
 #if LOOKUPSERVER_DEBUG
             dbgln("Doing lookup using nameserver '{}'", nameserver);
@@ -134,10 +131,7 @@ void LookupServer::service_client(NonnullRefPtr<Core::LocalSocket> socket)
             bool did_get_response = false;
             int retries = 3;
             do {
-                if (lookup_type == 'L')
-                    responses = lookup(hostname, nameserver, did_get_response, T_A);
-                else if (lookup_type == 'R')
-                    responses = lookup(hostname, nameserver, did_get_response, T_PTR);
+                responses = lookup(name, nameserver, did_get_response, record_type);
                 if (did_get_response)
                     break;
             } while (--retries);
@@ -152,24 +146,11 @@ void LookupServer::service_client(NonnullRefPtr<Core::LocalSocket> socket)
         }
         if (responses.is_empty()) {
             fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
-            return;
+            return {};
         }
     }
 
-    if (responses.is_empty()) {
-        int nsent = socket->write("Not found.\n");
-        if (nsent < 0)
-            perror("write");
-        return;
-    }
-    for (auto& response : responses) {
-        auto line = String::formatted("{}\n", response);
-        int nsent = socket->write(line);
-        if (nsent < 0) {
-            perror("write");
-            break;
-        }
-    }
+    return move(responses);
 }
 
 Vector<String> LookupServer::lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
