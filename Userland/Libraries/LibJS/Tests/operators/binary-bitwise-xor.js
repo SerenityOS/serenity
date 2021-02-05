@@ -40,6 +40,9 @@ test("basic numeric xor", () => {
     expect(5 ^ 3).toBe(6);
     expect(5 ^ 4).toBe(1);
     expect(5 ^ 5).toBe(0);
+
+    expect(0xffffffff ^ 0).toBe(-1);
+    expect(0xffffffff ^ 0xffffffff).toBe(0);
 });
 
 test("xor with non-numeric values", () => {

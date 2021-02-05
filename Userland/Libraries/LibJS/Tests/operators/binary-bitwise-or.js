@@ -40,6 +40,10 @@ test("basic numeric or", () => {
     expect(5 | 3).toBe(7);
     expect(5 | 4).toBe(5);
     expect(5 | 5).toBe(5);
+
+    expect(0xffffffff | 0).toBe(-1);
+    expect(0xffffffff | 0xffffffff).toBe(-1);
+    expect(2147483648 | 0).toBe(-2147483648);
 });
 
 test("or with non-numeric values", () => {

@@ -154,7 +154,16 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
         return {};
     if (number.is_nan())
         return js_nan();
-    return Value(::round(number.as_double()));
+    double intpart = 0;
+    double frac = modf(number.as_double(), &intpart);
+    if (intpart >= 0) {
+        if (frac >= 0.5)
+            intpart += 1.0;
+    } else {
+        if (frac < -0.5)
+            intpart -= 1.0;
+    }
+    return Value(intpart);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::max)

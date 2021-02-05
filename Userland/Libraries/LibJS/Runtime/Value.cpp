@@ -465,6 +465,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     }
 }
 
+// FIXME: These two conversions are wrong for JS, and seem likely to be footguns
 i32 Value::as_i32() const
 {
     return static_cast<i32>(as_double());
@@ -495,9 +496,17 @@ i32 Value::to_i32(GlobalObject& global_object) const
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
-    if (number.is_nan() || number.is_infinity())
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
         return 0;
-    return number.as_i32();
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto int32bit = fmod(int_val, 4294967296.0);
+    if (int32bit >= 2147483648.0)
+        int32bit -= 4294967296.0;
+    return static_cast<i32>(int32bit);
 }
 
 u32 Value::to_u32(GlobalObject& global_object) const
@@ -506,11 +515,14 @@ u32 Value::to_u32(GlobalObject& global_object) const
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
-    if (number.is_nan() || number.is_infinity())
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
         return 0;
-    if (number.as_double() <= 0)
-        return 0;
-    return number.as_u32();
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
+    return static_cast<u32>(int32bit);
 }
 
 size_t Value::to_length(GlobalObject& global_object) const
@@ -613,7 +625,7 @@ Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
             return Value(0);
-        return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object.global_object()) & rhs_numeric.to_i32(global_object.global_object()));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
@@ -636,7 +648,7 @@ Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() | (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object.global_object()) | rhs_numeric.to_i32(global_object.global_object()));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
@@ -659,7 +671,7 @@ Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object.global_object()) ^ rhs_numeric.to_i32(global_object.global_object()));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
@@ -704,6 +716,8 @@ Value unary_minus(GlobalObject& global_object, Value lhs)
 
 Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    // 6.1.6.1.9 Number::leftShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-leftShift
     auto lhs_numeric = lhs.to_numeric(global_object.global_object());
     if (global_object.vm().exception())
         return {};
@@ -715,7 +729,10 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() << (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_i32 = lhs_numeric.to_i32(global_object.global_object());
+        auto rhs_u32 = rhs_numeric.to_u32(global_object.global_object());
+        return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
@@ -725,6 +742,8 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    // 6.1.6.1.11 Number::signedRightShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift
     auto lhs_numeric = lhs.to_numeric(global_object.global_object());
     if (global_object.vm().exception())
         return {};
@@ -736,7 +755,10 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_i32 = lhs_numeric.to_i32(global_object.global_object());
+        auto rhs_u32 = rhs_numeric.to_u32(global_object.global_object());
+        return Value(lhs_i32 >> rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
@@ -746,6 +768,8 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    // 6.1.6.1.11 Number::unsignedRightShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift
     auto lhs_numeric = lhs.to_numeric(global_object.global_object());
     if (global_object.vm().exception())
         return {};
@@ -757,7 +781,10 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_u32 = lhs_numeric.to_u32(global_object.global_object());
+        auto rhs_u32 = rhs_numeric.to_u32(global_object.global_object()) % 32;
+        return Value(lhs_u32 >> rhs_u32);
     }
     global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperator, "unsigned right-shift");
     return {};
@@ -1085,9 +1112,9 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
             return false;
         if (lhs.is_number())
-            return Crypto::SignedBigInteger { lhs.as_i32() } == rhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { lhs.to_i32(global_object.global_object()) } == rhs.as_bigint().big_integer();
         else
-            return Crypto::SignedBigInteger { rhs.as_i32() } == lhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { rhs.to_i32(global_object.global_object()) } == lhs.as_bigint().big_integer();
     }
 
     return false;
@@ -1194,12 +1221,12 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
         x_lower_than_y = x_numeric.is_integer()
-            ? Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.as_i32() + 1 } < y_numeric.as_bigint().big_integer());
+            ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object.global_object()) } < y_numeric.as_bigint().big_integer()
+            : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object.global_object()) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object.global_object()) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
         x_lower_than_y = y_numeric.is_integer()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() + 1 });
+            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object.global_object()) }
+            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object.global_object()) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object.global_object()) + 1 });
     }
     if (x_lower_than_y)
         return TriState::True;
