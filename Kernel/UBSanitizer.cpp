@@ -36,21 +36,55 @@ extern "C" {
 static void print_location(const SourceLocation& location)
 {
     dbgln("KUBSAN: at {}, line {}, column: {}", location.filename(), location.line(), location.column());
+    dump_backtrace();
 }
 
-void __ubsan_handle_load_invalid_value(InvalidValueData&, void*);
-void __ubsan_handle_load_invalid_value(InvalidValueData& data, void*)
+void __ubsan_handle_load_invalid_value(const InvalidValueData&, void*);
+void __ubsan_handle_load_invalid_value(const InvalidValueData& data, void*)
 {
     dbgln("KUBSAN: load-invalid-value: {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
-    dump_backtrace();
 }
 
-void __ubsan_handle_nonnull_arg(NonnullArgData&);
-void __ubsan_handle_nonnull_arg(NonnullArgData& data)
+void __ubsan_handle_nonnull_arg(const NonnullArgData&);
+void __ubsan_handle_nonnull_arg(const NonnullArgData& data)
 {
     dbgln("KUBSAN: null pointer passed as argument {}, which is declared to never be null", data.argument_index);
     print_location(data.location);
-    dump_backtrace();
+}
+
+void __ubsan_handle_vla_bound_not_positive(const VLABoundData&, void*);
+void __ubsan_handle_vla_bound_not_positive(const VLABoundData& data, void*)
+{
+    dbgln("KUBSAN: VLA bound not positive {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_add_overflow(const OverflowData&, void* lhs, void* rhs);
+void __ubsan_handle_add_overflow(const OverflowData& data, void*, void*)
+{
+    dbgln("KUBSAN: addition overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_sub_overflow(const OverflowData&, void* lhs, void* rhs);
+void __ubsan_handle_sub_overflow(const OverflowData& data, void*, void*)
+{
+    dbgln("KUBSAN: subtraction overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_negate_overflow(const OverflowData&, void*);
+void __ubsan_handle_negate_overflow(const OverflowData& data, void*)
+{
+    dbgln("KUBSAN: negation overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_mul_overflow(const OverflowData&, void* lhs, void* rhs);
+void __ubsan_handle_mul_overflow(const OverflowData& data, void*, void*)
+{
+    dbgln("KUBSAN: multiplication overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
 }
 }

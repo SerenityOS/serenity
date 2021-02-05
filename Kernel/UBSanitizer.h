@@ -74,4 +74,14 @@ struct NonnullArgData {
     int argument_index;
 };
 
+struct OverflowData {
+    SourceLocation location;
+    const TypeDescriptor& type;
+};
+
+struct VLABoundData {
+    SourceLocation location;
+    const TypeDescriptor& type;
+};
+
 }
