@@ -42,6 +42,7 @@ public:
     SB16();
     virtual ~SB16() override;
 
+    static void detect();
     static void create();
     static SB16& the();
 
@@ -69,7 +70,7 @@ private:
     void dma_start(uint32_t length);
     void set_sample_rate(uint16_t hz);
     void dsp_write(u8 value);
-    u8 dsp_read();
+    static u8 dsp_read();
     u8 get_irq_line();
     void set_irq_register(u8 irq_number);
     void set_irq_line(u8 irq_number);
