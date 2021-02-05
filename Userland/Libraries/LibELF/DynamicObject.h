@@ -259,7 +259,8 @@ public:
     bool must_bind_now() const { return m_dt_flags & DF_BIND_NOW; }
     bool has_static_thread_local_storage() const { return m_dt_flags & DF_STATIC_TLS; }
 
-    VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset); }
+    bool has_plt() const { return m_procedure_linkage_table_offset.has_value(); }
+    VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
     const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
@@ -328,7 +329,7 @@ private:
     Elf32_Sword m_procedure_linkage_table_relocation_type { -1 };
     FlatPtr m_plt_relocation_offset_location { 0 }; // offset of PLT relocations, at end of relocations
     size_t m_size_of_plt_relocation_entry_list { 0 };
-    FlatPtr m_procedure_linkage_table_offset { 0 };
+    Optional<FlatPtr> m_procedure_linkage_table_offset;
 
     // NOTE: We'll only ever either RELA or REL entries, not both (thank god)
     // NOTE: The x86 ABI will only ever genrerate REL entries.

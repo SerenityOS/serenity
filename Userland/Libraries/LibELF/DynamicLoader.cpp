@@ -219,7 +219,8 @@ RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_t
 {
     do_lazy_relocations(total_tls_size);
     if (flags & RTLD_LAZY) {
-        setup_plt_trampoline();
+        if (m_dynamic_object->has_plt())
+            setup_plt_trampoline();
     }
 
     if (mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_EXEC) < 0) {
@@ -491,6 +492,7 @@ extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 void DynamicLoader::setup_plt_trampoline()
 {
     ASSERT(m_dynamic_object);
+    ASSERT(m_dynamic_object->has_plt());
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
     FlatPtr* got_ptr = (FlatPtr*)got_address.as_ptr();
