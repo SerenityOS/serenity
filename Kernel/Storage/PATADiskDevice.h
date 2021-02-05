@@ -37,7 +37,7 @@
 namespace Kernel {
 
 class IDEController;
-
+class IDEChannel;
 class PATADiskDevice final : public StorageDevice {
     friend class IDEController;
     AK_MAKE_ETERNAL
