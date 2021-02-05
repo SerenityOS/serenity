@@ -70,11 +70,14 @@ union FloatExtractor;
 template<>
 union FloatExtractor<double> {
     static const int mantissa_bits = 52;
+    static const unsigned long long mantissa_max = (1ull << 52) - 1;
     static const int exponent_bias = 1023;
+    static const int exponent_bits = 11;
+    static const unsigned exponent_max = 2047;
     struct {
         unsigned long long mantissa : 52;
         unsigned exponent : 11;
-        int sign : 1;
+        unsigned sign : 1;
     };
     double d;
 };
@@ -82,11 +85,14 @@ union FloatExtractor<double> {
 template<>
 union FloatExtractor<float> {
     static const int mantissa_bits = 23;
+    static const unsigned mantissa_max = (1 << 23) - 1;
     static const int exponent_bias = 127;
+    static const int exponent_bits = 8;
+    static const unsigned exponent_max = 255;
     struct {
         unsigned long long mantissa : 23;
         unsigned exponent : 8;
-        int sign : 1;
+        unsigned sign : 1;
     };
     float d;
 };
@@ -149,6 +155,71 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
             extractor.d += 1.0;
     }
 
+    return extractor.d;
+}
+
+// This is much branchier than it really needs to be
+template<typename FloatType>
+static FloatType internal_nextafter(FloatType x, bool up)
+{
+    if (!isfinite(x))
+        return x;
+    using Extractor = FloatExtractor<decltype(x)>;
+    Extractor extractor;
+    extractor.d = x;
+    if (x == 0) {
+        if (!extractor.sign) {
+            extractor.mantissa = 1;
+            extractor.sign = !up;
+            return extractor.d;
+        }
+        if (up) {
+            extractor.sign = false;
+            extractor.mantissa = 1;
+            return extractor.d;
+        }
+        extractor.mantissa = 1;
+        extractor.sign = up != extractor.sign;
+        return extractor.d;
+    }
+    if (up != extractor.sign) {
+        extractor.mantissa++;
+        if (!extractor.mantissa) {
+            // no need to normalize the mantissa as we just hit a power
+            // of two.
+            extractor.exponent++;
+            if (extractor.exponent == Extractor::exponent_max) {
+                extractor.exponent = Extractor::exponent_max - 1;
+                extractor.mantissa = Extractor::mantissa_max;
+            }
+        }
+        return extractor.d;
+    }
+
+    if (!extractor.mantissa) {
+        if (extractor.exponent) {
+            extractor.exponent--;
+            extractor.mantissa = Extractor::mantissa_max;
+        } else {
+            extractor.d = 0;
+        }
+        return extractor.d;
+    }
+
+    extractor.mantissa--;
+    if (extractor.mantissa != Extractor::mantissa_max)
+        return extractor.d;
+    if (extractor.exponent) {
+        extractor.exponent--;
+        // normalize
+        extractor.mantissa <<= 1;
+    } else {
+        if (extractor.sign) {
+            // Negative infinity
+            extractor.mantissa = 0;
+            extractor.exponent = Extractor::exponent_max;
+        }
+    }
     return extractor.d;
 }
 
@@ -634,14 +705,18 @@ double erfc(double x) NOEXCEPT
     return 1 - erf(x);
 }
 
-double nextafter(double, double) NOEXCEPT
+double nextafter(double x, double target) NOEXCEPT
 {
-    TODO();
+    if (x == target)
+        return target;
+    return internal_nextafter(x, target >= x);
 }
 
-float nextafterf(float, float) NOEXCEPT
+float nextafterf(float x, float target) NOEXCEPT
 {
-    TODO();
+    if (x == target)
+        return target;
+    return internal_nextafter(x, target >= x);
 }
 
 long double nextafterl(long double, long double) NOEXCEPT
@@ -649,14 +724,18 @@ long double nextafterl(long double, long double) NOEXCEPT
     TODO();
 }
 
-double nexttoward(double, long double) NOEXCEPT
+double nexttoward(double x, long double target) NOEXCEPT
 {
-    TODO();
+    if (x == target)
+        return target;
+    return internal_nextafter(x, target >= x);
 }
 
-float nexttowardf(float, long double) NOEXCEPT
+float nexttowardf(float x, long double target) NOEXCEPT
 {
-    TODO();
+    if (x == target)
+        return target;
+    return internal_nextafter(x, target >= x);
 }
 
 long double nexttowardl(long double, long double) NOEXCEPT
