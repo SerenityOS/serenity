@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,28 @@
 
 #pragma once
 
-#include "DNSRequest.h"
-#include "DNSResponse.h"
-#include <LibCore/Object.h>
+#include <AK/HashMap.h>
+#include <LibIPC/ClientConnection.h>
+#include <LookupServer/LookupClientEndpoint.h>
+#include <LookupServer/LookupServerEndpoint.h>
 
 namespace LookupServer {
 
-class DNSAnswer;
+class ClientConnection final
+    : public IPC::ClientConnection<LookupClientEndpoint, LookupServerEndpoint>
+    , public LookupServerEndpoint {
 
-class LookupServer final : public Core::Object {
-    C_OBJECT(LookupServer);
+    C_OBJECT(ClientConnection);
 
 public:
-    static LookupServer& the();
-    Vector<String> lookup(const String& name, unsigned short record_type);
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    virtual ~ClientConnection() override;
+
+    virtual void die() override;
 
 private:
-    LookupServer();
-
-    void load_etc_hosts();
-    Vector<String> lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
-
-    struct CachedLookup {
-        DNSQuestion question;
-        Vector<DNSAnswer> answers;
-    };
-
-    RefPtr<Core::LocalServer> m_local_server;
-    Vector<String> m_nameservers;
-    HashMap<String, String> m_etc_hosts;
-    HashMap<String, CachedLookup> m_lookup_cache;
+    virtual OwnPtr<Messages::LookupServer::LookupNameResponse> handle(const Messages::LookupServer::LookupName&) override;
+    virtual OwnPtr<Messages::LookupServer::LookupAddressResponse> handle(const Messages::LookupServer::LookupAddress&) override;
 };
 
 }
