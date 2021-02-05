@@ -90,6 +90,8 @@ double ceil(double) NOEXCEPT;
 float ceilf(float) NOEXCEPT;
 double floor(double) NOEXCEPT;
 float floorf(float) NOEXCEPT;
+double trunc(double) NOEXCEPT;
+float truncf(float) NOEXCEPT;
 double round(double) NOEXCEPT;
 float roundf(float) NOEXCEPT;
 double fabs(double) NOEXCEPT;
