@@ -197,6 +197,7 @@ set(KERNEL_SOURCES
     Time/RTC.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
+    UBSanitizer.cpp
     UserOrKernelBuffer.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
@@ -269,6 +270,7 @@ set(SOURCES
     ${C_SOURCES}
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=nonnull-attribute,bool")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DKERNEL")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE -fno-rtti -ffreestanding -fbuiltin")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
