@@ -57,11 +57,106 @@ constexpr size_t product_odd<1>() { return 1; }
 template<size_t value>
 constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
 
+enum class RoundingMode {
+    ToZero,
+    Up,
+    Down,
+    ToEven
+};
+
+template<typename T>
+union FloatExtractor;
+
+template<>
+union FloatExtractor<double> {
+    static const int mantissa_bits = 52;
+    static const int exponent_bias = 1023;
+    struct {
+        unsigned long long mantissa : 52;
+        unsigned exponent : 11;
+        int sign : 1;
+    };
+    double d;
+};
+
+template<>
+union FloatExtractor<float> {
+    static const int mantissa_bits = 23;
+    static const int exponent_bias = 127;
+    struct {
+        unsigned long long mantissa : 23;
+        unsigned exponent : 8;
+        int sign : 1;
+    };
+    float d;
+};
+
+// This is much branchier than it really needs to be
+template<typename FloatType>
+static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
+{
+    if (!isfinite(x))
+        return x;
+    using Extractor = FloatExtractor<decltype(x)>;
+    Extractor extractor;
+    extractor.d = x;
+    auto unbiased_exponent = extractor.exponent - Extractor::exponent_bias;
+    bool round = false;
+    bool guard = false;
+    if (unbiased_exponent < 0) {
+        // it was easier to special case [0..1) as it saves us from
+        // handling subnormals, underflows, etc
+        if (unbiased_exponent == -1) {
+            round = true;
+        }
+        guard = extractor.mantissa != 0;
+        extractor.mantissa = 0;
+        extractor.exponent = 0;
+    } else {
+        if (unbiased_exponent >= Extractor::mantissa_bits)
+            return x;
+        auto dead_bitcount = Extractor::mantissa_bits - unbiased_exponent;
+        auto dead_mask = (1ull << dead_bitcount) - 1;
+        auto dead_bits = extractor.mantissa & dead_mask;
+        extractor.mantissa &= ~dead_mask;
+
+        auto guard_mask = dead_mask >> 1;
+        guard = (dead_bits & guard_mask) != 0;
+        round = (dead_bits & ~guard_mask) != 0;
+    }
+    bool should_round = false;
+    switch (rounding_mode) {
+    case RoundingMode::ToEven:
+        should_round = round;
+        break;
+    case RoundingMode::Up:
+        if (!extractor.sign)
+            should_round = guard || round;
+        break;
+    case RoundingMode::Down:
+        if (extractor.sign)
+            should_round = guard || round;
+        break;
+    case RoundingMode::ToZero:
+        break;
+    }
+    if (should_round) {
+        // We could do this ourselves, but this saves us from manually
+        // handling overflow.
+        if (extractor.sign)
+            extractor.d -= 1.0;
+        else
+            extractor.d += 1.0;
+    }
+
+    return extractor.d;
+}
+
 extern "C" {
 
 double trunc(double x) NOEXCEPT
 {
-    return (int64_t)x;
+    return internal_to_integer(x, RoundingMode::ToZero);
 }
 
 double cos(double angle) NOEXCEPT
@@ -404,73 +499,48 @@ long double frexpl(long double, int*) NOEXCEPT
 
 double round(double value) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    if (value >= 0.0)
-        return (double)(int)(value + 0.5);
-    return (double)(int)(value - 0.5);
+    return internal_to_integer(value, RoundingMode::ToEven);
 }
 
 float roundf(float value) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    if (value >= 0.0f)
-        return (float)(int)(value + 0.5f);
-    return (float)(int)(value - 0.5f);
+    return internal_to_integer(value, RoundingMode::ToEven);
 }
 
 float floorf(float value) NOEXCEPT
 {
-    if (value >= 0)
-        return (int)value;
-    int intvalue = (int)value;
-    return ((float)intvalue == value) ? intvalue : intvalue - 1;
+    return internal_to_integer(value, RoundingMode::Down);
 }
 
 double floor(double value) NOEXCEPT
 {
-    if (value >= 0)
-        return (int)value;
-    int intvalue = (int)value;
-    return ((double)intvalue == value) ? intvalue : intvalue - 1;
+    return internal_to_integer(value, RoundingMode::Down);
 }
 
 double rint(double value) NOEXCEPT
 {
-    return (int)roundf(value);
+    // This should be the current rounding mode
+    return internal_to_integer(value, RoundingMode::ToEven);
 }
 
 float ceilf(float value) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    int as_int = (int)value;
-    if (value == (float)as_int)
-        return as_int;
-    if (value < 0) {
-        if (as_int == 0)
-            return -0;
-        return as_int;
-    }
-    return as_int + 1;
+    return internal_to_integer(value, RoundingMode::Up);
 }
 
 double ceil(double value) NOEXCEPT
 {
-    // FIXME: Please fix me. I am naive.
-    int as_int = (int)value;
-    if (value == (double)as_int)
-        return as_int;
-    if (value < 0) {
-        if (as_int == 0)
-            return -0;
-        return as_int;
-    }
-    return as_int + 1;
+    return internal_to_integer(value, RoundingMode::Up);
 }
 
 double modf(double x, double* intpart) NOEXCEPT
 {
-    *intpart = (double)((int)(x));
-    return x - (int)x;
+    double integer_part = internal_to_integer(x, RoundingMode::ToZero);
+    *intpart = integer_part;
+    auto fraction = x - integer_part;
+    if (signbit(fraction) != signbit(x))
+        fraction = -fraction;
+    return fraction;
 }
 
 double gamma(double x) NOEXCEPT
