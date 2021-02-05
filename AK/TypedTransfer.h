@@ -35,6 +35,9 @@ class TypedTransfer {
 public:
     static size_t move(T* destination, T* source, size_t count)
     {
+        if (!count)
+            return 0;
+
         if constexpr (Traits<T>::is_trivial()) {
             __builtin_memmove(destination, source, count * sizeof(T));
             return count;
@@ -52,6 +55,9 @@ public:
 
     static size_t copy(T* destination, const T* source, size_t count)
     {
+        if (!count)
+            return 0;
+
         if constexpr (Traits<T>::is_trivial()) {
             __builtin_memmove(destination, source, count * sizeof(T));
             return count;
@@ -69,6 +75,9 @@ public:
 
     static bool compare(const T* a, const T* b, size_t count)
     {
+        if (!count)
+            return true;
+
         if constexpr (Traits<T>::is_trivial())
             return !__builtin_memcmp(a, b, count * sizeof(T));
 
