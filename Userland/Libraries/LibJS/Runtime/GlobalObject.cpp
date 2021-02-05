@@ -167,8 +167,10 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_proxy_constructor);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    visitor.visit(m_##snake_name##_constructor);
+    visitor.visit(m_##snake_name##_constructor);                                         \
+    visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_ERROR_SUBCLASSES
+    JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
