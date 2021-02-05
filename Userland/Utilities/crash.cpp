@@ -27,13 +27,13 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <Kernel/API/Syscall.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <syscall.h>
 
 #pragma GCC optimize("O0")
 

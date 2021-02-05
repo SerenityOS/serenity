@@ -25,9 +25,9 @@
  */
 
 #include <AK/LogStream.h>
-#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <sys/ptrace.h>
+#include <syscall.h>
 
 extern "C" {
 

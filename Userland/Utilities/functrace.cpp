@@ -32,7 +32,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
-#include <Kernel/API/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -45,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syscall.h>
 #include <unistd.h>
 
 static OwnPtr<Debug::DebugSession> g_debug_session;

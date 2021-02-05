@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/internals.h>
+#include <syscall.h>
 #include <unistd.h>
 
 extern "C" {

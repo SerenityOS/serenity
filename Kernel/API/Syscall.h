@@ -504,7 +504,6 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 #define __ENUMERATE_SYSCALL(x) using Syscall::SC_##x;
 ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 #undef __ENUMERATE_SYSCALL
-#define syscall Syscall::invoke
 
 }
 

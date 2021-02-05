@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Format.h>
-#include <errno.h>
-#include <stdio.h>
-#include <syscall.h>
+#include <Kernel/API/Syscall.h>
+#include <LibSystem/syscall.h>
 
-int main()
+extern "C" {
+
+uintptr_t syscall0(uintptr_t function)
 {
-    for (int i = 0; i < Syscall::Function::__Count; ++i) {
-        dbgln("Testing syscall #{}", i);
-        // This is pure torture
-        syscall(Syscall::Function(i), 0xc0000001, 0xc0000002, 0xc0000003);
-    }
+    return Syscall::invoke((Syscall::Function)function);
+}
 
-    // Finally, test invalid syscalls:
-    dbgln("Testing syscall #{} (n+1)", (int)Syscall::Function::__Count);
-    syscall(Syscall::Function::__Count, 0xc0000001, 0xc0000002, 0xc0000003);
-    dbgln("Testing syscall #-1");
-    syscall(Syscall::Function(-1), 0xc0000001, 0xc0000002, 0xc0000003);
+uintptr_t syscall1(uintptr_t function, uintptr_t arg0)
+{
+    return Syscall::invoke((Syscall::Function)function, arg0);
+}
 
-    // If the Kernel survived, pass.
-    printf("PASS\n");
-    return 0;
+uintptr_t syscall2(uintptr_t function, uintptr_t arg0, uintptr_t arg1)
+{
+    return Syscall::invoke((Syscall::Function)function, arg0, arg1);
+}
+
+uintptr_t syscall3(uintptr_t function, uintptr_t arg0, uintptr_t arg1, uintptr_t arg2)
+{
+    return Syscall::invoke((Syscall::Function)function, arg0, arg1, arg2);
+}
 }

@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/API/Syscall.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -34,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <syscall.h>
 #include <unistd.h>
 
 extern "C" {

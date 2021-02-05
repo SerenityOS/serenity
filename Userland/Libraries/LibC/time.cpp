@@ -27,13 +27,13 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/times.h>
+#include <syscall.h>
 #include <time.h>
 
 extern "C" {

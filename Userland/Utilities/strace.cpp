@@ -27,7 +27,6 @@
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
 #include <AK/Types.h>
-#include <Kernel/API/Syscall.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -37,6 +36,7 @@
 #include <string.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 static int g_pid = -1;

@@ -25,12 +25,12 @@
  */
 
 #include <AK/Format.h>
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
+#include <syscall.h>
 #include <unistd.h>
 
 extern "C" {

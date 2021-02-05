@@ -33,7 +33,6 @@
 #include <sys/mman.h>
 
 #if defined(__serenity__)
-#    include <Kernel/API/Syscall.h>
 #    include <serenity.h>
 #endif
 

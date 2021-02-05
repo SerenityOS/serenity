@@ -32,7 +32,6 @@
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <Kernel/API/Syscall.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -53,6 +52,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <syscall.h>
 #include <termios.h>
 #include <unistd.h>
 

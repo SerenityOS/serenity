@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Format.h>
-#include <errno.h>
-#include <stdio.h>
-#include <syscall.h>
+#pragma once
 
-int main()
-{
-    for (int i = 0; i < Syscall::Function::__Count; ++i) {
-        dbgln("Testing syscall #{}", i);
-        // This is pure torture
-        syscall(Syscall::Function(i), 0xc0000001, 0xc0000002, 0xc0000003);
-    }
+#include <Kernel/API/Syscall.h>
+#include <sys/types.h>
 
-    // Finally, test invalid syscalls:
-    dbgln("Testing syscall #{} (n+1)", (int)Syscall::Function::__Count);
-    syscall(Syscall::Function::__Count, 0xc0000001, 0xc0000002, 0xc0000003);
-    dbgln("Testing syscall #-1");
-    syscall(Syscall::Function(-1), 0xc0000001, 0xc0000002, 0xc0000003);
+extern "C" {
 
-    // If the Kernel survived, pass.
-    printf("PASS\n");
-    return 0;
+uintptr_t syscall0(uintptr_t function);
+uintptr_t syscall1(uintptr_t function, uintptr_t arg0);
+uintptr_t syscall2(uintptr_t function, uintptr_t arg0, uintptr_t arg1);
+uintptr_t syscall3(uintptr_t function, uintptr_t arg0, uintptr_t arg1, uintptr_t arg2);
 }
+
+#ifdef __cplusplus
+
+inline uintptr_t syscall(auto function)
+{
+    return syscall0(function);
+}
+
+inline uintptr_t syscall(auto function, auto arg0)
+{
+    return syscall1((uintptr_t)function, (uintptr_t)arg0);
+}
+
+inline uintptr_t syscall(auto function, auto arg0, auto arg1)
+{
+    return syscall2((uintptr_t)function, (uintptr_t)arg0, (uintptr_t)arg1);
+}
+
+inline uintptr_t syscall(auto function, auto arg0, auto arg1, auto arg2)
+{
+    return syscall3((uintptr_t)function, (uintptr_t)arg0, (uintptr_t)arg1, (uintptr_t)arg2);
+}
+
+#endif
