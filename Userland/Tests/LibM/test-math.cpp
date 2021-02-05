@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,13 +35,13 @@
 
 TEST_CASE(trig)
 {
-    EXPECT_CLOSE(sin(1234), 0.653316);
-    EXPECT_CLOSE(cos(1234), -0.830914);
-    EXPECT_CLOSE(tan(1234), -0.786262);
+    EXPECT_CLOSE(sin(1234), 0.601927);
+    EXPECT_CLOSE(cos(1234), -0.798550);
+    EXPECT_CLOSE(tan(1234), -0.753775);
     EXPECT_CLOSE(sqrt(1234), 35.128336)
-    EXPECT_CLOSE(sin(-1), -0.867955);
-    EXPECT_CLOSE(cos(-1), 0.594715);
-    EXPECT_CLOSE(tan(-1), -1.459446);
+    EXPECT_CLOSE(sin(-1), -0.8414709848078965);
+    EXPECT_CLOSE(cos(-1), 0.5403023058681398);
+    EXPECT_CLOSE(tan(-1), -1.5574077246549023);
     EXPECT(isnan(sqrt(-1)));
     EXPECT(isnan(asin(1.1)));
     EXPECT(isnan(asin(-1.1)));
@@ -53,7 +53,7 @@ TEST_CASE(trig)
     EXPECT_CLOSE(asin(0.5), 0.523599);
     EXPECT_CLOSE(asin(0.501), 0.524754);
     EXPECT_CLOSE(asin(0.9), 1.119770);
-    EXPECT_CLOSE(asin(0.99), 1.429246);
+    EXPECT_CLOSE(asin(0.99), 1.429245);
     EXPECT_CLOSE(asin(1.0), 1.570750);
     EXPECT_CLOSE(atan(0), 0.0)
     EXPECT_CLOSE(atan(0.5), 0.463648)
@@ -95,7 +95,7 @@ TEST_CASE(exponents)
         EXPECT_CLOSE(cosh(v.x), v.cosh);
         EXPECT_CLOSE(tanh(v.x), v.tanh);
     }
-    EXPECT_EQ(exp(1000), std::numeric_limits<double>::infinity());
+    EXPECT_EQ(exp(1000), __builtin_huge_val());
 }
 
 TEST_CASE(logarithms)
