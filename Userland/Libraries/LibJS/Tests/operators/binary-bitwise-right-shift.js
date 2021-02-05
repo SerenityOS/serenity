@@ -26,6 +26,10 @@ test("basic numeric shifting", () => {
     expect(42 >> 3).toBe(5);
     expect(42 >> 4).toBe(2);
     expect(42 >> 5).toBe(1);
+
+    expect(0xffffffff >> 0).toBe(-1);
+    expect(0xffffffff >> 16).toBe(-1);
+    expect((0xf0000000 * 2) >> 16).toBe(-8192);
 });
 
 test("numeric shifting with negative lhs values", () => {
