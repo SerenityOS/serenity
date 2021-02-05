@@ -140,6 +140,7 @@ add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Userland/Libraries/LibC)
 include_directories(Userland/Libraries/LibM)
+include_directories(Userland/Libraries/LibSystem)
 include_directories(Userland/Services)
 include_directories(Userland)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

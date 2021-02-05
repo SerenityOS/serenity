@@ -30,7 +30,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <Kernel/API/Syscall.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <alloca.h>
 #include <assert.h>
@@ -45,6 +44,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 static void strtons(const char* str, char** endptr)

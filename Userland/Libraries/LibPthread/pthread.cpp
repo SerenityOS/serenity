@@ -28,7 +28,6 @@
 #include <AK/Atomic.h>
 #include <AK/Debug.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/API/Syscall.h>
 #include <limits.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -36,6 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <syscall.h>
 #include <time.h>
 #include <unistd.h>
 

@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <sys/times.h>
+#include <syscall.h>
 
 clock_t times(struct tms* buf)
 {

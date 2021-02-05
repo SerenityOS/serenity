@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 extern "C" {

@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <string.h>
+#include <syscall.h>
 #include <utime.h>
 
 extern "C" {

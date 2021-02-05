@@ -30,7 +30,6 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -41,6 +40,7 @@
 #include <sys/internals.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 struct FILE {

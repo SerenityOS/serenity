@@ -31,7 +31,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <AK/ScopeGuard.h>
-#include <Kernel/API/Syscall.h>
 #include <LibC/mman.h>
 #include <LibC/stdio.h>
 #include <LibC/sys/internals.h>
@@ -45,6 +44,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
+#include <syscall.h>
 
 namespace ELF {
 
@@ -216,7 +216,7 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
     auto object = loader->load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
     ASSERT(object);
 
-    if (name.is_one_of("libc.so", "libpthread.so", "/bin/UserspaceEmulator")) {
+    if (name == "libsystem.so") {
         if (syscall(SC_msyscall, object->base_address().as_ptr())) {
             ASSERT_NOT_REACHED();
         }
