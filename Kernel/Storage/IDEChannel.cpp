@@ -142,7 +142,15 @@ IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group,
 
     initialize(force_pio);
     detect_disks();
+
+    // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
+    clear_pending_interrupts();
     enable_irq();
+}
+
+void IDEChannel::clear_pending_interrupts() const
+{
+    m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 }
 
 IDEChannel::~IDEChannel()
