@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/API/Syscall.h>
 #include <LibCore/ArgsParser.h>
 #include <serenity.h>
 #include <stdio.h>

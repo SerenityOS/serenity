@@ -25,7 +25,6 @@
  */
 
 #ifdef __serenity__
-#    include <Kernel/API/Syscall.h>
 #    include <serenity.h>
 #endif
 #include <AK/ScopeGuard.h>
