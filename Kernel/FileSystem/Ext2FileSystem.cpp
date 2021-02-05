@@ -501,6 +501,8 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
         if (include_block_list_blocks)
             add_block(array_block_index);
         auto count = min(blocks_remaining, entries_per_block);
+        if (!count)
+            return;
         u32 array[count];
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
         auto result = read_block(array_block_index, &buffer, sizeof(array), 0);
