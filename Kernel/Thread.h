@@ -97,13 +97,13 @@ public:
 
     void detach()
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         m_is_joinable = false;
     }
 
     [[nodiscard]] bool is_joinable() const
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSharedSpinLock lock(m_lock);
         return m_is_joinable;
     }
 
@@ -114,17 +114,17 @@ public:
     {
         // Because the name can be changed, we can't return a const
         // reference here. We must make a copy
-        ScopedSpinLock lock(m_lock);
+        ScopedSharedSpinLock lock(m_lock);
         return m_name;
     }
     void set_name(const StringView& s)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         m_name = s;
     }
     void set_name(String&& name)
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         m_name = move(name);
     }
 
@@ -808,7 +808,7 @@ public:
         if (Thread::current() == this)
             return EDEADLK;
 
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         if (!m_is_joinable || state() == Dead)
             return EINVAL;
 
@@ -831,7 +831,7 @@ public:
     [[nodiscard]] bool is_blocked() const { return m_state == Blocked; }
     [[nodiscard]] bool is_in_block() const
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedSharedSpinLock lock(m_lock);
         return m_in_block;
     }
 
@@ -863,11 +863,11 @@ public:
         // tick or entering the next system call, or if it's in kernel
         // mode then we will intercept prior to returning back to user
         // mode.
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         while (state() == Thread::Stopped) {
             dbgln("yield_if_stopped -->");
             lock.unlock();
-            VERIFY(!m_lock.own_lock());
+            VERIFY(!m_lock.own_exclusive());
             // We shouldn't be holding the big lock here
             yield_while_not_holding_big_lock();
             lock.lock();
@@ -883,7 +883,7 @@ public:
         ScopedCritical critical;
         VERIFY(!s_mm_lock.own_lock());
         
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         // We need to hold m_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
@@ -920,17 +920,16 @@ public:
                 // threads to die. In that case
                 timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
                     VERIFY(!Processor::in_irq());
-                    VERIFY(!m_lock.own_lock());
+                    VERIFY(!m_lock.own_exclusive());
                     // NOTE: this may execute on the same or any other processor!
-                    ScopedSpinLock lock(m_lock);
+                    ScopedExclusiveSpinLock lock(m_lock);
                     if (m_blocker && timeout_unblocked.exchange(true) == false)
                         unblock();
                 });
                 if (!timer) {
                     // Timeout is already in the past
-                    VERIFY(m_lock.own_lock());
+                    VERIFY(m_lock.own_exclusive());
                     blocker.not_blocking(true);
-
                     m_blocker = nullptr;
                     m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
@@ -965,7 +964,7 @@ public:
             yield_while_not_holding_big_lock();
             VERIFY(Processor::in_critical());
 
-            ScopedSpinLock lock2(m_lock);
+            ScopedExclusiveSpinLock lock2(m_lock);
             if (should_be_stopped() || state() == Stopped) {
                 dbgln("Thread should be stopped, current state: {}", state_string());
                 set_state(Thread::Blocked);
@@ -990,7 +989,7 @@ public:
         }
 
         if (blocker.was_interrupted_by_signal()) {
-            ScopedSpinLock lock(m_lock);
+            ScopedExclusiveSpinLock lock(m_lock);
             dispatch_one_pending_signal();
         }
 
@@ -1149,7 +1148,7 @@ public:
         // We can't finalize until the thread is either detached or
         // a join has started. We can't make m_is_joinable atomic
         // because that would introduce a race in try_join.
-        ScopedSpinLock lock(m_lock);
+        ScopedSharedSpinLock lock(m_lock);
         return !m_is_joinable;
     }
 
@@ -1174,7 +1173,7 @@ public:
     void set_previous_mode(PreviousMode mode) { m_previous_mode = mode; }
     TrapFrame*& current_trap() { return m_current_trap; }
 
-    RecursiveSpinLock& get_lock() const { return m_lock; }
+    RecursiveSharedSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
     void holding_lock(Lock& lock, int refs_delta, const SourceLocation& location)
@@ -1227,24 +1226,24 @@ public:
 
     void clear_pending_beneficiary()
     {
-        VERIFY(m_lock.own_lock());
+        VERIFY(m_lock.own_exclusive());
         m_pending_beneficiary = nullptr;
         m_pending_donate_reason = nullptr;
     }
     void set_pending_beneficiary(Thread& beneficiary, const char* reason)
     {
-        VERIFY(m_lock.own_lock());
+        VERIFY(m_lock.own_exclusive());
         m_pending_beneficiary = beneficiary;
         m_pending_donate_reason = reason;
     }
     RefPtr<Thread> take_pending_beneficiary()
     {
-        VERIFY(m_lock.own_lock());
+        VERIFY(m_lock.own_exclusive());
         auto pending_beneficiary = move(m_pending_beneficiary);
         return pending_beneficiary.strong_ref();
     }
     const char* take_pending_donate_reason() {
-        VERIFY(m_lock.own_lock());
+        VERIFY(m_lock.own_exclusive());
         return exchange(m_pending_donate_reason, nullptr);
     }
 
@@ -1318,7 +1317,7 @@ private:
     void relock_process(LockMode, u32);
     void reset_fpu_state();
 
-    mutable RecursiveSpinLock m_lock;
+    mutable RecursiveSharedSpinLock m_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS m_tss {};

@@ -53,7 +53,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         auto result = peer_process.start_tracing_from(caller.pid());
         if (result.is_error())
             return result.error();
-        ScopedSpinLock lock(peer->get_lock());
+        ScopedExclusiveSpinLock lock(peer->get_lock());
         if (peer->state() != Thread::State::Stopped) {
             peer->send_signal(SIGSTOP, &caller);
         }

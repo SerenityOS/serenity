@@ -88,7 +88,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     PerformanceManager::add_process_created_event(*child);
 
     {
-        ScopedSpinLock lock(child_first_thread->get_lock());
+        ScopedExclusiveSpinLock lock(child_first_thread->get_lock());
         child_first_thread->set_affinity(Thread::current()->affinity());
         child_first_thread->set_state(Thread::State::Runnable);
     }

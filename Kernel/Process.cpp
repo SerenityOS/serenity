@@ -187,7 +187,7 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
         process->ref();
     }
 
-    ScopedSpinLock lock(first_thread->get_lock());
+    ScopedExclusiveSpinLock lock(first_thread->get_lock());
     first_thread->set_affinity(affinity);
     first_thread->set_state(Thread::State::Runnable);
     return process;
@@ -609,7 +609,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
         return {};
 
     auto thread = thread_or_error.release_value();
-    ScopedSpinLock lock(thread->get_lock());
+    ScopedExclusiveSpinLock lock(thread->get_lock());
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);

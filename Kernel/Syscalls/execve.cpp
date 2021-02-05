@@ -643,7 +643,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     PerformanceManager::add_process_exec_event(*this);
 
     {
-        ScopedSpinLock lock(new_main_thread->get_lock());
+        ScopedExclusiveSpinLock lock(new_main_thread->get_lock());
         new_main_thread->set_state(Thread::State::Runnable);
     }
     u32 lock_count_to_restore;
@@ -881,9 +881,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
-        VERIFY(!current_thread->get_lock().own_lock());
+        VERIFY(!current_thread->get_lock().own_exclusive());
         VERIFY(Processor::in_critical() == 1);
-        current_thread->get_lock().lock();
+        current_thread->get_lock().lock<SharedSpinLockMode::Exclusive>();
         current_thread->set_state(Thread::State::Running);
         Processor::assume_context(*current_thread, prev_flags);
         VERIFY_NOT_REACHED();

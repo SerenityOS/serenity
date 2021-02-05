@@ -1328,7 +1328,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     };
 
     ScopedCritical critical;
-    ScopedSpinLock lock(thread.get_lock());
+    ScopedExclusiveSpinLock lock(thread.get_lock());
     if (&thread == Processor::current_thread()) {
         VERIFY(thread.state() == Thread::Running);
         // Leave the lock. If we trigger page faults we may
@@ -1452,9 +1452,9 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!in_irq());
     VERIFY(is_kernel_mode());
-    VERIFY(from_thread->get_lock().own_lock());
+    VERIFY(from_thread->get_lock().own_exclusive());
     VERIFY(from_thread->get_lock().own_recursions() == 1);
-    VERIFY(to_thread->get_lock().own_lock());
+    VERIFY(to_thread->get_lock().own_exclusive());
     VERIFY(to_thread->get_lock().own_recursions() == 1);
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
@@ -1518,9 +1518,9 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     VERIFY(!are_interrupts_enabled());
     VERIFY(is_kernel_mode());
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} (locked: {}) to {} {} (locked: {}) (context_first_init)", VirtualAddress(from_thread), *from_thread, from_thread->get_lock().own_recursions(), VirtualAddress(to_thread), *to_thread, to_thread->get_lock().own_lock());
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
-    VERIFY(to_thread->get_lock().own_lock());
+    VERIFY(to_thread->get_lock().own_exclusive());
     VERIFY(to_thread == Thread::current());
 
     // Since we got here and don't have Scheduler::context_switch in the
@@ -1531,7 +1531,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // trigger a context switch within a context switch, leading to a crash.
     Scheduler::leave_context_switch(*from_thread, *to_thread, true);
 
-    VERIFY(!to_thread->get_lock().own_lock());
+    VERIFY(!to_thread->get_lock().own_exclusive());
 }
 
 extern "C" void thread_context_first_enter(void);
@@ -1561,7 +1561,7 @@ void exit_kernel_thread(void)
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
-    VERIFY(thread.get_lock().own_lock());
+    VERIFY(thread.get_lock().own_exclusive());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1

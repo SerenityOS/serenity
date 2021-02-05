@@ -80,8 +80,8 @@ Thread& Scheduler::pull_next_runnable_thread()
 
             lock.unlock();
             if (&thread != current_thread) {
-                VERIFY(!thread.get_lock().own_lock());
-                thread.save_flags(thread.get_lock().lock());
+                VERIFY(!thread.get_lock().own_exclusive());
+                thread.save_flags(thread.get_lock().lock<SharedSpinLockMode::Exclusive>());
             } else {
                 VERIFY(thread.get_lock().own_recursions() == 1);
             }
@@ -104,8 +104,8 @@ Thread& Scheduler::pull_next_runnable_thread()
     lock.unlock();
     auto* idle_thread = Processor::idle_thread();
     if (idle_thread != current_thread) {
-        VERIFY(!idle_thread->get_lock().own_lock());
-        idle_thread->save_flags(idle_thread->get_lock().lock());
+        VERIFY(!idle_thread->get_lock().own_exclusive());
+        idle_thread->save_flags(idle_thread->get_lock().lock<SharedSpinLockMode::Exclusive>());
     } else {
         VERIFY(idle_thread->get_lock().own_recursions() == 1);
     }
@@ -160,8 +160,8 @@ UNMAP_AFTER_INIT void Scheduler::start()
     VERIFY(processor.is_initialized());
     auto& idle_thread = *Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
-    VERIFY(!idle_thread.get_lock().own_lock());
-    idle_thread.save_flags(idle_thread.get_lock().lock());
+    VERIFY(!idle_thread.get_lock().own_exclusive());
+    idle_thread.save_flags(idle_thread.get_lock().lock<SharedSpinLockMode::Exclusive>());
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
@@ -178,13 +178,39 @@ bool Scheduler::pick_next()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
+    if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
+        dbgln("Scheduler[{}] thread list:", Processor::id());
+        Thread::for_each([&](Thread& thread) -> IterationDecision {
+            switch (thread.state()) {
+            case Thread::Dying:
+                dbgln("  {:12} {} @ {:04x}:{:08x} Finalizable: {}",
+                    thread.state_string(),
+                    thread,
+                    thread.tss().cs,
+                    thread.tss().eip,
+                    thread.is_finalizable());
+                break;
+            default:
+                dbgln("  {:12} Pr:{:2} {} @ {:04x}:{:08x}",
+                    thread.state_string(),
+                    thread.priority(),
+                    thread,
+                    thread.tss().cs,
+                    thread.tss().eip);
+                break;
+            }
+
+            return IterationDecision::Continue;
+        });
+    }
+
     auto current_thread = Thread::current();
 
     // Set the in_scheduler flag before acquiring the spinlock. This
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     Processor::set_in_scheduler(true);
-    current_thread->save_flags(current_thread->get_lock().lock());
+    current_thread->save_flags(current_thread->get_lock().lock<SharedSpinLockMode::Exclusive>());
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
@@ -257,15 +283,15 @@ bool Scheduler::yield()
 
 bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const char* reason)
 {
-    VERIFY(beneficiary->get_lock().own_lock());
+    VERIFY(beneficiary->get_lock().own_exclusive());
 
     VERIFY(Processor::in_critical() == 1);
 
     auto* current_thread = Thread::current();
-    VERIFY(current_thread->get_lock().own_lock());
+    VERIFY(current_thread->get_lock().own_exclusive());
     unsigned ticks_left = current_thread->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1) {
-        current_thread->get_lock().unlock(current_thread->saved_flags());
+        current_thread->get_lock().unlock<SharedSpinLockMode::Exclusive>(current_thread->saved_flags());
         return Scheduler::yield();
     }
 
@@ -281,7 +307,7 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     VERIFY(beneficiary);
 
     auto* current_thread = Thread::current();
-    VERIFY(!current_thread->get_lock().own_lock());
+    VERIFY(!current_thread->get_lock().own_exclusive());
     if (beneficiary == current_thread)
         return Scheduler::yield();
 
@@ -289,7 +315,6 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     Processor::set_in_scheduler(true);
-    current_thread->save_flags(current_thread->get_lock().lock());
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
@@ -300,13 +325,13 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     VERIFY(!Processor::in_irq());
 
     if (Processor::in_critical() > 1) {
-        ScopedSpinLock lock(current_thread->get_lock());
+        ScopedExclusiveSpinLock lock(current_thread->get_lock());
         current_thread->set_pending_beneficiary(*beneficiary, reason);
         Processor::invoke_scheduler_async();
         return false;
     }
 
-    current_thread->save_flags(current_thread->get_lock().lock());
+    current_thread->save_flags(current_thread->get_lock().lock<SharedSpinLockMode::Exclusive>());
     donate_to_and_switch(beneficiary, reason);
     return false;
 }
@@ -318,7 +343,7 @@ bool Scheduler::context_switch(Thread* thread)
 
     auto from_thread = Thread::current();
     if (from_thread == thread) {
-        thread->get_lock().unlock(thread->saved_flags());
+        thread->get_lock().unlock<SharedSpinLockMode::Exclusive>(thread->saved_flags());
         return false;
     }
 
@@ -352,7 +377,7 @@ bool Scheduler::context_switch(Thread* thread)
 
 void Scheduler::enter_current(Thread& prev_thread, Thread& current_thread, bool is_first)
 {
-    VERIFY(prev_thread.get_lock().own_lock());
+    VERIFY(prev_thread.get_lock().own_exclusive());
     prev_thread.set_active(false);
     if (prev_thread.state() == Thread::Dying) {
         // If the thread we switched from is marked as dying, then notify
@@ -372,7 +397,7 @@ void Scheduler::enter_current(Thread& prev_thread, Thread& current_thread, bool 
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
         if (!current_thread.is_in_block() && current_thread.previous_mode() != Thread::PreviousMode::KernelMode && current_thread.current_trap()) {
-            ScopedSpinLock lock(current_thread.get_lock());
+            ScopedExclusiveSpinLock lock(current_thread.get_lock());
             if (current_thread.state() == Thread::Running && current_thread.pending_signals_for_state()) {
                 current_thread.dispatch_one_pending_signal();
             }
@@ -383,9 +408,9 @@ void Scheduler::enter_current(Thread& prev_thread, Thread& current_thread, bool 
 void Scheduler::leave_context_switch(Thread& prev_thread, Thread& current_thread, bool is_first)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(prev_thread.get_lock().own_lock());
+    VERIFY(prev_thread.get_lock().own_exclusive());
     VERIFY(prev_thread.get_lock().own_recursions() == 1);
-    VERIFY(current_thread.get_lock().own_lock());
+    VERIFY(current_thread.get_lock().own_exclusive());
     VERIFY(current_thread.get_lock().own_recursions() == 1);
 
     enter_current(prev_thread, current_thread, is_first);
@@ -394,7 +419,7 @@ void Scheduler::leave_context_switch(Thread& prev_thread, Thread& current_thread
     Processor::restore_in_critical(in_critical);
 
     if (&prev_thread != &current_thread)
-        prev_thread.get_lock().unlock(prev_thread.saved_flags());
+        prev_thread.get_lock().unlock<SharedSpinLockMode::Exclusive>(prev_thread.saved_flags());
 
     // This is called when a thread is switched into for the first time.
     // At this point, enter_current has already be called, but because
@@ -403,7 +428,7 @@ void Scheduler::leave_context_switch(Thread& prev_thread, Thread& current_thread
     VERIFY(Processor::in_scheduler());
     Processor::set_in_scheduler(false);
 
-    current_thread.get_lock().unlock(current_thread.saved_flags());
+    current_thread.get_lock().unlock<SharedSpinLockMode::Exclusive>(current_thread.saved_flags());
 }
 
 void Scheduler::prepare_after_exec()
@@ -529,7 +554,7 @@ void Scheduler::idle_loop(void*)
     auto& proc = Processor::current();
     dbgln("Scheduler[{}]: idle loop running", proc.get_id());
     VERIFY_INTERRUPTS_ENABLED();
-    VERIFY(!Thread::current()->get_lock().own_lock());
+    VERIFY(!Thread::current()->get_lock().own_exclusive());
 
     for (;;) {
         VERIFY_INTERRUPTS_ENABLED();

@@ -143,7 +143,7 @@ Thread::~Thread()
 void Thread::unblock_from_blocker(Blocker& blocker)
 {
     auto do_unblock = [&]() {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         if (m_blocker != &blocker)
             return;
         if (!should_be_stopped() && !is_stopped())
@@ -162,7 +162,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 void Thread::unblock(u8 signal)
 {
     VERIFY(!Processor::in_irq());
-    VERIFY(m_lock.own_lock());
+    VERIFY(m_lock.own_exclusive());
     if (m_state != Thread::Blocked)
         return;
     VERIFY(m_blocker);
@@ -194,7 +194,7 @@ void Thread::set_should_die()
     }
     // Remember that we should die instead of returning to
     // the userspace.
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     m_should_die = true;
 
     // NOTE: Even the current thread can technically be in "Stopped"
@@ -257,7 +257,7 @@ void Thread::exit(void* exit_value)
 
 void Thread::yield_while_not_holding_big_lock()
 {
-    VERIFY(!m_lock.own_lock());
+    VERIFY(!m_lock.own_exclusive());
     VERIFY(Thread::current() == this);
     Scheduler::yield(); // Flag a context switch
     u32 prev_flags;
@@ -269,7 +269,7 @@ void Thread::yield_while_not_holding_big_lock()
 
 void Thread::yield_without_holding_big_lock()
 {
-    VERIFY(!m_lock.own_lock());
+    VERIFY(!m_lock.own_exclusive());
     VERIFY(Thread::current() == this);
     ScopedCritical critical;
     u32 lock_count_to_restore = 0;
@@ -333,7 +333,7 @@ const char* Thread::state_string() const
     case Thread::Stopped:
         return "Stopped";
     case Thread::Blocked: {
-        ScopedSpinLock lock(m_lock);
+        ScopedSharedSpinLock lock(m_lock);
         VERIFY(m_blocker != nullptr);
         return m_blocker->state_string();
     }
@@ -346,7 +346,7 @@ void Thread::finalize()
     VERIFY(Thread::current() == g_finalizer);
     VERIFY(Thread::current() != this);
 
-    VERIFY(!m_lock.own_lock());
+    VERIFY(!m_lock.own_exclusive());
 
 #if LOCK_DEBUG
     if (lock_count() > 0) {
@@ -361,7 +361,7 @@ void Thread::finalize()
 #endif
 
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         dbgln_if(THREAD_DEBUG, "Finalizing thread {}", *this);
         set_state(Thread::State::Dead);
         m_join_condition.thread_finalizing();
@@ -419,7 +419,7 @@ void Thread::check_dispatch_pending_signal()
 {
     auto result = DispatchSignalResult::Continue;
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         if (pending_signals_for_state())
             result = dispatch_one_pending_signal();
     }
@@ -443,7 +443,7 @@ u32 Thread::pending_signals() const
 
 u32 Thread::pending_signals_for_state() const
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
     if (is_handling_page_fault())
         return 0;
@@ -453,7 +453,7 @@ u32 Thread::pending_signals_for_state() const
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     VERIFY(signal < 32);
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
@@ -484,7 +484,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
 u32 Thread::update_signal_mask(u32 signal_mask)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     auto previous_signal_mask = m_signal_mask;
     m_signal_mask = signal_mask;
     m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
@@ -493,13 +493,13 @@ u32 Thread::update_signal_mask(u32 signal_mask)
 
 u32 Thread::signal_mask() const
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedSharedSpinLock lock(m_lock);
     return m_signal_mask;
 }
 
 u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     auto previous_signal_mask = m_signal_mask;
     if (block)
         m_signal_mask &= ~signal_set;
@@ -511,7 +511,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
 
 void Thread::clear_signals()
 {
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     m_signal_mask = 0;
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
@@ -529,7 +529,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
     VERIFY(Thread::current() == this);
     DispatchSignalResult result;
     {
-        ScopedSpinLock lock(m_lock);
+        ScopedExclusiveSpinLock lock(m_lock);
         result = dispatch_signal(signal);
     }
     if (result == DispatchSignalResult::Yield)
@@ -538,7 +538,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
 
 DispatchSignalResult Thread::dispatch_one_pending_signal()
 {
-    VERIFY(m_lock.own_lock());
+    VERIFY(m_lock.own_exclusive());
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if (signal_candidates == 0)
         return DispatchSignalResult::Continue;
@@ -555,7 +555,7 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
 DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
 {
     VERIFY(signal != 0);
-    ScopedSpinLock lock(m_lock);
+    ScopedExclusiveSpinLock lock(m_lock);
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if (!(signal_candidates & (1 << (signal - 1))))
         return DispatchSignalResult::Continue;
@@ -643,7 +643,7 @@ void Thread::resume_from_stopped()
 {
     VERIFY(is_stopped());
     VERIFY(m_stop_state != State::Invalid);
-    VERIFY(m_lock.own_lock());
+    VERIFY(m_lock.own_exclusive());
     if (m_stop_state == Blocked) {
         if (m_blocker) {
             // Hasn't been unblocked yet
@@ -660,7 +660,7 @@ void Thread::resume_from_stopped()
 DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(m_lock.own_lock());
+    VERIFY(m_lock.own_exclusive());
     VERIFY(signal > 0 && signal <= 32);
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
@@ -844,7 +844,7 @@ RefPtr<Thread> Thread::clone(Process& process)
 void Thread::set_state(State new_state, u8 stop_signal)
 {
     State previous_state;
-    VERIFY(m_lock.own_lock());
+    VERIFY(m_lock.own_exclusive());
     if (new_state == m_state)
         return;
 
