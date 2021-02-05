@@ -58,7 +58,7 @@ private:
     void enable_interrupt_vector();
     void disable_interrupt_vector();
     explicit SharedIRQHandler(u8 interrupt_number);
-    bool m_enabled;
+    bool m_enabled { true };
     HashTable<GenericInterruptHandler*> m_handlers;
     RefPtr<IRQController> m_responsible_irq_controller;
 };
