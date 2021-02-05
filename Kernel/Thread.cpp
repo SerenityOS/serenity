@@ -27,7 +27,7 @@
 
 namespace Kernel {
 
-SpinLock<u8> Thread::g_tid_map_lock;
+SharedSpinLock Thread::g_tid_map_lock;
 READONLY_AFTER_INIT HashMap<ThreadID, Thread*>* Thread::g_tid_map;
 
 UNMAP_AFTER_INIT void Thread::initialize()
@@ -65,7 +65,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     m_kernel_stack_region->set_name(String::formatted("Kernel stack (thread {})", m_tid.value()));
 
     {
-        ScopedSpinLock lock(g_tid_map_lock);
+        ScopedExclusiveSpinLock lock(g_tid_map_lock);
         auto result = g_tid_map->set(m_tid, this);
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
     }
@@ -134,7 +134,7 @@ Thread::~Thread()
         VERIFY(m_runnable_priority < 0);
     }
     {
-        ScopedSpinLock lock(g_tid_map_lock);
+        ScopedExclusiveSpinLock lock(g_tid_map_lock);
         auto result = g_tid_map->remove(m_tid);
         VERIFY(result);
     }
@@ -1004,7 +1004,7 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
     RefPtr<Thread> found_thread;
     {
-        ScopedSpinLock lock(g_tid_map_lock);
+        ScopedSharedSpinLock lock(g_tid_map_lock);
         auto it = g_tid_map->find(tid);
         if (it != g_tid_map->end())
             found_thread = it->value;

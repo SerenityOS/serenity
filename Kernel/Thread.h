@@ -72,7 +72,7 @@ class Thread
     friend struct ThreadReadyQueue;
     friend class Lock;
 
-    static SpinLock<u8> g_tid_map_lock;
+    static SharedSpinLock g_tid_map_lock;
     static HashMap<ThreadID, Thread*>* g_tid_map;
 
 public:
@@ -1400,7 +1400,7 @@ AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 template<typename Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    ScopedSpinLock lock(g_tid_map_lock);
+    ScopedSharedSpinLock lock(g_tid_map_lock);
     for (auto& it : *g_tid_map) {
         IterationDecision decision = callback(*it.value);
         if (decision != IterationDecision::Continue)
@@ -1412,7 +1412,7 @@ inline IterationDecision Thread::for_each(Callback callback)
 template<typename Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
-    ScopedSpinLock lock(g_tid_map_lock);
+    ScopedSharedSpinLock lock(g_tid_map_lock);
     for (auto& it : *g_tid_map) {
         auto& thread = *it.value;
         if (thread.state() != state)
