@@ -46,6 +46,7 @@ static in_addr_t* __gethostbyname_address_list_buffer[2];
 
 static hostent __gethostbyaddr_buffer;
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
+static constexpr i32 lookup_server_endpoint_magic = 9001;
 
 // Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
@@ -123,32 +124,74 @@ hostent* gethostbyname(const char* name)
         close(fd);
     });
 
-    auto line = String::formatted("L{}\n", name);
-    int nsent = write(fd, line.characters(), line.length());
+    size_t name_length = strlen(name);
+
+    struct [[gnu::packed]] {
+        u32 message_size;
+        i32 endpoint_magic;
+        i32 message_id;
+        i32 name_length;
+    } request_header = {
+        sizeof(request_header) - sizeof(request_header.message_size) + name_length,
+        lookup_server_endpoint_magic,
+        1,
+        (i32)name_length,
+    };
+    int nsent = write(fd, &request_header, sizeof(request_header));
     if (nsent < 0) {
         perror("write");
         return nullptr;
     }
+    ASSERT((size_t)nsent == sizeof(request_header));
+    nsent = write(fd, name, name_length);
+    if (nsent < 0) {
+        perror("write");
+        return nullptr;
+    }
+    ASSERT((size_t)nsent == name_length);
 
-    ASSERT((size_t)nsent == line.length());
+    struct [[gnu::packed]] {
+        u32 message_size;
+        i32 endpoint_magic;
+        i32 message_id;
+        i32 code;
+        u64 addresses_count;
+    } response_header;
 
-    char buffer[1024];
-    int nrecv = read(fd, buffer, sizeof(buffer) - 1);
+    int nrecv = read(fd, &response_header, sizeof(response_header));
     if (nrecv < 0) {
         perror("recv");
         return nullptr;
     }
-
-    if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
+    ASSERT((size_t)nrecv == sizeof(response_header));
+    if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 2) {
+        dbgln("Received an unexpected message");
         return nullptr;
-
-    auto responses = String(buffer, nrecv).split('\n');
-    if (responses.is_empty())
+    }
+    if (response_header.code != 0) {
+        // TODO: return a specific error.
         return nullptr;
+    }
+    ASSERT(response_header.addresses_count > 0);
 
-    auto& response = responses[0];
+    i32 response_length;
+    nrecv = read(fd, &response_length, sizeof(response_length));
+    if (nrecv < 0) {
+        perror("recv");
+        return nullptr;
+    }
+    ASSERT((size_t)nrecv == sizeof(response_length));
 
-    int rc = inet_pton(AF_INET, response.characters(), &__gethostbyname_address);
+    char response[response_length + 1];
+    nrecv = read(fd, response, response_length);
+    if (nrecv < 0) {
+        perror("recv");
+        return nullptr;
+    }
+    ASSERT(nrecv == response_length);
+    response[response_length] = 0;
+
+    int rc = inet_pton(AF_INET, response, &__gethostbyname_address);
     if (rc <= 0)
         return nullptr;
 
@@ -188,36 +231,66 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     });
 
     IPv4Address ipv4_address((const u8*)&((const in_addr*)addr)->s_addr);
+    auto address = ipv4_address.to_string();
 
-    auto line = String::formatted("R{}.{}.{}.{}.in-addr.arpa\n",
-        ipv4_address[3],
-        ipv4_address[2],
-        ipv4_address[1],
-        ipv4_address[0]);
-    int nsent = write(fd, line.characters(), line.length());
+    struct [[gnu::packed]] {
+        u32 message_size;
+        i32 endpoint_magic;
+        i32 message_id;
+        i32 address_length;
+    } request_header = {
+        sizeof(request_header) - sizeof(request_header.message_size) + address.length(),
+        lookup_server_endpoint_magic,
+        3,
+        (i32)address.length(),
+    };
+    int nsent = write(fd, &request_header, sizeof(request_header));
     if (nsent < 0) {
         perror("write");
         return nullptr;
     }
+    ASSERT((size_t)nsent == sizeof(request_header));
+    nsent = write(fd, address.characters(), address.length());
+    if (nsent < 0) {
+        perror("write");
+        return nullptr;
+    }
+    ASSERT((size_t)nsent == address.length());
 
-    ASSERT((size_t)nsent == line.length());
+    struct [[gnu::packed]] {
+        u32 message_size;
+        i32 endpoint_magic;
+        i32 message_id;
+        i32 code;
+        i32 name_length;
+    } response_header;
 
-    char buffer[1024];
-    int nrecv = read(fd, buffer, sizeof(buffer) - 1);
+    int nrecv = read(fd, &response_header, sizeof(response_header));
     if (nrecv < 0) {
         perror("recv");
         return nullptr;
     }
-
-    if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
+    ASSERT((size_t)nrecv == sizeof(response_header));
+    if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 4) {
+        dbgln("Received an unexpected message");
         return nullptr;
-
-    auto responses = String(buffer, nrecv).split('\n');
-    if (responses.is_empty())
+    }
+    if (response_header.code != 0) {
+        // TODO: return a specific error.
         return nullptr;
+    }
 
-    gethostbyaddr_name_buffer = responses[0];
-    __gethostbyaddr_buffer.h_name = const_cast<char*>(gethostbyaddr_name_buffer.characters());
+    char* buffer;
+    auto string_impl = StringImpl::create_uninitialized(response_header.name_length, buffer);
+    nrecv = read(fd, buffer, response_header.name_length);
+    if (nrecv < 0) {
+        perror("recv");
+        return nullptr;
+    }
+    ASSERT(nrecv == response_header.name_length);
+
+    gethostbyaddr_name_buffer = move(string_impl);
+    __gethostbyaddr_buffer.h_name = buffer;
     __gethostbyaddr_buffer.h_aliases = nullptr;
     __gethostbyaddr_buffer.h_addrtype = AF_INET;
     // FIXME: Should we populate the hostent's address list here with a sockaddr_in for the provided host?
