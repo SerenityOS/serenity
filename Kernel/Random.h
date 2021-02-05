@@ -110,7 +110,7 @@ private:
         HashType new_key;
         new_key.update(m_key);
         for (size_t i = 0; i < pool_count; ++i) {
-            if (m_reseed_number % (1 << i) == 0) {
+            if (m_reseed_number % (1u << i) == 0) {
                 DigestType digest = m_pools[i].digest();
                 new_key.update(digest.immutable_data(), digest.data_length());
             }
