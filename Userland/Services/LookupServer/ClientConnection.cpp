@@ -25,7 +25,7 @@
  */
 
 #include "ClientConnection.h"
-#include "DNSRequest.h"
+#include "DNSPacket.h"
 #include "LookupServer.h"
 #include <AK/IPv4Address.h>
 
