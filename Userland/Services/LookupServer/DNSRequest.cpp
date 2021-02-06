@@ -25,7 +25,7 @@
  */
 
 #include "DNSRequest.h"
-#include "DNSPacket.h"
+#include "DNSPacketHeader.h"
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <arpa/inet.h>
@@ -71,7 +71,7 @@ void DNSRequest::add_question(const String& name, u16 record_type, ShouldRandomi
 
 ByteBuffer DNSRequest::to_byte_buffer() const
 {
-    DNSPacket request_header;
+    DNSPacketHeader request_header;
     request_header.set_id(m_id);
     request_header.set_is_query();
     request_header.set_opcode(0);
