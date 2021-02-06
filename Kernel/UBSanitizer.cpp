@@ -108,4 +108,11 @@ void __ubsan_handle_out_of_bounds(const OutOfBoundsData& data, void*)
     dbgln("KUBSAN: out of bounds access into array of {} ({}-bit), index type {} ({}-bit)", data.array_type.name(), data.array_type.bit_width(), data.index_type.name(), data.index_type.bit_width());
     print_location(data.location);
 }
+
+void __ubsan_handle_type_mismatch_v1(const TypeMismatchData&, void*);
+void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, void*)
+{
+    dbgln("KUBSAN: type mismatch, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
 }
