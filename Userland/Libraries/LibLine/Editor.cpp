@@ -539,7 +539,7 @@ void Editor::interrupted()
 
     m_was_interrupted = true;
     handle_interrupt_event();
-    if (!m_finish)
+    if (!m_finish || !m_previous_interrupt_was_handled_as_interrupt)
         return;
 
     m_finish = false;
@@ -681,10 +681,13 @@ void Editor::try_update_once()
 void Editor::handle_interrupt_event()
 {
     m_was_interrupted = false;
+    m_previous_interrupt_was_handled_as_interrupt = false;
 
     m_callback_machine.interrupted(*this);
     if (!m_callback_machine.should_process_last_pressed_key())
         return;
+
+    m_previous_interrupt_was_handled_as_interrupt = true;
 
     fprintf(stderr, "^C");
     fflush(stderr);

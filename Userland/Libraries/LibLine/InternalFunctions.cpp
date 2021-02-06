@@ -258,6 +258,14 @@ void Editor::enter_search()
             return false; // Do not process this key event
         });
 
+        // ^C should cancel the search.
+        m_search_editor->register_key_input_callback(ctrl('C'), [this](Editor& search_editor) {
+            search_editor.finish();
+            m_reset_buffer_on_search_end = true;
+            search_editor.deferred_invoke([&search_editor](auto&) { search_editor.really_quit_event_loop(); });
+            return false;
+        });
+
         // Whenever the search editor gets a backspace, cycle back between history entries
         // unless we're at the zeroth entry, in which case, allow the deletion.
         m_search_editor->register_key_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
