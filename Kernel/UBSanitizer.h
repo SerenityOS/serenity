@@ -84,4 +84,16 @@ struct VLABoundData {
     const TypeDescriptor& type;
 };
 
+struct ShiftOutOfBoundsData {
+    SourceLocation location;
+    const TypeDescriptor& lhs_type;
+    const TypeDescriptor& rhs_type;
+};
+
+struct OutOfBoundsData {
+    SourceLocation location;
+    const TypeDescriptor& array_type;
+    const TypeDescriptor& index_type;
+};
+
 }
