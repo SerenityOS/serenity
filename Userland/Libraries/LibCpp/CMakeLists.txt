@@ -2,6 +2,7 @@ set(SOURCES
     AST.cpp
     Lexer.cpp
     Parser.cpp
+    Preprocessor.cpp
     SyntaxHighlighter.cpp
 )
 
