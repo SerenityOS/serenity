@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// #define CPP_DEBUG
-
 #ifdef CPP_DEBUG
 #    define DEBUG_SPAM
 #endif
@@ -33,6 +31,7 @@
 #include "Parser.h"
 #include "AK/LogStream.h"
 #include "AST.h"
+#include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>
 #include <LibCpp/Lexer.h>
@@ -49,7 +48,7 @@ Parser::Parser(const StringView& program)
             continue;
         m_tokens.append(move(token));
     }
-#ifdef CPP_DEBUG
+#if CPP_DEBUG
     dbgln("Program:");
     dbgln("{}", m_program);
     dbgln("Tokens:");
@@ -229,10 +228,12 @@ bool Parser::match_variable_declaration()
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
+    // Type
     if (!peek(Token::Type::KnownType).has_value() && !peek(Token::Type::Identifier).has_value())
         return false;
     consume();
 
+    // Identifier
     if (!peek(Token::Type::Identifier).has_value())
         return false;
     consume();
@@ -243,9 +244,10 @@ bool Parser::match_variable_declaration()
             error("initial value of variable is not an expression");
             return false;
         }
+        return true;
     }
 
-    return true;
+    return match(Token::Type::Semicolon);
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& parent)
@@ -706,7 +708,7 @@ void Parser::error(StringView message)
             m_tokens[m_state.token_index].m_start.column);
     }
     m_errors.append(formatted_message);
-    dbgln("{}", formatted_message);
+    dbgln<CPP_DEBUG>("{}", formatted_message);
 }
 
 bool Parser::match_expression()
@@ -1019,5 +1021,4 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement(ASTNode& parent)
     }
     return if_statement;
 }
-
 }
