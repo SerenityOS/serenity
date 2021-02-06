@@ -66,6 +66,10 @@
 #cmakedefine01 CPP_LANGUAGE_SERVER_DEBUG
 #endif
 
+#ifndef CPP_DEBUG
+#cmakedefine01 CPP_DEBUG
+#endif
+
 #ifndef CRYPTO_DEBUG
 #cmakedefine01 CRYPTO_DEBUG
 #endif
