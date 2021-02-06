@@ -96,4 +96,11 @@ struct OutOfBoundsData {
     const TypeDescriptor& index_type;
 };
 
+struct TypeMismatchData {
+    SourceLocation location;
+    const TypeDescriptor& type;
+    u8 log_alignment;
+    u8 type_check_kind;
+};
+
 }
