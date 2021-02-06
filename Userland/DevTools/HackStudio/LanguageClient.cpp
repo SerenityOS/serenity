@@ -62,6 +62,7 @@ void LanguageClient::remove_text(const String& path, size_t from_line, size_t fr
 
 void LanguageClient::request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column)
 {
+    set_active_client();
     m_connection.post_message(Messages::LanguageServer::AutoCompleteSuggestions(path, cursor_line, cursor_column));
 }
 
@@ -76,6 +77,11 @@ void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::Autocomp
 void LanguageClient::set_autocomplete_mode(const String& mode)
 {
     m_connection.post_message(Messages::LanguageServer::SetAutoCompleteMode(mode));
+}
+
+void LanguageClient::set_active_client()
+{
+    m_connection.attach(*this);
 }
 
 }
