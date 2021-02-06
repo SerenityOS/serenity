@@ -47,7 +47,7 @@ TableCellBox::~TableCellBox()
 size_t TableCellBox::colspan() const
 {
     if (!dom_node())
-        return 0;
+        return 1;
     return downcast<DOM::Element>(*dom_node()).attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
 }
 
