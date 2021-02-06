@@ -775,9 +775,9 @@ InodeMetadata Ext2FSInode::metadata() const
 
 void Ext2FSInode::flush_metadata()
 {
-    Locker locker(m_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::flush_metadata(): Flushing inode", identifier());
     fs().write_ext2_inode(index(), m_raw_inode);
+    Locker locker(m_lock);
     if (is_directory()) {
         // Unless we're about to go away permanently, invalidate the lookup cache.
         if (m_raw_inode.i_links_count != 0) {
@@ -815,9 +815,13 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
     auto new_inode = adopt_ref(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
-    if (auto result = read_block(block_index, &buffer, sizeof(ext2_inode), offset); result.is_error()) {
-        // FIXME: Propagate the actual error.
-        return nullptr;
+    {
+        ScopedLockRelease release_inode_lock(m_lock);
+        if (auto result = read_block(block_index, &buffer, sizeof(ext2_inode), offset); result.is_error()) {
+            // FIXME: Propagate the actual error.
+            release_inode_lock.do_not_restore();
+            return nullptr;
+        }
     }
     m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
@@ -825,6 +829,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
 KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
+    Locker fs_locker(fs().m_lock);
     Locker inode_locker(m_lock);
     VERIFY(offset >= 0);
     if (m_raw_inode.i_size == 0)
@@ -838,6 +843,8 @@ KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKe
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
+        inode_locker.unlock();
+        fs_locker.unlock();
         if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, (size_t)nread))
             return EFAULT;
         return nread;
@@ -877,8 +884,10 @@ KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKe
             if (!buffer_offset.memset(0, num_bytes_to_copy))
                 return EFAULT;
         } else {
+            ScopedLockRelease release_inode_lock(m_lock);
             if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
                 dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
+                release_inode_lock.do_not_restore();
                 return result.error();
             }
         }
@@ -985,10 +994,14 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
         VERIFY(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes(): Poking into i_block array for inline symlink '{}' ({} bytes)", identifier(), data.copy_into_string(count), count);
-            if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count))
+            ScopedLockRelease release_inode_lock(m_lock);
+            if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count)) {
+                release_inode_lock.do_not_restore();
                 return EFAULT;
+            }
             if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
                 m_raw_inode.i_size = offset + count;
+            release_inode_lock.restore_lock();
             set_metadata_dirty(true);
             return count;
         }
@@ -1026,8 +1039,10 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes(): Writing block {} (offset_into_block: {})", identifier(), m_block_list[bi.value()], offset_into_block);
+        ScopedLockRelease release_inode_lock(m_lock);
         if (auto result = fs().write_block(m_block_list[bi.value()], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
             dbgln("Ext2FSInode[{}]::write_bytes(): Failed to write block {} (index {})", identifier(), m_block_list[bi.value()], bi);
+            release_inode_lock.do_not_restore();
             return result;
         }
         remaining_count -= num_bytes_to_copy;
@@ -1156,9 +1171,15 @@ KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
         return result;
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
-    auto result = write_bytes(0, stream.size(), buffer, nullptr);
-    if (result.is_error())
-        return result.error();
+    KResultOr<ssize_t> result(KSuccess);
+    {
+        ScopedLockRelease release_inode_lock(m_lock);
+        result = write_bytes(0, stream.size(), buffer, nullptr);
+        if (result.is_error()) {
+            release_inode_lock.do_not_restore();
+            return result.error();
+        }
+    }
     set_metadata_dirty(true);
     if (static_cast<size_t>(result.value()) != directory_data.size())
         return EIO;
