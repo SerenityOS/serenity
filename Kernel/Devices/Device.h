@@ -72,14 +72,11 @@ public:
     NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
     {
         auto request = adopt(*new AsyncRequestType(*this, forward<Args>(args)...));
-        bool was_empty;
-        {
-            ScopedSpinLock lock(m_requests_lock);
-            was_empty = m_requests.is_empty();
-            m_requests.append(request);
-        }
+        ScopedSpinLock lock(m_requests_lock);
+        bool was_empty = m_requests.is_empty();
+        m_requests.append(request);
         if (was_empty)
-            request->do_start({});
+            request->do_start(move(lock));
         return request;
     }
 
