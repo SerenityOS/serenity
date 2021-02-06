@@ -448,6 +448,7 @@ private:
     struct termios m_default_termios {
     };
     bool m_was_interrupted { false };
+    bool m_previous_interrupt_was_handled_as_interrupt { true };
     bool m_was_resized { false };
 
     // FIXME: This should be something more take_first()-friendly.
