@@ -24,33 +24,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ClientConnection.h"
-#include <AK/LexicalPath.h>
-#include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/LocalServer.h>
-#include <LibIPC/ClientConnection.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#pragma once
 
-int main(int, char**)
-{
-    Core::EventLoop event_loop;
-    if (pledge("stdio unix recvfd rpath ", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+#include <AK/HashMap.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/String.h>
+#include <LibGUI/TextDocument.h>
 
-    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(socket.release_nonnull(), 1);
-    if (pledge("stdio recvfd rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+class FileDB final {
+public:
+    RefPtr<const GUI::TextDocument> get(const String& file_name) const;
+    RefPtr<GUI::TextDocument> get(const String& file_name);
+    bool add(const String& file_name, int fd);
 
-    if (unveil("/usr/include", "r") < 0)
-        perror("unveil");
+    void set_project_root(const String& root_path) { m_project_root = root_path; }
 
-    // unveil will be sealed later, when we know the project's root path.
-    return event_loop.exec();
-}
+    void on_file_edit_insert_text(const String& file_name, const String& inserted_text, size_t start_line, size_t start_column);
+    void on_file_edit_remove_text(const String& file_name, size_t start_line, size_t start_column, size_t end_line, size_t end_column);
+    String to_absolute_path(const String& file_name) const;
+    bool is_open(String file_name) const;
+
+private:
+    RefPtr<GUI::TextDocument> create_from_filesystem(const String& file_name) const;
+    RefPtr<GUI::TextDocument> create_from_fd(int fd) const;
+    RefPtr<GUI::TextDocument> create_from_file(Core::File&) const;
+
+private:
+    HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
+    String m_project_root;
+};
