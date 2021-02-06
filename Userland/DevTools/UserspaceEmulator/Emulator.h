@@ -172,6 +172,7 @@ private:
     int virt$anon_create(size_t, int);
     int virt$recvfd(int);
     int virt$sendfd(int, int);
+    int virt$msyscall(FlatPtr);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);

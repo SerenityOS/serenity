@@ -530,6 +530,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$umask(arg1);
     case SC_chown:
         return virt$chown(arg1);
+    case SC_msyscall:
+        return virt$msyscall(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1765,4 +1767,11 @@ bool Emulator::find_malloc_symbols(const MmapRegion& libc_text)
     m_malloc_size_symbol_end = m_malloc_size_symbol_start + malloc_size_symbol.value().size();
     return true;
 }
+
+int Emulator::virt$msyscall(FlatPtr)
+{
+    // FIXME: Implement this.
+    return 0;
+}
+
 }
