@@ -1181,6 +1181,7 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_in_irq = 0;
     m_in_critical = 0;
 
+    m_executing_deferred = false;
     m_in_scheduler = false;
     m_invoke_scheduler_async = false;
     m_scheduler_initialized = false;
@@ -2272,6 +2273,7 @@ void Processor::deferred_call_execute_pending()
 
     if (!m_pending_deferred_calls)
         return;
+    m_executing_deferred = true;
     auto* pending_list = m_pending_deferred_calls;
     m_pending_deferred_calls = nullptr;
 
@@ -2307,6 +2309,7 @@ void Processor::deferred_call_execute_pending()
             deferred_call_return_to_pool(pending_list);
         pending_list = next;
     } while (pending_list);
+    m_executing_deferred = false;
 }
 
 void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)

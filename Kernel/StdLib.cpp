@@ -12,10 +12,13 @@
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
     if (!is_user)
         return {};
@@ -71,6 +74,8 @@ template<>
 
 Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -82,6 +87,8 @@ Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 
 Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -93,6 +100,8 @@ Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
 
 Optional<u32> user_atomic_load_relaxed(volatile u32* var)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -104,6 +113,8 @@ Optional<u32> user_atomic_load_relaxed(volatile u32* var)
 
 bool user_atomic_store_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return false; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -115,6 +126,8 @@ bool user_atomic_store_relaxed(volatile u32* var, u32 val)
 
 Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     VERIFY(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
@@ -127,6 +140,8 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
 
 Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -138,6 +153,8 @@ Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
 
 Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -149,6 +166,8 @@ Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
 
 Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -160,6 +179,8 @@ Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
 
 Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
@@ -173,6 +194,8 @@ extern "C" {
 
 bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
         return false;
@@ -189,6 +212,8 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 
 bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
+    VERIFY(!Kernel::Thread::current()->is_idle_thread());
+    VERIFY(!Kernel::Processor::executing_deferred());
     bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
     if (!is_user)
         return false;

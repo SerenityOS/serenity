@@ -660,6 +660,7 @@ class Processor {
     CPUFeature m_features;
     static volatile u32 g_total_processors; // atomic
     u8 m_physical_address_bit_width;
+    bool m_executing_deferred;
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
@@ -832,6 +833,11 @@ public:
     ALWAYS_INLINE static bool is_bootstrap_processor()
     {
         return Processor::id() == 0;
+    }
+
+    ALWAYS_INLINE static bool executing_deferred()
+    {
+        return read_fs_u8(__builtin_offsetof(Processor, m_executing_deferred));
     }
 
     ALWAYS_INLINE void restore_irq(u32 prev_irq)
