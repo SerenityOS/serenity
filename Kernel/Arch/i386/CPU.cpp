@@ -1304,21 +1304,14 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             count++;
             if (max_frames != 0 && count > max_frames)
                 break;
-
-            if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]) || !retaddr)
-                    break;
-                stack_trace.append(retaddr);
-                if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
-                    break;
-            } else {
-                void* fault_at;
-                if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
-                    break;
-                stack_trace.append(retaddr);
-                if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
-                    break;
-            }
+            // We can't use copy_from_user here because we want to be able
+            // to capture stack traces from deferred calls as well!
+            void* fault_at;
+            if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
+                break;
+            stack_trace.append(retaddr);
+            if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
+                break;
         }
     };
     auto capture_current_thread = [&]() {
@@ -1378,14 +1371,11 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             ProcessPagingScope paging_scope(thread.process());
             auto& tss = thread.tss();
             u32* stack_top = reinterpret_cast<u32*>(tss.esp);
-            if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
-                if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
-                    frame_ptr = 0;
-            } else {
-                void* fault_at;
-                if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
-                    frame_ptr = 0;
-            }
+            // We can't use copy_from_user here because we want to be able
+            // to capture stack traces from deferred calls as well!
+            void* fault_at;
+            if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
+                frame_ptr = 0;
             eip = tss.eip;
             // TODO: We need to leave the scheduler lock here, but we also
             //       need to prevent the target thread from being run while
