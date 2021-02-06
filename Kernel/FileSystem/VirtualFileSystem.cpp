@@ -1031,6 +1031,10 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
             if (!safe_to_follow_symlink(*child_inode, parent_metadata))
                 return EACCES;
 
+            auto result = validate_path_against_process_veil(custody->absolute_path(), options);
+            if (result.is_error())
+                return result;
+
             auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
             if (symlink_target.is_error() || !have_more_parts)
                 return symlink_target;
