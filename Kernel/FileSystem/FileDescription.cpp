@@ -161,11 +161,14 @@ KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
 
 KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
-    Locker locker(m_lock);
-    if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
-        return EOVERFLOW;
+    {
+        Locker locker(m_lock);
+        if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
+            return EOVERFLOW;
+    }
     auto nread_or_error = m_file->read(*this, offset(), buffer, count);
     if (!nread_or_error.is_error()) {
+        Locker locker(m_lock);
         if (m_file->is_seekable())
             m_current_offset += nread_or_error.value();
         evaluate_block_conditions();
@@ -175,11 +178,14 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
 
 KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
 {
-    Locker locker(m_lock);
-    if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
-        return EOVERFLOW;
+    {
+        Locker locker(m_lock);
+        if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
+            return EOVERFLOW;
+    }
     auto nwritten_or_error = m_file->write(*this, offset(), data, size);
     if (!nwritten_or_error.is_error()) {
+        Locker locker(m_lock);
         if (m_file->is_seekable())
             m_current_offset += nwritten_or_error.value();
         evaluate_block_conditions();
