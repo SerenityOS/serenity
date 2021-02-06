@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Range.h"
 #include "ValueWithShadow.h"
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
@@ -38,9 +39,11 @@ class Region {
 public:
     virtual ~Region() { }
 
-    u32 base() const { return m_base; }
-    u32 size() const { return m_size; }
-    u32 end() const { return m_base + m_size; }
+    const Range& range() const { return m_range; }
+
+    u32 base() const { return m_range.base().get(); }
+    u32 size() const { return m_range.size(); }
+    u32 end() const { return m_range.end().get(); }
 
     bool contains(u32 address) const { return address >= base() && address < end(); }
 
@@ -82,8 +85,7 @@ protected:
 private:
     Emulator& m_emulator;
 
-    u32 m_base { 0 };
-    u32 m_size { 0 };
+    Range m_range;
 
     bool m_stack { false };
     bool m_text { false };

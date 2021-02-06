@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Region.h"
-#include "Emulator.h"
+#pragma once
+
+#include <AK/Types.h>
+#include <Kernel/VirtualAddress.h>
 
 namespace UserspaceEmulator {
 
-Region::Region(u32 base, u32 size)
-    : m_emulator(Emulator::the())
-    , m_range(Range { VirtualAddress { base }, size })
-{
+class Range {
+    friend class RangeAllocator;
+
+public:
+    Range() = delete;
+    Range(VirtualAddress base, size_t size)
+        : m_base(base)
+        , m_size(size)
+    {
+    }
+
+    VirtualAddress base() const { return m_base; }
+    size_t size() const { return m_size; }
+    bool is_valid() const { return !m_base.is_null(); }
+
+    bool contains(VirtualAddress vaddr) const { return vaddr >= base() && vaddr < end(); }
+
+    VirtualAddress end() const { return m_base.offset(m_size); }
+
+    bool operator==(const Range& other) const
+    {
+        return m_base == other.m_base && m_size == other.m_size;
+    }
+
+    bool contains(VirtualAddress base, size_t size) const
+    {
+        if (base.offset(size) < base)
+            return false;
+        return base >= m_base && base.offset(size) <= end();
+    }
+
+    bool contains(const Range& other) const
+    {
+        return contains(other.base(), other.size());
+    }
+
+    Vector<Range, 2> carve(const Range&);
+
+private:
+    VirtualAddress m_base;
+    size_t m_size { 0 };
+};
+
 }
 
+namespace AK {
+template<>
+struct Traits<UserspaceEmulator::Range> : public GenericTraits<UserspaceEmulator::Range> {
+    static constexpr bool is_trivial() { return true; }
+};
 }

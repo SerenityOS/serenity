@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/Random.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -81,6 +82,19 @@ Emulator::Emulator(const String& executable_path, const Vector<String>& argument
     , m_cpu(*this)
 {
     m_malloc_tracer = make<MallocTracer>(*this);
+
+    static constexpr FlatPtr userspace_range_base = 0x00800000;
+    static constexpr FlatPtr userspace_range_ceiling = 0xbe000000;
+#ifdef UE_ASLR
+    static constexpr FlatPtr page_mask = 0xfffff000u;
+    size_t random_offset = (AK::get_random<u8>() % 32 * MiB) & page_mask;
+    FlatPtr base = userspace_range_base + random_offset;
+#else
+    FlatPtr base = userspace_range_base;
+#endif
+
+    m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
+
     ASSERT(!s_the);
     s_the = this;
     // setup_stack(arguments, environment);
@@ -972,24 +986,9 @@ u32 Emulator::virt$munmap(FlatPtr address, u32 size)
     ASSERT(region);
     if (region->size() != round_up_to_power_of_two(size, PAGE_SIZE))
         TODO();
+    m_range_allocator.deallocate(region->range());
     mmu().remove_region(*region);
     return 0;
-}
-
-FlatPtr Emulator::allocate_vm(size_t size, size_t alignment)
-{
-    // FIXME: Write a proper VM allocator
-    static FlatPtr next_address = 0x30000000;
-
-    FlatPtr final_address;
-
-    if (!alignment)
-        alignment = PAGE_SIZE;
-
-    // FIXME: What if alignment is not a power of 2?
-    final_address = round_up_to_power_of_two(next_address, alignment);
-    next_address = round_up_to_power_of_two(final_address + size, PAGE_SIZE);
-    return final_address;
 }
 
 u32 Emulator::virt$mmap(u32 params_addr)
@@ -997,16 +996,21 @@ u32 Emulator::virt$mmap(u32 params_addr)
     Syscall::SC_mmap_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    u32 final_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
-    u32 final_address = allocate_vm(final_size, params.alignment);
-    if (params.addr != 0) {
-        // NOTE: We currently do not support allocating VM at a requeted address in the emulator.
-        // The loader needs this functionality to load .data just after .text.
-        // Luckily, since the loader calls mmap for .data right after it calls mmap for .text,
-        // the emulator will allocate a chunk of memory that is just after what we allocated for .text
-        // because of the way we currently allocate VM.
-        ASSERT(params.addr == final_address);
+    u32 requested_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
+    FlatPtr final_address;
+
+    Optional<Range> result;
+    if (params.flags & MAP_RANDOMIZED) {
+        result = m_range_allocator.allocate_randomized(requested_size, params.alignment);
+    } else if (params.flags & MAP_FIXED) {
+        result = m_range_allocator.allocate_specific(VirtualAddress { params.addr }, requested_size);
+    } else {
+        result = m_range_allocator.allocate_anywhere(requested_size, params.alignment);
     }
+    if (!result.has_value())
+        return -ENOMEM;
+    final_address = result.value().base().get();
+    auto final_size = result.value().size();
 
     if (params.flags & MAP_ANONYMOUS)
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot));
