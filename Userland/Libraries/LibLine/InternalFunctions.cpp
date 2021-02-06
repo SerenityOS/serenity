@@ -293,7 +293,8 @@ void Editor::enter_search()
 
             // move the search prompt below ours
             // and tell it to redraw itself
-            search_editor.set_origin(2, 1);
+            auto prompt_end_line = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
+            search_editor.set_origin(prompt_end_line + 1, 1);
             search_editor.m_refresh_needed = true;
 
             return false;
