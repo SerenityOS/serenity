@@ -31,9 +31,9 @@
 
 namespace LookupServer {
 
-class [[gnu::packed]] DNSPacket {
+class [[gnu::packed]] DNSPacketHeader {
 public:
-    DNSPacket()
+    DNSPacketHeader()
         : m_recursion_desired(false)
         , m_truncated(false)
         , m_authoritative_answer(false)
@@ -114,6 +114,6 @@ private:
     NetworkOrdered<u16> m_additional_count;
 };
 
-static_assert(sizeof(DNSPacket) == 12);
+static_assert(sizeof(DNSPacketHeader) == 12);
 
 }

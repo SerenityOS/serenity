@@ -25,7 +25,7 @@
  */
 
 #include "DNSResponse.h"
-#include "DNSPacket.h"
+#include "DNSPacketHeader.h"
 #include "DNSRequest.h"
 #include <AK/Debug.h>
 #include <AK/IPv4Address.h>
@@ -58,12 +58,12 @@ static_assert(sizeof(DNSRecordWithoutName) == 10);
 
 Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t raw_size)
 {
-    if (raw_size < sizeof(DNSPacket)) {
-        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(DNSPacket));
+    if (raw_size < sizeof(DNSPacketHeader)) {
+        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(DNSPacketHeader));
         return {};
     }
 
-    auto& response_header = *(const DNSPacket*)(raw_data);
+    auto& response_header = *(const DNSPacketHeader*)(raw_data);
 #if LOOKUPSERVER_DEBUG
     dbgln("Got response (ID: {})", response_header.id());
     dbgln("  Question count: {}", response_header.question_count());
@@ -79,7 +79,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
     if (response.code() != DNSResponse::Code::NOERROR)
         return response;
 
-    size_t offset = sizeof(DNSPacket);
+    size_t offset = sizeof(DNSPacketHeader);
 
     for (u16 i = 0; i < response_header.question_count(); ++i) {
         auto name = parse_dns_name(raw_data, offset, raw_size);
