@@ -108,8 +108,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
             size_t dummy_offset = offset;
             data = parse_dns_name(raw_data, dummy_offset, raw_size);
         } else if (record.type() == T_A) {
-            auto ipv4_address = IPv4Address((const u8*)record.data());
-            data = ipv4_address.to_string();
+            data = { record.data(), record.data_length() };
         } else {
             // FIXME: Parse some other record types perhaps?
             dbgln("data=(unimplemented record type {})", record.type());
