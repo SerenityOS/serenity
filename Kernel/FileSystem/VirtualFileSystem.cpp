@@ -383,7 +383,8 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
-    auto result = validate_path_against_process_veil(path, options);
+    LexicalPath p(path);
+    auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), p.basename()), options);
     if (result.is_error())
         return result;
 
@@ -399,7 +400,6 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (parent_custody.is_readonly())
         return EROFS;
 
-    LexicalPath p(path);
     dbgln<VFS_DEBUG>("VFS::create: '{}' in {}", p.basename(), parent_inode.identifier());
     uid_t uid = owner.has_value() ? owner.value().uid : current_process->euid();
     gid_t gid = owner.has_value() ? owner.value().gid : current_process->egid();
@@ -1030,6 +1030,10 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
 
             if (!safe_to_follow_symlink(*child_inode, parent_metadata))
                 return EACCES;
+
+            auto result = validate_path_against_process_veil(custody->absolute_path(), options);
+            if (result.is_error())
+                return result;
 
             auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
             if (symlink_target.is_error() || !have_more_parts)
