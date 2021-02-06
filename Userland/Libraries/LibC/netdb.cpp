@@ -181,19 +181,14 @@ hostent* gethostbyname(const char* name)
         return nullptr;
     }
     ASSERT((size_t)nrecv == sizeof(response_length));
+    ASSERT(response_length == sizeof(__gethostbyname_address));
 
-    char response[response_length + 1];
-    nrecv = read(fd, response, response_length);
+    nrecv = read(fd, &__gethostbyname_address, response_length);
     if (nrecv < 0) {
         perror("recv");
         return nullptr;
     }
     ASSERT(nrecv == response_length);
-    response[response_length] = 0;
-
-    int rc = inet_pton(AF_INET, response, &__gethostbyname_address);
-    if (rc <= 0)
-        return nullptr;
 
     gethostbyname_name_buffer = name;
     __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
@@ -230,8 +225,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         close(fd);
     });
 
-    IPv4Address ipv4_address((const u8*)&((const in_addr*)addr)->s_addr);
-    auto address = ipv4_address.to_string();
+    const in_addr_t& in_addr = ((const struct in_addr*)addr)->s_addr;
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -239,10 +233,10 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         i32 message_id;
         i32 address_length;
     } request_header = {
-        sizeof(request_header) - sizeof(request_header.message_size) + address.length(),
+        sizeof(request_header) - sizeof(request_header.message_size) + sizeof(in_addr),
         lookup_server_endpoint_magic,
         3,
-        (i32)address.length(),
+        (i32)sizeof(in_addr),
     };
     int nsent = write(fd, &request_header, sizeof(request_header));
     if (nsent < 0) {
@@ -250,12 +244,12 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         return nullptr;
     }
     ASSERT((size_t)nsent == sizeof(request_header));
-    nsent = write(fd, address.characters(), address.length());
+    nsent = write(fd, &in_addr, sizeof(in_addr));
     if (nsent < 0) {
         perror("write");
         return nullptr;
     }
-    ASSERT((size_t)nsent == address.length());
+    ASSERT((size_t)nsent == sizeof(in_addr));
 
     struct [[gnu::packed]] {
         u32 message_size;
