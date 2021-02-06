@@ -122,6 +122,9 @@ public:
 #endif
     }
 
+    Lock& get_lock() { return m_lock; }
+    const Lock& get_lock() const { return m_lock; }
+
 private:
     Lock& m_lock;
     bool m_locked { true };
@@ -147,6 +150,54 @@ public:
 private:
     T m_resource;
     Lock m_lock;
+};
+
+class ScopedLockRelease {
+    AK_MAKE_NONCOPYABLE(ScopedLockRelease);
+
+public:
+    ScopedLockRelease& operator=(ScopedLockRelease&&) = delete;
+
+    ScopedLockRelease(Lock& lock)
+        : m_lock(&lock)
+        , m_previous_mode(lock.force_unlock_if_locked(m_previous_recursions))
+    {
+    }
+
+    ScopedLockRelease(ScopedLockRelease&& from)
+        : m_lock(exchange(from.m_lock, nullptr))
+        , m_previous_mode(exchange(from.m_previous_mode, Lock::Mode::Unlocked))
+        , m_previous_recursions(exchange(from.m_previous_recursions, 0))
+    {
+    }
+
+    ~ScopedLockRelease()
+    {
+        if (m_lock && m_previous_mode != Lock::Mode::Unlocked)
+            m_lock->restore_lock(m_previous_mode, m_previous_recursions);
+    }
+
+    void restore_lock()
+    {
+        VERIFY(m_lock);
+        if (m_previous_mode != Lock::Mode::Unlocked) {
+            m_lock->restore_lock(m_previous_mode, m_previous_recursions);
+            m_previous_mode = Lock::Mode::Unlocked;
+            m_previous_recursions = 0;
+        }
+    }
+
+    void do_not_restore()
+    {
+        VERIFY(m_lock);
+        m_previous_mode = Lock::Mode::Unlocked;
+        m_previous_recursions = 0;
+    }
+
+private:
+    Lock* m_lock;
+    Lock::Mode m_previous_mode;
+    u32 m_previous_recursions;
 };
 
 }
