@@ -31,8 +31,19 @@
 
 namespace LanguageServers::Cpp {
 
-Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
+LexerAutoComplete::LexerAutoComplete(const FileDB& filedb)
+    : AutoCompleteEngine(filedb)
 {
+}
+
+Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position)
+{
+    auto document = filedb().get(file);
+    if (!document) {
+        dbgln("didn't find document for {}", file);
+        return {};
+    }
+    auto code = document->text();
     auto lines = code.split('\n', true);
     Cpp::Lexer lexer(code);
     auto tokens = lexer.lex();
