@@ -78,9 +78,14 @@ public:
 
     [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
-    void do_start(Badge<Device>)
+    void do_start(ScopedSpinLock<SpinLock<u8>>&& requests_lock)
     {
-        do_start();
+        if (is_completed_result(m_result))
+            return;
+        m_result = Started;
+        requests_lock.unlock();
+
+        start();
     }
 
     void complete(RequestResult result);
@@ -136,17 +141,6 @@ protected:
 private:
     void sub_request_finished(AsyncDeviceRequest&);
     void request_finished();
-
-    void do_start()
-    {
-        {
-            ScopedSpinLock lock(m_lock);
-            if (is_completed_result(m_result))
-                return;
-            m_result = Started;
-        }
-        start();
-    }
 
     bool in_target_context(const UserOrKernelBuffer& buffer) const
     {
