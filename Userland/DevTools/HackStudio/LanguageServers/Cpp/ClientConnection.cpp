@@ -40,6 +40,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int 
     : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
+    m_autocomplete_engine = make<LexerAutoComplete>(m_filedb);
 }
 
 ClientConnection::~ClientConnection()
@@ -66,38 +67,13 @@ OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const M
     return make<Messages::LanguageServer::GreetResponse>();
 }
 
-class DefaultDocumentClient final : public GUI::TextDocument::Client {
-public:
-    virtual ~DefaultDocumentClient() override = default;
-    virtual void document_did_append_line() override {};
-    virtual void document_did_insert_line(size_t) override {};
-    virtual void document_did_remove_line(size_t) override {};
-    virtual void document_did_remove_all_lines() override {};
-    virtual void document_did_change() override {};
-    virtual void document_did_set_text() override {};
-    virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
-
-    virtual bool is_automatic_indentation_enabled() const override { return false; }
-    virtual int soft_tab_width() const override { return 4; }
-};
-
-static DefaultDocumentClient s_default_document_client;
-
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
-    auto file = Core::File::construct(this);
-    if (!file->open(message.file().take_fd(), Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
-        errno = file->error();
-        perror("open");
-        dbgln("Failed to open project file");
+    if (m_filedb.is_open(message.file_name())) {
         return;
     }
-    auto content = file->read_all();
-    StringView content_view(content);
-    auto document = GUI::TextDocument::create(&s_default_document_client);
-    document->set_text(content_view);
-    m_open_files.set(message.file_name(), document);
-    dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
+    m_filedb.add(message.file_name(), message.file().take_fd());
+    m_autocomplete_engine->file_opened(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
@@ -107,16 +83,8 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText
     dbgln("Text: {}", message.text());
     dbgln("[{}:{}]", message.start_line(), message.start_column());
 #endif
-    auto document = document_for(message.file_name());
-    if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
-        return;
-    }
-    GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
-    document->insert_at(start_position, message.text(), &s_default_document_client);
-#if FILE_CONTENT_DEBUG
-    dbgln("{}", document->text());
-#endif
+    m_filedb.on_file_edit_insert_text(message.file_name(), message.text(), message.start_line(), message.start_column());
+    m_autocomplete_engine->on_edit(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
@@ -125,23 +93,8 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
     dbgln("RemoveText for file: {}", message.file_name());
     dbgln("[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
 #endif
-    auto document = document_for(message.file_name());
-    if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
-        return;
-    }
-    GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
-    GUI::TextRange range {
-        GUI::TextPosition { (size_t)message.start_line(),
-            (size_t)message.start_column() },
-        GUI::TextPosition { (size_t)message.end_line(),
-            (size_t)message.end_column() }
-    };
-
-    document->remove(range);
-#if FILE_CONTENT_DEBUG
-    dbgln("{}", document->text());
-#endif
+    m_filedb.on_file_edit_remove_text(message.file_name(), message.start_line(), message.start_column(), message.end_line(), message.end_column());
+    m_autocomplete_engine->on_edit(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
@@ -150,43 +103,27 @@ void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSugges
     dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
 #endif
 
-    auto document = document_for(message.file_name());
+    auto document = m_filedb.get(message.file_name());
     if (!document) {
         dbgln("file {} has not been opened", message.file_name());
         return;
     }
 
-    Vector<GUI::AutocompleteProvider::Entry> suggestions;
-    switch (m_auto_complete_mode) {
-    case AutoCompleteMode::Lexer:
-        suggestions = LexerAutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
-        break;
-    case AutoCompleteMode::Parser: {
-        auto engine = ParserAutoComplete(document->text());
-        suggestions = engine.get_suggestions({ (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
-    }
-    }
+    GUI::TextPosition autocomplete_position = { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) };
+    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(message.file_name(), autocomplete_position);
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
-}
-
-RefPtr<GUI::TextDocument> ClientConnection::document_for(const String& file_name)
-{
-    auto document_optional = m_open_files.get(file_name);
-    if (!document_optional.has_value())
-        return nullptr;
-
-    return document_optional.value();
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& message)
 {
-    auto document = document_for(message.file_name());
+    auto document = m_filedb.get(message.file_name());
     if (!document) {
         dbgln("file {} has not been opened", message.file_name());
         return;
     }
     auto content = message.content();
     document->set_text(content.view());
+    m_autocomplete_engine->on_edit(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMode& message)
@@ -195,9 +132,9 @@ void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMod
     dbgln("SetAutoCompleteMode: {}", message.mode());
 #endif
     if (message.mode() == "Parser")
-        m_auto_complete_mode = AutoCompleteMode::Parser;
+        m_autocomplete_engine = make<ParserAutoComplete>(m_filedb);
     else
-        m_auto_complete_mode = AutoCompleteMode::Lexer;
+        m_autocomplete_engine = make<LexerAutoComplete>(m_filedb);
 }
 
 }
