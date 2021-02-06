@@ -39,8 +39,6 @@ public:
 
     void add_value(Vector<int, 1>&&);
 
-    void set_background_color(Color color) { m_background_color = color; }
-
     struct ValueFormat {
         Color line_color { Color::Transparent };
         Color background_color { Color::Transparent };
@@ -63,7 +61,6 @@ private:
     int m_max { 100 };
     Vector<ValueFormat, 1> m_value_format;
     CircularQueue<Vector<int, 1>, 4000> m_values;
-    Color m_background_color { Color::Black };
     bool m_stack_values { false };
 
     Vector<Gfx::IntPoint, 1> m_calculated_points;
