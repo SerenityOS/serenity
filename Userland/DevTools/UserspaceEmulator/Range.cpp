@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Region.h"
-#include "Emulator.h"
+#include "Range.h"
+#include <AK/Vector.h>
 
 namespace UserspaceEmulator {
 
-Region::Region(u32 base, u32 size)
-    : m_emulator(Emulator::the())
-    , m_range(Range { VirtualAddress { base }, size })
+Vector<Range, 2> Range::carve(const Range& taken)
 {
+    ASSERT((taken.size() % PAGE_SIZE) == 0);
+    Vector<Range, 2> parts;
+    if (taken == *this)
+        return {};
+    if (taken.base() > base())
+        parts.append({ base(), taken.base().get() - base().get() });
+    if (taken.end() < end())
+        parts.append({ taken.end(), end().get() - taken.end().get() });
+    return parts;
 }
 
 }

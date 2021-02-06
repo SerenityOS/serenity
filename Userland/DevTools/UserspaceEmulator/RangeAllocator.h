@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,15 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Region.h"
-#include "Emulator.h"
+#pragma once
+
+#include "Range.h"
+#include <AK/Vector.h>
 
 namespace UserspaceEmulator {
 
-Region::Region(u32 base, u32 size)
-    : m_emulator(Emulator::the())
-    , m_range(Range { VirtualAddress { base }, size })
-{
-}
+class RangeAllocator {
+public:
+    RangeAllocator();
+    ~RangeAllocator();
+
+    void initialize_with_range(VirtualAddress, size_t);
+
+    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
+    Optional<Range> allocate_specific(VirtualAddress, size_t);
+    Optional<Range> allocate_randomized(size_t, size_t alignment);
+    void deallocate(const Range&);
+
+    void dump() const;
+
+    bool contains(const Range& range) const { return m_total_range.contains(range); }
+
+private:
+    void carve_at_index(int, const Range&);
+
+    Vector<Range> m_available_ranges;
+    Range m_total_range;
+};
 
 }
