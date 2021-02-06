@@ -41,6 +41,7 @@ public:
     enum class Type : u8 {
         Ramdisk,
         IDE,
+        SATA,
         NVMe,
     };
 
