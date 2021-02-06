@@ -27,7 +27,9 @@
 #include "GraphWidget.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/SystemTheme.h>
 
 GraphWidget::GraphWidget()
 {
@@ -49,7 +51,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
-    painter.fill_rect(event.rect(), m_background_color);
+    painter.fill_rect(event.rect(), palette().base());
 
     auto inner_rect = frame_inner_rect();
     float scale = (float)inner_rect.height() / (float)m_max;
