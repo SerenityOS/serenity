@@ -32,16 +32,16 @@
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibIPC/ServerConnection.h>
 
-#define LANGUAGE_CLIENT(namespace_, socket_name)                                 \
-    namespace namespace_ {                                                       \
-    class ServerConnection : public HackStudio::ServerConnection {               \
-        C_OBJECT(ServerConnection)                                               \
-    private:                                                                     \
-        ServerConnection()                                                       \
-            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name) \
-        {                                                                        \
-        }                                                                        \
-    };                                                                           \
+#define LANGUAGE_CLIENT(namespace_, socket_name)                                               \
+    namespace namespace_ {                                                                     \
+    class ServerConnection : public HackStudio::ServerConnection {                             \
+        C_OBJECT(ServerConnection)                                                             \
+    private:                                                                                   \
+        ServerConnection(const String& project_path)                                           \
+            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
+        {                                                                                      \
+        }                                                                                      \
+    };                                                                                         \
     }
 
 namespace LanguageClients {

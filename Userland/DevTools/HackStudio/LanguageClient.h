@@ -45,9 +45,10 @@ class ServerConnection
     : public IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>
     , public LanguageClientEndpoint {
 public:
-    ServerConnection(const StringView& socket)
+    ServerConnection(const StringView& socket, const String& project_path)
         : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, socket)
     {
+        m_project_path = project_path;
     }
 
     void attach(LanguageClient& client)
@@ -62,7 +63,7 @@ public:
 
     virtual void handshake() override
     {
-        send_sync<Messages::LanguageServer::Greet>();
+        send_sync<Messages::LanguageServer::Greet>(m_project_path);
     }
 
     WeakPtr<LanguageClient> language_client() { return m_language_client; }
@@ -75,7 +76,7 @@ public:
         if (auto instance = s_instances_for_projects.get(key); instance.has_value())
             return *instance.value();
 
-        auto connection = ConcreteType::construct();
+        auto connection = ConcreteType::construct(project_path);
         connection->handshake();
         s_instances_for_projects.set(key, *connection);
         return *connection;
@@ -84,6 +85,7 @@ public:
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
 
+    String m_project_path;
     WeakPtr<LanguageClient> m_language_client;
 };
 
@@ -94,16 +96,19 @@ public:
         , m_server_connection(move(connection))
     {
         m_previous_client = m_connection.language_client();
+        ASSERT(m_previous_client.ptr() != this);
         m_connection.attach(*this);
     }
 
     virtual ~LanguageClient()
     {
         m_connection.detach();
+        ASSERT(m_previous_client.ptr() != this);
         if (m_previous_client)
             m_connection.attach(*m_previous_client);
     }
 
+    void set_active_client();
     virtual void open_file(const String& path, int fd);
     virtual void set_file_content(const String& path, const String& content);
     virtual void insert_text(const String& path, const String& text, size_t line, size_t column);
