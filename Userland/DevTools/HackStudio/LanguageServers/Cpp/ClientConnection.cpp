@@ -52,8 +52,17 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet&)
+OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet& message)
 {
+    m_filedb.set_project_root(message.project_root());
+    if (unveil(message.project_root().characters(), "r") < 0) {
+        perror("unveil");
+        exit(1);
+    }
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        exit(1);
+    }
     return make<Messages::LanguageServer::GreetResponse>();
 }
 
