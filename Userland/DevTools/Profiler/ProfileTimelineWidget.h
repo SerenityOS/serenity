@@ -50,4 +50,5 @@ private:
     bool m_selecting { false };
     u64 m_select_start_time { 0 };
     u64 m_select_end_time { 0 };
+    u64 m_hover_time { 0 };
 };
