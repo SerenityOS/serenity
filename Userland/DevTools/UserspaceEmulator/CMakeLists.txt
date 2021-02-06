@@ -2,6 +2,8 @@ set(SOURCES
     Emulator.cpp
     MallocTracer.cpp
     MmapRegion.cpp
+    Range.cpp
+    RangeAllocator.cpp
     Region.cpp
     SimpleRegion.cpp
     SoftCPU.cpp

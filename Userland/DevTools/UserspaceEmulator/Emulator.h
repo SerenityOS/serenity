@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #pragma once
 
 #include "MallocTracer.h"
+#include "RangeAllocator.h"
 #include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
@@ -174,7 +175,6 @@ private:
     int virt$sendfd(int, int);
     int virt$msyscall(FlatPtr);
 
-    FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);
 
     void dispatch_one_pending_signal();
@@ -213,6 +213,8 @@ private:
     };
 
     HashMap<String, CachedELF> m_dynamic_library_cache;
+
+    RangeAllocator m_range_allocator;
 };
 
 ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const
