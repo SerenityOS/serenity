@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,14 +25,91 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DNSResponse.h"
+#include "DNSPacket.h"
 #include "DNSPacketHeader.h"
-#include "DNSRequest.h"
-#include <AK/Debug.h>
 #include <AK/IPv4Address.h>
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
+#include <arpa/inet.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 namespace LookupServer {
+
+void DNSPacket::add_question(const String& name, u16 record_type, ShouldRandomizeCase should_randomize_case)
+{
+    ASSERT(m_questions.size() <= UINT16_MAX);
+
+    if (name.is_empty())
+        return;
+
+    StringBuilder builder;
+    for (size_t i = 0; i < name.length(); ++i) {
+        u8 ch = name[i];
+        if (should_randomize_case == ShouldRandomizeCase::Yes) {
+            // Randomize the 0x20 bit in every ASCII character.
+            if (isalpha(ch)) {
+                if (arc4random_uniform(2))
+                    ch |= 0x20;
+                else
+                    ch &= ~0x20;
+            }
+        }
+        builder.append(ch);
+    }
+
+    if (name[name.length() - 1] != '.')
+        builder.append('.');
+
+    m_questions.empend(builder.to_string(), record_type, (u16)C_IN);
+}
+
+ByteBuffer DNSPacket::to_byte_buffer() const
+{
+    DNSPacketHeader header;
+    header.set_id(m_id);
+    if (is_query())
+        header.set_is_query();
+    else
+        header.set_is_response();
+    // FIXME: What should this be?
+    header.set_opcode(0);
+    header.set_truncated(false); // hopefully...
+    header.set_recursion_desired(true);
+    // FIXME: what should the be for requests?
+    header.set_recursion_available(true);
+    header.set_question_count(m_questions.size());
+    header.set_answer_count(m_answers.size());
+
+    DuplexMemoryStream stream;
+
+    stream << ReadonlyBytes { &header, sizeof(header) };
+    for (auto& question : m_questions) {
+        auto parts = question.name().split('.');
+        for (auto& part : parts) {
+            stream << (u8)part.length();
+            stream << part.bytes();
+        }
+        stream << '\0';
+        stream << htons(question.record_type());
+        stream << htons(question.class_code());
+    }
+    for (auto& answer : m_answers) {
+        auto parts = answer.name().split('.');
+        for (auto& part : parts) {
+            stream << (u8)part.length();
+            stream << part.bytes();
+        }
+        stream << '\0';
+        stream << htons(answer.type());
+        stream << htons(answer.class_code());
+        stream << htonl(answer.ttl());
+        stream << htons(answer.record_data().length());
+        stream << answer.record_data().bytes();
+    }
+
+    return stream.copy_into_contiguous_buffer();
+}
 
 static String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
@@ -56,47 +134,49 @@ private:
 
 static_assert(sizeof(DNSRecordWithoutName) == 10);
 
-Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t raw_size)
+Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_size)
 {
     if (raw_size < sizeof(DNSPacketHeader)) {
         dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(DNSPacketHeader));
         return {};
     }
 
-    auto& response_header = *(const DNSPacketHeader*)(raw_data);
-#if LOOKUPSERVER_DEBUG
-    dbgln("Got response (ID: {})", response_header.id());
-    dbgln("  Question count: {}", response_header.question_count());
-    dbgln("    Answer count: {}", response_header.answer_count());
-    dbgln(" Authority count: {}", response_header.authority_count());
-    dbgln("Additional count: {}", response_header.additional_count());
+    auto& header = *(const DNSPacketHeader*)(raw_data);
+#ifdef LOOKUPSERVER_DEBUG
+    dbgln("Got packet (ID: {})", header.id());
+    dbgln("  Question count: {}", header.question_count());
+    dbgln("    Answer count: {}", header.answer_count());
+    dbgln(" Authority count: {}", header.authority_count());
+    dbgln("Additional count: {}", header.additional_count());
 #endif
 
-    DNSResponse response;
-    response.m_id = response_header.id();
-    response.m_code = response_header.response_code();
+    DNSPacket packet;
+    packet.m_id = header.id();
+    packet.m_query_or_response = header.is_response();
+    packet.m_code = header.response_code();
 
-    if (response.code() != DNSResponse::Code::NOERROR)
-        return response;
+    // FIXME: Should we parse further in this case?
+    if (packet.code() != Code::NOERROR)
+        return packet;
 
     size_t offset = sizeof(DNSPacketHeader);
 
-    for (u16 i = 0; i < response_header.question_count(); ++i) {
+    for (u16 i = 0; i < header.question_count(); i++) {
         auto name = parse_dns_name(raw_data, offset, raw_size);
         struct RawDNSAnswerQuestion {
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
         };
         auto& record_and_class = *(const RawDNSAnswerQuestion*)&raw_data[offset];
-        response.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
+        packet.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
         offset += 4;
-#if LOOKUPSERVER_DEBUG
-        auto& question = response.m_questions.last();
+#ifdef LOOKUPSERVER_DEBUG
+        auto& question = packet.m_questions.last();
         dbgln("Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
 #endif
     }
 
-    for (u16 i = 0; i < response_header.answer_count(); ++i) {
+    for (u16 i = 0; i < header.answer_count(); ++i) {
         auto name = parse_dns_name(raw_data, offset, raw_size);
 
         auto& record = *(const DNSRecordWithoutName*)(&raw_data[offset]);
@@ -104,6 +184,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
         String data;
 
         offset += sizeof(DNSRecordWithoutName);
+
         if (record.type() == T_PTR) {
             size_t dummy_offset = offset;
             data = parse_dns_name(raw_data, dummy_offset, raw_size);
@@ -113,14 +194,14 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
             // FIXME: Parse some other record types perhaps?
             dbgln("data=(unimplemented record type {})", record.type());
         }
-#if LOOKUPSERVER_DEBUG
+#ifdef LOOKUPSERVER_DEBUG
         dbgln("Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
 #endif
-        response.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
+        packet.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
         offset += record.data_length();
     }
 
-    return response;
+    return packet;
 }
 
 String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level)

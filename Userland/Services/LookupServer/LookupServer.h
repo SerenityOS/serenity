@@ -26,8 +26,7 @@
 
 #pragma once
 
-#include "DNSRequest.h"
-#include "DNSResponse.h"
+#include "DNSPacket.h"
 #include <LibCore/Object.h>
 
 namespace LookupServer {

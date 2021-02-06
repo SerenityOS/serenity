@@ -26,8 +26,7 @@
 
 #include "LookupServer.h"
 #include "ClientConnection.h"
-#include "DNSRequest.h"
-#include "DNSResponse.h"
+#include "DNSPacket.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
@@ -173,7 +172,9 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         m_lookup_cache.remove(it);
     }
 
-    DNSRequest request;
+    DNSPacket request;
+    request.set_is_query();
+    request.set_id(arc4random_uniform(UINT16_MAX));
     request.add_question(hostname, record_type, should_randomize_case);
 
     auto buffer = request.to_byte_buffer();
@@ -204,7 +205,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
 
     did_get_response = true;
 
-    auto o_response = DNSResponse::from_raw_response(response_buffer, nrecv);
+    auto o_response = DNSPacket::from_raw_packet(response_buffer, nrecv);
     if (!o_response.has_value())
         return {};
 
@@ -215,7 +216,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         return {};
     }
 
-    if (response.code() == DNSResponse::Code::REFUSED) {
+    if (response.code() == DNSPacket::Code::REFUSED) {
         if (should_randomize_case == ShouldRandomizeCase::Yes) {
             // Retry with 0x20 case randomization turned off.
             return lookup(hostname, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
