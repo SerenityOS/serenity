@@ -27,12 +27,14 @@
 #include "ProfileTimelineWidget.h"
 #include "Profile.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
 
 ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
     : m_profile(profile)
 {
     set_fill_with_background_color(true);
     set_fixed_height(80);
+    m_hover_time = m_profile.first_timestamp();
 }
 
 ProfileTimelineWidget::~ProfileTimelineWidget()
@@ -58,7 +60,7 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
 
         bool in_kernel = event.in_kernel;
         Color color = in_kernel ? Color::from_rgb(0xc25e5a) : Color::from_rgb(0x5a65c2);
-        for (int i = 0; i < cw; ++i)
+        for (int i = 1; i <= cw; ++i)
             painter.draw_line({ x + i, frame_thickness() + column_height }, { x + i, height() - frame_thickness() * 2 }, color);
     }
 
@@ -67,7 +69,28 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
 
     int select_start_x = (int)((float)(normalized_start_time - m_profile.first_timestamp()) * column_width);
     int select_end_x = (int)((float)(normalized_end_time - m_profile.first_timestamp()) * column_width);
+    int select_hover_x = (int)((float)(m_hover_time - m_profile.first_timestamp()) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
+    painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
+
+    {
+        StringBuilder timeline_desc_builder;
+
+        timeline_desc_builder.appendff("Time: {} ms", m_hover_time - m_profile.first_timestamp());
+        if (normalized_start_time != normalized_end_time) {
+            auto start = normalized_start_time - m_profile.first_timestamp();
+            auto end = normalized_end_time - m_profile.first_timestamp();
+            timeline_desc_builder.appendff(", Selection: {} - {} ms", start, end);
+        }
+        const auto text = timeline_desc_builder.build();
+        Gfx::IntRect rect {
+            frame_thickness() + 3,
+            frame_thickness() + 3,
+            font().width(text),
+            font().glyph_height()
+        };
+        painter.draw_text(rect, text, font());
+    }
 }
 
 u64 ProfileTimelineWidget::timestamp_at_x(int x) const
@@ -91,11 +114,13 @@ void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
 
 void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!m_selecting)
-        return;
+    m_hover_time = timestamp_at_x(event.x());
 
-    m_select_end_time = timestamp_at_x(event.x());
-    m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    if (m_selecting) {
+        m_select_end_time = m_hover_time;
+        m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    }
+
     update();
 }
 
