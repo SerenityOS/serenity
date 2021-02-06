@@ -124,6 +124,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // before Processor::deferred_call_queue returns!
     Processor::deferred_call_queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
+        ScopedSpinLock lock(m_request_lock);
         VERIFY(m_current_request);
         auto& request = *m_current_request;
         m_current_request = nullptr;
@@ -132,6 +133,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
             if (result == AsyncDeviceRequest::Success) {
                 if (request.request_type() == AsyncBlockDeviceRequest::Read) {
                     if (!request.write_to_buffer(request.buffer(), m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * request.block_count())) {
+                        lock.unlock();
                         request.complete(AsyncDeviceRequest::MemoryFault);
                         return;
                     }
@@ -142,6 +144,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
             }
         }
 
+        lock.unlock();
         request.complete(result);
     });
 }
