@@ -58,10 +58,9 @@ OwnPtr<Messages::LookupServer::LookupNameResponse> ClientConnection::handle(cons
 
 OwnPtr<Messages::LookupServer::LookupAddressResponse> ClientConnection::handle(const Messages::LookupServer::LookupAddress& message)
 {
-    auto optional_address = IPv4Address::from_string(message.address());
-    if (!optional_address.has_value())
+    if (message.address().length() != 4)
         return make<Messages::LookupServer::LookupAddressResponse>(1, String());
-    auto& address = optional_address.value();
+    IPv4Address address { (const u8*)message.address().characters() };
     auto name = String::formatted("{}.{}.{}.{}.in-addr.arpa",
         address[3],
         address[2],
