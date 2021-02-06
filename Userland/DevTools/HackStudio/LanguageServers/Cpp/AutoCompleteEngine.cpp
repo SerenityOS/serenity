@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 #include "AutoCompleteEngine.h"
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibCpp/Lexer.h>
-#include <LibGUI/TextPosition.h>
 
-namespace LanguageServers::Cpp {
+AutoCompleteEngine::AutoCompleteEngine(const FileDB& filedb)
+    : m_filedb(filedb)
+{
+}
 
-using namespace ::Cpp;
-
-class LexerAutoComplete : public AutoCompleteEngine {
-public:
-    LexerAutoComplete(const FileDB& filedb);
-
-    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
-
-private:
-    Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
-    Vector<GUI::AutocompleteProvider::Entry> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
-};
-
+AutoCompleteEngine::~AutoCompleteEngine()
+{
 }

@@ -26,10 +26,11 @@
 
 #pragma once
 
+#include "AutoCompleteEngine.h"
+#include "FileDB.h"
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextDocument.h>
 #include <LibIPC/ClientConnection.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
@@ -57,16 +58,8 @@ private:
     virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
     virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override;
 
-    RefPtr<GUI::TextDocument> document_for(const String& file_name);
-
-    HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
-
-    enum class AutoCompleteMode {
-        Lexer,
-        Parser
-    };
-
-    AutoCompleteMode m_auto_complete_mode { AutoCompleteMode::Lexer };
+    FileDB m_filedb;
+    OwnPtr<AutoCompleteEngine> m_autocomplete_engine;
 };
 
 }
