@@ -124,6 +124,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
         u32 base_offset = index.value() * block_size() + offset;
+        ScopedLockRelease release_lock(m_lock);
         auto seek_result = file_description().seek(base_offset, SEEK_SET);
         if (seek_result.is_error())
             return seek_result.error();
@@ -153,6 +154,7 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
     Locker locker(m_lock);
     u32 base_offset = index.value() * m_logical_block_size;
+    ScopedLockRelease release_lock(m_lock);
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
     auto nread = file_description().read(buffer, m_logical_block_size);
@@ -165,6 +167,7 @@ bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
     Locker locker(m_lock);
     size_t base_offset = index.value() * m_logical_block_size;
+    ScopedLockRelease release_lock(m_lock);
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
     auto nwritten = file_description().write(buffer, m_logical_block_size);
@@ -220,6 +223,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
     if (!allow_cache) {
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
         auto base_offset = index.value() * block_size() + offset;
+        ScopedLockRelease release_lock(m_lock);
         auto seek_result = file_description().seek(base_offset, SEEK_SET);
         if (seek_result.is_error())
             return seek_result.error();
@@ -231,6 +235,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
     }
 
     auto& entry = cache().get(index);
+    ScopedLockRelease release_lock(m_lock);
     if (!entry.has_data) {
         auto base_offset = index.value() * block_size();
         auto seek_result = file_description().seek(base_offset, SEEK_SET);
@@ -240,7 +245,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
         auto nread = file_description().read(entry_data_buffer, block_size());
         if (nread.is_error())
             return nread.error();
-        VERIFY(nread.value() == block_size());
+        release_lock.restore_lock();
         entry.has_data = true;
     }
     if (buffer && !buffer->write(entry.data + offset, count))
