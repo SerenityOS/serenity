@@ -1,8 +1,10 @@
 set(SOURCES
+    AutoCompleteEngine.cpp
     ClientConnection.cpp
-    main.cpp
+    FileDB.cpp
     LexerAutoComplete.cpp
     ParserAutoComplete.cpp
+    main.cpp
 )
 
 set(GENERATED_SOURCES
