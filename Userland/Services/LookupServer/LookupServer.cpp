@@ -96,9 +96,10 @@ void LookupServer::load_etc_hosts()
             (u8)atoi(sections[2].characters()),
             (u8)atoi(sections[3].characters()),
         };
+        auto raw_addr = addr.to_in_addr_t();
 
         auto name = fields[1];
-        m_etc_hosts.set(name, addr.to_string());
+        m_etc_hosts.set(name, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
         IPv4Address reverse_addr {
             (u8)atoi(sections[3].characters()),
