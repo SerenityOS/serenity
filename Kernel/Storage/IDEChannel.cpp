@@ -35,6 +35,7 @@
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/PATADiskDevice.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -122,7 +123,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // This is important so that we can safely write the buffer back,
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
-    Processor::deferred_call_queue([this, result]() {
+    g_io_work->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
         ScopedSpinLock lock(m_request_lock);
         VERIFY(m_current_request);

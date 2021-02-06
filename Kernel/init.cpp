@@ -72,6 +72,7 @@
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 
 // Defined in the linker script
@@ -188,6 +189,8 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     Thread::initialize();
     Process::initialize();
     Scheduler::initialize();
+
+    WorkQueue::initialize();
 
     {
         RefPtr<Thread> init_stage2_thread;

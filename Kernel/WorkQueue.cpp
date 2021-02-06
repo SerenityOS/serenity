@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,61 +24,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <Kernel/Process.h>
+#include <Kernel/SpinLock.h>
+#include <Kernel/WaitQueue.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
-class BlockDevice;
-class CharacterDevice;
-class CoreDump;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class FutexQueue;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class Lock;
-class MappedROM;
-class MasterPTY;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
-class Process;
-class ProcessGroup;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SchedulerPerProcessorData;
-class Socket;
-class Space;
-template<typename BaseType>
-class SpinLock;
-class RecursiveSpinLock;
-template<typename LockType>
-class ScopedSpinLock;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class UserOrKernelBuffer;
-class VFS;
-class VMObject;
-class WaitQueue;
-class WorkQueue;
+WorkQueue* g_io_work;
 
-template<typename T>
-class KResultOr;
+void WorkQueue::initialize()
+{
+    g_io_work = new WorkQueue("IO WorkQueue");
+}
+
+WorkQueue::WorkQueue(const char* name)
+    : m_name(name)
+{
+    RefPtr<Thread> thread;
+    Process::create_kernel_process(thread, name, [this] {
+        for (;;) {
+            WorkItem* item;
+            bool have_more;
+            {
+                ScopedSpinLock lock(m_lock);
+                item = m_items.take_first();
+                have_more = !m_items.is_empty();
+            }
+            if (item) {
+                item->function(item->data);
+                if (item->free_data)
+                    item->free_data(item->data);
+                delete item;
+
+                if (have_more)
+                    continue;
+            }
+            [[maybe_unused]] auto result = m_wait_queue.wait_on({});
+        }
+    });
+    // If we can't create the thread we're in trouble...
+    m_thread = thread.release_nonnull();
+}
+
+void WorkQueue::do_queue(WorkItem* item)
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        m_items.append(*item);
+    }
+    m_wait_queue.wake_one();
+}
 
 }

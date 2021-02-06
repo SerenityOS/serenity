@@ -228,6 +228,7 @@ set(KERNEL_SOURCES
     VM/Space.cpp
     VM/VMObject.cpp
     WaitQueue.cpp
+    WorkQueue.cpp
     init.cpp
     kprintf.cpp
 )
