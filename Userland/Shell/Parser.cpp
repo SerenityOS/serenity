@@ -1373,7 +1373,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
 
     // Event selector
     AST::HistorySelector selector;
-    RefPtr<AST::Node> syntax_error;
+    RefPtr<AST::SyntaxError> syntax_error;
     selector.event.kind = AST::HistorySelector::EventKind::StartingStringLookup;
     selector.event.text_position = { m_offset, m_offset, m_line, m_line };
     selector.word_selector_range = {
@@ -1410,7 +1410,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         }
 
         selector.event.text = static_ptr_cast<AST::BarewordLiteral>(bareword)->text();
-        selector.event.text_position = (bareword ?: syntax_error)->position();
+        selector.event.text_position = bareword->position();
         auto it = selector.event.text.begin();
         bool is_negative = false;
         if (*it == '-') {
@@ -1422,14 +1422,22 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
             else
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromStart;
-            selector.event.index = abs(selector.event.text.to_int().value());
+            auto number = selector.event.text.to_int();
+            if (number.has_value())
+                selector.event.index = abs(number.value());
+            else
+                syntax_error = create<AST::SyntaxError>("History entry index value invalid or out of range");
         }
         break;
     }
     }
 
-    if (peek() != ':')
-        return create<AST::HistoryEvent>(move(selector));
+    if (peek() != ':') {
+        auto node = create<AST::HistoryEvent>(move(selector));
+        if (syntax_error)
+            node->set_is_syntax_error(*syntax_error);
+        return node;
+    }
 
     consume();
 
@@ -1445,14 +1453,14 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                     AST::HistorySelector::WordSelectorKind::Index,
                     0,
                     { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                    create<AST::SyntaxError>("Word selector value invalid or out of range")
+                    syntax_error ? NonnullRefPtr(*syntax_error) : create<AST::SyntaxError>("Word selector value invalid or out of range")
                 };
             }
             return AST::HistorySelector::WordSelector {
                 AST::HistorySelector::WordSelectorKind::Index,
                 value.value(),
                 { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                nullptr
+                syntax_error
             };
         }
         if (c == '^') {
@@ -1461,7 +1469,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                 AST::HistorySelector::WordSelectorKind::Index,
                 0,
                 { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                nullptr
+                syntax_error
             };
         }
         if (c == '$') {
@@ -1470,7 +1478,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                 AST::HistorySelector::WordSelectorKind::Last,
                 0,
                 { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                nullptr
+                syntax_error
             };
         }
         return {};
@@ -1478,9 +1486,10 @@ RefPtr<AST::Node> Parser::parse_history_designator()
 
     auto start = parse_word_selector();
     if (!start.has_value()) {
-        syntax_error = create<AST::SyntaxError>("Expected a word selector after ':' in a history event designator", true);
+        if (!syntax_error)
+            syntax_error = create<AST::SyntaxError>("Expected a word selector after ':' in a history event designator", true);
         auto node = create<AST::HistoryEvent>(move(selector));
-        node->set_is_syntax_error(syntax_error->syntax_error_node());
+        node->set_is_syntax_error(*syntax_error);
         return node;
     }
     selector.word_selector_range.start = start.release_value();
@@ -1489,9 +1498,10 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         consume();
         auto end = parse_word_selector();
         if (!end.has_value()) {
-            syntax_error = create<AST::SyntaxError>("Expected a word selector after '-' in a history event designator word selector", true);
+            if (!syntax_error)
+                syntax_error = create<AST::SyntaxError>("Expected a word selector after '-' in a history event designator word selector", true);
             auto node = create<AST::HistoryEvent>(move(selector));
-            node->set_is_syntax_error(syntax_error->syntax_error_node());
+            node->set_is_syntax_error(*syntax_error);
             return node;
         }
         selector.word_selector_range.end = move(end);
@@ -1499,7 +1509,10 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         selector.word_selector_range.end.clear();
     }
 
-    return create<AST::HistoryEvent>(move(selector));
+    auto node = create<AST::HistoryEvent>(move(selector));
+    if (syntax_error)
+        node->set_is_syntax_error(*syntax_error);
+    return node;
 }
 
 RefPtr<AST::Node> Parser::parse_comment()
