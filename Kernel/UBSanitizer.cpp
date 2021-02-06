@@ -87,4 +87,25 @@ void __ubsan_handle_mul_overflow(const OverflowData& data, void*, void*)
     dbgln("KUBSAN: multiplication overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
 }
+
+void __ubsan_handle_shift_out_of_bounds(const ShiftOutOfBoundsData&, void* lhs, void* rhs);
+void __ubsan_handle_shift_out_of_bounds(const ShiftOutOfBoundsData& data, void*, void*)
+{
+    dbgln("KUBSAN: shift out of bounds, {} ({}-bit) shifted by {} ({}-bit)", data.lhs_type.name(), data.lhs_type.bit_width(), data.rhs_type.name(), data.rhs_type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_divrem_overflow(const OverflowData&, void* lhs, void* rhs);
+void __ubsan_handle_divrem_overflow(const OverflowData& data, void*, void*)
+{
+    dbgln("KUBSAN: divrem overlow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    print_location(data.location);
+}
+
+void __ubsan_handle_out_of_bounds(const OutOfBoundsData&, void*);
+void __ubsan_handle_out_of_bounds(const OutOfBoundsData& data, void*)
+{
+    dbgln("KUBSAN: out of bounds access into array of {} ({}-bit), index type {} ({}-bit)", data.array_type.name(), data.array_type.bit_width(), data.index_type.name(), data.index_type.bit_width());
+    print_location(data.location);
+}
 }
