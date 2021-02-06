@@ -82,19 +82,14 @@ String Device::absolute_path(const FileDescription&) const
 
 void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)
 {
-    AsyncDeviceRequest* next_request = nullptr;
-
-    {
-        ScopedSpinLock lock(m_requests_lock);
-        VERIFY(!m_requests.is_empty());
-        VERIFY(m_requests.first().ptr() == &completed_request);
-        m_requests.remove(m_requests.begin());
-        if (!m_requests.is_empty())
-            next_request = m_requests.first().ptr();
+    ScopedSpinLock lock(m_requests_lock);
+    VERIFY(!m_requests.is_empty());
+    VERIFY(m_requests.first().ptr() == &completed_request);
+    m_requests.remove(m_requests.begin());
+    if (!m_requests.is_empty()) {
+        auto* next_request = m_requests.first().ptr();
+        next_request->do_start(move(lock));
     }
-
-    if (next_request)
-        next_request->start();
 
     evaluate_block_conditions();
 }
