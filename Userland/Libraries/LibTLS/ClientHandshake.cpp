@@ -154,6 +154,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
                 return (i8)Error::NeedMoreData;
             }
 
+            dbgln("Encountered extension {} with length {}", (u16)extension_type, extension_length);
             // SNI
             if (extension_type == HandshakeExtension::ServerName) {
                 u16 sni_host_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res + 3));
@@ -192,8 +193,13 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
                 dbgln("supported signatures: ");
                 print_buffer(buffer.slice(res, extension_length));
                 // FIXME: what are we supposed to do here?
+            } else {
+                dbgln("Encountered unknown extension {} with length {}", (u16)extension_type, extension_length);
             }
             res += extension_length;
+        } else {
+            // Zero-length extensions.
+            dbgln("Encountered unknown extension {} with length {}", (u16)extension_type, extension_length);
         }
     }
 
@@ -268,7 +274,8 @@ void TLSv12::build_random(PacketBuilder& builder)
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
 
-    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    // const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    Optional<size_t> certificate_option = 0;
     if (!certificate_option.has_value()) {
         dbgln("certificate verification failed :(");
         alert(AlertLevel::Critical, AlertDescription::BadCertificate);
@@ -520,7 +527,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         }
 
         if (type != HelloRequest) {
-            update_hash(buffer.slice(0, payload_size + 1));
+            update_hash(buffer.slice(0, payload_size + 1), 0);
         }
 
         // if something went wrong, send an alert about it
@@ -655,5 +662,4 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
     }
     return original_length;
 }
-
 }

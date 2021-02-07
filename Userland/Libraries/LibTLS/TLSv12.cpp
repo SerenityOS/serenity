@@ -737,6 +737,9 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 
 bool Context::verify_chain() const
 {
+    if (!options.validate_certificates)
+        return true;
+
     const Vector<Certificate>* local_chain = nullptr;
     if (is_server) {
         dbgln("Unsupported: Server mode");
@@ -813,10 +816,10 @@ Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringV
     return {};
 }
 
-TLSv12::TLSv12(Core::Object* parent, Version version)
+TLSv12::TLSv12(Core::Object* parent, Options options)
     : Core::Socket(Core::Socket::Type::TCP, parent)
 {
-    m_context.version = version;
+    m_context.options = move(options);
     m_context.is_server = false;
     m_context.tls_buffer = ByteBuffer::create_uninitialized(0);
 #ifdef SOCK_NONBLOCK
