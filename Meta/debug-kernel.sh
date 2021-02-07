@@ -9,6 +9,6 @@
 # the debugger which binary to load symbols, etc from.
 #
 $SERENITY_KERNEL_DEBUGGER \
-    -ex "file $(pwd)/kernel" \
+    -ex "file $(dirname "$0")/../Build/Kernel/Kernel" \
     -ex 'set arch i386:intel' \
     -ex 'target remote localhost:1234'
