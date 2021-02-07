@@ -1,6 +1,5 @@
 set(LOADER_SOURCES
     main.cpp
-    math.cpp
     misc.cpp
 )
 
