@@ -466,12 +466,6 @@ void Thread::check_dispatch_pending_signal()
     }
 }
 
-bool Thread::has_pending_signal(u8 signal) const
-{
-    ScopedSpinLock lock(g_scheduler_lock);
-    return pending_signals_for_state() & (1 << (signal - 1));
-}
-
 u32 Thread::pending_signals() const
 {
     ScopedSpinLock lock(g_scheduler_lock);
@@ -855,13 +849,6 @@ void Thread::set_default_signal_dispositions()
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress(SIG_IGN);
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
-}
-
-bool Thread::push_value_on_stack(FlatPtr value)
-{
-    m_tss.esp -= 4;
-    FlatPtr* stack_ptr = (FlatPtr*)m_tss.esp;
-    return copy_to_user(stack_ptr, &value);
 }
 
 RegisterState& Thread::get_register_dump_from_stack()

@@ -47,7 +47,6 @@
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
-#include <LibELF/AuxiliaryVector.h>
 
 namespace Kernel {
 
@@ -785,8 +784,6 @@ public:
     u32 affinity() const { return m_cpu_affinity; }
     void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
-    u32 stack_ptr() const { return m_tss.esp; }
-
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
@@ -1003,17 +1000,14 @@ public:
     DispatchSignalResult dispatch_signal(u8 signal);
     void check_dispatch_pending_signal();
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
-    void terminate_due_to_signal(u8 signal);
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
-    [[nodiscard]] bool has_pending_signal(u8 signal) const;
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
 
     void set_default_signal_dispositions();
-    bool push_value_on_stack(FlatPtr);
 
     KResult make_thread_specific_region(Badge<Process>);
 
