@@ -172,8 +172,10 @@ public:
     }
 
 private:
-    alignas(T) char m_storage[sizeof(T)];
-    KResult m_error;
+    union {
+        alignas(T) char m_storage[sizeof(T)];
+        KResult m_error;
+    };
     bool m_is_error { false };
     bool m_have_storage { false };
 };
