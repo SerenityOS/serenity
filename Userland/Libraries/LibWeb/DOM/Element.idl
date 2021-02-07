@@ -8,6 +8,9 @@ interface Element : Node {
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
 
+    ArrayFromVector getElementsByTagName(DOMString tagName);
+    ArrayFromVector getElementsByClassName(DOMString className);
+
     readonly attribute Element? firstElementChild;
     readonly attribute Element? lastElementChild;
 
