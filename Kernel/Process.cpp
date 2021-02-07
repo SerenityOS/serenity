@@ -811,7 +811,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     if (thread_or_error.is_error())
         return {};
 
-    auto& thread = thread_or_error.value();
+    auto thread = thread_or_error.release_value();
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
