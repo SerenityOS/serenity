@@ -401,10 +401,8 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                     if (image.interlaced) {
                         if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
                             ++interlace_pass;
-                            // FIXME: We could probably figure this out earlier and fail before doing a bunch of work.
-                            if (interlace_pass >= 4)
-                                return false;
-                            row = INTERLACE_ROW_OFFSETS[interlace_pass];
+                            if (interlace_pass < 4)
+                                row = INTERLACE_ROW_OFFSETS[interlace_pass];
                         } else {
                             row += INTERLACE_ROW_STRIDES[interlace_pass];
                         }
