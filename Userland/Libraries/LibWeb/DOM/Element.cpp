@@ -120,32 +120,40 @@ RefPtr<Layout::Node> Element::create_layout_node()
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
-    if (display == CSS::Display::Block)
+    switch (display) {
+    case CSS::Display::None:
+        ASSERT_NOT_REACHED();
+        break;
+    case CSS::Display::Block:
         return adopt(*new Layout::BlockBox(document(), this, move(style)));
-
-    if (display == CSS::Display::Inline) {
+    case CSS::Display::Inline:
         if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
             return adopt(*new Layout::BlockBox(document(), this, move(style)));
         return adopt(*new Layout::InlineNode(document(), *this, move(style)));
-    }
-
-    if (display == CSS::Display::ListItem)
+    case CSS::Display::ListItem:
         return adopt(*new Layout::ListItemBox(document(), *this, move(style)));
-    if (display == CSS::Display::Table)
+    case CSS::Display::Table:
         return adopt(*new Layout::TableBox(document(), this, move(style)));
-    if (display == CSS::Display::TableRow)
+    case CSS::Display::TableRow:
         return adopt(*new Layout::TableRowBox(document(), this, move(style)));
-    if (display == CSS::Display::TableCell)
+    case CSS::Display::TableCell:
         return adopt(*new Layout::TableCellBox(document(), this, move(style)));
-    if (display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup)
+    case CSS::Display::TableRowGroup:
+    case CSS::Display::TableHeaderGroup:
+    case CSS::Display::TableFooterGroup:
         return adopt(*new Layout::TableRowGroupBox(document(), *this, move(style)));
-    if (display == CSS::Display::InlineBlock) {
+    case CSS::Display::InlineBlock: {
         auto inline_block = adopt(*new Layout::BlockBox(document(), this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }
-    if (display == CSS::Display::Flex)
+    case CSS::Display::Flex:
         return adopt(*new Layout::BlockBox(document(), this, move(style)));
+    case CSS::Display::TableColumn:
+    case CSS::Display::TableColumnGroup:
+    case CSS::Display::TableCaption:
+        break;
+    }
     ASSERT_NOT_REACHED();
 }
 
