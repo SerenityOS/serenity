@@ -667,13 +667,13 @@ void TLSv12::try_disambiguate_error() const
     switch ((AlertDescription)m_context.critical_error) {
     case AlertDescription::HandshakeFailure:
         if (!m_context.cipher_spec_set) {
-            dbgln("- No cipher suite in common with {}", m_context.SNI);
+            dbgln("- No cipher suite in common with {}", m_context.extensions.SNI);
         } else {
             dbgln("- Unknown internal issue");
         }
         break;
     case AlertDescription::InsufficientSecurity:
-        dbgln("- No cipher suite in common with {} (the server is oh so secure)", m_context.SNI);
+        dbgln("- No cipher suite in common with {} (the server is oh so secure)", m_context.extensions.SNI);
         break;
     case AlertDescription::ProtocolVersion:
         dbgln("- The server refused to negotiate with TLS 1.2 :(");
