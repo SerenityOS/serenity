@@ -74,7 +74,6 @@ set(SOURCES
     ScrollBar.cpp
     ScrollableWidget.cpp
     SeparatorWidget.cpp
-    ShellSyntaxHighlighter.cpp
     Shortcut.cpp
     Slider.cpp
     SortingProxyModel.cpp
@@ -108,4 +107,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibShell LibRegex LibSyntax)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibRegex LibSyntax)

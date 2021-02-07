@@ -41,7 +41,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
-#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Window.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
@@ -49,6 +48,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/OutOfProcessWebView.h>
+#include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
 
 namespace HackStudio {
@@ -430,7 +430,7 @@ void Editor::set_document(GUI::TextDocument& doc)
         set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
         break;
     case Language::Shell:
-        set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
+        set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
         break;
     default:

@@ -6,10 +6,11 @@ set(SOURCES
     NodeVisitor.cpp
     Parser.cpp
     Shell.cpp
+    SyntaxHighlighter.cpp
 )
 
 serenity_lib(LibShell shell)
-target_link_libraries(LibShell LibCore LibLine)
+target_link_libraries(LibShell LibCore LibLine LibSyntax)
 
 set(SOURCES
     main.cpp
