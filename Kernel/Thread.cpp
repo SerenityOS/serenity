@@ -393,7 +393,7 @@ void Thread::finalize()
     }
 
     if (m_dump_backtrace_on_finalization)
-        dbgln("{}", backtrace_impl());
+        dbgln("{}", backtrace());
 
     kfree_aligned(m_fpu_state);
     drop_thread_count(false);
@@ -959,11 +959,6 @@ void Thread::set_state(State new_state, u8 stop_signal)
     }
 }
 
-String Thread::backtrace()
-{
-    return backtrace_impl();
-}
-
 struct RecognizedSymbol {
     u32 address;
     const KernelSymbol* symbol { nullptr };
@@ -992,7 +987,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
     return true;
 }
 
-String Thread::backtrace_impl()
+String Thread::backtrace()
 {
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
