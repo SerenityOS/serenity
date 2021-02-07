@@ -343,7 +343,7 @@ void WindowManager::notify_title_changed(Window& window)
     if (window.type() != WindowType::Normal)
         return;
 
-    dbgln<WINDOWMANAGER_DEBUG>("[WM] Window({}) title set to '{}'", &window, window.title());
+    dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) title set to '{}'", &window, window.title());
 
     if (m_switcher.is_visible())
         m_switcher.refresh();
@@ -356,7 +356,7 @@ void WindowManager::notify_modal_unparented(Window& window)
     if (window.type() != WindowType::Normal)
         return;
 
-    dbgln<WINDOWMANAGER_DEBUG>("[WM] Window({}) was unparented", &window);
+    dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) was unparented", &window);
 
     if (m_switcher.is_visible())
         m_switcher.refresh();
@@ -366,7 +366,7 @@ void WindowManager::notify_modal_unparented(Window& window)
 
 void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
-    dbgln<RESIZE_DEBUG>("[WM] Window({}) rect changed {} -> {}", &window, old_rect, new_rect);
+    dbgln_if(RESIZE_DEBUG, "[WM] Window({}) rect changed {} -> {}", &window, old_rect, new_rect);
 
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -431,7 +431,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
 
 void WindowManager::start_window_move(Window& window, const MouseEvent& event)
 {
-    dbgln<MOVE_DEBUG>("[WM] Begin moving Window({})", &window);
+    dbgln_if(MOVE_DEBUG, "[WM] Begin moving Window({})", &window);
 
     move_to_front_and_make_active(window);
     m_move_window = window;
@@ -464,7 +464,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
         return;
     }
 
-    dbgln<RESIZE_DEBUG>("[WM] Begin resizing Window({})", &window);
+    dbgln_if(RESIZE_DEBUG, "[WM] Begin resizing Window({})", &window);
 
     m_resizing_mouse_button = button;
     m_resize_window = window;
@@ -491,7 +491,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         return false;
     if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
 
-        dbgln<MOVE_DEBUG>("[WM] Finish moving Window({})", m_move_window);
+        dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
         m_move_window->invalidate();
         if (m_move_window->rect().contains(event.position()))
@@ -577,7 +577,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         return false;
 
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
-        dbgln<RESIZE_DEBUG>("[WM] Finish resizing Window({})", m_resize_window);
+        dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate();
@@ -684,7 +684,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     if (m_resize_window->rect() == new_rect)
         return true;
 
-    dbgln<RESIZE_DEBUG>("[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
+    dbgln_if(RESIZE_DEBUG, "[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
 
     m_resize_window->set_rect(new_rect);
     Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(new_rect));
@@ -806,7 +806,7 @@ void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& eve
         // we either haven't clicked anywhere, or we haven't clicked on this
         // window. set the current click window, and reset the timers.
 
-        dbgln<DOUBLECLICK_DEBUG>("Initial mousedown on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
+        dbgln_if(DOUBLECLICK_DEBUG, "Initial mousedown on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
 
         m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
@@ -838,7 +838,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
     if (&window != m_double_click_info.m_clicked_window) {
         // we either haven't clicked anywhere, or we haven't clicked on this
         // window. set the current click window, and reset the timers.
-        dbgln<DOUBLECLICK_DEBUG>("Initial mouseup on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
+        dbgln_if(DOUBLECLICK_DEBUG, "Initial mouseup on Window({}) for menus (previous was {})", &window, m_double_click_info.m_clicked_window);
 
         m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
@@ -853,7 +853,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
         // clock
         metadata.clock.start();
     } else {
-        dbgln<DOUBLECLICK_DEBUG>("Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed(), m_double_click_speed);
+        dbgln_if(DOUBLECLICK_DEBUG, "Transforming MouseUp to MouseDoubleClick ({} < {})!", metadata.clock.elapsed(), m_double_click_speed);
 
         event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
         // invalidate this now we've delivered a doubleclick, otherwise

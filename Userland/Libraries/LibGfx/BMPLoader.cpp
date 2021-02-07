@@ -317,7 +317,7 @@ static u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
 //   to scale the values in order to reach the proper value of 255.
 static u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
 {
-    dbgln<BMP_DEBUG>("DIB info sizes before access: #masks={}, #mask_sizes={}, #mask_shifts={}",
+    dbgln_if(BMP_DEBUG, "DIB info sizes before access: #masks={}, #mask_sizes={}, #mask_shifts={}",
         context.dib.info.masks.size(),
         context.dib.info.mask_sizes.size(),
         context.dib.info.mask_shifts.size());
@@ -471,7 +471,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
         return true;
 
     if (!context.file_bytes || context.file_size < bmp_header_size) {
-        dbgln<BMP_DEBUG>("Missing BMP header");
+        dbgln_if(BMP_DEBUG, "Missing BMP header");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -480,7 +480,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
 
     u16 header = streamer.read_u16();
     if (header != 0x4d42) {
-        dbgln<BMP_DEBUG>("BMP has invalid magic header number: {:#04x}", header);
+        dbgln_if(BMP_DEBUG, "BMP has invalid magic header number: {:#04x}", header);
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -502,7 +502,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     }
 
     if (context.data_offset >= context.file_size) {
-        dbgln<BMP_DEBUG>("BMP data offset is beyond file end?!");
+        dbgln_if(BMP_DEBUG, "BMP data offset is beyond file end?!");
         return false;
     }
 
@@ -725,12 +725,12 @@ static bool decode_bmp_v3_dib(BMPLoadingContext& context, Streamer& streamer)
     // suite results.
     if (context.dib.info.compression == Compression::ALPHABITFIELDS) {
         context.dib.info.masks.append(streamer.read_u32());
-        dbgln<BMP_DEBUG>("BMP alpha mask: {:#08x}", context.dib.info.masks[3]);
+        dbgln_if(BMP_DEBUG, "BMP alpha mask: {:#08x}", context.dib.info.masks[3]);
     } else if (context.dib_size() >= 56 && context.dib.core.bpp >= 16) {
         auto mask = streamer.read_u32();
         if ((context.dib.core.bpp == 32 && mask != 0) || context.dib.core.bpp == 16) {
             context.dib.info.masks.append(mask);
-            dbgln<BMP_DEBUG>("BMP alpha mask: {:#08x}", mask);
+            dbgln_if(BMP_DEBUG, "BMP alpha mask: {:#08x}", mask);
         }
     } else {
         streamer.drop_bytes(4);
@@ -807,7 +807,7 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
 
     streamer = Streamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
 
-    dbgln<BMP_DEBUG>("BMP dib size: {}", dib_size);
+    dbgln_if(BMP_DEBUG, "BMP dib size: {}", dib_size);
 
     bool error = false;
 
@@ -937,7 +937,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
 {
     // RLE-compressed images cannot be stored top-down
     if (context.dib.core.height < 0) {
-        dbgln<BMP_DEBUG>("BMP is top-down and RLE compressed");
+        dbgln_if(BMP_DEBUG, "BMP is top-down and RLE compressed");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }

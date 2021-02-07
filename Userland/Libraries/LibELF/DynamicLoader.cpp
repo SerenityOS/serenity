@@ -230,7 +230,7 @@ RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_t
 
     call_object_init_functions();
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("Loaded {}", m_filename);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Loaded {}", m_filename);
     return m_dynamic_object;
 }
 
@@ -359,25 +359,25 @@ void DynamicLoader::load_program_headers()
 
 DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, ELF::DynamicObject::Relocation relocation)
 {
-    dbgln<DYNAMIC_LOAD_DEBUG>("Relocation symbol: {}, type: {}", relocation.symbol().name(), relocation.type());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Relocation symbol: {}, type: {}", relocation.symbol().name(), relocation.type());
     FlatPtr* patch_ptr = nullptr;
     if (is_dynamic())
         patch_ptr = (FlatPtr*)(m_dynamic_object->base_address().as_ptr() + relocation.offset());
     else
         patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("dynamic object base address: {:p}", m_dynamic_object->base_address().as_ptr());
-    dbgln<DYNAMIC_LOAD_DEBUG>("relocation offset: {:#08x}", relocation.offset());
-    dbgln<DYNAMIC_LOAD_DEBUG>("patch_ptr: {:p}", patch_ptr);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "dynamic object base address: {:p}", m_dynamic_object->base_address().as_ptr());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "relocation offset: {:#08x}", relocation.offset());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "patch_ptr: {:p}", patch_ptr);
     switch (relocation.type()) {
     case R_386_NONE:
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
-        dbgln<DYNAMIC_LOAD_DEBUG>("None relocation. No symbol, no nothing.");
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "None relocation. No symbol, no nothing.");
         break;
     case R_386_32: {
         auto symbol = relocation.symbol();
-        dbgln<DYNAMIC_LOAD_DEBUG>("Absolute relocation: name: '{}', value: {}", symbol.name(), symbol.value());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Absolute relocation: name: '{}', value: {}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
             if (symbol.bind() == STB_WEAK)
@@ -387,22 +387,22 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         }
         u32 symbol_address = res.value().address;
         *patch_ptr += symbol_address;
-        dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
     case R_386_PC32: {
         auto symbol = relocation.symbol();
-        dbgln<DYNAMIC_LOAD_DEBUG>("PC-relative relocation: '{}', value: {:p}", symbol.name(), symbol.value());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "PC-relative relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
         ASSERT(res.has_value());
         u32 relative_offset = (res.value().address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
         *patch_ptr += relative_offset;
-        dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
     case R_386_GLOB_DAT: {
         auto symbol = relocation.symbol();
-        dbgln<DYNAMIC_LOAD_DEBUG>("Global data relocation: '{}', value: {:p}", symbol.name(), symbol.value());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Global data relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
             // We do not support these
@@ -419,46 +419,46 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             // Symbol not found
             return RelocationResult::Failed;
         }
-        dbgln<DYNAMIC_LOAD_DEBUG>("symbol found, location: {:#08x}", res.value().address);
-        dbgln<DYNAMIC_LOAD_DEBUG>("object: {}", m_filename);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol found, location: {:#08x}", res.value().address);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "object: {}", m_filename);
 
         u32 symbol_location = res.value().address;
         ASSERT(symbol_location != (FlatPtr)m_dynamic_object->base_address().as_ptr());
         *patch_ptr = symbol_location;
-        dbgln<DYNAMIC_LOAD_DEBUG>("   Symbol address: {:p}", *patch_ptr);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
     case R_386_RELATIVE: {
         // FIXME: According to the spec, R_386_relative ones must be done first.
         //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
-        dbgln<DYNAMIC_LOAD_DEBUG>("Load address relocation at offset {:#08x}", relocation.offset());
-        dbgln<DYNAMIC_LOAD_DEBUG>("    patch ptr == {:p}, adding load base address ({:p}) to it and storing {:p}", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Load address relocation at offset {:#08x}", relocation.offset());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "    patch ptr == {:p}, adding load base address ({:p}) to it and storing {:p}", *patch_ptr, m_dynamic_object->base_address().as_ptr(), *patch_ptr + m_dynamic_object->base_address().as_ptr());
         *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
         break;
     }
     case R_386_TLS_TPOFF32:
     case R_386_TLS_TPOFF: {
-        dbgln<DYNAMIC_LOAD_DEBUG>("Relocation type: R_386_TLS_TPOFF at offset {:#08x}", relocation.offset());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Relocation type: R_386_TLS_TPOFF at offset {:#08x}", relocation.offset());
         auto symbol = relocation.symbol();
         // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
         if (relocation.symbol_index() == 0)
             break;
-        dbgln<DYNAMIC_LOAD_DEBUG>("Symbol index: {}", symbol.index());
-        dbgln<DYNAMIC_LOAD_DEBUG>("Symbol is_undefined?: {}", symbol.is_undefined());
-        dbgln<DYNAMIC_LOAD_DEBUG>("TLS relocation: '{}', value: {:p}", symbol.name(), symbol.value());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Symbol index: {}", symbol.index());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Symbol is_undefined?: {}", symbol.is_undefined());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "TLS relocation: '{}', value: {:p}", symbol.name(), symbol.value());
         auto res = lookup_symbol(symbol);
         if (!res.has_value())
             break;
         u32 symbol_value = res.value().value;
-        dbgln<DYNAMIC_LOAD_DEBUG>("symbol value: {}", symbol_value);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol value: {}", symbol_value);
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
         ASSERT(dynamic_object_of_symbol);
         size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
-        dbgln<DYNAMIC_LOAD_DEBUG>("patch ptr: {:p}", patch_ptr);
-        dbgln<DYNAMIC_LOAD_DEBUG>("tls end offset: {}, total tls size: {}", offset_of_tls_end, total_tls_size);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "patch ptr: {:p}", patch_ptr);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "tls end offset: {}, total tls size: {}", offset_of_tls_end, total_tls_size);
         *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
-        dbgln<DYNAMIC_LOAD_DEBUG>("*patch ptr: {}", (i32)*patch_ptr);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "*patch ptr: {}", (i32)*patch_ptr);
         break;
     }
     case R_386_JMP_SLOT: {
@@ -466,7 +466,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         if (m_dynamic_object->must_bind_now() || s_always_bind_now) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
-            dbgln<DYNAMIC_LOAD_DEBUG>("patching plt reloaction: {:p}", relocation.offset_in_section());
+            dbgln_if(DYNAMIC_LOAD_DEBUG, "patching plt reloaction: {:p}", relocation.offset_in_section());
             [[maybe_unused]] auto rc = m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
             u8* relocation_address = relocation.address().as_ptr();
@@ -499,7 +499,7 @@ void DynamicLoader::setup_plt_trampoline()
     got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
     got_ptr[2] = (FlatPtr)&_plt_trampoline;
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("Set GOT PLT entries at {:p}: [0] = {:p} [1] = {:p}, [2] = {:p}", got_ptr, (void*)got_ptr[0], (void*)got_ptr[1], (void*)got_ptr[2]);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Set GOT PLT entries at {:p}: [0] = {:p} [1] = {:p}, [2] = {:p}", got_ptr, (void*)got_ptr[0], (void*)got_ptr[1], (void*)got_ptr[2]);
 }
 
 // Called from our ASM routine _plt_trampoline.
@@ -517,7 +517,7 @@ void DynamicLoader::call_object_init_functions()
     if (m_dynamic_object->has_init_section()) {
         auto init_function = (InitFunc)(m_dynamic_object->init_section().address().as_ptr());
 
-        dbgln<DYNAMIC_LOAD_DEBUG>("Calling DT_INIT at {:p}", init_function);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "Calling DT_INIT at {:p}", init_function);
         (init_function)();
     }
 
@@ -531,7 +531,7 @@ void DynamicLoader::call_object_init_functions()
             // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
             if (!*init_begin || ((FlatPtr)*init_begin == (FlatPtr)-1))
                 continue;
-            dbgln<DYNAMIC_LOAD_DEBUG>("Calling DT_INITARRAY entry at {:p}", *init_begin);
+            dbgln_if(DYNAMIC_LOAD_DEBUG, "Calling DT_INITARRAY entry at {:p}", *init_begin);
             (*init_begin)();
             ++init_begin;
         }

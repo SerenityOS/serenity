@@ -320,13 +320,13 @@ void IOAPIC::write_register(u32 index, u32 value) const
     m_regs->select = index;
     m_regs->window = value;
 
-    dbgln<IOAPIC_DEBUG>("IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln_if(IOAPIC_DEBUG, "IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
 }
 u32 IOAPIC::read_register(u32 index) const
 {
     InterruptDisabler disabler;
     m_regs->select = index;
-    dbgln<IOAPIC_DEBUG>("IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln_if(IOAPIC_DEBUG, "IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
     return m_regs->window;
 }
 

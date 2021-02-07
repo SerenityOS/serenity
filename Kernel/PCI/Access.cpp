@@ -74,34 +74,34 @@ PhysicalID Access::get_physical_id(Address address) const
 
 u8 Access::early_read8_field(Address address, u32 field)
 {
-    dbgln<PCI_DEBUG>("PCI: Early reading 8-bit field {:#08x} for {}", field, address);
+    dbgln_if(PCI_DEBUG, "PCI: Early reading 8-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in8(PCI_VALUE_PORT + (field & 3));
 }
 
 u16 Access::early_read16_field(Address address, u32 field)
 {
-    dbgln<PCI_DEBUG>("PCI: Early reading 16-bit field {:#08x} for {}", field, address);
+    dbgln_if(PCI_DEBUG, "PCI: Early reading 16-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in16(PCI_VALUE_PORT + (field & 2));
 }
 
 u32 Access::early_read32_field(Address address, u32 field)
 {
-    dbgln<PCI_DEBUG>("PCI: Early reading 32-bit field {:#08x} for {}", field, address);
+    dbgln_if(PCI_DEBUG, "PCI: Early reading 32-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in32(PCI_VALUE_PORT);
 }
 
 u16 Access::early_read_type(Address address)
 {
-    dbgln<PCI_DEBUG>("PCI: Early reading type for {}", address);
+    dbgln_if(PCI_DEBUG, "PCI: Early reading type for {}", address);
     return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
 }
 
 void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive)
 {
-    dbgln<PCI_DEBUG>("PCI: Enumerating function type={}, bus={}, device={}, function={}", type, bus, device, function);
+    dbgln_if(PCI_DEBUG, "PCI: Enumerating function type={}, bus={}, device={}, function={}", type, bus, device, function);
     Address address(0, bus, device, function);
     if (type == -1 || type == early_read_type(address))
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
@@ -117,7 +117,7 @@ void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Funct
 
 void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive)
 {
-    dbgln<PCI_DEBUG>("PCI: Enumerating device type={}, bus={}, device={}", type, bus, device);
+    dbgln_if(PCI_DEBUG, "PCI: Enumerating device type={}, bus={}, device={}", type, bus, device);
     Address address(0, bus, device, 0);
     if (early_read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
         return;
@@ -133,7 +133,7 @@ void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address
 
 void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback, bool recursive)
 {
-    dbgln<PCI_DEBUG>("PCI: Enumerating bus type={}, bus={}", type, bus);
+    dbgln_if(PCI_DEBUG, "PCI: Enumerating bus type={}, bus={}", type, bus);
     for (u8 device = 0; device < 32; ++device)
         enumerate_device(type, bus, device, callback, recursive);
 }
@@ -152,12 +152,12 @@ void enumerate(Function<void(Address, ID)> callback)
 
 Optional<u8> get_capabilities_pointer(Address address)
 {
-    dbgln<PCI_DEBUG>("PCI: Getting capabilities pointer for {}", address);
+    dbgln_if(PCI_DEBUG, "PCI: Getting capabilities pointer for {}", address);
     if (PCI::read16(address, PCI_STATUS) & (1 << 4)) {
-        dbgln<PCI_DEBUG>("PCI: Found capabilities pointer for {}", address);
+        dbgln_if(PCI_DEBUG, "PCI: Found capabilities pointer for {}", address);
         return PCI::read8(address, PCI_CAPABILITIES_POINTER);
     }
-    dbgln<PCI_DEBUG>("PCI: No capabilities pointer for {}", address);
+    dbgln_if(PCI_DEBUG, "PCI: No capabilities pointer for {}", address);
     return {};
 }
 
@@ -168,16 +168,16 @@ PhysicalID get_physical_id(Address address)
 
 Vector<Capability> get_capabilities(Address address)
 {
-    dbgln<PCI_DEBUG>("PCI: Getting capabilities for {}", address);
+    dbgln_if(PCI_DEBUG, "PCI: Getting capabilities for {}", address);
     auto capabilities_pointer = PCI::get_capabilities_pointer(address);
     if (!capabilities_pointer.has_value()) {
-        dbgln<PCI_DEBUG>("PCI: No capabilities for {}", address);
+        dbgln_if(PCI_DEBUG, "PCI: No capabilities for {}", address);
         return {};
     }
     Vector<Capability> capabilities;
     auto capability_pointer = capabilities_pointer.value();
     while (capability_pointer != 0) {
-        dbgln<PCI_DEBUG>("PCI: Reading in capability at {:#02x} for {}", capability_pointer, address);
+        dbgln_if(PCI_DEBUG, "PCI: Reading in capability at {:#02x} for {}", capability_pointer, address);
         u16 capability_header = PCI::read16(address, capability_pointer);
         u8 capability_id = capability_header & 0xff;
         capability_pointer = capability_header >> 8;

@@ -53,7 +53,7 @@ MasterPTY::MasterPTY(unsigned index)
 
 MasterPTY::~MasterPTY()
 {
-    dbgln<MASTERPTY_DEBUG>("~MasterPTY({})", m_index);
+    dbgln_if(MASTERPTY_DEBUG, "~MasterPTY({})", m_index);
     PTYMultiplexer::the().notify_master_destroyed({}, m_index);
 }
 
@@ -91,7 +91,7 @@ bool MasterPTY::can_write(const FileDescription&, size_t) const
 
 void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
 {
-    dbgln<MASTERPTY_DEBUG>("MasterPTY({}): slave closed, my retains: {}, slave retains: {}", m_index, ref_count(), m_slave->ref_count());
+    dbgln_if(MASTERPTY_DEBUG, "MasterPTY({}): slave closed, my retains: {}, slave retains: {}", m_index, ref_count(), m_slave->ref_count());
     // +1 ref for my MasterPTY::m_slave
     // +1 ref for FileDescription::m_device
     if (m_slave->ref_count() == 2)

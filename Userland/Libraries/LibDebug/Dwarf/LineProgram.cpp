@@ -251,7 +251,7 @@ void LineProgram::run_program()
         u8 opcode = 0;
         m_stream >> opcode;
 
-        dbgln<DWARF_DEBUG>("{:p}: opcode: {}", m_stream.offset() - 1, opcode);
+        dbgln_if(DWARF_DEBUG, "{:p}: opcode: {}", m_stream.offset() - 1, opcode);
 
         if (opcode == 0) {
             handle_extended_opcode();

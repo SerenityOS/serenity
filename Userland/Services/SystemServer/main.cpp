@@ -54,7 +54,7 @@ static void sigchld_handler(int)
         if (pid == 0)
             break;
 
-        dbgln<SYSTEMSERVER_DEBUG>("Reaped child with pid {}, exit status {}", pid, status);
+        dbgln_if(SYSTEMSERVER_DEBUG, "Reaped child with pid {}, exit status {}", pid, status);
 
         Service* service = Service::find_by_pid(pid);
         if (service == nullptr) {

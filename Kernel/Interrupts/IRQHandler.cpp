@@ -44,7 +44,7 @@ IRQHandler::~IRQHandler()
 
 bool IRQHandler::eoi()
 {
-    dbgln<IRQ_DEBUG>("EOI IRQ {}", interrupt_number());
+    dbgln_if(IRQ_DEBUG, "EOI IRQ {}", interrupt_number());
     if (!m_shared_with_others) {
         ASSERT(!m_responsible_irq_controller.is_null());
         m_responsible_irq_controller->eoi(*this);
@@ -55,7 +55,7 @@ bool IRQHandler::eoi()
 
 void IRQHandler::enable_irq()
 {
-    dbgln<IRQ_DEBUG>("Enable IRQ {}", interrupt_number());
+    dbgln_if(IRQ_DEBUG, "Enable IRQ {}", interrupt_number());
     m_enabled = true;
     if (!m_shared_with_others)
         m_responsible_irq_controller->enable(*this);
@@ -63,7 +63,7 @@ void IRQHandler::enable_irq()
 
 void IRQHandler::disable_irq()
 {
-    dbgln<IRQ_DEBUG>("Disable IRQ {}", interrupt_number());
+    dbgln_if(IRQ_DEBUG, "Disable IRQ {}", interrupt_number());
     m_enabled = false;
     if (!m_shared_with_others)
         m_responsible_irq_controller->disable(*this);

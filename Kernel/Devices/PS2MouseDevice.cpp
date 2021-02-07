@@ -99,7 +99,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 
     auto commit_packet = [&] {
         m_data_state = 0;
-        dbgln<PS2MOUSE_DEBUG>("PS2Mouse: {}, {} {} {}",
+        dbgln_if(PS2MOUSE_DEBUG, "PS2Mouse: {}, {} {} {}",
             m_data.bytes[1],
             m_data.bytes[2],
             (m_data.bytes[0] & 1) ? "Left" : "",

@@ -60,7 +60,7 @@ void Lock::lock(Mode mode)
         Mode current_mode = m_mode;
         switch (current_mode) {
         case Mode::Unlocked: {
-            dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
+            dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
             m_mode = mode;
             ASSERT(!m_holder);
             ASSERT(m_shared_holders.is_empty());
@@ -106,7 +106,7 @@ void Lock::lock(Mode mode)
             if (mode != Mode::Shared)
                 break;
 
-            dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
+            dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
 
             ASSERT(m_times_locked > 0);
             m_times_locked++;
@@ -126,9 +126,9 @@ void Lock::lock(Mode mode)
             ASSERT_NOT_REACHED();
         }
         m_lock.store(false, AK::memory_order_release);
-        dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {} ({}) waiting...", this, m_name);
+        dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waiting...", this, m_name);
         m_queue.wait_on({}, m_name);
-        dbgln<LOCK_TRACE_DEBUG>("Lock::lock @ {} ({}) waited", this, m_name);
+        dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waited", this, m_name);
     }
 }
 
@@ -191,7 +191,7 @@ void Lock::unlock()
             m_lock.store(false, AK::memory_order_release);
             if (unlocked_last) {
                 u32 did_wake = m_queue.wake_one();
-                dbgln<LOCK_TRACE_DEBUG>("Lock::unlock @ {} ({})  wake one ({})", this, m_name, did_wake);
+                dbgln_if(LOCK_TRACE_DEBUG, "Lock::unlock @ {} ({})  wake one ({})", this, m_name, did_wake);
             }
             return;
         }
@@ -219,7 +219,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                     return Mode::Unlocked;
                 }
 
-                dbgln<LOCK_RESTORE_DEBUG>("Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
+                dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
 #if LOCK_DEBUG
                 m_holder->holding_lock(*this, -(int)lock_count_to_restore);
 #endif
@@ -242,7 +242,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                     return Mode::Unlocked;
                 }
 
-                dbgln<LOCK_RESTORE_DEBUG>("Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}, total locks: {}",
+                dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}, total locks: {}",
                     this, it->value, m_times_locked);
 
                 ASSERT(it->value > 0);
@@ -303,7 +303,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 if (!m_mode.compare_exchange_strong(expected_mode, Mode::Exclusive))
                     break;
 
-                dbgln<LOCK_RESTORE_DEBUG>("Lock::restore_lock @ {}: restoring {} with lock count {}, was unlocked", this, mode_to_string(mode), lock_count);
+                dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was unlocked", this, mode_to_string(mode), lock_count);
 
                 ASSERT(m_times_locked == 0);
                 m_times_locked = lock_count;
@@ -322,7 +322,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 if (!m_mode.compare_exchange_strong(expected_mode, Mode::Shared) && expected_mode != Mode::Shared)
                     break;
 
-                dbgln<LOCK_RESTORE_DEBUG>("Lock::restore_lock @ {}: restoring {} with lock count {}, was {}",
+                dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was {}",
                     this, mode_to_string(mode), lock_count, mode_to_string(expected_mode));
 
                 ASSERT(expected_mode == Mode::Shared || m_times_locked == 0);

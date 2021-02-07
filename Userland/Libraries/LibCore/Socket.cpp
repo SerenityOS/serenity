@@ -79,7 +79,7 @@ bool Socket::connect(const String& hostname, int port)
     }
 
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
-    dbgln<CSOCKET_DEBUG>("Socket::connect: Resolved '{}' to {}", hostname, host_address);
+    dbgln_if(CSOCKET_DEBUG, "Socket::connect: Resolved '{}' to {}", hostname, host_address);
     return connect(host_address, port);
 }
 
@@ -98,7 +98,7 @@ bool Socket::connect(const SocketAddress& address, int port)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == SocketAddress::Type::IPv4);
-    dbgln<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
+    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
     ASSERT(port > 0 && port <= 65535);
 
@@ -119,7 +119,7 @@ bool Socket::connect(const SocketAddress& address)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == SocketAddress::Type::Local);
-    dbgln<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
+    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
@@ -138,7 +138,7 @@ bool Socket::connect(const SocketAddress& address)
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
     auto connected = [this] {
-        dbgln<CSOCKET_DEBUG>("{} connected!", *this);
+        dbgln_if(CSOCKET_DEBUG, "{} connected!", *this);
         if (!m_connected) {
             m_connected = true;
             ensure_read_notifier();
@@ -153,7 +153,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
-            dbgln<CSOCKET_DEBUG>("{} connection in progress (EINPROGRESS)", *this);
+            dbgln_if(CSOCKET_DEBUG, "{} connection in progress (EINPROGRESS)", *this);
             m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
             m_notifier->on_ready_to_write = move(connected);
             return true;
@@ -163,7 +163,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         errno = saved_errno;
         return false;
     }
-    dbgln<CSOCKET_DEBUG>("{} connected ok!", *this);
+    dbgln_if(CSOCKET_DEBUG, "{} connected ok!", *this);
     connected();
     return true;
 }

@@ -61,7 +61,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
         return EBUSY;
     auto master_index = m_freelist.take_last();
     auto master = adopt(*new MasterPTY(master_index));
-    dbgln<PTMX_DEBUG>("PTYMultiplexer::open: Vending master {}", master->index());
+    dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
     auto description = FileDescription::create(move(master));
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
@@ -74,7 +74,7 @@ void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
     LOCKER(m_lock);
     m_freelist.append(index);
-    dbgln<PTMX_DEBUG>("PTYMultiplexer: {} added to freelist", index);
+    dbgln_if(PTMX_DEBUG, "PTYMultiplexer: {} added to freelist", index);
 }
 
 }

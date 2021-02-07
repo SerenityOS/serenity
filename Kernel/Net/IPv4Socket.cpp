@@ -66,7 +66,7 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
-    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}) created with type={}, protocol={}", this, type, protocol);
+    dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) created with type={}, protocol={}", this, type, protocol);
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
     if (m_buffer_mode == BufferMode::Bytes) {
         m_scratch_buffer = KBuffer::create_with_size(65536);
@@ -119,7 +119,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
     m_local_address = IPv4Address((const u8*)&address.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
-    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket::bind {}({}) to {}:{}", class_name(), this, m_local_address, m_local_port);
+    dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket::bind {}({}) to {}:{}", class_name(), this, m_local_address, m_local_port);
 
     return protocol_bind();
 }
@@ -135,7 +135,7 @@ KResult IPv4Socket::listen(size_t backlog)
     m_role = Role::Listener;
     evaluate_block_conditions();
 
-    dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}) listening with backlog={}", this, backlog);
+    dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) listening with backlog={}", this, backlog);
 
     return protocol_listen();
 }
@@ -287,7 +287,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             packet = m_receive_queue.take_first();
             set_can_read(!m_receive_queue.is_empty());
 
-            dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
+            dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
                 this,
                 packet.data.value().size(),
                 m_receive_queue.size());
@@ -316,7 +316,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         packet = m_receive_queue.take_first();
         set_can_read(!m_receive_queue.is_empty());
 
-        dbgln<IPV4_SOCKET_DEBUG>("IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
+        dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
             this,
             packet.data.value().size(),
             m_receive_queue.size());
@@ -326,7 +326,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     packet_timestamp = packet.timestamp;
 
     if (addr) {
-        dbgln<IPV4_SOCKET_DEBUG>("Incoming packet is from: {}:{}", packet.peer_address, packet.peer_port);
+        dbgln_if(IPV4_SOCKET_DEBUG, "Incoming packet is from: {}:{}", packet.peer_address, packet.peer_port);
 
         sockaddr_in out_addr {};
         memcpy(&out_addr.sin_addr, &packet.peer_address, sizeof(IPv4Address));

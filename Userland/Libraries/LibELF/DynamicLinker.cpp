@@ -125,10 +125,10 @@ static Vector<String> get_dependencies(const String& name)
 
 static void map_dependencies(const String& name)
 {
-    dbgln<DYNAMIC_LOAD_DEBUG>("mapping dependencies for: {}", name);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", name);
 
     for (const auto& needed_name : get_dependencies(name)) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name.characters());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
         if (!g_loaders.contains(library_name)) {
@@ -136,19 +136,19 @@ static void map_dependencies(const String& name)
             map_dependencies(library_name);
         }
     }
-    dbgln<DYNAMIC_LOAD_DEBUG>("mapped dependencies for {}", name);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", name);
 }
 
 static void allocate_tls()
 {
     size_t total_tls_size = 0;
     for (const auto& data : g_loaders) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("{}: TLS Size: {}", data.key, data.value->tls_size());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size());
         total_tls_size += data.value->tls_size();
     }
     if (total_tls_size) {
         [[maybe_unused]] void* tls_address = ::allocate_tls(total_tls_size);
-        dbgln<DYNAMIC_LOAD_DEBUG>("from userspace, tls_address: {:p}", tls_address);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, tls_address: {:p}", tls_address);
     }
     g_total_tls_size = total_tls_size;
 }
@@ -180,14 +180,14 @@ static void initialize_libc(DynamicObject& libc)
 
 static void load_elf(const String& name)
 {
-    dbgln<DYNAMIC_LOAD_DEBUG>("load_elf: {}", name);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "load_elf: {}", name);
     auto loader = g_loaders.get(name).value();
 
     auto dynamic_object = loader->map();
     ASSERT(dynamic_object);
 
     for (const auto& needed_name : get_dependencies(name)) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("needed library: {}", needed_name);
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name);
         String library_name = get_library_name(needed_name);
         if (!g_loaded_objects.contains(library_name)) {
             load_elf(library_name);
@@ -200,7 +200,7 @@ static void load_elf(const String& name)
     g_loaded_objects.set(name, *dynamic_object);
     g_global_objects.append(*dynamic_object);
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("load_elf: done {}", name);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "load_elf: done {}", name);
 }
 
 static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
@@ -249,9 +249,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("loaded all dependencies");
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "loaded all dependencies");
     for ([[maybe_unused]] auto& lib : g_loaders) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size(), lib.value->tls_offset());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size(), lib.value->tls_offset());
     }
 
     allocate_tls();
@@ -263,11 +263,11 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     if (main_program_lib->is_dynamic())
         entry_point += reinterpret_cast<FlatPtr>(main_program_lib->text_segment_load_address().as_ptr());
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("entry point: {:p}", (void*)entry_point);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "entry point: {:p}", (void*)entry_point);
     g_loaders.clear();
 
     MainFunction main_function = (MainFunction)(entry_point);
-    dbgln<DYNAMIC_LOAD_DEBUG>("jumping to main program entry point: {:p}", main_function);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "jumping to main program entry point: {:p}", main_function);
     if (g_do_breakpoint_trap_before_entry) {
         asm("int3");
     }
@@ -278,7 +278,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     }
 
     rc = main_function(argc, argv, envp);
-    dbgln<DYNAMIC_LOAD_DEBUG>("rc: {}", rc);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "rc: {}", rc);
     if (g_libc_exit != nullptr) {
         g_libc_exit(rc);
     } else {

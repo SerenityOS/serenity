@@ -483,3 +483,5 @@ using AK::dbgln;
 
 using AK::FormatIfSupported;
 using AK::FormatString;
+
+#define dbgln_if(flag, format, ...) dbgln<flag>(format, ##__VA_ARGS__)
