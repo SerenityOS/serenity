@@ -337,7 +337,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_ppid(ppid)
     , m_wait_block_condition(*this)
 {
-    dbgln<PROCESS_DEBUG>("Created new process {}({})", m_name, m_pid.value());
+    dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, m_pid.value());
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 
@@ -599,7 +599,7 @@ void Process::finalize()
 {
     ASSERT(Thread::current() == g_finalizer);
 
-    dbgln<PROCESS_DEBUG>("Finalizing process {}", *this);
+    dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
     if (is_dumpable()) {
         if (m_should_dump_core)

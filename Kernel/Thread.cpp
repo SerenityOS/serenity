@@ -389,7 +389,7 @@ void Thread::finalize()
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
-        dbgln<THREAD_DEBUG>("Finalizing thread {}", *this);
+        dbgln_if(THREAD_DEBUG, "Finalizing thread {}", *this);
         set_state(Thread::State::Dead);
         m_join_condition.thread_finalizing();
     }
@@ -488,7 +488,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
-        dbgln<SIGNAL_DEBUG>("Signal {} was ignored by {}", signal, process());
+        dbgln_if(SIGNAL_DEBUG, "Signal {} was ignored by {}", signal, process());
         return;
     }
 
@@ -505,12 +505,12 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     if (m_state == Stopped) {
         ScopedSpinLock lock(m_lock);
         if (pending_signals_for_state()) {
-            dbgln<SIGNAL_DEBUG>("Signal: Resuming stopped {} to deliver signal {}", *this, signal);
+            dbgln_if(SIGNAL_DEBUG, "Signal: Resuming stopped {} to deliver signal {}", *this, signal);
             resume_from_stopped();
         }
     } else {
         ScopedSpinLock block_lock(m_block_lock);
-        dbgln<SIGNAL_DEBUG>("Signal: Unblocking {} to deliver signal {}", *this, signal);
+        dbgln_if(SIGNAL_DEBUG, "Signal: Unblocking {} to deliver signal {}", *this, signal);
         unblock(signal);
     }
 }
@@ -724,7 +724,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto& process = this->process();
     auto tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
-        dbgln<SIGNAL_DEBUG>("signal: signal {} sopping thread {}", signal, *this);
+        dbgln_if(SIGNAL_DEBUG, "signal: signal {} sopping thread {}", signal, *this);
         set_state(State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }
@@ -894,13 +894,13 @@ void Thread::set_state(State new_state, u8 stop_signal)
         if (previous_state == Invalid) {
             // If we were *just* created, we may have already pending signals
             if (has_unmasked_pending_signals()) {
-                dbgln<THREAD_DEBUG>("Dispatch pending signals to new thread {}", *this);
+                dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
                 dispatch_one_pending_signal();
             }
         }
 
         m_state = new_state;
-        dbgln<THREAD_DEBUG>("Set thread {} state to {}", *this, state_string());
+        dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
     }
 
     if (previous_state == Runnable) {
@@ -912,7 +912,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             process.for_each_thread([&](auto& thread) {
                 if (&thread == this || !thread.is_stopped())
                     return IterationDecision::Continue;
-                dbgln<THREAD_DEBUG>("Resuming peer thread {}", thread);
+                dbgln_if(THREAD_DEBUG, "Resuming peer thread {}", thread);
                 thread.resume_from_stopped();
                 return IterationDecision::Continue;
             });
@@ -931,7 +931,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             process.for_each_thread([&](auto& thread) {
                 if (&thread == this || thread.is_stopped())
                     return IterationDecision::Continue;
-                dbgln<THREAD_DEBUG>("Stopping peer thread {}", thread);
+                dbgln_if(THREAD_DEBUG, "Stopping peer thread {}", thread);
                 thread.set_state(Stopped, stop_signal);
                 return IterationDecision::Continue;
             });

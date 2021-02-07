@@ -93,13 +93,13 @@ void __cxa_finalize(void* dso_handle)
 
     ssize_t entry_index = atexit_entry_count;
 
-    dbgln<GLOBAL_DTORS_DEBUG>("__cxa_finalize: {} entries in the finalizer list", entry_index);
+    dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: {} entries in the finalizer list", entry_index);
 
     while (--entry_index >= 0) {
         auto& exit_entry = atexit_entries[entry_index];
         bool needs_calling = !exit_entry.has_been_called && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
-            dbgln<GLOBAL_DTORS_DEBUG>("__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
+            dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
             exit_entry.method(exit_entry.parameter);
             unlock_atexit_handlers();
             exit_entry.has_been_called = true;

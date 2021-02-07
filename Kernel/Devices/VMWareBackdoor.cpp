@@ -177,7 +177,7 @@ void VMWareBackdoor::send_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_send(command);
 
-    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command High bandwidth Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -188,7 +188,7 @@ void VMWareBackdoor::get_high_bandwidth(VMWareCommand& command)
 {
     vmware_high_bandwidth_get(command);
 
-    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command High bandwidth Get Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,
@@ -199,7 +199,7 @@ void VMWareBackdoor::send(VMWareCommand& command)
 {
     vmware_out(command);
 
-    dbgln<VMWARE_BACKDOOR_DEBUG>("VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
+    dbgln_if(VMWARE_BACKDOOR_DEBUG, "VMWareBackdoor Command Send Results: EAX {:#x} EBX {:#x} ECX {:#x} EDX {:#x}",
         command.ax,
         command.bx,
         command.cx,

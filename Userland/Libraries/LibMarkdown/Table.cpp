@@ -182,7 +182,7 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
         size_t relative_width = delimiter.length();
         for (auto ch : delimiter) {
             if (ch != '-') {
-                dbgln<MARKDOWN_DEBUG>("Invalid character _{}_ in table heading delimiter (ignored)", ch);
+                dbgln_if(MARKDOWN_DEBUG, "Invalid character _{}_ in table heading delimiter (ignored)", ch);
                 --relative_width;
             }
         }

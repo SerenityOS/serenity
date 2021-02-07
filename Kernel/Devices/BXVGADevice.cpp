@@ -106,7 +106,7 @@ void BXVGADevice::revert_resolution()
 
 void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 {
-    dbgln<BXVGA_DEBUG>("BXVGADevice resolution registers set to - {}x{}", width, height);
+    dbgln_if(BXVGA_DEBUG, "BXVGADevice resolution registers set to - {}x{}", width, height);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (u16)width);
     set_register(VBE_DISPI_INDEX_YRES, (u16)height);
@@ -119,7 +119,7 @@ void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 
 bool BXVGADevice::test_resolution(size_t width, size_t height)
 {
-    dbgln<BXVGA_DEBUG>("BXVGADevice resolution test - {}x{}", width, height);
+    dbgln_if(BXVGA_DEBUG, "BXVGADevice resolution test - {}x{}", width, height);
     set_resolution_registers(width, height);
     bool resolution_changed = validate_setup_resolution(width, height);
     revert_resolution();
@@ -241,7 +241,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;
         if (!set_resolution(resolution.width, resolution.height)) {
-            dbgln<BXVGA_DEBUG>("Reverting resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
+            dbgln_if(BXVGA_DEBUG, "Reverting resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
@@ -249,7 +249,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
                 return -EFAULT;
             return -EINVAL;
         }
-        dbgln<BXVGA_DEBUG>("New resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
+        dbgln_if(BXVGA_DEBUG, "New resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;

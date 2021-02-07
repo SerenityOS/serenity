@@ -210,13 +210,13 @@ NE2000NetworkAdapter::~NE2000NetworkAdapter()
 void NE2000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
-    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Got interrupt, status=0x{}", String::format("%02x", status));
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Got interrupt, status=0x{}", String::format("%02x", status));
 
     if (status & BIT_INTERRUPTMASK_PRX) {
-        dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Interrupt for packet received");
+        dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Interrupt for packet received");
     }
     if (status & BIT_INTERRUPTMASK_PTX) {
-        dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Interrupt for packet sent");
+        dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Interrupt for packet sent");
     }
     if (status & BIT_INTERRUPTMASK_RXE) {
         u8 fae = in8(REG_RD_FAE_TALLY);
@@ -278,9 +278,9 @@ int NE2000NetworkAdapter::ram_test()
         for (size_t j = 0; j < buffer.size(); ++j) {
             if (buffer[j] != patterns[i]) {
                 if (errors < 16)
-                    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Bad adapter RAM @ {} expected={} got={}", PhysicalAddress(NE2K_RAM_BEGIN + j), patterns[i], buffer[j]);
+                    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Bad adapter RAM @ {} expected={} got={}", PhysicalAddress(NE2K_RAM_BEGIN + j), patterns[i], buffer[j]);
                 else if (errors == 16)
-                    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Too many RAM errors, silencing further output");
+                    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Too many RAM errors, silencing further output");
                 errors++;
             }
         }
@@ -330,7 +330,7 @@ void NE2000NetworkAdapter::reset()
 
 void NE2000NetworkAdapter::rdma_read(size_t address, Bytes payload)
 {
-    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: DMA read @ {} length={}", PhysicalAddress(address), payload.size());
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: DMA read @ {} length={}", PhysicalAddress(address), payload.size());
 
     u8 command = in8(REG_RW_COMMAND) & ~(BIT_COMMAND_PAGE_FIELD | BIT_COMMAND_DMA_FIELD);
     out8(REG_RW_COMMAND, command | BIT_COMMAND_DMA_ABORT);
@@ -357,7 +357,7 @@ void NE2000NetworkAdapter::rdma_read(size_t address, Bytes payload)
 
 void NE2000NetworkAdapter::rdma_write(size_t address, ReadonlyBytes payload)
 {
-    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: DMA write @ {} length={}", PhysicalAddress(address), payload.size());
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: DMA write @ {} length={}", PhysicalAddress(address), payload.size());
 
     u8 command = in8(REG_RW_COMMAND) & ~(BIT_COMMAND_PAGE_FIELD | BIT_COMMAND_DMA_FIELD);
     out8(REG_RW_COMMAND, command | BIT_COMMAND_DMA_ABORT);
@@ -384,7 +384,7 @@ void NE2000NetworkAdapter::rdma_write(size_t address, ReadonlyBytes payload)
 
 void NE2000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Sending packet length={}", payload.size());
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Sending packet length={}", payload.size());
 
     if (payload.size() > NE2K_RAM_SEND_SIZE) {
         dmesgln("NE2000NetworkAdapter: Packet to send was too big; discarding");
@@ -404,7 +404,7 @@ void NE2000NetworkAdapter::send_raw(ReadonlyBytes payload)
     out8(REG_WR_TRANSMITBYTECOUNT1, packet_size >> 8);
     out8(REG_RW_COMMAND, BIT_COMMAND_DMA_ABORT | BIT_COMMAND_TXP | BIT_COMMAND_START);
 
-    dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Packet submitted for transmission");
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Packet submitted for transmission");
 
     enable_irq();
 }
@@ -423,7 +423,7 @@ void NE2000NetworkAdapter::receive()
         rdma_read(header_address, Bytes(reinterpret_cast<u8*>(&header), sizeof(header)));
 
         bool packet_ok = header.status & BIT_RECEIVESTATUS_PRX;
-        dbgln<NE2000_DEBUG>("NE2000NetworkAdapter: Packet received {} length={}", (packet_ok ? "intact" : "damaged"), header.length);
+        dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Packet received {} length={}", (packet_ok ? "intact" : "damaged"), header.length);
 
         if (packet_ok) {
             auto packet = ByteBuffer::create_uninitialized(sizeof(received_packet_header) + header.length);
