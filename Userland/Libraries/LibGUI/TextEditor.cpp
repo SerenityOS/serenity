@@ -38,13 +38,13 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/ScrollBar.h>
-#include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibSyntax/Highlighter.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <math.h>
@@ -1586,12 +1586,12 @@ void TextEditor::flush_pending_change_notification_if_needed()
     m_has_pending_change_notification = false;
 }
 
-const SyntaxHighlighter* TextEditor::syntax_highlighter() const
+const Syntax::Highlighter* TextEditor::syntax_highlighter() const
 {
     return m_highlighter.ptr();
 }
 
-void TextEditor::set_syntax_highlighter(OwnPtr<SyntaxHighlighter> highlighter)
+void TextEditor::set_syntax_highlighter(OwnPtr<Syntax::Highlighter> highlighter)
 {
     if (m_highlighter)
         m_highlighter->detach();

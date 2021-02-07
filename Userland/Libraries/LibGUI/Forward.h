@@ -77,7 +77,6 @@ class SpinBox;
 class Splitter;
 class StackWidget;
 class StatusBar;
-class SyntaxHighlighter;
 class TabWidget;
 class TableView;
 class TextBox;

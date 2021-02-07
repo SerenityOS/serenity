@@ -33,7 +33,7 @@
 
 namespace Cpp {
 
-static GUI::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::Token::Type type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::Token::Type type)
 {
     switch (type) {
     case Cpp::Token::Type::Keyword:

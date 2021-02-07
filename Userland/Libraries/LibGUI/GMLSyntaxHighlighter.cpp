@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 
 namespace GUI {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, GMLToken::Type type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette palette, GMLToken::Type type)
 {
     switch (type) {
     case GMLToken::Type::LeftCurly:
@@ -88,7 +88,7 @@ void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 
 Vector<GMLSyntaxHighlighter::MatchingTokenPair> GMLSyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({ reinterpret_cast<void*>(GMLToken::Type::LeftCurly), reinterpret_cast<void*>(GMLToken::Type::RightCurly) });
     }

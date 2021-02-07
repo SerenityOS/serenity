@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,16 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibSyntax/Highlighter.h>
 
-namespace GUI {
+namespace Syntax {
 
-SyntaxHighlighter::~SyntaxHighlighter()
+Highlighter::~Highlighter()
 {
 }
 
-void SyntaxHighlighter::highlight_matching_token_pair()
+void Highlighter::highlight_matching_token_pair()
 {
     ASSERT(m_editor);
     auto& document = m_editor->document();
@@ -125,19 +125,19 @@ void SyntaxHighlighter::highlight_matching_token_pair()
     }
 }
 
-void SyntaxHighlighter::attach(TextEditor& editor)
+void Highlighter::attach(GUI::TextEditor& editor)
 {
     ASSERT(!m_editor);
     m_editor = editor;
 }
 
-void SyntaxHighlighter::detach()
+void Highlighter::detach()
 {
     ASSERT(m_editor);
     m_editor = nullptr;
 }
 
-void SyntaxHighlighter::cursor_did_change()
+void Highlighter::cursor_did_change()
 {
     ASSERT(m_editor);
     auto& document = m_editor->document();
