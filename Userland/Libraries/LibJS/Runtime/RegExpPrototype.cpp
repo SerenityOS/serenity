@@ -190,8 +190,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     array->indexed_properties().put(array, 0, js_string(vm, match.view.to_string()));
 
     for (size_t i = 0; i < result.n_capture_groups; ++i) {
-        auto& capture = result.capture_group_matches[0][i];
-        array->indexed_properties().put(array, i + 1, js_string(vm, capture.view.to_string()));
+        auto capture_value = js_undefined();
+        if (result.capture_group_matches[0].size() > i) {
+            auto& capture = result.capture_group_matches[0][i];
+            capture_value = js_string(vm, capture.view.to_string());
+        }
+        array->indexed_properties().put(array, i + 1, capture_value);
     }
 
     Value groups = js_undefined();
