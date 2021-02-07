@@ -274,8 +274,6 @@ public:
     int sys$getcwd(Userspace<char*>, size_t);
     int sys$chdir(Userspace<const char*>, size_t);
     int sys$fchdir(int fd);
-    int sys$sleep(unsigned seconds);
-    int sys$usleep(useconds_t usec);
     int sys$adjtime(Userspace<const timeval*>, Userspace<timeval*>);
     int sys$gettimeofday(Userspace<timeval*>);
     int sys$clock_gettime(clockid_t, Userspace<timespec*>);
@@ -375,7 +373,6 @@ public:
     static void initialize();
 
     [[noreturn]] void crash(int signal, u32 eip, bool out_of_memory = false);
-    static void reap(Process&);
     [[nodiscard]] siginfo_t wait_info();
 
     const TTY* tty() const { return m_tty; }
