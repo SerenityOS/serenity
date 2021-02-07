@@ -37,8 +37,8 @@
 
 namespace Web::HTML {
 
-HTMLImageElement::HTMLImageElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLImageElement::HTMLImageElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
     m_image_loader.on_load = [this] {
         this->document().update_layout();

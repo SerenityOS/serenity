@@ -35,7 +35,7 @@ public:
     using WrapperType = Bindings::SVGElementWrapper;
 
 protected:
-    SVGElement(DOM::Document&, const QualifiedName& qualified_name);
+    SVGElement(DOM::Document&, QualifiedName);
 };
 
 }

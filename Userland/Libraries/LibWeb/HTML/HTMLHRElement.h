@@ -34,7 +34,7 @@ class HTMLHRElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLHRElementWrapper;
 
-    HTMLHRElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLHRElement(DOM::Document&, QualifiedName);
     virtual ~HTMLHRElement() override;
 };
 

@@ -34,7 +34,7 @@ class HTMLSelectElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 
-    HTMLSelectElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLSelectElement(DOM::Document&, QualifiedName);
     virtual ~HTMLSelectElement() override;
 };
 

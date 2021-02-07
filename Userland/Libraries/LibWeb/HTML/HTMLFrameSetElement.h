@@ -35,7 +35,7 @@ class HTMLFrameSetElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLFrameSetElementWrapper;
 
-    HTMLFrameSetElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLFrameSetElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFrameSetElement() override;
 };
 

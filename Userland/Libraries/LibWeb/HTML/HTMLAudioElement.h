@@ -34,7 +34,7 @@ class HTMLAudioElement final : public HTMLMediaElement {
 public:
     using WrapperType = Bindings::HTMLAudioElementWrapper;
 
-    HTMLAudioElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLAudioElement(DOM::Document&, QualifiedName);
     virtual ~HTMLAudioElement() override;
 };
 

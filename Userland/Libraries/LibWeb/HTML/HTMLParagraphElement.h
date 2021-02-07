@@ -34,7 +34,7 @@ class HTMLParagraphElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLParagraphElementWrapper;
 
-    HTMLParagraphElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLParagraphElement(DOM::Document&, QualifiedName);
     virtual ~HTMLParagraphElement() override;
 };
 

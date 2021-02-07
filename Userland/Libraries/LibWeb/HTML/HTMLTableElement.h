@@ -34,7 +34,7 @@ class HTMLTableElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableElementWrapper;
 
-    HTMLTableElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLTableElement(DOM::Document&, QualifiedName);
     virtual ~HTMLTableElement() override;
 
 private:

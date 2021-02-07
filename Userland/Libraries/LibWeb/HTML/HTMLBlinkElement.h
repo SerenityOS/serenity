@@ -33,7 +33,7 @@ namespace Web::HTML {
 
 class HTMLBlinkElement final : public HTMLElement {
 public:
-    HTMLBlinkElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLBlinkElement(DOM::Document&, QualifiedName);
     virtual ~HTMLBlinkElement() override;
 
 private:

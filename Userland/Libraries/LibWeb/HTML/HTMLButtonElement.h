@@ -34,7 +34,7 @@ class HTMLButtonElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLButtonElementWrapper;
 
-    HTMLButtonElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLButtonElement(DOM::Document&, QualifiedName);
     virtual ~HTMLButtonElement() override;
 };
 

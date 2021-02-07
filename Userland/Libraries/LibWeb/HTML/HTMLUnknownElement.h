@@ -34,7 +34,7 @@ class HTMLUnknownElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLUnknownElementWrapper;
 
-    HTMLUnknownElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLUnknownElement(DOM::Document&, QualifiedName);
     virtual ~HTMLUnknownElement() override;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ class Element
 public:
     using WrapperType = Bindings::ElementWrapper;
 
-    Element(Document&, const QualifiedName& qualified_name);
+    Element(Document&, QualifiedName);
     virtual ~Element() override;
 
     virtual FlyString node_name() const final { return m_qualified_name.local_name(); }

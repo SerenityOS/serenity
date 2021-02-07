@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 
