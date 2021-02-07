@@ -77,7 +77,6 @@ Thread::Thread(NonnullRefPtr<Process> process)
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned<16>(sizeof(FPUState));
     reset_fpu_state();
-    memset(&m_tss, 0, sizeof(m_tss));
     m_tss.iomapbase = sizeof(TSS32);
 
     // Only IF is set when a process boots.
