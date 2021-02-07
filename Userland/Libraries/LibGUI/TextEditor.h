@@ -36,6 +36,7 @@
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibSyntax/Forward.h>
 
 namespace GUI {
 
@@ -173,8 +174,8 @@ public:
     void set_cursor(size_t line, size_t column);
     void set_cursor(const TextPosition&);
 
-    const SyntaxHighlighter* syntax_highlighter() const;
-    void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
+    const Syntax::Highlighter* syntax_highlighter() const;
+    void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);
 
     const AutocompleteProvider* autocomplete_provider() const;
     void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
@@ -344,7 +345,7 @@ private:
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 
-    OwnPtr<SyntaxHighlighter> m_highlighter;
+    OwnPtr<Syntax::Highlighter> m_highlighter;
     OwnPtr<AutocompleteProvider> m_autocomplete_provider;
     OwnPtr<AutocompleteBox> m_autocomplete_box;
     bool m_should_keep_autocomplete_box { false };

@@ -26,18 +26,18 @@
 
 #pragma once
 
-#include <LibGUI/SyntaxHighlighter.h>
+#include <LibSyntax/Highlighter.h>
 
 namespace GUI {
 
-class IniSyntaxHighlighter final : public SyntaxHighlighter {
+class IniSyntaxHighlighter final : public Syntax::Highlighter {
 public:
     IniSyntaxHighlighter() { }
     virtual ~IniSyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::INI; }
+    virtual Syntax::Language language() const override { return Syntax::Language::INI; }
     virtual void rehighlight(Gfx::Palette) override;
 
 protected:

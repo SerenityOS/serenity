@@ -32,7 +32,7 @@
 
 namespace GUI {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, IniToken::Type type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, IniToken::Type type)
 {
     switch (type) {
     case IniToken::Type::LeftBracket:
@@ -87,7 +87,7 @@ void IniSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 
 Vector<IniSyntaxHighlighter::MatchingTokenPair> IniSyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({ reinterpret_cast<void*>(IniToken::Type::LeftBracket), reinterpret_cast<void*>(IniToken::Type::RightBracket) });
     }

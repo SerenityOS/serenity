@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <LibGUI/SyntaxHighlighter.h>
+#include <LibSyntax/Highlighter.h>
 
 namespace GUI {
 
-class ShellSyntaxHighlighter : public SyntaxHighlighter {
+class ShellSyntaxHighlighter : public Syntax::Highlighter {
 public:
     ShellSyntaxHighlighter() { }
     virtual ~ShellSyntaxHighlighter() override;
@@ -38,7 +38,7 @@ public:
     virtual bool is_identifier(void*) const override;
     virtual bool is_navigatable(void*) const override;
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::Shell; }
+    virtual Syntax::Language language() const override { return Syntax::Language::Shell; }
     virtual void rehighlight(Gfx::Palette) override;
 
 protected:

@@ -28,7 +28,6 @@
 
 #include "Cell.h"
 #include <LibGUI/JSSyntaxHighlighter.h>
-#include <LibGUI/SyntaxHighlighter.h>
 
 namespace Spreadsheet {
 

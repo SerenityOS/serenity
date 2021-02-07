@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,18 @@
 
 #pragma once
 
-#include <LibGUI/SyntaxHighlighter.h>
+#include <LibSyntax/Highlighter.h>
 
 namespace GUI {
 
-class GMLSyntaxHighlighter final : public SyntaxHighlighter {
+class GMLSyntaxHighlighter final : public Syntax::Highlighter {
 public:
     GMLSyntaxHighlighter() { }
     virtual ~GMLSyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::INI; }
+    virtual Syntax::Language language() const override { return Syntax::Language::GML; }
     virtual void rehighlight(Gfx::Palette) override;
 
 protected:
