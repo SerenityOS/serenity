@@ -53,6 +53,13 @@ void __ubsan_handle_nonnull_arg(const NonnullArgData& data)
     print_location(data.location);
 }
 
+void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLocation&);
+void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLocation& location)
+{
+    dbgln("KUBSAN: null pointer return from function declared to never return null");
+    print_location(location);
+}
+
 void __ubsan_handle_vla_bound_not_positive(const VLABoundData&, void*);
 void __ubsan_handle_vla_bound_not_positive(const VLABoundData& data, void*)
 {
