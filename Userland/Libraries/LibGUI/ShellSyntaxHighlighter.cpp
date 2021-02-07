@@ -523,9 +523,9 @@ void ShellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     m_editor->update();
 }
 
-Vector<SyntaxHighlighter::MatchingTokenPair> ShellSyntaxHighlighter::matching_token_pairs() const
+Vector<Syntax::Highlighter::MatchingTokenPair> ShellSyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    static Vector<Syntax::Highlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({
             (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen),

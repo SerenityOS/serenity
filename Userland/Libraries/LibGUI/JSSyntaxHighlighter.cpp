@@ -34,7 +34,7 @@
 
 namespace GUI {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
 {
     switch (JS::Token::category(type)) {
     case JS::TokenCategory::Invalid:
@@ -133,9 +133,9 @@ void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     m_editor->update();
 }
 
-Vector<SyntaxHighlighter::MatchingTokenPair> JSSyntaxHighlighter::matching_token_pairs() const
+Vector<Syntax::Highlighter::MatchingTokenPair> JSSyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    static Vector<Syntax::Highlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({ reinterpret_cast<void*>(JS::TokenType::CurlyOpen), reinterpret_cast<void*>(JS::TokenType::CurlyClose) });
         pairs.append({ reinterpret_cast<void*>(JS::TokenType::ParenOpen), reinterpret_cast<void*>(JS::TokenType::ParenClose) });

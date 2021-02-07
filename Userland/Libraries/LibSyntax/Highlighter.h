@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,65 @@
 
 #pragma once
 
-#include <LibSyntax/Highlighter.h>
+#include <AK/Noncopyable.h>
+#include <AK/WeakPtr.h>
+#include <LibGUI/TextDocument.h>
+#include <LibGfx/Palette.h>
 
-namespace GUI {
+namespace Syntax {
 
-class JSSyntaxHighlighter : public Syntax::Highlighter {
+enum class Language {
+    PlainText,
+    Cpp,
+    JavaScript,
+    INI,
+    GML,
+    Shell,
+};
+
+struct TextStyle {
+    const Gfx::Color color;
+    const bool bold { false };
+};
+
+class Highlighter {
+    AK_MAKE_NONCOPYABLE(Highlighter);
+    AK_MAKE_NONMOVABLE(Highlighter);
+
 public:
-    JSSyntaxHighlighter() { }
-    virtual ~JSSyntaxHighlighter() override;
+    virtual ~Highlighter();
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
+    virtual Language language() const = 0;
+    virtual void rehighlight(Gfx::Palette) = 0;
+    virtual void highlight_matching_token_pair();
 
-    virtual Syntax::Language language() const override { return Syntax::Language::JavaScript; }
-    virtual void rehighlight(Gfx::Palette) override;
+    virtual bool is_identifier(void*) const { return false; };
+    virtual bool is_navigatable(void*) const { return false; };
+
+    void attach(GUI::TextEditor& editor);
+    void detach();
+    void cursor_did_change();
 
 protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
+    Highlighter() { }
+
+    WeakPtr<GUI::TextEditor> m_editor;
+
+    struct MatchingTokenPair {
+        void* open;
+        void* close;
+    };
+
+    virtual Vector<MatchingTokenPair> matching_token_pairs() const = 0;
+    virtual bool token_types_equal(void*, void*) const = 0;
+
+    struct BuddySpan {
+        int index { -1 };
+        GUI::TextDocumentSpan span_backup;
+    };
+
+    bool m_has_brace_buddies { false };
+    BuddySpan m_brace_buddies[2];
 };
 
 }

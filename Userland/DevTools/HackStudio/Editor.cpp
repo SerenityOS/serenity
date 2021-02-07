@@ -43,7 +43,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/ShellSyntaxHighlighter.h>
-#include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>

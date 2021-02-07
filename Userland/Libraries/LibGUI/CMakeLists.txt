@@ -83,7 +83,6 @@ set(SOURCES
     Splitter.cpp
     StackWidget.cpp
     StatusBar.cpp
-    SyntaxHighlighter.cpp
     TabWidget.cpp
     TableView.cpp
     TextBox.cpp
@@ -110,4 +109,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibShell LibRegex LibJS)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibShell LibRegex LibJS LibSyntax)
