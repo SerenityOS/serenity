@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <Kernel/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -34,6 +33,7 @@
 #include <Kernel/Arch/i386/ISRStubs.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
@@ -59,7 +59,7 @@ static Descriptor s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
-static EntropySource s_entropy_source_interrupts{EntropySource::Static::Interrupts};
+static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interrupts };
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
@@ -70,6 +70,8 @@ extern "C" void exit_kernel_thread(void);
 extern "C" void pre_init_finished(void);
 extern "C" void post_init_finished(void);
 extern "C" void handle_interrupt(TrapFrame*);
+
+// clang-format off
 
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
@@ -121,6 +123,8 @@ extern "C" void handle_interrupt(TrapFrame*);
         "    call enter_trap_no_irq \n"             \
         "    call " #title "_handler\n"             \
         "    jmp common_trap_exit \n");
+
+// clang-format on
 
 static void dump(const RegisterState& regs)
 {
@@ -216,7 +220,6 @@ void fpu_exception_handler(TrapFrame*)
     // FIXME: It would be nice if we didn't have to do this at all.
     asm volatile("clts");
 }
-
 
 // 14: Page Fault
 EH_ENTRY(14, page_fault);
@@ -974,57 +977,56 @@ String Processor::features_string() const
 {
     StringBuilder builder;
     auto feature_to_str =
-        [](CPUFeature f) -> const char*
-        {
-            switch (f) {
-                case CPUFeature::NX:
-                    return "nx";
-                case CPUFeature::PAE:
-                    return "pae";
-                case CPUFeature::PGE:
-                    return "pge";
-                case CPUFeature::RDRAND:
-                    return "rdrand";
-                case CPUFeature::RDSEED:
-                    return "rdseed";
-                case CPUFeature::SMAP:
-                    return "smap";
-                case CPUFeature::SMEP:
-                    return "smep";
-                case CPUFeature::SSE:
-                    return "sse";
-                case CPUFeature::TSC:
-                    return "tsc";
-                case CPUFeature::RDTSCP:
-                    return "rdtscp";
-                case CPUFeature::CONSTANT_TSC:
-                    return "constant_tsc";
-                case CPUFeature::NONSTOP_TSC:
-                    return "nonstop_tsc";
-                case CPUFeature::UMIP:
-                    return "umip";
-                case CPUFeature::SEP:
-                    return "sep";
-                case CPUFeature::SYSCALL:
-                    return "syscall";
-                case CPUFeature::MMX:
-                    return "mmx";
-                case CPUFeature::SSE2:
-                    return "sse2";
-                case CPUFeature::SSE3:
-                    return "sse3";
-                case CPUFeature::SSSE3:
-                    return "ssse3";
-                case CPUFeature::SSE4_1:
-                    return "sse4.1";
-                case CPUFeature::SSE4_2:
-                    return "sse4.2";
-                // no default statement here intentionally so that we get
-                // a warning if a new feature is forgotten to be added here
-            }
-            // Shouldn't ever happen
-            return "???";
-        };
+        [](CPUFeature f) -> const char* {
+        switch (f) {
+        case CPUFeature::NX:
+            return "nx";
+        case CPUFeature::PAE:
+            return "pae";
+        case CPUFeature::PGE:
+            return "pge";
+        case CPUFeature::RDRAND:
+            return "rdrand";
+        case CPUFeature::RDSEED:
+            return "rdseed";
+        case CPUFeature::SMAP:
+            return "smap";
+        case CPUFeature::SMEP:
+            return "smep";
+        case CPUFeature::SSE:
+            return "sse";
+        case CPUFeature::TSC:
+            return "tsc";
+        case CPUFeature::RDTSCP:
+            return "rdtscp";
+        case CPUFeature::CONSTANT_TSC:
+            return "constant_tsc";
+        case CPUFeature::NONSTOP_TSC:
+            return "nonstop_tsc";
+        case CPUFeature::UMIP:
+            return "umip";
+        case CPUFeature::SEP:
+            return "sep";
+        case CPUFeature::SYSCALL:
+            return "syscall";
+        case CPUFeature::MMX:
+            return "mmx";
+        case CPUFeature::SSE2:
+            return "sse2";
+        case CPUFeature::SSE3:
+            return "sse3";
+        case CPUFeature::SSSE3:
+            return "ssse3";
+        case CPUFeature::SSE4_1:
+            return "sse4.1";
+        case CPUFeature::SSE4_2:
+            return "sse4.2";
+            // no default statement here intentionally so that we get
+            // a warning if a new feature is forgotten to be added here
+        }
+        // Shouldn't ever happen
+        return "???";
+    };
     bool first = true;
     for (u32 flag = 1; flag != 0; flag <<= 1) {
         if ((static_cast<u32>(m_features) & flag) != 0) {
@@ -1070,7 +1072,7 @@ void Processor::early_initialize(u32 cpu)
     cpu_setup();
     gdt_init();
 
-    ASSERT(is_initialized()); // sanity check
+    ASSERT(is_initialized());   // sanity check
     ASSERT(&current() == this); // sanity check
 }
 
@@ -1093,7 +1095,7 @@ void Processor::initialize(u32 cpu)
         ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
         asm volatile("fxsave %0"
-            : "=m"(s_clean_fpu_state));
+                     : "=m"(s_clean_fpu_state));
     }
 
     m_info = new ProcessorInfo(*this);
@@ -1146,7 +1148,7 @@ void Processor::flush_gdt()
     m_gdtr.address = m_gdt;
     m_gdtr.limit = (m_gdt_length * 8) - 1;
     asm volatile("lgdt %0" ::"m"(m_gdtr)
-        : "memory");
+                 : "memory");
 }
 
 const DescriptorTablePointer& Processor::get_gdtr()
@@ -1159,8 +1161,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     FlatPtr frame_ptr = 0, eip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
-    auto walk_stack = [&](FlatPtr stack_ptr)
-    {
+    auto walk_stack = [&](FlatPtr stack_ptr) {
         static constexpr size_t max_stack_frames = 4096;
         stack_trace.append(eip);
         size_t count = 1;
@@ -1187,8 +1188,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             }
         }
     };
-    auto capture_current_thread = [&]()
-    {
+    auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
         eip = (FlatPtr)__builtin_return_address(0);
 
@@ -1215,7 +1215,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
         auto& proc = Processor::current();
-        smp_unicast(thread.cpu(),
+        smp_unicast(
+            thread.cpu(),
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::id(), proc.get_id());
                 ProcessPagingScope paging_scope(thread.process());
@@ -1229,7 +1230,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 //       because the other processor is still holding the
                 //       scheduler lock...
                 capture_current_thread();
-            }, false);
+            },
+            false);
     } else {
         switch (thread.state()) {
         case Thread::Running:
@@ -1280,7 +1282,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
     asm volatile("fxsave %0"
-        : "=m"(from_thread->fpu_state()));
+                 : "=m"(from_thread->fpu_state()));
 
     from_tss.fs = get_fs();
     from_tss.gs = get_gs();
@@ -1298,8 +1300,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
 
-    asm volatile("fxrstor %0"
-        ::"m"(to_thread->fpu_state()));
+    asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
     // TODO: debug registers
     // TODO: ioperm?
@@ -1316,6 +1317,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln<CONTEXT_SWITCH_DEBUG>("switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
+    // clang-format off
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
     asm volatile(
@@ -1356,6 +1358,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
           [to_thread] "a" (to_thread)
         : "memory"
     );
+    // clang-format on
 
     dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
@@ -1383,6 +1386,8 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 }
 
 extern "C" void thread_context_first_enter(void);
+
+// clang-format off
 asm(
 // enter_thread_context returns to here first time a thread is executing
 ".globl thread_context_first_enter \n"
@@ -1397,6 +1402,7 @@ asm(
 "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
 "    jmp common_trap_exit \n"
 );
+// clang-format on
 
 void exit_kernel_thread(void)
 {
@@ -1523,6 +1529,7 @@ extern "C" u32 do_init_context(Thread* thread, u32 flags)
 
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
+// clang-format off
 asm(
 ".global do_assume_context \n"
 "do_assume_context: \n"
@@ -1542,6 +1549,7 @@ asm(
 "    pushl $thread_context_first_enter \n" // should be same as tss.eip
 "    jmp enter_thread_context \n"
 );
+// clang-format on
 
 void Processor::assume_context(Thread& thread, u32 flags)
 {
@@ -1590,6 +1598,7 @@ void Processor::initialize_context_switching(Thread& initial_thread)
 
     m_scheduler_initialized = true;
 
+    // clang-format off
     asm volatile(
         "movl %[new_esp], %%esp \n" // switch to new stack
         "pushl %[from_to_thread] \n" // to_thread
@@ -1613,6 +1622,7 @@ void Processor::initialize_context_switching(Thread& initial_thread)
            [from_to_thread] "b" (&initial_thread),
            [cpu] "c" (id())
     );
+    // clang-format on
 
     ASSERT_NOT_REACHED();
 }
@@ -1680,10 +1690,12 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
+        // clang-format off
         asm volatile("invlpg %0"
              :
              : "m"(*ptr)
              : "memory");
+        // clang-format on
         ptr += PAGE_SIZE;
         page_count--;
     }
@@ -1735,7 +1747,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
     return *msg;
 }
 
-Atomic<u32> Processor::s_idle_cpu_mask{ 0 };
+Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
@@ -1829,17 +1841,16 @@ bool Processor::smp_process_pending_messages()
     if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
-            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry*
-            {
-                ProcessorMessageEntry* rev_list = nullptr;
-                while (list) {
-                    auto next = list->next;
-                    list->next = rev_list;
-                    rev_list = list;
-                    list = next;
-                }
-                return rev_list;
-            };
+            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry* {
+            ProcessorMessageEntry* rev_list = nullptr;
+            while (list) {
+                auto next = list->next;
+                list->next = rev_list;
+                rev_list = list;
+                list = next;
+            }
+            return rev_list;
+        };
 
         pending_msgs = reverse_list(pending_msgs);
 
@@ -1859,15 +1870,15 @@ bool Processor::smp_process_pending_messages()
                 msg->callback_with_data.handler(msg->callback_with_data.data);
                 break;
             case ProcessorMessage::FlushTlb:
-				if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
-					// We assume that we don't cross into kernel land!
-					ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
-					if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
-						// This processor isn't using this page directory right now, we can ignore this request
+                if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
+                    // We assume that we don't cross into kernel land!
+                    ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+                    if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
+                        // This processor isn't using this page directory right now, we can ignore this request
                         dbgln<SMP_DEBUG>("SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
-						break;
-					}
-				}
+                        break;
+                    }
+                }
                 flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
                 break;
             }
@@ -2111,17 +2122,16 @@ void Processor::deferred_call_execute_pending()
 
     // We pulled the stack of pending deferred calls in LIFO order, so we need to reverse the list first
     auto reverse_list =
-        [](DeferredCallEntry* list) -> DeferredCallEntry*
-        {
-            DeferredCallEntry* rev_list = nullptr;
-            while (list) {
-                auto next = list->next;
-                list->next = rev_list;
-                rev_list = list;
-                list = next;
-            }
-            return rev_list;
-        };
+        [](DeferredCallEntry* list) -> DeferredCallEntry* {
+        DeferredCallEntry* rev_list = nullptr;
+        while (list) {
+            auto next = list->next;
+            list->next = rev_list;
+            rev_list = list;
+            list = next;
+        }
+        return rev_list;
+    };
     pending_list = reverse_list(pending_list);
 
     do {
@@ -2240,9 +2250,11 @@ void Processor::gdt_init()
     set_fs(GDT_SELECTOR_PROC);
 
     // Make sure CS points to the kernel code descriptor.
+    // clang-format off
     asm volatile(
         "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
         "sanity:\n");
+    // clang-format on
 }
 
 void Processor::set_thread_specific(u8* data, size_t len)
