@@ -163,8 +163,8 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
                 }
 
                 if (sni_host_length) {
-                    m_context.SNI = String { (const char*)buffer.offset_pointer(res + 5), sni_host_length };
-                    dbgln("server name indicator: {}", m_context.SNI);
+                    m_context.extensions.SNI = String { (const char*)buffer.offset_pointer(res + 5), sni_host_length };
+                    dbgln("server name indicator: {}", m_context.extensions.SNI);
                 }
             } else if (extension_type == HandshakeExtension::ApplicationLayerProtocolNegotiation && m_context.alpn.size()) {
                 if (buffer.size() - res > 2) {
