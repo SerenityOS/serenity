@@ -241,6 +241,11 @@ RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
 RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
 {
+    if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable)) {
+        dbgln("Invalid offset in font header");
+        return nullptr;
+    }
+
     if (buffer.size() < offset + (u32)Sizes::OffsetTable) {
         dbgln("Font file too small");
         return nullptr;
