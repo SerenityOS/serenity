@@ -246,7 +246,7 @@ private:
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
     virtual const Vector<TextDocumentSpan>& spans() const final { return document().spans(); }
-    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) { document().set_spans(move(spans)); }
+    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(move(spans)); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
     virtual void highlighter_did_request_update() final { update(); }
     virtual String highlighter_did_request_text() const final { return text(); }
