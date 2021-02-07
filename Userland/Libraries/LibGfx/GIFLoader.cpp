@@ -404,7 +404,8 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                             if (interlace_pass < 4)
                                 row = INTERLACE_ROW_OFFSETS[interlace_pass];
                         } else {
-                            row += INTERLACE_ROW_STRIDES[interlace_pass];
+                            if (interlace_pass < 4)
+                                row += INTERLACE_ROW_STRIDES[interlace_pass];
                         }
                     } else {
                         ++row;
