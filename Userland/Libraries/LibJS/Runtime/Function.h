@@ -48,8 +48,6 @@ public:
     virtual const FlyString& name() const = 0;
     virtual LexicalEnvironment* create_environment() = 0;
 
-    virtual void visit_edges(Visitor&) override;
-
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
     Value bound_this() const { return m_bound_this; }
@@ -65,6 +63,8 @@ public:
     virtual bool is_strict_mode() const { return false; }
 
 protected:
+    virtual void visit_edges(Visitor&) override;
+
     explicit Function(Object& prototype);
     Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
 
