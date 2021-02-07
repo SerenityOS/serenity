@@ -128,7 +128,8 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
     auto label_seed_buffer = Bytes { l_seed, l_seed_size };
     label_seed_buffer.overwrite(0, label, label_length);
     label_seed_buffer.overwrite(label_length, seed.data(), seed.size());
-    label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
+    if (seed_b.size() > 0)
+        label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
 
     auto digest_size = hmac.digest_size();
 
@@ -182,7 +183,7 @@ bool TLSv12::compute_master_secret(size_t length)
 
 ByteBuffer TLSv12::build_certificate()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
 
     Vector<const Certificate*> certificates;
     Vector<Certificate>* local_certificates = nullptr;
@@ -237,7 +238,7 @@ ByteBuffer TLSv12::build_certificate()
 
 ByteBuffer TLSv12::build_change_cipher_spec()
 {
-    PacketBuilder builder { MessageType::ChangeCipher, m_context.version, 64 };
+    PacketBuilder builder { MessageType::ChangeCipher, m_context.options.version, 64 };
     builder.append((u8)1);
     auto packet = builder.build();
     update_packet(packet);
@@ -253,7 +254,7 @@ ByteBuffer TLSv12::build_server_key_exchange()
 
 ByteBuffer TLSv12::build_client_key_exchange()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
     build_random(builder);
 

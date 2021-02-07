@@ -35,8 +35,8 @@ ByteBuffer TLSv12::build_hello()
 {
     fill_with_random(&m_context.local_random, 32);
 
-    auto packet_version = (u16)m_context.version;
-    auto version = (u16)m_context.version;
+    auto packet_version = (u16)m_context.options.version;
+    auto version = (u16)m_context.options.version;
     PacketBuilder builder { MessageType::Handshake, packet_version };
 
     builder.append((u8)ClientHello);
@@ -73,20 +73,18 @@ ByteBuffer TLSv12::build_hello()
     }
 
     // Ciphers
-    builder.append((u16)(5 * sizeof(u16)));
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA256);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA256);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_GCM_SHA256);
+    builder.append((u16)(m_context.options.usable_cipher_suites.size() * sizeof(u16)));
+    for (auto suite : m_context.options.usable_cipher_suites)
+        builder.append((u16)suite);
 
     // we don't like compression
+    VERIFY(!m_context.options.use_compression);
     builder.append((u8)1);
-    builder.append((u8)0);
+    builder.append((u8)m_context.options.use_compression);
 
-    // set SNI if we have one
+    // set SNI if we have one, and the user hasn't explicitly asked us to omit it.
     auto sni_length = 0;
-    if (!m_context.extensions.SNI.is_null())
+    if (!m_context.extensions.SNI.is_null() && m_context.options.use_sni)
         sni_length = m_context.extensions.SNI.length();
 
     if (sni_length)
@@ -130,7 +128,7 @@ ByteBuffer TLSv12::build_hello()
 
 ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 {
-    PacketBuilder builder(MessageType::Alert, (u16)m_context.version);
+    PacketBuilder builder(MessageType::Alert, (u16)m_context.options.version);
     builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
     builder.append(code);
 
@@ -145,7 +143,7 @@ ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 
 ByteBuffer TLSv12::build_finished()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version, 12 + 64 };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
 
     u32 out_size = 12;
