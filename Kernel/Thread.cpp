@@ -58,6 +58,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     auto kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow);
     if (!kernel_stack_region)
         return ENOMEM;
+    kernel_stack_region->set_stack(true);
     return adopt(*new Thread(move(process), kernel_stack_region.release_nonnull()));
 }
 
@@ -109,13 +110,6 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
 
     m_tss.cr3 = m_process->page_directory().cr3();
 
-    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::formatted("Kernel Stack (Thread {})", m_tid.value()), Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow);
-    if (!m_kernel_stack_region) {
-        // Abort creating this thread, was_created() will return false
-        return;
-    }
-
-    m_kernel_stack_region->set_stack(true);
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
