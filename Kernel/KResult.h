@@ -111,6 +111,8 @@ public:
 
     KResultOr& operator=(KResultOr&& other)
     {
+        if (&other == this)
+            return *this;
         if (!m_is_error && m_have_storage) {
             value().~T();
             m_have_storage = false;
