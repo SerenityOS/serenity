@@ -49,17 +49,6 @@ Palette::~Palette()
 {
 }
 
-const SystemTheme& PaletteImpl::theme() const
-{
-    return *m_theme_buffer.data<SystemTheme>();
-}
-
-Color PaletteImpl::color(ColorRole role) const
-{
-    ASSERT((int)role < (int)ColorRole::__Count);
-    return Color::from_rgba(theme().color[(int)role]);
-}
-
 int PaletteImpl::metric(MetricRole role) const
 {
     ASSERT((int)role < (int)MetricRole::__Count);
