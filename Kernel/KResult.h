@@ -163,7 +163,7 @@ public:
     {
         ASSERT(!m_is_error);
         ASSERT(m_have_storage);
-        T released_value = *reinterpret_cast<T*>(&m_storage);
+        T released_value(move(*reinterpret_cast<T*>(&m_storage)));
         value().~T();
         m_have_storage = false;
         return released_value;
