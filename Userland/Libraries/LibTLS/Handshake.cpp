@@ -86,8 +86,8 @@ ByteBuffer TLSv12::build_hello()
 
     // set SNI if we have one
     auto sni_length = 0;
-    if (!m_context.SNI.is_null())
-        sni_length = m_context.SNI.length();
+    if (!m_context.extensions.SNI.is_null())
+        sni_length = m_context.extensions.SNI.length();
 
     if (sni_length)
         extension_length += sni_length + 9;
@@ -105,7 +105,7 @@ ByteBuffer TLSv12::build_hello()
         builder.append((u8)0);
         // SNI host length + value
         builder.append((u16)sni_length);
-        builder.append((const u8*)m_context.SNI.characters(), sni_length);
+        builder.append((const u8*)m_context.extensions.SNI.characters(), sni_length);
     }
 
     if (alpn_length) {
