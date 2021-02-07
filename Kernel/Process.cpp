@@ -843,17 +843,6 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& desc
     m_flags = flags;
 }
 
-OwnPtr<KBuffer> Process::backtrace() const
-{
-    KBufferBuilder builder;
-    for_each_thread([&](Thread& thread) {
-        builder.appendf("Thread %d (%s):\n", thread.tid().value(), thread.name().characters());
-        builder.append(thread.backtrace());
-        return IterationDecision::Continue;
-    });
-    return builder.build();
-}
-
 Custody& Process::root_directory()
 {
     if (!m_root_directory)

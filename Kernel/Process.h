@@ -156,8 +156,6 @@ public:
     bool should_core_dump() const { return m_should_dump_core; }
     void set_dump_core(bool dump_core) { m_should_dump_core = dump_core; }
 
-    OwnPtr<KBuffer> backtrace() const;
-
     bool is_dead() const { return m_dead; }
 
     bool is_stopped() const { return m_is_stopped; }
