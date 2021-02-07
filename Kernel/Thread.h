@@ -884,7 +884,7 @@ public:
         scheduler_lock.unlock();
         block_lock.unlock();
 
-        dbgln<THREAD_DEBUG>("Thread {} blocking on {} ({}) -->", *this, &t, t.state_string());
+        dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &t, t.state_string());
         bool did_timeout = false;
         u32 lock_count_to_restore = 0;
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
@@ -915,7 +915,7 @@ public:
                 ASSERT(m_blocker == &t);
                 m_blocker = nullptr;
             }
-            dbgln<THREAD_DEBUG>("<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
+            dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
             m_in_block = false;
             break;
         }

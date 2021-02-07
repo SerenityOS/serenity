@@ -107,7 +107,7 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
         spans.append(span);
         advance_position(str[str.length() - 1]);
 
-        dbgln<SYNTAX_HIGHLIGHTING_DEBUG>("{}{} @ '{}' {}:{} - {}:{}",
+        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{}{} @ '{}' {}:{} - {}:{}",
             token.name(),
             is_trivia ? " (trivia)" : "",
             token.value(),

@@ -85,9 +85,9 @@ void HTMLScriptElement::execute_script()
             document().set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
-            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
         else
-            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running inline script");
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
         document().run_javascript(m_script_source);
 

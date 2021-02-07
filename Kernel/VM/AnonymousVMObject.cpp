@@ -472,7 +472,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     }
 
     u8* dest_ptr = MM.quickmap_page(*page);
-    dbgln<PAGE_FAULT_DEBUG>("      >> COW {} <- {}", page->paddr(), page_slot->paddr());
+    dbgln_if(PAGE_FAULT_DEBUG, "      >> COW {} <- {}", page->paddr(), page_slot->paddr());
     {
         SmapDisabler disabler;
         void* fault_at;

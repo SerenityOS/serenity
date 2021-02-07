@@ -73,8 +73,8 @@ void DynamicObject::dump() const
     if (m_has_soname)
         builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    dbgln<DYNAMIC_LOAD_DEBUG>("{}", builder.string_view());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
 }
 
 void DynamicObject::parse()
@@ -303,7 +303,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
         if (strcmp(name, symbol.name()) == 0) {
-            dbgln<DYNAMIC_LOAD_DEBUG>("Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
+            dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
@@ -348,7 +348,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const 
         hash2 = *(current_chain++);
         const auto symbol = m_dynamic.symbol(current_sym);
         if ((hash1 == (hash2 & ~1)) && strcmp(name, symbol.name()) == 0) {
-            dbgln<DYNAMIC_LOAD_DEBUG>("Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
+            dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
         if (hash2 & 1) {
@@ -494,7 +494,7 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 
     u32 symbol_location = result.value().address;
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("DynamicLoader: Jump slot relocation: putting {} ({:p}) into PLT at {}", sym.name(), symbol_location, (void*)relocation_address);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({:p}) into PLT at {}", sym.name(), symbol_location, (void*)relocation_address);
 
     *(u32*)relocation_address = symbol_location;
 
@@ -503,12 +503,12 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
 
 Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
-    dbgln<DYNAMIC_LOAD_DEBUG>("looking up symbol: {}", symbol.name());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "looking up symbol: {}", symbol.name());
     if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
         return DynamicLinker::lookup_global_symbol(symbol.name());
 
     if (!symbol.is_undefined()) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("symbol is defined in its object");
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol is defined in its object");
         return SymbolLookupResult { symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
     }
     return DynamicLinker::lookup_global_symbol(symbol.name());

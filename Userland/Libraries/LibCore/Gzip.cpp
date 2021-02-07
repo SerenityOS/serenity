@@ -102,7 +102,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     }
 
     auto new_size = data.size() - current;
-    dbgln<GZIP_DEBUG>("get_gzip_payload: Returning slice from {} with size {}", current, new_size);
+    dbgln_if(GZIP_DEBUG, "get_gzip_payload: Returning slice from {} with size {}", current, new_size);
     return data.slice(current, new_size);
 }
 
@@ -110,7 +110,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 {
     ASSERT(is_compressed(data));
 
-    dbgln<GZIP_DEBUG>("Gzip::decompress: Decompressing gzip compressed data. size={}", data.size());
+    dbgln_if(GZIP_DEBUG, "Gzip::decompress: Decompressing gzip compressed data. size={}", data.size());
     auto optional_payload = get_gzip_payload(data);
     if (!optional_payload.has_value()) {
         return Optional<ByteBuffer>();

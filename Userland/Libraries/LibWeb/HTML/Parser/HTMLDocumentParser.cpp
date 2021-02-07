@@ -141,7 +141,7 @@ void HTMLDocumentParser::run(const URL& url)
             break;
         auto& token = optional_token.value();
 
-        dbgln<PARSER_DEBUG>("[{}] {}", insertion_mode_name(), token.to_string());
+        dbgln_if(PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
 
         // FIXME: If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
         // FIXME: If the adjusted current node is a MathML text integration point and the token is a character token
@@ -157,7 +157,7 @@ void HTMLDocumentParser::run(const URL& url)
         }
 
         if (m_stop_parsing) {
-            dbgln<PARSER_DEBUG>("Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
+            dbgln_if(PARSER_DEBUG, "Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
             break;
         }
     }

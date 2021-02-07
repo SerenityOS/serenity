@@ -140,25 +140,25 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)message.key(), message.modifiers(), message.code_point(), message.scancode());
     Action* action = nullptr;
 
-    dbgln<KEYBOARD_SHORTCUTS_DEBUG>("Looking up action for {}", key_event->to_string());
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", key_event->to_string());
 
     if (auto* focused_widget = window->focused_widget()) {
         for (auto* widget = focused_widget; widget && !action; widget = widget->parent_widget()) {
             action = widget->action_for_key_event(*key_event);
 
-            dbgln<KEYBOARD_SHORTCUTS_DEBUG>("  > Focused widget {} gave action: {}", *widget, action);
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {}", *widget, action);
         }
     }
 
     if (!action) {
         action = window->action_for_key_event(*key_event);
-        dbgln<KEYBOARD_SHORTCUTS_DEBUG>("  > Asked window {}, got action: {}", *window, action);
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {}", *window, action);
     }
 
     // NOTE: Application-global shortcuts are ignored while a modal window is up.
     if (!action && !window->is_modal()) {
         action = Application::the()->action_for_key_event(*key_event);
-        dbgln<KEYBOARD_SHORTCUTS_DEBUG>("  > Asked application, got action: {}", action);
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {}", action);
     }
 
     if (action) {
