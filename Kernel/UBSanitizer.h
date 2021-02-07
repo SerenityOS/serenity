@@ -74,6 +74,10 @@ struct NonnullArgData {
     int argument_index;
 };
 
+struct NonnullReturnData {
+    SourceLocation attribute_location;
+};
+
 struct OverflowData {
     SourceLocation location;
     const TypeDescriptor& type;
