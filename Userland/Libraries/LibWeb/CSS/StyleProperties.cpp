@@ -179,12 +179,7 @@ void StyleProperties::load_font() const
     } else if (font_size->is_length()) {
         // FIXME: This isn't really a length, it's a numeric value..
         int font_size_integer = font_size->to_length().raw_value();
-        if (font_size_integer <= 10)
-            size = 10;
-        else if (font_size_integer <= 12)
-            size = 12;
-        else
-            size = 14;
+        size = font_size_integer;
     }
 
     FontSelector font_selector { family, size, weight };
