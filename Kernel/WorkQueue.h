@@ -64,6 +64,7 @@ private:
 
     void do_queue(WorkItem*);
 
+    const char* const m_name;
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;
     IntrusiveList<WorkItem, RawPtr<WorkItem>, &WorkItem::m_node> m_items;

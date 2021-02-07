@@ -8,6 +8,9 @@
 #include <Kernel/SpinLock.h>
 #include <Kernel/WaitQueue.h>
 #include <Kernel/WorkQueue.h>
+#include <Kernel/TimerQueue.h>
+
+#define WORKQUEUE_DEBUG_LONG_FUNCTIONS 1
 
 namespace Kernel {
 
@@ -19,6 +22,7 @@ void WorkQueue::initialize()
 }
 
 WorkQueue::WorkQueue(const char* name)
+    : m_name(name)
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, name, [this] {
@@ -31,7 +35,18 @@ WorkQueue::WorkQueue(const char* name)
                 have_more = !m_items.is_empty();
             }
             if (item) {
+#if WORKQUEUE_DEBUG_LONG_FUNCTIONS
+                auto deadline = TimeManagement::the().monotonic_time();
+                deadline += Time::from_seconds(2);
+                auto timer = TimerQueue::the().add_timer_without_id(CLOCK_MONOTONIC_COARSE, deadline, [this]() {
+                    dbgln("WorkQueue[{}] function has taken more than 2 seconds!", m_name);
+                    dbgln("{}", m_thread->backtrace());
+                });
+#endif
                 item->function(item->data);
+#if WORKQUEUE_DEBUG_LONG_FUNCTIONS
+                TimerQueue::the().cancel_timer(timer.release_nonnull());
+#endif
                 if (item->free_data)
                     item->free_data(item->data);
                 delete item;
