@@ -37,13 +37,15 @@
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibSyntax/Forward.h>
+#include <LibSyntax/HighlighterClient.h>
 
 namespace GUI {
 
 class TextEditor
     : public ScrollableWidget
-    , public TextDocument::Client {
-    C_OBJECT(TextEditor)
+    , public TextDocument::Client
+    , public Syntax::HighlighterClient {
+    C_OBJECT(TextEditor);
 
 public:
     enum Type {
@@ -240,6 +242,16 @@ private:
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
     virtual void document_did_set_cursor(const TextPosition&) override;
+
+    // ^Syntax::HighlighterClient
+    virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
+    virtual const Vector<TextDocumentSpan>& spans() const final { return document().spans(); }
+    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) { document().set_spans(move(spans)); }
+    virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
+    virtual void highlighter_did_request_update() final { update(); }
+    virtual String highlighter_did_request_text() const final { return text(); }
+    virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }
+    virtual GUI::TextPosition highlighter_did_request_cursor() const final { return m_cursor; }
 
     void create_actions();
     void paint_ruler(Painter&);

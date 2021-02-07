@@ -43,7 +43,6 @@
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
@@ -57,6 +56,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font.h>
+#include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <string.h>
@@ -476,7 +476,7 @@ TextEditorWidget::TextEditorWidget()
     syntax_menu.add_action(*m_cpp_highlight);
 
     m_js_highlight = GUI::Action::create_checkable("JavaScript", [&](auto&) {
-        m_editor->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+        m_editor->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_js_highlight);

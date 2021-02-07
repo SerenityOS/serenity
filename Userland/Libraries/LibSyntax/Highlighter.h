@@ -30,6 +30,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGfx/Palette.h>
+#include <LibSyntax/HighlighterClient.h>
 
 namespace Syntax {
 
@@ -61,14 +62,15 @@ public:
     virtual bool is_identifier(void*) const { return false; };
     virtual bool is_navigatable(void*) const { return false; };
 
-    void attach(GUI::TextEditor& editor);
+    void attach(HighlighterClient&);
     void detach();
     void cursor_did_change();
 
 protected:
     Highlighter() { }
 
-    WeakPtr<GUI::TextEditor> m_editor;
+    // FIXME: This should be WeakPtr somehow
+    HighlighterClient* m_client { nullptr };
 
     struct MatchingTokenPair {
         void* open;

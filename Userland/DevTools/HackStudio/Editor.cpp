@@ -38,12 +38,12 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Window.h>
+#include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -424,7 +424,7 @@ void Editor::set_document(GUI::TextDocument& doc)
         set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         break;
     case Language::JavaScript:
-        set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+        set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         break;
     case Language::Ini:
         set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());

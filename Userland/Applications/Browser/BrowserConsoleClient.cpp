@@ -28,13 +28,10 @@
 #include "ConsoleWidget.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
 #include <LibWeb/DOM/DocumentType.h>
-#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMTreeModel.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 
 namespace Browser {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,30 @@
 
 #pragma once
 
-#include <LibSyntax/Highlighter.h>
+#include <LibGUI/Forward.h>
 
-namespace JS {
+namespace Syntax {
 
-class SyntaxHighlighter : public Syntax::Highlighter {
+class HighlighterClient {
 public:
-    SyntaxHighlighter() { }
-    virtual ~SyntaxHighlighter() override;
+    virtual ~HighlighterClient() = default;
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
+    virtual Vector<GUI::TextDocumentSpan>& spans() = 0;
+    virtual const Vector<GUI::TextDocumentSpan>& spans() const = 0;
+    virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) = 0;
 
-    virtual Syntax::Language language() const override { return Syntax::Language::JavaScript; }
-    virtual void rehighlight(Gfx::Palette) override;
+    virtual String highlighter_did_request_text() const = 0;
+    virtual void highlighter_did_request_update() = 0;
+    virtual GUI::TextDocument& highlighter_did_request_document() = 0;
+    virtual GUI::TextPosition highlighter_did_request_cursor() const = 0;
+    virtual void highlighter_did_set_spans(Vector<GUI::TextDocumentSpan>) = 0;
 
-protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
+    void do_set_spans(Vector<GUI::TextDocumentSpan> spans) { highlighter_did_set_spans(move(spans)); }
+    void do_update() { highlighter_did_request_update(); }
+
+    String get_text() const { return highlighter_did_request_text(); }
+    GUI::TextDocument& get_document() { return highlighter_did_request_document(); }
+    GUI::TextPosition get_cursor() const { return highlighter_did_request_cursor(); }
 };
 
 }

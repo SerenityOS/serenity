@@ -77,8 +77,7 @@ bool SyntaxHighlighter::is_navigatable(void* token) const
 
 void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
     Cpp::Lexer lexer(text);
     auto tokens = lexer.lex();
 
@@ -95,12 +94,12 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
 
-    m_editor->update();
+    m_client->do_update();
 }
 
 Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const

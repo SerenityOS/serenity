@@ -81,8 +81,9 @@ set(SOURCES
     Runtime/VM.cpp
     Runtime/Value.cpp
     Runtime/WithScope.cpp
+    SyntaxHighlighter.cpp
     Token.cpp
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS LibM LibCore LibCrypto LibRegex)
+target_link_libraries(LibJS LibM LibCore LibCrypto LibRegex LibSyntax)

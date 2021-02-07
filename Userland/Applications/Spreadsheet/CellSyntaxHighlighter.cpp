@@ -25,7 +25,6 @@
  */
 
 #include "CellSyntaxHighlighter.h"
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Palette.h>
 #include <LibJS/Lexer.h>
@@ -34,18 +33,17 @@ namespace Spreadsheet {
 
 void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
-    m_editor->document().spans().clear();
+    auto text = m_client->get_text();
+    m_client->spans().clear();
     if (!text.starts_with('=')) {
-        m_editor->update();
+        m_client->do_update();
         return;
     }
 
-    JSSyntaxHighlighter::rehighlight(palette);
+    JS::SyntaxHighlighter::rehighlight(palette);
 
     // Highlight the '='
-    m_editor->document().spans().empend(
+    m_client->spans().empend(
         GUI::TextRange { { 0, 0 }, { 0, 1 } },
         Gfx::TextAttributes {
             palette.syntax_keyword(),
@@ -59,7 +57,7 @@ void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     if (m_cell && m_cell->exception()) {
         auto range = m_cell->exception()->source_ranges().first();
         GUI::TextRange text_range { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column - 1 } };
-        m_editor->document().spans().prepend(
+        m_client->spans().prepend(
             GUI::TextDocumentSpan {
                 text_range,
                 Gfx::TextAttributes {
@@ -71,7 +69,7 @@ void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
                 nullptr,
                 false });
     }
-    m_editor->update();
+    m_client->do_update();
 }
 
 CellSyntaxHighlighter::~CellSyntaxHighlighter()

@@ -32,7 +32,7 @@
 
 namespace GUI {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette palette, GMLToken::Type type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, GMLToken::Type type)
 {
     switch (type) {
     case GMLToken::Type::LeftCurly:
@@ -61,8 +61,7 @@ bool GMLSyntaxHighlighter::is_identifier(void* token) const
 
 void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
     GMLLexer lexer(text);
     auto tokens = lexer.lex();
 
@@ -78,12 +77,12 @@ void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
 
-    m_editor->update();
+    m_client->do_update();
 }
 
 Vector<GMLSyntaxHighlighter::MatchingTokenPair> GMLSyntaxHighlighter::matching_token_pairs() const
