@@ -44,10 +44,15 @@ public:
     static NonnullRefPtr<PaletteImpl> create_with_anonymous_buffer(Core::AnonymousBuffer);
     NonnullRefPtr<PaletteImpl> clone() const;
 
-    Color color(ColorRole) const;
+    Color color(ColorRole role) const
+    {
+        ASSERT((int)role < (int)ColorRole::__Count);
+        return Color::from_rgba(theme().color[(int)role]);
+    }
+
     int metric(MetricRole) const;
     String path(PathRole) const;
-    const SystemTheme& theme() const;
+    const SystemTheme& theme() const { return *m_theme_buffer.data<SystemTheme>(); }
 
     void replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer);
 
