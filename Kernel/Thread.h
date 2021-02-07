@@ -1238,7 +1238,7 @@ private:
     mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
-    TSS32 m_tss;
+    TSS32 m_tss {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
     IntrusiveListNode m_ready_queue_node;
