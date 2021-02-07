@@ -98,6 +98,9 @@ public:
     bool is_focused() const;
     virtual bool is_focusable() const { return false; }
 
+    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
+    NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
+
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
 
