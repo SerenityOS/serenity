@@ -26,6 +26,7 @@ Userland/Libraries/
 Userland/Libraries/LibC/
 Userland/Libraries/LibM/
 Userland/Libraries/LibPthread/
+Userland/Libraries/LibSystem/
 Toolchain/Local/i686/i686-pc-serenity/include/c++/10.2.0
 Build/
 Build/Userland/
