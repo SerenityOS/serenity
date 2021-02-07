@@ -126,8 +126,6 @@ public:
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
 
-    String backtrace();
-
     String name() const
     {
         // Because the name can be changed, we can't return a const
@@ -1231,7 +1229,7 @@ private:
 
     LockMode unlock_process_if_locked(u32&);
     void relock_process(LockMode, u32);
-    String backtrace_impl();
+    String backtrace();
     void reset_fpu_state();
 
     mutable RecursiveSpinLock m_lock;
