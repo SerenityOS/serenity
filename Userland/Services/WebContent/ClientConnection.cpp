@@ -87,7 +87,7 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadURL: url={}", message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", message.url());
 
     String process_name;
     if (message.url().host().is_empty())
@@ -102,13 +102,13 @@ void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
     page().load_html(message.html(), message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::SetViewportRect: rect={}", message.rect());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", message.rect());
     m_page_host->set_viewport_rect(message.rect());
 }
 

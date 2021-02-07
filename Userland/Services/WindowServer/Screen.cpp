@@ -82,7 +82,7 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
 
     FBResolution physical_resolution { 0, (unsigned)new_physical_width, (unsigned)new_physical_height };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
-    dbgln<WSSCREEN_DEBUG>("fb_set_resolution() - return code {}", rc);
+    dbgln_if(WSSCREEN_DEBUG, "fb_set_resolution() - return code {}", rc);
 
     if (rc == 0) {
         on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);

@@ -148,7 +148,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     for (auto& view : views) {
         input.view = view;
-        dbgln<REGEX_DEBUG>("[match] Starting match with view ({}): _{}_", view.length(), view);
+        dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;

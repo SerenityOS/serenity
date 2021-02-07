@@ -39,12 +39,12 @@ void TLSv12::write_packet(ByteBuffer& packet)
     m_context.tls_buffer.append(packet.data(), packet.size());
     if (m_context.connection_status > ConnectionStatus::Disconnected) {
         if (!m_has_scheduled_write_flush) {
-            dbgln<TLS_DEBUG>("Scheduling write of {}", m_context.tls_buffer.size());
+            dbgln_if(TLS_DEBUG, "Scheduling write of {}", m_context.tls_buffer.size());
             deferred_invoke([this](auto&) { write_into_socket(); });
             m_has_scheduled_write_flush = true;
         } else {
             // multiple packet are available, let's flush some out
-            dbgln<TLS_DEBUG>("Flushing scheduled write of {}", m_context.tls_buffer.size());
+            dbgln_if(TLS_DEBUG, "Flushing scheduled write of {}", m_context.tls_buffer.size());
             write_into_socket();
             // the deferred invoke is still in place
             m_has_scheduled_write_flush = true;
@@ -230,7 +230,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     size_t header_size = res;
     ssize_t payload_res = 0;
 
-    dbgln<TLS_DEBUG>("buffer size: {}", buffer.size());
+    dbgln_if(TLS_DEBUG, "buffer size: {}", buffer.size());
 
     if (buffer.size() < 5) {
         return (i8)Error::NeedMoreData;
@@ -249,15 +249,15 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     buffer_position += 2;
 
     auto length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(buffer_position));
-    dbgln<TLS_DEBUG>("record length: {} at offset: {}", length, buffer_position);
+    dbgln_if(TLS_DEBUG, "record length: {} at offset: {}", length, buffer_position);
     buffer_position += 2;
 
     if (buffer_position + length > buffer.size()) {
-        dbgln<TLS_DEBUG>("record length more than what we have: {}", buffer.size());
+        dbgln_if(TLS_DEBUG, "record length more than what we have: {}", buffer.size());
         return (i8)Error::NeedMoreData;
     }
 
-    dbgln<TLS_DEBUG>("message type: {}, length: {}", (u8)type, length);
+    dbgln_if(TLS_DEBUG, "message type: {}, length: {}", (u8)type, length);
     auto plain = buffer.slice(buffer_position, buffer.size() - buffer_position);
 
     ByteBuffer decrypted;
@@ -389,7 +389,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             write_packet(packet);
         } else {
-            dbgln<TLS_DEBUG>("application data message of size {}", plain.size());
+            dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
 
             m_context.application_buffer.append(plain.data(), plain.size());
         }
@@ -414,7 +414,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     case MessageType::Alert:
-        dbgln<TLS_DEBUG>("alert message of length {}", length);
+        dbgln_if(TLS_DEBUG, "alert message of length {}", length);
         if (length >= 2) {
             if constexpr (TLS_DEBUG)
                 print_buffer(plain);

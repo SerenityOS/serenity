@@ -42,7 +42,7 @@ ContiguousVMObject::ContiguousVMObject(size_t size, size_t physical_alignment)
     auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size, physical_alignment);
     for (size_t i = 0; i < page_count(); i++) {
         physical_pages()[i] = contiguous_physical_pages[i];
-        dbgln<CONTIGUOUS_VMOBJECT_DEBUG>("Contiguous page[{}]: {}", i, physical_pages()[i]->paddr());
+        dbgln_if(CONTIGUOUS_VMOBJECT_DEBUG, "Contiguous page[{}]: {}", i, physical_pages()[i]->paddr());
     }
 }
 

@@ -1314,7 +1314,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     ASSERT(m_in_critical == 1);
     ASSERT(is_kernel_mode());
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
     // clang-format off
@@ -1360,7 +1360,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     );
     // clang-format on
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     Processor::current().restore_in_critical(to_thread->saved_critical());
 }
@@ -1370,7 +1370,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     ASSERT(!are_interrupts_enabled());
     ASSERT(is_kernel_mode());
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     ASSERT(to_thread == Thread::current());
 
@@ -1553,7 +1553,7 @@ asm(
 
 void Processor::assume_context(Thread& thread, u32 flags)
 {
-    dbgln<CONTEXT_SWITCH_DEBUG>("Assume context for thread {} {}", VirtualAddress(&thread), thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
     ASSERT_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();
@@ -1860,7 +1860,7 @@ bool Processor::smp_process_pending_messages()
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
 
-            dbgln<SMP_DEBUG>("SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
+            dbgln_if(SMP_DEBUG, "SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
@@ -1875,7 +1875,7 @@ bool Processor::smp_process_pending_messages()
                     ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
                     if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
                         // This processor isn't using this page directory right now, we can ignore this request
-                        dbgln<SMP_DEBUG>("SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
+                        dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
                         break;
                     }
                 }
@@ -1925,7 +1925,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
 
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
     ASSERT(msg.refs > 0);
@@ -1994,7 +1994,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     auto& target_proc = processors()[cpu];
     msg.async = async;
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
 
     atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
     if (target_proc->smp_queue_message(msg)) {

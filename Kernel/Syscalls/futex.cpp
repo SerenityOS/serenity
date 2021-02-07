@@ -39,7 +39,7 @@ FutexQueue::FutexQueue(FlatPtr user_address_or_offset, VMObject* vmobject)
     : m_user_address_or_offset(user_address_or_offset)
     , m_is_global(vmobject != nullptr)
 {
-    dbgln<FUTEX_DEBUG>("Futex @ {}{}",
+    dbgln_if(FUTEX_DEBUG, "Futex @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 
@@ -56,7 +56,7 @@ FutexQueue::~FutexQueue()
         if (auto vmobject = m_vmobject.strong_ref())
             vmobject->unregister_on_deleted_handler(*this);
     }
-    dbgln<FUTEX_DEBUG>("~Futex @ {}{}",
+    dbgln_if(FUTEX_DEBUG, "~Futex @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 }
@@ -68,7 +68,7 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
     // to make sure we have at last a reference until we're done
     NonnullRefPtr<FutexQueue> own_ref(*this);
 
-    dbgln<FUTEX_DEBUG>("Futex::vmobject_deleted @ {}{}",
+    dbgln_if(FUTEX_DEBUG, "Futex::vmobject_deleted @ {}{}",
         this,
         m_is_global ? " (global)" : " (local)");
 

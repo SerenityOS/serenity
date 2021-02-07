@@ -353,7 +353,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         auto& target = to.first();
 
         for (auto& position : from) {
-            dbgln<COPY_DEBUG>("Paste from '{}' to '{}'", position.to_url(), target.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(), target.to_url());
             copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
         }
 
@@ -364,7 +364,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         // Fill the target selection with the single cell.
         auto& source = from.first();
         for (auto& position : to) {
-            dbgln<COPY_DEBUG>("Paste from '{}' to '{}'", source.to_url(), position.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", source.to_url(), position.to_url());
             copy_to(source, resolve_relative_to.has_value() ? offset_relative_to(position, source, resolve_relative_to.value()) : position);
         }
         return;

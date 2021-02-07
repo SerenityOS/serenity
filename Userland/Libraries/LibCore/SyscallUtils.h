@@ -44,7 +44,7 @@ inline int safe_syscall(Syscall syscall, Args&&... args)
         if (sysret == -1) {
             if constexpr (SAFE_SYSCALL_DEBUG) {
                 int saved_errno = errno;
-                dbgln<SAFE_SYSCALL_DEBUG>("Core::safe_syscall: {} ({}: {})", sysret, saved_errno, strerror(saved_errno));
+                dbgln_if(SAFE_SYSCALL_DEBUG, "Core::safe_syscall: {} ({}: {})", sysret, saved_errno, strerror(saved_errno));
             }
 
             if (errno == EINTR)

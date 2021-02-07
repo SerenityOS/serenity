@@ -207,7 +207,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 {
     auto options = packet.parse_options();
 
-    dbgln<DHCPV4CLIENT_DEBUG>("Here are the options: {}", options.to_string());
+    dbgln_if(DHCPV4CLIENT_DEBUG, "Here are the options: {}", options.to_string());
 
     auto value = options.get<DHCPMessageType>(DHCPOption::DHCPMessageType).value();
     switch (value) {

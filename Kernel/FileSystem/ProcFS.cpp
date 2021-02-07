@@ -1015,7 +1015,7 @@ NonnullRefPtr<Inode> ProcFS::root_inode() const
 
 RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 {
-    dbgln<PROCFS_DEBUG>("ProcFS::get_inode({})", inode_id.index());
+    dbgln_if(PROCFS_DEBUG, "ProcFS::get_inode({})", inode_id.index());
     if (inode_id == root_inode()->identifier())
         return m_root_inode;
 
@@ -1128,7 +1128,7 @@ void ProcFSInode::did_seek(FileDescription& description, off_t new_offset)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-    dbgln<PROCFS_DEBUG>("ProcFSInode::metadata({})", index());
+    dbgln_if(PROCFS_DEBUG, "ProcFSInode::metadata({})", index());
     InodeMetadata metadata;
     metadata.inode = identifier();
     metadata.ctime = mepoch;
@@ -1137,7 +1137,7 @@ InodeMetadata ProcFSInode::metadata() const
     auto proc_parent_directory = to_proc_parent_directory(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
 
-    dbgln<PROCFS_DEBUG>("  -> pid={}, fi={}, pdi={}", to_pid(identifier()).value(), (int)proc_file_type, (int)proc_parent_directory);
+    dbgln_if(PROCFS_DEBUG, "  -> pid={}, fi={}, pdi={}", to_pid(identifier()).value(), (int)proc_file_type, (int)proc_parent_directory);
 
     if (is_process_related_file(identifier())) {
         ProcessID pid = to_pid(identifier());
@@ -1210,14 +1210,14 @@ InodeMetadata ProcFSInode::metadata() const
 
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    dbgln<PROCFS_DEBUG>("ProcFS: read_bytes offset: {} count: {}", offset, count);
+    dbgln_if(PROCFS_DEBUG, "ProcFS: read_bytes offset: {} count: {}", offset, count);
     ASSERT(offset >= 0);
     ASSERT(buffer.user_or_kernel_ptr());
 
     if (!description)
         return -EIO;
     if (!description->data()) {
-        dbgln<PROCFS_DEBUG>("ProcFS: Do not have cached data!");
+        dbgln_if(PROCFS_DEBUG, "ProcFS: Do not have cached data!");
         return -EIO;
     }
 
@@ -1241,7 +1241,7 @@ InodeIdentifier ProcFS::ProcFSDirectoryEntry::identifier(unsigned fsid) const
 
 KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
-    dbgln<PROCFS_DEBUG>("ProcFS: traverse_as_directory {}", index());
+    dbgln_if(PROCFS_DEBUG, "ProcFS: traverse_as_directory {}", index());
 
     if (!Kernel::is_directory(identifier()))
         return ENOTDIR;

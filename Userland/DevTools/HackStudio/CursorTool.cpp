@@ -48,7 +48,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
                 m_editor.selection().toggle(*result.widget);
             } else if (!event.modifiers()) {
                 if (!m_editor.selection().contains(*result.widget)) {
-                    dbgln<CURSOR_TOOL_DEBUG>("Selection didn't contain {}, making it the only selected one", *result.widget);
+                    dbgln_if(CURSOR_TOOL_DEBUG, "Selection didn't contain {}, making it the only selected one", *result.widget);
                     m_editor.selection().set(*result.widget);
                 }
 

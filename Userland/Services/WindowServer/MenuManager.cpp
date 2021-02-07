@@ -466,7 +466,7 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
     else
         m_current_menubar = nullptr;
 
-    dbgln<MENUS_DEBUG>("[WM] Current menubar is now {}", menubar);
+    dbgln_if(MENUS_DEBUG, "[WM] Current menubar is now {}", menubar);
 
     Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&](Menu& menu) {

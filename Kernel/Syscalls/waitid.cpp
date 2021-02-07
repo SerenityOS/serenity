@@ -55,7 +55,7 @@ pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_param
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
-    dbgln<PROCESS_DEBUG>("sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
+    dbgln_if(PROCESS_DEBUG, "sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
     auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);
     if (siginfo_or_error.is_error())
