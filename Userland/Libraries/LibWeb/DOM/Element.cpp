@@ -152,7 +152,8 @@ RefPtr<Layout::Node> Element::create_layout_node()
     case CSS::Display::TableColumn:
     case CSS::Display::TableColumnGroup:
     case CSS::Display::TableCaption:
-        break;
+        // FIXME: This is just an incorrect placeholder until we improve table layout support.
+        return adopt(*new Layout::BlockBox(document(), this, move(style)));
     }
     ASSERT_NOT_REACHED();
 }
