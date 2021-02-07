@@ -34,7 +34,7 @@ class HTMLOptionElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLOptionElementWrapper;
 
-    HTMLOptionElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLOptionElement(DOM::Document&, QualifiedName);
     virtual ~HTMLOptionElement() override;
 };
 

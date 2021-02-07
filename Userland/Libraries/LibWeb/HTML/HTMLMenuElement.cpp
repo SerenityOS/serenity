@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLMenuElement::HTMLMenuElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLMenuElement::HTMLMenuElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

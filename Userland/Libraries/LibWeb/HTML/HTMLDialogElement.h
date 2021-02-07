@@ -34,7 +34,7 @@ class HTMLDialogElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDialogElementWrapper;
 
-    HTMLDialogElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLDialogElement(DOM::Document&, QualifiedName);
     virtual ~HTMLDialogElement() override;
 };
 

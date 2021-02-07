@@ -35,7 +35,7 @@ class SVGSVGElement final : public SVGGraphicsElement {
 public:
     using WrapperType = Bindings::SVGSVGElementWrapper;
 
-    SVGSVGElement(DOM::Document&, const QualifiedName& qualified_name);
+    SVGSVGElement(DOM::Document&, QualifiedName);
 
     virtual RefPtr<Layout::Node> create_layout_node() override;
 

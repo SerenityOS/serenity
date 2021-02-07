@@ -35,7 +35,7 @@ class HTMLFormElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLFormElementWrapper;
 
-    HTMLFormElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLFormElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFormElement() override;
 
     String action() const { return attribute(HTML::AttributeNames::action); }

@@ -34,7 +34,7 @@ class HTMLBRElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLBRElementWrapper;
 
-    HTMLBRElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLBRElement(DOM::Document&, QualifiedName);
     virtual ~HTMLBRElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node() override;

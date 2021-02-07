@@ -35,7 +35,7 @@ public:
     using WrapperType = Bindings::SVGGeometryElementWrapper;
 
 protected:
-    SVGGeometryElement(DOM::Document& document, const QualifiedName& qualified_name);
+    SVGGeometryElement(DOM::Document& document, QualifiedName qualified_name);
 };
 
 }

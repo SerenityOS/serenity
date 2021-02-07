@@ -34,7 +34,7 @@ class HTMLTimeElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTimeElementWrapper;
 
-    HTMLTimeElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLTimeElement(DOM::Document&, QualifiedName);
     virtual ~HTMLTimeElement() override;
 };
 

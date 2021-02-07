@@ -37,7 +37,7 @@ class SVGGraphicsElement : public SVGElement {
 public:
     using WrapperType = Bindings::SVGGraphicsElementWrapper;
 
-    SVGGraphicsElement(DOM::Document&, const QualifiedName& qualified_name);
+    SVGGraphicsElement(DOM::Document&, QualifiedName);
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 

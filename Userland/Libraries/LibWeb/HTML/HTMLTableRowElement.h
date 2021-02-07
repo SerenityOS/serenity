@@ -34,7 +34,7 @@ class HTMLTableRowElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableRowElementWrapper;
 
-    HTMLTableRowElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLTableRowElement(DOM::Document&, QualifiedName);
     virtual ~HTMLTableRowElement() override;
 };
 

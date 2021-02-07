@@ -30,8 +30,8 @@
 
 namespace Web::HTML {
 
-HTMLFontElement::HTMLFontElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLFontElement::HTMLFontElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

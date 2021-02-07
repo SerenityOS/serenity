@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLPictureElement::HTMLPictureElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLPictureElement::HTMLPictureElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

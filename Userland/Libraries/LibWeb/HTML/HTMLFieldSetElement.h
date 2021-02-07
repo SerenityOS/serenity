@@ -34,7 +34,7 @@ class HTMLFieldSetElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLFieldSetElementWrapper;
 
-    HTMLFieldSetElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLFieldSetElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
     const String& type() const

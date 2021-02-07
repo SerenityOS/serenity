@@ -28,8 +28,8 @@
 
 namespace Web::SVG {
 
-SVGGeometryElement::SVGGeometryElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : SVGGraphicsElement(document, qualified_name)
+SVGGeometryElement::SVGGeometryElement(DOM::Document& document, QualifiedName qualified_name)
+    : SVGGraphicsElement(document, move(qualified_name))
 {
 }
 

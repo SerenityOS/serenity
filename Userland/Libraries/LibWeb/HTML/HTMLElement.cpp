@@ -39,8 +39,8 @@
 
 namespace Web::HTML {
 
-HTMLElement::HTMLElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : Element(document, qualified_name)
+HTMLElement::HTMLElement(DOM::Document& document, QualifiedName qualified_name)
+    : Element(document, move(qualified_name))
 {
 }
 

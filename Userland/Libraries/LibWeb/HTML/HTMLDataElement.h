@@ -34,7 +34,7 @@ class HTMLDataElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDataElementWrapper;
 
-    HTMLDataElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLDataElement(DOM::Document&, QualifiedName);
     virtual ~HTMLDataElement() override;
 };
 

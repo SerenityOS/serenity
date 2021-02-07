@@ -29,8 +29,8 @@
 
 namespace Web::HTML {
 
-HTMLBRElement::HTMLBRElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLBRElement::HTMLBRElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

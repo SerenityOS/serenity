@@ -37,7 +37,7 @@ class HTMLObjectElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
 
-    HTMLObjectElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLObjectElement(DOM::Document&, QualifiedName);
     virtual ~HTMLObjectElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

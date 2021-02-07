@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLMapElement::HTMLMapElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLMapElement::HTMLMapElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

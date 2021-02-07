@@ -34,7 +34,7 @@ class HTMLDivElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDivElementWrapper;
 
-    HTMLDivElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLDivElement(DOM::Document&, QualifiedName);
     virtual ~HTMLDivElement() override;
 };
 

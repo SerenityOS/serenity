@@ -34,7 +34,7 @@ class HTMLIFrameElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLIFrameElementWrapper;
 
-    HTMLIFrameElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLIFrameElement(DOM::Document&, QualifiedName);
     virtual ~HTMLIFrameElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node() override;

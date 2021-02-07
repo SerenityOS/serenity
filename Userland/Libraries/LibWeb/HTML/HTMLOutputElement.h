@@ -34,7 +34,7 @@ class HTMLOutputElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLOutputElementWrapper;
 
-    HTMLOutputElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLOutputElement(DOM::Document&, QualifiedName);
     virtual ~HTMLOutputElement() override;
 
     const String& type() const
