@@ -26,14 +26,14 @@
 
 #include <AK/Debug.h>
 #include <LibCpp/Lexer.h>
-#include <LibGUI/CppSyntaxHighlighter.h>
+#include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
-namespace GUI {
+namespace Cpp {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, Cpp::Token::Type type)
+static GUI::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::Token::Type type)
 {
     switch (type) {
     case Cpp::Token::Type::Keyword:
@@ -63,19 +63,19 @@ static TextStyle style_for_token_type(Gfx::Palette palette, Cpp::Token::Type typ
     }
 }
 
-bool CppSyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(void* token) const
 {
     auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
     return cpp_token == Cpp::Token::Type::Identifier;
 }
 
-bool CppSyntaxHighlighter::is_navigatable(void* token) const
+bool SyntaxHighlighter::is_navigatable(void* token) const
 {
     auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
     return cpp_token == Cpp::Token::Type::IncludePath;
 }
 
-void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
     ASSERT(m_editor);
     auto text = m_editor->text();
@@ -103,7 +103,7 @@ void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     m_editor->update();
 }
 
-Vector<SyntaxHighlighter::MatchingTokenPair> CppSyntaxHighlighter::matching_token_pairs() const
+Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
 {
     static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
@@ -114,12 +114,12 @@ Vector<SyntaxHighlighter::MatchingTokenPair> CppSyntaxHighlighter::matching_toke
     return pairs;
 }
 
-bool CppSyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+bool SyntaxHighlighter::token_types_equal(void* token1, void* token2) const
 {
     return static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token1)) == static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token2));
 }
 
-CppSyntaxHighlighter::~CppSyntaxHighlighter()
+SyntaxHighlighter::~SyntaxHighlighter()
 {
 }
 

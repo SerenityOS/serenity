@@ -34,8 +34,8 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
@@ -418,7 +418,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     CodeDocument& code_document = static_cast<CodeDocument&>(doc);
     switch (code_document.language()) {
     case Language::Cpp:
-        set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
         m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
         break;
     case Language::GML:
