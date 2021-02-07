@@ -61,7 +61,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
         if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
             u8 handshake_type = packet[header_size];
             if (handshake_type != HandshakeType::HelloRequest && handshake_type != HandshakeType::HelloVerifyRequest) {
-                update_hash(packet.bytes().slice(header_size, packet.size() - header_size));
+                update_hash(packet.bytes(), header_size);
             }
         }
         if (m_context.cipher_spec_set && m_context.crypto.created) {
@@ -190,9 +190,10 @@ void TLSv12::update_packet(ByteBuffer& packet)
     ++m_context.local_sequence_number;
 }
 
-void TLSv12::update_hash(ReadonlyBytes message)
+void TLSv12::update_hash(ReadonlyBytes message, size_t header_size)
 {
-    m_context.handshake_hash.update(message);
+    dbgln("Update hash with message of size {}", message.size());
+    m_context.handshake_hash.update(message.slice(header_size));
 }
 
 ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)

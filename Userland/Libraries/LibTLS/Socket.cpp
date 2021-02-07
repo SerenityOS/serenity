@@ -83,7 +83,7 @@ bool TLSv12::write(ReadonlyBytes buffer)
         return false;
     }
 
-    PacketBuilder builder { MessageType::ApplicationData, m_context.version, buffer.size() };
+    PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, buffer.size() };
     builder.append(buffer);
     auto packet = builder.build();
 
