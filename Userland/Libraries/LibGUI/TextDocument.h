@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,7 +79,7 @@ public:
     const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
     TextDocumentLine& line(size_t line_index) { return m_lines[line_index]; }
 
-    void set_spans(const Vector<TextDocumentSpan>& spans) { m_spans = spans; }
+    void set_spans(Vector<TextDocumentSpan> spans) { m_spans = move(spans); }
 
     void set_text(const StringView&);
 

@@ -48,7 +48,6 @@ set(SOURCES
     IconView.cpp
     ImageWidget.cpp
     InputBox.cpp
-    JSSyntaxHighlighter.cpp
     JsonArrayModel.cpp
     Label.cpp
     Layout.cpp
@@ -109,4 +108,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibShell LibRegex LibJS LibSyntax)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibShell LibRegex LibSyntax)

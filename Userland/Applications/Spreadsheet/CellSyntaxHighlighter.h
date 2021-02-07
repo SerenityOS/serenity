@@ -27,11 +27,11 @@
 #pragma once
 
 #include "Cell.h"
-#include <LibGUI/JSSyntaxHighlighter.h>
+#include <LibJS/SyntaxHighlighter.h>
 
 namespace Spreadsheet {
 
-class CellSyntaxHighlighter final : public GUI::JSSyntaxHighlighter {
+class CellSyntaxHighlighter final : public JS::SyntaxHighlighter {
 public:
     CellSyntaxHighlighter() { }
     virtual ~CellSyntaxHighlighter() override;

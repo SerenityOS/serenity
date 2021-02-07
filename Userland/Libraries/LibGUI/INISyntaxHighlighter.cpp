@@ -60,8 +60,7 @@ bool IniSyntaxHighlighter::is_identifier(void* token) const
 
 void IniSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
     IniLexer lexer(text);
     auto tokens = lexer.lex();
 
@@ -77,12 +76,12 @@ void IniSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
 
-    m_editor->update();
+    m_client->do_update();
 }
 
 Vector<IniSyntaxHighlighter::MatchingTokenPair> IniSyntaxHighlighter::matching_token_pairs() const

@@ -25,16 +25,16 @@
  */
 
 #include <AK/Debug.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibJS/Lexer.h>
+#include <LibJS/SyntaxHighlighter.h>
 #include <LibJS/Token.h>
 
-namespace GUI {
+namespace JS {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, JS::TokenType type)
 {
     switch (JS::Token::category(type)) {
     case JS::TokenCategory::Invalid:
@@ -58,21 +58,20 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenTyp
     }
 }
 
-bool JSSyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(void* token) const
 {
     auto js_token = static_cast<JS::TokenType>(reinterpret_cast<size_t>(token));
     return js_token == JS::TokenType::Identifier;
 }
 
-bool JSSyntaxHighlighter::is_navigatable([[maybe_unused]] void* token) const
+bool SyntaxHighlighter::is_navigatable([[maybe_unused]] void* token) const
 {
     return false;
 }
 
-void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
 
     JS::Lexer lexer(text);
 
@@ -125,15 +124,15 @@ void JSSyntaxHighlighter::rehighlight(Gfx::Palette palette)
             was_eof = true;
     }
 
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
 
-    m_editor->update();
+    m_client->do_update();
 }
 
-Vector<Syntax::Highlighter::MatchingTokenPair> JSSyntaxHighlighter::matching_token_pairs() const
+Vector<Syntax::Highlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
 {
     static Vector<Syntax::Highlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
@@ -144,12 +143,12 @@ Vector<Syntax::Highlighter::MatchingTokenPair> JSSyntaxHighlighter::matching_tok
     return pairs;
 }
 
-bool JSSyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+bool SyntaxHighlighter::token_types_equal(void* token1, void* token2) const
 {
     return static_cast<JS::TokenType>(reinterpret_cast<size_t>(token1)) == static_cast<JS::TokenType>(reinterpret_cast<size_t>(token2));
 }
 
-JSSyntaxHighlighter::~JSSyntaxHighlighter()
+SyntaxHighlighter::~SyntaxHighlighter()
 {
 }
 
