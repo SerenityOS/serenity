@@ -203,7 +203,6 @@ struct Context {
     static void print_file(const StringView& fname);
 
     u8 remote_random[32];
-    // To be predictable
     u8 local_random[32];
     u8 session_id[32];
     u8 session_id_size { 0 };
