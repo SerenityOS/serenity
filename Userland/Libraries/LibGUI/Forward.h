@@ -82,6 +82,7 @@ class TableView;
 class TextBox;
 class TextDocument;
 class TextDocumentLine;
+struct TextDocumentSpan;
 class TextDocumentUndoCommand;
 class TextEditor;
 class ThemeChangeEvent;

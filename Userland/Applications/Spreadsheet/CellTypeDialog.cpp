@@ -36,7 +36,6 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SpinBox.h>
@@ -44,6 +43,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibJS/SyntaxHighlighter.h>
 
 REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
@@ -425,7 +425,7 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
         m_format.background_color = bg_input.color();
     };
 
-    formula_editor.set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    formula_editor.set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     formula_editor.set_should_hide_unnecessary_scrollbars(true);
     formula_editor.set_font(&Gfx::FontDatabase::default_fixed_width_font());
     formula_editor.on_change = [&] {

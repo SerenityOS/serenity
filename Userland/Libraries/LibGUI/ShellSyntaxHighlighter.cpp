@@ -502,25 +502,24 @@ bool ShellSyntaxHighlighter::is_navigatable(void* token) const
 
 void ShellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
 
     Parser parser(text);
     auto ast = parser.parse();
 
     Vector<GUI::TextDocumentSpan> spans;
     GUI::TextPosition position { 0, 0 };
-    HighlightVisitor visitor { spans, palette, m_editor->document() };
+    HighlightVisitor visitor { spans, palette, m_client->get_document() };
 
     if (ast)
         ast->visit(visitor);
 
     quick_sort(spans, [](auto& a, auto& b) { return a.range.start() < b.range.start(); });
 
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
-    m_editor->update();
+    m_client->do_update();
 }
 
 Vector<Syntax::Highlighter::MatchingTokenPair> ShellSyntaxHighlighter::matching_token_pairs() const

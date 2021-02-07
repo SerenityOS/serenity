@@ -28,13 +28,13 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/SyntaxHighlighter.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -66,7 +66,7 @@ ConsoleWidget::ConsoleWidget()
     bottom_container.set_fixed_height(22);
 
     m_input = bottom_container.add<GUI::TextBox>();
-    m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    m_input->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
     m_input->set_font(Gfx::FontDatabase::default_fixed_width_font());
     m_input->set_history_enabled(true);

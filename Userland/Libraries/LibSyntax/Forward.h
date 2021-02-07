@@ -29,5 +29,6 @@
 namespace Syntax {
 
 class Highlighter;
+class HighlighterClient;
 
 }

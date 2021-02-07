@@ -25,6 +25,7 @@
  */
 
 #include <LibGUI/TextEditor.h>
+#include <LibGfx/Color.h>
 #include <LibSyntax/Highlighter.h>
 
 namespace Syntax {
@@ -35,8 +36,7 @@ Highlighter::~Highlighter()
 
 void Highlighter::highlight_matching_token_pair()
 {
-    ASSERT(m_editor);
-    auto& document = m_editor->document();
+    auto& document = m_client->get_document();
 
     enum class Direction {
         Forward,
@@ -93,7 +93,7 @@ void Highlighter::highlight_matching_token_pair()
         buddy1.attributes.background_color = Color::DarkCyan;
         buddy0.attributes.color = Color::White;
         buddy1.attributes.color = Color::White;
-        m_editor->update();
+        m_client->do_update();
     };
 
     auto pairs = matching_token_pairs();
@@ -103,7 +103,7 @@ void Highlighter::highlight_matching_token_pair()
         auto token_type = span.data;
 
         for (auto& pair : pairs) {
-            if (token_types_equal(token_type, pair.open) && span.range.start() == m_editor->cursor()) {
+            if (token_types_equal(token_type, pair.open) && span.range.start() == m_client->get_cursor()) {
                 auto buddy = find_span_of_type(i, pair.close, pair.open, Direction::Forward);
                 if (buddy.has_value())
                     make_buddies(i, buddy.value());
@@ -115,7 +115,7 @@ void Highlighter::highlight_matching_token_pair()
         right_of_end.set_column(right_of_end.column() + 1);
 
         for (auto& pair : pairs) {
-            if (token_types_equal(token_type, pair.close) && right_of_end == m_editor->cursor()) {
+            if (token_types_equal(token_type, pair.close) && right_of_end == m_client->get_cursor()) {
                 auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
                 if (buddy.has_value())
                     make_buddies(i, buddy.value());
@@ -125,29 +125,27 @@ void Highlighter::highlight_matching_token_pair()
     }
 }
 
-void Highlighter::attach(GUI::TextEditor& editor)
+void Highlighter::attach(HighlighterClient& client)
 {
-    ASSERT(!m_editor);
-    m_editor = editor;
+    ASSERT(!m_client);
+    m_client = &client;
 }
 
 void Highlighter::detach()
 {
-    ASSERT(m_editor);
-    m_editor = nullptr;
+    m_client = nullptr;
 }
 
 void Highlighter::cursor_did_change()
 {
-    ASSERT(m_editor);
-    auto& document = m_editor->document();
+    auto& document = m_client->get_document();
     if (m_has_brace_buddies) {
         if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < static_cast<int>(document.spans().size()))
             document.set_span_at_index(m_brace_buddies[0].index, m_brace_buddies[0].span_backup);
         if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < static_cast<int>(document.spans().size()))
             document.set_span_at_index(m_brace_buddies[1].index, m_brace_buddies[1].span_backup);
         m_has_brace_buddies = false;
-        m_editor->update();
+        m_client->do_update();
     }
     highlight_matching_token_pair();
 }
