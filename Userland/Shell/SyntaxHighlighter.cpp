@@ -25,16 +25,14 @@
  */
 
 #include <AK/TemporaryChange.h>
-#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <Shell/NodeVisitor.h>
 #include <Shell/Parser.h>
+#include <Shell/SyntaxHighlighter.h>
 
-namespace GUI {
-
-using namespace Shell;
+namespace Shell {
 
 enum class AugmentedTokenKind : u32 {
     __TokenTypeCount = (u32)AST::Node::Kind::__Count,
@@ -44,7 +42,7 @@ enum class AugmentedTokenKind : u32 {
 
 class HighlightVisitor : public AST::NodeVisitor {
 public:
-    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, const Gfx::Palette& palette, const TextDocument& document)
+    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, const Gfx::Palette& palette, const GUI::TextDocument& document)
         : m_spans(spans)
         , m_palette(palette)
         , m_document(document)
@@ -77,12 +75,12 @@ private:
 
         return new_line;
     }
-    void set_offset_range_end(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    void set_offset_range_end(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 1)
     {
         auto new_line = offset_line(line, offset);
         range.set_end({ new_line.line_number, new_line.line_column });
     }
-    void set_offset_range_start(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    void set_offset_range_start(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 1)
     {
         auto new_line = offset_line(line, offset);
         range.set_start({ new_line.line_number, new_line.line_column });
@@ -476,11 +474,11 @@ private:
 
     Vector<GUI::TextDocumentSpan>& m_spans;
     const Gfx::Palette& m_palette;
-    const TextDocument& m_document;
+    const GUI::TextDocument& m_document;
     bool m_is_first_in_command { false };
 };
 
-bool ShellSyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(void* token) const
 {
     if (!token)
         return false;
@@ -491,7 +489,7 @@ bool ShellSyntaxHighlighter::is_identifier(void* token) const
         || kind == (size_t)AST::Node::Kind::Tilde;
 }
 
-bool ShellSyntaxHighlighter::is_navigatable(void* token) const
+bool SyntaxHighlighter::is_navigatable(void* token) const
 {
     if (!token)
         return false;
@@ -500,7 +498,7 @@ bool ShellSyntaxHighlighter::is_navigatable(void* token) const
     return (size_t)kind == (size_t)AST::Node::Kind::BarewordLiteral;
 }
 
-void ShellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
     auto text = m_client->get_text();
 
@@ -522,9 +520,9 @@ void ShellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
     m_client->do_update();
 }
 
-Vector<Syntax::Highlighter::MatchingTokenPair> ShellSyntaxHighlighter::matching_token_pairs() const
+Vector<Syntax::Highlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<Syntax::Highlighter::MatchingTokenPair> pairs;
+    static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({
             (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen),
@@ -534,12 +532,12 @@ Vector<Syntax::Highlighter::MatchingTokenPair> ShellSyntaxHighlighter::matching_
     return pairs;
 }
 
-bool ShellSyntaxHighlighter::token_types_equal(void* token0, void* token1) const
+bool SyntaxHighlighter::token_types_equal(void* token0, void* token1) const
 {
     return token0 == token1;
 }
 
-ShellSyntaxHighlighter::~ShellSyntaxHighlighter()
+SyntaxHighlighter::~SyntaxHighlighter()
 {
 }
 

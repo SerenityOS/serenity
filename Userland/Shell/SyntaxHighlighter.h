@@ -28,12 +28,12 @@
 
 #include <LibSyntax/Highlighter.h>
 
-namespace GUI {
+namespace Shell {
 
-class ShellSyntaxHighlighter : public Syntax::Highlighter {
+class SyntaxHighlighter : public Syntax::Highlighter {
 public:
-    ShellSyntaxHighlighter() { }
-    virtual ~ShellSyntaxHighlighter() override;
+    SyntaxHighlighter() { }
+    virtual ~SyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;
     virtual bool is_navigatable(void*) const override;
