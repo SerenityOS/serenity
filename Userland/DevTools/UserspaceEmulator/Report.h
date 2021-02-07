@@ -34,7 +34,7 @@ template<typename... Ts>
 void reportln(const StringView& format, Ts... args)
 {
     if (g_report_to_debug)
-        dbgln(format, args...);
+        AK::vdbgln(format, AK::VariadicFormatParams { args... });
     else
         warnln(format, args...);
 }
