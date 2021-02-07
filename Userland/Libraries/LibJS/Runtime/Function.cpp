@@ -90,6 +90,7 @@ void Function::visit_edges(Visitor& visitor)
 {
     Object::visit_edges(visitor);
 
+    visitor.visit(m_home_object);
     visitor.visit(m_bound_this);
 
     for (auto argument : m_bound_arguments)
