@@ -346,13 +346,10 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
         first_thread = Thread::current()->clone(*this);
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
-        first_thread = adopt(*new Thread(*this));
+        auto thread_or_error = Thread::try_create(*this);
+        ASSERT(!thread_or_error.is_error());
+        first_thread = thread_or_error.release_value();
         first_thread->detach();
-    }
-
-    if (first_thread && !first_thread->was_created()) {
-        // We couldn't entirely create or clone this thread, abort
-        first_thread = nullptr;
     }
 }
 
@@ -810,12 +807,11 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
 
     // FIXME: Do something with guard pages?
 
-    auto thread = adopt(*new Thread(*this));
-    if (!thread->was_created()) {
-        // Could not fully create this thread
+    auto thread_or_error = Thread::try_create(*this);
+    if (thread_or_error.is_error())
         return {};
-    }
 
+    auto& thread = thread_or_error.value();
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
