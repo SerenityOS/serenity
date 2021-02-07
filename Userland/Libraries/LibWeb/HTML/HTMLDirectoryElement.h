@@ -35,7 +35,7 @@ class HTMLDirectoryElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDirectoryElementWrapper;
 
-    HTMLDirectoryElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLDirectoryElement(DOM::Document&, QualifiedName);
     virtual ~HTMLDirectoryElement() override;
 };
 

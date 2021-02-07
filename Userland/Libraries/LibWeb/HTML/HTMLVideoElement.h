@@ -34,7 +34,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
 public:
     using WrapperType = Bindings::HTMLVideoElementWrapper;
 
-    HTMLVideoElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLVideoElement(DOM::Document&, QualifiedName);
     virtual ~HTMLVideoElement() override;
 };
 

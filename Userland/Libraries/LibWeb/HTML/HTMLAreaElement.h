@@ -34,7 +34,7 @@ class HTMLAreaElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLAreaElementWrapper;
 
-    HTMLAreaElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLAreaElement(DOM::Document&, QualifiedName);
     virtual ~HTMLAreaElement() override;
 };
 

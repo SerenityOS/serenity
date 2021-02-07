@@ -34,7 +34,7 @@ class HTMLEmbedElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLEmbedElementWrapper;
 
-    HTMLEmbedElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLEmbedElement(DOM::Document&, QualifiedName);
     virtual ~HTMLEmbedElement() override;
 };
 

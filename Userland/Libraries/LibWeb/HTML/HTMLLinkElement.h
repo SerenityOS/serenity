@@ -37,7 +37,7 @@ class HTMLLinkElement final
 public:
     using WrapperType = Bindings::HTMLLinkElementWrapper;
 
-    HTMLLinkElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLLinkElement(DOM::Document&, QualifiedName);
     virtual ~HTMLLinkElement() override;
 
     virtual void inserted_into(Node&) override;

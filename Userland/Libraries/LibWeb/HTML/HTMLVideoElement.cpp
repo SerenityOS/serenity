@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLVideoElement::HTMLVideoElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLMediaElement(document, qualified_name)
+HTMLVideoElement::HTMLVideoElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLMediaElement(document, move(qualified_name))
 {
 }
 

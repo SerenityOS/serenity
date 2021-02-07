@@ -32,8 +32,8 @@
 
 namespace Web::HTML {
 
-HTMLBlinkElement::HTMLBlinkElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLBlinkElement::HTMLBlinkElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
     , m_timer(Core::Timer::construct())
 {
     m_timer->set_interval(500);

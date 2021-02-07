@@ -35,7 +35,7 @@
 
 namespace Web::SVG {
 
-SVGSVGElement::SVGSVGElement(DOM::Document& document, const QualifiedName& qualified_name)
+SVGSVGElement::SVGSVGElement(DOM::Document& document, QualifiedName qualified_name)
     : SVGGraphicsElement(document, qualified_name)
 {
 }

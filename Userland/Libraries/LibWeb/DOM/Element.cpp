@@ -48,9 +48,9 @@
 
 namespace Web::DOM {
 
-Element::Element(Document& document, const QualifiedName& qualified_name)
+Element::Element(Document& document, QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
-    , m_qualified_name(qualified_name)
+    , m_qualified_name(move(qualified_name))
 {
 }
 

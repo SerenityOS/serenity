@@ -34,7 +34,7 @@ class HTMLHeadingElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLHeadingElementWrapper;
 
-    HTMLHeadingElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLHeadingElement(DOM::Document&, QualifiedName);
     virtual ~HTMLHeadingElement() override;
 };
 

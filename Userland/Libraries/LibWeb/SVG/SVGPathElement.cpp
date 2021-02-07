@@ -431,8 +431,8 @@ bool PathDataParser::match_coordinate() const
     return !done() && (isdigit(ch()) || ch() == '-' || ch() == '+' || ch() == '.');
 }
 
-SVGPathElement::SVGPathElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : SVGGeometryElement(document, qualified_name)
+SVGPathElement::SVGPathElement(DOM::Document& document, QualifiedName qualified_name)
+    : SVGGeometryElement(document, move(qualified_name))
 {
 }
 

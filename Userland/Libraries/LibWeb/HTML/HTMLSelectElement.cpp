@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLSelectElement::HTMLSelectElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLSelectElement::HTMLSelectElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

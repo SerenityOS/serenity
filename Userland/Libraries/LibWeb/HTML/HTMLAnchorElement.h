@@ -34,7 +34,7 @@ class HTMLAnchorElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLAnchorElementWrapper;
 
-    HTMLAnchorElement(DOM::Document&, const QualifiedName& qualified_name);
+    HTMLAnchorElement(DOM::Document&, QualifiedName);
     virtual ~HTMLAnchorElement() override;
 
     String href() const { return attribute(HTML::AttributeNames::href); }
