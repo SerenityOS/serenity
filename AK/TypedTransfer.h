@@ -33,14 +33,14 @@ namespace AK {
 template<typename T>
 class TypedTransfer {
 public:
-    static size_t move(T* destination, T* source, size_t count)
+    static void move(T* destination, T* source, size_t count)
     {
         if (!count)
-            return 0;
+            return;
 
         if constexpr (Traits<T>::is_trivial()) {
             __builtin_memmove(destination, source, count * sizeof(T));
-            return count;
+            return;
         }
 
         for (size_t i = 0; i < count; ++i) {
@@ -50,7 +50,7 @@ public:
                 new (&destination[count - i - 1]) T(AK::move(source[count - i - 1]));
         }
 
-        return count;
+        return;
     }
 
     static size_t copy(T* destination, const T* source, size_t count)
