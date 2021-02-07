@@ -28,17 +28,17 @@
 
 #include <LibGUI/SyntaxHighlighter.h>
 
-namespace GUI {
+namespace Cpp {
 
-class CppSyntaxHighlighter final : public SyntaxHighlighter {
+class SyntaxHighlighter final : public GUI::SyntaxHighlighter {
 public:
-    CppSyntaxHighlighter() { }
-    virtual ~CppSyntaxHighlighter() override;
+    SyntaxHighlighter() { }
+    virtual ~SyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;
     virtual bool is_navigatable(void*) const override;
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::Cpp; }
+    virtual GUI::SyntaxLanguage language() const override { return GUI::SyntaxLanguage::Cpp; }
     virtual void rehighlight(Gfx::Palette) override;
 
 protected:

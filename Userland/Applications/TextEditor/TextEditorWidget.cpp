@@ -33,12 +33,12 @@
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
@@ -469,7 +469,7 @@ TextEditorWidget::TextEditorWidget()
     syntax_menu.add_action(*m_plain_text_highlight);
 
     m_cpp_highlight = GUI::Action::create_checkable("C++", [&](auto&) {
-        m_editor->set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        m_editor->set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_cpp_highlight);
