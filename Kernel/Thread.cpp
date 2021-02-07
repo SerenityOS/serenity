@@ -53,20 +53,29 @@ void Thread::initialize()
     g_tid_map = new HashMap<ThreadID, Thread*>();
 }
 
-Thread::Thread(NonnullRefPtr<Process> process)
+KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
+{
+    auto kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow);
+    if (!kernel_stack_region)
+        return ENOMEM;
+    return adopt(*new Thread(move(process), kernel_stack_region.release_nonnull()));
+}
+
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region)
     : m_process(move(process))
+    , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(m_process->name())
 {
     bool is_first_thread = m_process->add_thread(*this);
-    ArmedScopeGuard guard([&]() {
-        drop_thread_count(is_first_thread);
-    });
     if (is_first_thread) {
         // First thread gets TID == PID
         m_tid = m_process->pid().value();
     } else {
         m_tid = Process::allocate_pid().value();
     }
+
+    m_kernel_stack_region->set_name(String::formatted("Kernel stack (thread {})", m_tid.value()));
+
     {
         ScopedSpinLock lock(g_tid_map_lock);
         auto result = g_tid_map->set(m_tid, this);
@@ -126,7 +135,6 @@ Thread::Thread(NonnullRefPtr<Process> process)
     // The finalizer is responsible for dropping this reference once this
     // thread is ready to be cleaned up.
     ref();
-    guard.disarm();
 }
 
 Thread::~Thread()
@@ -881,11 +889,10 @@ RegisterState& Thread::get_register_dump_from_stack()
 
 RefPtr<Thread> Thread::clone(Process& process)
 {
-    auto clone = adopt(*new Thread(process));
-    if (!clone->was_created()) {
-        // We failed to clone this thread
+    auto thread_or_error = Thread::try_create(process);
+    if (thread_or_error.is_error())
         return {};
-    }
+    auto& clone = thread_or_error.value();
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));

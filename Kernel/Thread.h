@@ -99,7 +99,7 @@ public:
 
     static void initialize();
 
-    explicit Thread(NonnullRefPtr<Process>);
+    static KResultOr<NonnullRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
     ~Thread();
 
     static RefPtr<Thread> from_tid(ThreadID);
@@ -1157,15 +1157,15 @@ public:
     }
 #endif
 
-    bool was_created() const
+    bool is_handling_page_fault() const
     {
-        return m_kernel_stack_region;
+        return m_handling_page_fault;
     }
-
-    bool is_handling_page_fault() const { return m_handling_page_fault; }
     void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
 
 private:
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
+
     IntrusiveListNode m_process_thread_list_node;
     int m_runnable_priority { -1 };
 

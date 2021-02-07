@@ -60,11 +60,11 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
 
     // FIXME: Do something with guard pages?
 
-    auto thread = adopt(*new Thread(*this));
-    if (!thread->was_created()) {
-        // Could not fully create a thread
-        return -ENOMEM;
-    }
+    auto thread_or_error = Thread::try_create(*this);
+    if (thread_or_error.is_error())
+        return thread_or_error.error();
+
+    auto& thread = thread_or_error.value();
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
