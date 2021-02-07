@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
@@ -104,11 +105,7 @@ void Element::remove_attribute(const FlyString& name)
 
 bool Element::has_class(const FlyString& class_name) const
 {
-    for (auto& class_ : m_classes) {
-        if (class_ == class_name)
-            return true;
-    }
-    return false;
+    return any_of(m_classes.begin(), m_classes.end(), [&](auto& it) { return it == class_name; });
 }
 
 RefPtr<Layout::Node> Element::create_layout_node()
