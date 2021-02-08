@@ -483,6 +483,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // We commit to the new executable at this point. There is no turning back!
 
+    // Prevent other processes from attaching to us with ptrace while we're doing this.
+    Locker ptrace_locker(ptrace_lock());
+
     // Disable profiling temporarily in case it's running on this process.
     TemporaryChange profiling_disabler(m_profiling, false);
 
