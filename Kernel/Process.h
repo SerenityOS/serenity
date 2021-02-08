@@ -206,9 +206,6 @@ public:
     template<typename Callback>
     IterationDecision for_each_thread(Callback) const;
 
-    template<typename Callback>
-    IterationDecision for_each_thread_in_coredump(Callback) const;
-
     void die();
     void finalize();
 
