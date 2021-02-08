@@ -288,11 +288,10 @@ void Compositor::compose()
         auto compose_window_rect = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
             if (!window.is_fullscreen()) {
                 rect.for_each_intersected(frame_rects, [&](const Gfx::IntRect& intersected_rect) {
-                    // TODO: Should optimize this to use a backing buffer
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
                     dbgln_if(COMPOSE_DEBUG, "    render frame: {}", intersected_rect);
-                    window.frame().paint(painter);
+                    window.frame().paint(painter, intersected_rect);
                     return IterationDecision::Continue;
                 });
             }

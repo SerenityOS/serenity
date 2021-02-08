@@ -1515,7 +1515,9 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
     m_allow_hidpi_icons = allow_hidpi_icons;
     reload_config();
     for_each_window([&](Window& window) {
-        window.frame().set_button_icons();
+        auto& window_frame = window.frame();
+        window_frame.set_button_icons();
+        window_frame.scale_changed();
         return IterationDecision::Continue;
     });
 }
