@@ -157,7 +157,7 @@ int main(int argc, char** argv)
         PingPacket ping_packet;
         memset(&ping_packet, 0, sizeof(PingPacket));
 
-        ping_packet.header.type = 8; // Echo request
+        ping_packet.header.type = ICMP_ECHO;
         ping_packet.header.code = 0;
         ping_packet.header.un.echo.id = htons(pid);
         ping_packet.header.un.echo.sequence = htons(seq++);
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
                 return 1;
             }
 
-            if (pong_packet.header.type != 0)
+            if (pong_packet.header.type != ICMP_ECHOREPLY)
                 continue;
             if (pong_packet.header.code != 0)
                 continue;
