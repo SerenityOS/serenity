@@ -136,6 +136,10 @@ add_compile_definitions(DEBUG SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
 
+if (DBGLN_NO_COMPILETIME_FORMAT_CHECK)
+    add_compile_definitions(DBGLN_NO_COMPILETIME_FORMAT_CHECK)
+endif()
+
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Userland/Libraries/LibC)
