@@ -29,7 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/Notifier.h>
+#include <LibCore/FileWatcher.h>
 #include <LibGUI/Model.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -63,7 +63,7 @@ public:
     };
 
     struct Node {
-        ~Node() { close(m_watch_fd); }
+        ~Node() { }
 
         String name;
         String symlink_target;
@@ -106,8 +106,7 @@ public:
 
         bool m_selected { false };
 
-        int m_watch_fd { -1 };
-        RefPtr<Core::Notifier> m_notifier;
+        RefPtr<Core::FileWatcher> m_file_watcher;
 
         int m_error { 0 };
         bool m_parent_of_root { false };
