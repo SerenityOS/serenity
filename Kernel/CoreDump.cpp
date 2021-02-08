@@ -34,7 +34,6 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
-#include <Kernel/Ptrace.h>
 #include <Kernel/RTC.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/ProcessPagingScope.h>
@@ -246,7 +245,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
-        Ptrace::copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
+        copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
         entry_buff.append((void*)&info, sizeof(info));
 

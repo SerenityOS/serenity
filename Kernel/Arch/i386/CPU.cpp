@@ -2264,6 +2264,40 @@ void Processor::set_thread_specific(u8* data, size_t len)
     descriptor.set_limit(len);
 }
 
+void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
+{
+    ptrace_regs.eax = kernel_regs.eax,
+    ptrace_regs.ecx = kernel_regs.ecx,
+    ptrace_regs.edx = kernel_regs.edx,
+    ptrace_regs.ebx = kernel_regs.ebx,
+    ptrace_regs.esp = kernel_regs.userspace_esp,
+    ptrace_regs.ebp = kernel_regs.ebp,
+    ptrace_regs.esi = kernel_regs.esi,
+    ptrace_regs.edi = kernel_regs.edi,
+    ptrace_regs.eip = kernel_regs.eip,
+    ptrace_regs.eflags = kernel_regs.eflags,
+    ptrace_regs.cs = 0;
+    ptrace_regs.ss = 0;
+    ptrace_regs.ds = 0;
+    ptrace_regs.es = 0;
+    ptrace_regs.fs = 0;
+    ptrace_regs.gs = 0;
+}
+
+void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, const PtraceRegisters& ptrace_regs)
+{
+    kernel_regs.eax = ptrace_regs.eax;
+    kernel_regs.ecx = ptrace_regs.ecx;
+    kernel_regs.edx = ptrace_regs.edx;
+    kernel_regs.ebx = ptrace_regs.ebx;
+    kernel_regs.esp = ptrace_regs.esp;
+    kernel_regs.ebp = ptrace_regs.ebp;
+    kernel_regs.esi = ptrace_regs.esi;
+    kernel_regs.edi = ptrace_regs.edi;
+    kernel_regs.eip = ptrace_regs.eip;
+    kernel_regs.eflags = (kernel_regs.eflags & ~safe_eflags_mask) | (ptrace_regs.eflags & safe_eflags_mask);
+}
+
 }
 
 #ifdef DEBUG
