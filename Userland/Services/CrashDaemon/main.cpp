@@ -25,7 +25,7 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <LibCore/DirectoryWatcher.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <serenity.h>
@@ -89,11 +89,11 @@ int main()
         return 1;
     }
 
-    Core::DirectoryWatcher watcher { "/tmp/coredump" };
+    Core::BlockingFileWatcher watcher { "/tmp/coredump" };
     while (true) {
         auto event = watcher.wait_for_event();
         ASSERT(event.has_value());
-        if (event.value().type != Core::DirectoryWatcher::Event::Type::ChildAdded)
+        if (event.value().type != Core::FileWatcherEvent::Type::ChildAdded)
             continue;
         auto coredump_path = event.value().child_path;
         dbgln("New coredump file: {}", coredump_path);
