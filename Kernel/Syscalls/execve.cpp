@@ -155,7 +155,12 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     return new_esp;
 }
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description, FlatPtr load_offset, Process::ShouldAllocateTls should_allocate_tls)
+enum class ShouldAllocateTls {
+    No,
+    Yes,
+};
+
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls should_allocate_tls)
 {
     auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
@@ -190,7 +195,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
     KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
-            ASSERT(should_allocate_tls == Process::ShouldAllocateTls::Yes);
+            ASSERT(should_allocate_tls == ShouldAllocateTls::Yes);
             ASSERT(program_header.size_in_memory());
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {

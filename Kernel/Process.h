@@ -390,11 +390,6 @@ public:
 
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    enum class ShouldAllocateTls {
-        No = 0,
-        Yes,
-    };
-
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
     KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description);
 
