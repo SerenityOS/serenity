@@ -70,6 +70,14 @@ public:
 
     SpinLock<u32>& get_lock() const { return m_lock; }
 
+    size_t amount_clean_inode() const;
+    size_t amount_dirty_private() const;
+    size_t amount_virtual() const;
+    size_t amount_resident() const;
+    size_t amount_shared() const;
+    size_t amount_purgeable_volatile() const;
+    size_t amount_purgeable_nonvolatile() const;
+
 private:
     Space(Process&, NonnullRefPtr<PageDirectory>);
 

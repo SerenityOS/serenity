@@ -28,6 +28,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AnonymousVMObject.h>
+#include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Space.h>
 
@@ -217,6 +218,93 @@ void Space::remove_all_regions(Badge<Process>)
 {
     ScopedSpinLock lock(m_lock);
     m_regions.clear();
+}
+
+size_t Space::amount_dirty_private() const
+{
+    // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
+    //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
+    //        That's probably a situation that needs to be looked at in general.
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        if (!region.is_shared())
+            amount += region.amount_dirty();
+    }
+    return amount;
+}
+
+size_t Space::amount_clean_inode() const
+{
+    HashTable<const InodeVMObject*> vmobjects;
+    {
+        ScopedSpinLock lock(m_lock);
+        for (auto& region : m_regions) {
+            if (region.vmobject().is_inode())
+                vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+        }
+    }
+    size_t amount = 0;
+    for (auto& vmobject : vmobjects)
+        amount += vmobject->amount_clean();
+    return amount;
+}
+
+size_t Space::amount_virtual() const
+{
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        amount += region.size();
+    }
+    return amount;
+}
+
+size_t Space::amount_resident() const
+{
+    // FIXME: This will double count if multiple regions use the same physical page.
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        amount += region.amount_resident();
+    }
+    return amount;
+}
+
+size_t Space::amount_shared() const
+{
+    // FIXME: This will double count if multiple regions use the same physical page.
+    // FIXME: It doesn't work at the moment, since it relies on PhysicalPage ref counts,
+    //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
+    //        so that every Region contributes +1 ref to each of its PhysicalPages.
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        amount += region.amount_shared();
+    }
+    return amount;
+}
+
+size_t Space::amount_purgeable_volatile() const
+{
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        if (region.vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
+            amount += region.amount_resident();
+    }
+    return amount;
+}
+
+size_t Space::amount_purgeable_nonvolatile() const
+{
+    size_t amount = 0;
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        if (region.vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
+            amount += region.amount_resident();
+    }
+    return amount;
 }
 
 }
