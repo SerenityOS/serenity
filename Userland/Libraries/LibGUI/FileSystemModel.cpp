@@ -136,28 +136,23 @@ void FileSystemModel::Node::traverse_if_needed()
         children.append(move(child));
     }
 
-    if (m_watch_fd >= 0)
-        return;
+    if (!m_file_watcher) {
 
-    m_watch_fd = watch_file(full_path.characters(), full_path.length());
-    if (m_watch_fd < 0) {
-        perror("watch_file");
-        return;
+        // We are not already watching this file, create a new watcher
+        auto watcher_or_error = Core::FileWatcher::watch(full_path);
+
+        // Note : the watcher may not be created (e.g. we do not have access rights.) This is expected, just don't watch if that's the case.
+        if (!watcher_or_error.is_error()) {
+            m_file_watcher = watcher_or_error.release_value();
+            m_file_watcher->on_change = [this](auto) {
+                has_traversed = false;
+                mode = 0;
+                children.clear();
+                reify_if_needed();
+                m_model.did_update();
+            };
+        }
     }
-    fcntl(m_watch_fd, F_SETFD, FD_CLOEXEC);
-    dbgln("Watching {} for changes, m_watch_fd={}", full_path, m_watch_fd);
-    m_notifier = Core::Notifier::construct(m_watch_fd, Core::Notifier::Event::Read);
-    m_notifier->on_ready_to_read = [this] {
-        char buffer[32];
-        int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
-        ASSERT(rc >= 0);
-
-        has_traversed = false;
-        mode = 0;
-        children.clear();
-        reify_if_needed();
-        m_model.did_update();
-    };
 }
 
 void FileSystemModel::Node::reify_if_needed()
