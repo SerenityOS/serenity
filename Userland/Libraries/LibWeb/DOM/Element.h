@@ -73,7 +73,7 @@ public:
             callback(attribute.name(), attribute.value());
     }
 
-    bool has_class(const FlyString&) const;
+    bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     const Vector<FlyString>& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
