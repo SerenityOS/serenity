@@ -45,7 +45,9 @@ public:
     ~WindowFrame();
 
     Gfx::IntRect rect() const;
-    void paint(Gfx::Painter&);
+    void paint(Gfx::Painter&, const Gfx::IntRect&);
+    void render(Gfx::Painter&);
+    void render_to_cache();
     void on_mouse_event(const MouseEvent&);
     void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_title_bar();
@@ -62,15 +64,24 @@ public:
 
     void start_flash_animation();
 
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
+    void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
+
+    void set_opacity(float);
     float opacity() const { return m_opacity; }
 
     bool is_opaque() const
     {
         if (opacity() < 1.0f)
             return false;
-        //if (has_alpha_channel())
-        //    return false;
+        if (has_alpha_channel())
+            return false;
         return true;
+    }
+
+    void scale_changed()
+    {
+        m_dirty = true;
     }
 
 private:
@@ -85,9 +96,16 @@ private:
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
 
+    RefPtr<Gfx::Bitmap> m_top_bottom;
+    RefPtr<Gfx::Bitmap> m_left_right;
+    int m_bottom_y { 0 }; // y-offset in m_top_bottom for the bottom half
+    int m_right_x { 0 };  // x-offset in m_left_right for the right half
+
     RefPtr<Core::Timer> m_flash_timer;
     size_t m_flash_counter { 0 };
     float m_opacity { 1 };
+    bool m_has_alpha_channel { false };
+    bool m_dirty { false };
 };
 
 }
