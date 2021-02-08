@@ -1089,11 +1089,6 @@ public:
     template<typename Callback>
     static IterationDecision for_each(Callback);
 
-    [[nodiscard]] static bool is_runnable_state(Thread::State state)
-    {
-        return state == Thread::State::Running || state == Thread::State::Runnable;
-    }
-
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 4 * MiB;
 
