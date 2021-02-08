@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include <AK/Vector.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
+#include <LibC/sys/arch/i386/regs.h>
 
 #define PAGE_SIZE 4096
 #define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
@@ -493,6 +494,9 @@ struct [[gnu::packed]] RegisterState {
 
 #define REGISTER_STATE_SIZE (19 * 4)
 static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
+
+void copy_kernel_registers_into_ptrace_registers(PtraceRegisters&, const RegisterState&);
+void copy_ptrace_registers_into_kernel_registers(RegisterState&, const PtraceRegisters&);
 
 struct [[gnu::aligned(16)]] FPUState
 {

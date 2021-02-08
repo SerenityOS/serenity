@@ -104,7 +104,6 @@ set(KERNEL_SOURCES
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
-    Ptrace.cpp
     RTC.cpp
     Random.cpp
     Scheduler.cpp
