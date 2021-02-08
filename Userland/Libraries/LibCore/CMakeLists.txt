@@ -5,11 +5,11 @@ set(SOURCES
     ConfigFile.cpp
     Command.cpp
     DateTime.cpp
-    DirectoryWatcher.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
+    FileWatcher.cpp
     File.cpp
     GetPassword.cpp
     Gzip.cpp
