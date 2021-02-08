@@ -62,6 +62,17 @@ public:
 
     void start_flash_animation();
 
+    float opacity() const { return m_opacity; }
+
+    bool is_opaque() const
+    {
+        if (opacity() < 1.0f)
+            return false;
+        //if (has_alpha_channel())
+        //    return false;
+        return true;
+    }
+
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
@@ -76,6 +87,7 @@ private:
 
     RefPtr<Core::Timer> m_flash_timer;
     size_t m_flash_counter { 0 };
+    float m_opacity { 1 };
 };
 
 }
