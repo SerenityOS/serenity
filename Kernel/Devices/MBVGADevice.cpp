@@ -64,7 +64,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const R
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     if (!vmobject)
         return ENOMEM;
-    return process.allocate_region_with_vmobject(
+    return process.space().allocate_region_with_vmobject(
         range,
         vmobject.release_nonnull(),
         0,

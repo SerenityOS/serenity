@@ -73,7 +73,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
     Range range = { VirtualAddress(address), sizeof(u32) };
-    auto* region = find_region_containing(range);
+    auto* region = space().find_region_containing(range);
     if (!region)
         return EFAULT;
     ProcessPagingScope scope(*this);

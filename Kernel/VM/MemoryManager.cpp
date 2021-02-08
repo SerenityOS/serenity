@@ -401,29 +401,29 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
     return nullptr;
 }
 
-Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress vaddr)
+Region* MemoryManager::user_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
-    ScopedSpinLock lock(s_mm_lock);
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
-    for (auto& region : process.m_regions) {
+    ScopedSpinLock lock(space.get_lock());
+    for (auto& region : space.regions()) {
         if (region.contains(vaddr))
             return &region;
     }
     return nullptr;
 }
 
-Region* MemoryManager::find_region_from_vaddr(Process& process, VirtualAddress vaddr)
+Region* MemoryManager::find_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
-    if (auto* region = user_region_from_vaddr(process, vaddr))
+    if (auto* region = user_region_from_vaddr(space, vaddr))
         return region;
     return kernel_region_from_vaddr(vaddr);
 }
 
-const Region* MemoryManager::find_region_from_vaddr(const Process& process, VirtualAddress vaddr)
+const Region* MemoryManager::find_region_from_vaddr(const Space& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
-    if (auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr))
+    if (auto* region = user_region_from_vaddr(const_cast<Space&>(space), vaddr))
         return region;
     return kernel_region_from_vaddr(vaddr);
 }
@@ -436,8 +436,8 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     auto page_directory = PageDirectory::find_by_cr3(read_cr3());
     if (!page_directory)
         return nullptr;
-    ASSERT(page_directory->process());
-    return user_region_from_vaddr(*page_directory->process(), vaddr);
+    ASSERT(page_directory->space());
+    return user_region_from_vaddr(*page_directory->space(), vaddr);
 }
 
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
@@ -735,12 +735,17 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
+    enter_space(process.space());
+}
+
+void MemoryManager::enter_space(Space& space)
+{
     auto current_thread = Thread::current();
     ASSERT(current_thread != nullptr);
     ScopedSpinLock lock(s_mm_lock);
 
-    current_thread->tss().cr3 = process.page_directory().cr3();
-    write_cr3(process.page_directory().cr3());
+    current_thread->tss().cr3 = space.page_directory().cr3();
+    write_cr3(space.page_directory().cr3());
 }
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
@@ -846,7 +851,7 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
     if (!is_user_address(vaddr))
         return false;
     ScopedSpinLock lock(s_mm_lock);
-    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+    auto* region = user_region_from_vaddr(const_cast<Process&>(process).space(), vaddr);
     return region && region->is_user_accessible() && region->is_stack();
 }
 

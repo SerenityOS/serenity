@@ -176,7 +176,7 @@ void syscall_handler(TrapFrame* trap)
         ASSERT_NOT_REACHED();
     }
 
-    auto* calling_region = MM.find_region_from_vaddr(process, VirtualAddress(regs.eip));
+    auto* calling_region = MM.find_region_from_vaddr(process.space(), VirtualAddress(regs.eip));
     if (!calling_region) {
         dbgln("Syscall from {:p} which has no associated region", regs.eip);
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
@@ -189,7 +189,7 @@ void syscall_handler(TrapFrame* trap)
         ASSERT_NOT_REACHED();
     }
 
-    if (process.enforces_syscall_regions() && !calling_region->is_syscall_region()) {
+    if (process.space().enforces_syscall_regions() && !calling_region->is_syscall_region()) {
         dbgln("Syscall from non-syscall region");
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
         ASSERT_NOT_REACHED();

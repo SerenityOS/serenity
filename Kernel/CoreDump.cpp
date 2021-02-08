@@ -59,7 +59,7 @@ OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& 
 CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
     : m_process(move(process))
     , m_fd(move(fd))
-    , m_num_program_headers(m_process->m_regions.size() + 1) // +1 for NOTE segment
+    , m_num_program_headers(m_process->space().region_count() + 1) // +1 for NOTE segment
 {
 }
 
@@ -137,7 +137,7 @@ KResult CoreDump::write_elf_header()
 KResult CoreDump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(Elf32_Ehdr) + m_num_program_headers * sizeof(Elf32_Phdr);
-    for (auto& region : m_process->m_regions) {
+    for (auto& region : m_process->space().regions()) {
         Elf32_Phdr phdr {};
 
         phdr.p_type = PT_LOAD;
@@ -178,7 +178,7 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
 KResult CoreDump::write_regions()
 {
-    for (auto& region : m_process->m_regions) {
+    for (auto& region : m_process->space().regions()) {
         if (region.is_kernel())
             continue;
 
@@ -258,13 +258,13 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 ByteBuffer CoreDump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
-    for (size_t region_index = 0; region_index < m_process->m_regions.size(); ++region_index) {
+    for (size_t region_index = 0; region_index < m_process->space().region_count(); ++region_index) {
 
         ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
-        auto& region = m_process->m_regions[region_index];
+        auto& region = m_process->space().regions()[region_index];
         info.region_start = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
         info.region_end = reinterpret_cast<uint32_t>(region.vaddr().as_ptr() + region.size());
         info.program_header_index = region_index;
@@ -316,7 +316,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
 
 KResult CoreDump::write()
 {
-    ScopedSpinLock lock(m_process->get_lock());
+    ScopedSpinLock lock(m_process->space().get_lock());
     ProcessPagingScope scope(m_process);
 
     ByteBuffer notes_segment = create_notes_segment_data();

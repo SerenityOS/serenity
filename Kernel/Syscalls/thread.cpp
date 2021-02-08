@@ -80,7 +80,7 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
     tss.eflags = 0x0202;
-    tss.cr3 = page_directory().cr3();
+    tss.cr3 = space().page_directory().cr3();
     tss.esp = (u32)user_stack_address;
 
     auto tsr_result = thread->make_thread_specific_region({});

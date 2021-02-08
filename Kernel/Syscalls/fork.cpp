@@ -47,15 +47,14 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_has_execpromises = m_has_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
-    child->m_enforces_syscall_regions = m_enforces_syscall_regions;
     child->m_fds = m_fds;
     child->m_sid = m_sid;
     child->m_pg = m_pg;
     child->m_umask = m_umask;
+    child->m_extra_gids = m_extra_gids;
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
-
-    child->m_extra_gids = m_extra_gids;
+    child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
 
     auto& child_tss = child_first_thread->m_tss;
     child_tss.eax = 0; // fork() returns 0 in the child :^)
@@ -80,8 +79,8 @@ pid_t Process::sys$fork(RegisterState& regs)
 #endif
 
     {
-        ScopedSpinLock lock(m_lock);
-        for (auto& region : m_regions) {
+        ScopedSpinLock lock(space().get_lock());
+        for (auto& region : space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", &region, region.name(), region.vaddr());
             auto region_clone = region.clone(*child);
             if (!region_clone) {
@@ -90,8 +89,8 @@ pid_t Process::sys$fork(RegisterState& regs)
                 return -ENOMEM;
             }
 
-            auto& child_region = child->add_region(region_clone.release_nonnull());
-            child_region.map(child->page_directory());
+            auto& child_region = child->space().add_region(region_clone.release_nonnull());
+            child_region.map(child->space().page_directory());
 
             if (&region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;

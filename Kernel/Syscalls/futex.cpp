@@ -147,7 +147,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     if (!is_private) {
         if (!Kernel::is_user_range(VirtualAddress(user_address_or_offset), sizeof(u32)))
             return -EFAULT;
-        auto region = MM.find_region_from_vaddr(*Process::current(), VirtualAddress(user_address_or_offset));
+        auto region = MM.find_region_from_vaddr(space(), VirtualAddress(user_address_or_offset));
         if (!region)
             return -EFAULT;
         vmobject = region->vmobject();
@@ -159,7 +159,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         case FUTEX_WAKE_OP: {
             if (!Kernel::is_user_range(VirtualAddress(user_address_or_offset2), sizeof(u32)))
                 return -EFAULT;
-            auto region2 = MM.find_region_from_vaddr(*Process::current(), VirtualAddress(user_address_or_offset2));
+            auto region2 = MM.find_region_from_vaddr(space(), VirtualAddress(user_address_or_offset2));
             if (!region2)
                 return -EFAULT;
             vmobject2 = region2->vmobject();

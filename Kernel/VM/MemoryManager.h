@@ -143,7 +143,8 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
-    void enter_process_paging_scope(Process&);
+    static void enter_process_paging_scope(Process&);
+    static void enter_space(Space&);
 
     bool validate_user_stack(const Process&, VirtualAddress) const;
 
@@ -196,8 +197,8 @@ public:
         }
     }
 
-    static Region* find_region_from_vaddr(Process&, VirtualAddress);
-    static const Region* find_region_from_vaddr(const Process&, VirtualAddress);
+    static Region* find_region_from_vaddr(Space&, VirtualAddress);
+    static const Region* find_region_from_vaddr(const Space&, VirtualAddress);
 
     void dump_kernel_regions();
 
@@ -225,7 +226,7 @@ private:
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(const PageDirectory*, VirtualAddress, size_t page_count = 1);
 
-    static Region* user_region_from_vaddr(Process&, VirtualAddress);
+    static Region* user_region_from_vaddr(Space&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
     static Region* find_region_from_vaddr(VirtualAddress);

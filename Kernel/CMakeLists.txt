@@ -212,6 +212,7 @@ set(KERNEL_SOURCES
     VM/RangeAllocator.cpp
     VM/Region.cpp
     VM/SharedInodeVMObject.cpp
+    VM/Space.cpp
     VM/VMObject.cpp
     WaitQueue.cpp
     init.cpp
