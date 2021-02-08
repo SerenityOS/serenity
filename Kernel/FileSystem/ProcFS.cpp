@@ -806,13 +806,13 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
         process_object.add("name", process.name());
         process_object.add("executable", process.executable() ? process.executable()->absolute_path() : "");
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
-        process_object.add("amount_virtual", process.amount_virtual());
-        process_object.add("amount_resident", process.amount_resident());
-        process_object.add("amount_dirty_private", process.amount_dirty_private());
-        process_object.add("amount_clean_inode", process.amount_clean_inode());
-        process_object.add("amount_shared", process.amount_shared());
-        process_object.add("amount_purgeable_volatile", process.amount_purgeable_volatile());
-        process_object.add("amount_purgeable_nonvolatile", process.amount_purgeable_nonvolatile());
+        process_object.add("amount_virtual", process.space().amount_virtual());
+        process_object.add("amount_resident", process.space().amount_resident());
+        process_object.add("amount_dirty_private", process.space().amount_dirty_private());
+        process_object.add("amount_clean_inode", process.space().amount_clean_inode());
+        process_object.add("amount_shared", process.space().amount_shared());
+        process_object.add("amount_purgeable_volatile", process.space().amount_purgeable_volatile());
+        process_object.add("amount_purgeable_nonvolatile", process.space().amount_purgeable_nonvolatile());
         process_object.add("dumpable", process.is_dumpable());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
