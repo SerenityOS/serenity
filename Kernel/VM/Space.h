@@ -68,7 +68,7 @@ public:
 
     void remove_all_regions(Badge<Process>);
 
-    SpinLock<u32>& get_lock() const { return m_lock; }
+    RecursiveSpinLock& get_lock() const { return m_lock; }
 
     size_t amount_clean_inode() const;
     size_t amount_dirty_private() const;
@@ -82,7 +82,7 @@ private:
     Space(Process&, NonnullRefPtr<PageDirectory>);
 
     Process* m_process { nullptr };
-    mutable SpinLock<u32> m_lock;
+    mutable RecursiveSpinLock m_lock;
 
     RefPtr<PageDirectory> m_page_directory;
 
