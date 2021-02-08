@@ -215,19 +215,11 @@ private:
 
     void register_reserved_ranges();
 
-    enum class AccessSpace { Kernel,
-        User };
-    enum class AccessType { Read,
-        Write };
-    template<AccessSpace, AccessType>
-    bool validate_range(const Process&, VirtualAddress, size_t) const;
-
     void register_vmobject(VMObject&);
     void unregister_vmobject(VMObject&);
     void register_region(Region&);
     void unregister_region(Region&);
 
-    void detect_cpu_features();
     void protect_kernel_image();
     void parse_memory_map();
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);

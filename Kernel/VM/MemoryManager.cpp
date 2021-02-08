@@ -841,41 +841,6 @@ void MemoryManager::unquickmap_page()
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
-template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
-bool MemoryManager::validate_range(const Process& process, VirtualAddress base_vaddr, size_t size) const
-{
-    ASSERT(s_mm_lock.is_locked());
-    ASSERT(size);
-    if (base_vaddr > base_vaddr.offset(size)) {
-        dbgln("Shenanigans! Asked to validate wrappy {} size={}", base_vaddr, size);
-        return false;
-    }
-
-    VirtualAddress vaddr = base_vaddr.page_base();
-    VirtualAddress end_vaddr = base_vaddr.offset(size - 1).page_base();
-    if (end_vaddr < vaddr) {
-        dbgln("Shenanigans! Asked to validate {} size={}", base_vaddr, size);
-        return false;
-    }
-    const Region* region = nullptr;
-    while (vaddr <= end_vaddr) {
-        if (!region || !region->contains(vaddr)) {
-            if (space == AccessSpace::Kernel)
-                region = kernel_region_from_vaddr(vaddr);
-            if (!region || !region->contains(vaddr))
-                region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
-            if (!region
-                || (space == AccessSpace::User && !region->is_user_accessible())
-                || (access_type == AccessType::Read && !region->is_readable())
-                || (access_type == AccessType::Write && !region->is_writable())) {
-                return false;
-            }
-        }
-        vaddr = region->range().end();
-    }
-    return true;
-}
-
 bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress vaddr) const
 {
     if (!is_user_address(vaddr))
