@@ -33,6 +33,7 @@
 #include <WindowServer/Button.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/Screen.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowFrame.h>
 #include <WindowServer/WindowManager.h>
@@ -200,13 +201,53 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
 }
 
-void WindowFrame::paint(Gfx::Painter& painter)
+void WindowFrame::paint(Gfx::Painter& painter, const Gfx::IntRect& rect)
+{
+    render_to_cache();
+
+    auto frame_rect = this->rect();
+    auto window_rect = m_window.rect();
+
+    if (m_top_bottom) {
+        auto top_bottom_height = frame_rect.height() - window_rect.height();
+        if (m_bottom_y > 0) {
+            // We have a top piece
+            auto src_rect = rect.intersected({ frame_rect.location(), { frame_rect.width(), m_bottom_y } });
+            if (!src_rect.is_empty())
+                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-frame_rect.location()), m_opacity);
+        }
+        if (m_bottom_y < top_bottom_height) {
+            // We have a bottom piece
+            Gfx::IntRect rect_in_frame { frame_rect.x(), window_rect.bottom() + 1, frame_rect.width(), top_bottom_height - m_bottom_y };
+            auto src_rect = rect.intersected(rect_in_frame);
+            if (!src_rect.is_empty())
+                painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-rect_in_frame.x(), -rect_in_frame.y() + m_bottom_y), m_opacity);
+        }
+    }
+
+    if (m_left_right) {
+        auto left_right_width = frame_rect.width() - window_rect.width();
+        if (m_right_x > 0) {
+            // We have a left piece
+            Gfx::IntRect rect_in_frame { frame_rect.x(), window_rect.y(), m_right_x, window_rect.height() };
+            auto src_rect = rect.intersected(rect_in_frame);
+            if (!src_rect.is_empty())
+                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.location()), m_opacity);
+        }
+        if (m_right_x < left_right_width) {
+            // We have a right piece
+            Gfx::IntRect rect_in_frame { window_rect.right() + 1, window_rect.y(), left_right_width - m_right_x, window_rect.height() };
+            auto src_rect = rect.intersected(rect_in_frame);
+            if (!src_rect.is_empty())
+                painter.blit(src_rect.location(), *m_left_right, src_rect.translated(-rect_in_frame.x() + m_right_x, -rect_in_frame.y()), m_opacity);
+        }
+    }
+}
+
+void WindowFrame::render(Gfx::Painter& painter)
 {
     if (m_window.is_frameless())
         return;
-
-    Gfx::PainterStateSaver saver(painter);
-    painter.translate(rect().location());
 
     if (m_window.type() == WindowType::Notification)
         paint_notification_frame(painter);
@@ -218,6 +259,70 @@ void WindowFrame::paint(Gfx::Painter& painter)
     for (auto& button : m_buttons) {
         button.paint(painter);
     }
+}
+
+void WindowFrame::render_to_cache()
+{
+    if (!m_dirty)
+        return;
+    m_dirty = true;
+
+    static RefPtr<Gfx::Bitmap> s_tmp_bitmap;
+    auto frame_rect = rect();
+    auto window_rect = m_window.rect();
+    auto scale = Screen::the().scale_factor();
+    if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(frame_rect.size()) || s_tmp_bitmap->scale() != scale)
+        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, frame_rect.size(), scale);
+
+    Gfx::Painter painter(*s_tmp_bitmap);
+    painter.fill_rect({ { 0, 0 }, frame_rect.size() }, Color::White);
+    render(painter);
+
+    auto top_bottom_height = frame_rect.height() - window_rect.height();
+    if (top_bottom_height > 0) {
+        if (!m_top_bottom || m_top_bottom->width() != frame_rect.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale)
+            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { frame_rect.width(), top_bottom_height }, scale);
+        m_bottom_y = window_rect.y() - frame_rect.y();
+        ASSERT(m_bottom_y >= 0);
+
+        Gfx::Painter top_bottom_painter(*m_top_bottom);
+        if (m_bottom_y > 0)
+            top_bottom_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, 0, frame_rect.width(), m_bottom_y });
+        if (m_bottom_y < top_bottom_height)
+            top_bottom_painter.blit({ 0, m_bottom_y }, *s_tmp_bitmap, { 0, frame_rect.height() - (frame_rect.bottom() - window_rect.bottom()), frame_rect.width(), top_bottom_height - m_bottom_y });
+    } else {
+        m_top_bottom = nullptr;
+        m_bottom_y = 0;
+    }
+
+    auto left_right_width = frame_rect.width() - window_rect.width();
+    if (left_right_width > 0) {
+        if (!m_left_right || m_left_right->height() != frame_rect.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale)
+            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { left_right_width, frame_rect.height() }, scale);
+        m_right_x = window_rect.x() - frame_rect.x();
+        ASSERT(m_right_x >= 0);
+
+        Gfx::Painter left_right_painter(*m_left_right);
+        if (m_right_x > 0)
+            left_right_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, m_bottom_y, m_right_x, window_rect.height() });
+        if (m_right_x < left_right_width)
+            left_right_painter.blit({ m_right_x, 0 }, *s_tmp_bitmap, { (window_rect.right() - frame_rect.x()) + 1, m_bottom_y, frame_rect.width() - (frame_rect.right() - window_rect.right()), window_rect.height() });
+    } else {
+        m_left_right = nullptr;
+        m_right_x = 0;
+    }
+}
+
+void WindowFrame::set_opacity(float opacity)
+{
+    if (m_opacity == opacity)
+        return;
+    bool was_opaque = is_opaque();
+    m_opacity = opacity;
+    if (was_opaque != is_opaque())
+        Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen(rect());
+    WindowManager::the().notify_opacity_changed(m_window);
 }
 
 static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
@@ -239,6 +344,7 @@ Gfx::IntRect WindowFrame::rect() const
 
 void WindowFrame::invalidate_title_bar()
 {
+    m_dirty = true;
     invalidate(title_bar_rect());
 }
 
@@ -255,6 +361,9 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
     layout_buttons();
 
     auto old_frame_rect = frame_rect_for_window(m_window, old_rect);
+    auto new_frame_rect = frame_rect_for_window(m_window, new_rect);
+    if (old_frame_rect.width() != new_frame_rect.width())
+        m_dirty = true;
     auto& compositor = Compositor::the();
     for (auto& dirty : old_frame_rect.shatter(rect()))
         compositor.invalidate_screen(dirty);
