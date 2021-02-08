@@ -487,10 +487,15 @@ NonnullRefPtrVector<Element> Document::get_elements_by_name(const String& name) 
 
 NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString& tag_name) const
 {
+    // FIXME: Support "*" for tag_name
+    // https://dom.spec.whatwg.org/#concept-getelementsbytagname
     NonnullRefPtrVector<Element> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.local_name() == tag_name)
+        if (element.namespace_() == Namespace::HTML
+                ? element.local_name().to_lowercase() == tag_name.to_lowercase()
+                : element.local_name() == tag_name) {
             elements.append(element);
+        }
         return IterationDecision::Continue;
     });
     return elements;
