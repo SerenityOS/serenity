@@ -47,6 +47,19 @@
 
 namespace Kernel {
 
+struct LoadResult {
+    OwnPtr<Space> space;
+    FlatPtr load_base { 0 };
+    FlatPtr entry_eip { 0 };
+    size_t size { 0 };
+    FlatPtr program_headers { 0 };
+    size_t num_program_headers { 0 };
+    WeakPtr<Region> tls_region;
+    size_t tls_size { 0 };
+    size_t tls_alignment { 0 };
+    WeakPtr<Region> stack_region;
+};
+
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd);
 
 static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
@@ -142,7 +155,7 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     return new_esp;
 }
 
-KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls should_allocate_tls)
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description, FlatPtr load_offset, Process::ShouldAllocateTls should_allocate_tls)
 {
     auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
@@ -172,10 +185,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     String elf_name = object_description.absolute_path();
     ASSERT(!Processor::current().in_critical());
 
+    MemoryManager::enter_space(*new_space);
+
     KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
-            ASSERT(should_allocate_tls == ShouldAllocateTls::Yes);
+            ASSERT(should_allocate_tls == Process::ShouldAllocateTls::Yes);
             ASSERT(program_header.size_in_memory());
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
@@ -184,13 +199,13 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
                 return IterationDecision::Break;
             }
 
-            auto range = allocate_range({}, program_header.size_in_memory());
+            auto range = new_space->allocate_range({}, program_header.size_in_memory());
             if (!range.has_value()) {
                 ph_load_result = ENOMEM;
                 return IterationDecision::Break;
             }
 
-            auto region_or_error = allocate_region(range.value(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+            auto region_or_error = new_space->allocate_region(range.value(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -225,12 +240,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             if (program_header.is_writable())
                 prot |= PROT_WRITE;
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
-            auto range = allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
+            auto range = new_space->allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
             if (!range.has_value()) {
                 ph_load_result = ENOMEM;
                 return IterationDecision::Break;
             }
-            auto region_or_error = allocate_region(range.value(), region_name, prot, AllocationStrategy::Reserve);
+            auto region_or_error = new_space->allocate_region(range.value(), region_name, prot, AllocationStrategy::Reserve);
             if (region_or_error.is_error()) {
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
@@ -262,12 +277,12 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             prot |= PROT_WRITE;
         if (program_header.is_executable())
             prot |= PROT_EXEC;
-        auto range = allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
+        auto range = new_space->allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
         if (!range.has_value()) {
             ph_load_result = ENOMEM;
             return IterationDecision::Break;
         }
-        auto region_or_error = allocate_region_with_vmobject(range.value(), *vmobject, program_header.offset(), elf_name, prot, true);
+        auto region_or_error = new_space->allocate_region_with_vmobject(range.value(), *vmobject, program_header.offset(), elf_name, prot, true);
         if (region_or_error.is_error()) {
             ph_load_result = region_or_error.error();
             return IterationDecision::Break;
@@ -287,19 +302,20 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return ENOEXEC;
     }
 
-    auto stack_range = allocate_range({}, Thread::default_userspace_stack_size);
+    auto stack_range = new_space->allocate_range({}, Thread::default_userspace_stack_size);
     if (!stack_range.has_value()) {
         dbgln("do_exec: Failed to allocate VM range for stack");
         return ENOMEM;
     }
 
-    auto stack_region_or_error = allocate_region(stack_range.value(), "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
+    auto stack_region_or_error = new_space->allocate_region(stack_range.value(), "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
     if (stack_region_or_error.is_error())
         return stack_region_or_error.error();
     auto& stack_region = *stack_region_or_error.value();
     stack_region.set_stack(true);
 
     return LoadResult {
+        move(new_space),
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
@@ -312,44 +328,20 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     };
 }
 
-KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header)
+KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header)
 {
-    RefPtr<PageDirectory> old_page_directory;
-    NonnullOwnPtrVector<Region> old_regions;
+    auto new_space = Space::create(*this, nullptr);
+    if (!new_space)
+        return ENOMEM;
 
-    {
-        auto page_directory = PageDirectory::create_for_userspace(*this);
-        if (!page_directory)
-            return ENOMEM;
-
-        // Need to make sure we don't swap contexts in the middle
-        ScopedCritical critical;
-        old_page_directory = move(m_page_directory);
-        old_regions = move(m_regions);
-        m_page_directory = page_directory.release_nonnull();
-        MM.enter_process_paging_scope(*this);
-    }
-
-    ArmedScopeGuard rollback_regions_guard([&]() {
-        ASSERT(Process::current() == this);
-        // Need to make sure we don't swap contexts in the middle
-        ScopedCritical critical;
-        // Explicitly clear m_regions *before* restoring the page directory,
-        // otherwise we may silently corrupt memory!
-        m_regions.clear();
-        // Now that we freed the regions, revert to the original page directory
-        // and restore the original regions
-        m_page_directory = move(old_page_directory);
-        MM.enter_process_paging_scope(*this);
-        m_regions = move(old_regions);
+    ScopeGuard space_guard([&]() {
+        MemoryManager::enter_process_paging_scope(*this);
     });
 
     if (interpreter_description.is_null()) {
-        auto result = load_elf_object(main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
+        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
         if (result.is_error())
             return result.error();
-
-        rollback_regions_guard.disarm();
         return result;
     }
 
@@ -358,7 +350,7 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
         return interpreter_load_offset.error();
     }
 
-    auto interpreter_load_result = load_elf_object(*interpreter_description, interpreter_load_offset.value(), ShouldAllocateTls::No);
+    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, interpreter_load_offset.value(), ShouldAllocateTls::No);
 
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
@@ -368,7 +360,6 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
     ASSERT(!interpreter_load_result.value().tls_alignment);
     ASSERT(!interpreter_load_result.value().tls_size);
 
-    rollback_regions_guard.disarm();
     return interpreter_load_result;
 }
 
@@ -481,34 +472,22 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     if (parts.is_empty())
         return -ENOENT;
 
+    auto main_program_metadata = main_program_description->metadata();
+
+    auto load_result_or_error = load(main_program_description, interpreter_description, main_program_header);
+    if (load_result_or_error.is_error()) {
+        dbgln("do_exec({}): Failed to load main program or interpreter", path);
+        return load_result_or_error.error();
+    }
+
+    // We commit to the new executable at this point. There is no turning back!
+
     // Disable profiling temporarily in case it's running on this process.
     TemporaryChange profiling_disabler(m_profiling, false);
 
-    // Mark this thread as the current thread that does exec
-    // No other thread from this process will be scheduled to run
-    auto current_thread = Thread::current();
-    m_exec_tid = current_thread->tid();
+    kill_threads_except_self();
 
-    // NOTE: We switch credentials before altering the memory layout of the process.
-    //       This ensures that ptrace access control takes the right credentials into account.
-
-    // FIXME: This still feels rickety. Perhaps it would be better to simply block ptrace
-    //        clients until we're ready to be traced? Or reject them with EPERM?
-
-    auto main_program_metadata = main_program_description->metadata();
-
-    auto old_euid = m_euid;
-    auto old_suid = m_suid;
-    auto old_egid = m_egid;
-    auto old_sgid = m_sgid;
-
-    ArmedScopeGuard cred_restore_guard = [&] {
-        m_euid = old_euid;
-        m_suid = old_suid;
-        m_egid = old_egid;
-        m_sgid = old_sgid;
-    };
-
+    auto& load_result = load_result_or_error.value();
     bool executable_is_setid = false;
 
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
@@ -522,17 +501,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
-    auto load_result_or_error = load(main_program_description, interpreter_description, main_program_header);
-    if (load_result_or_error.is_error()) {
-        dbgln("do_exec({}): Failed to load main program or interpreter", path);
-        return load_result_or_error.error();
-    }
-    auto& load_result = load_result_or_error.value();
-
-    // We can commit to the new credentials at this point.
-    cred_restore_guard.disarm();
-
-    kill_threads_except_self();
+    m_space = load_result.space.release_nonnull();
+    MemoryManager::enter_space(*m_space);
 
 #if EXEC_DEBUG
     dbgln("Memory layout after ELF load:");
@@ -549,19 +519,16 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_execpromises = 0;
     m_has_execpromises = false;
 
-    m_enforces_syscall_regions = false;
-
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
 
     m_coredump_metadata.clear();
 
+    auto current_thread = Thread::current();
     current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
 
     clear_futex_queues_on_exec();
-
-    m_region_lookup_cache = {};
 
     set_dumpable(!executable_is_setid);
 
@@ -616,8 +583,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // FIXME: PID/TID ISSUE
     m_pid = new_main_thread->tid().value();
     auto tsr_result = new_main_thread->make_thread_specific_region({});
-    if (tsr_result.is_error())
-        return tsr_result.error();
+    if (tsr_result.is_error()) {
+        // FIXME: We cannot fail this late. Refactor this so the allocation happens before we commit to the new executable.
+        ASSERT_NOT_REACHED();
+    }
     new_main_thread->reset_fpu_state();
 
     auto& tss = new_main_thread->m_tss;
@@ -629,7 +598,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.gs = GDT_SELECTOR_TLS | 3;
     tss.eip = load_result.entry_eip;
     tss.esp = new_userspace_esp;
-    tss.cr3 = m_page_directory->cr3();
+    tss.cr3 = space().page_directory().cr3();
     tss.ss2 = m_pid.value();
 
     // Throw away any recorded performance events in this process.
@@ -869,8 +838,6 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
     int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
-
-    m_exec_tid = 0;
 
     if (rc < 0)
         return rc;

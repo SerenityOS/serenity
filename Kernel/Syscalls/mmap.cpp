@@ -204,13 +204,13 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     Optional<Range> range;
 
     if (map_randomized) {
-        range = page_directory().range_allocator().allocate_randomized(PAGE_ROUND_UP(size), alignment);
+        range = space().page_directory().range_allocator().allocate_randomized(PAGE_ROUND_UP(size), alignment);
     } else {
-        range = allocate_range(VirtualAddress(addr), size, alignment);
+        range = space().allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.has_value()) {
             if (addr && !map_fixed) {
                 // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-                range = allocate_range({}, size, alignment);
+                range = space().allocate_range({}, size, alignment);
             }
         }
     }
@@ -220,7 +220,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        auto region_or_error = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
+        auto region_or_error = space().allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error())
             return (void*)region_or_error.error().error();
         region = region_or_error.value();
@@ -280,7 +280,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
     Range range_to_mprotect = { VirtualAddress(addr), size };
 
-    if (auto* whole_region = find_region_from_range(range_to_mprotect)) {
+    if (auto* whole_region = space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return -EPERM;
         if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
@@ -300,7 +300,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     }
 
     // Check if we can carve out the desired range from an existing region
-    if (auto* old_region = find_region_containing(range_to_mprotect)) {
+    if (auto* old_region = space().find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return -EPERM;
         if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
@@ -314,23 +314,23 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
-        auto adjacent_regions = split_region_around_range(*old_region, range_to_mprotect);
+        auto adjacent_regions = space().split_region_around_range(*old_region, range_to_mprotect);
 
         size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (range_to_mprotect.base().get() - old_region->range().base().get());
-        auto& new_region = allocate_split_region(*old_region, range_to_mprotect, new_range_offset_in_vmobject);
+        auto& new_region = space().allocate_split_region(*old_region, range_to_mprotect, new_range_offset_in_vmobject);
         new_region.set_readable(prot & PROT_READ);
         new_region.set_writable(prot & PROT_WRITE);
         new_region.set_executable(prot & PROT_EXEC);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        deallocate_region(*old_region);
+        space().deallocate_region(*old_region);
 
         // Map the new regions using our page directory (they were just allocated and don't have one).
         for (auto* adjacent_region : adjacent_regions) {
-            adjacent_region->map(page_directory());
+            adjacent_region->map(space().page_directory());
         }
-        new_region.map(page_directory());
+        new_region.map(space().page_directory());
         return 0;
     }
 
@@ -349,7 +349,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     if (!is_user_range(VirtualAddress(address), size))
         return -EFAULT;
 
-    auto* region = find_region_from_range({ VirtualAddress(address), size });
+    auto* region = space().find_region_from_range({ VirtualAddress(address), size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -397,7 +397,7 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
     if (name.is_null())
         return -EFAULT;
 
-    auto* region = find_region_from_range({ VirtualAddress(params.addr), params.size });
+    auto* region = space().find_region_from_range({ VirtualAddress(params.addr), params.size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -406,24 +406,6 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
     return 0;
 }
 
-// Carve out a virtual address range from a region and return the two regions on either side
-Vector<Region*, 2> Process::split_region_around_range(const Region& source_region, const Range& desired_range)
-{
-    Range old_region_range = source_region.range();
-    auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
-
-    ASSERT(!remaining_ranges_after_unmap.is_empty());
-    auto make_replacement_region = [&](const Range& new_range) -> Region& {
-        ASSERT(old_region_range.contains(new_range));
-        size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
-        return allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
-    };
-    Vector<Region*, 2> new_regions;
-    for (auto& new_range : remaining_ranges_after_unmap) {
-        new_regions.unchecked_append(&make_replacement_region(new_range));
-    }
-    return new_regions;
-}
 int Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
@@ -435,30 +417,30 @@ int Process::sys$munmap(void* addr, size_t size)
         return -EFAULT;
 
     Range range_to_unmap { VirtualAddress(addr), size };
-    if (auto* whole_region = find_region_from_range(range_to_unmap)) {
+    if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return -EPERM;
-        bool success = deallocate_region(*whole_region);
+        bool success = space().deallocate_region(*whole_region);
         ASSERT(success);
         return 0;
     }
 
-    if (auto* old_region = find_region_containing(range_to_unmap)) {
+    if (auto* old_region = space().find_region_containing(range_to_unmap)) {
         if (!old_region->is_mmap())
             return -EPERM;
 
-        auto new_regions = split_region_around_range(*old_region, range_to_unmap);
+        auto new_regions = space().split_region_around_range(*old_region, range_to_unmap);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        deallocate_region(*old_region);
+        space().deallocate_region(*old_region);
 
         // Instead we give back the unwanted VM manually.
-        page_directory().range_allocator().deallocate(range_to_unmap);
+        space().page_directory().range_allocator().deallocate(range_to_unmap);
 
         // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
         for (auto* new_region : new_regions) {
-            new_region->map(page_directory());
+            new_region->map(space().page_directory());
         }
         return 0;
     }
@@ -476,7 +458,7 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
     if (!copy_from_user(&params, user_params))
         return (void*)-EFAULT;
 
-    auto* old_region = find_region_from_range(Range { VirtualAddress(params.old_address), params.old_size });
+    auto* old_region = space().find_region_from_range(Range { VirtualAddress(params.old_address), params.old_size });
     if (!old_region)
         return (void*)-EINVAL;
 
@@ -491,11 +473,11 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
 
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        deallocate_region(*old_region);
+        space().deallocate_region(*old_region);
 
         auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
 
-        auto new_region_or_error = allocate_region_with_vmobject(range, new_vmobject, 0, old_name, old_prot, false);
+        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject, 0, old_name, old_prot, false);
         if (new_region_or_error.is_error())
             return (void*)new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();
@@ -527,11 +509,11 @@ void* Process::sys$allocate_tls(size_t size)
     });
     ASSERT(main_thread);
 
-    auto range = allocate_range({}, size);
+    auto range = space().allocate_range({}, size);
     if (!range.has_value())
         return (void*)-ENOMEM;
 
-    auto region_or_error = allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
+    auto region_or_error = space().allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return (void*)region_or_error.error().error();
 
@@ -552,15 +534,15 @@ void* Process::sys$allocate_tls(size_t size)
 
 int Process::sys$msyscall(void* address)
 {
-    if (m_enforces_syscall_regions)
+    if (space().enforces_syscall_regions())
         return -EPERM;
 
     if (!address) {
-        m_enforces_syscall_regions = true;
+        space().set_enforces_syscall_regions(true);
         return 0;
     }
 
-    auto* region = find_region_containing(Range { VirtualAddress { address }, 1 });
+    auto* region = space().find_region_containing(Range { VirtualAddress { address }, 1 });
     if (!region)
         return -EINVAL;
 

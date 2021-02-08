@@ -108,7 +108,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
         m_tss.gs = GDT_SELECTOR_TLS | 3;
     }
 
-    m_tss.cr3 = m_process->page_directory().cr3();
+    m_tss.cr3 = m_process->space().page_directory().cr3();
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
@@ -1015,11 +1015,11 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    auto range = process().allocate_range({}, thread_specific_region_size());
+    auto range = process().space().allocate_range({}, thread_specific_region_size());
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = process().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
+    auto region_or_error = process().space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error();
 

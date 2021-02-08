@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@
 #include <Kernel/UnveilNode.h>
 #include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/RangeAllocator.h>
+#include <Kernel/VM/Space.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/exec_elf.h>
 
@@ -98,6 +99,8 @@ enum class VeilState {
 };
 
 typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
+
+struct LoadResult;
 
 class Process
     : public RefCounted<Process>
@@ -164,9 +167,6 @@ public:
     bool is_kernel_process() const { return m_is_kernel_process; }
     bool is_user_process() const { return !m_is_kernel_process; }
 
-    PageDirectory& page_directory() { return *m_page_directory; }
-    const PageDirectory& page_directory() const { return *m_page_directory; }
-
     static RefPtr<Process> from_pid(ProcessID);
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
@@ -188,8 +188,6 @@ public:
     bool is_dumpable() const { return m_dumpable; }
     void set_dumpable(bool dumpable) { m_dumpable = dumpable; }
 
-    ThreadID exec_tid() const { return m_exec_tid; }
-
     mode_t umask() const { return m_umask; }
 
     bool in_group(gid_t) const;
@@ -208,8 +206,6 @@ public:
 
     void die();
     void finalize();
-
-    ALWAYS_INLINE SpinLock<u32>& get_lock() const { return m_lock; }
 
     ThreadTracer* tracer() { return m_tracer.ptr(); }
     bool is_traced() const { return !!m_tracer; }
@@ -373,14 +369,6 @@ public:
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY*);
 
-    size_t region_count() const { return m_regions.size(); }
-    const NonnullOwnPtrVector<Region>& regions() const
-    {
-        ASSERT(m_lock.is_locked());
-        return m_regions;
-    }
-    void dump_regions();
-
     u32 m_ticks_in_user { 0 };
     u32 m_ticks_in_kernel { 0 };
 
@@ -410,38 +398,18 @@ public:
 
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    struct LoadResult {
-        FlatPtr load_base { 0 };
-        FlatPtr entry_eip { 0 };
-        size_t size { 0 };
-        FlatPtr program_headers { 0 };
-        size_t num_program_headers { 0 };
-        WeakPtr<Region> tls_region;
-        size_t tls_size { 0 };
-        size_t tls_alignment { 0 };
-        WeakPtr<Region> stack_region;
-    };
-
     enum class ShouldAllocateTls {
         No = 0,
         Yes,
     };
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
-    KResultOr<LoadResult> load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls);
     KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description);
 
     bool is_superuser() const
     {
         return m_euid == 0;
     }
-
-    KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool shared);
-    KResultOr<Region*> allocate_region(const Range&, const String& name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
-    bool deallocate_region(Region& region);
-
-    Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
-    Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
@@ -503,7 +471,8 @@ public:
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
-    bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
+    Space& space() { return *m_space; }
+    const Space& space() const { return *m_space; }
 
 private:
     friend class MemoryManager;
@@ -517,10 +486,6 @@ private:
 
     Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();
-
-    Optional<Range> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
-
-    Region& add_region(NonnullOwnPtr<Region>);
 
     void kill_threads_except_self();
     void kill_all_threads();
@@ -552,12 +517,12 @@ private:
 
     void clear_futex_queues_on_exec();
 
-    RefPtr<PageDirectory> m_page_directory;
-
     Process* m_prev { nullptr };
     Process* m_next { nullptr };
 
     String m_name;
+
+    OwnPtr<Space> m_space;
 
     ProcessID m_pid { 0 };
     SessionID m_sid { 0 };
@@ -569,8 +534,6 @@ private:
     gid_t m_gid { 0 };
     uid_t m_suid { 0 };
     gid_t m_sgid { 0 };
-
-    ThreadID m_exec_tid { 0 };
 
     OwnPtr<ThreadTracer> m_tracer;
 
@@ -617,16 +580,6 @@ private:
 
     RefPtr<TTY> m_tty;
 
-    Region* find_region_from_range(const Range&);
-    Region* find_region_containing(const Range&);
-
-    NonnullOwnPtrVector<Region> m_regions;
-    struct RegionLookupCache {
-        Optional<Range> range;
-        WeakPtr<Region> region;
-    };
-    RegionLookupCache m_region_lookup_cache;
-
     ProcessID m_ppid { 0 };
     mode_t m_umask { 022 };
 
@@ -639,11 +592,8 @@ private:
     size_t m_master_tls_alignment { 0 };
 
     Lock m_big_lock { "Process" };
-    mutable SpinLock<u32> m_lock;
 
     RefPtr<Timer> m_alarm_timer;
-
-    bool m_enforces_syscall_regions { false };
 
     bool m_has_promises { false };
     u32 m_promises { 0 };
