@@ -920,11 +920,23 @@ void Compositor::recompute_occlusions()
 
             Gfx::DisjointRectSet opaque_covering;
             if (w.is_opaque()) {
-                visible_opaque = visible_rects.intersected(window_frame_rect);
                 transparency_rects.clear();
+                if (w.frame().is_opaque()) {
+                    visible_opaque = visible_rects.intersected(window_frame_rect);
+                } else {
+                    auto window_rect = w.rect().intersected(screen_rect);
+                    visible_opaque = visible_rects.intersected(window_rect);
+                    transparency_rects.add_many(window_frame_rect.shatter(window_rect));
+                }
             } else {
                 visible_opaque.clear();
-                transparency_rects = visible_rects.intersected(window_frame_rect);
+                if (w.frame().is_opaque()) {
+                    auto window_rect = w.rect().intersected(screen_rect);
+                    visible_opaque.add_many(window_frame_rect.shatter(window_rect));
+                    transparency_rects = visible_rects.intersected(window_rect);
+                } else {
+                    transparency_rects = visible_rects.intersected(window_frame_rect);
+                }
             }
 
             bool found_this_window = false;
@@ -942,26 +954,20 @@ void Compositor::recompute_occlusions()
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
 
-                if (w2.is_opaque()) {
-                    opaque_covering.add(covering_rect);
-                    if (opaque_covering.contains(window_frame_rect)) {
-                        // This window is entirely covered by another opaque window
-                        visible_opaque.clear();
-                        transparency_rects.clear();
-                        return IterationDecision::Break;
-                    }
-
+                auto add_opaque = [&](const Gfx::IntRect& covering) {
+                    opaque_covering.add(covering);
                     if (!visible_opaque.is_empty()) {
-                        auto uncovered_opaque = visible_opaque.shatter(covering_rect);
+                        auto uncovered_opaque = visible_opaque.shatter(covering);
                         visible_opaque = move(uncovered_opaque);
                     }
 
                     if (!transparency_rects.is_empty()) {
-                        auto uncovered_transparency = transparency_rects.shatter(covering_rect);
+                        auto uncovered_transparency = transparency_rects.shatter(covering);
                         transparency_rects = move(uncovered_transparency);
                     }
-                } else {
-                    visible_rects.for_each_intersected(covering_rect, [&](const Gfx::IntRect& intersected) {
+                };
+                auto add_transparent = [&](const Gfx::IntRect& covering) {
+                    visible_rects.for_each_intersected(covering, [&](const Gfx::IntRect& intersected) {
                         transparency_rects.add(intersected);
                         if (!visible_opaque.is_empty()) {
                             auto uncovered_opaque = visible_opaque.shatter(intersected);
@@ -969,6 +975,31 @@ void Compositor::recompute_occlusions()
                         }
                         return IterationDecision::Continue;
                     });
+                };
+                if (w2.is_opaque()) {
+                    if (w2.frame().is_opaque()) {
+                        if (opaque_covering.contains(covering_rect)) {
+                            // This window (including frame) is entirely covered by another opaque window
+                            visible_opaque.clear();
+                            transparency_rects.clear();
+                            return IterationDecision::Break;
+                        }
+                        add_opaque(covering_rect);
+                    } else {
+                        auto covering_window_rect = covering_rect.intersected(w2.rect());
+                        add_opaque(covering_window_rect);
+                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect))
+                            add_transparent(covering_frame_rect);
+                    }
+                } else {
+                    if (w2.frame().is_opaque()) {
+                        auto covering_window_rect = covering_rect.intersected(w2.rect());
+                        add_transparent(covering_window_rect);
+                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect))
+                            add_opaque(covering_frame_rect);
+                    } else {
+                        add_transparent(covering_rect);
+                    }
                 }
 
                 return IterationDecision::Continue;
@@ -979,10 +1010,15 @@ void Compositor::recompute_occlusions()
 
             ASSERT(!visible_opaque.intersects(transparency_rects));
 
+            // Determine visible area for the window below
             if (w.is_opaque()) {
-                // Determine visible area for the window below
-                auto visible_rects_below_window = visible_rects.shatter(window_frame_rect);
-                visible_rects = move(visible_rects_below_window);
+                if (w.frame().is_opaque()) {
+                    auto visible_rects_below_window = visible_rects.shatter(window_frame_rect);
+                    visible_rects = move(visible_rects_below_window);
+                } else {
+                    auto visible_rects_below_window = visible_rects.shatter(w.rect().intersected(screen_rect));
+                    visible_rects = move(visible_rects_below_window);
+                }
             }
             return IterationDecision::Continue;
         });
@@ -991,7 +1027,7 @@ void Compositor::recompute_occlusions()
             // Determine what transparent window areas need to render the wallpaper first
             WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& w) {
                 auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
-                if (w.is_opaque() || w.is_minimized()) {
+                if ((w.is_opaque() && w.frame().is_opaque()) || w.is_minimized()) {
                     transparency_wallpaper_rects.clear();
                     return IterationDecision::Continue;
                 }
