@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -145,9 +144,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     // acquiring the queue lock
     RefPtr<VMObject> vmobject, vmobject2;
     if (!is_private) {
-        if (!Kernel::is_user_range(VirtualAddress(user_address_or_offset), sizeof(u32)))
-            return -EFAULT;
-        auto region = MM.find_region_from_vaddr(space(), VirtualAddress(user_address_or_offset));
+        auto region = space().find_region_containing(Range { VirtualAddress { user_address_or_offset }, sizeof(u32) });
         if (!region)
             return -EFAULT;
         vmobject = region->vmobject();
@@ -157,9 +154,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         case FUTEX_REQUEUE:
         case FUTEX_CMP_REQUEUE:
         case FUTEX_WAKE_OP: {
-            if (!Kernel::is_user_range(VirtualAddress(user_address_or_offset2), sizeof(u32)))
-                return -EFAULT;
-            auto region2 = MM.find_region_from_vaddr(space(), VirtualAddress(user_address_or_offset2));
+            auto region2 = space().find_region_containing(Range { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
             if (!region2)
                 return -EFAULT;
             vmobject2 = region2->vmobject();
