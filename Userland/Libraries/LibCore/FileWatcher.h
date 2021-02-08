@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,34 +29,52 @@
 
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
+#include <AK/Result.h>
 #include <AK/String.h>
-#include <Kernel/API/InodeWatcherEvent.h>
+#include <LibCore/Notifier.h>
 
 namespace Core {
 
-class DirectoryWatcher {
-    AK_MAKE_NONCOPYABLE(DirectoryWatcher);
+struct FileWatcherEvent {
+    enum class Type {
+        Modified,
+        ChildAdded,
+        ChildRemoved,
+    };
+    Type type;
+    String child_path;
+};
+
+class BlockingFileWatcher {
+    AK_MAKE_NONCOPYABLE(BlockingFileWatcher);
 
 public:
-    explicit DirectoryWatcher(const String& path);
-    ~DirectoryWatcher();
+    explicit BlockingFileWatcher(const String& path);
+    ~BlockingFileWatcher();
 
-    struct Event {
-        enum class Type {
-            ChildAdded,
-            ChildRemoved,
-        };
-        Type type;
-        String child_path;
-    };
-
-    Optional<Event> wait_for_event();
+    Optional<FileWatcherEvent> wait_for_event();
 
 private:
-    String get_child_with_inode_index(unsigned) const;
-
     String m_path;
     int m_watcher_fd { -1 };
+};
+
+class FileWatcher : public RefCounted<FileWatcher> {
+    AK_MAKE_NONCOPYABLE(FileWatcher);
+
+public:
+    static Result<NonnullRefPtr<FileWatcher>, String> watch(const String& path);
+    ~FileWatcher();
+
+    Function<void(FileWatcherEvent)> on_change;
+
+private:
+    FileWatcher(NonnullRefPtr<Notifier>, const String& path);
+
+    NonnullRefPtr<Notifier> m_notifier;
+    String m_path;
 };
 
 }

@@ -138,6 +138,10 @@
 #cmakedefine01 FILE_CONTENT_DEBUG
 #endif
 
+#ifndef FILE_WATCHER_DEBUG
+#cmakedefine01 FILE_WATCHER_DEBUG
+#endif
+
 #ifndef FILL_PATH_DEBUG
 #cmakedefine01 FILL_PATH_DEBUG
 #endif
