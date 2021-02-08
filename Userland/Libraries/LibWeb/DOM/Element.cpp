@@ -103,9 +103,13 @@ void Element::remove_attribute(const FlyString& name)
     m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
-bool Element::has_class(const FlyString& class_name) const
+bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
 {
-    return any_of(m_classes.begin(), m_classes.end(), [&](auto& it) { return it == class_name; });
+    return any_of(m_classes.begin(), m_classes.end(), [&](auto& it) {
+        return case_sensitivity == CaseSensitivity::CaseSensitive
+            ? it == class_name
+            : it.to_lowercase() == class_name.to_lowercase();
+    });
 }
 
 RefPtr<Layout::Node> Element::create_layout_node()
