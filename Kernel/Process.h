@@ -408,10 +408,8 @@ public:
         return m_thread_count.load(AK::MemoryOrder::memory_order_relaxed);
     }
 
-    Lock& big_lock()
-    {
-        return m_big_lock;
-    }
+    Lock& big_lock() { return m_big_lock; }
+    Lock& ptrace_lock() { return m_ptrace_lock; }
 
     Custody& root_directory();
     Custody& root_directory_relative_to_global_root();
@@ -579,6 +577,7 @@ private:
     size_t m_master_tls_alignment { 0 };
 
     Lock m_big_lock { "Process" };
+    Lock m_ptrace_lock { "ptrace" };
 
     RefPtr<Timer> m_alarm_timer;
 
