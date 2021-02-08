@@ -501,6 +501,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
     }
 
+    set_dumpable(!executable_is_setid);
+
     m_space = load_result.space.release_nonnull();
     MemoryManager::enter_space(*m_space);
 
@@ -524,8 +526,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     current_thread->clear_signals();
 
     clear_futex_queues_on_exec();
-
-    set_dumpable(!executable_is_setid);
 
     for (size_t i = 0; i < m_fds.size(); ++i) {
         auto& description_and_flags = m_fds[i];
