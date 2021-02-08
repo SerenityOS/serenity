@@ -62,6 +62,7 @@ class Region;
 class Scheduler;
 class SchedulerPerProcessorData;
 class Socket;
+class Space;
 template<typename BaseType>
 class SpinLock;
 class RecursiveSpinLock;

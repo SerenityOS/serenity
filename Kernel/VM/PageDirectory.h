@@ -40,10 +40,10 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static RefPtr<PageDirectory> create_for_userspace(Process& process, const RangeAllocator* parent_range_allocator = nullptr)
+    static RefPtr<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr)
     {
-        auto page_directory = adopt(*new PageDirectory(process, parent_range_allocator));
-        if (!page_directory->process())
+        auto page_directory = adopt(*new PageDirectory(parent_range_allocator));
+        if (!page_directory->is_valid())
             return {};
         return page_directory;
     }
@@ -55,24 +55,31 @@ public:
     u32 cr3() const { return m_directory_table->paddr().get(); }
 
     RangeAllocator& range_allocator() { return m_range_allocator; }
+    const RangeAllocator& range_allocator() const { return m_range_allocator; }
+
     RangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
-    Process* process() { return m_process; }
-    const Process* process() const { return m_process; }
+    bool is_valid() const { return m_valid; }
+
+    Space* space() { return m_space; }
+    const Space* space() const { return m_space; }
+
+    void set_space(Badge<Space>, Space& space) { m_space = &space; }
 
     RecursiveSpinLock& get_lock() { return m_lock; }
 
 private:
-    PageDirectory(Process&, const RangeAllocator* parent_range_allocator);
+    explicit PageDirectory(const RangeAllocator* parent_range_allocator);
     PageDirectory();
 
-    Process* m_process { nullptr };
+    Space* m_space { nullptr };
     RangeAllocator m_range_allocator;
     RangeAllocator m_identity_range_allocator;
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<u32, RefPtr<PhysicalPage>> m_page_tables;
     RecursiveSpinLock m_lock;
+    bool m_valid { false };
 };
 
 }

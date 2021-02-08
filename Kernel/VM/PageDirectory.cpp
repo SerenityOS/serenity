@@ -73,7 +73,7 @@ PageDirectory::PageDirectory()
     m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, true, false);
 }
 
-PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
+PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
@@ -142,8 +142,8 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     auto* new_pd = MM.quickmap_pd(*this, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    // If we got here, we successfully created it. Set m_process now
-    m_process = &process;
+    // If we got here, we successfully created it. Set m_space now
+    m_valid = true;
 
     cr3_map().set(cr3(), this);
 }
@@ -151,7 +151,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 PageDirectory::~PageDirectory()
 {
     ScopedSpinLock lock(s_mm_lock);
-    if (m_process)
+    if (m_space)
         cr3_map().remove(cr3());
 }
 

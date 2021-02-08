@@ -116,110 +116,6 @@ bool Process::in_group(gid_t gid) const
     return m_gid == gid || m_extra_gids.contains_slow(gid);
 }
 
-Optional<Range> Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
-{
-    vaddr.mask(PAGE_MASK);
-    size = PAGE_ROUND_UP(size);
-    if (vaddr.is_null())
-        return page_directory().range_allocator().allocate_anywhere(size, alignment);
-    return page_directory().range_allocator().allocate_specific(vaddr, size);
-}
-
-Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
-{
-    auto& region = add_region(
-        Region::create_user_accessible(this, range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access(), source_region.is_cacheable(), source_region.is_shared()));
-    region.set_syscall_region(source_region.is_syscall_region());
-    region.set_mmap(source_region.is_mmap());
-    region.set_stack(source_region.is_stack());
-    size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
-    for (size_t i = 0; i < region.page_count(); ++i) {
-        if (source_region.should_cow(page_offset_in_source_region + i))
-            region.set_should_cow(i, true);
-    }
-    return region;
-}
-
-KResultOr<Region*> Process::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
-{
-    ASSERT(range.is_valid());
-    auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
-    if (!vmobject)
-        return ENOMEM;
-    auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot), true, false);
-    if (!region->map(page_directory()))
-        return ENOMEM;
-    return &add_region(move(region));
-}
-
-KResultOr<Region*> Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
-{
-    ASSERT(range.is_valid());
-    size_t end_in_vmobject = offset_in_vmobject + range.size();
-    if (end_in_vmobject <= offset_in_vmobject) {
-        dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
-        return EINVAL;
-    }
-    if (offset_in_vmobject >= vmobject->size()) {
-        dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.");
-        return EINVAL;
-    }
-    if (end_in_vmobject > vmobject->size()) {
-        dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.");
-        return EINVAL;
-    }
-    offset_in_vmobject &= PAGE_MASK;
-    auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot), true, shared));
-    if (!region.map(page_directory())) {
-        // FIXME: What is an appropriate error code here, really?
-        return ENOMEM;
-    }
-    return &region;
-}
-
-bool Process::deallocate_region(Region& region)
-{
-    OwnPtr<Region> region_protector;
-    ScopedSpinLock lock(m_lock);
-
-    if (m_region_lookup_cache.region.unsafe_ptr() == &region)
-        m_region_lookup_cache.region = nullptr;
-    for (size_t i = 0; i < m_regions.size(); ++i) {
-        if (&m_regions[i] == &region) {
-            region_protector = m_regions.unstable_take(i);
-            return true;
-        }
-    }
-    return false;
-}
-
-Region* Process::find_region_from_range(const Range& range)
-{
-    ScopedSpinLock lock(m_lock);
-    if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
-        return m_region_lookup_cache.region.unsafe_ptr();
-
-    size_t size = PAGE_ROUND_UP(range.size());
-    for (auto& region : m_regions) {
-        if (region.vaddr() == range.base() && region.size() == size) {
-            m_region_lookup_cache.range = range;
-            m_region_lookup_cache.region = region;
-            return &region;
-        }
-    }
-    return nullptr;
-}
-
-Region* Process::find_region_containing(const Range& range)
-{
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
-        if (region.contains(range))
-            return &region;
-    }
-    return nullptr;
-}
-
 void Process::kill_threads_except_self()
 {
     InterruptDisabler disabler;
@@ -339,7 +235,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 {
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, m_pid.value());
 
-    m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
+    m_space = Space::create(*this, fork_parent ? &fork_parent->space() : nullptr);
 
     if (fork_parent) {
         // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
@@ -363,28 +259,6 @@ Process::~Process()
         if (prev() || next())
             g_processes->remove(this);
     }
-}
-
-void Process::dump_regions()
-{
-    klog() << "Process regions:";
-    klog() << "BEGIN       END         SIZE        ACCESS  NAME";
-
-    ScopedSpinLock lock(m_lock);
-
-    Vector<Region*> sorted_regions;
-    sorted_regions.ensure_capacity(m_regions.size());
-    for (auto& region : m_regions)
-        sorted_regions.append(&region);
-    quick_sort(sorted_regions, [](auto& a, auto& b) {
-        return a->vaddr() < b->vaddr();
-    });
-
-    for (auto& sorted_region : sorted_regions) {
-        auto& region = *sorted_region;
-        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08zx", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
-    }
-    MM.dump_kernel_regions();
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
@@ -457,7 +331,7 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     }
     m_termination_signal = signal;
     set_dump_core(!out_of_memory);
-    dump_regions();
+    space().dump_regions();
     ASSERT(is_user_process());
     die();
     // We can not return from here, as there is nowhere
@@ -643,10 +517,7 @@ void Process::finalize()
 
     unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
 
-    {
-        ScopedSpinLock lock(m_lock);
-        m_regions.clear();
-    }
+    m_space->remove_all_regions({});
 
     ASSERT(ref_count() > 0);
     // WaitBlockCondition::finalize will be in charge of dropping the last
@@ -689,8 +560,8 @@ size_t Process::amount_dirty_private() const
     //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
     //        That's probably a situation that needs to be looked at in general.
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         if (!region.is_shared())
             amount += region.amount_dirty();
     }
@@ -701,8 +572,8 @@ size_t Process::amount_clean_inode() const
 {
     HashTable<const InodeVMObject*> vmobjects;
     {
-        ScopedSpinLock lock(m_lock);
-        for (auto& region : m_regions) {
+        ScopedSpinLock lock(space().get_lock());
+        for (auto& region : space().regions()) {
             if (region.vmobject().is_inode())
                 vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
         }
@@ -716,8 +587,8 @@ size_t Process::amount_clean_inode() const
 size_t Process::amount_virtual() const
 {
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         amount += region.size();
     }
     return amount;
@@ -727,8 +598,8 @@ size_t Process::amount_resident() const
 {
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         amount += region.amount_resident();
     }
     return amount;
@@ -741,8 +612,8 @@ size_t Process::amount_shared() const
     //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
     //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         amount += region.amount_shared();
     }
     return amount;
@@ -751,8 +622,8 @@ size_t Process::amount_shared() const
 size_t Process::amount_purgeable_volatile() const
 {
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         if (region.vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
@@ -762,8 +633,8 @@ size_t Process::amount_purgeable_volatile() const
 size_t Process::amount_purgeable_nonvolatile() const
 {
     size_t amount = 0;
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
+    ScopedSpinLock lock(space().get_lock());
+    for (auto& region : space().regions()) {
         if (region.vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
@@ -856,14 +727,6 @@ Custody& Process::root_directory_relative_to_global_root()
 void Process::set_root_directory(const Custody& root)
 {
     m_root_directory = root;
-}
-
-Region& Process::add_region(NonnullOwnPtr<Region> region)
-{
-    auto* ptr = region.ptr();
-    ScopedSpinLock lock(m_lock);
-    m_regions.append(move(region));
-    return *ptr;
 }
 
 void Process::set_tty(TTY* tty)

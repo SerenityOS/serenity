@@ -317,8 +317,8 @@ static bool procfs$pid_vm(InodeIdentifier identifier, KBufferBuilder& builder)
         return false;
     JsonArraySerializer array { builder };
     {
-        ScopedSpinLock lock(process->get_lock());
-        for (auto& region : process->regions()) {
+        ScopedSpinLock lock(process->space().get_lock());
+        for (auto& region : process->space().regions()) {
             if (!region.is_user_accessible() && !Process::current()->is_superuser())
                 continue;
             auto region_object = array.add_object();

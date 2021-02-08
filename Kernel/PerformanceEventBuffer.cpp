@@ -121,7 +121,7 @@ bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, con
 {
     auto process = Process::from_pid(pid);
     ASSERT(process);
-    ScopedSpinLock locker(process->get_lock());
+    ScopedSpinLock locker(process->space().get_lock());
 
     JsonObjectSerializer object(builder);
     object.add("pid", pid.value());
@@ -129,7 +129,7 @@ bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, con
 
     {
         auto region_array = object.add_array("regions");
-        for (const auto& region : process->regions()) {
+        for (const auto& region : process->space().regions()) {
             auto region_object = region_array.add_object();
             region_object.add("base", region.vaddr().get());
             region_object.add("size", region.size());
