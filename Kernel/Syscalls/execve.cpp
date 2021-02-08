@@ -52,8 +52,6 @@ struct LoadResult {
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
-    FlatPtr program_headers { 0 };
-    size_t num_program_headers { 0 };
     WeakPtr<Region> tls_region;
     size_t tls_size { 0 };
     size_t tls_alignment { 0 };
@@ -324,8 +322,6 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
-        VirtualAddress(elf_image.program_header_table_offset()).offset(load_offset).get(),
-        elf_image.program_header_count(),
         AK::try_make_weak_ptr(master_tls_region),
         master_tls_size,
         master_tls_alignment,
