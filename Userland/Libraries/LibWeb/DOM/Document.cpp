@@ -505,7 +505,7 @@ NonnullRefPtrVector<Element> Document::get_elements_by_class_name(const FlyStrin
 {
     NonnullRefPtrVector<Element> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.has_class(class_name))
+        if (element.has_class(class_name, in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
             elements.append(element);
         return IterationDecision::Continue;
     });
