@@ -504,11 +504,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_space = load_result.space.release_nonnull();
     MemoryManager::enter_space(*m_space);
 
-#if EXEC_DEBUG
-    dbgln("Memory layout after ELF load:");
-    dump_regions();
-#endif
-
     m_executable = main_program_description->custody();
     m_arguments = arguments;
     m_environment = environment;
