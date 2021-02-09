@@ -73,6 +73,7 @@ public:
 
     void set_viewport_scroll_offset(const Gfx::IntPoint&);
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
+    void set_viewport_rect(const Gfx::IntRect&);
 
     void did_scroll(Badge<InProcessWebView>);
 

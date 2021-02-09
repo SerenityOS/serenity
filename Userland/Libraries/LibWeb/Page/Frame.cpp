@@ -108,6 +108,28 @@ void Frame::set_document(DOM::Document* document)
         m_page->client().page_did_set_document_in_main_frame(m_document);
 }
 
+void Frame::set_viewport_rect(const Gfx::IntRect& rect)
+{
+    bool did_change = false;
+
+    if (m_size != rect.size()) {
+        m_size = rect.size();
+        if (m_document)
+            m_document->update_layout();
+        did_change = true;
+    }
+
+    if (m_viewport_scroll_offset != rect.location()) {
+        m_viewport_scroll_offset = rect.location();
+        did_change = true;
+    }
+
+    if (did_change) {
+        for (auto* client : m_viewport_clients)
+            client->frame_did_set_viewport_rect(rect);
+    }
+}
+
 void Frame::set_size(const Gfx::IntSize& size)
 {
     if (m_size == size)
