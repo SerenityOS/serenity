@@ -174,8 +174,6 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         auto url = document->complete_url(href);
         dbgln("Web::EventHandler: Clicking on a link to {}", url);
         if (button == GUI::MouseButton::Left) {
-            auto href = link->href();
-            auto url = document->complete_url(href);
             if (href.starts_with("javascript:")) {
                 document->run_javascript(href.substring_view(11, href.length() - 11));
             } else if (href.starts_with('#')) {
