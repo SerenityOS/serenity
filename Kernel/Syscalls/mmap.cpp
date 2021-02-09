@@ -37,49 +37,6 @@
 
 namespace Kernel {
 
-static bool should_make_executable_exception_for_dynamic_loader(bool make_readable, bool make_writable, bool make_executable, const Region& region)
-{
-    // Normally we don't allow W -> X transitions, but we have to make an exception
-    // for the dynamic loader, which needs to do this after performing text relocations.
-
-    // FIXME: Investigate whether we could get rid of all text relocations entirely.
-
-    // The exception is only made if all the following criteria is fulfilled:
-
-    // The region must be RW
-    if (!(region.is_readable() && region.is_writable() && !region.is_executable()))
-        return false;
-
-    // The region wants to become RX
-    if (!(make_readable && !make_writable && make_executable))
-        return false;
-
-    // The region is backed by a file
-    if (!region.vmobject().is_inode())
-        return false;
-
-    // The file mapping is private, not shared (no relocations in a shared mapping!)
-    if (!region.vmobject().is_private_inode())
-        return false;
-
-    Elf32_Ehdr header;
-    if (!copy_from_user(&header, region.vaddr().as_ptr(), sizeof(header)))
-        return false;
-
-    auto& inode = static_cast<const InodeVMObject&>(region.vmobject());
-
-    // The file is a valid ELF binary
-    if (!ELF::validate_elf_header(header, inode.size()))
-        return false;
-
-    // The file is an ELF shared object
-    if (header.e_type != ET_DYN)
-        return false;
-
-    // FIXME: Are there any additional checks/validations we could do here?
-    return true;
-}
-
 static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, const Region* region = nullptr)
 {
     bool make_readable = prot & PROT_READ;
@@ -104,9 +61,6 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, con
             return false;
 
         if (make_executable && region->has_been_writable()) {
-            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
-                return true;
-
             return false;
         }
     }
