@@ -85,6 +85,13 @@ public:
         m_dirty = true;
     }
 
+    void theme_changed()
+    {
+        m_dirty = m_shadow_dirty = true;
+        layout_buttons();
+        set_button_icons();
+    }
+
 private:
     void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&) const;
     void paint_notification_frame(Gfx::Painter&);
