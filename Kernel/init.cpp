@@ -82,6 +82,11 @@ extern ctor_func_t end_ctors;
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard;
 
+extern "C" u8* start_of_safemem_text;
+extern "C" u8* end_of_safemem_text;
+extern "C" u8* start_of_safemem_atomic_text;
+extern "C" u8* end_of_safemem_atomic_text;
+
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
@@ -131,6 +136,10 @@ extern "C" [[noreturn]] void init()
 
     CommandLine::initialize();
     MemoryManager::initialize(0);
+
+    // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
+    ASSERT(&start_of_safemem_text != &end_of_safemem_text);
+    ASSERT(&start_of_safemem_atomic_text != &end_of_safemem_atomic_text);
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
