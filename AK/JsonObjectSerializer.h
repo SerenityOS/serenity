@@ -88,43 +88,43 @@ public:
     void add(const StringView& key, int value)
     {
         begin_item(key);
-        m_builder.appendf("%d", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, unsigned value)
     {
         begin_item(key);
-        m_builder.appendf("%u", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long value)
     {
         begin_item(key);
-        m_builder.appendf("%ld", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long unsigned value)
     {
         begin_item(key);
-        m_builder.appendf("%lu", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long long value)
     {
         begin_item(key);
-        m_builder.appendf("%lld", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, long long unsigned value)
     {
         begin_item(key);
-        m_builder.appendf("%llu", value);
+        m_builder.appendff("{}", value);
     }
 
     void add(const StringView& key, double value)
     {
         begin_item(key);
-        m_builder.appendf("%f", value);
+        m_builder.appendff("{}", value);
     }
 
     JsonArraySerializer<Builder> add_array(const StringView& key)

@@ -207,9 +207,9 @@ void dump_bytes(ReadonlyBytes bytes)
     auto flush = [&]() {
         if (nrepeat > 0) {
             if (nrepeat == 1)
-                builder.appendf("%s0x%02x", prefix, static_cast<int>(buffered_byte));
+                builder.appendff("{}{:#02x}", prefix, static_cast<int>(buffered_byte));
             else
-                builder.appendf("%s%zu * 0x%02x", prefix, nrepeat, static_cast<int>(buffered_byte));
+                builder.appendff("{}{} * {:#02x}", prefix, nrepeat, static_cast<int>(buffered_byte));
 
             nrepeat = 0;
             prefix = ", ";
