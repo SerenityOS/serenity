@@ -72,8 +72,11 @@ void Frame::setup()
 
 void Frame::did_edit(Badge<EditEventHandler>)
 {
-    // The user has edited the content, restart the cursor blink cycle so that
-    // the cursor doesn't disappear during rapid continuous editing.
+    reset_cursor_blink_cycle();
+}
+
+void Frame::reset_cursor_blink_cycle()
+{
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
 }
@@ -211,7 +214,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
     return position;
 }
 
-void Frame::set_cursor_position(const DOM::Position& position)
+void Frame::set_cursor_position(DOM::Position position)
 {
     if (m_cursor_position == position)
         return;
@@ -219,12 +222,12 @@ void Frame::set_cursor_position(const DOM::Position& position)
     if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
         m_cursor_position.node()->layout_node()->set_needs_display();
 
-    m_cursor_position = position;
+    m_cursor_position = move(position);
 
     if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
         m_cursor_position.node()->layout_node()->set_needs_display();
 
-    dbgln("Cursor position: {}", m_cursor_position);
+    reset_cursor_blink_cycle();
 }
 
 String Frame::selected_text() const
