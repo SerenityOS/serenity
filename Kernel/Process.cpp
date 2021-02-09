@@ -156,20 +156,15 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
         arguments.append(parts.last());
     }
     RefPtr<Custody> cwd;
-    RefPtr<Custody> root;
     {
         ScopedSpinLock lock(g_processes_lock);
         if (auto parent = Process::from_pid(parent_pid)) {
             cwd = parent->m_cwd;
-            root = parent->m_root_directory;
         }
     }
 
     if (!cwd)
         cwd = VFS::the().root_custody();
-
-    if (!root)
-        root = VFS::the().root_custody();
 
     auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
     if (!first_thread)
