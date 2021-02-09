@@ -39,7 +39,7 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
         CPUID cpuid(0);
         StringBuilder builder;
         auto emit_u32 = [&](u32 value) {
-            builder.appendf("%c%c%c%c",
+            builder.appendff("{:c}{:c}{:c}{:c}",
                 value & 0xff,
                 (value >> 8) & 0xff,
                 (value >> 16) & 0xff,

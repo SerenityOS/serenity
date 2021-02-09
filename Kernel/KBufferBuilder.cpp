@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/KBufferBuilder.h>
-#include <stdarg.h>
 
 namespace Kernel {
 
@@ -111,22 +109,6 @@ void KBufferBuilder::append(char ch)
         return;
     insertion_ptr()[0] = ch;
     m_size += 1;
-}
-
-void KBufferBuilder::appendvf(const char* fmt, va_list ap)
-{
-    printf_internal([this](char*&, char ch) {
-        append(ch);
-    },
-        nullptr, fmt, ap);
-}
-
-void KBufferBuilder::appendf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    appendvf(fmt, ap);
-    va_end(ap);
 }
 
 void KBufferBuilder::append_escaped_for_json(const StringView& string)

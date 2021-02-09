@@ -349,10 +349,10 @@ String LocalSocket::absolute_path(const FileDescription& description) const
         builder.append(" (listening)");
         break;
     case Role::Accepted:
-        builder.appendf(" (accepted from pid %d)", origin_pid());
+        builder.appendff(" (accepted from pid {})", origin_pid());
         break;
     case Role::Connected:
-        builder.appendf(" (connected to pid %d)", acceptor_pid());
+        builder.appendff(" (connected to pid {})", acceptor_pid());
         break;
     case Role::Connecting:
         builder.append(" (connecting)");

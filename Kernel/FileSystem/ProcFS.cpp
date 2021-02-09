@@ -445,7 +445,7 @@ static bool procfs$devices(InodeIdentifier, KBufferBuilder& builder)
 
 static bool procfs$uptime(InodeIdentifier, KBufferBuilder& builder)
 {
-    builder.appendf("%llu\n", TimeManagement::the().uptime_ms() / 1000);
+    builder.appendff("{}\n", TimeManagement::the().uptime_ms() / 1000);
     return true;
 }
 
@@ -659,7 +659,7 @@ static bool procfs$pid_root(InodeIdentifier identifier, KBufferBuilder& builder)
 
 static bool procfs$self(InodeIdentifier, KBufferBuilder& builder)
 {
-    builder.appendf("%d", Process::current()->pid().value());
+    builder.appendff("{}", Process::current()->pid().value());
     return true;
 }
 
