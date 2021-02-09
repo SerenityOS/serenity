@@ -56,12 +56,16 @@ static Gfx::Bitmap* s_minimize_icon;
 static Gfx::Bitmap* s_maximize_icon;
 static Gfx::Bitmap* s_restore_icon;
 static Gfx::Bitmap* s_close_icon;
-static Gfx::Bitmap* s_window_shadow;
 
 static String s_last_title_button_icons_path;
 static int s_last_title_button_icons_scale;
 
+static Gfx::Bitmap* s_window_shadow;
+static Gfx::Bitmap* s_menu_shadow;
+static Gfx::Bitmap* s_tooltip_shadow;
 static String s_last_window_shadow_path;
+static String s_last_menu_shadow_path;
+static String s_last_tooltip_shadow_path;
 
 static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
 {
@@ -111,6 +115,15 @@ void WindowFrame::set_button_icons()
     if (m_window.is_frameless())
         return;
 
+    m_close_button->set_icon(*s_close_icon);
+    if (m_window.is_minimizable())
+        m_minimize_button->set_icon(*s_minimize_icon);
+    if (m_window.is_resizable())
+        m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
+}
+
+void WindowFrame::reload_config()
+{
     String icons_path = WindowManager::the().palette().title_button_icons_path();
     int icons_scale = WindowManager::the().compositor_icon_scale();
 
@@ -152,30 +165,34 @@ void WindowFrame::set_button_icons()
         full_path.clear();
     }
 
-    m_close_button->set_icon(*s_close_icon);
-    if (m_window.is_minimizable())
-        m_minimize_button->set_icon(*s_minimize_icon);
-    if (m_window.is_resizable())
-        m_maximize_button->set_icon(m_window.is_maximized() ? *s_restore_icon : *s_maximize_icon);
-
     s_last_title_button_icons_path = icons_path;
     s_last_title_button_icons_scale = icons_scale;
 
-    String window_shadow_path = WindowManager::the().palette().window_shadow_path();
-    if (!s_window_shadow || s_window_shadow->scale() != icons_scale || s_last_window_shadow_path != window_shadow_path) {
-        s_window_shadow = Gfx::Bitmap::load_from_file(window_shadow_path, icons_scale).leak_ref();
-        m_shadow_dirty = true;
-    }
-    s_last_window_shadow_path = window_shadow_path;
+    auto load_shadow = [](const String& path, String& last_path, Gfx::Bitmap*& shadow_bitmap) {
+        if (!shadow_bitmap || shadow_bitmap->scale() != s_last_title_button_icons_scale || last_path != path) {
+            shadow_bitmap = Gfx::Bitmap::load_from_file(path, s_last_title_button_icons_scale).leak_ref();
+            last_path = path;
+        }
+    };
+    load_shadow(WindowManager::the().palette().window_shadow_path(), s_last_window_shadow_path, s_window_shadow);
+    load_shadow(WindowManager::the().palette().menu_shadow_path(), s_last_menu_shadow_path, s_menu_shadow);
+    load_shadow(WindowManager::the().palette().tooltip_shadow_path(), s_last_tooltip_shadow_path, s_tooltip_shadow);
 }
 
 Gfx::Bitmap* WindowFrame::window_shadow() const
 {
     if (m_window.is_frameless())
         return nullptr;
-    if (m_window.type() == WindowType::Desktop)
+    switch (m_window.type()) {
+    case WindowType::Desktop:
         return nullptr;
-    return s_window_shadow;
+    case WindowType::Menu:
+        return s_menu_shadow;
+    case WindowType::Tooltip:
+        return s_tooltip_shadow;
+    default:
+        return s_window_shadow;
+    }
 }
 
 bool WindowFrame::frame_has_alpha() const
