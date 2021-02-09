@@ -168,6 +168,8 @@ void WindowFrame::set_button_icons()
 
 Gfx::Bitmap* WindowFrame::window_shadow() const
 {
+    if (m_window.is_frameless())
+        return nullptr;
     if (m_window.type() == WindowType::Desktop)
         return nullptr;
     return s_window_shadow;
