@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    char buffer[32];
+    char buffer[INET_ADDRSTRLEN];
     const char* ip_str = inet_ntop(AF_INET, hostent->h_addr_list[0], buffer, sizeof(buffer));
 
     printf("%s is %s\n", name_or_ip, ip_str);
