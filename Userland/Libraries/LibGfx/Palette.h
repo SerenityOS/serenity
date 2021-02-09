@@ -140,6 +140,7 @@ public:
     int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
 
     String title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
+    String window_shadow_path() const { return path(PathRole::WindowShadow); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }
     int metric(MetricRole role) const { return m_impl->metric(role); }

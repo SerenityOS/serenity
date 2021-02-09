@@ -61,6 +61,7 @@ public:
     virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&) const = 0;
 
     virtual Vector<IntRect> layout_buttons(WindowType, const IntRect& window_rect, const Palette&, size_t buttons) const = 0;
+    virtual bool is_simple_rect_frame() const = 0;
 
 protected:
     WindowTheme() { }
