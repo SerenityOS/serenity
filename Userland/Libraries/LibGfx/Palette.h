@@ -141,6 +141,8 @@ public:
 
     String title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
     String window_shadow_path() const { return path(PathRole::WindowShadow); }
+    String menu_shadow_path() const { return path(PathRole::MenuShadow); }
+    String tooltip_shadow_path() const { return path(PathRole::TooltipShadow); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }
     int metric(MetricRole role) const { return m_impl->metric(role); }

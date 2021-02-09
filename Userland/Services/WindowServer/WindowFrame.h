@@ -41,6 +41,8 @@ class Window;
 
 class WindowFrame {
 public:
+    static void reload_config();
+
     WindowFrame(Window&);
     ~WindowFrame();
 

@@ -145,6 +145,8 @@ enum class PathRole {
     NoRole,
     TitleButtonIcons,
     WindowShadow,
+    MenuShadow,
+    TooltipShadow,
     __Count,
 };
 

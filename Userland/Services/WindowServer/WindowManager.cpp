@@ -107,6 +107,8 @@ void WindowManager::reload_config()
     m_drag_cursor = get_cursor("Drag");
     m_wait_cursor = get_cursor("Wait");
     m_crosshair_cursor = get_cursor("Crosshair");
+
+    WindowFrame::reload_config();
 }
 
 const Gfx::Font& WindowManager::font() const
@@ -1434,6 +1436,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     Compositor::the().set_background_color(palette().desktop_background().to_string());
     HashTable<ClientConnection*> notified_clients;
+    WindowFrame::reload_config();
     for_each_window([&](Window& window) {
         if (window.client()) {
             if (!notified_clients.contains(window.client())) {
@@ -1523,9 +1526,10 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
 {
     m_allow_hidpi_icons = allow_hidpi_icons;
     reload_config();
+    WindowFrame::reload_config();
     for_each_window([&](Window& window) {
         auto& window_frame = window.frame();
-        window_frame.set_button_icons();
+        window_frame.theme_changed();
         return IterationDecision::Continue;
     });
 }
