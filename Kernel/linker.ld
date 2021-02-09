@@ -11,16 +11,15 @@ SECTIONS
         $<TARGET_OBJECTS:boot>
         *(.multiboot)
         start_of_kernel_text = .;
-        *(.text)
-        *(.text.startup)
 
         start_of_safemem_text = .;
-        *(.text.safemem)
+        KEEP(*(.text.safemem))
         end_of_safemem_text = .;
         start_of_safemem_atomic_text = .;
-        *(.text.safemem.atomic)
+        KEEP(*(.text.safemem.atomic))
         end_of_safemem_atomic_text = .;
 
+        *(.text*)
         end_of_kernel_text = .;
     }
 
@@ -34,13 +33,13 @@ SECTIONS
         *(.ctors)
         end_ctors = .;
 
-        *(.rodata)
+        *(.rodata*)
     }
 
     .data ALIGN(4K) : AT (ADDR(.data) - 0xc0000000)
     {
         start_of_kernel_data = .;
-        *(.data)
+        *(.data*)
         end_of_kernel_data = .;
     }
 
