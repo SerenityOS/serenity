@@ -1432,14 +1432,14 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
                 notified_clients.set(window.client());
             }
         }
-        window.frame().layout_buttons();
-        window.frame().set_button_icons();
+        window.frame().theme_changed();
         return IterationDecision::Continue;
     });
     MenuManager::the().did_change_theme();
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
+    Compositor::the().invalidate_occlusions();
     Compositor::the().invalidate_screen();
     return true;
 }
