@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,9 +94,8 @@ public:
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
-    DOM::Position& cursor_position() { return m_cursor_position; }
     const DOM::Position& cursor_position() const { return m_cursor_position; }
-    void set_cursor_position(const DOM::Position&);
+    void set_cursor_position(DOM::Position);
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
@@ -107,6 +106,8 @@ public:
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
+
+    void reset_cursor_blink_cycle();
 
     void setup();
 
