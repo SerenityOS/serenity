@@ -221,7 +221,7 @@ int main(int argc, char** argv)
             else if (ms > max_ms)
                 max_ms = ms;
 
-            char addr_buf[64];
+            char addr_buf[INET_ADDRSTRLEN];
             printf("Pong from %s: id=%u, seq=%u%s, time=%dms\n",
                 inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                 ntohs(pong_packet.header.un.echo.id),
