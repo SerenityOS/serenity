@@ -154,11 +154,13 @@ void syscall_handler(TrapFrame* trap)
     // to make kernel stacks a bit less deterministic.
     // Since this is very hot code, request random data in chunks instead of
     // one byte at a time. This is a noticeable speedup.
-    if (g_random_byte_buffer_offset == RandomByteBufferSize) {
+    int offset = g_random_byte_buffer_offset;
+    if (offset == RandomByteBufferSize) {
         get_fast_random_bytes(g_random_byte_buffer, RandomByteBufferSize);
-        g_random_byte_buffer_offset = 0;
+        offset = 0;
     }
-    auto* ptr = (char*)__builtin_alloca(g_random_byte_buffer[g_random_byte_buffer_offset++]);
+    auto* ptr = (char*)__builtin_alloca(g_random_byte_buffer[offset++]);
+    g_random_byte_buffer_offset = offset;
     asm volatile(""
                  : "=m"(*ptr));
 
