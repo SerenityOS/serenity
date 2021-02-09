@@ -47,6 +47,7 @@ public:
     virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&) const override;
 
     virtual Vector<IntRect> layout_buttons(WindowType, const IntRect& window_rect, const Palette&, size_t buttons) const override;
+    virtual bool is_simple_rect_frame() const override { return true; }
 
 private:
     struct FrameColors {
