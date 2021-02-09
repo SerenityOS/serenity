@@ -113,6 +113,7 @@ private:
     size_t m_flash_counter { 0 };
     float m_opacity { 1 };
     bool m_has_alpha_channel { false };
+    bool m_shadow_dirty { false };
     bool m_dirty { false };
 };
 
