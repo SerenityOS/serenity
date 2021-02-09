@@ -85,7 +85,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        char addr_str[100];
+        char addr_str[INET_ADDRSTRLEN];
 
         struct sockaddr_in sin;
         socklen_t len;
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        char addr_str[100];
+        char addr_str[INET_ADDRSTRLEN];
 
         struct sockaddr_in dst_addr;
         memset(&dst_addr, 0, sizeof(dst_addr));
