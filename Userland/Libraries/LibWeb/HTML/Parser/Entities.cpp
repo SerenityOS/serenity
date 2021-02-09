@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
 #include <AK/StringView.h>
 #include <LibWeb/HTML/Parser/Entities.h>
 

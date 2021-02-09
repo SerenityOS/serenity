@@ -25,9 +25,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/ByteBuffer.h>
-#include <AK/FlyString.h>
-#include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/Error.h>
@@ -43,11 +40,7 @@
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceWrapper.h>
-#include <LibWeb/Bindings/RangeConstructor.h>
-#include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
-#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>

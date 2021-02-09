@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Debug.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
 #include <LibWeb/Bindings/WindowObject.h>

@@ -28,17 +28,14 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
-#include <typeinfo>
 
 namespace Web::Layout {
 

@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
@@ -35,18 +34,10 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/Text.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -55,7 +46,6 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
-#include <stdio.h>
 
 REGISTER_WIDGET(Web, InProcessWebView)
 
