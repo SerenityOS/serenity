@@ -27,7 +27,6 @@
 #include <AK/Debug.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibWeb/Loader/ImageLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 

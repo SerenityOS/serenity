@@ -29,7 +29,6 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <stdlib.h>
 
 int main(int argc, char** argv)
 {

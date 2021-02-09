@@ -25,9 +25,7 @@
  */
 
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Page/Frame.h>

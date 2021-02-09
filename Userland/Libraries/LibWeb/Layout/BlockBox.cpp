@@ -26,16 +26,12 @@
 
 #include <LibGUI/Painter.h>
 #include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Layout/WidgetBox.h>
-#include <math.h>
 
 namespace Web::Layout {
 

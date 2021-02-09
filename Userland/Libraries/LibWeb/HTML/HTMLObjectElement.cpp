@@ -25,7 +25,6 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>

@@ -25,7 +25,6 @@
  */
 
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>

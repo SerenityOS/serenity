@@ -25,7 +25,6 @@
  */
 
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/CanvasBox.h>
 

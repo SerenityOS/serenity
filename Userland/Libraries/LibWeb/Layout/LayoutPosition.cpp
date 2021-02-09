@@ -27,7 +27,6 @@
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/Layout/Node.h>
 
 namespace Web::Layout {
 

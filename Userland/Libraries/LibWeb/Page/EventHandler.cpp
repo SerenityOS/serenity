@@ -26,8 +26,6 @@
 
 #include <LibGUI/Event.h>
 #include <LibGUI/Window.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
