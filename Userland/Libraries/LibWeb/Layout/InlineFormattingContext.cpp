@@ -31,7 +31,6 @@
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {

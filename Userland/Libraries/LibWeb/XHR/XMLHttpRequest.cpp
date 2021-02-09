@@ -26,7 +26,6 @@
 
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>

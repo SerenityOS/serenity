@@ -63,7 +63,6 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <ctype.h>
-#include <stdio.h>
 
 namespace Web::DOM {
 

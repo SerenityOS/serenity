@@ -27,12 +27,9 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -40,9 +37,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 

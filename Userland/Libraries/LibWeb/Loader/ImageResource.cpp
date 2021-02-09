@@ -26,7 +26,6 @@
 
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibImageDecoderClient/Client.h>
 #include <LibWeb/Loader/ImageResource.h>
 

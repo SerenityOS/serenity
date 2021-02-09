@@ -28,7 +28,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/InProcessWebView.h>

@@ -25,7 +25,6 @@
  */
 
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FlexFormattingContext.h>
@@ -35,7 +34,6 @@
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
-#include <LibWeb/Layout/TableRowBox.h>
 
 namespace Web::Layout {
 

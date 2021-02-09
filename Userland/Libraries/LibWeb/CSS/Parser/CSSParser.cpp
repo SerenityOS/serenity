@@ -30,7 +30,6 @@
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -26,7 +26,6 @@
 
 #include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
@@ -35,7 +34,6 @@
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>

@@ -24,18 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "EditEventHandler.h"
 #include <AK/StringBuilder.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/Page/Frame.h>
-
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/Dump.h>
-#include <LibWeb/Layout/InitialContainingBlockBox.h>
-
-#include "EditEventHandler.h"
 
 namespace Web {
 
