@@ -319,7 +319,7 @@ private:
     bool m_ruler_visible { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
-    WrappingMode m_wrapping_mode { WrappingMode::WrapAnywhere };
+    WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
     bool m_has_visible_list { false };
     bool m_visualize_trailing_whitespace { true };
     int m_line_spacing { 4 };
