@@ -433,9 +433,9 @@ String IPv4Socket::absolute_path(const FileDescription&) const
     StringBuilder builder;
     builder.append("socket:");
 
-    builder.appendf("%s:%d", m_local_address.to_string().characters(), m_local_port);
+    builder.appendff("{}:{}", m_local_address.to_string(), m_local_port);
     if (m_role == Role::Accepted || m_role == Role::Connected)
-        builder.appendf(" / %s:%d", m_peer_address.to_string().characters(), m_peer_port);
+        builder.appendff(" / {}:{}", m_peer_address.to_string(), m_peer_port);
 
     switch (m_role) {
     case Role::Listener:

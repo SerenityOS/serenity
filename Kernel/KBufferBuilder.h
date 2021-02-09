@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,6 @@ public:
     void append(const StringView&);
     void append(char);
     void append(const char*, int);
-    void appendf(const char*, ...);
-    void appendvf(const char*, va_list);
 
     void append_escaped_for_json(const StringView&);
     void append_bytes(ReadonlyBytes);
