@@ -56,9 +56,19 @@ static Gfx::Bitmap* s_minimize_icon;
 static Gfx::Bitmap* s_maximize_icon;
 static Gfx::Bitmap* s_restore_icon;
 static Gfx::Bitmap* s_close_icon;
+static Gfx::Bitmap* s_window_shadow;
 
 static String s_last_title_button_icons_path;
 static int s_last_title_button_icons_scale;
+
+static String s_last_window_shadow_path;
+
+static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
+{
+    if (window.is_frameless())
+        return rect;
+    return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette());
+}
 
 WindowFrame::WindowFrame(Window& window)
     : m_window(window)
@@ -94,6 +104,7 @@ WindowFrame::~WindowFrame()
 
 void WindowFrame::set_button_icons()
 {
+    m_dirty = true;
     if (m_window.is_frameless())
         return;
 
@@ -104,6 +115,8 @@ void WindowFrame::set_button_icons()
     if (!s_minimize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-minimize.png");
+        if (s_minimize_icon)
+            s_minimize_icon->unref();
         if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png", icons_scale).leak_ref();
         full_path.clear();
@@ -111,6 +124,8 @@ void WindowFrame::set_button_icons()
     if (!s_maximize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-maximize.png");
+        if (s_maximize_icon)
+            s_maximize_icon->unref();
         if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png", icons_scale).leak_ref();
         full_path.clear();
@@ -118,6 +133,8 @@ void WindowFrame::set_button_icons()
     if (!s_restore_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-restore.png");
+        if (s_restore_icon)
+            s_restore_icon->unref();
         if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png", icons_scale).leak_ref();
         full_path.clear();
@@ -125,6 +142,8 @@ void WindowFrame::set_button_icons()
     if (!s_close_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-close.png");
+        if (s_close_icon)
+            s_close_icon->unref();
         if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale).leak_ref();
         full_path.clear();
@@ -138,6 +157,26 @@ void WindowFrame::set_button_icons()
 
     s_last_title_button_icons_path = icons_path;
     s_last_title_button_icons_scale = icons_scale;
+
+    String window_shadow_path = WindowManager::the().palette().window_shadow_path();
+    if (!s_window_shadow || s_window_shadow->scale() != icons_scale || s_last_window_shadow_path != window_shadow_path) {
+        s_window_shadow = Gfx::Bitmap::load_from_file(window_shadow_path, icons_scale).leak_ref();
+    }
+    s_last_window_shadow_path = window_shadow_path;
+}
+
+Gfx::Bitmap* WindowFrame::window_shadow() const
+{
+    if (m_window.type() == WindowType::Desktop)
+        return nullptr;
+    return s_window_shadow;
+}
+
+bool WindowFrame::frame_has_alpha() const
+{
+    if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::RGBA32)
+        return true;
+    return false;
 }
 
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
@@ -205,7 +244,7 @@ void WindowFrame::paint(Gfx::Painter& painter, const Gfx::IntRect& rect)
 {
     render_to_cache();
 
-    auto frame_rect = this->rect();
+    auto frame_rect = render_rect();
     auto window_rect = m_window.rect();
 
     if (m_top_bottom) {
@@ -265,48 +304,62 @@ void WindowFrame::render_to_cache()
 {
     if (!m_dirty)
         return;
-    m_dirty = true;
+    m_dirty = false;
 
-    static RefPtr<Gfx::Bitmap> s_tmp_bitmap;
+    static Gfx::Bitmap* s_tmp_bitmap;
     auto frame_rect = rect();
+    auto total_frame_rect = frame_rect;
+    auto* shadow_bitmap = inflate_for_shadow(total_frame_rect, m_shadow_offset);
     auto window_rect = m_window.rect();
     auto scale = Screen::the().scale_factor();
-    if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(frame_rect.size()) || s_tmp_bitmap->scale() != scale)
-        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, frame_rect.size(), scale);
+    if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(total_frame_rect.size()) || s_tmp_bitmap->scale() != scale) {
+        if (s_tmp_bitmap)
+            s_tmp_bitmap->unref();
+        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, total_frame_rect.size(), scale).leak_ref();
+    }
 
     Gfx::Painter painter(*s_tmp_bitmap);
-    painter.fill_rect({ { 0, 0 }, frame_rect.size() }, Color::White);
-    render(painter);
+    for (auto& rect : total_frame_rect.shatter(window_rect))
+        painter.clear_rect({ rect.location() - total_frame_rect.location(), rect.size() }, { 255, 255, 255, 0 });
 
-    auto top_bottom_height = frame_rect.height() - window_rect.height();
+    if (shadow_bitmap)
+        paint_simple_rect_shadow(painter, { { 0, 0 }, total_frame_rect.size() }, *shadow_bitmap);
+
+    {
+        Gfx::PainterStateSaver save(painter);
+        painter.translate(m_shadow_offset);
+        render(painter);
+    }
+
+    auto top_bottom_height = total_frame_rect.height() - window_rect.height();
     if (top_bottom_height > 0) {
-        if (!m_top_bottom || m_top_bottom->width() != frame_rect.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale)
-            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { frame_rect.width(), top_bottom_height }, scale);
-        m_bottom_y = window_rect.y() - frame_rect.y();
+        if (!m_top_bottom || m_top_bottom->width() != total_frame_rect.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale)
+            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { total_frame_rect.width(), top_bottom_height }, scale);
+        m_bottom_y = window_rect.y() - total_frame_rect.y();
         ASSERT(m_bottom_y >= 0);
 
         Gfx::Painter top_bottom_painter(*m_top_bottom);
         if (m_bottom_y > 0)
-            top_bottom_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, 0, frame_rect.width(), m_bottom_y });
+            top_bottom_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, 0, total_frame_rect.width(), m_bottom_y }, 1.0, false);
         if (m_bottom_y < top_bottom_height)
-            top_bottom_painter.blit({ 0, m_bottom_y }, *s_tmp_bitmap, { 0, frame_rect.height() - (frame_rect.bottom() - window_rect.bottom()), frame_rect.width(), top_bottom_height - m_bottom_y });
+            top_bottom_painter.blit({ 0, m_bottom_y }, *s_tmp_bitmap, { 0, total_frame_rect.height() - (total_frame_rect.bottom() - window_rect.bottom()), total_frame_rect.width(), top_bottom_height - m_bottom_y }, 1.0, false);
     } else {
         m_top_bottom = nullptr;
         m_bottom_y = 0;
     }
 
-    auto left_right_width = frame_rect.width() - window_rect.width();
+    auto left_right_width = total_frame_rect.width() - window_rect.width();
     if (left_right_width > 0) {
-        if (!m_left_right || m_left_right->height() != frame_rect.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale)
-            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { left_right_width, frame_rect.height() }, scale);
-        m_right_x = window_rect.x() - frame_rect.x();
+        if (!m_left_right || m_left_right->height() != total_frame_rect.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale)
+            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { left_right_width, total_frame_rect.height() }, scale);
+        m_right_x = window_rect.x() - total_frame_rect.x();
         ASSERT(m_right_x >= 0);
 
         Gfx::Painter left_right_painter(*m_left_right);
         if (m_right_x > 0)
-            left_right_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, m_bottom_y, m_right_x, window_rect.height() });
+            left_right_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, m_bottom_y, m_right_x, window_rect.height() }, 1.0, false);
         if (m_right_x < left_right_width)
-            left_right_painter.blit({ m_right_x, 0 }, *s_tmp_bitmap, { (window_rect.right() - frame_rect.x()) + 1, m_bottom_y, frame_rect.width() - (frame_rect.right() - window_rect.right()), window_rect.height() });
+            left_right_painter.blit({ m_right_x, 0 }, *s_tmp_bitmap, { (window_rect.right() - total_frame_rect.x()) + 1, m_bottom_y, total_frame_rect.width() - (total_frame_rect.right() - window_rect.right()), window_rect.height() }, 1.0, false);
     } else {
         m_left_right = nullptr;
         m_right_x = 0;
@@ -321,30 +374,45 @@ void WindowFrame::set_opacity(float opacity)
     m_opacity = opacity;
     if (was_opaque != is_opaque())
         Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(rect());
+    Compositor::the().invalidate_screen(render_rect());
     WindowManager::the().notify_opacity_changed(m_window);
 }
 
-static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
+Gfx::IntRect WindowFrame::inflated_for_shadow(const Gfx::IntRect& frame_rect) const
 {
-    if (window.is_frameless())
-        return rect;
-    return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette());
+    if (auto* shadow = window_shadow()) {
+        auto total_shadow_size = shadow->height();
+        return frame_rect.inflated(total_shadow_size, total_shadow_size);
+    }
+    return frame_rect;
 }
 
-static Gfx::IntRect frame_rect_for_window(Window& window)
+Gfx::Bitmap* WindowFrame::inflate_for_shadow(Gfx::IntRect& frame_rect, Gfx::IntPoint& shadow_offset) const
 {
-    return frame_rect_for_window(window, window.rect());
+    auto* shadow = window_shadow();
+    if (shadow) {
+        auto total_shadow_size = shadow->height();
+        frame_rect.inflate(total_shadow_size, total_shadow_size);
+        auto offset = total_shadow_size / 2;
+        shadow_offset = { offset, offset };
+    } else {
+        shadow_offset = {};
+    }
+    return shadow;
 }
 
 Gfx::IntRect WindowFrame::rect() const
 {
-    return frame_rect_for_window(m_window);
+    return frame_rect_for_window(m_window, m_window.rect());
+}
+
+Gfx::IntRect WindowFrame::render_rect() const
+{
+    return inflated_for_shadow(rect());
 }
 
 void WindowFrame::invalidate_title_bar()
 {
-    m_dirty = true;
     invalidate(title_bar_rect());
 }
 
@@ -353,6 +421,7 @@ void WindowFrame::invalidate(Gfx::IntRect relative_rect)
     auto frame_rect = rect();
     auto window_rect = m_window.rect();
     relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
+    m_dirty = true;
     m_window.invalidate(relative_rect, true);
 }
 
@@ -360,15 +429,15 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
 {
     layout_buttons();
 
-    auto old_frame_rect = frame_rect_for_window(m_window, old_rect);
-    auto new_frame_rect = frame_rect_for_window(m_window, new_rect);
-    if (old_frame_rect.width() != new_frame_rect.width())
+    auto old_frame_rect = inflated_for_shadow(frame_rect_for_window(m_window, old_rect));
+    auto new_frame_rect = inflated_for_shadow(frame_rect_for_window(m_window, new_rect));
+    if (old_frame_rect.size() != new_frame_rect.size())
         m_dirty = true;
     auto& compositor = Compositor::the();
-    for (auto& dirty : old_frame_rect.shatter(rect()))
+    for (auto& dirty : old_frame_rect.shatter(new_frame_rect))
         compositor.invalidate_screen(dirty);
     if (!m_window.is_opaque())
-        compositor.invalidate_screen(rect());
+        compositor.invalidate_screen(new_frame_rect);
 
     compositor.invalidate_occlusions();
 
@@ -489,6 +558,81 @@ void WindowFrame::start_flash_animation()
     }
     m_flash_counter = 8;
     m_flash_timer->start();
+}
+
+void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::IntRect& containing_rect, const Gfx::Bitmap& shadow_bitmap) const
+{
+    // The layout of the shadow_bitmap is defined like this:
+    // +---------+----+---------+----+----+----+
+    // |   TL    | T  |   TR    | LT | L  | LB |
+    // +---------+----+---------+----+----+----+
+    // |   BL    | B  |   BR    | RT | R  | RB |
+    // +---------+----+---------+----+----+----+
+    // Located strictly on the top or bottom of the rectangle, above or below of the content:
+    //   TL = top-left     T = top     TR = top-right
+    //   BL = bottom-left  B = bottom  BR = bottom-right
+    // Located on the left or right of the rectangle, but not above or below of the content:
+    //   LT = left-top     L = left    LB = left-bottom
+    //   RT = right-top    R = right   RB = right-bottom
+    // So, the bitmap has two rows and 6 column, two of which are twice as wide.
+    // The height divided by two defines a cell size, and width of each
+    // column must be the same as the height of the cell, except for the
+    // first an third column, which are twice as wide.
+    if (shadow_bitmap.height() % 2 != 0) {
+        dbgln("Can't paint simple rect shadow, shadow bitmap height {} is not even", shadow_bitmap.height());
+        return;
+    }
+    auto base_size = shadow_bitmap.height() / 2;
+    if (shadow_bitmap.width() != base_size * (6 + 2)) {
+        if (shadow_bitmap.width() % base_size != 0)
+            dbgln("Can't paint simple rect shadow, shadow bitmap width {} is not a multiple of {}", shadow_bitmap.width(), base_size);
+        else
+            dbgln("Can't paint simple rect shadow, shadow bitmap width {} but expected {}", shadow_bitmap.width(), base_size * (6 + 2));
+        return;
+    }
+
+    // The containing_rect should have been inflated appropriately
+    ASSERT(containing_rect.size().contains(Gfx::IntSize { base_size, base_size }));
+
+    auto half_width = containing_rect.width() / 2;
+    auto paint_horizontal = [&](int y, int src_row) {
+        Gfx::PainterStateSaver save(painter);
+        painter.add_clip_rect({ containing_rect.left(), y, containing_rect.width(), base_size });
+        int corner_piece_width = base_size * 2;
+        int left_corners_right = min(half_width, corner_piece_width);
+        int right_corners_left = max(half_width, containing_rect.width() - corner_piece_width);
+        painter.blit({ containing_rect.left() + left_corners_right - corner_piece_width, y }, shadow_bitmap, { 0, src_row * base_size, corner_piece_width, base_size });
+        painter.blit({ containing_rect.left() + right_corners_left, y }, shadow_bitmap, { corner_piece_width + base_size, src_row * base_size, corner_piece_width, base_size });
+        for (int x = left_corners_right; x < right_corners_left; x += base_size) {
+            auto width = min(right_corners_left - x, base_size);
+            painter.blit({ containing_rect.left() + x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
+        }
+    };
+
+    paint_horizontal(containing_rect.top(), 0);
+    paint_horizontal(containing_rect.bottom() - base_size + 1, 1);
+
+    auto sides_height = containing_rect.height() - 2 * base_size;
+    auto half_height = sides_height / 2;
+    auto paint_vertical = [&](int x, int src_row) {
+        Gfx::PainterStateSaver save(painter);
+        painter.add_clip_rect({ x, containing_rect.y() + base_size, base_size, containing_rect.height() - 2 * base_size });
+        int top_corners_bottom = base_size + min(half_height, base_size);
+        int top_corner_height = top_corners_bottom - base_size;
+        int bottom_corners_top = base_size + max(half_height, sides_height - base_size);
+        int bottom_corner_height = sides_height + base_size - bottom_corners_top;
+        painter.blit({ x, containing_rect.top() + top_corners_bottom - top_corner_height }, shadow_bitmap, { base_size * 5, src_row * base_size, base_size, top_corner_height });
+        painter.blit({ x, containing_rect.top() + bottom_corners_top }, shadow_bitmap, { base_size * 7, src_row * base_size + base_size - bottom_corner_height, base_size, bottom_corner_height });
+        if (sides_height > 2 * base_size) {
+            for (int y = top_corners_bottom; y < bottom_corners_top; y += base_size) {
+                auto height = min(bottom_corners_top - y, base_size);
+                painter.blit({ x, containing_rect.top() + y }, shadow_bitmap, { base_size * 6, src_row * base_size, base_size, height });
+            }
+        }
+    };
+
+    paint_vertical(containing_rect.left(), 0);
+    paint_vertical(containing_rect.right() - base_size + 1, 1);
 }
 
 }

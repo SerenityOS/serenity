@@ -45,6 +45,7 @@ public:
     ~WindowFrame();
 
     Gfx::IntRect rect() const;
+    Gfx::IntRect render_rect() const;
     void paint(Gfx::Painter&, const Gfx::IntRect&);
     void render(Gfx::Painter&);
     void render_to_cache();
@@ -64,7 +65,7 @@ public:
 
     void start_flash_animation();
 
-    bool has_alpha_channel() const { return m_has_alpha_channel; }
+    bool has_alpha_channel() const { return m_has_alpha_channel || frame_has_alpha(); }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
     void set_opacity(float);
@@ -79,14 +80,19 @@ public:
         return true;
     }
 
-    void scale_changed()
+    void set_dirty()
     {
         m_dirty = true;
     }
 
 private:
+    void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&) const;
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
+    Gfx::Bitmap* window_shadow() const;
+    bool frame_has_alpha() const;
+    Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
+    Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
 
@@ -95,6 +101,8 @@ private:
     Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
+
+    Gfx::IntPoint m_shadow_offset {};
 
     RefPtr<Gfx::Bitmap> m_top_bottom;
     RefPtr<Gfx::Bitmap> m_left_right;
