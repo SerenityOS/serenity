@@ -100,10 +100,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
 
 void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
 {
-    page().main_frame().set_size(rect.size());
-    if (page().main_frame().document())
-        page().main_frame().document()->update_layout();
-    page().main_frame().set_viewport_scroll_offset(rect.location());
+    page().main_frame().set_viewport_rect(rect);
 }
 
 void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
