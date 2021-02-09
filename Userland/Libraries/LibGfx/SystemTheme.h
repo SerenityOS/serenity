@@ -144,6 +144,7 @@ enum class MetricRole {
 enum class PathRole {
     NoRole,
     TitleButtonIcons,
+    WindowShadow,
     __Count,
 };
 

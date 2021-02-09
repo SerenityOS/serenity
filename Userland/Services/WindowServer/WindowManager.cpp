@@ -270,7 +270,7 @@ void WindowManager::remove_window(Window& window)
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
 
-    Compositor::the().invalidate_screen(window.frame().rect());
+    Compositor::the().invalidate_screen(window.frame().render_rect());
 
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -1517,7 +1517,6 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
     for_each_window([&](Window& window) {
         auto& window_frame = window.frame();
         window_frame.set_button_icons();
-        window_frame.scale_changed();
         return IterationDecision::Continue;
     });
 }

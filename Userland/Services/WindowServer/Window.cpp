@@ -268,7 +268,7 @@ void Window::set_minimized(bool minimized)
     m_minimized = minimized;
     update_menu_item_text(PopupMenuItem::Minimize);
     Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().rect());
+    Compositor::the().invalidate_screen(frame().render_rect());
     if (!blocking_modal_window())
         start_minimize_animation();
     if (!minimized)
@@ -323,7 +323,7 @@ void Window::set_opacity(float opacity)
     m_opacity = opacity;
     if (was_opaque != is_opaque())
         Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().rect());
+    Compositor::the().invalidate_screen(frame().render_rect());
     WindowManager::the().notify_opacity_changed(*this);
 }
 
@@ -449,14 +449,17 @@ void Window::set_visible(bool b)
     if (m_visible)
         invalidate(true);
     else
-        Compositor::the().invalidate_screen(frame().rect());
+        Compositor::the().invalidate_screen(frame().render_rect());
 }
 
 void Window::invalidate(bool invalidate_frame)
 {
     m_invalidated = true;
     m_invalidated_all = true;
-    m_invalidated_frame |= invalidate_frame;
+    if (invalidate_frame && !m_invalidated_frame) {
+        m_invalidated_frame = true;
+        frame().set_dirty();
+    }
     m_dirty_rects.clear();
     Compositor::the().invalidate_window();
 }
@@ -477,11 +480,14 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
     if (rect.is_empty())
         return false;
     if (m_invalidated_all) {
-        m_invalidated_frame |= with_frame;
+        if (with_frame && !m_invalidated_frame) {
+            m_invalidated_frame = true;
+            frame().set_dirty();
+        }
         return false;
     }
 
-    auto outer_rect = frame().rect();
+    auto outer_rect = frame().render_rect();
     auto inner_rect = rect;
     inner_rect.move_by(position());
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
@@ -490,7 +496,10 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
         return false;
 
     m_invalidated = true;
-    m_invalidated_frame |= with_frame;
+    if (with_frame && !m_invalidated_frame) {
+        m_invalidated_frame = true;
+        frame().set_dirty();
+    }
     m_dirty_rects.add(inner_rect.translated(-outer_rect.location()));
     return true;
 }
@@ -499,11 +508,11 @@ void Window::prepare_dirty_rects()
 {
     if (m_invalidated_all) {
         if (m_invalidated_frame)
-            m_dirty_rects = frame().rect();
+            m_dirty_rects = frame().render_rect();
         else
             m_dirty_rects = rect();
     } else {
-        m_dirty_rects.move_by(frame().rect().location());
+        m_dirty_rects.move_by(frame().render_rect().location());
     }
 }
 

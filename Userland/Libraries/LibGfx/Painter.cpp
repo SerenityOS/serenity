@@ -735,13 +735,13 @@ void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& sourc
     }
 }
 
-void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
+void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
 {
     ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
     if (opacity < 1.0f)
         return blit_with_opacity(position, source, a_src_rect, opacity);
-    if (source.has_alpha_channel())
+    if (source.has_alpha_channel() && apply_alpha)
         return blit_with_alpha(position, source, a_src_rect);
 
     auto safe_src_rect = a_src_rect.intersected(source.rect());

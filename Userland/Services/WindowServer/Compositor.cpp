@@ -151,7 +151,7 @@ void Compositor::compose()
 
     // Mark window regions as dirty that need to be re-rendered
     wm.for_each_visible_window_from_back_to_front([&](Window& window) {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         for (auto& dirty_rect : dirty_screen_rects.rects()) {
             auto invalidate_rect = dirty_rect.intersected(frame_rect);
             if (!invalidate_rect.is_empty()) {
@@ -173,12 +173,12 @@ void Compositor::compose()
         if (transparency_rects.is_empty())
             return IterationDecision::Continue;
 
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         auto& dirty_rects = window.dirty_rects();
         wm.for_each_visible_window_from_back_to_front([&](Window& w) {
             if (&w == &window)
                 return IterationDecision::Continue;
-            auto frame_rect2 = w.frame().rect();
+            auto frame_rect2 = w.frame().render_rect();
             if (!frame_rect2.intersects(frame_rect))
                 return IterationDecision::Continue;
             transparency_rects.for_each_intersected(w.dirty_rects(), [&](const Gfx::IntRect& intersected_dirty) {
@@ -206,6 +206,9 @@ void Compositor::compose()
     auto cursor_rect = current_cursor_rect();
     bool need_to_draw_cursor = false;
 
+    auto back_painter = *m_back_painter;
+    auto temp_painter = *m_temp_painter;
+
     auto check_restore_cursor_back = [&](const Gfx::IntRect& rect) {
         if (!need_to_draw_cursor && rect.intersects(cursor_rect)) {
             // Restore what's behind the cursor if anything touches the area of the cursor
@@ -225,25 +228,17 @@ void Compositor::compose()
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
         dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
         ASSERT(!flush_rects.intersects(rect));
-        bool have_rect = false;
         for (auto& r : flush_transparent_rects.rects()) {
-            if (r == rect) {
-                have_rect = true;
-                break;
-            }
+            if (r == rect)
+                return;
         }
 
-        if (!have_rect) {
-            flush_transparent_rects.add(rect);
-            check_restore_cursor_back(rect);
-        }
+        flush_transparent_rects.add(rect);
+        check_restore_cursor_back(rect);
     };
 
     if (!m_cursor_back_bitmap || m_invalidated_cursor)
         check_restore_cursor_back(cursor_rect);
-
-    auto back_painter = *m_back_painter;
-    auto temp_painter = *m_temp_painter;
 
     auto paint_wallpaper = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
         // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
@@ -277,7 +272,7 @@ void Compositor::compose()
     });
 
     auto compose_window = [&](Window& window) -> IterationDecision {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         if (!frame_rect.intersects(ws.rect()))
             return IterationDecision::Continue;
         auto frame_rects = frame_rect.shatter(window.rect());
@@ -849,7 +844,7 @@ bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_
             return IterationDecision::Continue;
         if (!window.is_opaque())
             return IterationDecision::Continue;
-        if (window.frame().rect().contains(rect)) {
+        if (window.frame().render_rect().contains(rect)) {
             found_containing_window = true;
             return IterationDecision::Break;
         }
@@ -907,7 +902,7 @@ void Compositor::recompute_occlusions()
         Gfx::DisjointRectSet visible_rects(screen_rect);
         bool have_transparent = false;
         WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& w) {
-            auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+            auto window_frame_rect = w.frame().render_rect().intersected(screen_rect);
             w.transparency_wallpaper_rects().clear();
             auto& visible_opaque = w.opaque_rects();
             auto& transparency_rects = w.transparency_rects();
@@ -948,7 +943,7 @@ void Compositor::recompute_occlusions()
 
                 if (w2.is_minimized())
                     return IterationDecision::Continue;
-                auto window_frame_rect2 = w2.frame().rect().intersected(screen_rect);
+                auto window_frame_rect2 = w2.frame().render_rect().intersected(screen_rect);
                 auto covering_rect = window_frame_rect2.intersected(window_frame_rect);
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
@@ -1026,7 +1021,7 @@ void Compositor::recompute_occlusions()
             // Determine what transparent window areas need to render the wallpaper first
             WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& w) {
                 auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
-                if ((w.is_opaque() && w.frame().is_opaque()) || w.is_minimized()) {
+                if (w.is_minimized()) {
                     transparency_wallpaper_rects.clear();
                     return IterationDecision::Continue;
                 }
@@ -1053,7 +1048,7 @@ void Compositor::recompute_occlusions()
     }
 
     wm.for_each_visible_window_from_back_to_front([&](Window& w) {
-        auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+        auto window_frame_rect = w.frame().render_rect().intersected(screen_rect);
         if (w.is_minimized() || window_frame_rect.is_empty())
             return IterationDecision::Continue;
 
