@@ -172,7 +172,7 @@ inline void JsonValue::serialize(Builder& builder) const
         break;
 #if !defined(KERNEL)
     case Type::Double:
-        builder.appendf("%g", m_value.as_double);
+        builder.appendff("{}", m_value.as_double);
         break;
 #endif
     case Type::Int32:

@@ -73,7 +73,7 @@ String encode_hex(ReadonlyBytes input)
     StringBuilder output(input.size() * 2);
 
     for (auto ch : input)
-        output.appendf("%02x", ch);
+        output.appendff("{:02x}", ch);
 
     return output.build();
 }
