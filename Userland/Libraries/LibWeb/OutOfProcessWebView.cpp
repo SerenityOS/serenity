@@ -59,6 +59,10 @@ void OutOfProcessWebView::create_client()
     m_client_state.client->on_web_content_process_crash = [this] {
         create_client();
         ASSERT(m_client_state.client);
+
+        // Don't keep a stale backup bitmap around.
+        m_backup_bitmap = nullptr;
+
         handle_resize();
         StringBuilder builder;
         builder.append("<html><head><title>Crashed: ");
@@ -106,16 +110,14 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    if (!m_client_state.has_usable_bitmap) {
-        painter.fill_rect(frame_inner_rect(), palette().base());
+    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.ptr() : m_backup_bitmap.ptr()) {
+        painter.add_clip_rect(frame_inner_rect());
+        painter.translate(frame_thickness(), frame_thickness());
+        painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
         return;
     }
 
-    painter.add_clip_rect(frame_inner_rect());
-    painter.translate(frame_thickness(), frame_thickness());
-
-    ASSERT(m_client_state.front_bitmap);
-    painter.blit({ 0, 0 }, *m_client_state.front_bitmap, m_client_state.front_bitmap->rect());
+    painter.fill_rect(frame_inner_rect(), palette().base());
 }
 
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
@@ -127,6 +129,11 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 void OutOfProcessWebView::handle_resize()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
+
+    if (m_client_state.has_usable_bitmap) {
+        // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
+        m_backup_bitmap = m_client_state.front_bitmap;
+    }
 
     if (m_client_state.front_bitmap) {
         m_client_state.front_bitmap = nullptr;
@@ -193,6 +200,8 @@ void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 b
         m_client_state.has_usable_bitmap = true;
         swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
         swap(m_client_state.back_bitmap_id, m_client_state.front_bitmap_id);
+        // We don't need the backup bitmap anymore, so drop it.
+        m_backup_bitmap = nullptr;
         update();
     }
 }
