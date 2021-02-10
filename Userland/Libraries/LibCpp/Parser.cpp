@@ -664,7 +664,7 @@ bool Parser::done()
     return m_state.token_index == m_tokens.size();
 }
 
-StringView Parser::text_of_token(const Cpp::Token& token)
+StringView Parser::text_of_token(const Cpp::Token& token) const
 {
     ASSERT(token.m_start.line == token.m_end.line);
     ASSERT(token.m_start.column <= token.m_end.column);

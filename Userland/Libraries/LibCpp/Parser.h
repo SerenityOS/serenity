@@ -45,6 +45,7 @@ public:
     Optional<Token> token_at(Position) const;
     RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
     StringView text_of_node(const ASTNode&) const;
+    StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     Vector<String> errors() const { return m_errors; }
 
@@ -127,7 +128,6 @@ private:
         size_t token_index { 0 };
     };
 
-    StringView text_of_token(const Cpp::Token& token);
     void error(StringView message = {});
 
     size_t node_span_size(const ASTNode& node) const;
