@@ -80,6 +80,15 @@ TEST_CASE(FundamentalTypeClassification)
     EXPECT_TRAIT_TRUE(IsFundamental, unsigned short, unsigned int, unsigned long, unsigned long long);
 
     EXPECT_TRAIT_FALSE(IsFundamental, Empty, int*, int&);
+
+    EXPECT_TRAIT_TRUE(IsUnsigned, unsigned);
+    EXPECT_TRAIT_TRUE(IsUnsigned, unsigned short);
+    EXPECT_TRAIT_TRUE(IsUnsigned, unsigned char);
+    EXPECT_TRAIT_TRUE(IsUnsigned, unsigned long);
+    EXPECT_TRAIT_FALSE(IsUnsigned, int);
+    EXPECT_TRAIT_FALSE(IsUnsigned, short);
+    EXPECT_TRAIT_FALSE(IsUnsigned, char);
+    EXPECT_TRAIT_FALSE(IsUnsigned, long);
 }
 
 TEST_CASE(AddConst)
