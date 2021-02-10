@@ -422,6 +422,7 @@ void Compositor::compose()
     if (m_invalidated_window) {
         if (auto* fullscreen_window = wm.active_fullscreen_window()) {
             compose_window(*fullscreen_window);
+            fullscreen_window->clear_dirty_rects();
         } else {
             wm.for_each_visible_window_from_back_to_front([&](Window& window) {
                 compose_window(window);
