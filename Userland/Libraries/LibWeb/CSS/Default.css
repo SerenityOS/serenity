@@ -194,3 +194,10 @@ ul,
 ol {
     padding-left: 20px;
 }
+
+/* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
+input[type=text] {
+    border: 1px solid black;
+    min-width: 80px;
+    min-height: 16px;
+}

@@ -27,10 +27,13 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Page/Frame.h>
@@ -74,8 +77,10 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
     if (type() == "checkbox")
         return adopt(*new Layout::CheckBox(document(), *this, move(style)));
 
-    // FIXME: Implement <input type=text> in terms of LibWeb primitives.
-    return nullptr;
+    create_shadow_tree_if_needed();
+    auto layout_node = adopt(*new Layout::BlockBox(document(), this, move(style)));
+    layout_node->set_inline(true);
+    return layout_node;
 }
 
 void HTMLInputElement::set_checked(bool checked)
@@ -92,6 +97,41 @@ void HTMLInputElement::set_checked(bool checked)
 bool HTMLInputElement::enabled() const
 {
     return !has_attribute(HTML::AttributeNames::disabled);
+}
+
+String HTMLInputElement::value() const
+{
+    if (m_text_node)
+        return m_text_node->data();
+    return default_value();
+}
+
+void HTMLInputElement::set_value(String value)
+{
+    if (m_text_node) {
+        m_text_node->set_data(move(value));
+        return;
+    }
+    set_attribute(HTML::AttributeNames::value, move(value));
+}
+
+void HTMLInputElement::create_shadow_tree_if_needed()
+{
+    if (shadow_root())
+        return;
+
+    // FIXME: This assumes that we want a text box. Is that always true?
+    auto shadow_root = adopt(*new DOM::ShadowRoot(document(), *this));
+    auto initial_value = attribute(HTML::AttributeNames::value);
+    if (initial_value.is_null())
+        initial_value = String::empty();
+    auto element = document().create_element(HTML::TagNames::div);
+    element->set_attribute(HTML::AttributeNames::style, "white-space: pre");
+    m_text_node = adopt(*new DOM::Text(document(), initial_value));
+    m_text_node->set_always_editable(true);
+    element->append_child(*m_text_node);
+    shadow_root->append_child(move(element));
+    set_shadow_root(move(shadow_root));
 }
 
 }

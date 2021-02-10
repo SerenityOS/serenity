@@ -11,6 +11,8 @@ interface HTMLInputElement : HTMLElement {
     [Reflect=dirname] attribute DOMString dirName;
     [Reflect=value] attribute DOMString defaultValue;
 
+    [LegacyNullToEmptyString] attribute DOMString value;
+
     attribute boolean checked;
 
     [Reflect] attribute boolean disabled;
