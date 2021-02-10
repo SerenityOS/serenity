@@ -53,7 +53,7 @@ Parser::Parser(const StringView& program)
     dbgln("{}", m_program);
     dbgln("Tokens:");
     for (auto& token : m_tokens) {
-        dbgln("{}", token.to_string());
+        dbgln("{} ({}:{}-{}:{})", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column);
     }
 #endif
 }
@@ -673,9 +673,14 @@ StringView Parser::text_of_token(const Cpp::Token& token) const
 
 StringView Parser::text_of_node(const ASTNode& node) const
 {
-    if (node.start().line == node.end().line) {
-        ASSERT(node.start().column <= node.end().column);
-        return m_lines[node.start().line].substring_view(node.start().column, node.end().column - node.start().column + 1);
+    return text_of_range(node.start(), node.end());
+}
+
+StringView Parser::text_of_range(Position start, Position end) const
+{
+    if (start.line == end.line) {
+        ASSERT(start.column <= end.column);
+        return m_lines[start.line].substring_view(start.column, end.column - start.column + 1);
     }
 
     auto index_of_position([this](auto position) {
@@ -686,8 +691,8 @@ StringView Parser::text_of_node(const ASTNode& node) const
         start_index += position.column;
         return start_index;
     });
-    auto start_index = index_of_position(node.start());
-    auto end_index = index_of_position(node.end());
+    auto start_index = index_of_position(start);
+    auto end_index = index_of_position(end);
     ASSERT(end_index >= start_index);
     return m_program.substring_view(start_index, end_index - start_index);
 }
@@ -717,6 +722,7 @@ bool Parser::match_expression()
     return token_type == Token::Type::Integer
         || token_type == Token::Type::Float
         || token_type == Token::Type::Identifier
+        || token_type == Token::Type::DoubleQuotedString
         || match_unary_expression();
 }
 
@@ -821,7 +827,6 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
         auto token = peek();
         if (token.type() != Token::Type::DoubleQuotedString && token.type() != Token::Type::EscapeSequence) {
             ASSERT(start_token_index.has_value());
-            // TODO: don't consume
             end_token_index = m_state.token_index - 1;
             break;
         }
@@ -829,13 +834,19 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
             start_token_index = m_state.token_index;
         consume();
     }
+
+    // String was not terminated
+    if (!end_token_index.has_value()) {
+        end_token_index = m_tokens.size() - 1;
+    }
+
     ASSERT(start_token_index.has_value());
     ASSERT(end_token_index.has_value());
+
     Token start_token = m_tokens[start_token_index.value()];
     Token end_token = m_tokens[end_token_index.value()];
-    ASSERT(start_token.start().line == end_token.start().line);
 
-    auto text = m_lines[start_token.start().line].substring_view(start_token.start().column, end_token.end().column - start_token.start().column + 1);
+    auto text = text_of_range(start_token.start(), end_token.end());
     auto string_literal = create_ast_node<StringLiteral>(parent, start_token.start(), end_token.end());
     string_literal->m_value = text;
     return string_literal;
