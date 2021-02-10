@@ -27,6 +27,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
@@ -92,14 +93,14 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
 {
     // If the parent doesn't have a layout node, we don't need one either.
-    if (dom_node.parent() && !dom_node.parent()->layout_node())
+    if (dom_node.parent_or_shadow_host() && !dom_node.parent_or_shadow_host()->layout_node())
         return;
 
     auto layout_node = dom_node.create_layout_node();
     if (!layout_node)
         return;
 
-    if (!dom_node.parent()) {
+    if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
     } else {
         if (layout_node->is_inline()) {
@@ -122,8 +123,12 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
         }
     }
 
-    if (dom_node.has_children() && layout_node->can_have_children()) {
+    auto* shadow_root = is<DOM::Element>(dom_node) ? downcast<DOM::Element>(dom_node).shadow_root() : nullptr;
+
+    if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
         push_parent(downcast<NodeWithStyle>(*layout_node));
+        if (shadow_root)
+            create_layout_tree(*shadow_root);
         downcast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
             create_layout_tree(dom_child);
         });
