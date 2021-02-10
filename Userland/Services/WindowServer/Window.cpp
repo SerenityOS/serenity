@@ -152,7 +152,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
         m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
     }
 
-    invalidate(true);
+    invalidate(true, old_rect.size() != rect.size());
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
@@ -172,7 +172,7 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
         }
     }
 
-    invalidate(true);
+    invalidate(true, old_rect.size() != rect.size());
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
@@ -466,14 +466,15 @@ void Window::set_visible(bool b)
         Compositor::the().invalidate_screen(frame().render_rect());
 }
 
-void Window::invalidate(bool invalidate_frame)
+void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 {
     m_invalidated = true;
     m_invalidated_all = true;
     if (invalidate_frame && !m_invalidated_frame) {
         m_invalidated_frame = true;
-        frame().set_dirty();
     }
+    if (re_render_frame)
+        frame().set_dirty();
     m_dirty_rects.clear();
     Compositor::the().invalidate_window();
 }
@@ -494,10 +495,8 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
     if (rect.is_empty())
         return false;
     if (m_invalidated_all) {
-        if (with_frame && !m_invalidated_frame) {
-            m_invalidated_frame = true;
-            frame().set_dirty();
-        }
+        if (with_frame)
+            m_invalidated_frame |= true;
         return false;
     }
 
@@ -510,10 +509,8 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
         return false;
 
     m_invalidated = true;
-    if (with_frame && !m_invalidated_frame) {
-        m_invalidated_frame = true;
-        frame().set_dirty();
-    }
+    if (with_frame)
+        m_invalidated_frame |= true;
     m_dirty_rects.add(inner_rect.translated(-outer_rect.location()));
     return true;
 }
