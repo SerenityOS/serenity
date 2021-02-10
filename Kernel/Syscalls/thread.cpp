@@ -95,6 +95,12 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
 {
     REQUIRE_PROMISE(thread);
     cli();
+
+    if (this->thread_count() == 1) {
+        // If this is the last thread, instead kill the process.
+        this->sys$exit(0);
+    }
+
     Thread::current()->exit(reinterpret_cast<void*>(exit_value.ptr()));
     ASSERT_NOT_REACHED();
 }
