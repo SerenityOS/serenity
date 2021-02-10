@@ -121,7 +121,7 @@ static FlatPtr as_buf(Vector<FlatPtr> params_vec)
             builder.appendff(" {:p}", params_vec[i]);
         }
         builder.appendff(" ] at {:p}", (FlatPtr)buf);
-        dbgln(builder.to_string());
+        dbgln("{}", builder.to_string());
     }
 
     // Leak the buffer here. We need to keep it until the special syscall happens,
