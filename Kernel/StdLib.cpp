@@ -36,7 +36,6 @@
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -68,7 +67,6 @@ Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -80,7 +78,6 @@ Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -92,7 +89,6 @@ Optional<u32> user_atomic_load_relaxed(volatile u32* var)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -104,7 +100,6 @@ bool user_atomic_store_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return false; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
@@ -117,7 +112,6 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
         return {}; // not aligned!
     ASSERT(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -129,7 +123,6 @@ Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -141,7 +134,6 @@ Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -153,7 +145,6 @@ Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -165,7 +156,6 @@ Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -177,7 +167,6 @@ extern "C" {
 bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     ASSERT(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
@@ -194,7 +183,6 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     ASSERT(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
@@ -250,7 +238,6 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
 [[nodiscard]] bool memset_user(void* dest_ptr, int c, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
