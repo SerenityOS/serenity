@@ -57,6 +57,9 @@ public:
     using TreeNode<Node>::ref;
     using TreeNode<Node>::unref;
 
+    ParentNode* parent_or_shadow_host();
+    const ParentNode* parent_or_shadow_host() const { return const_cast<Node*>(this)->parent_or_shadow_host(); }
+
     // ^EventTarget
     virtual void ref_event_target() final { ref(); }
     virtual void unref_event_target() final { unref(); }
