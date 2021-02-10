@@ -32,7 +32,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ListItemBox.h>
-#include <LibWeb/Layout/WidgetBox.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
@@ -481,13 +481,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     // FIXME: This is a hack and should be managed by an overflow mechanism.
     icb.set_height(max(static_cast<float>(viewport_rect.height()), lowest_bottom));
-
-    // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
-    //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
-    icb.for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& widget) {
-        widget.update_widget();
-        return IterationDecision::Continue;
-    });
 }
 
 static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)
