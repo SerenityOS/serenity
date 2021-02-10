@@ -85,14 +85,14 @@ Core::AnonymousBuffer load_system_theme(const String& path)
         return metric;
     };
 
-    auto get_path = [&](auto& name, auto role) {
+    auto get_path = [&](auto& name, auto role, bool allow_empty) {
         auto path = file->read_entry("Paths", name);
         if (path.is_empty()) {
             switch (role) {
             case (int)PathRole::TitleButtonIcons:
                 return "/res/icons/16x16/";
             default:
-                return "/res/";
+                return allow_empty ? "" : "/res/";
             }
         }
         return &path[0];
@@ -111,17 +111,17 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     DO_METRIC(TitleButtonWidth);
     DO_METRIC(TitleButtonHeight);
 
-#define DO_PATH(x)                                                                                               \
+#define DO_PATH(x, allow_empty)                                                                                  \
     do {                                                                                                         \
-        auto path = get_path(#x, (int)PathRole::x);                                                              \
+        auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
         memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
         data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
     } while (0)
 
-    DO_PATH(TitleButtonIcons);
-    DO_PATH(MenuShadow);
-    DO_PATH(TooltipShadow);
-    DO_PATH(WindowShadow);
+    DO_PATH(TitleButtonIcons, false);
+    DO_PATH(MenuShadow, true);
+    DO_PATH(TooltipShadow, true);
+    DO_PATH(WindowShadow, true);
 
     return buffer;
 }
