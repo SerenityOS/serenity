@@ -90,6 +90,10 @@ public:
     void theme_changed()
     {
         m_dirty = m_shadow_dirty = true;
+        m_top_bottom = nullptr;
+        m_left_right = nullptr;
+        m_bottom_y = m_right_x = 0;
+
         layout_buttons();
         set_button_icons();
     }
