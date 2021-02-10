@@ -28,7 +28,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Uint8ClampedArray.h>
-#include <string.h>
 
 namespace JS {
 

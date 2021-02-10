@@ -31,7 +31,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
 

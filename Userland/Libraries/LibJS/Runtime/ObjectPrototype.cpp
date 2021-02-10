@@ -26,7 +26,6 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
