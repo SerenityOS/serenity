@@ -24,20 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Badge.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
-#include <LibJS/Runtime/MarkedValueList.h>
-#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
