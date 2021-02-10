@@ -420,4 +420,10 @@ void InProcessWebView::page_did_request_alert(const String& message)
     GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
+bool InProcessWebView::page_did_request_confirm(const String& message)
+{
+    auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
 }

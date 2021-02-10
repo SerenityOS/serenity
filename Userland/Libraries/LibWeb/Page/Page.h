@@ -105,6 +105,7 @@ public:
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) { }
     virtual void page_did_request_alert(const String&) { }
+    virtual bool page_did_request_confirm(const String&) { return false; }
 };
 
 }
