@@ -31,8 +31,8 @@
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
@@ -363,6 +363,14 @@ NonnullRefPtrVector<Element> Element::get_elements_by_class_name(const FlyString
         return IterationDecision::Continue;
     });
     return elements;
+}
+
+void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
+{
+    if (m_shadow_root == shadow_root)
+        return;
+    m_shadow_root = move(shadow_root);
+    invalidate_style();
 }
 
 }
