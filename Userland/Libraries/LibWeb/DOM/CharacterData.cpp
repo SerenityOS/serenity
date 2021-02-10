@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/CharacterData.h>
+#include <LibWeb/DOM/Document.h>
 
 namespace Web::DOM {
 
@@ -36,6 +37,15 @@ CharacterData::CharacterData(Document& document, NodeType type, const String& da
 
 CharacterData::~CharacterData()
 {
+}
+
+void CharacterData::set_data(String data)
+{
+    if (m_data == data)
+        return;
+    m_data = move(data);
+    // FIXME: This is definitely too aggressive.
+    document().schedule_forced_layout();
 }
 
 }
