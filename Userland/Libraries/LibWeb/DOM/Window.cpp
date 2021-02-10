@@ -25,7 +25,6 @@
  */
 
 #include <LibGUI/DisplayLink.h>
-#include <LibGUI/MessageBox.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -67,8 +66,9 @@ void Window::alert(const String& message)
 
 bool Window::confirm(const String& message)
 {
-    auto confirm_result = GUI::MessageBox::show(nullptr, message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+    if (auto* page = m_document.page())
+        return page->client().page_did_request_confirm(message);
+    return false;
 }
 
 i32 Window::set_interval(JS::Function& callback, i32 interval)
