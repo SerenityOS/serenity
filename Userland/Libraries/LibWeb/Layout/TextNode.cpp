@@ -26,7 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
-#include <LibGUI/Painter.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>

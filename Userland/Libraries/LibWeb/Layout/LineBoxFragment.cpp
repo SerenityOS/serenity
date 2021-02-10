@@ -25,7 +25,7 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibGUI/Painter.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>
