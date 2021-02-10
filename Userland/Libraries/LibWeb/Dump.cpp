@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
-#include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
@@ -49,9 +48,7 @@ void dump_tree(const DOM::Node& node)
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
         dbgprintf("  ");
-    if (is<DOM::Document>(node)) {
-        dbgprintf("*Document*\n");
-    } else if (is<DOM::Element>(node)) {
+    if (is<DOM::Element>(node)) {
         dbgprintf("<%s", downcast<DOM::Element>(node).local_name().characters());
         downcast<DOM::Element>(node).for_each_attribute([](auto& name, auto& value) {
             dbgprintf(" %s=%s", name.characters(), value.characters());
@@ -59,12 +56,8 @@ void dump_tree(const DOM::Node& node)
         dbgprintf(">\n");
     } else if (is<DOM::Text>(node)) {
         dbgprintf("\"%s\"\n", downcast<DOM::Text>(node).data().characters());
-    } else if (is<DOM::DocumentType>(node)) {
-        dbgprintf("<!DOCTYPE html>\n");
-    } else if (is<DOM::Comment>(node)) {
-        dbgprintf("<!--%s-->\n", downcast<DOM::Comment>(node).data().characters());
-    } else if (is<DOM::DocumentFragment>(node)) {
-        dbgprintf("#document-fragment\n");
+    } else {
+        dbgprintf("%s\n", node.node_name().characters());
     }
     ++indent;
     if (is<DOM::ParentNode>(node)) {
@@ -96,14 +89,10 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
-    else if (is<DOM::Text>(layout_node.dom_node()))
-        tag_name = "#text";
-    else if (is<DOM::Document>(layout_node.dom_node()))
-        tag_name = "#document";
     else if (is<DOM::Element>(layout_node.dom_node()))
         tag_name = downcast<DOM::Element>(*layout_node.dom_node()).local_name();
     else
-        tag_name = "???";
+        tag_name = layout_node.dom_node()->node_name();
 
     String identifier = "";
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
