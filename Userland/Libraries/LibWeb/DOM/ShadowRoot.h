@@ -49,6 +49,10 @@ public:
     String mode() const { return m_closed ? "closed" : "open"; }
 
 private:
+    // ^Node
+    virtual FlyString node_name() const override { return "#shadow-root"; }
+    virtual RefPtr<Layout::Node> create_layout_node() override;
+
     // NOTE: The specification doesn't seem to specify a default value for closed. Assuming false for now.
     bool m_closed { false };
     bool m_delegates_focus { false };
