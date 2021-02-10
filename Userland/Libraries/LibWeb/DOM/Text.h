@@ -39,10 +39,16 @@ public:
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
+    // ^Node
     virtual FlyString node_name() const override { return "#text"; }
+    virtual bool is_editable() const override { return m_always_editable || CharacterData::is_editable(); }
+
+    void set_always_editable(bool b) { m_always_editable = b; }
 
 private:
     virtual RefPtr<Layout::Node> create_layout_node() override;
+
+    bool m_always_editable { false };
 };
 
 }
