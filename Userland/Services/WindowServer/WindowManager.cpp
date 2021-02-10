@@ -1526,7 +1526,6 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
 {
     m_allow_hidpi_icons = allow_hidpi_icons;
     reload_config();
-    WindowFrame::reload_config();
     for_each_window([&](Window& window) {
         auto& window_frame = window.frame();
         window_frame.theme_changed();
