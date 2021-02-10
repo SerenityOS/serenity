@@ -25,8 +25,8 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Page/Frame.h>

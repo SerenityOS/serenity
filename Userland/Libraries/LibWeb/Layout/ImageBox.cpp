@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/Painter.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Page/Frame.h>

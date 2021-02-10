@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,12 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/URL.h>
+#include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <Kernel/API/KeyCode.h>
-#include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
