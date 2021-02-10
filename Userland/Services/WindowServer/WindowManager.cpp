@@ -440,7 +440,7 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     m_move_window->set_default_positioned(false);
     m_move_origin = event.position();
     m_move_window_origin = window.position();
-    window.invalidate();
+    window.invalidate(true, true);
 }
 
 void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
@@ -475,7 +475,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
 
     m_active_input_tracking_window = nullptr;
 
-    window.invalidate();
+    window.invalidate(true, true);
 
     if (hot_area_row == 0 || hot_area_column == 0) {
         m_resize_window->set_default_positioned(false);
@@ -495,7 +495,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
-        m_move_window->invalidate();
+        m_move_window->invalidate(true, true);
         if (m_move_window->rect().contains(event.position()))
             hovered_window = m_move_window;
         if (m_move_window->is_resizable()) {
@@ -591,7 +591,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         }
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
-        m_resize_window->invalidate();
+        m_resize_window->invalidate(true, true);
         if (m_resize_window->rect().contains(event.position()))
             hovered_window = m_resize_window;
         m_resize_window = nullptr;
@@ -1181,11 +1181,12 @@ void WindowManager::set_highlight_window(Window* window)
 {
     if (window == m_highlight_window)
         return;
-    if (auto* previous_highlight_window = m_highlight_window.ptr())
-        previous_highlight_window->invalidate();
+    auto* previous_highlight_window = m_highlight_window.ptr();
     m_highlight_window = window;
+    if (previous_highlight_window)
+        previous_highlight_window->invalidate(true, true);
     if (m_highlight_window)
-        m_highlight_window->invalidate();
+        m_highlight_window->invalidate(true, true);
 }
 
 bool WindowManager::is_active_window_or_accessory(Window& window) const
@@ -1267,7 +1268,7 @@ void WindowManager::set_active_window(Window* window, bool make_input)
 
     if (previously_active_window) {
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
-        previously_active_window->invalidate();
+        previously_active_window->invalidate(true, true);
         m_active_window = nullptr;
         m_active_input_tracking_window = nullptr;
         tell_wm_listeners_window_state_changed(*previously_active_window);
@@ -1276,7 +1277,7 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     if (window) {
         m_active_window = *window;
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
-        m_active_window->invalidate();
+        m_active_window->invalidate(true, true);
         if (auto* client = window->client()) {
             MenuManager::the().set_current_menubar(client->app_menubar());
         } else {

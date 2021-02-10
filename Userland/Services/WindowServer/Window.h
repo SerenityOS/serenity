@@ -179,7 +179,7 @@ public:
 
     Gfx::IntSize size() const { return m_rect.size(); }
 
-    void invalidate(bool with_frame = true);
+    void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
     bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
 
