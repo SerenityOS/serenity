@@ -143,6 +143,12 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_identi
         if (decl.is_variable_or_parameter_declaration()) {
             add_name(((Cpp::VariableOrParameterDeclaration&)decl).m_name);
         }
+        if (decl.is_struct_or_class()) {
+            add_name(((Cpp::StructOrClassDeclaration&)decl).m_name);
+        }
+        if (decl.is_function()) {
+            add_name(((Cpp::FunctionDeclaration&)decl).m_name);
+        }
     }
 
     auto partial_text = document.parser.text_of_node(node);
