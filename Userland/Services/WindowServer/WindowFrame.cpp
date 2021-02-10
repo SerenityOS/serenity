@@ -169,9 +169,20 @@ void WindowFrame::reload_config()
     s_last_title_button_icons_scale = icons_scale;
 
     auto load_shadow = [](const String& path, String& last_path, Gfx::Bitmap*& shadow_bitmap) {
-        if (!shadow_bitmap || shadow_bitmap->scale() != s_last_title_button_icons_scale || last_path != path) {
+        if (path.is_empty()) {
+            last_path = String::empty();
+            if (shadow_bitmap) {
+                shadow_bitmap->unref();
+                shadow_bitmap = nullptr;
+            }
+        } else if (!shadow_bitmap || shadow_bitmap->scale() != s_last_title_button_icons_scale || last_path != path) {
+            if (shadow_bitmap)
+                shadow_bitmap->unref();
             shadow_bitmap = Gfx::Bitmap::load_from_file(path, s_last_title_button_icons_scale).leak_ref();
-            last_path = path;
+            if (shadow_bitmap)
+                last_path = path;
+            else
+                last_path = String::empty();
         }
     };
     load_shadow(WindowManager::the().palette().window_shadow_path(), s_last_window_shadow_path, s_window_shadow);
