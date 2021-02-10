@@ -101,6 +101,10 @@ public:
     NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
     NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
 
+    ShadowRoot* shadow_root() { return m_shadow_root; }
+    const ShadowRoot* shadow_root() const { return m_shadow_root; }
+    void set_shadow_root(RefPtr<ShadowRoot>);
+
 protected:
     RefPtr<Layout::Node> create_layout_node() override;
 
@@ -116,6 +120,8 @@ private:
     RefPtr<CSS::StyleProperties> m_specified_css_values;
 
     Vector<FlyString> m_classes;
+
+    RefPtr<ShadowRoot> m_shadow_root;
 };
 
 template<>
