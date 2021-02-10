@@ -176,4 +176,9 @@ void PageHost::page_did_request_alert(const String& message)
     m_client.send_sync<Messages::WebContentClient::DidRequestAlert>(message);
 }
 
+bool PageHost::page_did_request_confirm(const String& message)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestConfirm>(message)->result();
+}
+
 }

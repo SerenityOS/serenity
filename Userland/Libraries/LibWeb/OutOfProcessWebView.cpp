@@ -287,6 +287,12 @@ void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient
     GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
+bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, const String& message)
+{
+    auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
