@@ -30,7 +30,6 @@
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web {
@@ -165,18 +164,6 @@ void Frame::set_needs_display(const Gfx::IntRect& rect)
 
     if (host_element() && host_element()->layout_node())
         host_element()->layout_node()->set_needs_display();
-}
-
-void Frame::did_scroll(Badge<InProcessWebView>)
-{
-    if (!m_document)
-        return;
-    if (!m_document->layout_node())
-        return;
-    m_document->layout_node()->for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& layout_widget) {
-        layout_widget.update_widget();
-        return IterationDecision::Continue;
-    });
 }
 
 void Frame::scroll_to_anchor(const String& fragment)

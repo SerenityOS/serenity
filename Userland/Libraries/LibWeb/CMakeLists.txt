@@ -172,7 +172,6 @@ set(SOURCES
     Layout/TableRowGroupBox.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
-    Layout/WidgetBox.cpp
     LayoutTreeModel.cpp
     Loader/ContentFilter.cpp
     Loader/FrameLoader.cpp

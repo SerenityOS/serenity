@@ -75,15 +75,12 @@ public:
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(const Gfx::IntRect&);
 
-    void did_scroll(Badge<InProcessWebView>);
-
     FrameLoader& loader() { return m_loader; }
     const FrameLoader& loader() const { return m_loader; }
 
     EventHandler& event_handler() { return m_event_handler; }
     const EventHandler& event_handler() const { return m_event_handler; }
 
-    void scroll_to(const Gfx::IntPoint&);
     void scroll_to_anchor(const String&);
 
     Frame& main_frame() { return m_main_frame; }

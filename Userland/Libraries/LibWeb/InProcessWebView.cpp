@@ -401,7 +401,6 @@ void InProcessWebView::set_document(DOM::Document* document)
 void InProcessWebView::did_scroll()
 {
     page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
-    page().main_frame().did_scroll({});
 }
 
 void InProcessWebView::drop_event(GUI::DropEvent& event)
