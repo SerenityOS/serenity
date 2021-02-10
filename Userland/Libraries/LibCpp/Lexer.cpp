@@ -640,6 +640,10 @@ Vector<Token> Lexer::lex()
                     }
                 }
 
+                // If string is not terminated - stop before EOF
+                if (!peek(1))
+                    break;
+
                 if (consume() == '"')
                     break;
             }

@@ -114,6 +114,7 @@ private:
     Token peek() const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
+    StringView text_of_range(Position start, Position end) const;
 
     void save_state();
     void load_state();
