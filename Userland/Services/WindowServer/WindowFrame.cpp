@@ -465,6 +465,7 @@ Gfx::IntRect WindowFrame::render_rect() const
 
 void WindowFrame::invalidate_title_bar()
 {
+    m_dirty = true;
     invalidate(title_bar_rect());
 }
 
