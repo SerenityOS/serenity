@@ -41,7 +41,7 @@ public:
     virtual ~CharacterData() override;
 
     const String& data() const { return m_data; }
-    void set_data(const String& data) { m_data = data; }
+    void set_data(String);
 
     unsigned length() const { return m_data.length(); }
 
