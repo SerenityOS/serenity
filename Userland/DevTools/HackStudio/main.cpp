@@ -35,6 +35,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Notification.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibThread/Lock.h>
@@ -53,6 +54,7 @@ static RefPtr<GUI::Window> s_window;
 static RefPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
+static void notify_make_not_available();
 static void update_path_environment_variable();
 
 int main(int argc, char** argv)
@@ -75,8 +77,9 @@ int main(int argc, char** argv)
 
     update_path_environment_variable();
 
-    if (!make_is_available())
-        GUI::MessageBox::show(s_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
+    if (!make_is_available()) {
+        notify_make_not_available();
+    }
 
     const char* path_argument = nullptr;
     Core::ArgsParser args_parser;
@@ -120,6 +123,14 @@ static bool make_is_available()
     waitpid(pid, &wstatus, 0);
     posix_spawn_file_actions_destroy(&action);
     return WEXITSTATUS(wstatus) == 0;
+}
+
+static void notify_make_not_available()
+{
+    auto notification = GUI::Notification::construct();
+    notification->set_title("'make' Not Available");
+    notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository");
+    notification->show();
 }
 
 static void update_path_environment_variable()
