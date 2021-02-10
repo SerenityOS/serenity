@@ -53,6 +53,7 @@ class MouseEvent;
 class Node;
 class ParentNode;
 class Position;
+class ShadowRoot;
 class Text;
 class Timer;
 class Window;
