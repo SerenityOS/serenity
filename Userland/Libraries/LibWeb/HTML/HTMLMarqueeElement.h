@@ -37,6 +37,9 @@ public:
 
     HTMLMarqueeElement(DOM::Document&, QualifiedName);
     virtual ~HTMLMarqueeElement() override;
+
+private:
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
 }
