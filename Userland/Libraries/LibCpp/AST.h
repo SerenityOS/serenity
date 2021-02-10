@@ -128,6 +128,7 @@ public:
     virtual bool is_variable_declaration() const { return false; }
     virtual bool is_parameter() const { return false; }
     virtual bool is_struct_or_class() const { return false; }
+    virtual bool is_function() const { return false; }
 
 protected:
     Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end)
@@ -152,6 +153,7 @@ public:
     virtual ~FunctionDeclaration() override = default;
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
     virtual void dump(size_t indent) const override;
+    virtual bool is_function() const override { return true; }
     const StringView& name() const { return m_name; }
     RefPtr<FunctionDefinition> definition() { return m_definition; }
 
