@@ -533,7 +533,7 @@ template<typename... _Ignored>
 constexpr auto DependentFalse = false;
 
 template<typename T>
-using IsUnsigned = IsSame<T, MakeUnsigned<T>>;
+using IsUnsigned = IsSame<T, typename MakeUnsigned<T>::Type>;
 
 template<typename T>
 using IsArithmetic = IntegralConstant<bool, IsIntegral<T>::value || IsFloatingPoint<T>::value>;
@@ -620,6 +620,7 @@ using AK::IsFundamental;
 using AK::IsNullPointer;
 using AK::IsSame;
 using AK::IsUnion;
+using AK::IsUnsigned;
 using AK::IsVoid;
 using AK::MakeIndexSequence;
 using AK::MakeIntegerSequence;
