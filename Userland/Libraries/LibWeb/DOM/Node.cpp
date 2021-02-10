@@ -259,4 +259,11 @@ void Node::inserted_into(Node&)
     set_needs_style_update(true);
 }
 
+ParentNode* Node::parent_or_shadow_host()
+{
+    if (is<ShadowRoot>(*this))
+        return downcast<ShadowRoot>(*this).host();
+    return downcast<ParentNode>(parent());
+}
+
 }
