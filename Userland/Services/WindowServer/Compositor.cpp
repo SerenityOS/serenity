@@ -948,8 +948,14 @@ void Compositor::recompute_occlusions()
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
 
-                auto add_opaque = [&](const Gfx::IntRect& covering) {
+                auto add_opaque = [&](const Gfx::IntRect& covering) -> bool {
                     opaque_covering.add(covering);
+                    if (opaque_covering.contains(window_frame_rect)) {
+                        // This window (including frame) is entirely covered by another opaque window
+                        visible_opaque.clear();
+                        transparency_rects.clear();
+                        return false;
+                    }
                     if (!visible_opaque.is_empty()) {
                         auto uncovered_opaque = visible_opaque.shatter(covering);
                         visible_opaque = move(uncovered_opaque);
@@ -959,6 +965,7 @@ void Compositor::recompute_occlusions()
                         auto uncovered_transparency = transparency_rects.shatter(covering);
                         transparency_rects = move(uncovered_transparency);
                     }
+                    return true;
                 };
                 auto add_transparent = [&](const Gfx::IntRect& covering) {
                     visible_rects.for_each_intersected(covering, [&](const Gfx::IntRect& intersected) {
@@ -972,25 +979,23 @@ void Compositor::recompute_occlusions()
                 };
                 if (w2.is_opaque()) {
                     if (w2.frame().is_opaque()) {
-                        if (opaque_covering.contains(covering_rect)) {
-                            // This window (including frame) is entirely covered by another opaque window
-                            visible_opaque.clear();
-                            transparency_rects.clear();
+                        if (!add_opaque(covering_rect))
                             return IterationDecision::Break;
-                        }
-                        add_opaque(covering_rect);
                     } else {
                         auto covering_window_rect = covering_rect.intersected(w2.rect());
-                        add_opaque(covering_window_rect);
+                        if (!add_opaque(covering_window_rect))
+                            return IterationDecision::Break;
                         for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect))
                             add_transparent(covering_frame_rect);
                     }
                 } else {
                     if (w2.frame().is_opaque()) {
                         auto covering_window_rect = covering_rect.intersected(w2.rect());
+                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect)) {
+                            if (!add_opaque(covering_frame_rect))
+                                return IterationDecision::Break;
+                        }
                         add_transparent(covering_window_rect);
-                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect))
-                            add_opaque(covering_frame_rect);
                     } else {
                         add_transparent(covering_rect);
                     }
@@ -1011,6 +1016,11 @@ void Compositor::recompute_occlusions()
                     visible_rects = move(visible_rects_below_window);
                 } else {
                     auto visible_rects_below_window = visible_rects.shatter(w.rect().intersected(screen_rect));
+                    visible_rects = move(visible_rects_below_window);
+                }
+            } else if (w.frame().is_opaque()) {
+                for (auto& rect : window_frame_rect.shatter(w.rect())) {
+                    auto visible_rects_below_window = visible_rects.shatter(rect);
                     visible_rects = move(visible_rects_below_window);
                 }
             }
