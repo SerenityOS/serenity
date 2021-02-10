@@ -26,8 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/FlyString.h>
-#include <AK/Function.h>
 #include <LibJS/Console.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/GlobalObject.h>

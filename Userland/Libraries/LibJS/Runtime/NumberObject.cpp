@@ -24,11 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberObject.h>
-#include <LibJS/Runtime/NumberPrototype.h>
-#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 

@@ -24,10 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
 
 namespace JS {

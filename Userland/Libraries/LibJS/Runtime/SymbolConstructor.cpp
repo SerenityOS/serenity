@@ -27,7 +27,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
-#include <LibJS/Runtime/SymbolObject.h>
 
 namespace JS {
 

@@ -27,8 +27,6 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Runtime/Cell.h>
-#include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
