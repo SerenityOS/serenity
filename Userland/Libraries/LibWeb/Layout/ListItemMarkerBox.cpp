@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/Painter.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 
 namespace Web::Layout {

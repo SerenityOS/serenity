@@ -26,6 +26,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>

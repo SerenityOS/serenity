@@ -25,8 +25,8 @@
  */
 
 #include <AK/Demangle.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>

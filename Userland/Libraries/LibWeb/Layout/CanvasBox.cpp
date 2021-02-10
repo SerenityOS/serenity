@@ -24,8 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/Painter.h>
-#include <LibGfx/StylePainter.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/CanvasBox.h>
 
 namespace Web::Layout {

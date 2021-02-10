@@ -27,9 +27,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/Application.h>
-#include <LibGUI/DisplayLink.h>
-#include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
