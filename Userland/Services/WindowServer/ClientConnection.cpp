@@ -466,7 +466,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_size_increment(message.size_increment());
     window->set_base_size(message.base_size());
     window->set_resize_aspect_ratio(message.resize_aspect_ratio());
-    window->invalidate();
+    window->invalidate(true, true);
     if (window->type() == WindowType::MenuApplet)
         AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
