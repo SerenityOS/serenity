@@ -26,6 +26,7 @@
 
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/Layout/BlockBox.h>
 
 namespace Web::DOM {
 
@@ -44,6 +45,11 @@ EventTarget* ShadowRoot::get_parent(const Event& event)
     }
 
     return host();
+}
+
+RefPtr<Layout::Node> ShadowRoot::create_layout_node()
+{
+    return adopt(*new Layout::BlockBox(document(), this, CSS::ComputedValues {}));
 }
 
 }
