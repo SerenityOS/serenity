@@ -109,22 +109,29 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
         return {};
     }
 
-    if (!node->is_identifier()) {
-        if (is_empty_property(document, *node, position)) {
-            ASSERT(node->is_member_expression());
-            return autocomplete_property(document, (MemberExpression&)(*node), "");
+    if (node->is_identifier()) {
+        if (is_property(*node)) {
+            return autocomplete_property(document, (MemberExpression&)(*node->parent()), document.parser.text_of_node(*node));
         }
-        return {};
+
+        return autocomplete_name(document, *node, document.parser.text_of_node(*node));
     }
 
-    if (is_property(*node)) {
-        return autocomplete_property(document, (MemberExpression&)(*node->parent()), document.parser.text_of_node(*node));
+    if (is_empty_property(document, *node, position)) {
+        ASSERT(node->is_member_expression());
+        return autocomplete_property(document, (MemberExpression&)(*node), "");
     }
 
-    return autocomplete_identifier(document, *node);
+    String partial_text = String::empty();
+    auto containing_token = document.parser.token_at(position);
+    if (containing_token.has_value()) {
+        partial_text = document.parser.text_of_token(containing_token.value());
+    }
+
+    return autocomplete_name(document, *node, partial_text.view());
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_identifier(const DocumentData& document, const ASTNode& node) const
+Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const StringView& partial_text) const
 {
     const Cpp::ASTNode* current = &node;
     NonnullRefPtrVector<Cpp::Declaration> available_declarations;
@@ -132,6 +139,9 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_identi
         available_declarations.append(current->declarations());
         current = current->parent();
     }
+
+    available_declarations.append(get_declarations_in_outer_scope_including_headers(document));
+
     Vector<StringView> available_names;
     auto add_name = [&available_names](auto& name) {
         if (name.is_null() || name.is_empty())
@@ -151,7 +161,6 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_identi
         }
     }
 
-    auto partial_text = document.parser.text_of_node(node);
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
     for (auto& name : available_names) {
         if (name.starts_with(partial_text)) {
