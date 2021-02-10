@@ -105,6 +105,10 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     auto& text_label = left_container.add<GUI::Label>(text);
     text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
+    widget.set_tooltip(text);
+    title_label.set_tooltip(text);
+    text_label.set_tooltip(text);
+
     auto& right_container = widget.add<GUI::Widget>();
     right_container.set_fixed_width(36);
     right_container.set_layout<GUI::HorizontalBoxLayout>();
