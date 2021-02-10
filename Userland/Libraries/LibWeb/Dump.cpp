@@ -31,8 +31,8 @@
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
@@ -60,6 +60,9 @@ void dump_tree(const DOM::Node& node)
         dbgprintf("%s\n", node.node_name().characters());
     }
     ++indent;
+    if (is<DOM::Element>(node) && downcast<DOM::Element>(node).shadow_root()) {
+        dump_tree(*downcast<DOM::Element>(node).shadow_root());
+    }
     if (is<DOM::ParentNode>(node)) {
         if (!is<HTML::HTMLTemplateElement>(node)) {
             static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
