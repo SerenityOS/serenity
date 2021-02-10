@@ -248,7 +248,7 @@ void Thread::die_if_needed()
     ScopedCritical critical;
 
     // Flag a context switch. Because we're in a critical section,
-    // Scheduler::yield will actually only mark a pending scontext switch
+    // Scheduler::yield will actually only mark a pending context switch
     // Simply leaving the critical section would not necessarily trigger
     // a switch.
     Scheduler::yield();
