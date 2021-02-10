@@ -43,7 +43,6 @@
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
-#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
@@ -220,10 +219,6 @@ void Element::recompute_style()
         tree_builder.build(*this);
         return;
     }
-
-    // Don't bother with style on widgets. NATIVE LOOK & FEEL BABY!
-    if (is<Layout::WidgetBox>(layout_node()))
-        return;
 
     auto diff = StyleDifference::NeedsRelayout;
     if (old_specified_css_values)
