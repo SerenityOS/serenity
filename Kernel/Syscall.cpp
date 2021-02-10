@@ -131,7 +131,7 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 constexpr int RandomByteBufferSize = 256;
 u8 g_random_byte_buffer[RandomByteBufferSize];
-int g_random_byte_buffer_offset = RandomByteBufferSize;
+volatile int g_random_byte_buffer_offset = RandomByteBufferSize;
 
 void syscall_handler(TrapFrame* trap)
 {
