@@ -106,6 +106,7 @@ private:
     virtual void page_did_layout() override;
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
     virtual void page_did_request_alert(const String&) override;
+    virtual bool page_did_request_confirm(const String&) override;
 
     void layout_and_sync_size();
 
