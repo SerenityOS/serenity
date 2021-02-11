@@ -37,12 +37,9 @@ ssize_t Process::sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_
     if (iov_count < 0)
         return -EINVAL;
 
-    {
-        Checked checked_iov_count = sizeof(iovec);
-        checked_iov_count *= iov_count;
-        if (checked_iov_count.has_overflow())
-            return -EFAULT;
-    }
+    // Arbitrary pain threshold.
+    if (iov_count > (int)MiB)
+        return -EFAULT;
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
