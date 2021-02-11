@@ -269,8 +269,37 @@ set(SOURCES
     ${CRYPTO_SOURCES}
     ${C_SOURCES}
 )
+set(KERNEL_FSANITIZE_FLAGS
+    "shift"
+    "shift-exponent"
+    "shift-base"
+    "integer-divide-by-zero"
+    "unreachable"
+    "vla-bound"
+    "return"
+    "signed-integer-overflow"
+    "bounds"
+    "bounds-strict"
+    "object-size"
+    "float-divide-by-zero"
+    "float-cast-overflow"
+    "nonnull-attribute"
+    "returns-nonnull-attribute"
+    "bool"
+    "enum"
+    "vptr"
+    "builtin"
+    # following flags will cause triple faults:
+    # "alignment"
+    # "null"
+    # "pointer-overflow"
+    )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=nonnull-attribute,returns-nonnull-attribute,bool,vla-bound,signed-integer-overflow,shift,shift-exponent,shift-base,integer-divide-by-zero,return,bounds,bounds-strict,object-size,enum,vptr")
+foreach(flag IN LISTS KERNEL_FSANITIZE_FLAGS)
+    message("\tkernel fsanitize flag:${flag}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${flag}")
+endforeach()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DKERNEL")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE -fno-rtti -ffreestanding -fbuiltin")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
