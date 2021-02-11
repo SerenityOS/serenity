@@ -46,7 +46,7 @@ static const ssize_t max_inline_symlink_length = 60;
 
 struct Ext2FSDirectoryEntry {
     String name;
-    InodeIdentifier inode;
+    Ext2FS::InodeIndex inode_index { 0 };
     u8 file_type { 0 };
 };
 
@@ -1020,7 +1020,7 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
         dbgln("* Inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry.inode.index(), u16(entry.name.length()), u16(record_length), u8(entry.file_type), entry.name);
 #endif
 
-        stream << u32(entry.inode.index());
+        stream << u32(entry.inode_index);
         stream << u16(record_length);
         stream << u8(entry.name.length());
         stream << u8(entry.file_type);
@@ -1069,7 +1069,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
             name_already_exists = true;
             return false;
         }
-        entries.append({ entry.name, entry.inode, entry.file_type });
+        entries.append({ entry.name, entry.inode.index(), entry.file_type });
         return true;
     });
 
@@ -1085,7 +1085,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     if (result.is_error())
         return result;
 
-    entries.empend(name, child.identifier(), to_ext2_file_type(mode));
+    entries.empend(name, child.index(), to_ext2_file_type(mode));
     result = write_directory(entries);
     if (result.is_error())
         return result;
@@ -1117,7 +1117,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     Vector<Ext2FSDirectoryEntry> entries;
     KResult result = traverse_as_directory([&](auto& entry) {
         if (name != entry.name)
-            entries.append({ entry.name, entry.inode, entry.file_type });
+            entries.append({ entry.name, entry.inode.index(), entry.file_type });
         return true;
     });
     if (result.is_error())
@@ -1444,8 +1444,8 @@ KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, 
 #endif
 
     Vector<Ext2FSDirectoryEntry> entries;
-    entries.empend(".", inode->identifier(), static_cast<u8>(EXT2_FT_DIR));
-    entries.empend("..", parent_inode.identifier(), static_cast<u8>(EXT2_FT_DIR));
+    entries.empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR));
+    entries.empend("..", parent_inode.index(), static_cast<u8>(EXT2_FT_DIR));
 
     auto result = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     if (result.is_error())

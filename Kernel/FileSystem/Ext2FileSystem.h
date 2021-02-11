@@ -98,6 +98,8 @@ class Ext2FS final : public BlockBasedFS {
     friend class Ext2FSInode;
 
 public:
+    using InodeIndex = u32;
+
     static NonnullRefPtr<Ext2FS> create(FileDescription&);
 
     virtual ~Ext2FS() override;
@@ -117,7 +119,6 @@ public:
 private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
-    typedef unsigned InodeIndex;
     explicit Ext2FS(FileDescription&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
