@@ -65,9 +65,8 @@ static struct lconv default_locale = {
     default_empty_value
 };
 
-char* setlocale(int category, const char* locale)
+char* setlocale(int, const char*)
 {
-    dbgln("FIXME(LibC): setlocale({}, '{}')", category, locale);
     return nullptr;
 }
 
