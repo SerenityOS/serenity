@@ -498,7 +498,7 @@ bool SyntaxHighlighter::is_navigatable(void* token) const
     return (size_t)kind == (size_t)AST::Node::Kind::BarewordLiteral;
 }
 
-void SyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void SyntaxHighlighter::rehighlight(const Palette& palette)
 {
     auto text = m_client->get_text();
 

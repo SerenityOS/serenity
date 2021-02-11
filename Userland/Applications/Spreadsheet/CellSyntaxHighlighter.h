@@ -36,7 +36,7 @@ public:
     CellSyntaxHighlighter() { }
     virtual ~CellSyntaxHighlighter() override;
 
-    virtual void rehighlight(Gfx::Palette) override;
+    virtual void rehighlight(const Palette&) override;
     void set_cell(const Cell* cell) { m_cell = cell; }
 
 private:
