@@ -60,6 +60,9 @@ int Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_
     auto name = copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
         return -EFAULT;
+    // Empty and whitespace-only names only exist to confuse users.
+    if (name.is_whitespace())
+        return -EINVAL;
     m_name = move(name);
     return 0;
 }
