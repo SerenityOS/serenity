@@ -246,7 +246,6 @@ void Thread::die_if_needed()
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
 
     ScopedCritical critical;
-    set_should_die();
 
     // Flag a context switch. Because we're in a critical section,
     // Scheduler::yield will actually only mark a pending scontext switch
