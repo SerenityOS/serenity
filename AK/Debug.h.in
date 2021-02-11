@@ -350,6 +350,10 @@
 #cmakedefine01 SYNTAX_HIGHLIGHTING_DEBUG
 #endif
 
+#ifndef SYSCALL_1_DEBUG
+#cmakedefine01 SYSCALL_1_DEBUG
+#endif
+
 #ifndef SYSTEM_MENU_DEBUG
 #cmakedefine01 SYSTEM_MENU_DEBUG
 #endif
