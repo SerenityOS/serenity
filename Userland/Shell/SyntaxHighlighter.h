@@ -39,7 +39,7 @@ public:
     virtual bool is_navigatable(void*) const override;
 
     virtual Syntax::Language language() const override { return Syntax::Language::Shell; }
-    virtual void rehighlight(Gfx::Palette) override;
+    virtual void rehighlight(const Palette&) override;
 
 protected:
     virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
