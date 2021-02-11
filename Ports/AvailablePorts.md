@@ -9,6 +9,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`binutils`](binutils/)        | GNU Binutils                                  | 2.32              | https://www.gnu.org/software/binutils/                |
 | [`byacc`](byacc/)              | Berkeley Yacc                                 | 20191125          | https://invisible-island.net/byacc/byacc.html         |
 | [`c-ray`](c-ray/)              | C-Ray                                         |                   | https://github.com/vkoskiv/c-ray                      |
+| [`cmake`](cmake/)              | CMake                                         | 3.19.4            | https://cmake.org/                                    |
 | [`curl`](curl/)                | curl                                          | 7.65.3            | https://curl.se/                                      |
 | [`dash`](dash/)                | DASH                                          | 0.5.10.2          | http://gondor.apana.org.au/~herbert/dash              |
 | [`diffutils`](diffutils/)      | GNU Diffutils                                 | 3.5               | https://www.gnu.org/software/diffutils/               |
