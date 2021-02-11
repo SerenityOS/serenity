@@ -144,7 +144,10 @@ enum class MetricRole {
 enum class PathRole {
     NoRole,
     TitleButtonIcons,
-    WindowShadow,
+    InactiveWindowShadow,
+    ActiveWindowShadow,
+    TaskBarShadow,
+    MenuBarShadow,
     MenuShadow,
     TooltipShadow,
     __Count,

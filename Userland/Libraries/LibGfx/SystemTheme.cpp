@@ -119,9 +119,12 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     } while (0)
 
     DO_PATH(TitleButtonIcons, false);
+    DO_PATH(ActiveWindowShadow, true);
+    DO_PATH(InactiveWindowShadow, true);
+    DO_PATH(TaskBarShadow, true);
+    DO_PATH(MenuBarShadow, true);
     DO_PATH(MenuShadow, true);
     DO_PATH(TooltipShadow, true);
-    DO_PATH(WindowShadow, true);
 
     return buffer;
 }

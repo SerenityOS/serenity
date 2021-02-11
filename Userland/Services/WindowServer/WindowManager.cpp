@@ -1287,6 +1287,9 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     } else {
         MenuManager::the().set_current_menubar(nullptr);
     }
+
+    // Window shapes may have changed (e.g. shadows for inactive/active windows)
+    Compositor::the().invalidate_occlusions();
 }
 
 void WindowManager::set_hovered_window(Window* window)
