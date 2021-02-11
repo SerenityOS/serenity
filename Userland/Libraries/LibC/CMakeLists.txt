@@ -21,6 +21,7 @@ set(LIBC_SOURCES
     qsort.cpp
     scanf.cpp
     sched.cpp
+    semaphore.cpp
     serenity.cpp
     setjmp.S
     signal.cpp
