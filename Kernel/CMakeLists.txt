@@ -296,7 +296,6 @@ set(KERNEL_FSANITIZE_FLAGS
     )
 
 foreach(flag IN LISTS KERNEL_FSANITIZE_FLAGS)
-    message("\tkernel fsanitize flag:${flag}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${flag}")
 endforeach()
 
