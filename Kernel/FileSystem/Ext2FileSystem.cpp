@@ -109,22 +109,22 @@ bool Ext2FS::initialize()
     ASSERT(success);
 
     auto& super_block = this->super_block();
-#if EXT2_DEBUG
-    klog() << "ext2fs: super block magic: " << String::format("%x", super_block.s_magic) << " (super block size: " << sizeof(ext2_super_block) << ")";
-#endif
+    if constexpr (EXT2_DEBUG) {
+        klog() << "ext2fs: super block magic: " << String::format("%x", super_block.s_magic) << " (super block size: " << sizeof(ext2_super_block) << ")";
+    }
     if (super_block.s_magic != EXT2_SUPER_MAGIC)
         return false;
 
-#if EXT2_DEBUG
-    klog() << "ext2fs: " << super_block.s_inodes_count << " inodes, " << super_block.s_blocks_count << " blocks";
-    klog() << "ext2fs: block size = " << EXT2_BLOCK_SIZE(&super_block);
-    klog() << "ext2fs: first data block = " << super_block.s_first_data_block;
-    klog() << "ext2fs: inodes per block = " << inodes_per_block();
-    klog() << "ext2fs: inodes per group = " << inodes_per_group();
-    klog() << "ext2fs: free inodes = " << super_block.s_free_inodes_count;
-    klog() << "ext2fs: desc per block = " << EXT2_DESC_PER_BLOCK(&super_block);
-    klog() << "ext2fs: desc size = " << EXT2_DESC_SIZE(&super_block);
-#endif
+    if constexpr (EXT2_DEBUG) {
+        klog() << "ext2fs: " << super_block.s_inodes_count << " inodes, " << super_block.s_blocks_count << " blocks";
+        klog() << "ext2fs: block size = " << EXT2_BLOCK_SIZE(&super_block);
+        klog() << "ext2fs: first data block = " << super_block.s_first_data_block;
+        klog() << "ext2fs: inodes per block = " << inodes_per_block();
+        klog() << "ext2fs: inodes per group = " << inodes_per_group();
+        klog() << "ext2fs: free inodes = " << super_block.s_free_inodes_count;
+        klog() << "ext2fs: desc per block = " << EXT2_DESC_PER_BLOCK(&super_block);
+        klog() << "ext2fs: desc size = " << EXT2_DESC_SIZE(&super_block);
+    }
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
 
@@ -152,12 +152,12 @@ bool Ext2FS::initialize()
         return false;
     }
 
-#if EXT2_DEBUG
-    for (unsigned i = 1; i <= m_block_group_count; ++i) {
-        auto& group = group_descriptor(i);
-        klog() << "ext2fs: group[" << i << "] { block_bitmap: " << group.bg_block_bitmap << ", inode_bitmap: " << group.bg_inode_bitmap << ", inode_table: " << group.bg_inode_table << " }";
+    if constexpr (EXT2_DEBUG) {
+        for (unsigned i = 1; i <= m_block_group_count; ++i) {
+            auto& group = group_descriptor(i);
+            klog() << "ext2fs: group[" << i << "] { block_bitmap: " << group.bg_block_bitmap << ", inode_bitmap: " << group.bg_inode_bitmap << ", inode_table: " << group.bg_inode_table << " }";
+        }
     }
-#endif
 
     return true;
 }
@@ -267,11 +267,11 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
         --remaining_blocks;
     }
     if (inode_dirty) {
-#if EXT2_DEBUG
-        dbgln("Ext2FS: Writing {} direct block(s) to i_block array of inode {}", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
-        for (size_t i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i)
-            dbgln("   + {}", blocks[i]);
-#endif
+        if constexpr (EXT2_DEBUG) {
+            dbgln("Ext2FS: Writing {} direct block(s) to i_block array of inode {}", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
+            for (size_t i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i)
+                dbgln("   + {}", blocks[i]);
+        }
         write_ext2_inode(inode_index, e2inode);
         inode_dirty = false;
     }
@@ -288,9 +288,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
             inode_dirty = true;
         e2inode.i_block[EXT2_IND_BLOCK] = new_indirect_block;
         if (inode_dirty) {
-#if EXT2_DEBUG
-            dbgln("Ext2FS: Adding the indirect block to i_block array of inode {}", inode_index);
-#endif
+            dbgln_if(EXT2_DEBUG, "Ext2FS: Adding the indirect block to i_block array of inode {}", inode_index);
             write_ext2_inode(inode_index, e2inode);
             inode_dirty = false;
         }
@@ -330,9 +328,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
             inode_dirty = true;
         e2inode.i_block[EXT2_DIND_BLOCK] = new_dindirect_block;
         if (inode_dirty) {
-#if EXT2_DEBUG
-            dbgln("Ext2FS: Adding the doubly-indirect block to i_block array of inode {}", inode_index);
-#endif
+            dbgln_if(EXT2_DEBUG, "Ext2FS: Adding the doubly-indirect block to i_block array of inode {}", inode_index);
             write_ext2_inode(inode_index, e2inode);
             inode_dirty = false;
         }
@@ -459,9 +455,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     if (is_symlink(e2inode.i_mode) && e2inode.i_blocks == 0)
         block_count = 0;
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS::block_list_for_inode(): i_size={}, i_blocks={}, block_count={}", e2inode.i_size, e2inode.i_blocks, block_count);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS::block_list_for_inode(): i_size={}, i_blocks={}, block_count={}", e2inode.i_size, e2inode.i_blocks, block_count);
 
     unsigned blocks_remaining = block_count;
 
@@ -545,9 +539,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
 {
     LOCKER(m_lock);
     ASSERT(inode.m_raw_inode.i_links_count == 0);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: Inode {} has no more links, time to delete!", inode.index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: Inode {} has no more links, time to delete!", inode.index());
 
     // Mark all blocks used by this inode as free.
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
@@ -604,9 +596,7 @@ void Ext2FS::flush_writes()
                 dbgln("Ext2FS: flush_writes() had error {}", result.error());
             }
             cached_bitmap->dirty = false;
-#if EXT2_DEBUG
-            dbgln("Flushed bitmap block {}", cached_bitmap->bitmap_block_index);
-#endif
+            dbgln_if(EXT2_DEBUG, "Flushed bitmap block {}", cached_bitmap->bitmap_block_index);
         }
     }
 
@@ -671,9 +661,7 @@ InodeMetadata Ext2FSInode::metadata() const
 void Ext2FSInode::flush_metadata()
 {
     LOCKER(m_lock);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: flush_metadata for inode {}", index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: flush_metadata for inode {}", index());
     fs().write_ext2_inode(index(), m_raw_inode);
     if (is_directory()) {
         // Unless we're about to go away permanently, invalidate the lookup cache.
@@ -758,9 +746,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
     ssize_t nread = 0;
     size_t remaining_count = min((off_t)count, (off_t)size() - offset);
 
-#if EXT2_VERY_DEBUG
-    dbgln("Ext2FS: Reading up to {} bytes, {} bytes into inode {} to {}", count, offset, index(), buffer.user_or_kernel_ptr());
-#endif
+    dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: Reading up to {} bytes, {} bytes into inode {} to {}", count, offset, index(), buffer.user_or_kernel_ptr());
 
     for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         auto block_index = m_block_list[bi];
@@ -790,10 +776,10 @@ KResult Ext2FSInode::resize(u64 new_size)
     size_t blocks_needed_before = ceil_div(old_size, block_size);
     size_t blocks_needed_after = ceil_div(new_size, block_size);
 
-#if EXT2_DEBUG
-    dbgln("Ext2FSInode::resize(): blocks needed before (size was {}): {}", old_size, blocks_needed_before);
-    dbgln("Ext2FSInode::resize(): blocks needed after  (size is  {}): {}", new_size, blocks_needed_after);
-#endif
+    if constexpr (EXT2_DEBUG) {
+        dbgln("Ext2FSInode::resize(): blocks needed before (size was {}): {}", old_size, blocks_needed_before);
+        dbgln("Ext2FSInode::resize(): blocks needed after  (size is  {}): {}", new_size, blocks_needed_after);
+    }
 
     if (blocks_needed_after > blocks_needed_before) {
         u32 additional_blocks_needed = blocks_needed_after - blocks_needed_before;
@@ -811,12 +797,12 @@ KResult Ext2FSInode::resize(u64 new_size)
         auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         block_list.append(move(new_blocks));
     } else if (blocks_needed_after < blocks_needed_before) {
-#if EXT2_DEBUG
-        dbgln("Ext2FS: Shrinking inode {}. Old block list is {} entries:", index(), block_list.size());
-        for (auto block_index : block_list) {
-            dbgln("    # {}", block_index);
+        if constexpr (EXT2_DEBUG) {
+            dbgln("Ext2FS: Shrinking inode {}. Old block list is {} entries:", index(), block_list.size());
+            for (auto block_index : block_list) {
+                dbgln("    # {}", block_index);
+            }
         }
-#endif
         while (block_list.size() != blocks_needed_after) {
             auto block_index = block_list.take_last();
             if (block_index)
@@ -868,9 +854,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     if (is_symlink()) {
         ASSERT(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
-#if EXT2_DEBUG
-            dbgln("Ext2FS: write_bytes poking into i_block array for inline symlink '{}' ({} bytes)", data.copy_into_string(count), count);
-#endif
+            dbgln_if(EXT2_DEBUG, "Ext2FS: write_bytes poking into i_block array for inline symlink '{}' ({} bytes)", data.copy_into_string(count), count);
             if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count))
                 return -EFAULT;
             if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
@@ -908,17 +892,13 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     ssize_t nwritten = 0;
     size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
 
-#if EXT2_VERY_DEBUG
-    dbgln("Ext2FS: Writing {} bytes, {} bytes into inode {} from {}", count, offset, index(), data.user_or_kernel_ptr());
-#endif
+    dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: Writing {} bytes, {} bytes into inode {} from {}", count, offset, index(), data.user_or_kernel_ptr());
 
     for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-#if EXT2_VERY_DEBUG
-        dbgln("Ext2FS: Writing block {} (offset_into_block: {})", m_block_list[bi], offset_into_block);
-#endif
-        auto result = fs().write_block(m_block_list[bi], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache);
+        dbgln_if(EXT2_DEBUG, "Ext2FS: Writing block {} (offset_into_block: {})", m_block_list[bi], offset_into_block);
+        result = fs().write_block(m_block_list[bi], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache);
         if (result.is_error()) {
             dbgln("Ext2FS: write_block({}) failed (bi: {})", m_block_list[bi], bi);
             return result;
@@ -927,9 +907,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
         nwritten += num_bytes_to_copy;
     }
 
-#if EXT2_VERY_DEBUG
-    dbgln("Ext2FS: After write, i_size={}, i_blocks={} ({} blocks in list)", m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
-#endif
+    dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: After write, i_size={}, i_blocks={} ({} blocks in list)", m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
 
     if (old_size != new_size)
         inode_size_changed(old_size, new_size);
@@ -964,9 +942,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     LOCKER(m_lock);
     ASSERT(is_directory());
 
-#if EXT2_VERY_DEBUG
-    dbgln("Ext2FS: Traversing as directory: {}", index());
-#endif
+    dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: Traversing as directory: {}", index());
 
     auto buffer_or = read_entire();
     if (buffer_or.is_error())
@@ -977,9 +953,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
-#if EXT2_VERY_DEBUG
-            dbgln("Ext2Inode::traverse_as_directory: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
-#endif
+            dbgln_if(EXT2_DEBUG, "Ext2Inode::traverse_as_directory: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
             if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
                 break;
         }
@@ -1002,9 +976,7 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
     int blocks_needed = ceil_div(static_cast<size_t>(directory_size), block_size);
     int occupied_size = blocks_needed * block_size;
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS: New directory inode {} contents to write (size {}, occupied {}):", index(), directory_size, occupied_size);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: New directory inode {} contents to write (size {}, occupied {}):", index(), directory_size, occupied_size);
 
     auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
     OutputMemoryStream stream { directory_data };
@@ -1016,9 +988,7 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
         if (i == entries.size() - 1)
             record_length += occupied_size - directory_size;
 
-#if EXT2_DEBUG
-        dbgln("* Inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry.inode.index(), u16(entry.name.length()), u16(record_length), u8(entry.file_type), entry.name);
-#endif
+        dbgln_if(EXT2_DEBUG, "* Inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry.inode_index, u16(entry.name.length()), u16(record_length), u8(entry.file_type), entry.name);
 
         stream << u32(entry.inode_index);
         stream << u16(record_length);
@@ -1058,9 +1028,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
 
-#if EXT2_DEBUG
-    dbgln("Ext2FSInode::add_child: Adding inode {} with name '{}' and mode {:o} to directory {}", child.index(), name, mode, index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode::add_child: Adding inode {} with name '{}' and mode {:o} to directory {}", child.index(), name, mode, index());
 
     Vector<Ext2FSDirectoryEntry> entries;
     bool name_already_exists = false;
@@ -1098,9 +1066,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
 KResult Ext2FSInode::remove_child(const StringView& name)
 {
     LOCKER(m_lock);
-#if EXT2_DEBUG
-    dbgln("Ext2FSInode::remove_child('{}') in inode {}", name, index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode::remove_child('{}') in inode {}", name, index());
     ASSERT(is_directory());
 
     auto it = m_lookup_cache.find(name);
@@ -1110,9 +1076,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 
     InodeIdentifier child_id { fsid(), child_inode_index };
 
-#if EXT2_DEBUG
-    dbgln("Ext2FSInode::remove_child(): Removing '{}' in directory {}", name, index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode::remove_child(): Removing '{}' in directory {}", name, index());
 
     Vector<Ext2FSDirectoryEntry> entries;
     KResult result = traverse_as_directory([&](auto& entry) {
@@ -1171,16 +1135,12 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count)
 {
     LOCKER(m_lock);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: allocate_blocks(preferred group: {}, count {})", preferred_group_index, count);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_blocks(preferred group: {}, count {})", preferred_group_index, count);
     if (count == 0)
         return {};
 
     Vector<BlockIndex> blocks;
-#if EXT2_DEBUG
-    dbgln("Ext2FS: allocate_blocks:");
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_blocks:");
     blocks.ensure_capacity(count);
 
     GroupIndex group_index = preferred_group_index;
@@ -1216,16 +1176,12 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
         size_t free_region_size = 0;
         auto first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
         ASSERT(first_unset_bit_index.has_value());
-#if EXT2_DEBUG
-        dbgln("Ext2FS: allocating free region of size: {} [{}]", free_region_size, group_index);
-#endif
+        dbgln_if(EXT2_DEBUG, "Ext2FS: allocating free region of size: {} [{}]", free_region_size, group_index);
         for (size_t i = 0; i < free_region_size; ++i) {
             BlockIndex block_index = (first_unset_bit_index.value() + i) + first_block_in_group;
             set_block_allocation_state(block_index, true);
             blocks.unchecked_append(block_index);
-#if EXT2_DEBUG
-            dbgln("  allocated > {}", block_index);
-#endif
+            dbgln_if(EXT2_DEBUG, "  allocated > {}", block_index);
         }
     }
 
@@ -1236,9 +1192,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
 {
     LOCKER(m_lock);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
 
     unsigned group_index = 0;
 
@@ -1263,9 +1217,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
         return 0;
     }
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS: find_a_free_inode: found suitable group [{}] for new inode :^)", group_index);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode: found suitable group [{}] for new inode :^)", group_index);
 
     auto& bgd = group_descriptor(group_index);
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
@@ -1288,9 +1240,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
     }
 
     unsigned inode = first_free_inode_in_group;
-#if EXT2_DEBUG
-    dbgln("Ext2FS: found suitable inode {}", inode);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: found suitable inode {}", inode);
 
     ASSERT(get_inode_allocation_state(inode) == false);
     return inode;
@@ -1335,9 +1285,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
 
     bool current_state = cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: set_inode_allocation_state({}) {} -> {}", inode_index, current_state, new_state);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: set_inode_allocation_state({}) {} -> {}", inode_index, current_state, new_state);
 
     if (current_state == new_state) {
         ASSERT_NOT_REACHED();
@@ -1398,9 +1346,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
 
     bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
-#if EXT2_DEBUG
-    dbgln("Ext2FS: block {} state: {} -> {} (in bitmap block {})", block_index, current_state, new_state, bgd.bg_block_bitmap);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: block {} state: {} -> {} (in bitmap block {})", block_index, current_state, new_state, bgd.bg_block_bitmap);
 
     if (current_state == new_state) {
         ASSERT_NOT_REACHED();
@@ -1439,9 +1385,7 @@ KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, 
 
     auto& inode = inode_or_error.value();
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS: create_directory: created new directory named '{} with inode {}", name, inode->index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: create_directory: created new directory named '{} with inode {}", name, inode->index());
 
     Vector<Ext2FSDirectoryEntry> entries;
     entries.empend(".", inode->index(), static_cast<u8>(EXT2_FT_DIR));
@@ -1472,9 +1416,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     if (name.length() > EXT2_NAME_LEN)
         return ENAMETOOLONG;
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = find_a_free_inode();
@@ -1508,9 +1450,8 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     else if (is_block_device(mode))
         e2inode.i_block[1] = dev;
 
-#if EXT2_DEBUG
-    dbgln("Ext2FS: writing initial metadata for inode {}", inode_id);
-#endif
+    dbgln_if(EXT2_DEBUG, "Ext2FS: writing initial metadata for inode {}", inode_id);
+
     e2inode.i_flags = 0;
     success = write_ext2_inode(inode_id, e2inode);
     ASSERT(success);
