@@ -27,7 +27,6 @@
 #include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <AK/QuickSort.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>

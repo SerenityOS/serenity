@@ -96,10 +96,7 @@ public:
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
     bool is_user_accessible() const { return m_user_accessible; }
-    void set_user_accessible(bool b) { m_user_accessible = b; }
-
     bool is_kernel() const { return m_kernel || vaddr().get() >= 0xc0000000; }
-    void set_kernel(bool kernel) { m_kernel = kernel; }
 
     PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
 
@@ -171,11 +168,6 @@ public:
     size_t first_page_index() const
     {
         return m_offset_in_vmobject / PAGE_SIZE;
-    }
-
-    size_t last_page_index() const
-    {
-        return (first_page_index() + page_count()) - 1;
     }
 
     size_t page_count() const
