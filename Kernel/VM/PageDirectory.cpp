@@ -28,7 +28,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
@@ -36,7 +35,6 @@ namespace Kernel {
 
 static const FlatPtr userspace_range_base = 0x00800000;
 static const FlatPtr userspace_range_ceiling = 0xbe000000;
-static const FlatPtr kernelspace_range_base = 0xc0800000;
 
 static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
 

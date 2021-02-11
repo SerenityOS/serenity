@@ -115,8 +115,6 @@ public:
         return IterationDecision::Continue;
     }
 
-    size_t get_lazy_committed_page_count() const;
-
 private:
     explicit AnonymousVMObject(size_t, AllocationStrategy);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
