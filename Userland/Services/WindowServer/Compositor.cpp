@@ -275,7 +275,8 @@ void Compositor::compose()
         auto frame_rect = window.frame().render_rect();
         if (!frame_rect.intersects(ws.rect()))
             return IterationDecision::Continue;
-        auto frame_rects = frame_rect.shatter(window.rect());
+        auto window_rect = window.rect();
+        auto frame_rects = frame_rect.shatter(window_rect);
 
         dbgln_if(COMPOSE_DEBUG, "  window {} frame rect: {}", window.title(), frame_rect);
 
@@ -291,9 +292,15 @@ void Compositor::compose()
                 });
             }
 
+            auto clear_window_rect = [&](const Gfx::IntRect& clear_rect) {
+                auto fill_color = wm.palette().window();
+                if (!window.is_opaque())
+                    fill_color.set_alpha(255 * window.opacity());
+                painter.fill_rect(clear_rect, fill_color);
+            };
+
             if (!backing_store) {
-                if (window.is_opaque())
-                    painter.fill_rect(window.rect().intersected(rect), wm.palette().window());
+                clear_window_rect(window_rect.intersected(rect));
                 return;
             }
 
@@ -312,44 +319,42 @@ void Compositor::compose()
             case ResizeDirection::Right:
             case ResizeDirection::Down:
             case ResizeDirection::DownRight:
-                backing_rect.set_location(window.rect().location());
+                backing_rect.set_location(window_rect.location());
                 break;
             case ResizeDirection::Left:
             case ResizeDirection::Up:
             case ResizeDirection::UpLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_right_without_resize(window_rect.right());
+                backing_rect.set_bottom_without_resize(window_rect.bottom());
                 break;
             case ResizeDirection::UpRight:
                 backing_rect.set_left(window.rect().left());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_bottom_without_resize(window_rect.bottom());
                 break;
             case ResizeDirection::DownLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_top(window.rect().top());
+                backing_rect.set_right_without_resize(window_rect.right());
+                backing_rect.set_top(window_rect.top());
                 break;
             }
 
-            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window.rect())
+            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window_rect)
                                                                  .intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
-            if (dirty_rect_in_backing_coordinates.is_empty())
-                return;
-            auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
+            if (!dirty_rect_in_backing_coordinates.is_empty()) {
+                auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
-            if (window.client() && window.client()->is_unresponsive()) {
-                painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
-                    return src.to_grayscale().darkened(0.75f);
-                });
-            } else {
-                painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+                if (window.client() && window.client()->is_unresponsive()) {
+                    painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
+                        return src.to_grayscale().darkened(0.75f);
+                    });
+                } else {
+                    painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+                }
             }
 
-            if (window.is_opaque()) {
-                for (auto background_rect : window.rect().shatter(backing_rect))
-                    painter.fill_rect(background_rect, wm.palette().window());
-            }
+            for (auto background_rect : window_rect.shatter(backing_rect))
+                clear_window_rect(background_rect);
         };
 
         auto& dirty_rects = window.dirty_rects();
