@@ -58,7 +58,7 @@ bool IniSyntaxHighlighter::is_identifier(void* token) const
     return ini_token == GUI::IniToken::Type::Name;
 }
 
-void IniSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void IniSyntaxHighlighter::rehighlight(const Palette& palette)
 {
     auto text = m_client->get_text();
     IniLexer lexer(text);

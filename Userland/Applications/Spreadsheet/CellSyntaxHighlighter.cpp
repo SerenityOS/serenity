@@ -31,7 +31,7 @@
 
 namespace Spreadsheet {
 
-void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void CellSyntaxHighlighter::rehighlight(const Palette& palette)
 {
     auto text = m_client->get_text();
     m_client->spans().clear();

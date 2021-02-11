@@ -56,7 +56,7 @@ public:
     virtual ~Highlighter();
 
     virtual Language language() const = 0;
-    virtual void rehighlight(Gfx::Palette) = 0;
+    virtual void rehighlight(const Palette&) = 0;
     virtual void highlight_matching_token_pair();
 
     virtual bool is_identifier(void*) const { return false; };
