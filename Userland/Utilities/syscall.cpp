@@ -24,71 +24,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <getopt.h>
-#include <stdint.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syscall.h>
-#include <unistd.h>
-
-#if !defined __ENUMERATE_SYSCALL
-#    define __ENUMERATE_SYSCALL(x) SC_##x,
-#endif
 
 #define SC_NARG 4
-
-Syscall::Function syscall_table[] = {
-    ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
-};
 
 FlatPtr arg[SC_NARG];
 char buf[BUFSIZ];
 
-FlatPtr parse(char* s);
+static FlatPtr parse(const char* s);
 
 int main(int argc, char** argv)
 {
-    int oflag;
-    int opt;
-    while ((opt = getopt(argc, argv, "olh")) != -1) {
-        switch (opt) {
-        case 'o':
-            oflag = 1;
-            break;
-        case 'l':
-            for (auto sc : syscall_table) {
-                fprintf(stdout, "%s ", Syscall::to_string(sc));
-            }
-            return EXIT_SUCCESS;
-        case 'h':
-            fprintf(stderr, "usage: \tsyscall [-o] [-l] [-h] <syscall-name> <args...> [buf==BUFSIZ buffer]\n");
-            fprintf(stderr, "\tsyscall write 1 hello 5\n");
-            fprintf(stderr, "\tsyscall -o read 0 buf 5\n");
-            fprintf(stderr, "\tsyscall sleep 3\n");
-            break;
-        default:
-            exit(EXIT_FAILURE);
-        }
+    bool output_buffer = false;
+    bool list_syscalls = false;
+    Vector<const char*> arguments;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(output_buffer, "Output the contents of the buffer (beware of stray zero bytes!)", "output-buffer", 'o');
+    args_parser.add_option(list_syscalls, "List all existing syscalls", "list-syscalls", 'l');
+    args_parser.add_positional_argument(arguments, "Syscall arguments (can be strings, 'buf' for the output buffer, or numbers like 1234 or 0xffffffff)", "syscall-arguments");
+    args_parser.parse(argc, argv);
+
+    for (size_t i = 0; i < arguments.size(); i++) {
+        arg[i] = parse(arguments[i]);
     }
 
-    if (optind >= argc) {
-        fprintf(stderr, "No entry specified\n");
-        return -1;
-    }
-
-    for (int i = 0; i < argc - optind; i++) {
-        arg[i] = parse(argv[i + optind]);
-    }
-
-    for (auto sc : syscall_table) {
-        if (strcmp(Syscall::to_string(sc), (char*)arg[0]) == 0) {
+    for (int sc = 0; sc < Syscall::Function::__Count; ++sc) {
+        if (strcmp(Syscall::to_string((Syscall::Function)sc), (char*)arg[0]) == 0) {
             int rc = syscall(sc, arg[1], arg[2], arg[3]);
             if (rc == -1) {
                 perror("syscall");
             } else {
-                if (oflag)
+                if (output_buffer)
                     fwrite(buf, 1, sizeof(buf), stdout);
             }
 
@@ -101,7 +72,7 @@ int main(int argc, char** argv)
     return -1;
 }
 
-FlatPtr parse(char* s)
+FlatPtr parse(const char* s)
 {
     char* t;
     FlatPtr l;
