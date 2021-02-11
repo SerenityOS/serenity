@@ -220,7 +220,6 @@ public:
         ScopedSpinLock lock(m_volatile_ranges_lock);
         ScopedSpinLock other_lock(other.m_volatile_ranges_lock);
         m_volatile_ranges = other.m_volatile_ranges;
-        return;
     }
 
     bool add_volatile_range(const VolatilePageRange& range);

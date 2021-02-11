@@ -42,30 +42,15 @@ namespace Kernel {
 #define PAGE_ROUND_UP(x) ((((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 #define PAGE_ROUND_DOWN(x) (((FlatPtr)(x)) & ~(PAGE_SIZE - 1))
 
-template<typename T>
-inline T* low_physical_to_virtual(T* physical)
-{
-    return (T*)(((u8*)physical) + 0xc0000000);
-}
-
 inline u32 low_physical_to_virtual(u32 physical)
 {
     return physical + 0xc0000000;
-}
-
-template<typename T>
-inline T* virtual_to_low_physical(T* physical)
-{
-    return (T*)(((u8*)physical) - 0xc0000000);
 }
 
 inline u32 virtual_to_low_physical(u32 physical)
 {
     return physical - 0xc0000000;
 }
-
-class KBuffer;
-class SynthFSInode;
 
 enum class UsedMemoryRangeType {
     LowMemory = 0,
@@ -80,14 +65,14 @@ constexpr static const char* UserMemoryRangeTypeNames[] {
 };
 
 struct UsedMemoryRange {
-    UsedMemoryRangeType type;
+    UsedMemoryRangeType type {};
     PhysicalAddress start;
     PhysicalAddress end;
 };
 
 struct ContiguousReservedMemoryRange {
     PhysicalAddress start;
-    size_t length;
+    size_t length {};
 };
 
 enum class PhysicalMemoryRangeType {
@@ -96,13 +81,13 @@ enum class PhysicalMemoryRangeType {
     ACPI_Reclaimable,
     ACPI_NVS,
     BadMemory,
-    Unknown
+    Unknown,
 };
 
 struct PhysicalMemoryRange {
-    PhysicalMemoryRangeType type;
+    PhysicalMemoryRangeType type { PhysicalMemoryRangeType::Unknown };
     PhysicalAddress start;
-    size_t length;
+    size_t length {};
 };
 
 const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value);
@@ -127,13 +112,11 @@ class MemoryManager {
     friend class AnonymousVMObject;
     friend class Region;
     friend class VMObject;
-    friend OwnPtr<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:
     static MemoryManager& the();
     static bool is_initialized();
 
-    static void early_initialize();
     static void initialize(u32 cpu);
 
     static inline MemoryManagerData& get_data()
@@ -186,19 +169,7 @@ public:
         }
     }
 
-    template<typename T, typename Callback>
-    static void for_each_vmobject_of_type(Callback callback)
-    {
-        for (auto& vmobject : MM.m_vmobjects) {
-            if (!is<T>(vmobject))
-                continue;
-            if (callback(static_cast<T&>(vmobject)) == IterationDecision::Break)
-                break;
-        }
-    }
-
     static Region* find_region_from_vaddr(Space&, VirtualAddress);
-    static const Region* find_region_from_vaddr(const Space&, VirtualAddress);
 
     void dump_kernel_regions();
 
@@ -243,7 +214,6 @@ private:
     void release_pte(PageDirectory&, VirtualAddress, bool);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
-    RefPtr<PhysicalPage> m_low_page_table;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
@@ -265,8 +235,6 @@ private:
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
     InlineLinkedList<VMObject> m_vmobjects;
-
-    RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };
 
 template<typename Callback>

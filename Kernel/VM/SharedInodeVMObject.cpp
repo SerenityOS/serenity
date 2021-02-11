@@ -25,8 +25,6 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
