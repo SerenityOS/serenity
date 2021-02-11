@@ -590,9 +590,13 @@ void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source,
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
                 u8 alpha = Color::from_rgba(src[x]).alpha();
-                if (alpha == 0xff)
-                    dst[x] = filter(Color::from_rgba(src[x])).value();
-                else if (!alpha)
+                if (alpha == 0xff) {
+                    auto color = filter(Color::from_rgba(src[x]));
+                    if (color.alpha() == 0xff)
+                        dst[x] = color.value();
+                    else
+                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                } else if (!alpha)
                     continue;
                 else
                     dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
@@ -605,9 +609,13 @@ void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source,
             const RGBA32* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x <= (last_column - first_column); ++x) {
                 u8 alpha = Color::from_rgba(src[x / s]).alpha();
-                if (alpha == 0xff)
-                    dst[x] = filter(Color::from_rgba(src[x / s])).value();
-                else if (!alpha)
+                if (alpha == 0xff) {
+                    auto color = filter(Color::from_rgba(src[x / s]));
+                    if (color.alpha() == 0xff)
+                        dst[x] = color.value();
+                    else
+                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                } else if (!alpha)
                     continue;
                 else
                     dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x / s]))).value();
