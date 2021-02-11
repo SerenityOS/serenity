@@ -345,9 +345,18 @@ void Compositor::compose()
                 auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
                 if (window.client() && window.client()->is_unresponsive()) {
-                    painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
-                        return src.to_grayscale().darkened(0.75f);
-                    });
+                    if (window.is_opaque()) {
+                        painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
+                            return src.to_grayscale().darkened(0.75f);
+                        });
+                    } else {
+                        u8 alpha = 255 * window.opacity();
+                        painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [&](Color src) {
+                            auto color = src.to_grayscale().darkened(0.75f);
+                            color.set_alpha(alpha);
+                            return color;
+                        });
+                    }
                 } else {
                     painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
                 }
