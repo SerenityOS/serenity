@@ -474,7 +474,7 @@ void Window::invalidate(bool invalidate_frame, bool re_render_frame)
         m_invalidated_frame = true;
     }
     if (re_render_frame)
-        frame().set_dirty();
+        frame().set_dirty(true);
     m_dirty_rects.clear();
     Compositor::the().invalidate_window();
 }

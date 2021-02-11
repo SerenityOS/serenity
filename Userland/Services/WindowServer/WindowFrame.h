@@ -82,9 +82,10 @@ public:
         return true;
     }
 
-    void set_dirty()
+    void set_dirty(bool re_render_shadow = false)
     {
         m_dirty = true;
+        m_shadow_dirty |= re_render_shadow;
     }
 
     void theme_changed()
