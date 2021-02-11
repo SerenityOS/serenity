@@ -42,7 +42,7 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
     void* fault_at;
     ssize_t length = Kernel::safe_strnlen(user_str, user_str_size, fault_at);
     if (length < 0) {
-        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (strnlen)";
+        klog() << "copy_string_from_user(" << static_cast<const void*>(user_str) << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (strnlen)";
         return {};
     }
     if (length == 0)
@@ -51,7 +51,7 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
     char* buffer;
     auto copied_string = StringImpl::create_uninitialized((size_t)length, buffer);
     if (!Kernel::safe_memcpy(buffer, user_str, (size_t)length, fault_at)) {
-        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (memcpy)";
+        klog() << "copy_string_from_user(" << static_cast<const void*>(user_str) << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (memcpy)";
         return {};
     }
     return copied_string;
