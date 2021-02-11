@@ -77,11 +77,11 @@ KernelRng::KernelRng()
     } else {
         // Fallback to RTC
         klog() << "KernelRng: Using RTC as entropy source (bad!)";
-        time_t current_time = RTC::now();
+        auto current_time = static_cast<u64>(RTC::now());
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             this->resource().add_random_event(current_time, i % 32);
-            current_time *= 0x574a;
-            current_time += 0x40b2;
+            current_time *= 0x574au;
+            current_time += 0x40b2u;
         }
     }
 }
