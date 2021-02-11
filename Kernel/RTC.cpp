@@ -102,8 +102,6 @@ time_t now()
 
     klog() << "RTC: Year: " << year << ", month: " << month << ", day: " << day << ", hour: " << hour << ", minute: " << minute << ", second: " << second;
 
-    ASSERT(year >= 2018);
-
     time_t days_since_epoch = years_to_days_since_epoch(year) + day_of_year(year, month, day);
     return ((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second;
 }
