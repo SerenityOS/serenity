@@ -188,6 +188,7 @@ int main(int argc, char** argv)
         }
     };
 
+    bool did_match_something = false;
     if (!files.size() && !recursive) {
         char* line = nullptr;
         size_t line_len = 0;
@@ -201,7 +202,9 @@ int main(int argc, char** argv)
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return 1;
 
-            if (matches(line_view, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+            auto matched = matches(line_view, "stdin", false, is_binary);
+            did_match_something = did_match_something || matched;
+            if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
                 return 0;
         }
     } else {
@@ -217,5 +220,5 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
+    return did_match_something ? 0 : 1;
 }
