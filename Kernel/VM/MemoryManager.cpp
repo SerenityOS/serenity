@@ -108,13 +108,13 @@ void MemoryManager::protect_kernel_image()
 {
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
     // Disable writing to the kernel text and rodata segments.
-    for (size_t i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
+    for (auto i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
     if (Processor::current().has_feature(CPUFeature::NX)) {
         // Disable execution of the kernel data, bss and heap segments.
-        for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_image; i += PAGE_SIZE) {
+        for (auto i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -153,7 +153,7 @@ bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_addres
             continue;
         if (!(current_range.start.offset(current_range.length) > start_address))
             continue;
-        if (!(current_range.length >= range.size()))
+        if (current_range.length < range.size())
             return false;
         return true;
     }
@@ -162,7 +162,7 @@ bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_addres
 
 void MemoryManager::parse_memory_map()
 {
-    RefPtr<PhysicalRegion> region;
+    RefPtr<PhysicalRegion> physical_region;
 
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
@@ -186,10 +186,10 @@ void MemoryManager::parse_memory_map()
     }
 
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
-        klog() << "MM: Multiboot mmap: address = " << String::format("0x%016llx", mmap->addr) << ", length = " << String::format("0x%016llx", mmap->len) << ", type = 0x" << String::format("%x", mmap->type);
+        dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", mmap->addr, mmap->len, mmap->type);
 
         auto start_address = PhysicalAddress(mmap->addr);
-        size_t length = static_cast<size_t>(mmap->len);
+        auto length = static_cast<size_t>(mmap->len);
         switch (mmap->type) {
         case (MULTIBOOT_MEMORY_AVAILABLE):
             m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
@@ -222,17 +222,17 @@ void MemoryManager::parse_memory_map()
         // Fix up unaligned memory regions.
         auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
-            klog() << "MM: got an unaligned region base from the bootloader; correcting " << String::format("%p", (void*)mmap->addr) << " by " << diff << " bytes";
+            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting {:p} by {} bytes", mmap->addr, diff);
             diff = PAGE_SIZE - diff;
             mmap->addr += diff;
             mmap->len -= diff;
         }
         if ((mmap->len % PAGE_SIZE) != 0) {
-            klog() << "MM: got an unaligned region length from the bootloader; correcting " << mmap->len << " by " << (mmap->len % PAGE_SIZE) << " bytes";
+            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting length {} by {} bytes", mmap->len, mmap->len % PAGE_SIZE);
             mmap->len -= mmap->len % PAGE_SIZE;
         }
         if (mmap->len < PAGE_SIZE) {
-            klog() << "MM: memory region from bootloader is too small; we want >= " << PAGE_SIZE << " bytes, but got " << mmap->len << " bytes";
+            dmesgln("MM: Memory physical_region from bootloader is too small; we want >= {} bytes, but got {} bytes", PAGE_SIZE, mmap->len);
             continue;
         }
 
@@ -250,29 +250,29 @@ void MemoryManager::parse_memory_map()
             if (should_skip)
                 continue;
 
-            // Assign page to user physical region.
-            if (region.is_null() || region->upper().offset(PAGE_SIZE) != addr) {
+            // Assign page to user physical physical_region.
+            if (physical_region.is_null() || physical_region->upper().offset(PAGE_SIZE) != addr) {
                 m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                region = m_user_physical_regions.last();
+                physical_region = m_user_physical_regions.last();
             } else {
-                region->expand(region->lower(), addr);
+                physical_region->expand(physical_region->lower(), addr);
             }
         }
     }
 
-    // Append statically-allocated super physical region.
+    // Append statically-allocated super physical physical_region.
     m_super_physical_regions.append(PhysicalRegion::create(
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
 
     for (auto& region : m_super_physical_regions) {
         m_super_physical_pages += region.finalize_capacity();
-        klog() << "MM: Super physical region: " << region.lower() << " - " << region.upper();
+        dmesgln("MM: Super physical region: {} - {}", region.lower(), region.upper());
     }
 
     for (auto& region : m_user_physical_regions) {
         m_user_physical_pages += region.finalize_capacity();
-        klog() << "MM: User physical region: " << region.lower() << " - " << region.upper();
+        dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
     }
 
     ASSERT(m_super_physical_pages > 0);
@@ -447,7 +447,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #endif
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
-        klog() << "CPU[" << Processor::id() << "] NP(error) fault at invalid address " << fault.vaddr();
+        dmesgln("CPU[{}] NP(error) fault at invalid address {}", Processor::id(), fault.vaddr());
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -571,7 +571,7 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
         return;
     }
 
-    klog() << "MM: deallocate_user_physical_page couldn't figure out region for user page @ " << page.paddr();
+    dmesgln("MM: deallocate_user_physical_page couldn't figure out region for user page @ {}", page.paddr());
     ASSERT_NOT_REACHED();
 }
 
@@ -626,7 +626,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
                 return IterationDecision::Continue;
             int purged_page_count = static_cast<AnonymousVMObject&>(vmobject).purge_with_interrupts_disabled({});
             if (purged_page_count) {
-                klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from AnonymousVMObject{" << &vmobject << "}";
+                dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
                 page = find_free_user_physical_page(false);
                 purged_pages = true;
                 ASSERT(page);
@@ -634,9 +634,8 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
             }
             return IterationDecision::Continue;
         });
-
         if (!page) {
-            klog() << "MM: no user physical pages available";
+            dmesgln("MM: no user physical pages available");
             return {};
         }
     }
@@ -657,7 +656,7 @@ void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_super_physical_regions) {
         if (!region.contains(page)) {
-            klog() << "MM: deallocate_supervisor_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
+            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", page.paddr(), region.lower(), region.upper());
             continue;
         }
 
@@ -666,7 +665,7 @@ void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page
         return;
     }
 
-    klog() << "MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ " << page.paddr();
+    dbgln("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ {}", page.paddr());
     ASSERT_NOT_REACHED();
 }
 
@@ -685,10 +684,10 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
     if (physical_pages.is_empty()) {
         if (m_super_physical_regions.is_empty()) {
-            klog() << "MM: no super physical regions available (?)";
+            dmesgln("MM: no super physical regions available (?)");
         }
 
-        klog() << "MM: no super physical pages available";
+        dmesgln("MM: no super physical pages available");
         ASSERT_NOT_REACHED();
         return {};
     }
@@ -712,10 +711,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
     if (!page) {
         if (m_super_physical_regions.is_empty()) {
-            klog() << "MM: no super physical regions available (?)";
+            dmesgln("MM: no super physical regions available (?)");
         }
 
-        klog() << "MM: no super physical pages available";
+        dmesgln("MM: no super physical pages available");
         ASSERT_NOT_REACHED();
         return {};
     }
@@ -879,11 +878,18 @@ void MemoryManager::unregister_region(Region& region)
 
 void MemoryManager::dump_kernel_regions()
 {
-    klog() << "Kernel regions:";
-    klog() << "BEGIN       END         SIZE        ACCESS  NAME";
+    dbgln("Kernel regions:");
+    dbgln("BEGIN       END         SIZE        ACCESS  NAME");
     ScopedSpinLock lock(s_mm_lock);
-    for (auto& region : MM.m_kernel_regions) {
-        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08zx", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
+    for (auto& region : m_kernel_regions) {
+        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
+            region.is_readable() ? 'R' : ' ',
+            region.is_writable() ? 'W' : ' ',
+            region.is_executable() ? 'X' : ' ',
+            region.is_shared() ? 'S' : ' ',
+            region.is_stack() ? 'T' : ' ',
+            region.is_syscall_region() ? 'C' : ' ',
+            region.name());
     }
 }
 
