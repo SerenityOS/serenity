@@ -330,6 +330,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     widget.load_from_gml(file_manager_window_gml);
 
+    auto& toolbar_container = *widget.find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
     auto& main_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("main_toolbar");
     auto& location_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("location_toolbar");
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
@@ -339,11 +340,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("breadcrumb_toolbar");
     breadcrumb_toolbar.layout()->set_margins({ 6, 0, 6, 0 });
     auto& breadcrumb_bar = *widget.find_descendant_of_type_named<GUI::BreadcrumbBar>("breadcrumb_bar");
-
-    location_textbox.on_focusout = [&] {
-        location_toolbar.set_visible(false);
-        breadcrumb_toolbar.set_visible(true);
-    };
 
     auto& splitter = *widget.find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
     auto& tree_view = *widget.find_descendant_of_type_named<GUI::TreeView>("tree_view");
@@ -414,6 +410,78 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
     });
+
+    RefPtr<GUI::Action> layout_toolbar_action;
+    RefPtr<GUI::Action> layout_location_action;
+    RefPtr<GUI::Action> layout_statusbar_action;
+    RefPtr<GUI::Action> layout_folderpane_action;
+
+    auto show_toolbar = config->read_bool_entry("Layout", "ShowToolbar", true);
+    layout_toolbar_action = GUI::Action::create_checkable("Toolbar", [&](auto& action) {
+        if (action.is_checked()) {
+            main_toolbar.set_visible(true);
+            toolbar_container.set_visible(true);
+        } else {
+            main_toolbar.set_visible(false);
+            if (!location_toolbar.is_visible() && !breadcrumb_toolbar.is_visible())
+                toolbar_container.set_visible(false);
+        }
+        show_toolbar = action.is_checked();
+        config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
+        config->sync();
+    });
+    layout_toolbar_action->set_checked(show_toolbar);
+    main_toolbar.set_visible(show_toolbar);
+
+    auto show_location = config->read_bool_entry("Layout", "ShowLocationBar", true);
+    layout_location_action = GUI::Action::create_checkable("Location bar", [&](auto& action) {
+        if (action.is_checked()) {
+            breadcrumb_toolbar.set_visible(true);
+            location_toolbar.set_visible(false);
+            toolbar_container.set_visible(true);
+        } else {
+            breadcrumb_toolbar.set_visible(false);
+            location_toolbar.set_visible(false);
+            if (!main_toolbar.is_visible())
+                toolbar_container.set_visible(false);
+        }
+        show_location = action.is_checked();
+        config->write_bool_entry("Layout", "ShowLocationBar", action.is_checked());
+        config->sync();
+    });
+    layout_location_action->set_checked(show_location);
+    breadcrumb_toolbar.set_visible(show_location);
+
+    toolbar_container.set_visible(show_location | show_toolbar);
+
+    layout_statusbar_action = GUI::Action::create_checkable("Status bar", [&](auto& action) {
+        action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
+        config->write_bool_entry("Layout", "ShowStatusBar", action.is_checked());
+        config->sync();
+    });
+
+    auto show_statusbar = config->read_bool_entry("Layout", "ShowStatusBar", true);
+    layout_statusbar_action->set_checked(show_statusbar);
+    statusbar.set_visible(show_statusbar);
+
+    layout_folderpane_action = GUI::Action::create_checkable("Folder pane", { Mod_Ctrl, Key_P }, [&](auto& action) {
+        action.is_checked() ? tree_view.set_visible(true) : tree_view.set_visible(false);
+        config->write_bool_entry("Layout", "ShowFolderPane", action.is_checked());
+        config->sync();
+    });
+
+    auto show_folderpane = config->read_bool_entry("Layout", "ShowFolderPane", true);
+    layout_folderpane_action->set_checked(show_folderpane);
+    tree_view.set_visible(show_folderpane);
+
+    location_textbox.on_focusout = [&] {
+        if (show_location)
+            breadcrumb_toolbar.set_visible(true);
+        if (!(show_location | show_toolbar))
+            toolbar_container.set_visible(false);
+
+        location_toolbar.set_visible(false);
+    };
 
     RefPtr<GUI::Action> view_as_table_action;
     RefPtr<GUI::Action> view_as_icons_action;
@@ -632,6 +700,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     action_show_dotfiles->set_checked(show_dotfiles);
 
     auto& view_menu = menubar->add_menu("View");
+    auto& layout_menu = view_menu.add_submenu("Layout");
+    layout_menu.add_action(*layout_toolbar_action);
+    layout_menu.add_action(*layout_location_action);
+    layout_menu.add_action(*layout_statusbar_action);
+    layout_menu.add_action(*layout_folderpane_action);
+
+    view_menu.add_separator();
+
     view_menu.add_action(*view_as_icons_action);
     view_menu.add_action(*view_as_table_action);
     view_menu.add_action(*view_as_columns_action);
@@ -639,6 +715,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_menu.add_action(action_show_dotfiles);
 
     auto go_to_location_action = GUI::Action::create("Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
+        toolbar_container.set_visible(true);
         location_toolbar.set_visible(true);
         breadcrumb_toolbar.set_visible(false);
         location_textbox.select_all();

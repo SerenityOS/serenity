@@ -5,6 +5,7 @@
     }
 
     @GUI::ToolBarContainer {
+        name: "toolbar_container"
         @GUI::ToolBar {
             name: "main_toolbar"
         }
