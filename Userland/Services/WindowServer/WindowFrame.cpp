@@ -221,6 +221,8 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
 
 bool WindowFrame::frame_has_alpha() const
 {
+    if (m_has_alpha_channel)
+        return true;
     if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::RGBA32)
         return true;
     return false;
@@ -347,11 +349,26 @@ void WindowFrame::render(Gfx::Painter& painter)
     }
 }
 
+void WindowFrame::theme_changed()
+{
+    m_dirty = m_shadow_dirty = true;
+    m_top_bottom = nullptr;
+    m_left_right = nullptr;
+    m_bottom_y = m_right_x = 0;
+
+    layout_buttons();
+    set_button_icons();
+
+    m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
+}
+
 void WindowFrame::render_to_cache()
 {
     if (!m_dirty)
         return;
     m_dirty = false;
+
+    m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
 
     static Gfx::Bitmap* s_tmp_bitmap;
     auto frame_rect = rect();
@@ -387,6 +404,7 @@ void WindowFrame::render_to_cache()
     Gfx::IntPoint update_location(m_shadow_dirty ? Gfx::IntPoint { 0, 0 } : m_shadow_offset);
 
     Gfx::Painter painter(*s_tmp_bitmap);
+
     // Clear the frame area, not including the window content area, which we don't care about
     for (auto& rect : frame_rect_to_update.shatter(window_rect))
         painter.clear_rect({ rect.location() - frame_rect_to_update.location(), rect.size() }, { 255, 255, 255, 0 });

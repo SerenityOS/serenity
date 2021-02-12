@@ -89,11 +89,13 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
 
-    int stripe_left = titlebar_title_rect.right() + 5;
     int stripe_right = leftmost_button_rect.left() - 3;
-    if (stripe_left && stripe_right && stripe_left < stripe_right) {
-        for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+    if (stripes_color.alpha() > 0) {
+        int stripe_left = titlebar_title_rect.right() + 5;
+        if (stripe_left && stripe_right && stripe_left < stripe_right) {
+            for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+                painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
+            }
         }
     }
 
@@ -145,11 +147,13 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
     auto titlebar_rect = title_bar_rect(WindowType::Notification, window_rect, palette);
     painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, titlebar_rect, palette.active_window_border1(), palette.active_window_border2());
 
-    int stripe_top = close_button_rect.bottom() + 4;
-    int stripe_bottom = window_rect.height() - 3;
-    if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
-        for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
-            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
+    if (palette.active_window_title_stripes().alpha() > 0) {
+        int stripe_top = close_button_rect.bottom() + 4;
+        int stripe_bottom = window_rect.height() - 3;
+        if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
+            for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
+                painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
+            }
         }
     }
 }
