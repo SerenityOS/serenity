@@ -38,8 +38,9 @@
 #endif
 
 #ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
-// Note: Clang 12 adds support for CTAD, this would fail with any version prior to that.
-#    if defined(__clang__) && __clang_major__ < 12
+// Note: Clang 12 adds support for CTAD, but still fails to build the dbgln() checks, so they're disabled altogether for now.
+// See https://oss-fuzz-build-logs.storage.googleapis.com/log-79750138-f41e-4f39-8812-7c536f1d2e35.txt, for example.
+#    if defined(__clang__)
 #        define DBGLN_NO_COMPILETIME_FORMAT_CHECK
 #    endif
 #endif
