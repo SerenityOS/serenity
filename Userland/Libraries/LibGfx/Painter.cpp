@@ -206,6 +206,10 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
 
 void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_rect, Color gradient_start, Color gradient_end)
 {
+    if (gradient_start == gradient_end) {
+        fill_rect(a_rect, gradient_start);
+        return;
+    }
 
 #ifdef NO_FPU
     return fill_rect(a_rect, gradient_start);
@@ -222,23 +226,31 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
+    float alpha_increment = increment * ((float)gradient_end.alpha() - (float)gradient_start.alpha());
 
     if (orientation == Orientation::Horizontal) {
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
             float c = offset * increment;
+            float c_alpha = gradient_start.alpha() + offset * alpha_increment;
             for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = gamma_accurate_blend(gradient_start, gradient_end, c).value();
+                auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
+                color.set_alpha(c_alpha);
+                dst[j] = color.value();
+                c_alpha += alpha_increment;
                 c += increment;
             }
             dst += dst_skip;
         }
     } else {
         float c = offset * increment;
+        float c_alpha = gradient_start.alpha() + offset * alpha_increment;
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
             auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
+            color.set_alpha(c_alpha);
             for (int j = 0; j < clipped_rect.width(); ++j) {
                 dst[j] = color.value();
             }
+            c_alpha += alpha_increment;
             c += increment;
             dst += dst_skip;
         }
