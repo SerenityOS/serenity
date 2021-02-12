@@ -97,7 +97,8 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 {
     // FIXME: Should this fail gracefully somehow?
     ASSERT(group_index <= m_block_group_count);
-    return block_group_descriptors()[group_index - 1];
+    ASSERT(group_index > 0);
+    return block_group_descriptors()[group_index.value() - 1];
 }
 
 bool Ext2FS::initialize()
@@ -1143,7 +1144,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
     dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_blocks:");
     blocks.ensure_capacity(count);
 
-    GroupIndex group_index = preferred_group_index;
+    auto group_index = preferred_group_index;
 
     if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
         group_index = 1;
@@ -1157,7 +1158,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         } else {
             if (group_index == preferred_group_index)
                 group_index = 1;
-            for (; group_index <= m_block_group_count; ++group_index) {
+            for (; group_index <= m_block_group_count; group_index = GroupIndex { group_index.value() + 1 }) {
                 if (group_descriptor(group_index).bg_free_blocks_count) {
                     found_a_group = true;
                     break;
@@ -1172,7 +1173,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
         auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
 
-        BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index().value();
+        BlockIndex first_block_in_group = (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
         size_t free_region_size = 0;
         auto first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
         ASSERT(first_unset_bit_index.has_value());
@@ -1194,16 +1195,16 @@ InodeIndex Ext2FS::find_a_free_inode(GroupIndex preferred_group)
     LOCKER(m_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
 
-    unsigned group_index = 0;
+    GroupIndex group_index;
 
     // FIXME: We shouldn't refuse to allocate an inode if there is no group that can house the whole thing.
     //        In those cases we should just spread it across multiple groups.
-    auto is_suitable_group = [this](GroupIndex group_index) {
+    auto is_suitable_group = [this](auto group_index) {
         auto& bgd = group_descriptor(group_index);
         return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= 1;
     };
 
-    if (preferred_group && is_suitable_group(preferred_group)) {
+    if (preferred_group.value() && is_suitable_group(preferred_group)) {
         group_index = preferred_group;
     } else {
         for (unsigned i = 1; i <= m_block_group_count; ++i) {
@@ -1223,7 +1224,7 @@ InodeIndex Ext2FS::find_a_free_inode(GroupIndex preferred_group)
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
     InodeIndex first_free_inode_in_group = 0;
 
-    InodeIndex first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
+    InodeIndex first_inode_in_group = (group_index.value() - 1) * inodes_per_group() + 1;
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
     auto inode_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), inodes_in_group);
@@ -1253,7 +1254,7 @@ Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) 
     return (block_index.value() - 1) / blocks_per_group() + 1;
 }
 
-unsigned Ext2FS::group_index_from_inode(InodeIndex inode) const
+auto Ext2FS::group_index_from_inode(InodeIndex inode) const -> GroupIndex
 {
     if (!inode)
         return 0;
@@ -1265,9 +1266,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     LOCKER(m_lock);
     if (index == 0)
         return true;
-    unsigned group_index = group_index_from_inode(index);
+    auto group_index = group_index_from_inode(index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = index.value() - ((group_index - 1) * inodes_per_group());
+    unsigned index_in_group = index.value() - ((group_index.value() - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 
     auto& cached_bitmap = const_cast<Ext2FS&>(*this).get_bitmap_block(bgd.bg_inode_bitmap);
@@ -1277,9 +1278,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
 bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
 {
     LOCKER(m_lock);
-    unsigned group_index = group_index_from_inode(inode_index);
+    auto group_index = group_index_from_inode(inode_index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = inode_index.value() - ((group_index - 1) * inodes_per_group());
+    unsigned index_in_group = inode_index.value() - ((group_index.value() - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
@@ -1338,9 +1339,9 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     ASSERT(block_index != 0);
     LOCKER(m_lock);
 
-    GroupIndex group_index = group_index_from_block_index(block_index);
+    auto group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = (block_index.value() - first_block_index().value()) - ((group_index - 1) * blocks_per_group());
+    unsigned index_in_group = (block_index.value() - first_block_index().value()) - ((group_index.value() - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
