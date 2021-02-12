@@ -56,7 +56,7 @@ public:
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
     unsigned fsid() const { return m_fs.fsid(); }
-    unsigned index() const { return m_index; }
+    InodeIndex index() const { return m_index; }
 
     size_t size() const { return metadata().size; }
     bool is_symlink() const { return metadata().is_symlink(); }
@@ -127,7 +127,7 @@ public:
     static SpinLock<u32>& all_inodes_lock();
 
 protected:
-    Inode(FS& fs, unsigned index);
+    Inode(FS& fs, InodeIndex);
     void set_metadata_dirty(bool);
     void inode_contents_changed(off_t, ssize_t, const UserOrKernelBuffer&);
     void inode_size_changed(size_t old_size, size_t new_size);
@@ -140,7 +140,7 @@ protected:
 
 private:
     FS& m_fs;
-    unsigned m_index { 0 };
+    InodeIndex m_index { 0 };
     WeakPtr<SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;

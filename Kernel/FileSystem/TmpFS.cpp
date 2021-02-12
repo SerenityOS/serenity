@@ -62,7 +62,7 @@ void TmpFS::register_inode(TmpFSInode& inode)
     LOCKER(m_lock);
     ASSERT(inode.identifier().fsid() == fsid());
 
-    unsigned index = inode.identifier().index();
+    auto index = inode.identifier().index();
     m_inodes.set(index, inode);
 }
 

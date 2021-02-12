@@ -227,7 +227,7 @@ ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t siz
     OutputMemoryStream stream { temp_buffer };
 
     KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream, this](auto& entry) {
-        stream << (u32)entry.inode.index();
+        stream << (u32)entry.inode.index().value();
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
         stream << (u32)entry.name.length();
         stream << entry.name.bytes();

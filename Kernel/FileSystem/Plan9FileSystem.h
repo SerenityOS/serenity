@@ -171,7 +171,7 @@ class Plan9FSInode final : public Inode {
 public:
     virtual ~Plan9FSInode() override;
 
-    u32 fid() const { return index(); }
+    u32 fid() const { return index().value(); }
 
     // ^Inode
     virtual InodeMetadata metadata() const override;

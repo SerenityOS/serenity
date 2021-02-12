@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DistinctNumeric.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 
@@ -35,10 +36,12 @@ namespace Kernel {
 class FS;
 struct InodeMetadata;
 
+TYPEDEF_DISTINCT_ORDERED_ID(unsigned, InodeIndex);
+
 class InodeIdentifier {
 public:
     InodeIdentifier() { }
-    InodeIdentifier(u32 fsid, u32 inode)
+    InodeIdentifier(u32 fsid, InodeIndex inode)
         : m_fsid(fsid)
         , m_index(inode)
     {
@@ -47,7 +50,7 @@ public:
     bool is_valid() const { return m_fsid != 0 && m_index != 0; }
 
     u32 fsid() const { return m_fsid; }
-    u32 index() const { return m_index; }
+    InodeIndex index() const { return m_index; }
 
     FS* fs();
     const FS* fs() const;
@@ -66,12 +69,12 @@ public:
 
 private:
     u32 m_fsid { 0 };
-    u32 m_index { 0 };
+    InodeIndex m_index { 0 };
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const InodeIdentifier& value)
 {
-    stream << value.fsid() << ':' << value.index();
+    stream << value.fsid() << ':' << value.index().value();
     return stream;
 }
 
@@ -82,5 +85,13 @@ struct AK::Formatter<Kernel::InodeIdentifier> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::InodeIdentifier value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}:{}", value.fsid(), value.index());
+    }
+};
+
+template<>
+struct AK::Formatter<Kernel::InodeIndex> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::InodeIndex value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
     }
 };

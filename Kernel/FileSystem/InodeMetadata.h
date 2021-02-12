@@ -108,7 +108,7 @@ struct InodeMetadata {
         if (!is_valid())
             return EIO;
         buffer.st_rdev = encoded_device(major_device, minor_device);
-        buffer.st_ino = inode.index();
+        buffer.st_ino = inode.index().value();
         buffer.st_mode = mode;
         buffer.st_nlink = link_count;
         buffer.st_uid = uid;

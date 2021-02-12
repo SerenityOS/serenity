@@ -146,7 +146,7 @@ bool VFS::mount_root(FS& file_system)
 
     auto root_inode = file_system.root_inode();
     if (!root_inode->is_directory()) {
-        klog() << "VFS: root inode (" << String::format("%02u", file_system.fsid()) << ":" << String::format("%08u", root_inode->index()) << ") for / is not a directory :(";
+        klog() << "VFS: root inode (" << String::format("%02u", file_system.fsid()) << ":" << String::format("%08u", root_inode->index().value()) << ") for / is not a directory :(";
         return false;
     }
 

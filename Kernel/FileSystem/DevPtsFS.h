@@ -64,7 +64,7 @@ public:
     virtual ~DevPtsFSInode() override;
 
 private:
-    DevPtsFSInode(DevPtsFS&, unsigned index, SlavePTY*);
+    DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY*);
 
     // ^Inode
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
