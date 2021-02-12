@@ -147,6 +147,10 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
+    // This limit is just a number from the place where numbers come from.
+    if (params.nfds >= 16384)
+        return -ENOBUFS;
+
     Thread::BlockTimeout timeout;
     if (params.timeout) {
         timespec timeout_copy;
