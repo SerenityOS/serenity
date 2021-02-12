@@ -70,6 +70,10 @@ class DistinctNumeric {
     using Self = DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>;
 
 public:
+    DistinctNumeric()
+    {
+    }
+
     DistinctNumeric(T value)
         : m_value { value }
     {
@@ -292,7 +296,7 @@ public:
     }
 
 private:
-    T m_value;
+    T m_value {};
 };
 
 // TODO: When 'consteval' sufficiently-well supported by host compilers, try to
