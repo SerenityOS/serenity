@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <errno_numbers.h>
 #include <pwd.h>
@@ -160,6 +161,93 @@ struct passwd* getpwent()
             return &s_passwd_entry;
         // Otherwise, proceed to the next line.
     }
+}
+
+static void construct_pwd(struct passwd* pwd, char* buf, struct passwd** result)
+{
+    auto* buf_name = &buf[0];
+    auto* buf_passwd = &buf[s_name.length() + 1];
+    auto* buf_gecos = &buf[s_name.length() + 1 + s_gecos.length() + 1];
+    auto* buf_dir = &buf[s_gecos.length() + 1 + s_name.length() + 1 + s_gecos.length() + 1];
+    auto* buf_shell = &buf[s_dir.length() + 1 + s_gecos.length() + 1 + s_name.length() + 1 + s_gecos.length() + 1];
+
+    bool ok = true;
+    ok = ok || s_name.copy_characters_to_buffer(buf_name, s_name.length() + 1);
+    ok = ok || s_passwd.copy_characters_to_buffer(buf_passwd, s_passwd.length() + 1);
+    ok = ok || s_gecos.copy_characters_to_buffer(buf_gecos, s_gecos.length() + 1);
+    ok = ok || s_dir.copy_characters_to_buffer(buf_dir, s_dir.length() + 1);
+    ok = ok || s_shell.copy_characters_to_buffer(buf_shell, s_shell.length() + 1);
+
+    ASSERT(ok);
+
+    *result = pwd;
+    pwd->pw_name = buf_name;
+    pwd->pw_passwd = buf_passwd;
+    pwd->pw_gecos = buf_gecos;
+    pwd->pw_dir = buf_dir;
+    pwd->pw_shell = buf_shell;
+}
+
+int getpwnam_r(const char* name, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
+{
+    // FIXME: This is a HACK!
+    TemporaryChange name_change { s_name, {} };
+    TemporaryChange passwd_change { s_passwd, {} };
+    TemporaryChange gecos_change { s_gecos, {} };
+    TemporaryChange dir_change { s_dir, {} };
+    TemporaryChange shell_change { s_shell, {} };
+
+    setpwent();
+    bool found = false;
+    while (auto* pw = getpwent()) {
+        if (!strcmp(pw->pw_name, name)) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        *result = nullptr;
+        return 0;
+    }
+
+    const auto total_buffer_length = s_name.length() + s_passwd.length() + s_gecos.length() + s_dir.length() + s_shell.length() + 5;
+    if (buflen < total_buffer_length)
+        return ERANGE;
+
+    construct_pwd(pwd, buf, result);
+    return 0;
+}
+
+int getpwuid_r(uid_t uid, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
+{
+    // FIXME: This is a HACK!
+    TemporaryChange name_change { s_name, {} };
+    TemporaryChange passwd_change { s_passwd, {} };
+    TemporaryChange gecos_change { s_gecos, {} };
+    TemporaryChange dir_change { s_dir, {} };
+    TemporaryChange shell_change { s_shell, {} };
+
+    setpwent();
+    bool found = false;
+    while (auto* pw = getpwent()) {
+        if (pw->pw_uid == uid) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        *result = nullptr;
+        return 0;
+    }
+
+    const auto total_buffer_length = s_name.length() + s_passwd.length() + s_gecos.length() + s_dir.length() + s_shell.length() + 5;
+    if (buflen < total_buffer_length)
+        return ERANGE;
+
+    construct_pwd(pwd, buf, result);
+    return 0;
 }
 
 int putpwent(const struct passwd* p, FILE* stream)
