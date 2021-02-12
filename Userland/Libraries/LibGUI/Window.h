@@ -68,7 +68,9 @@ public:
 
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_opacity(float);
+    float opacity() const { return m_opacity_when_windowless; }
 
     WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
