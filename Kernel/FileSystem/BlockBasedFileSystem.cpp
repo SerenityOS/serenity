@@ -138,9 +138,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
-#if BBFS_DEBUG
-    klog() << "BlockBasedFileSystem::write_block " << index << ", size=" << count;
-#endif
+    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
 
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
@@ -211,9 +209,7 @@ bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOr
 KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
-#if BBFS_DEBUG
-    klog() << "BlockBasedFileSystem::write_blocks " << index << " x" << count;
-#endif
+    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
         auto result = write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache);
         if (result.is_error())
@@ -226,9 +222,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
-#if BBFS_DEBUG
-    klog() << "BlockBasedFileSystem::read_block " << index;
-#endif
+    dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
 
     if (!allow_cache) {
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
