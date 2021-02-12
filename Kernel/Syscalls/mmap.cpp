@@ -160,7 +160,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (alignment & ~PAGE_MASK)
         return (void*)-EINVAL;
 
-    if (!is_user_range(VirtualAddress(addr), size))
+    if (!is_user_range(VirtualAddress(addr), PAGE_ROUND_UP(size)))
         return (void*)-EFAULT;
 
     String name;
@@ -272,13 +272,13 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         REQUIRE_PROMISE(prot_exec);
     }
 
-    if (!size)
+    Range range_to_mprotect = { VirtualAddress(addr), PAGE_ROUND_UP(size) };
+
+    if (!range_to_mprotect.size())
         return -EINVAL;
 
-    if (!is_user_range(VirtualAddress(addr), size))
+    if (!is_user_range(range_to_mprotect))
         return -EFAULT;
-
-    Range range_to_mprotect = { VirtualAddress(addr), size };
 
     if (auto* whole_region = space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
@@ -343,13 +343,15 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
-    if (!size)
+    Range range_to_madvise { VirtualAddress(address), PAGE_ROUND_UP(size) };
+
+    if (!range_to_madvise.size())
         return -EINVAL;
 
-    if (!is_user_range(VirtualAddress(address), size))
+    if (!is_user_range(range_to_madvise))
         return -EFAULT;
 
-    auto* region = space().find_region_from_range({ VirtualAddress(address), size });
+    auto* region = space().find_region_from_range(range_to_madvise);
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -413,10 +415,11 @@ int Process::sys$munmap(void* addr, size_t size)
     if (!size)
         return -EINVAL;
 
-    if (!is_user_range(VirtualAddress(addr), size))
+    Range range_to_unmap { VirtualAddress(addr), PAGE_ROUND_UP(size) };
+
+    if (!is_user_range(range_to_unmap))
         return -EFAULT;
 
-    Range range_to_unmap { VirtualAddress(addr), size };
     if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return -EPERM;

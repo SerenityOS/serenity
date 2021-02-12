@@ -265,6 +265,11 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
 }
 
+inline bool is_user_range(const Range& range)
+{
+    return is_user_range(range.base(), range.size());
+}
+
 inline bool PhysicalPage::is_shared_zero_page() const
 {
     return this == &MM.shared_zero_page();
