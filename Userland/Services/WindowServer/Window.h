@@ -219,7 +219,7 @@ public:
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled || m_automatic_cursor_tracking_enabled; }
 
     bool has_alpha_channel() const { return m_has_alpha_channel; }
-    void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
+    void set_has_alpha_channel(bool value);
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
