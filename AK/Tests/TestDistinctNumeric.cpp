@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/DistinctNumeric.h>
 #include <AK/TestSuite.h>
+
+#include <AK/DistinctNumeric.h>
 
 template<typename T>
 class ForType {
