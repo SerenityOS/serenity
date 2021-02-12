@@ -57,10 +57,12 @@ void DevFS::notify_new_device(Device& device)
     m_root_inode->m_devices.append(new_device_inode);
 }
 
-size_t DevFS::get_new_inode_index()
+size_t DevFS::allocate_inode_index()
 {
     LOCKER(m_lock);
-    return 1 + (++m_inode_index);
+    m_next_inode_index = m_next_inode_index.value() + 1;
+    ASSERT(m_next_inode_index > 0);
+    return 1 + m_next_inode_index.value();
 }
 
 void DevFS::notify_device_removal(Device&)
@@ -95,7 +97,7 @@ RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
 }
 
 DevFSInode::DevFSInode(DevFS& fs)
-    : Inode(fs, fs.get_new_inode_index())
+    : Inode(fs, fs.allocate_inode_index())
 {
 }
 ssize_t DevFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
