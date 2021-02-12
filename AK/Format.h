@@ -38,7 +38,7 @@
 #endif
 
 #ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
-// Note: Clang 12 adds support for CTAD on NTTPs, this would fail with any version prior to that.
+// Note: Clang 12 adds support for CTAD, this would fail with any version prior to that.
 #    if defined(__clang__) && __clang_major__ < 12
 #        define DBGLN_NO_COMPILETIME_FORMAT_CHECK
 #    endif
@@ -47,15 +47,15 @@
 #ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
 namespace {
 
-template<size_t N, StringLiteral<N> fmt>
-consteval auto extract_used_argument_index(size_t specifier_start_index, size_t specifier_end_index, size_t& next_implicit_argument_index)
+template<size_t N>
+consteval auto extract_used_argument_index(const char (&fmt)[N], size_t specifier_start_index, size_t specifier_end_index, size_t& next_implicit_argument_index)
 {
     struct {
         size_t index_value { 0 };
         bool saw_explicit_index { false };
     } state;
     for (size_t i = specifier_start_index; i < specifier_end_index; ++i) {
-        auto c = fmt.data[i];
+        auto c = fmt[i];
         if (c > '9' || c < '0')
             break;
 
@@ -71,8 +71,8 @@ consteval auto extract_used_argument_index(size_t specifier_start_index, size_t 
 }
 
 // FIXME: We should rather parse these format strings at compile-time if possible.
-template<size_t N, StringLiteral<N> fmt>
-consteval auto count_fmt_params()
+template<size_t N>
+consteval auto count_fmt_params(const char (&fmt)[N])
 {
     struct {
         // FIXME: Switch to variable-sized storage whenever we can come up with one :)
@@ -91,10 +91,10 @@ consteval auto count_fmt_params()
     } result;
 
     for (size_t i = 0; i < N; ++i) {
-        auto ch = fmt.data[i];
+        auto ch = fmt[i];
         switch (ch) {
         case '{':
-            if (i + 1 < N && fmt.data[i + 1] == '{') {
+            if (i + 1 < N && fmt[i + 1] == '{') {
                 ++i;
                 continue;
             }
@@ -108,7 +108,7 @@ consteval auto count_fmt_params()
             ++result.unclosed_braces;
             break;
         case '}':
-            if (i + 1 < N && fmt.data[i + 1] == '}') {
+            if (i + 1 < N && fmt[i + 1] == '}') {
                 ++i;
                 continue;
             }
@@ -123,7 +123,7 @@ consteval auto count_fmt_params()
                 if (result.total_used_argument_count >= result.used_arguments.size())
                     result.internal_error = "Format-String Checker internal error: Too many format arguments in format string";
 
-                auto used_argument_index = extract_used_argument_index<N, fmt>(specifier_start_index, i, result.next_implicit_argument_index);
+                auto used_argument_index = extract_used_argument_index<N>(fmt, specifier_start_index, i, result.next_implicit_argument_index);
                 if (used_argument_index + 1 != result.next_implicit_argument_index)
                     result.has_explicit_argument_references = true;
                 result.used_arguments[result.total_used_argument_count++] = used_argument_index;
@@ -140,7 +140,7 @@ consteval auto count_fmt_params()
 }
 }
 
-template<size_t N, StringLiteral<N> fmt, size_t param_count, auto check = count_fmt_params<N, fmt>()>
+template<size_t N, StringLiteral<N> fmt, size_t param_count, auto check = count_fmt_params<N>(fmt.data)>
 constexpr bool check_format_parameter_consistency()
 {
     static_assert(check.internal_error.data[0] == 0, "Some internal error occured, try looking at the check function type for the error");
