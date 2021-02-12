@@ -87,7 +87,7 @@ private:
     const Ext2FS& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
-    mutable Vector<unsigned> m_block_list;
+    mutable Vector<BlockBasedFS::BlockIndex> m_block_list;
     mutable HashMap<String, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode;
 };
@@ -113,7 +113,6 @@ public:
     virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const override;
 
 private:
-    typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     explicit Ext2FS(FileDescription&);
 
