@@ -128,7 +128,7 @@ enum ProcFileType {
 
 static inline ProcessID to_pid(const InodeIdentifier& identifier)
 {
-    return identifier.index() >> 16u;
+    return identifier.index().value() >> 16u;
 }
 
 static inline ThreadID to_tid(const InodeIdentifier& identifier)
@@ -139,25 +139,25 @@ static inline ThreadID to_tid(const InodeIdentifier& identifier)
 
 static inline ProcParentDirectory to_proc_parent_directory(const InodeIdentifier& identifier)
 {
-    return (ProcParentDirectory)((identifier.index() >> 12) & 0xf);
+    return (ProcParentDirectory)((identifier.index().value() >> 12) & 0xf);
 }
 
 static inline ProcFileType to_proc_file_type(const InodeIdentifier& identifier)
 {
-    return (ProcFileType)(identifier.index() & 0xff);
+    return (ProcFileType)(identifier.index().value() & 0xff);
 }
 
 static inline int to_fd(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_PID_fd);
-    return (identifier.index() & 0xff) - FI_MaxStaticFileIndex;
+    return (identifier.index().value() & 0xff) - FI_MaxStaticFileIndex;
 }
 
 static inline size_t to_sys_index(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
     ASSERT(to_proc_file_type(identifier) == FI_Root_sys_variable);
-    return identifier.index() >> 16u;
+    return identifier.index().value() >> 16u;
 }
 
 static inline InodeIdentifier to_identifier(unsigned fsid, ProcParentDirectory parent, ProcessID pid, ProcFileType proc_file_type)
@@ -1020,7 +1020,7 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
         return m_root_inode;
 
     LOCKER(m_inodes_lock);
-    auto it = m_inodes.find(inode_id.index());
+    auto it = m_inodes.find(inode_id.index().value());
     if (it != m_inodes.end()) {
         // It's possible that the ProcFSInode ref count was dropped to 0 or
         // the ~ProcFSInode destructor is even running already, but blocked
@@ -1032,12 +1032,12 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
         // We couldn't ref it, so just create a new one and replace the entry
     }
     auto inode = adopt(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
-    auto result = m_inodes.set(inode_id.index(), inode.ptr());
+    auto result = m_inodes.set(inode_id.index().value(), inode.ptr());
     ASSERT(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
     return inode;
 }
 
-ProcFSInode::ProcFSInode(ProcFS& fs, unsigned index)
+ProcFSInode::ProcFSInode(ProcFS& fs, InodeIndex index)
     : Inode(fs, index)
 {
 }
@@ -1045,7 +1045,7 @@ ProcFSInode::ProcFSInode(ProcFS& fs, unsigned index)
 ProcFSInode::~ProcFSInode()
 {
     LOCKER(fs().m_inodes_lock);
-    auto it = fs().m_inodes.find(index());
+    auto it = fs().m_inodes.find(index().value());
     if (it != fs().m_inodes.end() && it->value == this)
         fs().m_inodes.remove(it);
 }

@@ -61,13 +61,13 @@ bool DevPtsFS::initialize()
     return true;
 }
 
-static unsigned inode_index_to_pty_index(unsigned inode_index)
+static unsigned inode_index_to_pty_index(InodeIndex inode_index)
 {
     ASSERT(inode_index > 1);
-    return inode_index - 2;
+    return inode_index.value() - 2;
 }
 
-static unsigned pty_index_to_inode_index(unsigned pty_index)
+static InodeIndex pty_index_to_inode_index(unsigned pty_index)
 {
     return pty_index + 2;
 }
@@ -109,7 +109,7 @@ void DevPtsFS::unregister_slave_pty(SlavePTY& slave_pty)
     s_ptys->remove(slave_pty.index());
 }
 
-DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, unsigned index, SlavePTY* pty)
+DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY* pty)
     : Inode(fs, index)
 {
     if (pty)

@@ -116,7 +116,7 @@ private:
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
-    ProcFSInode(ProcFS&, unsigned index);
+    ProcFSInode(ProcFS&, InodeIndex);
 };
 
 class ProcFSProxyInode final : public Inode {
