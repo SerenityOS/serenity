@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibCpp/SyntaxHighlighter.h>
@@ -65,7 +66,10 @@ TextEditorWidget::TextEditorWidget()
 {
     load_from_gml(text_editor_window_gml);
 
+    m_config = Core::ConfigFile::get_for_app("TextEditor");
+
     auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
+    auto& toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
 
     m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
@@ -417,7 +421,41 @@ TextEditorWidget::TextEditorWidget()
     m_preview_actions.add_action(*m_html_preview_action);
     m_preview_actions.set_exclusive(true);
 
+    m_layout_toolbar_action = GUI::Action::create_checkable("Toolbar", [&](auto& action) {
+        action.is_checked() ? toolbar_container.set_visible(true) : toolbar_container.set_visible(false);
+        m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
+        m_config->sync();
+    });
+    auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
+    m_layout_toolbar_action->set_checked(show_toolbar);
+    toolbar_container.set_visible(show_toolbar);
+
+    m_layout_statusbar_action = GUI::Action::create_checkable("Status bar", [&](auto& action) {
+        action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
+        m_config->write_bool_entry("Layout", "ShowStatusBar", action.is_checked());
+        m_config->sync();
+    });
+    auto show_statusbar = m_config->read_bool_entry("Layout", "ShowStatusBar", true);
+    m_layout_statusbar_action->set_checked(show_statusbar);
+    m_statusbar->set_visible(show_statusbar);
+
+    m_layout_ruler_action = GUI::Action::create_checkable("Ruler", [&](auto& action) {
+        action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
+        m_config->write_bool_entry("Layout", "ShowRuler", action.is_checked());
+        m_config->sync();
+    });
+    auto show_ruler = m_config->read_bool_entry("Layout", "ShowRuler", true);
+    m_layout_ruler_action->set_checked(show_ruler);
+    m_editor->set_ruler_visible(show_ruler);
+
     auto& view_menu = menubar->add_menu("View");
+    auto& layout_menu = view_menu.add_submenu("Layout");
+    layout_menu.add_action(*m_layout_toolbar_action);
+    layout_menu.add_action(*m_layout_statusbar_action);
+    layout_menu.add_action(*m_layout_ruler_action);
+
+    view_menu.add_separator();
+
     view_menu.add_action(GUI::Action::create("Editor font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(window(), &m_editor->font(), true);

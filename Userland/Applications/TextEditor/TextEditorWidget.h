@@ -84,6 +84,10 @@ private:
     RefPtr<GUI::Action> m_replace_previous_action;
     RefPtr<GUI::Action> m_replace_all_action;
 
+    RefPtr<GUI::Action> m_layout_toolbar_action;
+    RefPtr<GUI::Action> m_layout_statusbar_action;
+    RefPtr<GUI::Action> m_layout_ruler_action;
+
     GUI::ActionGroup m_preview_actions;
     RefPtr<GUI::Action> m_no_preview_action;
     RefPtr<GUI::Action> m_markdown_preview_action;
@@ -117,6 +121,7 @@ private:
     RefPtr<GUI::Action> m_shell_highlight;
 
     RefPtr<Web::OutOfProcessWebView> m_page_view;
+    RefPtr<Core::ConfigFile> m_config;
 
     bool m_document_dirty { false };
     bool m_document_opening { false };
