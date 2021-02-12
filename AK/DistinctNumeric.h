@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 
@@ -297,6 +299,14 @@ public:
 
 private:
     T m_value {};
+};
+
+template<typename T, typename X, bool Incr, bool Cmp, bool Bool, bool Flags, bool Shift, bool Arith>
+struct Formatter<DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith> value)
+    {
+        return Formatter<FormatString>::format(builder, "{}", value.value());
+    }
 };
 
 // TODO: When 'consteval' sufficiently-well supported by host compilers, try to
