@@ -250,13 +250,17 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
 #endif
 
     {
-        LOCKER(IPv4Socket::all_sockets().lock());
-        for (RefPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
-            LOCKER(socket->lock());
-            if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
-                continue;
-            socket->did_receive(ipv4_packet.source(), 0, KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+        NonnullRefPtrVector<IPv4Socket> icmp_sockets;
+        {
+            LOCKER(IPv4Socket::all_sockets().lock(), Lock::Mode::Shared);
+            for (auto* socket : IPv4Socket::all_sockets().resource()) {
+                if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
+                    continue;
+                icmp_sockets.append(*socket);
+            }
         }
+        for (auto& socket : icmp_sockets)
+            socket.did_receive(ipv4_packet.source(), 0, KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
     }
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
