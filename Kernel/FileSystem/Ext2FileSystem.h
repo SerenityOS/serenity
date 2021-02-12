@@ -113,7 +113,8 @@ public:
     virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const override;
 
 private:
-    typedef unsigned GroupIndex;
+    TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);
+
     explicit Ext2FS(FileDescription&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
