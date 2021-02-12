@@ -191,7 +191,8 @@ namespace Kernel {
     S(set_coredump_metadata)  \
     S(abort)                  \
     S(anon_create)            \
-    S(msyscall)
+    S(msyscall)               \
+    S(readv)
 
 namespace Syscall {
 
