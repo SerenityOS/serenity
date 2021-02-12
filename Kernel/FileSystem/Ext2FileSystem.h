@@ -83,14 +83,12 @@ private:
     bool populate_lookup_cache() const;
     KResult resize(u64);
 
-    static u8 file_type_for_directory_entry(const ext2_dir_entry_2&);
-
     Ext2FS& fs();
     const Ext2FS& fs() const;
-    Ext2FSInode(Ext2FS&, unsigned index);
+    Ext2FSInode(Ext2FS&, InodeIndex);
 
     mutable Vector<unsigned> m_block_list;
-    mutable HashMap<String, unsigned> m_lookup_cache;
+    mutable HashMap<String, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode;
 };
 
@@ -98,8 +96,6 @@ class Ext2FS final : public BlockBasedFS {
     friend class Ext2FSInode;
 
 public:
-    using InodeIndex = u32;
-
     static NonnullRefPtr<Ext2FS> create(FileDescription&);
 
     virtual ~Ext2FS() override;
@@ -132,7 +128,7 @@ private:
     unsigned inode_size() const;
 
     bool write_ext2_inode(InodeIndex, const ext2_inode&);
-    bool find_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const;
+    bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     bool flush_super_block();
 

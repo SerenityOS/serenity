@@ -55,7 +55,7 @@ private:
 
     RefPtr<TmpFSInode> m_root_inode;
 
-    HashMap<unsigned, NonnullRefPtr<TmpFSInode>> m_inodes;
+    HashMap<InodeIndex, NonnullRefPtr<TmpFSInode>> m_inodes;
     RefPtr<Inode> get_inode(InodeIdentifier identifier) const;
     void register_inode(TmpFSInode&);
     void unregister_inode(InodeIdentifier);

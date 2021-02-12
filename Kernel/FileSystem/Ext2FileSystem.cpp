@@ -46,7 +46,7 @@ static const ssize_t max_inline_symlink_length = 60;
 
 struct Ext2FSDirectoryEntry {
     String name;
-    Ext2FS::InodeIndex inode_index { 0 };
+    InodeIndex inode_index { 0 };
     u8 file_type { 0 };
 };
 
@@ -172,7 +172,7 @@ NonnullRefPtr<Inode> Ext2FS::root_inode() const
     return *get_inode({ fsid(), EXT2_ROOT_INO });
 }
 
-bool Ext2FS::find_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset) const
+bool Ext2FS::find_block_containing_inode(InodeIndex inode, unsigned& block_index, unsigned& offset) const
 {
     LOCKER(m_lock);
     auto& super_block = this->super_block();
@@ -185,7 +185,7 @@ bool Ext2FS::find_block_containing_inode(unsigned inode, unsigned& block_index, 
 
     auto& bgd = group_descriptor(group_index_from_inode(inode));
 
-    offset = ((inode - 1) % inodes_per_group()) * inode_size();
+    offset = ((inode.value() - 1) % inodes_per_group()) * inode_size();
     block_index = bgd.bg_inode_table + (offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
     offset &= block_size() - 1;
 
@@ -620,7 +620,7 @@ void Ext2FS::flush_writes()
         uncache_inode(index);
 }
 
-Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index)
+Ext2FSInode::Ext2FSInode(Ext2FS& fs, InodeIndex index)
     : Inode(fs, index)
 {
 }
@@ -728,7 +728,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         m_block_list = fs().block_list_for_inode(m_raw_inode);
 
     if (m_block_list.is_empty()) {
-        klog() << "ext2fs: read_bytes: empty block list for inode " << index();
+        dmesgln("Ext2FS: read_bytes: empty block list for inode {}", index());
         return -EIO;
     }
 
@@ -990,7 +990,7 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
 
         dbgln_if(EXT2_DEBUG, "* Inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", entry.inode_index, u16(entry.name.length()), u16(record_length), u8(entry.file_type), entry.name);
 
-        stream << u32(entry.inode_index);
+        stream << u32(entry.inode_index.value());
         stream << u16(record_length);
         stream << u8(entry.name.length());
         stream << u8(entry.file_type);
@@ -1121,7 +1121,7 @@ unsigned Ext2FS::blocks_per_group() const
     return EXT2_BLOCKS_PER_GROUP(&super_block());
 }
 
-bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
+bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
 {
     LOCKER(m_lock);
     unsigned block_index;
@@ -1189,7 +1189,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
     return blocks;
 }
 
-unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
+InodeIndex Ext2FS::find_a_free_inode(GroupIndex preferred_group)
 {
     LOCKER(m_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
@@ -1221,16 +1221,16 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
 
     auto& bgd = group_descriptor(group_index);
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
-    unsigned first_free_inode_in_group = 0;
+    InodeIndex first_free_inode_in_group = 0;
 
-    unsigned first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
+    InodeIndex first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
     auto inode_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), inodes_in_group);
     for (size_t i = 0; i < inode_bitmap.size(); ++i) {
         if (inode_bitmap.get(i))
             continue;
-        first_free_inode_in_group = first_inode_in_group + i;
+        first_free_inode_in_group = InodeIndex(first_inode_in_group.value() + i);
         break;
     }
 
@@ -1239,7 +1239,7 @@ unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group)
         return 0;
     }
 
-    unsigned inode = first_free_inode_in_group;
+    InodeIndex inode = first_free_inode_in_group;
     dbgln_if(EXT2_DEBUG, "Ext2FS: found suitable inode {}", inode);
 
     ASSERT(get_inode_allocation_state(inode) == false);
@@ -1253,11 +1253,11 @@ Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) 
     return (block_index - 1) / blocks_per_group() + 1;
 }
 
-unsigned Ext2FS::group_index_from_inode(unsigned inode) const
+unsigned Ext2FS::group_index_from_inode(InodeIndex inode) const
 {
     if (!inode)
         return 0;
-    return (inode - 1) / inodes_per_group() + 1;
+    return (inode.value() - 1) / inodes_per_group() + 1;
 }
 
 bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
@@ -1267,7 +1267,7 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
         return true;
     unsigned group_index = group_index_from_inode(index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
+    unsigned index_in_group = index.value() - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 
     auto& cached_bitmap = const_cast<Ext2FS&>(*this).get_bitmap_block(bgd.bg_inode_bitmap);
@@ -1279,7 +1279,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     LOCKER(m_lock);
     unsigned group_index = group_index_from_inode(inode_index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = inode_index - ((group_index - 1) * inodes_per_group());
+    unsigned index_in_group = inode_index.value() - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 
     auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
@@ -1473,7 +1473,7 @@ bool Ext2FSInode::populate_lookup_cache() const
     LOCKER(m_lock);
     if (!m_lookup_cache.is_empty())
         return true;
-    HashMap<String, unsigned> children;
+    HashMap<String, InodeIndex> children;
 
     KResult result = traverse_as_directory([&children](auto& entry) {
         children.set(entry.name, entry.inode.index());
