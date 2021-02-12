@@ -75,6 +75,8 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
 
 void HeapBlock::deallocate(Cell* cell)
 {
+    ASSERT(is_valid_cell_pointer(cell));
+    ASSERT(!m_freelist || is_valid_cell_pointer(m_freelist));
     ASSERT(cell->is_live());
     ASSERT(!cell->is_marked());
     cell->~Cell();
