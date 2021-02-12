@@ -48,6 +48,10 @@ public:
 
     virtual Vector<IntRect> layout_buttons(WindowType, const IntRect& window_rect, const Palette&, size_t buttons) const override;
     virtual bool is_simple_rect_frame() const override { return true; }
+    virtual bool frame_uses_alpha(WindowState state, const Palette& palette) const override
+    {
+        return compute_frame_colors(state, palette).uses_alpha();
+    }
 
 private:
     struct FrameColors {
@@ -56,6 +60,11 @@ private:
         Color border_color2;
         Color title_stripes_color;
         Color title_shadow_color;
+
+        bool uses_alpha() const
+        {
+            return title_color.alpha() != 0xff || border_color.alpha() != 0xff || border_color2.alpha() != 0xff || title_stripes_color.alpha() != 0xff || title_shadow_color.alpha() != 0xff;
+        }
     };
 
     FrameColors compute_frame_colors(WindowState, const Palette&) const;

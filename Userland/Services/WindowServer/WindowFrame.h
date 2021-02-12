@@ -88,16 +88,7 @@ public:
         m_shadow_dirty |= re_render_shadow;
     }
 
-    void theme_changed()
-    {
-        m_dirty = m_shadow_dirty = true;
-        m_top_bottom = nullptr;
-        m_left_right = nullptr;
-        m_bottom_y = m_right_x = 0;
-
-        layout_buttons();
-        set_button_icons();
-    }
+    void theme_changed();
 
 private:
     void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&) const;
