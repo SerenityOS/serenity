@@ -60,12 +60,12 @@ public:
 private:
     DevFS();
     RefPtr<Inode> get_inode(InodeIdentifier) const;
-    size_t get_new_inode_index();
+    size_t allocate_inode_index();
 
     NonnullRefPtr<DevFSRootDirectoryInode> m_root_inode;
     NonnullRefPtrVector<DevFSInode> m_nodes;
 
-    size_t m_inode_index { 0 };
+    InodeIndex m_next_inode_index { 0 };
 };
 
 class DevFSInode : public Inode {
@@ -89,9 +89,6 @@ protected:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
-
-private:
-    size_t m_index;
 };
 
 class DevFSDeviceInode : public DevFSInode {
