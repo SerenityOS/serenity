@@ -176,6 +176,7 @@ enum {
     _SC_OPEN_MAX,
     _SC_TTY_NAME_MAX,
     _SC_PAGESIZE,
+    _SC_GETPW_R_SIZE_MAX,
 };
 
 #define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
@@ -183,6 +184,7 @@ enum {
 #define _SC_OPEN_MAX _SC_OPEN_MAX
 #define _SC_PAGESIZE _SC_PAGESIZE
 #define _SC_TTY_NAME_MAX _SC_TTY_NAME_MAX
+#define _SC_GETPW_R_SIZE_MAX _SC_GETPW_R_SIZE_MAX
 
 long sysconf(int name);
 

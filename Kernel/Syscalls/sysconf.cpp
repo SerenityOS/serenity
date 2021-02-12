@@ -42,6 +42,8 @@ long Process::sys$sysconf(int name)
         return PAGE_SIZE;
     case _SC_TTY_NAME_MAX:
         return TTY_NAME_MAX;
+    case _SC_GETPW_R_SIZE_MAX:
+        return 4096; // idk
     default:
         return -EINVAL;
     }
