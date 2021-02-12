@@ -31,15 +31,6 @@ namespace Kernel {
 
 KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
 {
-    switch (idtype) {
-    case P_ALL:
-    case P_PID:
-    case P_PGID:
-        break;
-    default:
-        return EINVAL;
-    }
-
     KResultOr<siginfo_t> result = KResult(KSuccess);
     if (Thread::current()->block<Thread::WaitBlocker>({}, options, idtype, id, result).was_interrupted())
         return EINTR;
@@ -54,6 +45,15 @@ pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_param
     Syscall::SC_waitid_params params;
     if (!copy_from_user(&params, user_params))
         return -EFAULT;
+
+    switch (params.idtype) {
+    case P_ALL:
+    case P_PID:
+    case P_PGID:
+        break;
+    default:
+        return EINVAL;
+    }
 
     dbgln_if(PROCESS_DEBUG, "sys$waitid({}, {}, {}, {})", params.idtype, params.id, params.infop, params.options);
 
