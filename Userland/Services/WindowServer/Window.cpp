@@ -323,8 +323,16 @@ void Window::set_opacity(float opacity)
     m_opacity = opacity;
     if (was_opaque != is_opaque())
         Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().render_rect());
+    invalidate(false);
     WindowManager::the().notify_opacity_changed(*this);
+}
+
+void Window::set_has_alpha_channel(bool value)
+{
+    if (m_has_alpha_channel == value)
+        return;
+    m_has_alpha_channel = value;
+    Compositor::the().invalidate_occlusions();
 }
 
 void Window::set_occluded(bool occluded)
