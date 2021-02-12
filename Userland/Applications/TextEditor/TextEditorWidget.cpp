@@ -487,12 +487,13 @@ TextEditorWidget::TextEditorWidget()
     wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
     wrapping_mode_menu.add_action(*m_wrap_at_words_action);
 
-    m_wrap_anywhere_action->set_checked(true);
+    m_no_wrapping_action->set_checked(true);
 
     view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_action(*m_html_preview_action);
+    m_no_preview_action->set_checked(true);
     view_menu.add_separator();
 
     syntax_actions.set_exclusive(true);
