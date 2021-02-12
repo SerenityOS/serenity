@@ -32,6 +32,8 @@ namespace Kernel {
 
 class BlockBasedFS : public FileBackedFS {
 public:
+    TYPEDEF_DISTINCT_ORDERED_ID(unsigned, BlockIndex);
+
     virtual ~BlockBasedFS() override;
 
     size_t logical_block_size() const { return m_logical_block_size; };
@@ -42,25 +44,33 @@ public:
 protected:
     explicit BlockBasedFS(FileDescription&);
 
-    KResult read_block(unsigned index, UserOrKernelBuffer* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
-    KResult read_blocks(unsigned index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache = true) const;
+    KResult read_block(BlockIndex, UserOrKernelBuffer*, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    KResult read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;
 
-    bool raw_read(unsigned index, UserOrKernelBuffer& buffer);
-    bool raw_write(unsigned index, const UserOrKernelBuffer& buffer);
+    bool raw_read(BlockIndex, UserOrKernelBuffer&);
+    bool raw_write(BlockIndex, const UserOrKernelBuffer&);
 
-    bool raw_read_blocks(unsigned index, size_t count, UserOrKernelBuffer& buffer);
-    bool raw_write_blocks(unsigned index, size_t count, const UserOrKernelBuffer& buffer);
+    bool raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer&);
+    bool raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer&);
 
-    KResult write_block(unsigned index, const UserOrKernelBuffer& buffer, size_t count, size_t offset = 0, bool allow_cache = true);
-    KResult write_blocks(unsigned index, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
+    KResult write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, size_t offset = 0, bool allow_cache = true);
+    KResult write_blocks(BlockIndex, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
 
     size_t m_logical_block_size { 512 };
 
 private:
     DiskCache& cache() const;
-    void flush_specific_block_if_needed(unsigned index);
+    void flush_specific_block_if_needed(BlockIndex index);
 
     mutable OwnPtr<DiskCache> m_cache;
 };
 
 }
+
+template<>
+struct AK::Formatter<Kernel::BlockBasedFS::BlockIndex> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::BlockBasedFS::BlockIndex value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "{}", value.value());
+    }
+};
