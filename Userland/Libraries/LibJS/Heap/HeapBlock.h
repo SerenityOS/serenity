@@ -51,6 +51,7 @@ public:
     {
         if (!m_freelist)
             return nullptr;
+        ASSERT(is_valid_cell_pointer(m_freelist));
         return exchange(m_freelist, m_freelist->next);
     }
 
@@ -78,6 +79,11 @@ public:
         if (cell_index >= cell_count())
             return nullptr;
         return cell(cell_index);
+    }
+
+    bool is_valid_cell_pointer(const Cell* cell)
+    {
+        return cell_from_possible_pointer((FlatPtr)cell);
     }
 
     IntrusiveListNode m_list_node;
