@@ -123,13 +123,6 @@ TEST_CASE(operator_bool)
     EXPECT_EQ(!a, true);
     EXPECT_EQ(!b, false);
     EXPECT_EQ(!c, false);
-    EXPECT_EQ(a && b, false);
-    EXPECT_EQ(a && c, false);
-    EXPECT_EQ(b && c, true);
-    EXPECT_EQ(a || a, false);
-    EXPECT_EQ(a || b, true);
-    EXPECT_EQ(a || c, true);
-    EXPECT_EQ(b || c, true);
 }
 
 TEST_CASE(operator_flags)
@@ -233,8 +226,6 @@ TEST_CASE(composability)
     EXPECT_EQ(a >= b, false);
     // Bool
     EXPECT_EQ(!a, true);
-    EXPECT_EQ(a && b, false);
-    EXPECT_EQ(a || b, true);
     // Flags
     EXPECT_EQ(a & b, GeneralNumeric(0));
     EXPECT_EQ(a | b, GeneralNumeric(1));

@@ -150,16 +150,6 @@ public:
         static_assert(Bool, "'!a' is only available for DistinctNumeric types with 'Bool'.");
         return !this->m_value;
     }
-    bool operator&&(const Self& other) const
-    {
-        static_assert(Bool, "'a&&b' is only available for DistinctNumeric types with 'Bool'.");
-        return this->m_value && other.m_value;
-    }
-    bool operator||(const Self& other) const
-    {
-        static_assert(Bool, "'a||b' is only available for DistinctNumeric types with 'Bool'.");
-        return this->m_value || other.m_value;
-    }
     // Intentionally don't define `operator bool() const` here. C++ is a bit
     // overzealos, and whenever there would be a type error, C++ instead tries
     // to convert to a common int-ish type first. `bool` is int-ish, so
