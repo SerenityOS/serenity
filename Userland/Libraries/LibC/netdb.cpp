@@ -654,4 +654,23 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
 
     return true;
 }
+
+int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res)
+{
+    (void)node;
+    (void)service;
+    (void)hints;
+    (void)res;
+    ASSERT_NOT_REACHED();
+}
+void freeaddrinfo(struct addrinfo* res)
+{
+    (void)res;
+    ASSERT_NOT_REACHED();
+}
+const char* gai_strerror(int errcode)
+{
+    (void)errcode;
+    return "Not yet implemented";
+}
 }
