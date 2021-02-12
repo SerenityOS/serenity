@@ -76,7 +76,17 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
     if (!copy_from_user(&requested_sleep, params.requested_sleep))
         return -EFAULT;
 
-    bool is_absolute = params.flags & TIMER_ABSTIME;
+    bool is_absolute;
+    switch (params.flags) {
+    case 0:
+        is_absolute = false;
+        break;
+    case TIMER_ABSTIME:
+        is_absolute = true;
+        break;
+    default:
+        return -EINVAL;
+    }
 
     if (!TimeManagement::is_valid_clock_id(params.clock_id))
         return -EINVAL;
