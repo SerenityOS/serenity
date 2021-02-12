@@ -153,6 +153,98 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     return new_esp;
 }
 
+struct RequiredLoadRange {
+    FlatPtr start { 0 };
+    FlatPtr end { 0 };
+};
+
+static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
+{
+    auto& inode = *(program_description.inode());
+    auto vmobject = SharedInodeVMObject::create_with_inode(inode);
+
+    size_t executable_size = inode.size();
+
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF memory range calculation", Region::Access::Read);
+    if (!region) {
+        dbgln("Could not allocate memory for ELF");
+        return ENOMEM;
+    }
+
+    auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
+    if (!elf_image.is_valid()) {
+        return EINVAL;
+    }
+
+    RequiredLoadRange range {};
+    elf_image.for_each_program_header([&range](const auto& pheader) {
+        if (pheader.type() != PT_LOAD)
+            return IterationDecision::Continue;
+
+        auto region_start = (FlatPtr)pheader.vaddr().as_ptr();
+        auto region_end = region_start + pheader.size_in_memory();
+        if (range.start == 0 || region_start < range.start)
+            range.start = region_start;
+        if (range.end == 0 || region_end > range.end)
+            range.end = region_end;
+        return IterationDecision::Continue;
+    });
+
+    ASSERT(range.end > range.start);
+    return range;
+};
+
+static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description)
+{
+    constexpr FlatPtr interpreter_load_range_start = 0x08000000;
+    constexpr FlatPtr interpreter_load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
+    constexpr FlatPtr minimum_interpreter_load_offset_randomization_size = 10 * MiB;
+
+    auto random_load_offset_in_range([](auto start, auto size) {
+        return PAGE_ROUND_DOWN(start + get_good_random<FlatPtr>() % size);
+    });
+
+    if (main_program_header.e_type == ET_DYN) {
+        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
+    }
+
+    if (main_program_header.e_type != ET_EXEC)
+        return -EINVAL;
+
+    auto main_program_load_range_result = get_required_load_range(main_program_description);
+    if (main_program_load_range_result.is_error())
+        return main_program_load_range_result.error();
+
+    auto main_program_load_range = main_program_load_range_result.value();
+
+    auto interpreter_load_range_result = get_required_load_range(interpreter_description);
+    if (interpreter_load_range_result.is_error())
+        return interpreter_load_range_result.error();
+
+    auto interpreter_size_in_memory = interpreter_load_range_result.value().end - interpreter_load_range_result.value().start;
+    auto interpreter_load_range_end = interpreter_load_range_start + interpreter_load_range_size - interpreter_size_in_memory;
+
+    // No intersection
+    if (main_program_load_range.end < interpreter_load_range_start || main_program_load_range.start > interpreter_load_range_end)
+        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
+
+    RequiredLoadRange first_available_part = { interpreter_load_range_start, main_program_load_range.start };
+    RequiredLoadRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
+
+    RequiredLoadRange selected_range {};
+    // Select larger part
+    if (first_available_part.end - first_available_part.start > second_available_part.end - second_available_part.start)
+        selected_range = first_available_part;
+    else
+        selected_range = second_available_part;
+
+    // If main program is too big and leaves us without enough space for adequate loader randmoization
+    if (selected_range.end - selected_range.start < minimum_interpreter_load_offset_randomization_size)
+        return -E2BIG;
+
+    return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
+}
+
 enum class ShouldAllocateTls {
     No,
     Yes,
@@ -362,98 +454,6 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     ASSERT(!interpreter_load_result.value().tls_size);
 
     return interpreter_load_result;
-}
-
-struct RequiredLoadRange {
-    FlatPtr start { 0 };
-    FlatPtr end { 0 };
-};
-
-static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
-{
-    auto& inode = *(program_description.inode());
-    auto vmobject = SharedInodeVMObject::create_with_inode(inode);
-
-    size_t executable_size = inode.size();
-
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF memory range calculation", Region::Access::Read);
-    if (!region) {
-        dbgln("Could not allocate memory for ELF");
-        return ENOMEM;
-    }
-
-    auto elf_image = ELF::Image(region->vaddr().as_ptr(), executable_size);
-    if (!elf_image.is_valid()) {
-        return EINVAL;
-    }
-
-    RequiredLoadRange range {};
-    elf_image.for_each_program_header([&range](const auto& pheader) {
-        if (pheader.type() != PT_LOAD)
-            return IterationDecision::Continue;
-
-        auto region_start = (FlatPtr)pheader.vaddr().as_ptr();
-        auto region_end = region_start + pheader.size_in_memory();
-        if (range.start == 0 || region_start < range.start)
-            range.start = region_start;
-        if (range.end == 0 || region_end > range.end)
-            range.end = region_end;
-        return IterationDecision::Continue;
-    });
-
-    ASSERT(range.end > range.start);
-    return range;
-};
-
-KResultOr<FlatPtr> Process::get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description)
-{
-    constexpr FlatPtr interpreter_load_range_start = 0x08000000;
-    constexpr FlatPtr interpreter_load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
-    constexpr FlatPtr minimum_interpreter_load_offset_randomization_size = 10 * MiB;
-
-    auto random_load_offset_in_range([](auto start, auto size) {
-        return PAGE_ROUND_DOWN(start + get_good_random<FlatPtr>() % size);
-    });
-
-    if (main_program_header.e_type == ET_DYN) {
-        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
-    }
-
-    if (main_program_header.e_type != ET_EXEC)
-        return -EINVAL;
-
-    auto main_program_load_range_result = get_required_load_range(main_program_description);
-    if (main_program_load_range_result.is_error())
-        return main_program_load_range_result.error();
-
-    auto main_program_load_range = main_program_load_range_result.value();
-
-    auto interpreter_load_range_result = get_required_load_range(interpreter_description);
-    if (interpreter_load_range_result.is_error())
-        return interpreter_load_range_result.error();
-
-    auto interpreter_size_in_memory = interpreter_load_range_result.value().end - interpreter_load_range_result.value().start;
-    auto interpreter_load_range_end = interpreter_load_range_start + interpreter_load_range_size - interpreter_size_in_memory;
-
-    // No intersection
-    if (main_program_load_range.end < interpreter_load_range_start || main_program_load_range.start > interpreter_load_range_end)
-        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
-
-    RequiredLoadRange first_available_part = { interpreter_load_range_start, main_program_load_range.start };
-    RequiredLoadRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
-
-    RequiredLoadRange selected_range {};
-    // Select larger part
-    if (first_available_part.end - first_available_part.start > second_available_part.end - second_available_part.start)
-        selected_range = first_available_part;
-    else
-        selected_range = second_available_part;
-
-    // If main program is too big and leaves us without enough space for adequate loader randmoization
-    if (selected_range.end - selected_range.start < minimum_interpreter_load_offset_randomization_size)
-        return -E2BIG;
-
-    return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
 }
 
 int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header)
