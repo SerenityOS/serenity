@@ -187,8 +187,8 @@ Vector<Region*, 2> Space::split_region_around_range(const Region& source_region,
 
 void Space::dump_regions()
 {
-    klog() << "Process regions:";
-    klog() << "BEGIN       END         SIZE        ACCESS  NAME";
+    dbgln("Process regions:");
+    dbgln("BEGIN       END         SIZE        ACCESS  NAME");
 
     ScopedSpinLock lock(m_lock);
 
@@ -202,7 +202,7 @@ void Space::dump_regions()
 
     for (auto& sorted_region : sorted_regions) {
         auto& region = *sorted_region;
-        dmesgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
+        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
             region.is_readable() ? 'R' : ' ',
             region.is_writable() ? 'W' : ' ',
             region.is_executable() ? 'X' : ' ',

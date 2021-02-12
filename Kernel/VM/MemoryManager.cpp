@@ -882,7 +882,10 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN       END         SIZE        ACCESS  NAME");
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_kernel_regions) {
-        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
+        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c}{:c} {}",
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
             region.is_readable() ? 'R' : ' ',
             region.is_writable() ? 'W' : ' ',
             region.is_executable() ? 'X' : ' ',
