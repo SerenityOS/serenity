@@ -106,11 +106,6 @@ private:
     mutable SpinLock<u8> m_lock;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Range& value)
-{
-    return stream << String::formatted("Range({:08x}-{:08x})", value.base().get(), value.end().get() - 1);
-}
-
 }
 
 namespace AK {
