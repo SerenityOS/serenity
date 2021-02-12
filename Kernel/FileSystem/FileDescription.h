@@ -124,7 +124,7 @@ public:
 
     bool is_fifo() const;
     FIFO* fifo();
-    FIFO::Direction fifo_direction() { return m_fifo_direction; }
+    FIFO::Direction fifo_direction() const { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
     OwnPtr<FileDescriptionData>& data() { return m_data; }
