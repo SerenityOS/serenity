@@ -87,8 +87,14 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
 
 DynamicLoader::~DynamicLoader()
 {
-    munmap(m_file_data, m_file_size);
-    close(m_image_fd);
+    if (munmap(m_file_data, m_file_size) < 0) {
+        perror("munmap");
+        ASSERT_NOT_REACHED();
+    }
+    if (close(m_image_fd) < 0) {
+        perror("close");
+        ASSERT_NOT_REACHED();
+    }
 }
 
 const DynamicObject& DynamicLoader::dynamic_object() const
