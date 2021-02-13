@@ -67,45 +67,53 @@ public:
     }
 
     WeakPtr<LanguageClient> language_client() { return m_language_client; }
+    const String& projcet_path() const { return m_project_path; }
 
     template<typename ConcreteType>
     static NonnullRefPtr<ServerConnection> get_or_create(const String& project_path)
     {
-        static HashMap<String, NonnullRefPtr<ConcreteType>> s_instances_for_projects;
         auto key = LexicalPath { project_path }.string();
         if (auto instance = s_instances_for_projects.get(key); instance.has_value())
             return *instance.value();
 
         auto connection = ConcreteType::construct(project_path);
         connection->handshake();
-        s_instances_for_projects.set(key, *connection);
+        set_instance_for_project(project_path, *connection);
         return *connection;
     }
+
+    static RefPtr<ServerConnection> instance_for_project(const String& project_path);
+    static void set_instance_for_project(const String& project_path, NonnullRefPtr<ServerConnection>&&);
+    static void remove_instance_for_project(const String& project_path);
+
+    virtual void die();
 
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
 
     String m_project_path;
     WeakPtr<LanguageClient> m_language_client;
+
+private:
+    static HashMap<String, NonnullRefPtr<ServerConnection>> s_instances_for_projects;
 };
 
 class LanguageClient : public Weakable<LanguageClient> {
 public:
     explicit LanguageClient(NonnullRefPtr<ServerConnection>&& connection)
-        : m_connection(*connection)
-        , m_server_connection(move(connection))
+        : m_server_connection(move(connection))
     {
-        m_previous_client = m_connection.language_client();
+        m_previous_client = m_server_connection->language_client();
         ASSERT(m_previous_client.ptr() != this);
-        m_connection.attach(*this);
+        m_server_connection->attach(*this);
     }
 
     virtual ~LanguageClient()
     {
-        m_connection.detach();
+        m_server_connection->detach();
         ASSERT(m_previous_client.ptr() != this);
         if (m_previous_client)
-            m_connection.attach(*m_previous_client);
+            m_server_connection->attach(*m_previous_client);
     }
 
     void set_active_client();
@@ -117,12 +125,12 @@ public:
     virtual void set_autocomplete_mode(const String& mode);
 
     void provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>&);
+    void on_server_crash();
 
     Function<void(Vector<GUI::AutocompleteProvider::Entry>)> on_autocomplete_suggestions;
 
 private:
-    ServerConnection& m_connection;
-    NonnullRefPtr<ServerConnection> m_server_connection;
+    WeakPtr<ServerConnection> m_server_connection;
     WeakPtr<LanguageClient> m_previous_client;
 };
 
