@@ -260,7 +260,7 @@ void Widget::event(Core::Event& event)
     case Event::Hide:
         return hide_event(static_cast<HideEvent&>(event));
     case Event::KeyDown:
-        return keydown_event(static_cast<KeyEvent&>(event));
+        return handle_keydown_event(static_cast<KeyEvent&>(event));
     case Event::KeyUp:
         return keyup_event(static_cast<KeyEvent&>(event));
     case Event::MouseMove:
@@ -291,6 +291,15 @@ void Widget::event(Core::Event& event)
         return change_event(static_cast<Event&>(event));
     default:
         return Core::Object::event(event);
+    }
+}
+
+void Widget::handle_keydown_event(KeyEvent& event)
+{
+    keydown_event(event);
+    if (event.key() == KeyCode::Key_Menu) {
+        ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
+        context_menu_event(c_event);
     }
 }
 
