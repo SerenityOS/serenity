@@ -12,7 +12,7 @@ while IFS= read -r FLAG; do
     # There are (basically) no false positives, but there might be false negatives,
     # for example we intentionally don't check for commented-out lines here.
     if ! grep -qP "set\(${FLAG}" Meta/CMake/all_the_debug_macros.cmake ; then
-        echo "ALL_THE_DEBUG_MACROS probably doesn't include ${FLAG}"
+        echo "'all_the_debug_macros.cmake' is missing ${FLAG}"
         MISSING_FLAGS=y
     fi
 done < <(
@@ -22,16 +22,16 @@ done < <(
         '*.in' \
         ':!:Kernel/FileSystem/ext2_fs.h' \
         ':!:Userland/Libraries/LibELF/exec_elf.h' \
-    | xargs grep -P '^ *#.*DEBUG' \
+    | xargs grep -P '(_DEBUG|DEBUG_)' \
     | sed -re 's,^.*[^a-zA-Z0-9_]([a-zA-Z0-9_]*DEBUG[a-zA-Z0-9_]*).*$,\1,' \
     | sort \
     | uniq
 )
 
 if [ "n" != "${MISSING_FLAGS}" ] ; then
-    echo "Some flags are missing for the ALL_THE_DEBUG_MACROS feature in CMakeLists.txt."
+    echo "Some flags are missing for the ALL_THE_DEBUG_MACROS feature."
     echo "If you just added a new SOMETHING_DEBUG flag, that's great!"
     echo "We want to enable all of these in automated builds, so that the code doesn't rot."
-    echo "Please add it to the ALL_THE_DEBUG_MACROS section."
+    echo "Please add it to Meta/CMake/all_the_debug_macros.cmake"
     exit 1
 fi
