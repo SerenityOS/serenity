@@ -30,6 +30,7 @@
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/socket.h>
 
@@ -173,6 +174,10 @@ bool Decoder::decode([[maybe_unused]] File& file)
     int fd = recvfd(m_sockfd);
     if (fd < 0) {
         dbgln("recvfd: {}", strerror(errno));
+        return false;
+    }
+    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+        dbgln("fcntl(F_SETFD, FD_CLOEXEC)", strerror(errno));
         return false;
     }
     file = File(fd, File::ConstructWithReceivedFileDescriptor);
