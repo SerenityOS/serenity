@@ -31,6 +31,7 @@
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/Debugger.h"
 #include "Debugger/DisassemblyWidget.h"
+#include "Dialogs/NewProjectDialog.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
@@ -57,6 +58,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
@@ -130,6 +132,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_remove_current_editor_action = create_remove_current_editor_action();
     m_open_action = create_open_action();
     m_save_action = create_save_action();
+    m_new_project_action = create_new_project_action();
 
     create_action_tab(*m_right_hand_splitter);
 
@@ -381,6 +384,18 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
     });
     delete_action->set_enabled(false);
     return delete_action;
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
+{
+    return GUI::Action::create("Create new project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
+        auto dialog = NewProjectDialog::construct(window());
+        dialog->set_icon(window()->icon());
+        auto result = dialog->exec();
+
+        if (result == GUI::Dialog::ExecResult::ExecOK && dialog->created_project_path().has_value())
+            open_project(dialog->created_project_path().value());
+    });
 }
 
 void HackStudioWidget::add_new_editor(GUI::Widget& parent)
@@ -849,6 +864,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
 void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
 {
     auto& app_menu = menubar.add_menu("Hack Studio");
+    app_menu.add_action(*m_new_project_action);
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);
     app_menu.add_separator();

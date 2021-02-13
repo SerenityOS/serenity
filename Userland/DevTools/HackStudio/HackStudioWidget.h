@@ -84,6 +84,7 @@ private:
     NonnullRefPtr<GUI::Action> create_new_directory_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
+    NonnullRefPtr<GUI::Action> create_new_project_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_action();
     NonnullRefPtr<GUI::Action> create_switch_to_previous_editor_action();
     NonnullRefPtr<GUI::Action> create_remove_current_editor_action();
@@ -158,6 +159,7 @@ private:
     RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
     RefPtr<GUI::Action> m_delete_action;
+    RefPtr<GUI::Action> m_new_project_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
     RefPtr<GUI::Action> m_switch_to_previous_editor;
     RefPtr<GUI::Action> m_remove_current_editor_action;
