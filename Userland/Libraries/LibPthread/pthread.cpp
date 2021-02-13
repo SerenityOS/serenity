@@ -740,4 +740,9 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
     ASSERT_NOT_REACHED();
 }
 
+int pthread_atfork(void (*)(void), void (*)(void), void (*)(void))
+{
+    ASSERT_NOT_REACHED();
+}
+
 } // extern "C"
