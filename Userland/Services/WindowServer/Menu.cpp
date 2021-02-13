@@ -391,9 +391,16 @@ void Menu::event(Core::Event& event)
         ASSERT(menu_window());
         ASSERT(menu_window()->is_visible());
 
-        // Default to the first item on key press if one has not been selected yet
+        // Default to the first enabled, non-separator item on key press if one has not been selected yet
         if (!hovered_item()) {
-            m_hovered_item_index = 0;
+            int counter = 0;
+            for (const auto& item : m_items) {
+                if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                    m_hovered_item_index = counter;
+                    break;
+                }
+                counter++;
+            }
             update_for_new_hovered_item(key == Key_Right);
             return;
         }
