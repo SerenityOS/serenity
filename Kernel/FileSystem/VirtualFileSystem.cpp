@@ -84,8 +84,8 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
     
     Mount mount { file_system, &mount_point, flags };
     if (!m_mounts.contains_slow(mount)) 
-        m_mounts.append(move(mount));
-    
+        m_mounts.append(move(mount)); 
+
     return KSuccess;
 }
 
@@ -94,11 +94,10 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
     LOCKER(m_lock);
 
     dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
-    // FIXME: check that this is not already a mount point
-    Mount mount { source.inode(), mount_point, flags };
+    
     if (!m_mounts.contains_slow(mount)) 
         m_mounts.append(move(mount));
-    
+
     return KSuccess;
 }
 
