@@ -134,7 +134,8 @@
     __ENUMERATE_KEY_CODE(Pipe, "|")                  \
     __ENUMERATE_KEY_CODE(Tilde, "~")                 \
     __ENUMERATE_KEY_CODE(Backtick, "`")              \
-    __ENUMERATE_KEY_CODE(Logo, "Logo")
+    __ENUMERATE_KEY_CODE(Logo, "Logo")               \
+    __ENUMERATE_KEY_CODE(Menu, "Menu")
 
 enum KeyCode : u8 {
 #define __ENUMERATE_KEY_CODE(name, ui_name) Key_##name,
