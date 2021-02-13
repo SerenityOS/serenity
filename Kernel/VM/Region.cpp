@@ -49,6 +49,10 @@ Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offs
     , m_cacheable(cacheable)
     , m_kernel(kernel)
 {
+    ASSERT(m_range.base().is_page_aligned());
+    ASSERT(m_range.size());
+    ASSERT((m_range.size() % PAGE_SIZE) == 0);
+
     m_vmobject->ref_region();
     register_purgeable_page_ranges();
     MM.register_region(*this);
