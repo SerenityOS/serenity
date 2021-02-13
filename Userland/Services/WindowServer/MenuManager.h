@@ -89,6 +89,9 @@ public:
             m_current_menubar->for_each_menu(callback);
     }
 
+    Menu* previous_menu(Menu* current);
+    Menu* next_menu(Menu* current);
+
     void did_change_theme();
 
 private:

@@ -167,6 +167,15 @@ void MenuManager::event(Core::Event& event)
                 // Going "back" a menu should be the previous menu in the stack
                 if (it.index() > 0)
                     set_current_menu(m_open_menu_stack.at(it.index() - 1));
+                else {
+                    if (m_current_menu->hovered_item())
+                        m_current_menu->set_hovered_item(-1);
+                    else {
+                        auto* target_menu = previous_menu(m_current_menu);
+                        if (target_menu)
+                            open_menu(*target_menu);
+                    }
+                }
                 close_everyone_not_in_lineage(*m_current_menu);
                 return;
             }
@@ -175,6 +184,13 @@ void MenuManager::event(Core::Event& event)
                 auto hovered_item = m_current_menu->hovered_item();
                 if (hovered_item && hovered_item->is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
+                else if (m_open_menu_stack.size() <= 1) {
+                    auto* target_menu = next_menu(m_current_menu);
+                    if (target_menu) {
+                        open_menu(*target_menu);
+                        close_everyone_not_in_lineage(*target_menu);
+                    }
+                }
                 return;
             }
 
@@ -492,6 +508,37 @@ void MenuManager::set_system_menu(Menu& menu)
 {
     m_system_menu = menu;
     set_current_menubar(m_current_menubar);
+}
+
+Menu* MenuManager::previous_menu(Menu* current)
+{
+    Menu* found = nullptr;
+    Menu* previous = nullptr;
+    for_each_active_menubar_menu([&](Menu& menu) {
+        if (current == &menu) {
+            found = previous;
+            return IterationDecision::Break;
+        }
+        previous = &menu;
+        return IterationDecision::Continue;
+    });
+    return found;
+}
+
+Menu* MenuManager::next_menu(Menu* current)
+{
+    Menu* found = nullptr;
+    bool is_next = false;
+    for_each_active_menubar_menu([&](Menu& menu) {
+        if (is_next) {
+            found = &menu;
+            return IterationDecision::Break;
+        }
+        if (current == &menu)
+            is_next = true;
+        return IterationDecision::Continue;
+    });
+    return found;
 }
 
 void MenuManager::did_change_theme()
