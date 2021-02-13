@@ -145,4 +145,6 @@ int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* _
 int pthread_rwlockattr_init(pthread_rwlockattr_t*);
 int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int);
 
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
+
 __END_DECLS
