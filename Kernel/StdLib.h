@@ -102,6 +102,26 @@ template<typename T>
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
+#define DEPRECATE_COPY_FROM_USER_TYPE(T, REPLACEMENT)                                                                                \
+    template<>                                                                                                                       \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, const T*)            \
+    {                                                                                                                                \
+        VERIFY_NOT_REACHED();                                                                                                        \
+    }                                                                                                                                \
+    template<>                                                                                                                       \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<const T*>) \
+    {                                                                                                                                \
+        VERIFY_NOT_REACHED();                                                                                                        \
+    }                                                                                                                                \
+    template<>                                                                                                                       \
+    [[nodiscard]] inline __attribute__((deprecated("use " #REPLACEMENT " instead"))) bool copy_from_user<T>(T*, Userspace<T*>)       \
+    {                                                                                                                                \
+        VERIFY_NOT_REACHED();                                                                                                        \
+    }
+
+DEPRECATE_COPY_FROM_USER_TYPE(timespec, copy_time_from_user)
+DEPRECATE_COPY_FROM_USER_TYPE(timeval, copy_time_from_user)
+
 template<typename T>
 [[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const T* src)
 {
