@@ -685,47 +685,229 @@ int pthread_equal(pthread_t t1, pthread_t t2)
     return t1 == t2;
 }
 
+// FIXME: Use the fancy futex mechanism above to write an rw lock.
+//        For the time being, let's just use a less-than-good lock to get things working.
 int pthread_rwlock_destroy(pthread_rwlock_t* rl)
 {
     if (!rl)
         return 0;
-    ASSERT_NOT_REACHED();
+    return 0;
 }
-int pthread_rwlock_init(pthread_rwlock_t* __restrict, const pthread_rwlockattr_t* __restrict)
+
+// In a very non-straightforward way, this value is composed of two 32-bit integers
+// the top 32 bits are reserved for the ID of write-locking thread (if any)
+// and the bottom 32 bits are:
+//     top 2 bits (30,31): reader wake mask, writer wake mask
+//     middle 16 bits: information
+//        bit 16: someone is waiting to write
+//        bit 17: locked for write
+//     bottom 16 bits (0..15): reader count
+constexpr static u32 reader_wake_mask = 1 << 30;
+constexpr static u32 writer_wake_mask = 1 << 31;
+constexpr static u32 writer_locked_mask = 1 << 17;
+constexpr static u32 writer_intent_mask = 1 << 16;
+int pthread_rwlock_init(pthread_rwlock_t* __restrict lockp, const pthread_rwlockattr_t* __restrict attr)
 {
-    ASSERT_NOT_REACHED();
+    // Just ignore the attributes. use defaults for now.
+    (void)attr;
+
+    // No readers, no writer, not locked at all.
+    *lockp = 0;
+    return 0;
 }
-int pthread_rwlock_rdlock(pthread_rwlock_t*)
+
+// Note that this function does not care about the top 32 bits at all.
+static int rwlock_rdlock_maybe_timed(u32* lockp, const struct timespec* timeout = nullptr, bool only_once = false, int value_if_timeout = -1, int value_if_okay = -2)
 {
-    ASSERT_NOT_REACHED();
+    auto current = AK::atomic_load(lockp);
+    for (; !only_once;) {
+        // First, see if this is locked for writing
+        // if it's not, try to add to the counter.
+        // If someone is waiting to write, and there is one or no other readers, let them have the lock.
+        if (!(current & writer_locked_mask)) {
+            auto count = (u16)current;
+            if (!(current & writer_intent_mask) || count > 1) {
+                ++count;
+                auto desired = (current << 16) | count;
+                auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+                if (!did_exchange)
+                    continue; // tough luck, try again.
+                return value_if_okay;
+            }
+        }
+
+        // If no one else is waiting for the read wake bit, set it.
+        if (!(current & reader_wake_mask)) {
+            auto desired = current | reader_wake_mask;
+            auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+            if (!did_exchange)
+                continue; // Something interesting happened!
+
+            current = desired;
+        }
+
+        // Seems like someone is writing (or is interested in writing and we let them have the lock)
+        // wait until they're done.
+        auto rc = futex(lockp, FUTEX_WAIT_BITSET, current, timeout, nullptr, reader_wake_mask);
+        if (rc < 0 && errno == ETIMEDOUT && timeout) {
+            return value_if_timeout;
+        }
+        if (rc < 0 && errno != EAGAIN) {
+            // Something broke. let's just bail out.
+            return errno;
+        }
+        errno = 0;
+        // Reload the 'current' value
+        current = AK::atomic_load(lockp);
+    }
+    return value_if_timeout;
 }
-int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict)
+
+static int rwlock_wrlock_maybe_timed(pthread_rwlock_t* lockval_p, const struct timespec* timeout = nullptr, bool only_once = false, int value_if_timeout = -1, int value_if_okay = -2)
 {
-    ASSERT_NOT_REACHED();
+    u32* lockp = reinterpret_cast<u32*>(lockval_p);
+    auto current = AK::atomic_load(lockp);
+    for (; !only_once;) {
+        // First, see if this is locked for writing, and if there are any readers.
+        // if not, lock it.
+        // If someone is waiting to write, let them have the lock.
+        if (!(current & writer_locked_mask) && ((u16)current) == 0) {
+            if (!(current & writer_intent_mask)) {
+                auto desired = current | writer_locked_mask | writer_intent_mask;
+                auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+                if (!did_exchange)
+                    continue;
+
+                // Now that we've locked the value, it's safe to set our thread ID.
+                AK::atomic_store(reinterpret_cast<i32*>(lockval_p) + 1, pthread_self());
+                return value_if_okay;
+            }
+        }
+
+        // That didn't work, if no one else is waiting for the write bit, set it.
+        if (!(current & writer_wake_mask)) {
+            auto desired = current | writer_wake_mask | writer_intent_mask;
+            auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_acquire);
+            if (!did_exchange)
+                continue; // Something interesting happened!
+
+            current = desired;
+        }
+
+        // Seems like someone is writing (or is interested in writing and we let them have the lock)
+        // wait until they're done.
+        auto rc = futex(lockp, FUTEX_WAIT_BITSET, current, timeout, nullptr, writer_wake_mask);
+        if (rc < 0 && errno == ETIMEDOUT && timeout) {
+            return value_if_timeout;
+        }
+        if (rc < 0 && errno != EAGAIN) {
+            // Something broke. let's just bail out.
+            return errno;
+        }
+        errno = 0;
+        // Reload the 'current' value
+        current = AK::atomic_load(lockp);
+    }
+
+    return value_if_timeout;
 }
-int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict)
+
+int pthread_rwlock_rdlock(pthread_rwlock_t* lockp)
 {
-    ASSERT_NOT_REACHED();
+    if (!lockp)
+        return EINVAL;
+
+    return rwlock_rdlock_maybe_timed(reinterpret_cast<u32*>(lockp), nullptr, false, 0, 0);
 }
-int pthread_rwlock_tryrdlock(pthread_rwlock_t*)
+int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict lockp, const struct timespec* __restrict timespec)
 {
-    ASSERT_NOT_REACHED();
+    if (!lockp)
+        return EINVAL;
+
+    auto rc = rwlock_rdlock_maybe_timed(reinterpret_cast<u32*>(lockp), timespec);
+    if (rc == -1) // "ok"
+        return 0;
+    if (rc == -2) // "timed out"
+        return 1;
+    return rc;
 }
-int pthread_rwlock_trywrlock(pthread_rwlock_t*)
+int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict lockp, const struct timespec* __restrict timespec)
 {
-    ASSERT_NOT_REACHED();
+    if (!lockp)
+        return EINVAL;
+
+    auto rc = rwlock_wrlock_maybe_timed(lockp, timespec);
+    if (rc == -1) // "ok"
+        return 0;
+    if (rc == -2) // "timed out"
+        return 1;
+    return rc;
 }
-int pthread_rwlock_unlock(pthread_rwlock_t*)
+int pthread_rwlock_tryrdlock(pthread_rwlock_t* lockp)
 {
-    ASSERT_NOT_REACHED();
+    if (!lockp)
+        return EINVAL;
+
+    return rwlock_rdlock_maybe_timed(reinterpret_cast<u32*>(lockp), nullptr, true, EBUSY, 0);
 }
-int pthread_rwlock_wrlock(pthread_rwlock_t*)
+int pthread_rwlock_trywrlock(pthread_rwlock_t* lockp)
 {
-    ASSERT_NOT_REACHED();
+    if (!lockp)
+        return EINVAL;
+
+    return rwlock_wrlock_maybe_timed(lockp, nullptr, true, EBUSY, 0);
+}
+int pthread_rwlock_unlock(pthread_rwlock_t* lockval_p)
+{
+    if (!lockval_p)
+        return EINVAL;
+
+    // This is a weird API, we don't really know whether we're unlocking write or read...
+    auto lockp = reinterpret_cast<u32*>(lockval_p);
+    auto current = AK::atomic_load(lockp, AK::MemoryOrder::memory_order_relaxed);
+    if (current & writer_locked_mask) {
+        // If this lock is locked for writing, its owner better be us!
+        auto owner_id = AK::atomic_load(reinterpret_cast<i32*>(lockval_p) + 1);
+        auto my_id = pthread_self();
+        if (owner_id != my_id)
+            return EINVAL; // you don't own this lock, silly.
+
+        // Now just unlock it.
+        auto desired = current & ~(writer_locked_mask | writer_intent_mask);
+        AK::atomic_store(lockp, desired, AK::MemoryOrder::memory_order_release);
+        // Then wake both readers and writers, if any.
+        auto rc = futex(lockp, FUTEX_WAKE_BITSET, current, nullptr, nullptr, (current & writer_wake_mask) | reader_wake_mask);
+        if (rc < 0)
+            return errno;
+        return 0;
+    }
+
+    for (;;) {
+        auto count = (u16)current;
+        if (!count) {
+            // Are you crazy? this isn't even locked!
+            return EINVAL;
+        }
+        --count;
+        auto desired = (current << 16) | count;
+        auto did_exchange = AK::atomic_compare_exchange_strong(lockp, current, desired, AK::MemoryOrder::memory_order_release);
+        if (!did_exchange)
+            continue; // tough luck, try again.
+    }
+
+    // Finally, unlocked at last!
+    return 0;
+}
+int pthread_rwlock_wrlock(pthread_rwlock_t* lockp)
+{
+    if (!lockp)
+        return EINVAL;
+
+    return rwlock_wrlock_maybe_timed(lockp, nullptr, false, 0, 0);
 }
 int pthread_rwlockattr_destroy(pthread_rwlockattr_t*)
 {
-    ASSERT_NOT_REACHED();
+    return 0;
 }
 int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict)
 {
