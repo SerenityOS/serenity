@@ -229,7 +229,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
     auto iso_8601 = vm.argument(0).to_string(global_object);
     if (vm.exception())
-        return js_nan();
+        return {};
 
     return parse_simplified_iso8601(iso_8601);
 }
