@@ -97,8 +97,7 @@ ParserAutoComplete::DocumentData::DocumentData(String&& _text)
 
 Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position)
 {
-    ASSERT(autocomplete_position.column() > 0);
-    Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() - 1 };
+    Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
 
     VERBOSE("ParserAutoComplete position {}:{}", position.line, position.column);
 
