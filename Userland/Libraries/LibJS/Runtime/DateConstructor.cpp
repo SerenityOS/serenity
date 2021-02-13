@@ -168,29 +168,33 @@ Value DateConstructor::call()
 
 Value DateConstructor::construct(Function&)
 {
-    if (vm().argument_count() == 0) {
+    auto& vm = this->vm();
+    if (vm.argument_count() == 0) {
         struct timeval tv;
         gettimeofday(&tv, nullptr);
         auto datetime = Core::DateTime::now();
         auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
         return Date::create(global_object(), datetime, milliseconds);
     }
-    if (vm().argument_count() == 1) {
-        auto value = vm().argument(0);
+    if (vm.argument_count() == 1) {
+        auto value = vm.argument(0);
         if (value.is_string())
             value = parse_simplified_iso8601(value.as_string().string());
         // A timestamp since the epoch, in UTC.
+        // FIXME: This doesn't construct an "Invalid Date" object if the argument is NaN.
         // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
         double value_as_double = value.to_double(global_object());
+        if (vm.exception())
+            return {};
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
     }
     // A date/time in components, in local time.
-    // FIXME: This doesn't construct an "Invalid Date" object if one of the parameters is NaN.
-    auto arg_or = [this](size_t i, i32 fallback) { return vm().argument_count() > i ? vm().argument(i).to_i32(global_object()) : fallback; };
-    int year = vm().argument(0).to_i32(global_object());
-    int month_index = vm().argument(1).to_i32(global_object());
+    // FIXME: This doesn't construct an "Invalid Date" object if one of the arguments is NaN.
+    auto arg_or = [this, &vm](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_i32(global_object()) : fallback; };
+    int year = vm.argument(0).to_i32(global_object());
+    int month_index = vm.argument(1).to_i32(global_object());
     int day = arg_or(2, 1);
     int hours = arg_or(3, 0);
     int minutes = arg_or(4, 0);
