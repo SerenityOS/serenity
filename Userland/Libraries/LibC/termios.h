@@ -56,6 +56,7 @@ speed_t cfgetispeed(const struct termios*);
 speed_t cfgetospeed(const struct termios*);
 int cfsetispeed(struct termios*, speed_t);
 int cfsetospeed(struct termios*, speed_t);
+void cfmakeraw(struct termios*);
 
 /* c_cc characters */
 #define VINTR 0

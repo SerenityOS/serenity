@@ -145,4 +145,16 @@ int cfsetospeed(struct termios* tp, speed_t speed)
     }
     __RETURN_WITH_ERRNO(ospeed, 0, -1);
 }
+
+void cfmakeraw(struct termios* tp)
+{
+    if (!tp)
+        return;
+
+    auto& termios = *tp;
+    termios.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    termios.c_lflag &= ~OPOST;
+    termios.c_cflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    termios.c_cflag |= CS8;
+}
 }
