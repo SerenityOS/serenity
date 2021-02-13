@@ -345,6 +345,7 @@ private:
     void handle_mousedown_event(MouseEvent&);
     void handle_mousedoubleclick_event(MouseEvent&);
     void handle_mouseup_event(MouseEvent&);
+    void handle_keydown_event(KeyEvent&);
     void handle_enter_event(Core::Event&);
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource, bool siblings_only);
