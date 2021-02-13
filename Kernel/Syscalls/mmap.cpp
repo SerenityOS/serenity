@@ -272,7 +272,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         REQUIRE_PROMISE(prot_exec);
     }
 
-    Range range_to_mprotect = { VirtualAddress(addr), PAGE_ROUND_UP(size) };
+    Range range_to_mprotect = { VirtualAddress((FlatPtr)addr & PAGE_MASK), PAGE_ROUND_UP(size) };
 
     if (!range_to_mprotect.size())
         return -EINVAL;
@@ -343,7 +343,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
-    Range range_to_madvise { VirtualAddress(address), PAGE_ROUND_UP(size) };
+    Range range_to_madvise { VirtualAddress((FlatPtr)address & PAGE_MASK), PAGE_ROUND_UP(size) };
 
     if (!range_to_madvise.size())
         return -EINVAL;
