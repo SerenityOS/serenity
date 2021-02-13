@@ -99,6 +99,8 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 
 KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
 {
+    if (level != SOL_SOCKET)
+        return ENOPROTOOPT;
     ASSERT(level == SOL_SOCKET);
     switch (option) {
     case SO_SNDTIMEO:
