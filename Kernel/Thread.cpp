@@ -834,7 +834,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     // valid (fork, exec etc) but the tss will, so we use that instead.
     auto& regs = get_register_dump_from_stack();
     setup_stack(regs);
-    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
+    regs.eip = process.signal_trampoline().get();
 
 #if SIGNAL_DEBUG
     dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
