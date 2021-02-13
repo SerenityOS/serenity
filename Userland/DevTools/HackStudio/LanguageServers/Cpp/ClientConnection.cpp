@@ -40,7 +40,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int 
     : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
-    m_autocomplete_engine = make<LexerAutoComplete>(m_filedb);
+    m_autocomplete_engine = make<ParserAutoComplete>(m_filedb);
 }
 
 ClientConnection::~ClientConnection()

@@ -979,6 +979,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_set_autocomplete_mode_action
     auto action = GUI::Action::create_checkable("AutoComplete C++ with Parser", [this](auto& action) {
         get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path())->set_autocomplete_mode(action.is_checked() ? "Parser" : "Lexer");
     });
+    action->set_checked(true);
     return action;
 }
 
