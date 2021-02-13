@@ -339,9 +339,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
         remaining_blocks -= new_shape.doubly_indirect_blocks;
         output_block_index += new_shape.doubly_indirect_blocks;
     } else {
-        unsigned indirect_block_count = new_shape.doubly_indirect_blocks / entries_per_block;
-        if ((new_shape.doubly_indirect_blocks % entries_per_block) != 0)
-            indirect_block_count++;
+        unsigned indirect_block_count = divide_rounded_up(new_shape.doubly_indirect_blocks, entries_per_block);
 
         auto dind_block_contents = ByteBuffer::create_uninitialized(block_size());
         if (dind_block_new) {
