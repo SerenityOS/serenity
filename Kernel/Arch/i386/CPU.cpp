@@ -139,12 +139,13 @@ static void dump(const RegisterState& regs)
         esp = regs.userspace_esp;
     }
 
-    klog() << "exception code: " << String::format("%04x", regs.exception_code) << " (isr: " << String::format("%04x", regs.isr_number);
-    klog() << "  pc=" << String::format("%04x", (u16)regs.cs) << ":" << String::format("%08x", regs.eip) << " flags=" << String::format("%04x", (u16)regs.eflags);
-    klog() << " stk=" << String::format("%04x", ss) << ":" << String::format("%08x", esp);
-    klog() << "  ds=" << String::format("%04x", (u16)regs.ds) << " es=" << String::format("%04x", (u16)regs.es) << " fs=" << String::format("%04x", (u16)regs.fs) << " gs=" << String::format("%04x", (u16)regs.gs);
-    klog() << "eax=" << String::format("%08x", regs.eax) << " ebx=" << String::format("%08x", regs.ebx) << " ecx=" << String::format("%08x", regs.ecx) << " edx=" << String::format("%08x", regs.edx);
-    klog() << "ebp=" << String::format("%08x", regs.ebp) << " esp=" << String::format("%08x", regs.esp) << " esi=" << String::format("%08x", regs.esi) << " edi=" << String::format("%08x", regs.edi);
+    dbgln("Exception code: {:04x} (isr: {:04x})", regs.exception_code, regs.isr_number);
+    dbgln("    pc={:04x}:{:08x} eflags={:08x}", (u16)regs.cs, regs.eip, regs.eflags);
+    dbgln(" stack={:04x}:{:08x}", ss, esp);
+    dbgln("    ds={:04x} es={:04x} fs={:04x} gs={:04x}", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
+    dbgln("   eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    dbgln("   ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
+
     u32 cr0;
     asm("movl %%cr0, %%eax"
         : "=a"(cr0));
@@ -155,22 +156,14 @@ static void dump(const RegisterState& regs)
     u32 cr4;
     asm("movl %%cr4, %%eax"
         : "=a"(cr4));
-    klog() << "cr0=" << String::format("%08x", cr0) << " cr2=" << String::format("%08x", cr2) << " cr3=" << String::format("%08x", cr3) << " cr4=" << String::format("%08x", cr4);
-
-    auto process = Process::current();
-    u8 code[8];
-    void* fault_at;
-    if (process && safe_memcpy(code, (void*)regs.eip, 8, fault_at)) {
-        SmapDisabler disabler;
-        klog() << "code: " << String::format("%02x", code[0]) << " " << String::format("%02x", code[1]) << " " << String::format("%02x", code[2]) << " " << String::format("%02x", code[3]) << " " << String::format("%02x", code[4]) << " " << String::format("%02x", code[5]) << " " << String::format("%02x", code[6]) << " " << String::format("%02x", code[7]);
-    }
+    dbgln("   cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4);
 }
 
 void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
 {
     auto process = Process::current();
     if (!process) {
-        klog() << description << " with !current";
+        dmesgln("{} with !current", description);
         Processor::halt();
     }
 
@@ -178,11 +171,11 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*process);
 
-    klog() << "CRASH: CPU #" << Processor::id() << " " << description << ". Ring " << (regs.cs & 3) << ".";
+    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::id(), description, (regs.cs & 3));
     dump(regs);
 
     if (!(regs.cs & 3)) {
-        klog() << "Crash in ring 0 :(";
+        dmesgln("Crash in ring 0 :(");
         dump_backtrace();
         Processor::halt();
     }
@@ -337,7 +330,7 @@ void debug_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        klog() << "Debug Exception in Ring0";
+        dmesgln("Debug exception in ring 0");
         Processor::halt();
         return;
     }
@@ -360,7 +353,7 @@ void breakpoint_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        klog() << "Breakpoint Trap in Ring0";
+        dmesgln("Breakpoint trap in ring 0");
         Processor::halt();
         return;
     }
@@ -370,21 +363,21 @@ void breakpoint_handler(TrapFrame* trap)
     current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
 
-#define EH(i, msg)                                                                                                                                                             \
-    static void _exception##i()                                                                                                                                                \
-    {                                                                                                                                                                          \
-        klog() << msg;                                                                                                                                                         \
-        u32 cr0, cr2, cr3, cr4;                                                                                                                                                \
-        asm("movl %%cr0, %%eax"                                                                                                                                                \
-            : "=a"(cr0));                                                                                                                                                      \
-        asm("movl %%cr2, %%eax"                                                                                                                                                \
-            : "=a"(cr2));                                                                                                                                                      \
-        asm("movl %%cr3, %%eax"                                                                                                                                                \
-            : "=a"(cr3));                                                                                                                                                      \
-        asm("movl %%cr4, %%eax"                                                                                                                                                \
-            : "=a"(cr4));                                                                                                                                                      \
-        klog() << "CR0=" << String::format("%x", cr0) << " CR2=" << String::format("%x", cr2) << " CR3=" << String::format("%x", cr3) << " CR4=" << String::format("%x", cr4); \
-        Processor::halt();                                                                                                                                                     \
+#define EH(i, msg)                                                                \
+    static void _exception##i()                                                   \
+    {                                                                             \
+        dbgln("{}", msg);                                                         \
+        u32 cr0, cr2, cr3, cr4;                                                   \
+        asm("movl %%cr0, %%eax"                                                   \
+            : "=a"(cr0));                                                         \
+        asm("movl %%cr2, %%eax"                                                   \
+            : "=a"(cr2));                                                         \
+        asm("movl %%cr3, %%eax"                                                   \
+            : "=a"(cr3));                                                         \
+        asm("movl %%cr4, %%eax"                                                   \
+            : "=a"(cr4));                                                         \
+        dbgln("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4); \
+        Processor::halt();                                                        \
     }
 
 EH(2, "Unknown error")
@@ -405,7 +398,7 @@ const DescriptorTablePointer& get_idtr()
 
 static void unimp_trap()
 {
-    klog() << "Unhandled IRQ.";
+    dmesgln("Unhandled IRQ");
     Processor::Processor::halt();
 }
 
@@ -1081,10 +1074,10 @@ void Processor::initialize(u32 cpu)
     ASSERT(m_self == this);
     ASSERT(&current() == this); // sanity check
 
-    klog() << "CPU[" << id() << "]: Supported features: " << features_string();
+    dmesgln("CPU[{}]: Supported features: {}", id(), features_string());
     if (!has_feature(CPUFeature::RDRAND))
-        klog() << "CPU[" << id() << "]: No RDRAND support detected, randomness will be poor";
-    klog() << "CPU[" << id() << "]: Physical address bit width: " << m_physical_address_bit_width;
+        dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", id());
+    dmesgln("CPU[{}]: Physical address bit width: {}", id(), m_physical_address_bit_width);
 
     if (cpu == 0)
         idt_init();
@@ -2304,8 +2297,8 @@ void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, con
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
-    klog() << "ASSERTION FAILED: " << msg << "\n"
-           << file << ":" << line << " in " << func;
+    dmesgln("ASSERTION FAILED: {}", msg);
+    dmesgln("{}:{} in {}", file, line, func);
 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
