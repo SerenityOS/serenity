@@ -47,6 +47,8 @@
 
 namespace Kernel {
 
+extern Region* g_signal_trampoline_region;
+
 struct LoadResult {
     OwnPtr<Space> space;
     FlatPtr load_base { 0 };
@@ -481,6 +483,12 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         return load_result_or_error.error();
     }
 
+    auto signal_trampoline_range = load_result_or_error.value().space->allocate_range({}, PAGE_SIZE);
+    if (!signal_trampoline_range.has_value()) {
+        dbgln("do_exec: Failed to allocate VM for signal trampoline");
+        return -ENOMEM;
+    }
+
     // We commit to the new executable at this point. There is no turning back!
 
     // Prevent other processes from attaching to us with ptrace while we're doing this.
@@ -509,6 +517,14 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_space = load_result.space.release_nonnull();
     MemoryManager::enter_space(*m_space);
+
+    auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range.value(), g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
+    if (signal_trampoline_region.is_error()) {
+        ASSERT_NOT_REACHED();
+    }
+
+    signal_trampoline_region.value()->set_syscall_region(true);
+    m_signal_trampoline = signal_trampoline_region.value()->vaddr();
 
     m_executable = main_program_description->custody();
     m_arguments = arguments;

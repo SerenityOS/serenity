@@ -57,8 +57,6 @@ namespace Kernel {
 timeval kgettimeofday();
 void kgettimeofday(timeval&);
 
-extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
-
 #define ENUMERATE_PLEDGE_PROMISES         \
     __ENUMERATE_PLEDGE_PROMISE(stdio)     \
     __ENUMERATE_PLEDGE_PROMISE(rpath)     \
@@ -458,6 +456,8 @@ public:
     Space& space() { return *m_space; }
     const Space& space() const { return *m_space; }
 
+    VirtualAddress signal_trampoline() const { return m_signal_trampoline; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -507,6 +507,7 @@ private:
     String m_name;
 
     OwnPtr<Space> m_space;
+    VirtualAddress m_signal_trampoline;
 
     ProcessID m_pid { 0 };
     SessionID m_sid { 0 };
