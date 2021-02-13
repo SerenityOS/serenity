@@ -69,6 +69,11 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
+static unsigned divide_rounded_up(unsigned a, unsigned b)
+{
+    return (a / b) + (a % b != 0);
+}
+
 NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
 {
     return adopt(*new Ext2FS(file_description));
@@ -205,31 +210,25 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
         return shape;
 
     shape.indirect_blocks = min(blocks_remaining, entries_per_block);
-    blocks_remaining -= shape.indirect_blocks;
     shape.meta_blocks += 1;
+    blocks_remaining -= shape.indirect_blocks;
     if (!blocks_remaining)
         return shape;
 
     shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
-    blocks_remaining -= shape.doubly_indirect_blocks;
     shape.meta_blocks += 1;
-    shape.meta_blocks += shape.doubly_indirect_blocks / entries_per_block;
-    if ((shape.doubly_indirect_blocks % entries_per_block) != 0)
-        shape.meta_blocks += 1;
+    shape.meta_blocks += divide_rounded_up(shape.doubly_indirect_blocks, entries_per_block);
+    blocks_remaining -= shape.doubly_indirect_blocks;
     if (!blocks_remaining)
         return shape;
-
-    dbgln("we don't know how to compute tind ext2fs blocks yet!");
-    ASSERT_NOT_REACHED();
 
     shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
+    shape.meta_blocks += 1;
+    shape.meta_blocks += divide_rounded_up(shape.triply_indirect_blocks, entries_per_block * entries_per_block);
+    shape.meta_blocks += divide_rounded_up(shape.triply_indirect_blocks, entries_per_block);
     blocks_remaining -= shape.triply_indirect_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    ASSERT_NOT_REACHED();
-
-    return {};
+    ASSERT(blocks_remaining == 0);
+    return shape;
 }
 
 KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2inode, const Vector<BlockIndex>& blocks)
