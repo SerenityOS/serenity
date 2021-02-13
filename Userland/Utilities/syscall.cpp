@@ -141,7 +141,7 @@ static FlatPtr parse_parameter_buffer(ArgIter& iter)
         params_vec.append(parse_from(iter));
     }
 
-    fprintf(stderr, "Warning: Treating unmatched ']' as literal string\n");
+    fprintf(stderr, "Error: Unmatched '['?!\n");
     exit(1);
     ASSERT_NOT_REACHED();
 }
