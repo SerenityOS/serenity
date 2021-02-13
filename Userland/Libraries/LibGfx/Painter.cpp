@@ -522,14 +522,11 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     }
 }
 
-void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
+void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
 {
     ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
-    ASSERT(!m_target->has_alpha_channel());
 
-    if (!opacity)
-        return;
-    if (opacity >= 1.0f)
+    if (opacity >= 1.0f && !(source.has_alpha_channel() && apply_alpha))
         return blit(position, source, a_src_rect);
 
     u8 alpha = 255 * opacity;
@@ -558,18 +555,28 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const unsigned src_skip = source.pitch() / sizeof(RGBA32);
 
-    // FIXME: This does the wrong thing if source has an alpha channel: It ignores it and pretends that every pixel in source is fully opaque.
-    // Maybe just punt to draw_scaled_bitmap() in that case too?
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int x = 0; x <= (last_column - first_column); ++x) {
-            Color src_color_with_alpha = Color::from_rgb(src[x]);
-            src_color_with_alpha.set_alpha(alpha);
-            Color dst_color = Color::from_rgb(dst[x]);
-            dst[x] = dst_color.blend(src_color_with_alpha).value();
+    auto do_blit = [&]<bool with_src_alpha>() {
+        for (int row = first_row; row <= last_row; ++row) {
+            for (int x = 0; x <= (last_column - first_column); ++x) {
+                if constexpr (with_src_alpha) {
+                    Color src_color_with_alpha = Color::from_rgba(src[x]);
+                    float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
+                    src_color_with_alpha.set_alpha(255 * (opacity * pixel_opacity));
+                    dst[x] = Color::from_rgba(dst[x]).blend(src_color_with_alpha).value();
+                } else {
+                    Color src_color_with_alpha = Color::from_rgb(src[x]);
+                    src_color_with_alpha.set_alpha(alpha);
+                    dst[x] = Color::from_rgb(dst[x]).blend(src_color_with_alpha).value();
+                }
+            }
+            dst += dst_skip;
+            src += src_skip;
         }
-        dst += dst_skip;
-        src += src_skip;
-    }
+    };
+    if (source.has_alpha_channel() && apply_alpha)
+        do_blit.template operator()<true>();
+    else
+        do_blit.template operator()<false>();
 }
 
 void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, Function<Color(Color)> filter)
@@ -712,57 +719,12 @@ void Painter::blit_offset(const IntPoint& a_position, const Gfx::Bitmap& source,
     blit(position, source, src_rect);
 }
 
-void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect)
-{
-    auto safe_src_rect = a_src_rect.intersected(source.rect());
-    if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect);
-
-    ASSERT(source.has_alpha_channel());
-    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
-
-    auto clipped_rect = dst_rect.intersected(clip_rect());
-    if (clipped_rect.is_empty())
-        return;
-
-    int scale = this->scale();
-    auto src_rect = a_src_rect * scale;
-    clipped_rect *= scale;
-    dst_rect *= scale;
-
-    const int first_row = clipped_rect.top() - dst_rect.top();
-    const int last_row = clipped_rect.bottom() - dst_rect.top();
-    const int first_column = clipped_rect.left() - dst_rect.left();
-    const int last_column = clipped_rect.right() - dst_rect.left();
-
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-    const size_t src_skip = source.pitch() / sizeof(RGBA32);
-
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int x = 0; x <= (last_column - first_column); ++x) {
-            u8 alpha = Color::from_rgba(src[x]).alpha();
-            if (alpha == 0xff)
-                dst[x] = src[x];
-            else if (!alpha)
-                continue;
-            else
-                dst[x] = Color::from_rgba(dst[x]).blend(Color::from_rgba(src[x])).value();
-        }
-        dst += dst_skip;
-        src += src_skip;
-    }
-}
-
 void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
 {
     ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
-    if (opacity < 1.0f)
-        return blit_with_opacity(position, source, a_src_rect, opacity);
-    if (source.has_alpha_channel() && apply_alpha)
-        return blit_with_alpha(position, source, a_src_rect);
+    if (opacity < 1.0f || (source.has_alpha_channel() && apply_alpha))
+        return blit_with_opacity(position, source, a_src_rect, opacity, apply_alpha);
 
     auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
