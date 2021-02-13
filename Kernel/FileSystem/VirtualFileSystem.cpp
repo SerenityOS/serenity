@@ -98,6 +98,7 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
     Mount mount { source.inode(), mount_point, flags };
     if (!m_mounts.contains_slow(mount)) 
         m_mounts.append(move(mount));
+    
     return KSuccess;
 }
 
