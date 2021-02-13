@@ -28,6 +28,8 @@
 #include <AK/Atomic.h>
 #include <AK/Debug.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/API/Syscall.h>
+#include <LibSystem/syscall.h>
 #include <limits.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -681,6 +683,61 @@ int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldty
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
     return t1 == t2;
+}
+
+int pthread_rwlock_destroy(pthread_rwlock_t* rl)
+{
+    if (!rl)
+        return 0;
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_init(pthread_rwlock_t* __restrict, const pthread_rwlockattr_t* __restrict)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_rdlock(pthread_rwlock_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_tryrdlock(pthread_rwlock_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_trywrlock(pthread_rwlock_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_unlock(pthread_rwlock_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlock_wrlock(pthread_rwlock_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlockattr_init(pthread_rwlockattr_t*)
+{
+    ASSERT_NOT_REACHED();
+}
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
+{
+    ASSERT_NOT_REACHED();
 }
 
 } // extern "C"
