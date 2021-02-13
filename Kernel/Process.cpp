@@ -58,15 +58,15 @@
 
 namespace Kernel {
 
-static void create_signal_trampolines();
+static void create_signal_trampoline();
 
 RecursiveSpinLock g_processes_lock;
 static Atomic<pid_t> next_pid;
 InlineLinkedList<Process>* g_processes;
 String* g_hostname;
 Lock* g_hostname_lock;
-VirtualAddress g_return_to_ring3_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
+Region* g_signal_trampoline_region;
 
 ProcessID Process::allocate_pid()
 {
@@ -88,7 +88,7 @@ void Process::initialize()
     g_hostname = new String("courage");
     g_hostname_lock = new Lock;
 
-    create_signal_trampolines();
+    create_signal_trampoline();
 }
 
 Vector<ProcessID> Process::all_pids()
@@ -285,25 +285,21 @@ void signal_trampoline_dummy()
 extern "C" void asm_signal_trampoline(void);
 extern "C" void asm_signal_trampoline_end(void);
 
-void create_signal_trampolines()
+void create_signal_trampoline()
 {
     // NOTE: We leak this region.
-    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write | Region::Access::Execute, false).leak_ptr();
-    trampoline_region->set_syscall_region(true);
-    g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
+    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write, false).leak_ptr();
+    g_signal_trampoline_region->set_syscall_region(true);
 
     u8* trampoline = (u8*)asm_signal_trampoline;
     u8* trampoline_end = (u8*)asm_signal_trampoline_end;
     size_t trampoline_size = trampoline_end - trampoline;
 
-    {
-        SmapDisabler disabler;
-        u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
-        memcpy(code_ptr, trampoline, trampoline_size);
-    }
+    u8* code_ptr = (u8*)g_signal_trampoline_region->vaddr().as_ptr();
+    memcpy(code_ptr, trampoline, trampoline_size);
 
-    trampoline_region->set_writable(false);
-    trampoline_region->remap();
+    g_signal_trampoline_region->set_writable(false);
+    g_signal_trampoline_region->remap();
 }
 
 void Process::crash(int signal, u32 eip, bool out_of_memory)
