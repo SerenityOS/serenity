@@ -137,8 +137,7 @@ protected:
     void set_physical_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color);
     void fill_rect_with_draw_op(const IntRect&, Color);
-    void blit_with_alpha(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
-    void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity);
+    void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity, bool apply_alpha = true);
     void draw_physical_pixel(const IntPoint&, Color, int thickness = 1);
     IntRect clip_rect() const { return state().clip_rect; }
 
