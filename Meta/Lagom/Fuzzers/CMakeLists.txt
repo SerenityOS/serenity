@@ -33,6 +33,7 @@ add_simple_fuzzer(FuzzRegexPosixExtended)
 add_simple_fuzzer(FuzzShell)
 add_simple_fuzzer(FuzzTTF)
 add_simple_fuzzer(FuzzURL)
+add_simple_fuzzer(FuzzRSAKeyParsing)
 
 if (NOT ENABLE_OSS_FUZZ)
 set(CMAKE_EXE_LINKER_FLAGS "${ORIGINAL_CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
