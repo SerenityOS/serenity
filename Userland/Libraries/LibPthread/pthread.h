@@ -87,6 +87,10 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
         0, 0, CLOCK_MONOTONIC_COARSE \
     }
 
+// FIXME: Actually implement this!
+#define PTHREAD_RWLOCK_INITIALIZER \
+    NULL
+
 #define PTHREAD_KEYS_MAX 64
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
@@ -126,5 +130,19 @@ int pthread_setname_np(pthread_t, const char*);
 int pthread_getname_np(pthread_t, char*, size_t);
 
 int pthread_equal(pthread_t t1, pthread_t t2);
+
+int pthread_rwlock_destroy(pthread_rwlock_t*);
+int pthread_rwlock_init(pthread_rwlock_t* __restrict, const pthread_rwlockattr_t* __restrict);
+int pthread_rwlock_rdlock(pthread_rwlock_t*);
+int pthread_rwlock_timedrdlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict);
+int pthread_rwlock_timedwrlock(pthread_rwlock_t* __restrict, const struct timespec* __restrict);
+int pthread_rwlock_tryrdlock(pthread_rwlock_t*);
+int pthread_rwlock_trywrlock(pthread_rwlock_t*);
+int pthread_rwlock_unlock(pthread_rwlock_t*);
+int pthread_rwlock_wrlock(pthread_rwlock_t*);
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t*);
+int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict);
+int pthread_rwlockattr_init(pthread_rwlockattr_t*);
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int);
 
 __END_DECLS
