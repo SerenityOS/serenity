@@ -22,6 +22,7 @@ for cmd in \
         Meta/lint-ipc-ids.sh \
         Meta/lint-keymaps.py \
         Meta/lint-shell-scripts.sh \
+        Meta/lint-ports.py \
         Meta/lint-prettier.sh \
         Meta/lint-python.sh; do
     echo "Running ${cmd}... "
