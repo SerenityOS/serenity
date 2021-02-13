@@ -368,7 +368,7 @@ void FormatBuilder::put_i64(
     const auto is_negative = value < 0;
     value = is_negative ? -value : value;
 
-    put_u64(static_cast<size_t>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
+    put_u64(static_cast<u64>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
 }
 
 #ifndef KERNEL
