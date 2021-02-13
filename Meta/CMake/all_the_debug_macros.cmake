@@ -170,7 +170,15 @@ set(SYSCALL_1_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)
+# False positive: DT_DEBUG is a flag, but for a bitset, not a feature.
+# set(DT_DEBUG ON)
+# False positive: GUI_DND_DEBUG is a flag, but passed as an envvar.
+# set(GUI_DND_DEBUG ON)
+# False positive: GUI_FOCUS_DEBUG is a flag, but passed as an envvar.
+# set(GUI_FOCUS_DEBUG ON)
 # False positive: LOG_DEBUG is a flag, but for a bitset, not a feature.
 # set(LOG_DEBUG ON)
+# False positive: UHCI_USBCMD_SOFTWARE_DEBUG is a flag, but for a bitset, not a feature.
+# set(UHCI_USBCMD_SOFTWARE_DEBUG ON)
 # Clogs up build: The WrapperGenerator stuff is run at compile time.
 # set(WRAPPER_GENERATOR_DEBUG ON)
