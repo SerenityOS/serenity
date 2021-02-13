@@ -177,7 +177,7 @@ bool Decoder::decode([[maybe_unused]] File& file)
         return false;
     }
     if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-        dbgln("fcntl(F_SETFD, FD_CLOEXEC)", strerror(errno));
+        dbgln("fcntl(F_SETFD, FD_CLOEXEC): {}", strerror(errno));
         return false;
     }
     file = File(fd, File::ConstructWithReceivedFileDescriptor);
