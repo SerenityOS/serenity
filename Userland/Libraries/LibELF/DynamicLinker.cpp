@@ -257,7 +257,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     allocate_tls();
 
     load_elf(main_program_name);
-    auto main_program_lib = commit_elf(main_program_name);
+
+    // NOTE: We put this in a RefPtr instead of a NonnullRefPtr so we can release it later.
+    RefPtr main_program_lib = commit_elf(main_program_name);
 
     FlatPtr entry_point = reinterpret_cast<FlatPtr>(main_program_lib->image().entry().as_ptr());
     if (main_program_lib->is_dynamic())
@@ -271,6 +273,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     if (g_do_breakpoint_trap_before_entry) {
         asm("int3");
     }
+
+    // Unmap the main executable and release our related resources.
+    main_program_lib = nullptr;
 
     int rc = syscall(SC_msyscall, nullptr);
     if (rc < 0) {
