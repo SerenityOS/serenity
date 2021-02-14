@@ -58,9 +58,6 @@ void DNSPacket::add_question(const String& name, u16 record_type, ShouldRandomiz
         builder.append(ch);
     }
 
-    if (name[name.length() - 1] != '.')
-        builder.append('.');
-
     m_questions.empend(builder.to_string(), record_type, (u16)C_IN);
 }
 
@@ -85,7 +82,7 @@ ByteBuffer DNSPacket::to_byte_buffer() const
 
     stream << ReadonlyBytes { &header, sizeof(header) };
     for (auto& question : m_questions) {
-        auto parts = question.name().split('.');
+        auto parts = question.name().as_string().split('.');
         for (auto& part : parts) {
             stream << (u8)part.length();
             stream << part.bytes();
@@ -95,7 +92,7 @@ ByteBuffer DNSPacket::to_byte_buffer() const
         stream << htons(question.class_code());
     }
     for (auto& answer : m_answers) {
-        auto parts = answer.name().split('.');
+        auto parts = answer.name().as_string().split('.');
         for (auto& part : parts) {
             stream << (u8)part.length();
             stream << part.bytes();
