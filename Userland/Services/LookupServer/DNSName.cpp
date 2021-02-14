@@ -105,4 +105,14 @@ OutputStream& operator<<(OutputStream& stream, const DNSName& name)
     return stream;
 }
 
+unsigned DNSName::Traits::hash(const DNSName& name)
+{
+    return CaseInsensitiveStringTraits::hash(name.as_string());
+}
+
+bool DNSName::Traits::equals(const DNSName& a, const DNSName& b)
+{
+    return CaseInsensitiveStringTraits::equals(a.as_string(), b.as_string());
+}
+
 }
