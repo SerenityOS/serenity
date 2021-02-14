@@ -62,11 +62,11 @@ static void create_signal_trampoline();
 
 RecursiveSpinLock g_processes_lock;
 static Atomic<pid_t> next_pid;
-InlineLinkedList<Process>* g_processes;
-String* g_hostname;
-Lock* g_hostname_lock;
-HashMap<String, OwnPtr<Module>>* g_modules;
-Region* g_signal_trampoline_region;
+READONLY_AFTER_INIT InlineLinkedList<Process>* g_processes;
+READONLY_AFTER_INIT String* g_hostname;
+READONLY_AFTER_INIT Lock* g_hostname_lock;
+READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
+READONLY_AFTER_INIT Region* g_signal_trampoline_region;
 
 ProcessID Process::allocate_pid()
 {
