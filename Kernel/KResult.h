@@ -141,27 +141,27 @@ public:
 
     [[nodiscard]] bool is_error() const { return m_is_error; }
 
-    ALWAYS_INLINE KResult error() const
+    [[nodiscard]] ALWAYS_INLINE KResult error() const
     {
         ASSERT(m_is_error);
         return m_error;
     }
 
-    KResult result() const { return m_is_error ? m_error : KSuccess; }
+    [[nodiscard]] KResult result() const { return m_is_error ? m_error : KSuccess; }
 
-    ALWAYS_INLINE T& value()
+    [[nodiscard]] ALWAYS_INLINE T& value()
     {
         ASSERT(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
         ASSERT(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    ALWAYS_INLINE T release_value()
+    [[nodiscard]] ALWAYS_INLINE T release_value()
     {
         ASSERT(!m_is_error);
         ASSERT(m_have_storage);
