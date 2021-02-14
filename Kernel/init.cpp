@@ -102,7 +102,7 @@ extern "C" void init_finished(u32 cpu);
 extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
 extern "C" [[noreturn]] void init();
 
-VirtualConsole* tty0;
+READONLY_AFTER_INIT VirtualConsole* tty0;
 
 static Processor s_bsp_processor; // global but let's keep it "private"
 
