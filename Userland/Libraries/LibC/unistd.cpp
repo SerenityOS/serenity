@@ -29,6 +29,7 @@
 #include <AK/Vector.h>
 #include <alloca.h>
 #include <assert.h>
+#include <bits/pthread_integration.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -75,10 +76,15 @@ int fchown(int fd, uid_t uid, gid_t gid)
 
 pid_t fork()
 {
+    __pthread_fork_prepare();
+
     int rc = syscall(SC_fork);
     if (rc == 0) {
         s_cached_tid = 0;
         s_cached_pid = 0;
+        __pthread_fork_child();
+    } else if (rc != -1) {
+        __pthread_fork_parent();
     }
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
