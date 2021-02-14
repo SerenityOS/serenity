@@ -155,7 +155,7 @@ public:
         Blocked
     };
 
-    class BlockResult {
+    class [[nodiscard]] BlockResult {
     public:
         enum Type {
             WokeNormally,
