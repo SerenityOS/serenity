@@ -147,6 +147,7 @@ void Window::show()
         m_frameless,
         m_accessory,
         m_opacity_when_windowless,
+        m_alpha_hit_threshold,
         m_base_size,
         m_size_increment,
         m_resize_aspect_ratio,
@@ -671,6 +672,20 @@ void Window::set_opacity(float opacity)
     if (!is_visible())
         return;
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOpacity>(m_window_id, opacity);
+}
+
+void Window::set_alpha_hit_threshold(float threshold)
+{
+    if (threshold < 0.0f)
+        threshold = 0.0f;
+    else if (threshold > 1.0f)
+        threshold = 1.0f;
+    if (m_alpha_hit_threshold == threshold)
+        return;
+    m_alpha_hit_threshold = threshold;
+    if (!is_visible())
+        return;
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowAlphaHitThreshold>(m_window_id, threshold);
 }
 
 void Window::set_hovered_widget(Widget* widget)
