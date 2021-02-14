@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,14 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Span.h>
-#include <LibCrypto/ASN1/ASN1.h>
-#include <LibCrypto/ASN1/DER.h>
+#include <AK/Base64.h>
+#include <AK/GenericLexer.h>
+#include <LibCrypto/ASN1/PEM.h>
 
 namespace Crypto {
 
-ByteBuffer decode_pem(ReadonlyBytes);
+ByteBuffer decode_pem(ReadonlyBytes data)
+{
+    GenericLexer lexer { data };
+    ByteBuffer decoded;
+
+    // FIXME: Parse multiple.
+    enum {
+        PreStartData,
+        Started,
+        Ended,
+    } state { PreStartData };
+    while (!lexer.is_eof()) {
+        switch (state) {
+        case PreStartData:
+            if (lexer.consume_specific("-----BEGIN"))
+                state = Started;
+            lexer.consume_line();
+            break;
+        case Started: {
+            if (lexer.consume_specific("-----END")) {
+                state = Ended;
+                lexer.consume_line();
+                break;
+            }
+            auto b64decoded = decode_base64(lexer.consume_line().trim_whitespace(TrimMode::Right));
+            decoded.append(b64decoded.data(), b64decoded.size());
+            break;
+        }
+        case Ended:
+            lexer.consume_all();
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    return decoded;
+}
 
 }

@@ -29,84 +29,45 @@
 #include <AK/Types.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
-namespace Crypto {
+namespace Crypto::ASN1 {
 
-namespace ASN1 {
-
-enum class Kind {
+enum class Kind : u8 {
     Eol,
-    Boolean,
-    Integer,
-    ShortInteger,
-    BitString,
-    OctetString,
-    Null,
-    ObjectIdentifier,
-    IA5String,
-    PrintableString,
-    Utf8String,
-    UTCTime,
-    Choice,
-    Sequence,
-    Set,
-    SetOf
+    Boolean = 0x01,
+    Integer = 0x02,
+    BitString = 0x03,
+    OctetString = 0x04,
+    Null = 0x05,
+    ObjectIdentifier = 0x06,
+    IA5String = 0x16,
+    PrintableString = 0x13,
+    Utf8String = 0x0c,
+    UTCTime = 0x017,
+    Sequence = 0x10,
+    Set = 0x11,
+    // Choice = ??,
 };
 
-static inline StringView kind_name(Kind kind)
-{
-    switch (kind) {
-    case Kind::Eol:
-        return "EndOfList";
-    case Kind::Boolean:
-        return "Boolean";
-    case Kind::Integer:
-        return "Integer";
-    case Kind::ShortInteger:
-        return "ShortInteger";
-    case Kind::BitString:
-        return "BitString";
-    case Kind::OctetString:
-        return "OctetString";
-    case Kind::Null:
-        return "Null";
-    case Kind::ObjectIdentifier:
-        return "ObjectIdentifier";
-    case Kind::IA5String:
-        return "IA5String";
-    case Kind::PrintableString:
-        return "PrintableString";
-    case Kind::Utf8String:
-        return "UTF8String";
-    case Kind::UTCTime:
-        return "UTCTime";
-    case Kind::Choice:
-        return "Choice";
-    case Kind::Sequence:
-        return "Sequence";
-    case Kind::Set:
-        return "Set";
-    case Kind::SetOf:
-        return "SetOf";
-    }
+enum class Class : u8 {
+    Universal = 0,
+    Application = 0x40,
+    Context = 0x80,
+    Private = 0xc0,
+};
 
-    return "InvalidKind";
-}
+enum class Type : u8 {
+    Primitive = 0,
+    Constructed = 0x20,
+};
 
-struct List {
+struct Tag {
     Kind kind;
-    void* data;
-    size_t size;
-    bool used;
-    List *prev, *next, *child, *parent;
+    Class class_;
+    Type type;
 };
 
-static constexpr void set(List& list, Kind type, void* data, size_t size)
-{
-    list.kind = type;
-    list.data = data;
-    list.size = size;
-    list.used = false;
-}
-}
+String kind_name(Kind);
+String class_name(Class);
+String type_name(Type);
 
 }
