@@ -155,21 +155,18 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 
 Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
-    if (auto it = m_lookup_cache.find(name.as_string()); it != m_lookup_cache.end()) {
-        auto& cached_lookup = it->value;
-        if (cached_lookup.question.record_type() == record_type) {
-            Vector<String> responses;
-            for (auto& cached_answer : cached_lookup.answers) {
+    if (auto cached_answers = m_lookup_cache.get(name.as_string()); cached_answers.has_value()) {
+        Vector<String> responses;
+        for (auto& answer : cached_answers.value()) {
+            if (answer.type() == record_type && !answer.has_expired()) {
 #if LOOKUPSERVER_DEBUG
-                dbgln("Cache hit: {} -> {}, expired: {}", name.as_string(), cached_answer.record_data(), cached_answer.has_expired());
+                dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
 #endif
-                if (!cached_answer.has_expired())
-                    responses.append(cached_answer.record_data());
+                responses.append(answer.record_data());
             }
-            if (!responses.is_empty())
-                return responses;
         }
-        m_lookup_cache.remove(it);
+        if (!responses.is_empty())
+            return responses;
     }
 
     DNSPacket request;
@@ -250,21 +247,31 @@ Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserve
     }
 
     Vector<String, 8> responses;
-    Vector<DNSAnswer, 8> cacheable_answers;
     for (auto& answer : response.answers()) {
+        put_in_cache(answer);
         if (answer.type() != record_type)
             continue;
         responses.append(answer.record_data());
-        if (!answer.has_expired())
-            cacheable_answers.append(answer);
     }
 
-    if (!cacheable_answers.is_empty()) {
-        if (m_lookup_cache.size() >= 256)
-            m_lookup_cache.remove(m_lookup_cache.begin());
-        m_lookup_cache.set(name.as_string(), { request.questions()[0], move(cacheable_answers) });
-    }
     return responses;
+}
+
+void LookupServer::put_in_cache(const DNSAnswer& answer)
+{
+    if (answer.has_expired())
+        return;
+
+    // Prevent the cache from growing too big.
+    // TODO: Evict least used entries.
+    if (m_lookup_cache.size() >= 256)
+        m_lookup_cache.remove(m_lookup_cache.begin());
+
+    auto it = m_lookup_cache.find(answer.name().as_string());
+    if (it == m_lookup_cache.end())
+        m_lookup_cache.set(answer.name().as_string(), { answer });
+    else
+        it->value.append(answer);
 }
 
 }
