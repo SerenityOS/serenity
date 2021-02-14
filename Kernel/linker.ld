@@ -43,6 +43,13 @@ SECTIONS
         end_of_kernel_data = .;
     }
 
+    .ro_after_init ALIGN(4K) (NOLOAD) : AT(ADDR(.ro_after_init) - 0xc0000000)
+    {
+        start_of_ro_after_init = .;
+        *(.ro_after_init);
+        end_of_ro_after_init = .;
+    }
+
     .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - 0xc0000000)
     {
         start_of_kernel_bss = .;

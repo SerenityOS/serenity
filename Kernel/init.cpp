@@ -296,6 +296,9 @@ void init_stage2(void*)
 
     load_kernel_symbol_table();
 
+    // NOTE: Everything marked READONLY_AFTER_INIT becomes non-writable after this point.
+    MM.protect_readonly_after_init_memory();
+
     int error;
 
     // FIXME: It would be nicer to set the mode from userspace.
