@@ -469,11 +469,17 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
 {
     REQUIRE_PROMISE(stdio);
 
-    Syscall::SC_mremap_params params;
+    Syscall::SC_mremap_params params {};
     if (!copy_from_user(&params, user_params))
         return (void*)-EFAULT;
 
-    auto* old_region = space().find_region_from_range(Range { VirtualAddress(params.old_address), params.old_size });
+    if (page_round_up_would_wrap(params.old_size))
+        return (void*)-EINVAL;
+
+    auto old_address = page_round_down(params.old_address);
+    auto old_size = page_round_up(params.old_size);
+
+    auto* old_region = space().find_region_from_range(Range { VirtualAddress { old_address }, old_size });
     if (!old_region)
         return (void*)-EINVAL;
 
