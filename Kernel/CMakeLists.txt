@@ -101,6 +101,7 @@ set(KERNEL_SOURCES
     PCI/IOAccess.cpp
     PCI/Initializer.cpp
     PCI/MMIOAccess.cpp
+    Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
