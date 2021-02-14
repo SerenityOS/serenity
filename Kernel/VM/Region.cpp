@@ -229,7 +229,7 @@ size_t Region::amount_shared() const
 
 NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, u8 access, Cacheable cacheable, bool shared)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared);
+    auto region = adopt_own(*new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (owner)
         region->m_owner = owner->make_weak_ptr();
     return region;
@@ -237,7 +237,7 @@ NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range
 
 NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, u8 access, Cacheable cacheable)
 {
-    return make<Region>(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false);
+    return adopt_own(*new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
 
 bool Region::should_cow(size_t page_index) const
