@@ -392,7 +392,7 @@ void NE2000NetworkAdapter::send_raw(ReadonlyBytes payload)
     }
 
     while (in8(REG_RW_COMMAND) & BIT_COMMAND_TXP)
-        m_wait_queue.wait_on({}, "NE2000NetworkAdapter");
+        m_wait_queue.wait_forever("NE2000NetworkAdapter");
 
     disable_irq();
     size_t packet_size = payload.size();

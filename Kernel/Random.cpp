@@ -91,7 +91,7 @@ void KernelRng::wait_for_entropy()
     ScopedSpinLock lock(get_lock());
     if (!resource().is_ready()) {
         dbgln("Entropy starvation...");
-        m_seed_queue.wait_on({}, "KernelRng");
+        m_seed_queue.wait_forever("KernelRng");
     }
 }
 
