@@ -126,22 +126,32 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_type)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short record_type)
 {
 #if LOOKUPSERVER_DEBUG
     dbgln("Got request for '{}'", name.as_string());
 #endif
 
-    Vector<String> responses;
+    Vector<DNSAnswer> answers;
+    auto add_answer = [&](const DNSAnswer& answer) {
+        DNSAnswer answer_with_original_case {
+            name,
+            answer.type(),
+            answer.class_code(),
+            answer.ttl(),
+            answer.record_data()
+        };
+        answers.append(answer_with_original_case);
+    };
 
     // First, try local data.
     if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
         for (auto& answer : local_answers.value()) {
             if (answer.type() == record_type)
-                responses.append(answer.name().as_string());
+                add_answer(answer);
         }
-        if (!responses.is_empty())
-            return responses;
+        if (!answers.is_empty())
+            return answers;
     }
 
     // Second, try our cache.
@@ -152,11 +162,11 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 #if LOOKUPSERVER_DEBUG
                 dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
 #endif
-                responses.append(answer.record_data());
+                add_answer(answer);
             }
         }
-        if (!responses.is_empty())
-            return responses;
+        if (!answers.is_empty())
+            return answers;
     }
 
     // Third, ask the upstream nameservers.
@@ -166,12 +176,15 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 #endif
         bool did_get_response = false;
         int retries = 3;
+        Vector<DNSAnswer> upstream_answers;
         do {
-            responses = lookup(name, nameserver, did_get_response, record_type);
+            upstream_answers = lookup(name, nameserver, did_get_response, record_type);
             if (did_get_response)
                 break;
         } while (--retries);
-        if (!responses.is_empty()) {
+        if (!upstream_answers.is_empty()) {
+            for (auto& answer : upstream_answers)
+                add_answer(answer);
             break;
         } else {
             if (!did_get_response)
@@ -180,15 +193,15 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
                 dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
         }
     }
-    if (responses.is_empty()) {
+    if (answers.is_empty()) {
         fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
         return {};
     }
 
-    return move(responses);
+    return move(answers);
 }
 
-Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
     DNSPacket request;
     request.set_is_query();
@@ -270,15 +283,15 @@ Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserve
         return {};
     }
 
-    Vector<String, 8> responses;
+    Vector<DNSAnswer, 8> answers;
     for (auto& answer : response.answers()) {
         put_in_cache(answer);
         if (answer.type() != record_type)
             continue;
-        responses.append(answer.record_data());
+        answers.append(answer);
     }
 
-    return responses;
+    return move(answers);
 }
 
 void LookupServer::put_in_cache(const DNSAnswer& answer)
