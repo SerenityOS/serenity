@@ -42,11 +42,11 @@ public:
     {
     }
 
-    bool is_null() const { return m_address == 0; }
-    bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
+    [[nodiscard]] bool is_null() const { return m_address == 0; }
+    [[nodiscard]] bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 
-    VirtualAddress offset(FlatPtr o) const { return VirtualAddress(m_address + o); }
-    FlatPtr get() const { return m_address; }
+    [[nodiscard]] VirtualAddress offset(FlatPtr o) const { return VirtualAddress(m_address + o); }
+    [[nodiscard]] FlatPtr get() const { return m_address; }
     void set(FlatPtr address) { m_address = address; }
     void mask(FlatPtr m) { m_address &= m; }
 
@@ -57,10 +57,10 @@ public:
     bool operator==(const VirtualAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const VirtualAddress& other) const { return m_address != other.m_address; }
 
-    u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
-    const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
+    [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
+    [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    VirtualAddress page_base() const { return VirtualAddress(m_address & 0xfffff000); }
+    [[nodiscard]] VirtualAddress page_base() const { return VirtualAddress(m_address & 0xfffff000); }
 
 private:
     FlatPtr m_address { 0 };
