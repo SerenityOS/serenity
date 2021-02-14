@@ -225,7 +225,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         if (event_is_inside_current_menu) {
             WindowManager::the().set_hovered_window(window);
             auto translated_event = mouse_event.translated(-window->position());
-            WindowManager::the().deliver_mouse_event(*window, translated_event);
+            WindowManager::the().deliver_mouse_event(*window, translated_event, true);
             return;
         }
 
@@ -262,7 +262,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
                     continue;
                 WindowManager::the().set_hovered_window(menu->menu_window());
                 auto translated_event = mouse_event.translated(-menu->menu_window()->position());
-                WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event);
+                WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event, true);
                 break;
             }
         }

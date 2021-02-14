@@ -716,7 +716,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
             auto translated_event = event.translated(-window.position());
             translated_event.set_drag(true);
             translated_event.set_mime_data(*m_dnd_mime_data);
-            deliver_mouse_event(window, translated_event);
+            deliver_mouse_event(window, translated_event, false);
             return IterationDecision::Break;
         });
     }
@@ -875,10 +875,10 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
     metadata.last_position = event.position();
 }
 
-void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event)
+void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click)
 {
     window.dispatch_event(event);
-    if (event.type() == Event::MouseUp) {
+    if (process_double_click && event.type() == Event::MouseUp) {
         process_event_for_doubleclick(window, event);
         if (event.type() == Event::MouseDoubleClick)
             window.dispatch_event(event);
@@ -887,20 +887,12 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event)
 
 void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_window)
 {
-    HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
+    Window* received_mouse_event = nullptr;
 
     // We need to process ongoing drag events first. Otherwise, global tracking
     // and dnd collides, leading to duplicate GUI::DragOperation instances
     if (process_ongoing_drag(event, hovered_window))
         return;
-
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->blocking_modal_window())
-            continue;
-        windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
-        auto translated_event = event.translated(-window->position());
-        deliver_mouse_event(*window, translated_event);
-    }
 
     hovered_window = nullptr;
 
@@ -939,11 +931,10 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         //
         // This prevents e.g. moving on one window out of the bounds starting
         // a move in that other unrelated window, and other silly shenanigans.
-        if (!windows_who_received_mouse_event_due_to_cursor_tracking.contains(m_active_input_tracking_window)) {
-            auto translated_event = event.translated(-m_active_input_tracking_window->position());
-            deliver_mouse_event(*m_active_input_tracking_window, translated_event);
-            windows_who_received_mouse_event_due_to_cursor_tracking.set(m_active_input_tracking_window.ptr());
-        }
+        auto translated_event = event.translated(-m_active_input_tracking_window->position());
+        deliver_mouse_event(*m_active_input_tracking_window, translated_event, true);
+        received_mouse_event = m_active_input_tracking_window.ptr();
+
         if (event.type() == Event::MouseUp && event.buttons() == 0) {
             m_active_input_tracking_window = nullptr;
         }
@@ -1002,9 +993,10 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
             if (window.rect().contains(event.position())) {
                 hovered_window = &window;
-                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window) && !window.blocking_modal_window()) {
+                if (!window.global_cursor_tracking() && !window.blocking_modal_window()) {
                     auto translated_event = event.translated(-window.position());
-                    deliver_mouse_event(window, translated_event);
+                    deliver_mouse_event(window, translated_event, true);
+                    received_mouse_event = &window;
                     if (event.type() == Event::MouseDown) {
                         m_active_input_tracking_window = window;
                     }
@@ -1032,6 +1024,15 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         // Clicked outside of any window
         if (!hovered_window && !event_window_with_frame && event.type() == Event::MouseDown)
             set_active_window(nullptr);
+    }
+
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (received_mouse_event == window)
+            continue;
+        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->blocking_modal_window())
+            continue;
+        auto translated_event = event.translated(-window->position());
+        deliver_mouse_event(*window, translated_event, false);
     }
 
     if (event_window_with_frame != m_resize_candidate.ptr())

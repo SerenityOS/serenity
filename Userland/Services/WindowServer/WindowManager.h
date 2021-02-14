@@ -190,7 +190,7 @@ public:
     bool update_theme(String theme_path, String theme_name);
 
     void set_hovered_window(Window*);
-    void deliver_mouse_event(Window& window, MouseEvent& event);
+    void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
 
