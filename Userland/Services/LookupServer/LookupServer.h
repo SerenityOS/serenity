@@ -45,17 +45,15 @@ private:
     LookupServer();
 
     void load_etc_hosts();
+    void put_in_cache(const DNSAnswer&);
+
     Vector<String> lookup(const DNSName& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
-    struct CachedLookup {
-        DNSQuestion question;
-        Vector<DNSAnswer> answers;
-    };
 
     RefPtr<Core::LocalServer> m_local_server;
     Vector<String> m_nameservers;
     HashMap<String, String> m_etc_hosts;
-    HashMap<String, CachedLookup> m_lookup_cache;
+    HashMap<String, Vector<DNSAnswer>> m_lookup_cache;
 };
 
 }
