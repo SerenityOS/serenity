@@ -322,6 +322,10 @@
 #cmakedefine01 RESOURCE_DEBUG
 #endif
 
+#ifndef RSA_PARSE_DEBUG
+#cmakedefine01 RSA_PARSE_DEBUG
+#endif
+
 #ifndef SAFE_SYSCALL_DEBUG
 #cmakedefine01 SAFE_SYSCALL_DEBUG
 #endif
