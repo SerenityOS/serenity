@@ -83,22 +83,12 @@ ByteBuffer DNSPacket::to_byte_buffer() const
 
     stream << ReadonlyBytes { &header, sizeof(header) };
     for (auto& question : m_questions) {
-        auto parts = question.name().as_string().split('.');
-        for (auto& part : parts) {
-            stream << (u8)part.length();
-            stream << part.bytes();
-        }
-        stream << '\0';
+        stream << question.name();
         stream << htons(question.record_type());
         stream << htons(question.class_code());
     }
     for (auto& answer : m_answers) {
-        auto parts = answer.name().as_string().split('.');
-        for (auto& part : parts) {
-            stream << (u8)part.length();
-            stream << part.bytes();
-        }
-        stream << '\0';
+        stream << answer.name();
         stream << htons(answer.type());
         stream << htons(answer.class_code());
         stream << htonl(answer.ttl());
