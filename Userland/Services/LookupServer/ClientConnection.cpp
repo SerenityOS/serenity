@@ -50,9 +50,13 @@ void ClientConnection::die()
 
 OwnPtr<Messages::LookupServer::LookupNameResponse> ClientConnection::handle(const Messages::LookupServer::LookupName& message)
 {
-    auto addresses = LookupServer::the().lookup(message.name(), T_A);
-    if (addresses.is_empty())
+    auto answers = LookupServer::the().lookup(message.name(), T_A);
+    if (answers.is_empty())
         return make<Messages::LookupServer::LookupNameResponse>(1, Vector<String>());
+    Vector<String> addresses;
+    for (auto& answer : answers) {
+        addresses.append(answer.record_data());
+    }
     return make<Messages::LookupServer::LookupNameResponse>(0, move(addresses));
 }
 
@@ -66,9 +70,9 @@ OwnPtr<Messages::LookupServer::LookupAddressResponse> ClientConnection::handle(c
         address[2],
         address[1],
         address[0]);
-    auto hosts = LookupServer::the().lookup(name, T_PTR);
-    if (hosts.is_empty())
+    auto answers = LookupServer::the().lookup(name, T_PTR);
+    if (answers.is_empty())
         return make<Messages::LookupServer::LookupAddressResponse>(1, String());
-    return make<Messages::LookupServer::LookupAddressResponse>(0, hosts[0]);
+    return make<Messages::LookupServer::LookupAddressResponse>(0, answers[0].record_data());
 }
 }
