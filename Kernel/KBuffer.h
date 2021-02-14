@@ -79,7 +79,7 @@ public:
         return buffer;
     }
 
-    bool expand(size_t new_capacity)
+    [[nodiscard]] bool expand(size_t new_capacity)
     {
         auto new_region = MM.allocate_kernel_region(page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
         if (!new_region)
@@ -90,10 +90,10 @@ public:
         return true;
     }
 
-    u8* data() { return m_region->vaddr().as_ptr(); }
-    const u8* data() const { return m_region->vaddr().as_ptr(); }
-    size_t size() const { return m_size; }
-    size_t capacity() const { return m_region->size(); }
+    [[nodiscard]] u8* data() { return m_region->vaddr().as_ptr(); }
+    [[nodiscard]] const u8* data() const { return m_region->vaddr().as_ptr(); }
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] size_t capacity() const { return m_region->size(); }
 
     void set_size(size_t size)
     {
@@ -101,8 +101,8 @@ public:
         m_size = size;
     }
 
-    const Region& region() const { return *m_region; }
-    Region& region() { return *m_region; }
+    [[nodiscard]] const Region& region() const { return *m_region; }
+    [[nodiscard]] Region& region() { return *m_region; }
 
 private:
     explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size, AllocationStrategy strategy)
@@ -117,14 +117,14 @@ private:
     NonnullOwnPtr<Region> m_region;
 };
 
-class KBuffer {
+class [[nodiscard]] KBuffer {
 public:
     explicit KBuffer(RefPtr<KBufferImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
@@ -132,7 +132,7 @@ public:
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 
-    static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
@@ -140,30 +140,30 @@ public:
         return adopt_own(*new KBuffer(impl.release_nonnull()));
     }
 
-    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    [[nodiscard]] static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         return KBuffer(KBufferImpl::create_with_size(size, access, name, strategy));
     }
 
-    static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+    [[nodiscard]] static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
     {
         return KBuffer(KBufferImpl::copy(data, size, access, name));
     }
 
-    bool is_null() const { return !m_impl; }
+    [[nodiscard]] bool is_null() const { return !m_impl; }
 
-    u8* data() { return m_impl ? m_impl->data() : nullptr; }
-    const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
-    size_t size() const { return m_impl ? m_impl->size() : 0; }
-    size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
+    [[nodiscard]] u8* data() { return m_impl ? m_impl->data() : nullptr; }
+    [[nodiscard]] const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
+    [[nodiscard]] size_t size() const { return m_impl ? m_impl->size() : 0; }
+    [[nodiscard]] size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
-    void* end_pointer() { return data() + size(); }
-    const void* end_pointer() const { return data() + size(); }
+    [[nodiscard]] void* end_pointer() { return data() + size(); }
+    [[nodiscard]] const void* end_pointer() const { return data() + size(); }
 
     void set_size(size_t size) { m_impl->set_size(size); }
 
-    const KBufferImpl& impl() const { return *m_impl; }
-    RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
+    [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
+    [[nodiscard]] RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
     KBuffer(const ByteBuffer& buffer, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
         : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
