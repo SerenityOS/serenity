@@ -53,6 +53,9 @@
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/mallocdefs.h>
 
+extern FlatPtr start_of_ro_after_init;
+extern FlatPtr end_of_ro_after_init;
+
 namespace Kernel {
 
 static DescriptorTablePointer s_idtr;
@@ -263,6 +266,11 @@ void page_fault_handler(TrapFrame* trap)
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {}", VirtualAddress(regs.userspace_esp));
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
+    }
+
+    if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
+        dump(regs);
+        PANIC("Attempt to write into READONLY_AFTER_INIT section");
     }
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
