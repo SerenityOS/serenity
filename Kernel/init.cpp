@@ -60,6 +60,7 @@
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Initializer.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
@@ -288,8 +289,7 @@ void init_stage2(void*)
 
     StorageManagement::initialize(root, force_pio);
     if (!VFS::the().mount_root(StorageManagement::the().root_filesystem())) {
-        klog() << "VFS::mount_root failed";
-        Processor::halt();
+        PANIC("VFS::mount_root failed");
     }
 
     Process::current()->set_root_directory(VFS::the().root_custody());
@@ -307,8 +307,7 @@ void init_stage2(void*)
         init_args.prepend(userspace_init);
     Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, move(init_args), {}, tty0);
     if (error != 0) {
-        klog() << "init_stage2: error spawning SystemServer: " << error;
-        Processor::halt();
+        PANIC("init_stage2: Error spawning SystemServer: {}", error);
     }
     thread->set_priority(THREAD_PRIORITY_HIGH);
 

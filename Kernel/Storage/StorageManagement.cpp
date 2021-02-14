@@ -29,6 +29,7 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
@@ -146,8 +147,7 @@ void StorageManagement::determine_boot_device()
     }
 
     if (m_boot_block_device.is_null()) {
-        klog() << "init_stage2: boot device " << m_boot_argument << " not found";
-        Processor::halt();
+        PANIC("StorageManagement: boot device {} not found", m_boot_argument);
     }
 }
 
@@ -159,8 +159,7 @@ void StorageManagement::determine_boot_device_with_partition_uuid()
     auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
 
     if (partition_uuid.to_string().length() != 36) {
-        klog() << "init_stage2: specified partition UUID is not valid";
-        Processor::halt();
+        PANIC("StorageManagement: Specified partition UUID is not valid");
     }
 
     for (auto& partition : m_disk_partitions) {
@@ -182,13 +181,11 @@ NonnullRefPtr<FS> StorageManagement::root_filesystem() const
 {
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {
-        klog() << "init_stage2: couldn't find a suitable device to boot from";
-        Processor::halt();
+        PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
     auto e2fs = Ext2FS::create(FileDescription::create(boot_device_description.release_nonnull()).value());
     if (!e2fs->initialize()) {
-        klog() << "init_stage2: couldn't open root filesystem";
-        Processor::halt();
+        PANIC("StorageManagement: Couldn't open root filesystem");
     }
     return e2fs;
 }

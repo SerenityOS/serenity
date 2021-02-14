@@ -38,6 +38,7 @@
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SpinLock.h>
@@ -247,9 +248,7 @@ void* kmalloc_impl(size_t size)
 
     void* ptr = g_kmalloc_global->m_heap.allocate(size);
     if (!ptr) {
-        klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
-        Kernel::dump_backtrace();
-        Processor::halt();
+        PANIC("kmalloc: Out of memory (requested size: {})");
     }
 
     return ptr;

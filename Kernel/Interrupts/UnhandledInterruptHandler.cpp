@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
+#include <Kernel/Panic.h>
 
 namespace Kernel {
 UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)
@@ -34,14 +35,12 @@ UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)
 
 void UnhandledInterruptHandler::handle_interrupt(const RegisterState&)
 {
-    dbgln("Interrupt: Unhandled vector {} was invoked for handle_interrupt(RegisterState&).", interrupt_number());
-    Processor::halt();
+    PANIC("Interrupt: Unhandled vector {} was invoked for handle_interrupt(RegisterState&).", interrupt_number());
 }
 
 [[noreturn]] bool UnhandledInterruptHandler::eoi()
 {
-    dbgln("Interrupt: Unhandled vector {} was invoked for eoi().", interrupt_number());
-    Processor::halt();
+    PANIC("Interrupt: Unhandled vector {} was invoked for eoi().", interrupt_number());
 }
 
 UnhandledInterruptHandler::~UnhandledInterruptHandler()
