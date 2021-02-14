@@ -450,7 +450,7 @@ void UHCIController::spawn_port_proc()
                     }
                 }
             }
-            Thread::current()->sleep(sleep_time);
+            (void)Thread::current()->sleep(sleep_time);
         }
     });
 }
