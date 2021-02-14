@@ -108,7 +108,7 @@ struct KmallocGlobalHeap {
             // was big enough to likely satisfy the request
             if (subheap.free_bytes() < allocation_request) {
                 // Looks like we probably need more
-                size_t memory_size = PAGE_ROUND_UP(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
+                size_t memory_size = page_round_up(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
                 // Add some more to the new heap. We're already using it for other
                 // allocations not including the original allocation_request
                 // that triggered heap expansion. If we don't allocate

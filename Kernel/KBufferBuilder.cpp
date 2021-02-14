@@ -42,7 +42,7 @@ inline bool KBufferBuilder::check_expand(size_t size)
     size_t new_buffer_size = m_size + size;
     if (Checked<size_t>::addition_would_overflow(new_buffer_size, 1 * MiB))
         return false;
-    new_buffer_size = PAGE_ROUND_UP(new_buffer_size + 1 * MiB);
+    new_buffer_size = page_round_up(new_buffer_size + 1 * MiB);
     return m_buffer->expand(new_buffer_size);
 }
 

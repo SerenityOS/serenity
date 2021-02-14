@@ -39,8 +39,23 @@
 
 namespace Kernel {
 
-#define PAGE_ROUND_UP(x) ((((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
-#define PAGE_ROUND_DOWN(x) (((FlatPtr)(x)) & ~(PAGE_SIZE - 1))
+constexpr bool page_round_up_would_wrap(FlatPtr x)
+{
+    return x > 0xfffff000u;
+}
+
+constexpr FlatPtr page_round_up(FlatPtr x)
+{
+    FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
+    // Rounding up >0xffff0000 wraps back to 0. That's never what we want.
+    ASSERT(x == 0 || rounded != 0);
+    return rounded;
+}
+
+constexpr FlatPtr page_round_down(FlatPtr x)
+{
+    return ((FlatPtr)(x)) & ~(PAGE_SIZE - 1);
+}
 
 inline u32 low_physical_to_virtual(u32 physical)
 {

@@ -51,7 +51,7 @@ private:
 
 DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_address, const MMIOSegment& mmio_segment)
     : m_device_address(device_address)
-    , m_mapped_region(MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Region::Access::Read | Region::Access::Write).release_nonnull())
+    , m_mapped_region(MM.allocate_kernel_region(page_round_up(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Region::Access::Read | Region::Access::Write).release_nonnull())
 {
     PhysicalAddress segment_lower_addr = mmio_segment.get_paddr();
     PhysicalAddress device_physical_mmio_space = segment_lower_addr.offset(
@@ -106,7 +106,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     klog() << "PCI: MCFG, length - " << length << ", revision " << revision;
     checkup_region->unmap();
 
-    auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
+    auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), page_round_up(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
 
     auto& mcfg = *(ACPI::Structures::MCFG*)mcfg_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
     dbgln_if(PCI_DEBUG, "PCI: Checking MCFG @ {}, {}", VirtualAddress(&mcfg), PhysicalAddress(p_mcfg.get()));

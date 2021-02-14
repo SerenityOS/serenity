@@ -77,7 +77,7 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
 
     InterruptDisabler disabler;
 
-    auto new_page_count = PAGE_ROUND_UP(new_size) / PAGE_SIZE;
+    auto new_page_count = page_round_up(new_size) / PAGE_SIZE;
     m_physical_pages.resize(new_page_count);
 
     m_dirty_pages.grow(new_page_count, false);
