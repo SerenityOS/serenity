@@ -30,6 +30,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
+#include <bits/pthread_integration.h>
 #include <limits.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -110,7 +111,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 
 int pthread_self()
 {
-    return gettid();
+    return __pthread_self();
 }
 
 int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
@@ -172,11 +173,7 @@ int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
 
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
-    mutex->lock = 0;
-    mutex->owner = 0;
-    mutex->level = 0;
-    mutex->type = attributes ? attributes->type : PTHREAD_MUTEX_NORMAL;
-    return 0;
+    return __pthread_mutex_init(mutex, attributes);
 }
 
 int pthread_mutex_destroy(pthread_mutex_t*)
@@ -186,22 +183,7 @@ int pthread_mutex_destroy(pthread_mutex_t*)
 
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
-    pthread_t this_thread = pthread_self();
-    for (;;) {
-        u32 expected = false;
-        if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == this_thread) {
-                mutex->level++;
-                return 0;
-            }
-            sched_yield();
-            continue;
-        }
-        mutex->owner = this_thread;
-        mutex->level = 0;
-        return 0;
-    }
+    return __pthread_mutex_lock(mutex);
 }
 
 int pthread_mutex_trylock(pthread_mutex_t* mutex)
@@ -222,13 +204,7 @@ int pthread_mutex_trylock(pthread_mutex_t* mutex)
 
 int pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
-    if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
-        mutex->level--;
-        return 0;
-    }
-    mutex->owner = 0;
-    mutex->lock = 0;
-    return 0;
+    return __pthread_mutex_unlock(mutex);
 }
 
 int pthread_mutexattr_init(pthread_mutexattr_t* attr)
@@ -922,9 +898,12 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
     ASSERT_NOT_REACHED();
 }
 
-int pthread_atfork(void (*)(void), void (*)(void), void (*)(void))
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
 {
-    ASSERT_NOT_REACHED();
+    __pthread_fork_atfork_register_prepare(prepare);
+    __pthread_fork_atfork_register_parent(parent);
+    __pthread_fork_atfork_register_child(child);
+    return 0;
 }
 
 } // extern "C"
