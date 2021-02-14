@@ -97,7 +97,7 @@ void LookupServer::load_etc_hosts()
         };
         auto raw_addr = addr.to_in_addr_t();
 
-        auto name = fields[1];
+        DNSName name = fields[1];
         m_etc_hosts.set(name, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
         IPv4Address reverse_addr {
@@ -121,7 +121,7 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 
     Vector<String> responses;
 
-    if (auto known_host = m_etc_hosts.get(name.as_string()); known_host.has_value()) {
+    if (auto known_host = m_etc_hosts.get(name); known_host.has_value()) {
         responses.append(known_host.value());
     } else if (!name.as_string().is_empty()) {
         for (auto& nameserver : m_nameservers) {
@@ -155,7 +155,7 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 
 Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
-    if (auto cached_answers = m_lookup_cache.get(name.as_string()); cached_answers.has_value()) {
+    if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
         Vector<String> responses;
         for (auto& answer : cached_answers.value()) {
             if (answer.type() == record_type && !answer.has_expired()) {
@@ -270,9 +270,9 @@ void LookupServer::put_in_cache(const DNSAnswer& answer)
     if (m_lookup_cache.size() >= 256)
         m_lookup_cache.remove(m_lookup_cache.begin());
 
-    auto it = m_lookup_cache.find(answer.name().as_string());
+    auto it = m_lookup_cache.find(answer.name());
     if (it == m_lookup_cache.end())
-        m_lookup_cache.set(answer.name().as_string(), { answer });
+        m_lookup_cache.set(answer.name(), { answer });
     else
         it->value.append(answer);
 }

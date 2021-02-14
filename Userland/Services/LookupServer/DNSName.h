@@ -43,6 +43,12 @@ public:
 
     void randomize_case();
 
+    class Traits : public AK::Traits<DNSName> {
+    public:
+        static unsigned hash(const DNSName& name);
+        static bool equals(const DNSName&, const DNSName&);
+    };
+
 private:
     String m_name;
 };
