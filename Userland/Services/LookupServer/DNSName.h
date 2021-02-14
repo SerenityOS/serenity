@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/String.h>
 
 namespace LookupServer {
@@ -42,5 +43,7 @@ public:
 private:
     String m_name;
 };
+
+OutputStream& operator<<(OutputStream& stream, const DNSName&);
 
 }

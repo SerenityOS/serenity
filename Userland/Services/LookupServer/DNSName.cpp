@@ -26,6 +26,7 @@
  */
 
 #include "DNSName.h"
+#include <AK/Vector.h>
 
 namespace LookupServer {
 
@@ -67,6 +68,17 @@ DNSName DNSName::parse(const u8* data, size_t& offset, size_t max_offset, size_t
             offset += b;
         }
     }
+}
+
+OutputStream& operator<<(OutputStream& stream, const DNSName& name)
+{
+    auto parts = name.as_string().split_view('.');
+    for (auto& part : parts) {
+        stream << (u8)part.length();
+        stream << part.bytes();
+    }
+    stream << '\0';
+    return stream;
 }
 
 }
