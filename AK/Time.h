@@ -27,6 +27,12 @@
 #pragma once
 
 #include <AK/Platform.h>
+#include <AK/Types.h>
+
+// Kernel and Userspace pull in the definitions from different places.
+// Avoid trying to figure out which one.
+struct timeval;
+struct timespec;
 
 namespace AK {
 
@@ -65,6 +71,46 @@ inline int years_to_days_since_epoch(int year)
         days -= days_in_year(current_year);
     return days;
 }
+
+/*
+ * Represents a time amount in a "safe" way.
+ * Minimum: 0 seconds, 0 nanoseconds
+ * Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
+ * If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
+ * Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
+ * Outputs (e.g. from 'to_timeval') are always in normal form.
+ */
+class Time {
+public:
+    Time(const Time&) = default;
+
+    static Time from_seconds(i64 seconds) { return Time(seconds, 0); };
+    static Time from_timespec(const struct timespec&);
+    static Time from_timeval(const struct timeval&);
+    static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
+    static Time zero() { return Time(0, 0); };
+    static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
+
+    timespec to_timespec() const;
+    timeval to_timeval() const;
+
+    bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
+    bool operator!=(const Time& other) const { return !(*this == other); }
+    Time operator+(const Time& other) const;
+    Time operator-(const Time& other) const;
+
+private:
+    explicit Time(i64 seconds, u32 nanoseconds)
+        : m_seconds(seconds)
+        , m_nanoseconds(nanoseconds)
+    {
+    }
+
+    static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
+
+    i64 m_seconds;
+    u32 m_nanoseconds; // Always less than 1'000'000'000
+};
 
 template<typename TimevalType>
 inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType& result)
@@ -178,6 +224,7 @@ using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
 using AK::is_leap_year;
+using AK::Time;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
