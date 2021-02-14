@@ -120,6 +120,7 @@ private:
     virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;
     virtual void handle(const Messages::WindowServer::WM_PopupWindowMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> handle(const Messages::WindowServer::SetWindowHasAlphaChannel&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> handle(const Messages::WindowServer::SetWindowAlphaHitThreshold&) override;
     virtual OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> handle(const Messages::WindowServer::MoveWindowToFront&) override;
     virtual OwnPtr<Messages::WindowServer::SetFullscreenResponse> handle(const Messages::WindowServer::SetFullscreen&) override;
     virtual void handle(const Messages::WindowServer::AsyncSetWallpaper&) override;

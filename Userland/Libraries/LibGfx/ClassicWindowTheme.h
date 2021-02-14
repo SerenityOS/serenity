@@ -52,6 +52,7 @@ public:
     {
         return compute_frame_colors(state, palette).uses_alpha();
     }
+    virtual float frame_alpha_hit_threshold(WindowState) const override { return 1.0f; }
 
 private:
     struct FrameColors {

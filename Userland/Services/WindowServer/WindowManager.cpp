@@ -726,7 +726,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 
     hovered_window = nullptr;
     for_each_visible_window_from_front_to_back([&](auto& window) {
-        if (window.frame().rect().contains(event.position())) {
+        if (window.hit_test(event.position())) {
             hovered_window = &window;
             return IterationDecision::Break;
         }
@@ -940,7 +940,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         }
 
         for_each_visible_window_from_front_to_back([&](auto& window) {
-            if (window.frame().rect().contains(event.position())) {
+            if (window.hit_test(event.position())) {
                 hovered_window = &window;
                 return IterationDecision::Break;
             }
@@ -977,7 +977,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 return;
             }
 
-            ASSERT(window.frame().rect().contains(event.position()));
+            ASSERT(window.hit_test(event.position()));
             if (event.type() == Event::MouseDown) {
                 // We're clicking on something that's blocked by a modal window.
                 // Flash the modal window to let the user know about it.
@@ -990,8 +990,12 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     set_active_window(&window);
             }
 
-            // Well okay, let's see if we're hitting the frame or the window inside the frame.
-            if (window.rect().contains(event.position())) {
+            if (window.frame().hit_test(event.position())) {
+                // We are hitting the frame, pass the event along to WindowFrame.
+                window.frame().on_mouse_event(event.translated(-window.frame().rect().location()));
+                event_window_with_frame = &window;
+            } else if (window.hit_test(event.position(), false)) {
+                // We are hitting the window content
                 hovered_window = &window;
                 if (!window.global_cursor_tracking() && !window.blocking_modal_window()) {
                     auto translated_event = event.translated(-window.position());
@@ -1001,20 +1005,14 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                         m_active_input_tracking_window = window;
                     }
                 }
-                return;
             }
-
-            // We are hitting the frame, pass the event along to WindowFrame.
-            window.frame().on_mouse_event(event.translated(-window.frame().rect().location()));
-            event_window_with_frame = &window;
         };
 
         if (auto* fullscreen_window = active_fullscreen_window()) {
             process_mouse_event_for_window(*fullscreen_window);
         } else {
             for_each_visible_window_from_front_to_back([&](Window& window) {
-                auto window_frame_rect = window.frame().rect();
-                if (!window_frame_rect.contains(event.position()))
+                if (!window.hit_test(event.position()))
                     return IterationDecision::Continue;
                 process_mouse_event_for_window(window);
                 return IterationDecision::Break;
