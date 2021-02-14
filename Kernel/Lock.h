@@ -58,10 +58,10 @@ public:
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
     void restore_lock(Mode, u32);
-    bool is_locked() const { return m_mode != Mode::Unlocked; }
+    [[nodiscard]] bool is_locked() const { return m_mode != Mode::Unlocked; }
     void clear_waiters();
 
-    const char* name() const { return m_name; }
+    [[nodiscard]] const char* name() const { return m_name; }
 
     static const char* mode_to_string(Mode mode)
     {
@@ -149,10 +149,10 @@ public:
         : m_resource(move(resource))
     {
     }
-    Lock& lock() { return m_lock; }
-    T& resource() { return m_resource; }
+    [[nodiscard]] Lock& lock() { return m_lock; }
+    [[nodiscard]] T& resource() { return m_resource; }
 
-    T lock_and_copy()
+    [[nodiscard]] T lock_and_copy()
     {
         LOCKER(m_lock);
         return m_resource;
