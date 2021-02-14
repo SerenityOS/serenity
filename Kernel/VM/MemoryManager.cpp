@@ -46,6 +46,8 @@ extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
 extern FlatPtr start_of_kernel_data;
 extern FlatPtr end_of_kernel_bss;
+extern FlatPtr start_of_ro_after_init;
+extern FlatPtr end_of_ro_after_init;
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
@@ -118,6 +120,18 @@ void MemoryManager::protect_kernel_image()
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
+    }
+}
+
+void MemoryManager::protect_readonly_after_init_memory()
+{
+    ScopedSpinLock mm_lock(s_mm_lock);
+    ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+    // Disable writing to the .ro_after_init section
+    for (auto i = (FlatPtr)&start_of_ro_after_init; i < (FlatPtr)&end_of_ro_after_init; i += PAGE_SIZE) {
+        auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        pte.set_writable(false);
+        flush_tlb(&kernel_page_directory(), VirtualAddress(i));
     }
 }
 

@@ -34,6 +34,8 @@
 #include <Kernel/VirtualAddress.h>
 #include <LibC/sys/arch/i386/regs.h>
 
+#define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
+
 #define PAGE_SIZE 4096
 #define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
 #define PAGE_MASK ((FlatPtr)0xfffff000u)

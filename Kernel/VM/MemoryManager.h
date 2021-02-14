@@ -141,6 +141,8 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
+    void protect_readonly_after_init_memory();
+
     static void enter_process_paging_scope(Process&);
     static void enter_space(Space&);
 
