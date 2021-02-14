@@ -17,6 +17,7 @@ set(LIBC_SOURCES
     mntent.cpp
     netdb.cpp
     poll.cpp
+    pthread_integration.cpp
     pwd.cpp
     qsort.cpp
     scanf.cpp

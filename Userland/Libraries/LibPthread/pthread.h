@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <bits/pthread_integration.h>
 #include <sched.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
@@ -75,13 +76,11 @@ int pthread_setspecific(pthread_key_t key, const void* value);
 int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param);
 int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param);
 
-#define PTHREAD_MUTEX_NORMAL 0
-#define PTHREAD_MUTEX_RECURSIVE 1
+#define PTHREAD_MUTEX_NORMAL __PTHREAD_MUTEX_NORMAL
+#define PTHREAD_MUTEX_RECURSIVE __PTHREAD_MUTEX_RECURSIVE
 #define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL
-#define PTHREAD_MUTEX_INITIALIZER      \
-    {                                  \
-        0, 0, 0, PTHREAD_MUTEX_DEFAULT \
-    }
+#define PTHREAD_MUTEX_INITIALIZER __PTHREAD_MUTEX_INITIALIZER
+
 #define PTHREAD_COND_INITIALIZER     \
     {                                \
         0, 0, CLOCK_MONOTONIC_COARSE \
