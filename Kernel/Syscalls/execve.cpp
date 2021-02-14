@@ -90,7 +90,10 @@ static bool validate_stack_size(const Vector<String>& arguments, const Vector<St
 
 static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, Vector<String> arguments, Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
 {
-    FlatPtr new_esp = region.vaddr().offset(Thread::default_userspace_stack_size).get();
+    FlatPtr new_esp = region.range().end().get();
+
+    // Add some bits of randomness to the user stack pointer.
+    new_esp -= round_up_to_power_of_two(get_fast_random<u32>() % 4096, 16);
 
     auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
