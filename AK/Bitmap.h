@@ -82,6 +82,7 @@ public:
     }
 
     size_t size() const { return m_size; }
+    size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
     bool get(size_t index) const
     {
         ASSERT(index < m_size);
@@ -523,8 +524,6 @@ public:
     static constexpr u32 max_size = 0xffffffff;
 
 private:
-    size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
-
     u8* m_data { nullptr };
     size_t m_size { 0 };
     bool m_owned { false };
