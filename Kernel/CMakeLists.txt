@@ -306,7 +306,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE -fno-rtti -ffreestanding -fbu
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-asynchronous-unwind-tables")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
+if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
+endif()
 
 # Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
 # is not currently meant to be used, besides when developing Kernel ASAN support.
@@ -329,7 +331,6 @@ file(GENERATE OUTPUT linker.ld INPUT linker.ld)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     include_directories(/usr/local/include/c++/10.2.0/)
-    include_directories(/usr/local/include/c++/10.2.0/${SERENITY_ARCH}-pc-serenity/)
 else()
     include_directories(../Toolchain/Local/${SERENITY_ARCH}/${SERENITY_ARCH}-pc-serenity/include/c++/10.2.0/)
     include_directories(../Toolchain/Local/${SERENITY_ARCH}/${SERENITY_ARCH}-pc-serenity/include/c++/10.2.0/${SERENITY_ARCH}-pc-serenity/)
