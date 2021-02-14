@@ -228,9 +228,6 @@ public:
     Region* m_next { nullptr };
     Region* m_prev { nullptr };
 
-    // NOTE: These are public so we can make<> them.
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, u8 access, Cacheable, bool shared);
-
     bool remap_vmobject_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
@@ -247,6 +244,8 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, u8 access, Cacheable, bool shared);
+
     bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
 
     void set_access_bit(Access access, bool b)
