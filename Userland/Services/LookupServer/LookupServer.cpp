@@ -79,6 +79,19 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
+    // The TTL we return for static data from /etc/hosts.
+    // The value here is 1 day.
+    static constexpr u32 static_ttl = 86400;
+
+    auto add_answer = [this](const DNSName& name, unsigned short record_type, String data) {
+        auto it = m_etc_hosts.find(name);
+        if (it == m_etc_hosts.end()) {
+            m_etc_hosts.set(name, {});
+            it = m_etc_hosts.find(name);
+        }
+        it->value.empend(name, record_type, (u16)C_IN, static_ttl, data);
+    };
+
     auto file = Core::File::construct("/etc/hosts");
     if (!file->open(Core::IODevice::ReadOnly))
         return;
@@ -98,7 +111,7 @@ void LookupServer::load_etc_hosts()
         auto raw_addr = addr.to_in_addr_t();
 
         DNSName name = fields[1];
-        m_etc_hosts.set(name, String { (const char*)&raw_addr, sizeof(raw_addr) });
+        add_answer(name, T_A, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
         IPv4Address reverse_addr {
             (u8)atoi(sections[3].characters()),
@@ -109,7 +122,7 @@ void LookupServer::load_etc_hosts()
         StringBuilder builder;
         builder.append(reverse_addr.to_string());
         builder.append(".in-addr.arpa");
-        m_etc_hosts.set(builder.to_string(), name);
+        add_answer(builder.to_string(), T_PTR, name.as_string());
     }
 }
 
@@ -121,9 +134,16 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 
     Vector<String> responses;
 
-    if (auto known_host = m_etc_hosts.get(name); known_host.has_value()) {
-        responses.append(known_host.value());
-    } else if (!name.as_string().is_empty()) {
+    if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
+        for (auto& answer : local_answers.value()) {
+            if (answer.type() == record_type)
+                responses.append(answer.name().as_string());
+        }
+        if (!responses.is_empty())
+            return responses;
+    }
+
+    if (!name.as_string().is_empty()) {
         for (auto& nameserver : m_nameservers) {
 #if LOOKUPSERVER_DEBUG
             dbgln("Doing lookup using nameserver '{}'", nameserver);

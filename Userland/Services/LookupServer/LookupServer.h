@@ -52,7 +52,7 @@ private:
 
     RefPtr<Core::LocalServer> m_local_server;
     Vector<String> m_nameservers;
-    HashMap<DNSName, String, DNSName::Traits> m_etc_hosts;
+    HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_etc_hosts;
     HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_lookup_cache;
 };
 
