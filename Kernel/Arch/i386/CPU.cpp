@@ -58,8 +58,8 @@ extern FlatPtr end_of_ro_after_init;
 
 namespace Kernel {
 
-static DescriptorTablePointer s_idtr;
-static Descriptor s_idt[256];
+READONLY_AFTER_INIT static DescriptorTablePointer s_idtr;
+READONLY_AFTER_INIT static Descriptor s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
