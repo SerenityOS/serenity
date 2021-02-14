@@ -70,6 +70,13 @@ DNSName DNSName::parse(const u8* data, size_t& offset, size_t max_offset, size_t
     }
 }
 
+size_t DNSName::serialized_size() const
+{
+    if (m_name.is_empty())
+        return 1;
+    return m_name.length() + 2;
+}
+
 OutputStream& operator<<(OutputStream& stream, const DNSName& name)
 {
     auto parts = name.as_string().split_view('.');

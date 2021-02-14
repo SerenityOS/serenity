@@ -92,8 +92,14 @@ ByteBuffer DNSPacket::to_byte_buffer() const
         stream << htons(answer.type());
         stream << htons(answer.class_code());
         stream << htonl(answer.ttl());
-        stream << htons(answer.record_data().length());
-        stream << answer.record_data().bytes();
+        if (answer.type() == T_PTR) {
+            DNSName name { answer.record_data() };
+            stream << htons(name.serialized_size());
+            stream << name;
+        } else {
+            stream << htons(answer.record_data().length());
+            stream << answer.record_data().bytes();
+        }
     }
 
     return stream.copy_into_contiguous_buffer();
