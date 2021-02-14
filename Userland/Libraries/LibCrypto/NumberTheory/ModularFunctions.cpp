@@ -258,7 +258,7 @@ static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInte
         return n == 2;
     }
 
-    for (auto a : tests) {
+    for (auto& a : tests) {
         // Technically: ASSERT(2 <= a && a <= n - 2)
         ASSERT(a < n);
         auto x = ModularPower(a, d, n);
