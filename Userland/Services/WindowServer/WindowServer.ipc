@@ -41,6 +41,7 @@ endpoint WindowServer = 2
         bool frameless,
         bool accessory,
         float opacity,
+        float alpha_hit_threshold,
         Gfx::IntSize base_size,
         Gfx::IntSize size_increment,
         Optional<Gfx::IntSize> resize_aspect_ratio,
@@ -69,6 +70,8 @@ endpoint WindowServer = 2
 
     SetGlobalCursorTracking(i32 window_id, bool enabled) => ()
     SetWindowOpacity(i32 window_id, float opacity) => ()
+
+    SetWindowAlphaHitThreshold(i32 window_id, float threshold) => ()
 
     SetWindowBackingStore(i32 window_id, i32 bpp, i32 pitch, IPC::File anon_file, i32 serial, bool has_alpha_channel, Gfx::IntSize size, bool flush_immediately) => ()
 

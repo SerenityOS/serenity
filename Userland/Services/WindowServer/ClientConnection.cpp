@@ -463,6 +463,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         window->recalculate_rect();
     }
     window->set_opacity(message.opacity());
+    window->set_alpha_hit_threshold(message.alpha_hit_threshold());
     window->set_size_increment(message.size_increment());
     window->set_base_size(message.base_size());
     window->set_resize_aspect_ratio(message.resize_aspect_ratio());
@@ -634,6 +635,17 @@ OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnectio
     }
     it->value->set_has_alpha_channel(message.has_alpha_channel());
     return make<Messages::WindowServer::SetWindowHasAlphaChannelResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowAlphaHitThreshold& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowAlphaHitThreshold: Bad window ID");
+        return {};
+    }
+    it->value->set_alpha_hit_threshold(message.threshold());
+    return make<Messages::WindowServer::SetWindowAlphaHitThresholdResponse>();
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetActiveWindow& message)

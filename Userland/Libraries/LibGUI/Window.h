@@ -72,6 +72,9 @@ public:
     void set_opacity(float);
     float opacity() const { return m_opacity_when_windowless; }
 
+    void set_alpha_hit_threshold(float);
+    float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
+
     WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
 
@@ -238,6 +241,7 @@ private:
     RefPtr<Gfx::Bitmap> m_custom_cursor;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
+    float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
     WeakPtr<Widget> m_focused_widget;
     WeakPtr<Widget> m_global_cursor_tracking_widget;

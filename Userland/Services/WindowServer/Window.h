@@ -145,6 +145,13 @@ public:
     float opacity() const { return m_opacity; }
     void set_opacity(float);
 
+    float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
+    void set_alpha_hit_threshold(float threshold)
+    {
+        m_alpha_hit_threshold = threshold;
+    }
+    bool hit_test(const Gfx::IntPoint&, bool include_frame = true) const;
+
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
     int width() const { return m_rect.width(); }
@@ -365,6 +372,7 @@ private:
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
+    float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
     NonnullRefPtr<Gfx::Bitmap> m_icon;
