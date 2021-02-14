@@ -167,7 +167,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
 
     size_t executable_size = inode.size();
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF memory range calculation", Region::Access::Read);
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, page_round_up(executable_size), "ELF memory range calculation", Region::Access::Read);
     if (!region) {
         dbgln("Could not allocate memory for ELF");
         return ENOMEM;
@@ -203,7 +203,7 @@ static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_pro
     constexpr FlatPtr minimum_interpreter_load_offset_randomization_size = 10 * MiB;
 
     auto random_load_offset_in_range([](auto start, auto size) {
-        return PAGE_ROUND_DOWN(start + get_good_random<FlatPtr>() % size);
+        return page_round_down(start + get_good_random<FlatPtr>() % size);
     });
 
     if (main_program_header.e_type == ET_DYN) {
@@ -263,7 +263,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
 
     size_t executable_size = inode.size();
 
-    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(executable_size), "ELF loading", Region::Access::Read);
+    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, page_round_up(executable_size), "ELF loading", Region::Access::Read);
     if (!executable_region) {
         dbgln("Could not allocate memory for ELF loading");
         return ENOMEM;

@@ -57,7 +57,7 @@ Space::~Space()
 Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
-    size = PAGE_ROUND_UP(size);
+    size = page_round_up(size);
     if (vaddr.is_null())
         return page_directory().range_allocator().allocate_anywhere(size, alignment);
     return page_directory().range_allocator().allocate_specific(vaddr, size);
@@ -137,7 +137,7 @@ Region* Space::find_region_from_range(const Range& range)
     if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
         return m_region_lookup_cache.region.unsafe_ptr();
 
-    size_t size = PAGE_ROUND_UP(range.size());
+    size_t size = page_round_up(range.size());
     for (auto& region : m_regions) {
         if (region.vaddr() == range.base() && region.size() == size) {
             m_region_lookup_cache.range = range;

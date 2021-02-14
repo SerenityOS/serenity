@@ -36,7 +36,7 @@ MappedROM map_bios()
     MappedROM mapping;
     mapping.size = 128 * KiB;
     mapping.paddr = PhysicalAddress(0xe0000);
-    mapping.region = MM.allocate_kernel_region(mapping.paddr, PAGE_ROUND_UP(mapping.size), {}, Region::Access::Read);
+    mapping.region = MM.allocate_kernel_region(mapping.paddr, page_round_up(mapping.size), {}, Region::Access::Read);
     return mapping;
 }
 
@@ -49,7 +49,7 @@ MappedROM map_ebda()
     size_t ebda_size = *ebda_length_ptr;
 
     MappedROM mapping;
-    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), PAGE_ROUND_UP(ebda_size), {}, Region::Access::Read);
+    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), page_round_up(ebda_size), {}, Region::Access::Read);
     mapping.offset = ebda_paddr.offset_in_page();
     mapping.size = ebda_size;
     mapping.paddr = ebda_paddr;

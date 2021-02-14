@@ -160,7 +160,10 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (alignment & ~PAGE_MASK)
         return (void*)-EINVAL;
 
-    if (!is_user_range(VirtualAddress(addr), PAGE_ROUND_UP(size)))
+    if (page_round_up_would_wrap(size))
+        return (void*)-EINVAL;
+
+    if (!is_user_range(VirtualAddress(addr), page_round_up(size)))
         return (void*)-EFAULT;
 
     String name;
@@ -204,7 +207,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     Optional<Range> range;
 
     if (map_randomized) {
-        range = space().page_directory().range_allocator().allocate_randomized(PAGE_ROUND_UP(size), alignment);
+        range = space().page_directory().range_allocator().allocate_randomized(page_round_up(size), alignment);
     } else {
         range = space().allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.has_value()) {
@@ -272,7 +275,10 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         REQUIRE_PROMISE(prot_exec);
     }
 
-    Range range_to_mprotect = { VirtualAddress((FlatPtr)addr & PAGE_MASK), PAGE_ROUND_UP(size) };
+    if (page_round_up_would_wrap(size))
+        return -EINVAL;
+
+    Range range_to_mprotect = { VirtualAddress((FlatPtr)addr & PAGE_MASK), page_round_up(size) };
 
     if (!range_to_mprotect.size())
         return -EINVAL;
@@ -343,7 +349,10 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
-    Range range_to_madvise { VirtualAddress((FlatPtr)address & PAGE_MASK), PAGE_ROUND_UP(size) };
+    if (page_round_up_would_wrap(size))
+        return -EINVAL;
+
+    Range range_to_madvise { VirtualAddress((FlatPtr)address & PAGE_MASK), page_round_up(size) };
 
     if (!range_to_madvise.size())
         return -EINVAL;
@@ -415,7 +424,10 @@ int Process::sys$munmap(void* addr, size_t size)
     if (!size)
         return -EINVAL;
 
-    Range range_to_unmap { VirtualAddress(addr), PAGE_ROUND_UP(size) };
+    if (page_round_up_would_wrap(size))
+        return -EINVAL;
+
+    Range range_to_unmap { VirtualAddress(addr), page_round_up(size) };
 
     if (!is_user_range(range_to_unmap))
         return -EFAULT;
