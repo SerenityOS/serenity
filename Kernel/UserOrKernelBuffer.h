@@ -36,7 +36,7 @@
 
 namespace Kernel {
 
-class UserOrKernelBuffer {
+class [[nodiscard]] UserOrKernelBuffer {
 public:
     UserOrKernelBuffer() = delete;
 
@@ -61,10 +61,10 @@ public:
         return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
     }
 
-    bool is_kernel_buffer() const;
-    const void* user_or_kernel_ptr() const { return m_buffer; }
+    [[nodiscard]] bool is_kernel_buffer() const;
+    [[nodiscard]] const void* user_or_kernel_ptr() const { return m_buffer; }
 
-    UserOrKernelBuffer offset(ssize_t offset) const
+    [[nodiscard]] UserOrKernelBuffer offset(ssize_t offset) const
     {
         if (!m_buffer)
             return *this;
@@ -74,7 +74,7 @@ public:
         return offset_buffer;
     }
 
-    String copy_into_string(size_t size) const;
+    [[nodiscard]] String copy_into_string(size_t size) const;
     [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
     [[nodiscard]] bool write(const void* src, size_t len)
     {
