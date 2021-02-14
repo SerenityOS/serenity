@@ -62,6 +62,11 @@ LookupServer::LookupServer()
 
     load_etc_hosts();
 
+    if (config->read_bool_entry("DNS", "EnableServer")) {
+        m_dns_server = DNSServer::construct(this);
+        // TODO: drop root privileges here.
+    }
+
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
         auto socket = m_local_server->accept();
