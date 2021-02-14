@@ -134,6 +134,7 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
 
     Vector<String> responses;
 
+    // First, try local data.
     if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
         for (auto& answer : local_answers.value()) {
             if (answer.type() == record_type)
@@ -143,41 +144,10 @@ Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_t
             return responses;
     }
 
-    if (!name.as_string().is_empty()) {
-        for (auto& nameserver : m_nameservers) {
-#if LOOKUPSERVER_DEBUG
-            dbgln("Doing lookup using nameserver '{}'", nameserver);
-#endif
-            bool did_get_response = false;
-            int retries = 3;
-            do {
-                responses = lookup(name, nameserver, did_get_response, record_type);
-                if (did_get_response)
-                    break;
-            } while (--retries);
-            if (!responses.is_empty()) {
-                break;
-            } else {
-                if (!did_get_response)
-                    dbgln("Never got a response from '{}', trying next nameserver", nameserver);
-                else
-                    dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
-            }
-        }
-        if (responses.is_empty()) {
-            fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
-            return {};
-        }
-    }
-
-    return move(responses);
-}
-
-Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
-{
+    // Second, try our cache.
     if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
-        Vector<String> responses;
         for (auto& answer : cached_answers.value()) {
+            // TODO: Actually remove expired answers from the cache.
             if (answer.type() == record_type && !answer.has_expired()) {
 #if LOOKUPSERVER_DEBUG
                 dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
@@ -189,6 +159,37 @@ Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserve
             return responses;
     }
 
+    // Third, ask the upstream nameservers.
+    for (auto& nameserver : m_nameservers) {
+#if LOOKUPSERVER_DEBUG
+        dbgln("Doing lookup using nameserver '{}'", nameserver);
+#endif
+        bool did_get_response = false;
+        int retries = 3;
+        do {
+            responses = lookup(name, nameserver, did_get_response, record_type);
+            if (did_get_response)
+                break;
+        } while (--retries);
+        if (!responses.is_empty()) {
+            break;
+        } else {
+            if (!did_get_response)
+                dbgln("Never got a response from '{}', trying next nameserver", nameserver);
+            else
+                dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
+        }
+    }
+    if (responses.is_empty()) {
+        fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
+        return {};
+    }
+
+    return move(responses);
+}
+
+Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+{
     DNSPacket request;
     request.set_is_query();
     request.set_id(arc4random_uniform(UINT16_MAX));
