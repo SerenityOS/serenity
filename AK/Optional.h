@@ -124,20 +124,20 @@ public:
         new (&m_storage) T(forward<Parameters>(parameters)...);
     }
 
-    ALWAYS_INLINE bool has_value() const { return m_has_value; }
+    [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_has_value; }
 
-    ALWAYS_INLINE T& value()
+    [[nodiscard]] ALWAYS_INLINE T& value()
     {
         ASSERT(m_has_value);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
         return value_without_consume_state();
     }
 
-    T release_value()
+    [[nodiscard]] T release_value()
     {
         ASSERT(m_has_value);
         T released_value = move(value());
@@ -146,7 +146,7 @@ public:
         return released_value;
     }
 
-    ALWAYS_INLINE T value_or(const T& fallback) const
+    [[nodiscard]] ALWAYS_INLINE T value_or(const T& fallback) const
     {
         if (m_has_value)
             return value();
