@@ -59,8 +59,13 @@ public:
         HasBeenExecutable = 64,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable, bool shared);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
+    enum class Cacheable {
+        No = 0,
+        Yes,
+    };
+
+    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, u8 access, Cacheable, bool shared);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, u8 access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -79,8 +84,7 @@ public:
     const String& name() const { return m_name; }
     unsigned access() const { return m_access; }
 
-    void set_name(const String& name) { m_name = name; }
-    void set_name(String&& name) { m_name = move(name); }
+    void set_name(String name) { m_name = move(name); }
 
     const VMObject& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
@@ -95,8 +99,8 @@ public:
     bool is_mmap() const { return m_mmap; }
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
-    bool is_user_accessible() const { return m_user_accessible; }
-    bool is_kernel() const { return m_kernel || vaddr().get() >= 0xc0000000; }
+    bool is_user() const { return !is_kernel(); }
+    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= 0xc0000000; }
 
     PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
 
@@ -225,7 +229,7 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable, bool kernel, bool shared);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, u8 access, Cacheable, bool shared);
 
     bool remap_vmobject_page_range(size_t page_index, size_t page_count);
 
@@ -272,11 +276,9 @@ private:
     String m_name;
     u8 m_access { 0 };
     bool m_shared : 1 { false };
-    bool m_user_accessible : 1 { false };
     bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
-    bool m_kernel : 1 { false };
     bool m_syscall_region : 1 { false };
     WeakPtr<Process> m_owner;
 };

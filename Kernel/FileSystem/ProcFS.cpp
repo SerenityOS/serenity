@@ -319,7 +319,7 @@ static bool procfs$pid_vm(InodeIdentifier identifier, KBufferBuilder& builder)
     {
         ScopedSpinLock lock(process->space().get_lock());
         for (auto& region : process->space().regions()) {
-            if (!region.is_user_accessible() && !Process::current()->is_superuser())
+            if (!region.is_user() && !Process::current()->is_superuser())
                 continue;
             auto region_object = array.add_object();
             region_object.add("readable", region.is_readable());
@@ -328,13 +328,11 @@ static bool procfs$pid_vm(InodeIdentifier identifier, KBufferBuilder& builder)
             region_object.add("stack", region.is_stack());
             region_object.add("shared", region.is_shared());
             region_object.add("syscall", region.is_syscall_region());
-            region_object.add("user_accessible", region.is_user_accessible());
             region_object.add("purgeable", region.vmobject().is_anonymous());
             if (region.vmobject().is_anonymous()) {
                 region_object.add("volatile", static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile());
             }
             region_object.add("cacheable", region.is_cacheable());
-            region_object.add("kernel", region.is_kernel());
             region_object.add("address", region.vaddr().get());
             region_object.add("size", region.size());
             region_object.add("amount_resident", region.amount_resident());
