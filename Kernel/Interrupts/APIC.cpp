@@ -309,7 +309,7 @@ void APIC::do_boot_aps()
     // Also account for the data appended to:
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
-    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), PAGE_ROUND_UP(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
+    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
     memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs

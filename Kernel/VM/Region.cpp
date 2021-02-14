@@ -154,8 +154,8 @@ bool Region::is_volatile(VirtualAddress vaddr, size_t size) const
         return false;
 
     auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
-    size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
-    size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+    size_t first_page_index = page_round_down(offset_in_vmobject) / PAGE_SIZE;
+    size_t last_page_index = page_round_up(offset_in_vmobject + size) / PAGE_SIZE;
     return is_volatile_range({ first_page_index, last_page_index - first_page_index });
 }
 
@@ -171,16 +171,16 @@ auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, b
         // partial pages volatile to prevent potentially non-volatile
         // data to be discarded. So rund up the first page and round
         // down the last page.
-        size_t first_page_index = PAGE_ROUND_UP(offset_in_vmobject) / PAGE_SIZE;
-        size_t last_page_index = PAGE_ROUND_DOWN(offset_in_vmobject + size) / PAGE_SIZE;
+        size_t first_page_index = page_round_up(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = page_round_down(offset_in_vmobject + size) / PAGE_SIZE;
         if (first_page_index != last_page_index)
             add_volatile_range({ first_page_index, last_page_index - first_page_index });
     } else {
         // If marking pages as non-volatile, round down the first page
         // and round up the last page to make sure the beginning and
         // end of the range doesn't inadvertedly get discarded.
-        size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
-        size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+        size_t first_page_index = page_round_down(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = page_round_up(offset_in_vmobject + size) / PAGE_SIZE;
         switch (remove_volatile_range({ first_page_index, last_page_index - first_page_index }, was_purged)) {
         case PurgeablePageRanges::RemoveVolatileError::Success:
         case PurgeablePageRanges::RemoveVolatileError::SuccessNoChange:

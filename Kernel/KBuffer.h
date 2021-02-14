@@ -50,7 +50,7 @@ class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
     static RefPtr<KBufferImpl> try_create_with_size(size_t size, u8 access, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), name, access, strategy);
+        auto region = MM.allocate_kernel_region(page_round_up(size), name, access, strategy);
         if (!region)
             return nullptr;
         return adopt(*new KBufferImpl(region.release_nonnull(), size, strategy));
@@ -58,7 +58,7 @@ public:
 
     static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, u8 access, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(bytes.size()), name, access, strategy);
+        auto region = MM.allocate_kernel_region(page_round_up(bytes.size()), name, access, strategy);
         if (!region)
             return nullptr;
         memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
@@ -81,7 +81,7 @@ public:
 
     bool expand(size_t new_capacity)
     {
-        auto new_region = MM.allocate_kernel_region(PAGE_ROUND_UP(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
+        auto new_region = MM.allocate_kernel_region(page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
         if (!new_region)
             return false;
         if (m_region && m_size > 0)

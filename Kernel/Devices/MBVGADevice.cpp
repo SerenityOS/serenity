@@ -58,7 +58,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const R
         return ENODEV;
     if (offset != 0)
         return ENXIO;
-    if (range.size() != PAGE_ROUND_UP(framebuffer_size_in_bytes()))
+    if (range.size() != page_round_up(framebuffer_size_in_bytes()))
         return EOVERFLOW;
 
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());

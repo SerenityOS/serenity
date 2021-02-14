@@ -47,7 +47,7 @@ template<typename T>
 static TypedMapping<T> map_typed(PhysicalAddress paddr, size_t length, u8 access = Region::Access::Read)
 {
     TypedMapping<T> table;
-    table.region = MM.allocate_kernel_region(paddr.page_base(), PAGE_ROUND_UP(length), {}, access);
+    table.region = MM.allocate_kernel_region(paddr.page_base(), page_round_up(length), {}, access);
     table.offset = paddr.offset_in_page();
     return table;
 }

@@ -68,7 +68,7 @@ RamdiskController::RamdiskController()
     size_t count = 0;
     for (auto used_memory_range : MemoryManager::the().used_memory_ranges()) {
         if (used_memory_range.type == UsedMemoryRangeType::BootModule) {
-            size_t length = PAGE_ROUND_UP(used_memory_range.end.get()) - used_memory_range.start.get();
+            size_t length = page_round_up(used_memory_range.end.get()) - used_memory_range.start.get();
             auto region = MemoryManager::the().allocate_kernel_region(used_memory_range.start, length, "Ramdisk", Region::Access::Read | Region::Access::Write);
             m_devices.append(RamdiskDevice::create(*this, move(region), 6, count));
             count++;
