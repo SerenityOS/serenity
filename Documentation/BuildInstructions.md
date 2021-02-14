@@ -116,7 +116,12 @@ Notes:
 
 #### OpenBSD prerequisites
 ```
-$ pkg_add bash gcc git gmake gmp ninja sudo
+$ doas pkg_add bash cmake g++ gcc git gmake gmp ninja
+```
+
+To use `ninja image` and `ninja run`, you'll need Qemu and other utilities:
+```
+$ doas pkg_add coreutils qemu sudo
 ```
 
 #### FreeBSD prerequisites
