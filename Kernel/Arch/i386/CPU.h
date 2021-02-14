@@ -283,7 +283,7 @@ void replace_shared_handler_with_single(GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void flush_idt();
 void load_task_register(u16 selector);
-void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
+[[noreturn]] void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
 #define LSW(x) ((u32)(x)&0xFFFF)
 #define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
