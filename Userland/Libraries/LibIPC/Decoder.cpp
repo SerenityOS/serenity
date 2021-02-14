@@ -171,13 +171,9 @@ bool Decoder::decode(Dictionary& dictionary)
 bool Decoder::decode([[maybe_unused]] File& file)
 {
 #ifdef __serenity__
-    int fd = recvfd(m_sockfd);
+    int fd = recvfd(m_sockfd, O_CLOEXEC);
     if (fd < 0) {
         dbgln("recvfd: {}", strerror(errno));
-        return false;
-    }
-    if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-        dbgln("fcntl(F_SETFD, FD_CLOEXEC): {}", strerror(errno));
         return false;
     }
     file = File(fd, File::ConstructWithReceivedFileDescriptor);

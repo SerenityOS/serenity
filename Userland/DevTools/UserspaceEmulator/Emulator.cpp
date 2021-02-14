@@ -456,7 +456,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_sendfd:
         return virt$sendfd(arg1, arg2);
     case SC_recvfd:
-        return virt$recvfd(arg1);
+        return virt$recvfd(arg1, arg2);
     case SC_open:
         return virt$open(arg1);
     case SC_pipe:
@@ -563,9 +563,9 @@ int Emulator::virt$sendfd(int socket, int fd)
     return syscall(SC_sendfd, socket, fd);
 }
 
-int Emulator::virt$recvfd(int socket)
+int Emulator::virt$recvfd(int socket, int options)
 {
-    return syscall(SC_recvfd, socket);
+    return syscall(SC_recvfd, socket, options);
 }
 
 int Emulator::virt$profiling_enable(pid_t pid)

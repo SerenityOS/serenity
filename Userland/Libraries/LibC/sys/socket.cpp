@@ -151,9 +151,9 @@ int sendfd(int sockfd, int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int recvfd(int sockfd)
+int recvfd(int sockfd, int options)
 {
-    int rc = syscall(SC_recvfd, sockfd);
+    int rc = syscall(SC_recvfd, sockfd, options);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

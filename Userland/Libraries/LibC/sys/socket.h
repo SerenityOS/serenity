@@ -152,7 +152,7 @@ int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 int getsockname(int sockfd, struct sockaddr*, socklen_t*);
 int getpeername(int sockfd, struct sockaddr*, socklen_t*);
 int sendfd(int sockfd, int fd);
-int recvfd(int sockfd);
+int recvfd(int sockfd, int options);
 
 // These three are non-POSIX, but common:
 #define CMSG_ALIGN(x) (((x) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
