@@ -44,6 +44,13 @@ void DNSPacket::add_question(const DNSQuestion& question)
     ASSERT(m_questions.size() <= UINT16_MAX);
 }
 
+void DNSPacket::add_answer(const DNSAnswer& answer)
+{
+    m_answers.empend(answer);
+
+    ASSERT(m_answers.size() <= UINT16_MAX);
+}
+
 ByteBuffer DNSPacket::to_byte_buffer() const
 {
     DNSPacketHeader header;
@@ -54,6 +61,7 @@ ByteBuffer DNSPacket::to_byte_buffer() const
         header.set_is_response();
     // FIXME: What should this be?
     header.set_opcode(0);
+    header.set_response_code(m_code);
     header.set_truncated(false); // hopefully...
     header.set_recursion_desired(true);
     // FIXME: what should the be for requests?

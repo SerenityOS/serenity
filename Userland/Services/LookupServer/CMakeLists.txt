@@ -5,6 +5,7 @@ set(SOURCES
     DNSAnswer.cpp
     DNSName.cpp
     DNSPacket.cpp
+    DNSServer.cpp
     LookupServer.cpp
     LookupServerEndpoint.h
     LookupClientEndpoint.h
