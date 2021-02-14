@@ -41,6 +41,7 @@ set(AK_TEST_SOURCES
     TestString.cpp
     TestStringUtils.cpp
     TestStringView.cpp
+    TestTime.cpp
     TestTrie.cpp
     TestTypeTraits.cpp
     TestTypedTransfer.cpp
