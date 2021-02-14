@@ -18,7 +18,13 @@ its dependencies, the required files that will be downloaded as well as
 configuration/compilation options, and some other things (see
 [Writing ports scripts](#writing-ports-scripts) for details).
 
-To install a certain port, `cd` into its directory and run `./package.sh`
+- To install a certain port, `cd` into its directory and run `./package.sh`
+- To install all available ports, run the `build_all.sh` script in this
+  directory. Pass `clean` as first argument to remove old build files
+  beforehand.
+- To reinstall all currently installed ports, run the `build_installed.sh`
+  script in this directory. This is sometimes required when LibC changes, for
+  example. Pass `clean` as first argument to remove old build files beforehand.
 
 Installed ports are being tracked in `Build/packages.db` (a simple text file).
 You can delete this file at any time, in fact it must be edited or removed
