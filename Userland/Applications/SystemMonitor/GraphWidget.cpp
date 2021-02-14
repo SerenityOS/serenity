@@ -25,6 +25,7 @@
  */
 
 #include "GraphWidget.h"
+#include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
@@ -47,6 +48,8 @@ void GraphWidget::add_value(Vector<int, 1>&& value)
 
 void GraphWidget::paint_event(GUI::PaintEvent& event)
 {
+    const auto& system_palette = GUI::Application::the()->palette();
+
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
@@ -60,8 +63,11 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
         // Draw one set of values at a time
         for (size_t k = 0; k < m_value_format.size(); k++) {
             const auto& format = m_value_format[k];
-            if (format.line_color == Color::Transparent && format.background_color == Color::Transparent)
+            if (format.graph_color_role == ColorRole::Base) {
                 continue;
+            }
+            const auto& line_color = system_palette.color(format.graph_color_role);
+            const auto& background_color = line_color.with_alpha(0x7f);
             m_calculated_points.clear_with_capacity();
             for (size_t i = 0; i < m_values.size(); i++) {
                 int x = inner_rect.right() - (i * 2) + 1;
@@ -83,7 +89,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                 m_calculated_points.append(current_point);
             }
             ASSERT(m_calculated_points.size() <= m_values.size());
-            if (format.background_color != Color::Transparent) {
+            if (format.graph_color_role != ColorRole::Base) {
                 // Fill the background for the area we have values for
                 Gfx::Path path;
                 size_t points_in_path = 0;
@@ -99,11 +105,11 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                         path.line_to({ current_point->x() - 1, inner_rect.bottom() + 1 });
                         path.line_to({ first_point->x() + 1, inner_rect.bottom() + 1 });
                         path.close();
-                        painter.fill_path(path, format.background_color, Gfx::Painter::WindingRule::EvenOdd);
+                        painter.fill_path(path, background_color, Gfx::Painter::WindingRule::EvenOdd);
                     } else if (points_in_path == 1 && current_point) {
                         // Can't fill any area, we only have one data point.
                         // Just draw a vertical line as a "fill"...
-                        painter.draw_line(*current_point, { current_point->x(), inner_rect.bottom() }, format.background_color);
+                        painter.draw_line(*current_point, { current_point->x(), inner_rect.bottom() }, background_color);
                     }
                     path = {};
                     points_in_path = 0;
@@ -128,7 +134,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                 }
                 check_fill_area();
             }
-            if (format.line_color != Color::Transparent) {
+            if (format.graph_color_role != ColorRole::Base) {
                 // Draw the line for the data points we have
                 const Gfx::IntPoint* previous_point = nullptr;
                 for (size_t i = 0; i < m_calculated_points.size(); i++) {
@@ -138,7 +144,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                         continue;
                     }
                     if (previous_point)
-                        painter.draw_line(*previous_point, current_point, format.line_color);
+                        painter.draw_line(*previous_point, current_point, line_color);
                     previous_point = &current_point;
                 }
             }
@@ -150,6 +156,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
         int y = 0;
         for (size_t i = 0; i < min(m_value_format.size(), current_values.size()); i++) {
             const auto& format = m_value_format[i];
+            const auto& graph_color = system_palette.color(format.graph_color_role);
             if (!format.text_formatter)
                 continue;
             auto constrain_rect = inner_rect.shrunken(8, 8);
@@ -158,7 +165,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
             auto text = format.text_formatter(current_values[i]);
             if (format.text_shadow_color != Color::Transparent)
                 painter.draw_text(text_rect.translated(1, 1), text.characters(), Gfx::TextAlignment::CenterRight, format.text_shadow_color);
-            painter.draw_text(text_rect, text.characters(), Gfx::TextAlignment::CenterRight, format.line_color);
+            painter.draw_text(text_rect, text.characters(), Gfx::TextAlignment::CenterRight, graph_color);
             y += text_rect.height() + 4;
         }
     }

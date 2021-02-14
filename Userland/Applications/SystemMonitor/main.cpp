@@ -573,8 +573,6 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
     auto graphs_container = GUI::LazyWidget::construct();
 
     graphs_container->on_first_show = [](GUI::LazyWidget& self) {
-        const auto system_palette = GUI::Application::the()->palette();
-
         self.set_fill_with_background_color(true);
         self.set_background_role(ColorRole::Button);
         self.set_layout<GUI::VerticalBoxLayout>();
@@ -589,13 +587,13 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
             auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
             cpu_graph.set_max(100);
             cpu_graph.set_value_format(0, {
-                                              .line_color = system_palette.syntax_preprocessor_statement(),
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
                                               .text_formatter = [](int value) {
                                                   return String::formatted("Total: {}%", value);
                                               },
                                           });
             cpu_graph.set_value_format(1, {
-                                              .line_color = system_palette.syntax_preprocessor_value(),
+                                              .graph_color_role = ColorRole::SyntaxPreprocessorValue,
                                               .text_formatter = [](int value) {
                                                   return String::formatted("Kernel: {}%", value);
                                               },
@@ -614,19 +612,19 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
         memory_graph.set_stack_values(true);
         memory_graph.set_value_format(0, {
-                                             .line_color = system_palette.syntax_comment(),
+                                             .graph_color_role = ColorRole::SyntaxComment,
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Committed: {} KiB", value);
                                              },
                                          });
         memory_graph.set_value_format(1, {
-                                             .line_color = system_palette.syntax_preprocessor_statement(),
+                                             .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Allocated: {} KiB", value);
                                              },
                                          });
         memory_graph.set_value_format(2, {
-                                             .line_color = system_palette.syntax_preprocessor_value(),
+                                             .graph_color_role = ColorRole::SyntaxPreprocessorValue,
                                              .text_formatter = [&memory_graph](int value) {
                                                  return String::formatted("Kernel heap: {} KiB", value);
                                              },
