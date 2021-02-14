@@ -784,11 +784,11 @@ u32 read_dr6()
     return dr6;
 }
 
-FPUState Processor::s_clean_fpu_state;
+READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
-static Vector<Processor*>* s_processors;
+READONLY_AFTER_INIT static Vector<Processor*>* s_processors;
 static SpinLock s_processor_lock;
-volatile u32 Processor::g_total_processors;
+READONLY_AFTER_INIT volatile u32 Processor::g_total_processors;
 static volatile bool s_smp_enabled;
 
 Vector<Processor*>& Processor::processors()
