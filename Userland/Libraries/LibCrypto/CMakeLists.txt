@@ -1,4 +1,7 @@
 set(SOURCES
+    ASN1/ASN1.cpp
+    ASN1/DER.cpp
+    ASN1/PEM.cpp
     Authentication/GHash.cpp
     BigInt/SignedBigInteger.cpp
     BigInt/UnsignedBigInteger.cpp

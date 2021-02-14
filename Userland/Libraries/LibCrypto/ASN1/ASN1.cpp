@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,14 +24,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Span.h>
 #include <LibCrypto/ASN1/ASN1.h>
-#include <LibCrypto/ASN1/DER.h>
 
-namespace Crypto {
+namespace Crypto::ASN1 {
 
-ByteBuffer decode_pem(ReadonlyBytes);
+String kind_name(Kind kind)
+{
+    switch (kind) {
+    case Kind::Eol:
+        return "EndOfList";
+    case Kind::Boolean:
+        return "Boolean";
+    case Kind::Integer:
+        return "Integer";
+    case Kind::BitString:
+        return "BitString";
+    case Kind::OctetString:
+        return "OctetString";
+    case Kind::Null:
+        return "Null";
+    case Kind::ObjectIdentifier:
+        return "ObjectIdentifier";
+    case Kind::IA5String:
+        return "IA5String";
+    case Kind::PrintableString:
+        return "PrintableString";
+    case Kind::Utf8String:
+        return "UTF8String";
+    case Kind::UTCTime:
+        return "UTCTime";
+    case Kind::Sequence:
+        return "Sequence";
+    case Kind::Set:
+        return "Set";
+    }
+
+    return "InvalidKind";
+}
+
+String class_name(Class class_)
+{
+    switch (class_) {
+    case Class::Application:
+        return "Application";
+    case Class::Context:
+        return "Context";
+    case Class::Private:
+        return "Private";
+    case Class::Universal:
+        return "Universal";
+    }
+
+    return "InvalidClass";
+}
+
+String type_name(Type type)
+{
+    switch (type) {
+    case Type::Constructed:
+        return "Constructed";
+    case Type::Primitive:
+        return "Primitive";
+    }
+
+    return "InvalidType";
+}
 
 }

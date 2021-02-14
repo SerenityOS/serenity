@@ -839,7 +839,7 @@ bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes 
     if (certificate_pem_buffer.is_empty() || rsa_key.is_empty()) {
         return true;
     }
-    auto decoded_certificate = Crypto::decode_pem(certificate_pem_buffer, 0);
+    auto decoded_certificate = Crypto::decode_pem(certificate_pem_buffer);
     if (decoded_certificate.is_empty()) {
         dbgln("Certificate not PEM");
         return false;
