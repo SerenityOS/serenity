@@ -28,6 +28,7 @@
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -258,6 +259,12 @@ bool Region::map_individual_page_impl(size_t page_index)
 {
     ASSERT(m_page_directory->get_lock().own_lock());
     auto page_vaddr = vaddr_from_page_index(page_index);
+
+    bool user_allowed = page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr);
+    if (is_mmap() && !user_allowed) {
+        PANIC("About to map mmap'ed page at a kernel address");
+    }
+
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
         return false;
@@ -274,7 +281,7 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(is_writable());
         if (Processor::current().has_feature(CPUFeature::NX))
             pte->set_execute_disabled(!is_executable());
-        pte->set_user_allowed(page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr));
+        pte->set_user_allowed(user_allowed);
     }
     return true;
 }
