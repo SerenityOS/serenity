@@ -1405,6 +1405,10 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     }
 
     u32 kernel_stack_top = thread.kernel_stack_top();
+
+    // Add a random offset between 0-256 (16-byte aligned)
+    kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
+
     u32 stack_top = kernel_stack_top;
 
     // TODO: handle NT?
