@@ -53,11 +53,14 @@ public:
     Optional<IPv4Address> local_address() const;
     Optional<u16> local_port() const;
 
+    int fd() const { return m_fd; }
+
     Function<void()> on_ready_to_receive;
 
-private:
+protected:
     explicit UDPServer(Object* parent = nullptr);
 
+private:
     int m_fd { -1 };
     bool m_bound { false };
     RefPtr<Notifier> m_notifier;
