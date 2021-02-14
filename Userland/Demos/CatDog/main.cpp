@@ -224,6 +224,7 @@ int main(int argc, char** argv)
     window->set_frameless(true);
     window->set_resizable(false);
     window->set_has_alpha_channel(true);
+    window->set_alpha_hit_threshold(1.0f);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& root_widget = window->set_main_widget<MainFrame>();
