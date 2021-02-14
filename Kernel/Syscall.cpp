@@ -26,6 +26,7 @@
 
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/ThreadTracer.h>
@@ -165,9 +166,7 @@ void syscall_handler(TrapFrame* trap)
     static constexpr u32 iopl_mask = 3u << 12;
 
     if ((regs.eflags & (iopl_mask)) != 0) {
-        dbgln("Syscall from process with IOPL != 0");
-        handle_crash(regs, "Non-zero IOPL on syscall entry", SIGSEGV);
-        ASSERT_NOT_REACHED();
+        PANIC("Syscall from process with IOPL != 0");
     }
 
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
