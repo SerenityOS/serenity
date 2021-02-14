@@ -239,7 +239,7 @@ void SB16::handle_irq(const RegisterState&)
 
 void SB16::wait_for_irq()
 {
-    m_irq_queue.wait_on({}, "SB16");
+    m_irq_queue.wait_forever("SB16");
     disable_irq();
 }
 

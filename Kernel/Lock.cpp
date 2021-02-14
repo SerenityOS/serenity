@@ -127,7 +127,7 @@ void Lock::lock(Mode mode)
         }
         m_lock.store(false, AK::memory_order_release);
         dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waiting...", this, m_name);
-        m_queue.wait_on({}, m_name);
+        m_queue.wait_forever(m_name);
         dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waited", this, m_name);
     }
 }

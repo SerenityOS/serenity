@@ -106,7 +106,7 @@ void NetworkTask_main(void*)
     for (;;) {
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
         if (!packet_size) {
-            packet_wait_queue.wait_on({}, "NetworkTask");
+            packet_wait_queue.wait_forever("NetworkTask");
             continue;
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {
