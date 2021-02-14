@@ -347,7 +347,7 @@ public:
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
     int sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
     int sys$sendfd(int sockfd, int fd);
-    int sys$recvfd(int sockfd);
+    int sys$recvfd(int sockfd, int options);
     long sys$sysconf(int name);
     int sys$disown(ProcessID);
     void* sys$allocate_tls(size_t);

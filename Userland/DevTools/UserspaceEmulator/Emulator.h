@@ -171,7 +171,7 @@ private:
     int virt$ftruncate(int fd, off_t);
     mode_t virt$umask(mode_t);
     int virt$anon_create(size_t, int);
-    int virt$recvfd(int);
+    int virt$recvfd(int, int);
     int virt$sendfd(int, int);
     int virt$msyscall(FlatPtr);
 

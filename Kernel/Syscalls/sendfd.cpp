@@ -52,7 +52,7 @@ int Process::sys$sendfd(int sockfd, int fd)
     return local_socket.sendfd(*socket_description, *passing_descriptor);
 }
 
-int Process::sys$recvfd(int sockfd)
+int Process::sys$recvfd(int sockfd, int options)
 {
     REQUIRE_PROMISE(recvfd);
     auto socket_description = file_description(sockfd);
@@ -74,7 +74,11 @@ int Process::sys$recvfd(int sockfd)
     if (received_descriptor_or_error.is_error())
         return received_descriptor_or_error.error();
 
-    m_fds[new_fd].set(*received_descriptor_or_error.value(), 0);
+    u32 fd_flags = 0;
+    if (options & O_CLOEXEC)
+        fd_flags |= FD_CLOEXEC;
+
+    m_fds[new_fd].set(*received_descriptor_or_error.value(), fd_flags);
     return new_fd;
 }
 
