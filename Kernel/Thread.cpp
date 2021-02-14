@@ -46,7 +46,7 @@
 namespace Kernel {
 
 SpinLock<u8> Thread::g_tid_map_lock;
-HashMap<ThreadID, Thread*>* Thread::g_tid_map;
+READONLY_AFTER_INIT HashMap<ThreadID, Thread*>* Thread::g_tid_map;
 
 void Thread::initialize()
 {
