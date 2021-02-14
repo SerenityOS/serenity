@@ -43,6 +43,7 @@
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/SpinLock.h>
@@ -163,8 +164,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
 {
     auto process = Process::current();
     if (!process) {
-        dmesgln("{} with !current", description);
-        Processor::halt();
+        PANIC("{} with !current", description);
     }
 
     // If a process crashed while inspecting another process,
@@ -175,9 +175,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     dump(regs);
 
     if (!(regs.cs & 3)) {
-        dmesgln("Crash in ring 0 :(");
-        dump_backtrace();
-        Processor::halt();
+        PANIC("Crash in ring 0");
     }
 
     cli();
@@ -330,9 +328,7 @@ void debug_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        dmesgln("Debug exception in ring 0");
-        Processor::halt();
-        return;
+        PANIC("Debug exception in ring 0");
     }
     constexpr u8 REASON_SINGLESTEP = 14;
     bool is_reason_singlestep = (read_dr6() & (1 << REASON_SINGLESTEP));
@@ -353,9 +349,7 @@ void breakpoint_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        dmesgln("Breakpoint trap in ring 0");
-        Processor::halt();
-        return;
+        PANIC("Breakpoint trap in ring 0");
     }
     if (auto tracer = process.tracer()) {
         tracer->set_regs(regs);
@@ -376,8 +370,7 @@ void breakpoint_handler(TrapFrame* trap)
             : "=a"(cr3));                                                         \
         asm("movl %%cr4, %%eax"                                                   \
             : "=a"(cr4));                                                         \
-        dbgln("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4); \
-        Processor::halt();                                                        \
+        PANIC("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4); \
     }
 
 EH(2, "Unknown error")
@@ -398,8 +391,7 @@ const DescriptorTablePointer& get_idtr()
 
 static void unimp_trap()
 {
-    dmesgln("Unhandled IRQ");
-    Processor::Processor::halt();
+    PANIC("Unhandled IRQ");
 }
 
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)

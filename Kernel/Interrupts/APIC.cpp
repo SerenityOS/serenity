@@ -36,6 +36,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/APICTimer.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -424,8 +425,7 @@ void APIC::enable(u32 cpu)
 {
     if (cpu >= 8) {
         // TODO: x2apic support?
-        klog() << "SMP support is currently limited to 8 CPUs!";
-        Processor::halt();
+        PANIC("SMP support is currently limited to 8 CPUs!");
     }
 
     // Use the CPU# as logical apic id

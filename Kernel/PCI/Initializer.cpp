@@ -27,11 +27,10 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/PCI/MMIOAccess.h>
+#include <Kernel/Panic.h>
 
 namespace Kernel {
 namespace PCI {
@@ -46,8 +45,7 @@ static Access::Type detect_optimal_access_type(bool mmio_allowed)
     if (test_pci_io())
         return Access::Type::IO;
 
-    klog() << "No PCI bus access method detected!";
-    Processor::halt();
+    PANIC("No PCI bus access method detected!");
 }
 
 void initialize()
