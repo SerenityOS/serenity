@@ -186,7 +186,7 @@ struct KmallocGlobalHeap {
     }
 };
 
-static KmallocGlobalHeap* g_kmalloc_global;
+READONLY_AFTER_INIT static KmallocGlobalHeap* g_kmalloc_global;
 static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
 
 // Treat the heap as logically separate from .bss
@@ -199,7 +199,7 @@ static size_t g_kfree_call_count;
 bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
-static u8* s_end_of_eternal_range;
+READONLY_AFTER_INIT static u8* s_end_of_eternal_range;
 
 static void kmalloc_allocate_backup_memory()
 {
