@@ -172,26 +172,22 @@ void syscall_handler(TrapFrame* trap)
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
-        ASSERT_NOT_REACHED();
     }
 
     auto* calling_region = MM.find_region_from_vaddr(process.space(), VirtualAddress(regs.eip));
     if (!calling_region) {
         dbgln("Syscall from {:p} which has no associated region", regs.eip);
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
-        ASSERT_NOT_REACHED();
     }
 
     if (calling_region->is_writable()) {
         dbgln("Syscall from writable memory at {:p}", regs.eip);
         handle_crash(regs, "Syscall from writable memory", SIGSEGV);
-        ASSERT_NOT_REACHED();
     }
 
     if (process.space().enforces_syscall_regions() && !calling_region->is_syscall_region()) {
         dbgln("Syscall from non-syscall region");
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
-        ASSERT_NOT_REACHED();
     }
 
     process.big_lock().lock();
