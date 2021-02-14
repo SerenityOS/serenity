@@ -113,17 +113,17 @@ void LookupServer::load_etc_hosts()
     }
 }
 
-Vector<String> LookupServer::lookup(const String& name, unsigned short record_type)
+Vector<String> LookupServer::lookup(const DNSName& name, unsigned short record_type)
 {
 #if LOOKUPSERVER_DEBUG
-    dbgln("Got request for '{}'", name);
+    dbgln("Got request for '{}'", name.as_string());
 #endif
 
     Vector<String> responses;
 
-    if (auto known_host = m_etc_hosts.get(name); known_host.has_value()) {
+    if (auto known_host = m_etc_hosts.get(name.as_string()); known_host.has_value()) {
         responses.append(known_host.value());
-    } else if (!name.is_empty()) {
+    } else if (!name.as_string().is_empty()) {
         for (auto& nameserver : m_nameservers) {
 #if LOOKUPSERVER_DEBUG
             dbgln("Doing lookup using nameserver '{}'", nameserver);
@@ -153,15 +153,15 @@ Vector<String> LookupServer::lookup(const String& name, unsigned short record_ty
     return move(responses);
 }
 
-Vector<String> LookupServer::lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
-    if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
+    if (auto it = m_lookup_cache.find(name.as_string()); it != m_lookup_cache.end()) {
         auto& cached_lookup = it->value;
         if (cached_lookup.question.record_type() == record_type) {
             Vector<String> responses;
             for (auto& cached_answer : cached_lookup.answers) {
 #if LOOKUPSERVER_DEBUG
-                dbgln("Cache hit: {} -> {}, expired: {}", hostname, cached_answer.record_data(), cached_answer.has_expired());
+                dbgln("Cache hit: {} -> {}, expired: {}", name.as_string(), cached_answer.record_data(), cached_answer.has_expired());
 #endif
                 if (!cached_answer.has_expired())
                     responses.append(cached_answer.record_data());
@@ -175,7 +175,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
     DNSPacket request;
     request.set_is_query();
     request.set_id(arc4random_uniform(UINT16_MAX));
-    request.add_question(hostname, record_type, should_randomize_case);
+    request.add_question(name.as_string(), record_type, should_randomize_case);
 
     auto buffer = request.to_byte_buffer();
 
@@ -219,7 +219,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
     if (response.code() == DNSPacket::Code::REFUSED) {
         if (should_randomize_case == ShouldRandomizeCase::Yes) {
             // Retry with 0x20 case randomization turned off.
-            return lookup(hostname, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
+            return lookup(name, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
         }
         return {};
     }
@@ -229,13 +229,17 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         return {};
     }
 
+    // Verify the questions in our request and in their response match exactly, including case.
     for (size_t i = 0; i < request.question_count(); ++i) {
         auto& request_question = request.questions()[i];
         auto& response_question = response.questions()[i];
-        if (request_question != response_question) {
+        bool exact_match = request_question.class_code() == response_question.class_code()
+            && request_question.record_type() == response_question.record_type()
+            && request_question.name().as_string() == response_question.name().as_string();
+        if (!exact_match) {
             dbgln("Request and response questions do not match");
-            dbgln("   Request: name=_{}_, type={}, class={}", request_question.name(), response_question.record_type(), response_question.class_code());
-            dbgln("  Response: name=_{}_, type={}, class={}", response_question.name(), response_question.record_type(), response_question.class_code());
+            dbgln("   Request: name=_{}_, type={}, class={}", request_question.name().as_string(), response_question.record_type(), response_question.class_code());
+            dbgln("  Response: name=_{}_, type={}, class={}", response_question.name().as_string(), response_question.record_type(), response_question.class_code());
             return {};
         }
     }
@@ -258,7 +262,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
     if (!cacheable_answers.is_empty()) {
         if (m_lookup_cache.size() >= 256)
             m_lookup_cache.remove(m_lookup_cache.begin());
-        m_lookup_cache.set(hostname, { request.questions()[0], move(cacheable_answers) });
+        m_lookup_cache.set(name.as_string(), { request.questions()[0], move(cacheable_answers) });
     }
     return responses;
 }

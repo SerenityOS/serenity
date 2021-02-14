@@ -27,6 +27,7 @@
 #pragma once
 
 #include "DNSPacket.h"
+#include "DNSName.h"
 #include <LibCore/Object.h>
 
 namespace LookupServer {
@@ -38,13 +39,13 @@ class LookupServer final : public Core::Object {
 
 public:
     static LookupServer& the();
-    Vector<String> lookup(const String& name, unsigned short record_type);
+    Vector<String> lookup(const DNSName& name, unsigned short record_type);
 
 private:
     LookupServer();
 
     void load_etc_hosts();
-    Vector<String> lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
+    Vector<String> lookup(const DNSName& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
         DNSQuestion question;
