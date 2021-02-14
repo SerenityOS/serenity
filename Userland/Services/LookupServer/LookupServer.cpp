@@ -172,7 +172,10 @@ Vector<String> LookupServer::lookup(const DNSName& name, const String& nameserve
     DNSPacket request;
     request.set_is_query();
     request.set_id(arc4random_uniform(UINT16_MAX));
-    request.add_question(name.as_string(), record_type, should_randomize_case);
+    DNSName name_in_question = name;
+    if (should_randomize_case == ShouldRandomizeCase::Yes)
+        name_in_question.randomize_case();
+    request.add_question({ name_in_question, record_type, C_IN });
 
     auto buffer = request.to_byte_buffer();
 
