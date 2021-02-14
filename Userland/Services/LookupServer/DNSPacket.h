@@ -79,7 +79,7 @@ public:
         return m_answers.size();
     }
 
-    void add_question(const String& name, u16 record_type, ShouldRandomizeCase);
+    void add_question(const DNSQuestion&);
 
     enum class Code : u8 {
         NOERROR = 0,
