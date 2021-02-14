@@ -535,6 +535,40 @@ void WindowFrame::layout_buttons()
         m_buttons[i].set_relative_rect(button_rects[i]);
 }
 
+bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
+{
+    if (m_window.is_frameless())
+        return false;
+    auto frame_rect = rect();
+    if (!frame_rect.contains(point))
+        return false;
+    auto window_rect = m_window.rect();
+    if (window_rect.contains(point))
+        return false;
+
+    u8 alpha_threshold = Gfx::WindowTheme::current().frame_alpha_hit_threshold(window_state_for_theme()) * 255;
+    if (alpha_threshold == 0)
+        return true;
+    u8 alpha = 0xff;
+    auto relative_point = point.translated(-render_rect().location());
+    if (point.y() < window_rect.y()) {
+        if (m_top_bottom)
+            alpha = m_top_bottom->get_pixel(relative_point).alpha();
+    } else if (point.y() > window_rect.bottom()) {
+        if (m_top_bottom)
+            alpha = m_top_bottom->get_pixel(relative_point.x(), m_bottom_y + point.y() - window_rect.bottom() - 1).alpha();
+    } else if (point.x() < window_rect.x()) {
+        if (m_left_right)
+            alpha = m_left_right->get_pixel(relative_point.x(), relative_point.y() - m_bottom_y).alpha();
+    } else if (point.x() > window_rect.right()) {
+        if (m_left_right)
+            alpha = m_left_right->get_pixel(m_right_x + point.x() - window_rect.right() - 1, relative_point.y() - m_bottom_y).alpha();
+    } else {
+        return false;
+    }
+    return alpha >= alpha_threshold;
+}
+
 void WindowFrame::on_mouse_event(const MouseEvent& event)
 {
     ASSERT(!m_window.is_fullscreen());

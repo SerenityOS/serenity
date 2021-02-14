@@ -873,4 +873,20 @@ bool Window::is_descendant_of(Window& window) const
     return false;
 }
 
+bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
+{
+    if (!frame().rect().contains(point))
+        return false;
+    if (!rect().contains(point)) {
+        if (include_frame)
+            return frame().hit_test(point);
+        return false;
+    }
+    u8 threshold = alpha_hit_threshold() * 255;
+    if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel())
+        return true;
+    auto color = m_backing_store->get_pixel(point.translated(-rect().location()));
+    return color.alpha() >= threshold;
+}
+
 }
