@@ -263,7 +263,6 @@ void page_fault_handler(TrapFrame* trap)
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {}", VirtualAddress(regs.userspace_esp));
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
-        ASSERT_NOT_REACHED();
     }
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
