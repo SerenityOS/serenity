@@ -41,6 +41,8 @@ public:
     size_t serialized_size() const;
     const String& as_string() const { return m_name; }
 
+    void randomize_case();
+
 private:
     String m_name;
 };
