@@ -169,6 +169,9 @@ void syscall_handler(TrapFrame* trap)
         PANIC("Syscall from process with IOPL != 0");
     }
 
+    // NOTE: We take the big process lock before inspecting memory regions.
+    process.big_lock().lock();
+
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
@@ -190,7 +193,6 @@ void syscall_handler(TrapFrame* trap)
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
     }
 
-    process.big_lock().lock();
     u32 function = regs.eax;
     u32 arg1 = regs.edx;
     u32 arg2 = regs.ecx;
