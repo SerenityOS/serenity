@@ -194,7 +194,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
         }
     }
     if (answers.is_empty()) {
-        fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
+        dbgln("Tried all nameservers but never got a response :(");
         return {};
     }
 
@@ -279,7 +279,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
     }
 
     if (response.answer_count() < 1) {
-        dbgln("LookupServer: Not enough answers ({}) :(", response.answer_count());
+        dbgln("LookupServer: No answers :(");
         return {};
     }
 
