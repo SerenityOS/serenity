@@ -34,8 +34,8 @@ namespace Syscall {
 struct StringArgument;
 }
 
-String copy_string_from_user(const char*, size_t);
-String copy_string_from_user(Userspace<const char*>, size_t);
+[[nodiscard]] String copy_string_from_user(const char*, size_t);
+[[nodiscard]] String copy_string_from_user(Userspace<const char*>, size_t);
 
 [[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val);
 [[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val);
@@ -54,18 +54,18 @@ extern "C" {
 [[nodiscard]] bool memset_user(void*, int, size_t);
 
 void* memcpy(void*, const void*, size_t);
-int strncmp(const char* s1, const char* s2, size_t n);
-char* strstr(const char* haystack, const char* needle);
-int strcmp(char const*, const char*);
-size_t strlen(const char*);
-size_t strnlen(const char*, size_t);
+[[nodiscard]] int strncmp(const char* s1, const char* s2, size_t n);
+[[nodiscard]] char* strstr(const char* haystack, const char* needle);
+[[nodiscard]] int strcmp(char const*, const char*);
+[[nodiscard]] size_t strlen(const char*);
+[[nodiscard]] size_t strnlen(const char*, size_t);
 void* memset(void*, int, size_t);
-int memcmp(const void*, const void*, size_t);
+[[nodiscard]] int memcmp(const void*, const void*, size_t);
 void* memmove(void* dest, const void* src, size_t n);
 const void* memmem(const void* haystack, size_t, const void* needle, size_t);
 
-inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
-inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
+[[nodiscard]] inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
+[[nodiscard]] inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 }
 
 template<typename T>
