@@ -28,6 +28,7 @@
 
 #include <AK/CircularQueue.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/SystemTheme.h>
 
 class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)
@@ -40,8 +41,7 @@ public:
     void add_value(Vector<int, 1>&&);
 
     struct ValueFormat {
-        Color line_color { Color::Transparent };
-        Color background_color { Color::Transparent };
+        Gfx::ColorRole graph_color_role { Gfx::ColorRole::Base };
         Color text_shadow_color { Color::Transparent };
         Function<String(int)> text_formatter;
     };
