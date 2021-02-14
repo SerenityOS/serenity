@@ -27,6 +27,7 @@
 
 #include "DNSName.h"
 #include <AK/Vector.h>
+#include <ctype.h>
 
 namespace LookupServer {
 
@@ -75,6 +76,22 @@ size_t DNSName::serialized_size() const
     if (m_name.is_empty())
         return 1;
     return m_name.length() + 2;
+}
+
+void DNSName::randomize_case()
+{
+    StringBuilder builder;
+    for (char c : m_name) {
+        // Randomize the 0x20 bit in every ASCII character.
+        if (isalpha(c)) {
+            if (arc4random_uniform(2))
+                c |= 0x20;
+            else
+                c &= ~0x20;
+        }
+        builder.append(c);
+    }
+    m_name = builder.to_string();
 }
 
 OutputStream& operator<<(OutputStream& stream, const DNSName& name)
