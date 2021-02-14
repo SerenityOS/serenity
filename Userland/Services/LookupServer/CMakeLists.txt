@@ -3,6 +3,7 @@ compile_ipc(LookupClient.ipc LookupClientEndpoint.h)
 
 set(SOURCES
     DNSAnswer.cpp
+    DNSName.cpp
     DNSPacket.cpp
     LookupServer.cpp
     LookupServerEndpoint.h
