@@ -29,6 +29,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
@@ -418,8 +419,7 @@ bool Scheduler::context_switch(Thread* thread)
     if (thread->process().is_user_process()) {
         auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
         if (iopl != 0) {
-            dbgln("PANIC: Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
-            Processor::halt();
+            PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
         }
     }
 #endif
