@@ -281,7 +281,7 @@ bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
     if (length != other.trimmed_length())
         return false;
 
-    return !__builtin_memcmp(m_words.data(), other.words().data(), length);
+    return !__builtin_memcmp(m_words.data(), other.words().data(), length * (BITS_IN_WORD / 8));
 }
 
 bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
