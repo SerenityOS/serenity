@@ -80,6 +80,7 @@ public:
     }
 
     void add_question(const DNSQuestion&);
+    void add_answer(const DNSAnswer&);
 
     enum class Code : u8 {
         NOERROR = 0,
