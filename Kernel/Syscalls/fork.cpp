@@ -52,6 +52,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_pg = m_pg;
     child->m_umask = m_umask;
     child->m_extra_gids = m_extra_gids;
+    child->m_signal_trampoline = m_signal_trampoline;
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
     child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
