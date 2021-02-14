@@ -56,20 +56,15 @@ set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
 
-find_program(INSTALL_COMMAND ginstall)
-if(NOT INSTALL_COMMAND)
-    set(INSTALL_COMMAND install)
-endif()
-
 add_library(crt0 STATIC crt0.cpp)
 add_custom_command(
     TARGET crt0
-    COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 add_library(crt0_shared STATIC crt0_shared.cpp)
 add_custom_command(
     TARGET crt0_shared
-    COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
 )
 
 set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
@@ -77,7 +72,7 @@ set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
 add_library(ssp STATIC ssp.cpp)
 add_custom_command(
     TARGET ssp
-    COMMAND ${INSTALL_COMMAND} -D $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
 )
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
