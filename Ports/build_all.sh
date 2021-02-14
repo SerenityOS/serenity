@@ -21,7 +21,7 @@ for file in *; do
             if $(./package.sh > /dev/null 2>&1 ); then
                 echo "Built ${dirname}."
             else
-                echo "ERROR: Built ${dirname} not succesful!"
+                echo "ERROR: Build of ${dirname} was not successful!"
                 some_failed=true
             fi
         popd > /dev/null
