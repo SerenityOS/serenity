@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
@@ -33,6 +34,9 @@ namespace LookupServer {
 class DNSName {
 public:
     DNSName(const String&);
+
+    static DNSName parse(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
+
     const String& as_string() const { return m_name; }
 
 private:

@@ -26,6 +26,7 @@
  */
 
 #include "DNSPacket.h"
+#include "DNSName.h"
 #include "DNSPacketHeader.h"
 #include <AK/IPv4Address.h>
 #include <AK/MemoryStream.h>
@@ -108,8 +109,6 @@ ByteBuffer DNSPacket::to_byte_buffer() const
     return stream.copy_into_contiguous_buffer();
 }
 
-static String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
-
 class [[gnu::packed]] DNSRecordWithoutName {
 public:
     DNSRecordWithoutName() { }
@@ -159,7 +158,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     size_t offset = sizeof(DNSPacketHeader);
 
     for (u16 i = 0; i < header.question_count(); i++) {
-        auto name = parse_dns_name(raw_data, offset, raw_size);
+        auto name = DNSName::parse(raw_data, offset, raw_size);
         struct RawDNSAnswerQuestion {
             NetworkOrdered<u16> record_type;
             NetworkOrdered<u16> class_code;
@@ -174,7 +173,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     }
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
-        auto name = parse_dns_name(raw_data, offset, raw_size);
+        auto name = DNSName::parse(raw_data, offset, raw_size);
 
         auto& record = *(const DNSRecordWithoutName*)(&raw_data[offset]);
 
@@ -184,7 +183,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
 
         if (record.type() == T_PTR) {
             size_t dummy_offset = offset;
-            data = parse_dns_name(raw_data, dummy_offset, raw_size);
+            data = DNSName::parse(raw_data, dummy_offset, raw_size).as_string();
         } else if (record.type() == T_A) {
             data = { record.data(), record.data_length() };
         } else {
@@ -199,36 +198,6 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     }
 
     return packet;
-}
-
-String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level)
-{
-    if (recursion_level > 4)
-        return {};
-    Vector<char, 128> buf;
-    while (offset < max_offset) {
-        u8 ch = data[offset];
-        if (ch == '\0') {
-            ++offset;
-            break;
-        }
-        if ((ch & 0xc0) == 0xc0) {
-            if ((offset + 1) >= max_offset)
-                return {};
-            size_t dummy = (ch & 0x3f) << 8 | data[offset + 1];
-            offset += 2;
-            StringBuilder builder;
-            builder.append(buf.data(), buf.size());
-            auto okay = parse_dns_name(data, dummy, max_offset, recursion_level + 1);
-            builder.append(okay);
-            return builder.to_string();
-        }
-        for (size_t i = 0; i < ch; ++i)
-            buf.append(data[offset + i + 1]);
-        buf.append('.');
-        offset += ch + 1;
-    }
-    return String::copy(buf);
 }
 
 }
