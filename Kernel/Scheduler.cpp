@@ -64,10 +64,10 @@ static u32 time_slice_for(const Thread& thread)
     return 2;
 }
 
-Thread* g_finalizer;
-WaitQueue* g_finalizer_wait_queue;
+READONLY_AFTER_INIT Thread* g_finalizer;
+READONLY_AFTER_INIT WaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work { false };
-static Process* s_colonel_process;
+READONLY_AFTER_INIT static Process* s_colonel_process;
 
 struct ThreadReadyQueue {
     IntrusiveList<Thread, &Thread::m_ready_queue_node> thread_list;
@@ -75,7 +75,7 @@ struct ThreadReadyQueue {
 static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
-static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
 
 static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 {
