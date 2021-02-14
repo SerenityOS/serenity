@@ -314,7 +314,7 @@ void APIC::do_boot_aps()
     // Allocate enough stacks for all APs
     Vector<OwnPtr<Region>> apic_ap_stacks;
     for (u32 i = 0; i < aps_to_enable; i++) {
-        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow, true);
+        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
         if (!stack_region) {
             klog() << "APIC: Failed to allocate stack for AP #" << i;
             return;

@@ -38,16 +38,15 @@
 
 namespace Kernel {
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel, bool shared)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, u8 access, Cacheable cacheable, bool shared)
     : PurgeablePageRanges(vmobject)
     , m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
-    , m_name(name)
+    , m_name(move(name))
     , m_access(access | ((access & 0x7) << 4))
     , m_shared(shared)
-    , m_cacheable(cacheable)
-    , m_kernel(kernel)
+    , m_cacheable(cacheable == Cacheable::Yes)
 {
     ASSERT(m_range.base().is_page_aligned());
     ASSERT(m_range.size());
@@ -104,7 +103,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
 
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(
-            &new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access, m_cacheable, m_shared);
+            &new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access, m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
         if (m_vmobject->is_anonymous())
             region->copy_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
@@ -123,7 +122,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
     auto clone_region = Region::create_user_accessible(
-        &new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access, m_cacheable, m_shared);
+        &new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access, m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
     if (m_vmobject->is_anonymous())
         clone_region->copy_purgeable_page_ranges(*this);
     if (m_stack) {
@@ -228,20 +227,17 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable, bool shared)
+NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, u8 access, Cacheable cacheable, bool shared)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false, shared);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared);
     if (owner)
         region->m_owner = owner->make_weak_ptr();
-    region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, u8 access, Cacheable cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, true, false);
-    region->m_user_accessible = false;
-    return region;
+    return make<Region>(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false);
 }
 
 bool Region::should_cow(size_t page_index) const
@@ -278,7 +274,7 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(is_writable());
         if (Processor::current().has_feature(CPUFeature::NX))
             pte->set_execute_disabled(!is_executable());
-        pte->set_user_allowed(is_user_accessible());
+        pte->set_user_allowed(page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr));
     }
     return true;
 }
@@ -388,7 +384,7 @@ bool Region::map(PageDirectory& page_directory)
     ScopedSpinLock page_lock(page_directory.get_lock());
 
     // FIXME: Find a better place for this sanity check(?)
-    if (is_user_accessible() && !is_shared()) {
+    if (is_user() && !is_shared()) {
         ASSERT(!vmobject().is_shared_inode());
     }
 

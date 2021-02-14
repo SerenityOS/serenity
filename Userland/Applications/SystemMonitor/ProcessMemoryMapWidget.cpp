@@ -79,8 +79,6 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     pid_vm_fields.empend("amount_dirty", "Dirty", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
-        if (!object.get("user_accessible").to_bool())
-            builder.append('K');
         if (object.get("readable").to_bool())
             builder.append('R');
         if (object.get("writable").to_bool())
