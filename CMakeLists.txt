@@ -30,6 +30,18 @@ add_custom_target(run
     USES_TERMINAL
 )
 
+# This can currently only be implemented by ordered commands
+# as cmake doesn't support inter dependency ordering, and we
+# would like to avoid inject dependencies on the existing
+# custom commands to allow people to run commands adhoc with
+# out forcing re-builds when they might not want them.
+add_custom_target(setup-and-run
+    COMMAND ${CMAKE_MAKE_PROGRAM} install
+    COMMAND ${CMAKE_MAKE_PROGRAM} image
+    COMMAND ${CMAKE_MAKE_PROGRAM} run
+    USES_TERMINAL
+)
+
 add_custom_target(image
     DEPENDS qemu-image
 )
