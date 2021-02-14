@@ -38,6 +38,7 @@ public:
 
     static DNSName parse(const u8* data, size_t& offset, size_t max_offset, size_t recursion_level = 0);
 
+    size_t serialized_size() const;
     const String& as_string() const { return m_name; }
 
 private:
