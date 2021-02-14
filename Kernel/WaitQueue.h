@@ -50,6 +50,12 @@ public:
         return Thread::current()->block<Thread::QueueBlocker>(timeout, *this, forward<Args>(args)...);
     }
 
+    template<class... Args>
+    void wait_forever(Args&&... args)
+    {
+        (void)Thread::current()->block<Thread::QueueBlocker>({}, *this, forward<Args>(args)...);
+    }
+
 protected:
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
 
