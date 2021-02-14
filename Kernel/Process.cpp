@@ -288,7 +288,7 @@ extern "C" void asm_signal_trampoline_end(void);
 void create_signal_trampoline()
 {
     // NOTE: We leak this region.
-    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write, false).leak_ptr();
+    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write).leak_ptr();
     g_signal_trampoline_region->set_syscall_region(true);
 
     u8* trampoline = (u8*)asm_signal_trampoline;

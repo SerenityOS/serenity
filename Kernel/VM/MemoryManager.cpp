@@ -454,7 +454,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault, lock);
 }
 
-OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, size_t physical_alignment, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, String name, u8 access, size_t physical_alignment, Region::Cacheable cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -462,10 +462,10 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, con
     if (!range.has_value())
         return {};
     auto vmobject = ContiguousVMObject::create_with_size(size, physical_alignment);
-    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, AllocationStrategy strategy, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u8 access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -475,10 +475,10 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     auto vmobject = AnonymousVMObject::create_with_size(size, strategy);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), vmobject.release_nonnull(), name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject.release_nonnull(), move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -488,10 +488,10 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -501,35 +501,26 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress pa
     auto vmobject = AnonymousVMObject::create_for_physical_range(paddr, size);
     if (!vmobject)
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access, bool cacheable)
-{
-    return allocate_kernel_region(size, name, access, true, AllocationStrategy::Reserve, cacheable);
-}
-
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, String name, u8 access, Region::Cacheable cacheable)
 {
     ScopedSpinLock lock(s_mm_lock);
-    OwnPtr<Region> region;
-    if (user_accessible)
-        region = Region::create_user_accessible(nullptr, range, vmobject, 0, name, access, cacheable, false);
-    else
-        region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
+    auto region = Region::create_kernel_only(range, vmobject, 0, move(name), access, cacheable);
     if (region)
         region->map(kernel_page_directory());
     return region;
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, user_accessible, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), vmobject, move(name), access, cacheable);
 }
 
 bool MemoryManager::commit_user_physical_pages(size_t page_count)
@@ -843,7 +834,7 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
         return false;
     ScopedSpinLock lock(s_mm_lock);
     auto* region = user_region_from_vaddr(const_cast<Process&>(process).space(), vaddr);
-    return region && region->is_user_accessible() && region->is_stack();
+    return region && region->is_user() && region->is_stack();
 }
 
 void MemoryManager::register_vmobject(VMObject& vmobject)
