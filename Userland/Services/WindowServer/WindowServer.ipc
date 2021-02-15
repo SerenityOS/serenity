@@ -44,6 +44,7 @@ endpoint WindowServer = 2
         float alpha_hit_threshold,
         Gfx::IntSize base_size,
         Gfx::IntSize size_increment,
+        Gfx::IntSize minimum_size,
         Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
         [UTF8] String title,
@@ -58,6 +59,9 @@ endpoint WindowServer = 2
 
     SetWindowRect(i32 window_id, Gfx::IntRect rect) => (Gfx::IntRect rect)
     GetWindowRect(i32 window_id) => (Gfx::IntRect rect)
+
+    SetWindowMinimumSize(i32 window_id, Gfx::IntSize size) => ()
+    GetWindowMinimumSize(i32 window_id) => (Gfx::IntSize size)
 
     GetWindowRectInMenubar(i32 window_id) => (Gfx::IntRect rect)
 

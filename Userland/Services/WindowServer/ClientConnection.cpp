@@ -413,6 +413,48 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
     return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
 }
 
+OwnPtr<Messages::WindowServer::SetWindowMinimumSizeResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowMinimumSize& message)
+{
+    int window_id = message.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowMinimumSize: Bad window ID");
+        return {};
+    }
+    auto& window = *(*it).value;
+    if (window.is_fullscreen()) {
+        dbgln("ClientConnection: Ignoring SetWindowMinimumSize request for fullscreen window");
+        return {};
+    }
+
+    window.set_minimum_size(message.size());
+
+    if (window.width() < window.minimum_size().width() || window.height() < window.minimum_size().height()) {
+        // New minimum size is larger than the current window size, resize accordingly.
+        auto new_rect = window.rect();
+        bool did_size_clamp = window.apply_minimum_size(new_rect);
+        window.set_rect(new_rect);
+        window.nudge_into_desktop();
+        window.request_update(window.rect());
+
+        if (did_size_clamp)
+            window.refresh_client_size();
+    }
+
+    return make<Messages::WindowServer::SetWindowMinimumSizeResponse>();
+}
+
+OwnPtr<Messages::WindowServer::GetWindowMinimumSizeResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowMinimumSize& message)
+{
+    int window_id = message.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("GetWindowMinimumSize: Bad window ID");
+        return {};
+    }
+    return make<Messages::WindowServer::GetWindowMinimumSizeResponse>(it->value->minimum_size());
+}
+
 OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRectInMenubar& message)
 {
     int window_id = message.window_id();
@@ -454,9 +496,13 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
             rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
             window->set_default_positioned(true);
         }
-        window->apply_minimum_size(rect);
+        window->set_minimum_size(message.minimum_size());
+        bool did_size_clamp = window->apply_minimum_size(rect);
         window->set_rect(rect);
         window->nudge_into_desktop();
+
+        if (did_size_clamp)
+            window->refresh_client_size();
     }
     if (window->type() == WindowType::Desktop) {
         window->set_rect(WindowManager::the().desktop_rect());
