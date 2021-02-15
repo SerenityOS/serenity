@@ -900,9 +900,12 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
 
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
 {
-    __pthread_fork_atfork_register_prepare(prepare);
-    __pthread_fork_atfork_register_parent(parent);
-    __pthread_fork_atfork_register_child(child);
+    if (prepare)
+        __pthread_fork_atfork_register_prepare(prepare);
+    if (parent)
+        __pthread_fork_atfork_register_parent(parent);
+    if (child)
+        __pthread_fork_atfork_register_child(child);
     return 0;
 }
 
