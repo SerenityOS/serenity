@@ -1058,6 +1058,8 @@ bool TextEditor::write_to_file(const String& path)
         return false;
     }
 
+    ScopeGuard fd_guard = [fd] { close(fd); };
+
     // Compute the final file size and ftruncate() to make writing fast.
     // FIXME: Remove this once the kernel is smart enough to do this instead.
     off_t file_size = 0;
@@ -1078,7 +1080,6 @@ bool TextEditor::write_to_file(const String& path)
             ssize_t nwritten = write(fd, line_as_utf8.characters(), line_as_utf8.length());
             if (nwritten < 0) {
                 perror("write");
-                close(fd);
                 return false;
             }
         }
@@ -1087,13 +1088,11 @@ bool TextEditor::write_to_file(const String& path)
             ssize_t nwritten = write(fd, &ch, 1);
             if (nwritten != 1) {
                 perror("write");
-                close(fd);
                 return false;
             }
         }
     }
 
-    close(fd);
     return true;
 }
 
