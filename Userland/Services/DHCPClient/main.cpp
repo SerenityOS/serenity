@@ -25,6 +25,7 @@
  */
 
 #include "DHCPv4Client.h"
+#include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
@@ -69,7 +70,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     auto file = Core::File::construct("/proc/net/adapters");
     if (!file->open(Core::IODevice::ReadOnly)) {
-        warnln("Error: {}", file->error_string());
+        dbgln("Error: {}", file->error_string());
         return 1;
     }
 
@@ -77,7 +78,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto json = JsonValue::from_string(file_contents);
 
     if (!json.has_value() || !json.value().is_array()) {
-        warnln("Error: No network adapters available");
+        dbgln("Error: No network adapters available");
         return 1;
     }
 
@@ -90,6 +91,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
         auto name = if_object.get("name").to_string();
         auto mac = if_object.get("mac_address").to_string();
+        dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}", name, mac);
         ifnames.append({ name, mac_from_string(mac) });
     });
 
