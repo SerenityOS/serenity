@@ -169,8 +169,12 @@ public:
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
-    void apply_minimum_size(Gfx::IntRect&);
+    bool apply_minimum_size(Gfx::IntRect&);
     void nudge_into_desktop(bool force_titlebar_visible = true);
+
+    Gfx::IntSize minimum_size() const { return m_minimum_size; }
+    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void set_taskbar_rect(const Gfx::IntRect&);
     const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
@@ -189,6 +193,8 @@ public:
     void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
     bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
+
+    void refresh_client_size();
 
     void prepare_dirty_rects();
     void clear_dirty_rects();
@@ -375,6 +381,7 @@ private:
     float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
+    Gfx::IntSize m_minimum_size { 1, 1 };
     NonnullRefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Cursor> m_cursor;
     WindowFrame m_frame;

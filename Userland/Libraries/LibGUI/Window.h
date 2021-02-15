@@ -108,6 +108,10 @@ public:
 
     Gfx::IntPoint position() const { return rect().location(); }
 
+    Gfx::IntSize minimum_size() const;
+    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
+
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(const Gfx::IntPoint& point) { set_rect({ point, size() }); }
 
@@ -248,6 +252,8 @@ private:
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
+    Gfx::IntSize m_minimum_size_when_windowless { 50, 50 };
+    bool m_minimum_size_modified { false };
     String m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;

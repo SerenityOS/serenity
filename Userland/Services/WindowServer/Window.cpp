@@ -37,6 +37,8 @@
 
 namespace WindowServer {
 
+const static Gfx::IntSize s_default_normal_minimum_size = { 50, 50 };
+
 static String default_window_icon_path()
 {
     return "/res/icons/16x16/window.png";
@@ -88,6 +90,10 @@ Window::Window(Core::Object& parent, WindowType type)
     , m_icon(default_window_icon())
     , m_frame(*this)
 {
+    // Set default minimum size for Normal windows
+    if (m_type == WindowType::Normal)
+        m_minimum_size = s_default_normal_minimum_size;
+
     WindowManager::the().add_window(*this);
 }
 
@@ -111,6 +117,10 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
         m_wm_event_mask = WMEventMask::WindowStateChanges | WMEventMask::WindowRemovals | WMEventMask::WindowIconChanges;
         m_listens_to_wm_events = true;
     }
+
+    // Set default minimum size for Normal windows
+    if (m_type == WindowType::Normal)
+        m_minimum_size = s_default_normal_minimum_size;
 
     if (parent_window)
         set_parent_window(*parent_window);
@@ -176,14 +186,16 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
-void Window::apply_minimum_size(Gfx::IntRect& rect)
+bool Window::apply_minimum_size(Gfx::IntRect& rect)
 {
-    Gfx::IntSize minimum_size { 1, 1 };
-    if (type() == WindowType::Normal)
-        minimum_size = { 50, 50 };
+    int new_width = max(m_minimum_size.width(), rect.width());
+    int new_height = max(m_minimum_size.height(), rect.height());
+    bool did_size_clamp = new_width != rect.width() || new_height != rect.height();
 
-    rect.set_width(max(minimum_size.width(), rect.width()));
-    rect.set_height(max(minimum_size.height(), rect.height()));
+    rect.set_width(new_width);
+    rect.set_height(new_height);
+
+    return did_size_clamp;
 }
 
 void Window::nudge_into_desktop(bool force_titlebar_visible)
@@ -216,6 +228,20 @@ void Window::nudge_into_desktop(bool force_titlebar_visible)
         height(),
     };
     set_rect(new_window_rect);
+}
+
+void Window::set_minimum_size(const Gfx::IntSize& size)
+{
+    ASSERT(!size.is_empty());
+
+    if (m_minimum_size == size)
+        return;
+
+    // Disallow setting minimum zero widths or heights.
+    if (size.width() == 0 || size.height() == 0)
+        return;
+
+    m_minimum_size = size;
 }
 
 void Window::handle_mouse_event(const MouseEvent& event)
@@ -521,6 +547,11 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
         m_invalidated_frame |= true;
     m_dirty_rects.add(inner_rect.translated(-outer_rect.location()));
     return true;
+}
+
+void Window::refresh_client_size()
+{
+    client()->post_message(Messages::WindowClient::WindowResized(m_window_id, m_rect));
 }
 
 void Window::prepare_dirty_rects()
