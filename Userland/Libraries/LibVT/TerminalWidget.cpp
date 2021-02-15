@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,6 @@
  */
 
 #include "TerminalWidget.h"
-#include "XtermColors.h"
 #include <AK/LexicalPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -40,7 +39,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -109,7 +107,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
-        force_repaint();
+        update();
     };
 
     dbgln("Load config file from {}", m_config->file_name());
@@ -485,12 +483,6 @@ void TerminalWidget::flush_dirty_lines()
     update(rect);
 }
 
-void TerminalWidget::force_repaint()
-{
-    m_needs_background_fill = true;
-    update();
-}
-
 void TerminalWidget::resize_event(GUI::ResizeEvent& event)
 {
     relayout(event.size());
@@ -542,7 +534,7 @@ void TerminalWidget::set_opacity(u8 new_opacity)
 
     window()->set_has_alpha_channel(new_opacity < 255);
     m_opacity = new_opacity;
-    force_repaint();
+    update();
 }
 
 bool TerminalWidget::has_selection() const
@@ -966,8 +958,7 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
         set_fixed_size(m_pixel_width, m_pixel_height);
     }
 
-    m_needs_background_fill = true;
-    force_repaint();
+    update();
 
     winsize ws;
     ws.ws_row = rows;
@@ -992,9 +983,9 @@ void TerminalWidget::beep()
     m_visual_beep_timer->restart(200);
     m_visual_beep_timer->set_single_shot(true);
     m_visual_beep_timer->on_timeout = [this] {
-        force_repaint();
+        update();
     };
-    force_repaint();
+    update();
 }
 
 void TerminalWidget::emit(const u8* data, size_t size)
