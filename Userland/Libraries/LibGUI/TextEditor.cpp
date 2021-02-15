@@ -1060,18 +1060,24 @@ bool TextEditor::write_to_file(const String& path)
 
     ScopeGuard fd_guard = [fd] { close(fd); };
 
-    // Compute the final file size and ftruncate() to make writing fast.
-    // FIXME: Remove this once the kernel is smart enough to do this instead.
     off_t file_size = 0;
-    for (size_t i = 0; i < line_count(); ++i)
-        file_size += line(i).length();
-    file_size += line_count() - 1;
+    if (line_count() == 1 && line(0).is_empty()) {
+        // Truncate to zero.
+    } else {
+        // Compute the final file size and ftruncate() to make writing fast.
+        // FIXME: Remove this once the kernel is smart enough to do this instead.
+        for (size_t i = 0; i < line_count(); ++i)
+            file_size += line(i).length();
+        file_size += line_count();
+    }
 
-    int rc = ftruncate(fd, file_size);
-    if (rc < 0) {
+    if (ftruncate(fd, file_size) < 0) {
         perror("ftruncate");
         return false;
     }
+
+    if (file_size == 0)
+        return true;
 
     for (size_t i = 0; i < line_count(); ++i) {
         auto& line = this->line(i);
@@ -1083,13 +1089,11 @@ bool TextEditor::write_to_file(const String& path)
                 return false;
             }
         }
-        if (i != line_count() - 1) {
-            char ch = '\n';
-            ssize_t nwritten = write(fd, &ch, 1);
-            if (nwritten != 1) {
-                perror("write");
-                return false;
-            }
+        char ch = '\n';
+        ssize_t nwritten = write(fd, &ch, 1);
+        if (nwritten != 1) {
+            perror("write");
+            return false;
         }
     }
 
