@@ -157,21 +157,22 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
 
     size_t line_index = 0;
 
-    if (is_wrapping_enabled()) {
-        for (size_t i = 0; i < line_count(); ++i) {
-            auto& rect = m_line_visual_data[i].visual_rect;
-            if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
-                line_index = i;
-                break;
+    if (position.y() >= 0) {
+        if (is_wrapping_enabled()) {
+            for (size_t i = 0; i < line_count(); ++i) {
+                auto& rect = m_line_visual_data[i].visual_rect;
+                if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
+                    line_index = i;
+                    break;
+                }
+                if (position.y() > rect.bottom())
+                    line_index = line_count() - 1;
             }
-            if (position.y() > rect.bottom())
-                line_index = line_count() - 1;
+        } else {
+            line_index = (size_t)(position.y() / line_height());
         }
-    } else {
-        line_index = (size_t)(position.y() / line_height());
+        line_index = max((size_t)0, min(line_index, line_count() - 1));
     }
-
-    line_index = max((size_t)0, min(line_index, line_count() - 1));
 
     size_t column_index = 0;
     switch (m_text_alignment) {
