@@ -150,6 +150,7 @@ void Window::show()
         m_alpha_hit_threshold,
         m_base_size,
         m_size_increment,
+        m_minimum_size_when_windowless,
         m_resize_aspect_ratio,
         (i32)m_window_type,
         m_title_when_windowless,
@@ -259,6 +260,23 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
         m_main_widget->resize(window_rect.size());
 }
 
+Gfx::IntSize Window::minimum_size() const
+{
+    if (!is_visible())
+        return m_minimum_size_when_windowless;
+
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowMinimumSize>(m_window_id)->size();
+}
+
+void Window::set_minimum_size(const Gfx::IntSize& size)
+{
+    m_minimum_size_modified = true;
+    m_minimum_size_when_windowless = size;
+
+    if (is_visible())
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowMinimumSize>(m_window_id, size);
+}
+
 void Window::center_on_screen()
 {
     auto window_rect = rect();
@@ -278,6 +296,14 @@ void Window::center_within(const Window& other)
 void Window::set_window_type(WindowType window_type)
 {
     m_window_type = window_type;
+
+    if (!m_minimum_size_modified) {
+        // Apply minimum size defaults.
+        if (m_window_type == WindowType::Normal)
+            m_minimum_size_when_windowless = { 50, 50 };
+        else
+            m_minimum_size_when_windowless = { 1, 1 };
+    }
 }
 
 void Window::set_cursor(Gfx::StandardCursor cursor)
