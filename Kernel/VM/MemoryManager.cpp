@@ -195,7 +195,7 @@ void MemoryManager::parse_memory_map()
     auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
 
-    for (auto used_range : m_used_memory_ranges) {
+    for (auto& used_range : m_used_memory_ranges) {
         klog() << "MM: " << used_range;
     }
 
@@ -255,7 +255,7 @@ void MemoryManager::parse_memory_map()
 
             // Skip used memory ranges.
             bool should_skip = false;
-            for (auto used_range : m_used_memory_ranges) {
+            for (auto& used_range : m_used_memory_ranges) {
                 if (addr.get() >= used_range.start.get() && addr.get() <= used_range.end.get()) {
                     should_skip = true;
                     break;
