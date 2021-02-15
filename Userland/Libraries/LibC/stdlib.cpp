@@ -991,6 +991,14 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
 
+    if (base == 16) {
+        // Dr. POSIX: "If the value of base is 16, the characters 0x or 0X may optionally precede
+        //             the sequence of letters and digits, following the sign if present."
+        if (*parse_ptr == '0') {
+            if (tolower(*(parse_ptr + 1)) == 'x')
+                parse_ptr += 2;
+        }
+    }
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
