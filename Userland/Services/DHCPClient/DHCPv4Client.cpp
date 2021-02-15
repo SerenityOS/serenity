@@ -276,6 +276,7 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
 
     DHCPv4Packet& packet = builder.peek();
     packet.set_op(DHCPv4Op::BootRequest);
+    packet.ciaddr() = offer.yiaddr();
     packet.set_htype(1); // 10mb ethernet
     packet.set_hlen(sizeof(MACAddress));
     packet.set_xid(offer.xid());
