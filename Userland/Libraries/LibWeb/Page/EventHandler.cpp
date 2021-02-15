@@ -197,7 +197,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         if (button == GUI::MouseButton::Left) {
             auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (result.layout_node && result.layout_node->dom_node()) {
-                m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
+                m_frame.set_cursor_position(DOM::Position(*result.layout_node->dom_node(), result.index_in_node));
                 layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
                 m_in_mouse_selection = true;
             }
@@ -262,7 +262,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         if (m_in_mouse_selection) {
             auto hit = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (hit.layout_node && hit.layout_node->dom_node()) {
-                m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
+                m_frame.set_cursor_position(DOM::Position(*hit.layout_node->dom_node(), result.index_in_node));
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
             if (auto* page = m_frame.page())
