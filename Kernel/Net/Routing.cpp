@@ -205,6 +205,12 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { nullptr, {} };
     }
 
+    // If it's a broadcast, we already know everything we need to know.
+    // FIXME: We should also deal with the case where `target_addr` is
+    //        a broadcast to a subnet rather than a full broadcast.
+    if (target_addr == 0xffffffff && matches(adapter))
+        return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+
     {
         LOCKER(arp_table().lock());
         auto addr = arp_table().resource().get(next_hop_ip);
