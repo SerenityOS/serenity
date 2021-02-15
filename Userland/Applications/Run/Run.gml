@@ -31,7 +31,7 @@
             text_alignment: "CenterLeft"
         }
 
-        @GUI::TextBox {
+        @GUI::ComboBox {
             name: "path"
         }
     }
