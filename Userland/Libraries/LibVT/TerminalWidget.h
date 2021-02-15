@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,11 @@
 #include <LibVT/Range.h>
 #include <LibVT/Terminal.h>
 
-class TerminalWidget final : public GUI::Frame
+class TerminalWidget final
+    : public GUI::Frame
     , public VT::TerminalClient {
-    C_OBJECT(TerminalWidget)
+    C_OBJECT(TerminalWidget);
+
 public:
     TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config);
     virtual ~TerminalWidget() override;
@@ -51,10 +53,7 @@ public:
         flush_dirty_lines();
     }
 
-    void create_window();
-
     void flush_dirty_lines();
-    void force_repaint();
 
     void apply_size_increments_to_window(GUI::Window&);
 
@@ -172,7 +171,6 @@ private:
     String m_context_menu_href;
 
     BellMode m_bell_mode { BellMode::Visible };
-    bool m_belling { false };
     bool m_alt_key_held { false };
     bool m_rectangle_selection { false };
 
@@ -190,13 +188,10 @@ private:
     RefPtr<Core::Notifier> m_notifier;
 
     u8 m_opacity { 255 };
-    bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
 
     RefPtr<Gfx::Font> m_bold_font;
-
-    int m_glyph_width { 0 };
 
     enum class AutoScrollDirection {
         None,
