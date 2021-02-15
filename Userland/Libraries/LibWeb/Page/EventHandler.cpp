@@ -262,6 +262,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         if (m_in_mouse_selection) {
             auto hit = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (hit.layout_node && hit.layout_node->dom_node()) {
+                m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
             if (auto* page = m_frame.page())
