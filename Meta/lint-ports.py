@@ -7,7 +7,7 @@ import re
 PORT_TABLE_REGEX = re.compile(r'^\| \[`([^`]+)`\][^`]+$', re.MULTILINE)
 
 PORT_TABLE_FILE = 'AvailablePorts.md'
-IGNORE_FILES = {'.gitignore', '.port_include.sh', PORT_TABLE_FILE, 'build_all.sh', 'ReadMe.md'}
+IGNORE_FILES = {'.gitignore', '.port_include.sh', PORT_TABLE_FILE, 'build_all.sh', 'build_installed.sh', 'ReadMe.md'}
 
 
 def read_port_table(filename):
