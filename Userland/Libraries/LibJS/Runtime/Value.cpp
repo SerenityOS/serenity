@@ -191,7 +191,7 @@ static String double_to_string(double d)
         else
             builder.append('-');
 
-        builder.append(String::format("%d", abs(exponent - 1)));
+        builder.append(String::number(fabs(exponent - 1)));
         return builder.to_string();
     }
 
@@ -205,7 +205,7 @@ static String double_to_string(double d)
     else
         builder.append('-');
 
-    builder.append(String::format("%d", abs(exponent - 1)));
+    builder.append(String::number(fabs(exponent - 1)));
     return builder.to_string();
 }
 
@@ -576,7 +576,7 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
         return 0;
     if (number.is_infinity())
         return number.as_double();
-    auto integer = floor(abs(number.as_double()));
+    auto integer = floor(fabs(number.as_double()));
     if (number.as_double() < 0)
         integer = -integer;
     return integer;
