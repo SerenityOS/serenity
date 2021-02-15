@@ -53,7 +53,9 @@ static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
     dst.sin_addr.s_addr = IPv4Address { 255, 255, 255, 255 }.to_u32();
     memset(&dst.sin_zero, 0, sizeof(dst.sin_zero));
 
+    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({} bound to {}, ..., {} at {}) = ...?", fd, iface.m_ifname, dst.sin_addr.s_addr, dst.sin_port);
     auto rc = sendto(fd, &packet, sizeof(packet), 0, (sockaddr*)&dst, sizeof(dst));
+    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({}) = {}", fd, rc);
     if (rc < 0) {
         dbgln("sendto failed with {}", strerror(errno));
         // FIXME: what do we do here?
@@ -113,8 +115,8 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
     m_server->on_ready_to_receive = [this] {
         auto buffer = m_server->receive(sizeof(DHCPv4Packet));
         dbgln("Received {} bytes", buffer.size());
-        if (buffer.size() != sizeof(DHCPv4Packet)) {
-            dbgln("we expected {} bytes, this is a bad packet", sizeof(DHCPv4Packet));
+        if (buffer.size() < sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1 || buffer.size() > sizeof(DHCPv4Packet)) {
+            dbgln("we expected {}-{} bytes, this is a bad packet", sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1, sizeof(DHCPv4Packet));
             return;
         }
         auto& packet = *(DHCPv4Packet*)buffer.data();
