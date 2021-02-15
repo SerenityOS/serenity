@@ -39,7 +39,7 @@
 #include <string.h>
 
 enum class DHCPv4Flags : u16 {
-    Broadcast = 1,
+    Broadcast = 1 << 15,
     /* everything else is reserved and must be zero */
 };
 
