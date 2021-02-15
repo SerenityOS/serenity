@@ -79,6 +79,11 @@ void TextDocument::set_text(const StringView& text)
             add_line(i);
     }
     add_line(i);
+
+    // Don't show the file's trailing newline as an actual new line.
+    if (line_count() > 1 && line(line_count() - 1).is_empty())
+        m_lines.take_last();
+
     m_client_notifications_enabled = true;
 
     for (auto* client : m_clients)
