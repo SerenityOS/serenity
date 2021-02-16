@@ -553,6 +553,10 @@ void Widget::update(const Gfx::IntRect& rect)
     if (!updates_enabled())
         return;
 
+    auto bound_by_widget = rect.intersected(this->rect());
+    if (bound_by_widget.is_empty())
+        return;
+
     Window* window = m_window;
     Widget* parent = parent_widget();
     while (parent) {
@@ -562,7 +566,7 @@ void Widget::update(const Gfx::IntRect& rect)
         parent = parent->parent_widget();
     }
     if (window)
-        window->update(rect.translated(window_relative_rect().location()));
+        window->update(bound_by_widget.translated(window_relative_rect().location()));
 }
 
 Gfx::IntRect Widget::window_relative_rect() const
