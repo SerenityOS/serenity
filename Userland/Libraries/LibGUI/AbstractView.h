@@ -171,6 +171,8 @@ protected:
 
     void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision);
 
+    void set_suppress_update_on_selection_change(bool value) { m_suppress_update_on_selection_change = value; }
+
     virtual void did_scroll() override;
     void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
@@ -215,6 +217,7 @@ private:
     bool m_tab_key_navigation_enabled { false };
     bool m_is_dragging { false };
     bool m_draw_item_text_with_shadow { false };
+    bool m_suppress_update_on_selection_change { false };
 };
 
 }

@@ -208,7 +208,8 @@ void AbstractView::notify_selection_changed(Badge<ModelSelection>)
     did_update_selection();
     if (on_selection_change)
         on_selection_change();
-    update();
+    if (!m_suppress_update_on_selection_change)
+        update();
 }
 
 NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) const

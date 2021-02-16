@@ -109,6 +109,11 @@ private:
             VERIFY(valid);
             return icon_rect.contains(point) || text_rect.contains(point);
         }
+
+        Gfx::IntRect rect() const
+        {
+            return text_rect.united(icon_rect);
+        }
     };
 
     template<typename Function>
