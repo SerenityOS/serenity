@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -288,6 +288,12 @@ Tab::Tab(Type type)
             tab_widget->set_bar_visible(!is_fullscreen && tab_widget->children().size() > 1);
             m_toolbar_container->set_visible(!is_fullscreen);
             m_statusbar->set_visible(!is_fullscreen);
+
+            if (is_fullscreen) {
+                view().set_frame_thickness(0);
+            } else {
+                view().set_frame_thickness(2);
+            }
         },
         this));
 
@@ -534,7 +540,7 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
     m_tab_context_menu->popup(screen_position);
 }
 
-GUI::Widget& Tab::view()
+GUI::ScrollableWidget& Tab::view()
 {
     if (m_type == Type::InProcessWebView)
         return *m_page_view;
