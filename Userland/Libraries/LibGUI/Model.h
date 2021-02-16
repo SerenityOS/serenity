@@ -74,7 +74,7 @@ public:
     virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual String column_name(int) const { return {}; }
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const = 0;
-    virtual TriState data_matches(const ModelIndex&, Variant) const { return TriState::Unknown; }
+    virtual TriState data_matches(const ModelIndex&, const Variant&) const { return TriState::Unknown; }
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
