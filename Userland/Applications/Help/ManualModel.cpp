@@ -184,7 +184,7 @@ void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, co
     node->set_open(open);
 }
 
-TriState ManualModel::data_matches(const GUI::ModelIndex& index, GUI::Variant term) const
+TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
 {
     auto view_result = page_view(page_path(index));
     if (view_result.is_error() || view_result.value().is_empty())
