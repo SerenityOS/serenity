@@ -97,7 +97,7 @@ public:
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
-    bool is_minimizable() const { return m_minimizable; }
+    bool is_minimizable() const { return m_type == WindowType::Normal && m_minimizable; }
     void set_minimizable(bool);
 
     bool is_resizable() const { return m_resizable && !m_fullscreen; }
@@ -120,7 +120,7 @@ public:
 
     bool is_movable() const
     {
-        return m_type == WindowType::Normal;
+        return m_type == WindowType::Normal || m_type == WindowType::ToolWindow;
     }
 
     WindowFrame& frame() { return m_frame; }

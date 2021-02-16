@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -340,9 +340,14 @@ void WindowManager::tell_wm_listeners_window_rect_changed(Window& window)
     });
 }
 
+static bool window_type_has_title(WindowType type)
+{
+    return type == WindowType::Normal || type == WindowType::ToolWindow;
+}
+
 void WindowManager::notify_title_changed(Window& window)
 {
-    if (window.type() != WindowType::Normal)
+    if (!window_type_has_title(window.type()))
         return;
 
     dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) title set to '{}'", &window, window.title());
@@ -412,7 +417,9 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
 {
     bool new_window_picked = false;
     Window* first_candidate = nullptr;
-    for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& candidate) {
+    for_each_visible_window_from_front_to_back([&](Window& candidate) {
+        if (candidate.type() != WindowType::Normal && candidate.type() == WindowType::ToolWindow)
+            return IterationDecision::Continue;
         if (candidate.is_destroyed())
             return IterationDecision::Continue;
         if (previous_active != first_candidate)
@@ -984,7 +991,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 if (auto* blocking_modal_window = window.blocking_modal_window())
                     blocking_modal_window->frame().start_flash_animation();
 
-                if (window.type() == WindowType::Normal)
+                if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow)
                     move_to_front_and_make_active(window);
                 else if (window.type() == WindowType::Desktop)
                     set_active_window(&window);
@@ -1068,6 +1075,7 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
     switch (type) {
     case WindowType::Desktop:
     case WindowType::Normal:
+    case WindowType::ToolWindow:
         return desktop_rect();
     case WindowType::Menu:
     case WindowType::WindowSwitcher:
@@ -1218,7 +1226,7 @@ bool WindowManager::is_active_window_or_accessory(Window& window) const
 
 static bool window_type_can_become_active(WindowType type)
 {
-    return type == WindowType::Normal || type == WindowType::Desktop;
+    return type == WindowType::Normal || type == WindowType::ToolWindow || type == WindowType::Desktop;
 }
 
 void WindowManager::restore_active_input_window(Window* window)
@@ -1507,7 +1515,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
 Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
-    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().title_bar_height(palette()) + 10);
+    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
 
     // FIXME: Find a better source for this.
     int taskbar_height = 28;
@@ -1526,7 +1534,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
         point = overlap_window->position() + shift;
         point = { point.x() % Screen::the().width(),
             (point.y() >= (Screen::the().height() - taskbar_height))
-                ? menubar_height + Gfx::WindowTheme::current().title_bar_height(palette())
+                ? menubar_height + Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette())
                 : point.y() };
     } else {
         point = desired;
