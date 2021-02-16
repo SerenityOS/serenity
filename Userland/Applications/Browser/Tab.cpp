@@ -127,6 +127,7 @@ Tab::Tab(Type type)
 
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_bookmark_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
     m_bookmark_button->set_fixed_size(22, 22);
 
