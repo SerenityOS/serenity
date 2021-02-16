@@ -80,6 +80,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.splice, splice, 2, attr);
     define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
+    define_native_function(vm.names.flat, flat, 0, attr);
     define_property(vm.names.length, Value(0), Attribute::Configurable);
 
     // Use define_property here instead of define_native_function so that
@@ -1034,4 +1035,51 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
     return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Value);
 }
 
+static void recursive_array_flat(VM& vm, GlobalObject& global_object, Array& new_array, Object& array, double depth)
+{
+    auto array_length = length_of_array_like(global_object, array);
+    if (vm.exception())
+        return;
+
+    for (size_t j = 0; j < array_length; ++j) {
+        auto value = array.get(j);
+        if (vm.exception())
+            return;
+
+        if (depth > 0 && value.is_array()) {
+            recursive_array_flat(vm, global_object, new_array, value.as_array(), depth - 1);
+            continue;
+        }
+        if (!value.is_empty()) {
+            new_array.indexed_properties().append(value);
+            if (vm.exception())
+                return;
+        }
+    }
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto* new_array = Array::create(global_object);
+
+    double depth = 1;
+    if (vm.argument_count() > 0) {
+        auto depth_argument = vm.argument(0);
+        if (!depth_argument.is_undefined()) {
+            auto depth_num = depth_argument.to_integer_or_infinity(global_object);
+            if (vm.exception())
+                return {};
+            depth = max(depth_num, 0.0);
+        }
+    }
+
+    recursive_array_flat(vm, global_object, *new_array, *this_object, depth);
+    if (vm.exception())
+        return {};
+    return new_array;
+}
 }

@@ -108,6 +108,7 @@ namespace JS {
     P(find)                                  \
     P(findIndex)                             \
     P(flags)                                 \
+    P(flat)                                  \
     P(floor)                                 \
     P(forEach)                               \
     P(from)                                  \
