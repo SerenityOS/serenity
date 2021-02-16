@@ -31,6 +31,7 @@
 
 typedef long double longdouble;
 typedef long long longlong;
+typedef unsigned long unsignedlong;
 typedef char charstar[32];
 
 template<typename T>
@@ -143,6 +144,7 @@ DECL_WITH_TYPE(longlong);
 DECL_WITH_TYPE(float);
 DECL_WITH_TYPE(double);
 DECL_WITH_TYPE(longdouble);
+DECL_WITH_TYPE(unsignedlong);
 
 #undef DECL_WITH_TYPE
 
@@ -179,6 +181,9 @@ const TestSuite test_suites[] {
     { "%u.%u.%u", "3.19", 2, 3, { unsignedarg0, unsignedarg1, unsignedarg2 }, { to_value_t(3u), to_value_t(19u) } },
     // Failing test case from previous impl:
     { "SSH-%d.%d-%[^\n]\n", "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1\n", 3, 3, { intarg0, intarg1, charstararg0 }, { to_value_t(2), to_value_t(0), str_to_value_t("OpenSSH_8.2p1 Ubuntu-4ubuntu0.1") } },
+    // GCC failure tests
+    { "%d.%d.%d", "10.2.0", 3, 3, { intarg0, intarg1, intarg2 }, { to_value_t(10), to_value_t(2), to_value_t(0) } },
+    { "%lu", "3054       ", 1, 1, { unsignedlongarg0 }, { to_value_t(3054ul) } },
 };
 
 bool g_any_failed = false;
