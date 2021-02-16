@@ -374,6 +374,12 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     if (!m_main_widget)
         return;
     auto rects = event.rects();
+    if (!m_pending_paint_event_rects.is_empty()) {
+        // It's possible that there had been some calls to update() that
+        // haven't been flushed. We can handle these right now, avoiding
+        // another round trip.
+        rects.append(move(m_pending_paint_event_rects));
+    }
     VERIFY(!rects.is_empty());
     if (m_back_store && m_back_store->size() != event.window_size()) {
         // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
