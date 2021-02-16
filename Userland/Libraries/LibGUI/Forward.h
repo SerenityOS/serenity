@@ -71,6 +71,7 @@ class Painter;
 class ResizeCorner;
 class ResizeEvent;
 class ScrollBar;
+class ScrollableWidget;
 class Slider;
 class SortingProxyModel;
 class SpinBox;
