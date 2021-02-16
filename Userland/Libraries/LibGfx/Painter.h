@@ -129,6 +129,8 @@ public:
         m_state_stack.take_last();
     }
 
+    IntRect clip_rect() const { return state().clip_rect; }
+
 protected:
     IntPoint translation() const { return state().translation; }
     IntRect to_physical(const IntRect& r) const { return r.translated(translation()) * scale(); }
@@ -139,7 +141,6 @@ protected:
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity, bool apply_alpha = true);
     void draw_physical_pixel(const IntPoint&, Color, int thickness = 1);
-    IntRect clip_rect() const { return state().clip_rect; }
 
     struct State {
         const Font* font;
