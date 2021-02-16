@@ -416,12 +416,8 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     else if (created_new_backing_store)
         set_current_backing_store(*m_back_store, true);
 
-    if (is_visible()) {
-        Vector<Gfx::IntRect> rects_to_send;
-        for (auto& r : rects)
-            rects_to_send.append(r);
-        WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects_to_send));
-    }
+    if (is_visible())
+        WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects));
 }
 
 void Window::handle_key_event(KeyEvent& event)
@@ -606,10 +602,7 @@ void Window::update(const Gfx::IntRect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
-            Vector<Gfx::IntRect> rects_to_send;
-            for (auto& r : rects)
-                rects_to_send.append(r);
-            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects_to_send, false));
+            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects, false));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
