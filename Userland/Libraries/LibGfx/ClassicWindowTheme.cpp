@@ -26,7 +26,6 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ClassicWindowTheme.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
@@ -44,6 +43,9 @@ ClassicWindowTheme::~ClassicWindowTheme()
 
 Gfx::IntRect ClassicWindowTheme::title_bar_icon_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
 {
+    if (window_type == WindowType::ToolWindow)
+        return {};
+
     auto titlebar_rect = title_bar_rect(window_type, window_rect, palette);
     Gfx::IntRect icon_rect {
         titlebar_rect.x() + 2,
@@ -61,9 +63,9 @@ Gfx::IntRect ClassicWindowTheme::title_bar_text_rect(WindowType window_type, con
     auto titlebar_rect = title_bar_rect(window_type, window_rect, palette);
     auto titlebar_icon_rect = title_bar_icon_rect(window_type, window_rect, palette);
     return {
-        titlebar_rect.x() + 3 + titlebar_icon_rect.width() + 2,
+        titlebar_rect.x() + 3 + (titlebar_icon_rect.is_empty() ? 0 : titlebar_icon_rect.width() + 2),
         titlebar_rect.y(),
-        titlebar_rect.width() - 5 - titlebar_icon_rect.width() - 2,
+        titlebar_rect.width() - 5 - (titlebar_icon_rect.is_empty() ? 0 : titlebar_icon_rect.width() - 2),
         titlebar_rect.height()
     };
 }
@@ -110,10 +112,41 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     painter.blit(titlebar_icon_rect.location(), icon, icon.rect());
 }
 
+void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
+{
+    auto frame_rect = frame_rect_for_window(WindowType::ToolWindow, window_rect, palette);
+    frame_rect.set_location({ 0, 0 });
+    Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
+
+    auto& title_font = FontDatabase::default_bold_font();
+
+    auto titlebar_rect = title_bar_rect(WindowType::ToolWindow, window_rect, palette);
+    auto titlebar_inner_rect = title_bar_text_rect(WindowType::ToolWindow, window_rect, palette);
+    auto titlebar_title_rect = titlebar_inner_rect;
+    titlebar_title_rect.set_width(FontDatabase::default_bold_font().width(title_text));
+
+    auto [title_color, border_color, border_color2, stripes_color, shadow_color] = compute_frame_colors(window_state, palette);
+
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 2), titlebar_rect.bottom_right().translated(0, 2), palette.button());
+
+    painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
+
+    int stripe_right = leftmost_button_rect.left() - 3;
+
+    auto clipped_title_rect = titlebar_title_rect;
+    clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
+    if (!clipped_title_rect.is_empty()) {
+        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, title_font, Gfx::TextAlignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
+        // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
+        painter.draw_text(clipped_title_rect.translated(0, 1), title_text, title_font, Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
+    }
+}
+
 IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
 {
     auto& title_font = FontDatabase::default_bold_font();
-    auto window_titlebar_height = title_bar_height(palette);
+    auto window_titlebar_height = title_bar_height(window_type, palette);
     // FIXME: The top of the titlebar doesn't get redrawn properly if this padding is different
     int total_vertical_padding = title_font.glyph_height() - 1;
 
@@ -160,10 +193,11 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
 
 IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette) const
 {
-    auto window_titlebar_height = title_bar_height(palette);
+    auto window_titlebar_height = title_bar_height(window_type, palette);
 
     switch (window_type) {
     case WindowType::Normal:
+    case WindowType::ToolWindow:
         return {
             window_rect.x() - 4,
             window_rect.y() - window_titlebar_height - 6,
@@ -210,10 +244,18 @@ Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const
     return button_rects;
 }
 
-int ClassicWindowTheme::title_bar_height(const Palette& palette) const
+int ClassicWindowTheme::title_bar_height(WindowType window_type, const Palette& palette) const
 {
     auto& title_font = FontDatabase::default_bold_font();
-    return max(palette.window_title_height(), title_font.glyph_height() + 8);
+    switch (window_type) {
+    case WindowType::Normal:
+    case WindowType::Notification:
+        return max(palette.window_title_height(), title_font.glyph_height() + 8);
+    case WindowType::ToolWindow:
+        return max(palette.window_title_height() - 4, title_font.glyph_height() + 4);
+    default:
+        return 0;
+    }
 }
 
 }

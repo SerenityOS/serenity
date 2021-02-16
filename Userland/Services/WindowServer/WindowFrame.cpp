@@ -45,6 +45,8 @@ static Gfx::WindowTheme::WindowType to_theme_window_type(WindowType type)
     switch (type) {
     case WindowType::Normal:
         return Gfx::WindowTheme::WindowType::Normal;
+    case WindowType::ToolWindow:
+        return Gfx::WindowTheme::WindowType::ToolWindow;
     case WindowType::Notification:
         return Gfx::WindowTheme::WindowType::Notification;
     default:
@@ -271,22 +273,25 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
     Gfx::WindowTheme::current().paint_notification_frame(painter, m_window.rect(), palette, m_buttons.last().relative_rect());
 }
 
+String WindowFrame::compute_title_text() const
+{
+    if (m_window.client() && m_window.client()->is_unresponsive())
+        return String::formatted("{} (Not responding)", m_window.title());
+    return m_window.title();
+}
+
+void WindowFrame::paint_tool_window_frame(Gfx::Painter& painter)
+{
+    auto palette = WindowManager::the().palette();
+    auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
+    Gfx::WindowTheme::current().paint_tool_window_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), palette, leftmost_button_rect);
+}
+
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    auto& window = m_window;
-    String title_text;
-    if (window.client() && window.client()->is_unresponsive()) {
-        StringBuilder builder;
-        builder.append(window.title());
-        builder.append(" (Not responding)");
-        title_text = builder.to_string();
-    } else {
-        title_text = window.title();
-    }
-
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), m_window.icon(), palette, leftmost_button_rect);
 }
 
 void WindowFrame::paint(Gfx::Painter& painter, const Gfx::IntRect& rect)
@@ -341,6 +346,8 @@ void WindowFrame::render(Gfx::Painter& painter)
         paint_notification_frame(painter);
     else if (m_window.type() == WindowType::Normal)
         paint_normal_frame(painter);
+    else if (m_window.type() == WindowType::ToolWindow)
+        paint_tool_window_frame(painter);
     else
         return;
 
@@ -574,10 +581,10 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
     ASSERT(!m_window.is_fullscreen());
 
     auto& wm = WindowManager::the();
-    if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::Notification)
+    if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::ToolWindow && m_window.type() != WindowType::Notification)
         return;
 
-    if (m_window.type() == WindowType::Normal) {
+    if (m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) {
         if (event.type() == Event::MouseDown)
             wm.move_to_front_and_make_active(m_window);
 
@@ -632,7 +639,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
         if (event.type() == Event::MouseDown) {
-            if (m_window.type() == WindowType::Normal && event.button() == MouseButton::Right) {
+            if ((m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) && event.button() == MouseButton::Right) {
                 auto default_action = m_window.is_maximized() ? WindowMenuDefaultAction::Restore : WindowMenuDefaultAction::Maximize;
                 m_window.popup_window_menu(event.position().translated(rect().location()), default_action);
                 return;
