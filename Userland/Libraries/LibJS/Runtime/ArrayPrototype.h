@@ -66,6 +66,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(splice);
     JS_DECLARE_NATIVE_FUNCTION(fill);
     JS_DECLARE_NATIVE_FUNCTION(values);
+    JS_DECLARE_NATIVE_FUNCTION(flat);
 };
 
 }
