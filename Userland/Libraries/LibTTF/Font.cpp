@@ -34,6 +34,7 @@
 #include <LibTTF/Font.h>
 #include <LibTTF/Glyf.h>
 #include <LibTTF/Tables.h>
+#include <LibTextCodec/Decoder.h>
 #include <math.h>
 
 namespace TTF {
@@ -189,8 +190,15 @@ String Name::string_for_id(NameId id) const
         if (this_id != (u16)id)
             continue;
 
+        auto platform = be_u16(m_slice.offset_pointer(6 + i * 12 + 0));
         auto length = be_u16(m_slice.offset_pointer(6 + i * 12 + 8));
         auto offset = be_u16(m_slice.offset_pointer(6 + i * 12 + 10));
+
+        if (platform == (u16)Platform::Windows) {
+            static auto& decoder = *TextCodec::decoder_for("utf-16be");
+            return decoder.to_utf8(StringView { (const char*)m_slice.offset_pointer(string_offset + offset), length });
+        }
+
         return String((const char*)m_slice.offset_pointer(string_offset + offset), length);
     }
 

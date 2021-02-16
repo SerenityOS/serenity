@@ -148,6 +148,11 @@ private:
 
 class Name {
 public:
+    enum class Platform {
+        Unicode = 0,
+        Macintosh = 1,
+        Windows = 3,
+    };
     static Optional<Name> from_slice(const ReadonlyBytes&);
 
     String family_name() const { return string_for_id(NameId::FamilyName); }
