@@ -563,6 +563,9 @@ int Process::sys$msyscall(void* address)
         return 0;
     }
 
+    if (!is_user_address(VirtualAddress { address }))
+        return -EFAULT;
+
     auto* region = space().find_region_containing(Range { VirtualAddress { address }, 1 });
     if (!region)
         return -EINVAL;
