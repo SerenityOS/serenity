@@ -492,7 +492,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_title(message.title());
     if (!message.fullscreen()) {
         auto rect = message.rect();
-        if (message.auto_position() && window->type() == WindowType::Normal) {
+        if (message.auto_position() && window->is_movable()) {
             rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
             window->set_default_positioned(true);
         }

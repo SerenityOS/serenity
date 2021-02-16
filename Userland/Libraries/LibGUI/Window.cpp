@@ -299,7 +299,7 @@ void Window::set_window_type(WindowType window_type)
 
     if (!m_minimum_size_modified) {
         // Apply minimum size defaults.
-        if (m_window_type == WindowType::Normal)
+        if (m_window_type == WindowType::Normal || m_window_type == WindowType::ToolWindow)
             m_minimum_size_when_windowless = { 50, 50 };
         else
             m_minimum_size_when_windowless = { 1, 1 };

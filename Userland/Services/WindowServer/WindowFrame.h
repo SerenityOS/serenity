@@ -96,12 +96,14 @@ private:
     void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&) const;
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
+    void paint_tool_window_frame(Gfx::Painter&);
     Gfx::Bitmap* window_shadow() const;
     bool frame_has_alpha() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
     Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
+    String compute_title_text() const;
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;
