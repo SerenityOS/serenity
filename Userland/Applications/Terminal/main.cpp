@@ -179,12 +179,12 @@ static pid_t run_command(int ptm_fd, String command)
 
 static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
-    auto window = GUI::Window::construct(terminal.window());
+    auto window = GUI::Window::construct();
+    window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Terminal settings");
-    window->set_minimizable(false);
     window->set_resizable(false);
     window->resize(200, 210);
-    window->set_modal(true);
+    window->center_within(*terminal.window());
 
     auto& settings = window->set_main_widget<GUI::Widget>();
     settings.load_from_gml(terminal_settings_window_gml);
@@ -233,10 +233,10 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
+    window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Find in Terminal");
     window->set_resizable(false);
     window->resize(300, 90);
-    window->set_modal(true);
 
     auto& search = window->set_main_widget<GUI::Widget>();
     search.set_fill_with_background_color(true);
@@ -397,18 +397,9 @@ int main(int argc, char** argv)
 
     auto open_settings_action = GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
         [&](const GUI::Action&) {
-            if (!settings_window) {
+            if (!settings_window)
                 settings_window = create_settings_window(terminal);
-                settings_window->on_close_request = [&] {
-                    settings_window->remove_from_parent();
-                    settings_window = nullptr;
-                    return GUI::Window::CloseRequestDecision::Close;
-                };
-            }
-            if (!settings_window->is_visible()) {
-                settings_window->center_within(*window);
-                settings_window->show();
-            }
+            settings_window->show();
             settings_window->move_to_front();
         });
 
@@ -456,13 +447,8 @@ int main(int argc, char** argv)
     edit_menu.add_separator();
     edit_menu.add_action(GUI::Action::create("Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"),
         [&](auto&) {
-            if (!find_window) {
+            if (!find_window)
                 find_window = create_find_window(terminal);
-                find_window->on_close_request = [&] {
-                    find_window = nullptr;
-                    return GUI::Window::CloseRequestDecision::Close;
-                };
-            }
             find_window->show();
             find_window->move_to_front();
         }));
