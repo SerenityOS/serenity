@@ -35,15 +35,6 @@
 
 class GraphWidget;
 
-struct PidAndTid {
-    bool operator==(const PidAndTid& other) const
-    {
-        return pid == other.pid && tid == other.tid;
-    }
-    pid_t pid;
-    int tid;
-};
-
 class ProcessModel final : public GUI::Model {
 public:
     enum Column {
@@ -150,16 +141,9 @@ private:
         ThreadState previous_state;
     };
 
-    HashMap<PidAndTid, NonnullOwnPtr<Thread>> m_threads;
+    HashMap<int, NonnullOwnPtr<Thread>> m_threads;
     NonnullOwnPtrVector<CpuInfo> m_cpus;
-    Vector<PidAndTid> m_pids;
+    Vector<int> m_tids;
     RefPtr<Gfx::Bitmap> m_generic_process_icon;
     RefPtr<Core::File> m_proc_all;
 };
-
-namespace AK {
-template<>
-struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
-    static unsigned hash(const PidAndTid& value) { return pair_int_hash(value.pid, value.tid); }
-};
-}

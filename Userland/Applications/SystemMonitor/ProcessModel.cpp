@@ -66,7 +66,7 @@ ProcessModel::~ProcessModel()
 
 int ProcessModel::row_count(const GUI::ModelIndex&) const
 {
-    return m_pids.size();
+    return m_tids.size();
 }
 
 int ProcessModel::column_count(const GUI::ModelIndex&) const
@@ -190,7 +190,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         }
     }
 
-    auto it = m_threads.find(m_pids[index.row()]);
+    auto it = m_threads.find(m_tids[index.row()]);
     auto& thread = *(*it).value;
 
     if (role == GUI::ModelRole::Sort) {
@@ -333,7 +333,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
 void ProcessModel::update()
 {
-    auto previous_pid_count = m_pids.size();
+    auto previous_tid_count = m_tids.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     u64 last_sum_ticks_scheduled = 0, last_sum_ticks_scheduled_kernel = 0;
@@ -343,7 +343,7 @@ void ProcessModel::update()
         last_sum_ticks_scheduled_kernel += current_state.ticks_kernel;
     }
 
-    HashTable<PidAndTid> live_pids;
+    HashTable<int> live_tids;
     u64 sum_ticks_scheduled = 0, sum_ticks_scheduled_kernel = 0;
     if (all_processes.has_value()) {
         for (auto& it : all_processes.value()) {
@@ -386,51 +386,51 @@ void ProcessModel::update()
                 sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
                 sum_ticks_scheduled_kernel += thread.ticks_kernel;
                 {
-                    auto pit = m_threads.find({ it.value.pid, thread.tid });
+                    auto pit = m_threads.find(thread.tid);
                     if (pit == m_threads.end())
-                        m_threads.set({ it.value.pid, thread.tid }, make<Thread>());
+                        m_threads.set(thread.tid, make<Thread>());
                 }
-                auto pit = m_threads.find({ it.value.pid, thread.tid });
+                auto pit = m_threads.find(thread.tid);
                 ASSERT(pit != m_threads.end());
                 (*pit).value->previous_state = (*pit).value->current_state;
                 (*pit).value->current_state = state;
 
-                live_pids.set({ it.value.pid, thread.tid });
+                live_tids.set(thread.tid);
             }
         }
     }
 
-    m_pids.clear();
+    m_tids.clear();
     for (auto& c : m_cpus) {
         c.total_cpu_percent = 0.0;
         c.total_cpu_percent_kernel = 0.0;
     }
-    Vector<PidAndTid, 16> pids_to_remove;
+    Vector<int, 16> tids_to_remove;
     for (auto& it : m_threads) {
-        if (!live_pids.contains(it.key)) {
-            pids_to_remove.append(it.key);
+        if (!live_tids.contains(it.key)) {
+            tids_to_remove.append(it.key);
             continue;
         }
-        auto& process = *it.value;
-        u32 ticks_scheduled_diff = (process.current_state.ticks_user + process.current_state.ticks_kernel)
-            - (process.previous_state.ticks_user + process.previous_state.ticks_kernel);
-        u32 ticks_scheduled_diff_kernel = process.current_state.ticks_kernel - process.previous_state.ticks_kernel;
-        process.current_state.cpu_percent = ((float)ticks_scheduled_diff * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
-        process.current_state.cpu_percent_kernel = ((float)ticks_scheduled_diff_kernel * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
-        if (it.key.pid != 0) {
-            auto& cpu_info = m_cpus[process.current_state.cpu];
-            cpu_info.total_cpu_percent += process.current_state.cpu_percent;
-            cpu_info.total_cpu_percent_kernel += process.current_state.cpu_percent_kernel;
-            m_pids.append(it.key);
+        auto& thread = *it.value;
+        u32 ticks_scheduled_diff = (thread.current_state.ticks_user + thread.current_state.ticks_kernel)
+            - (thread.previous_state.ticks_user + thread.previous_state.ticks_kernel);
+        u32 ticks_scheduled_diff_kernel = thread.current_state.ticks_kernel - thread.previous_state.ticks_kernel;
+        thread.current_state.cpu_percent = ((float)ticks_scheduled_diff * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
+        thread.current_state.cpu_percent_kernel = ((float)ticks_scheduled_diff_kernel * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
+        if (it.value->current_state.pid != 0) {
+            auto& cpu_info = m_cpus[thread.current_state.cpu];
+            cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
+            cpu_info.total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
+            m_tids.append(it.key);
         }
     }
-    for (auto pid : pids_to_remove)
-        m_threads.remove(pid);
+    for (auto tid : tids_to_remove)
+        m_threads.remove(tid);
 
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
 
     // FIXME: This is a rather hackish way of invalidating indexes.
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indexes.
-    did_update(previous_pid_count == m_pids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndexes : GUI::Model::UpdateFlag::InvalidateAllIndexes);
+    did_update(previous_tid_count == m_tids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndexes : GUI::Model::UpdateFlag::InvalidateAllIndexes);
 }
