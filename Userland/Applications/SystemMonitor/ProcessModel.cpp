@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,15 +25,11 @@
  */
 
 #include "ProcessModel.h"
-#include "GraphWidget.h"
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
-#include <fcntl.h>
-#include <stdio.h>
 
 static ProcessModel* s_the;
 
@@ -48,9 +44,6 @@ ProcessModel::ProcessModel()
     ASSERT(!s_the);
     s_the = this;
     m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png");
-    m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/highpriority.png");
-    m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/lowpriority.png");
-    m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/normalpriority.png");
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::IODevice::ReadOnly)) {
@@ -264,7 +257,6 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return thread.current_state.veil;
         }
         ASSERT_NOT_REACHED();
-        return {};
     }
 
     if (role == GUI::ModelRole::Display) {
@@ -385,7 +377,6 @@ void ProcessModel::update()
                 state.tid = thread.tid;
                 state.pgid = it.value.pgid;
                 state.sid = it.value.sid;
-                state.times_scheduled = thread.times_scheduled;
                 state.ticks_user = thread.ticks_user;
                 state.ticks_kernel = thread.ticks_kernel;
                 state.cpu = thread.cpu;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,7 +96,7 @@ public:
         float total_cpu_percent { 0.0 };
         float total_cpu_percent_kernel { 0.0 };
 
-        CpuInfo(u32 id)
+        explicit CpuInfo(u32 id)
             : id(id)
         {
         }
@@ -115,7 +115,6 @@ private:
         pid_t ppid;
         pid_t pgid;
         pid_t sid;
-        unsigned times_scheduled;
         unsigned ticks_user;
         unsigned ticks_kernel;
         String executable;
@@ -151,14 +150,10 @@ private:
         ThreadState previous_state;
     };
 
-    HashMap<uid_t, String> m_usernames;
     HashMap<PidAndTid, NonnullOwnPtr<Thread>> m_threads;
     NonnullOwnPtrVector<CpuInfo> m_cpus;
     Vector<PidAndTid> m_pids;
     RefPtr<Gfx::Bitmap> m_generic_process_icon;
-    RefPtr<Gfx::Bitmap> m_high_priority_icon;
-    RefPtr<Gfx::Bitmap> m_low_priority_icon;
-    RefPtr<Gfx::Bitmap> m_normal_priority_icon;
     RefPtr<Core::File> m_proc_all;
 };
 
