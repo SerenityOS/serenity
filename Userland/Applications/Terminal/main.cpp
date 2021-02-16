@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -518,6 +518,12 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     config->sync();
+
+    if (pledge("stdio tty rpath accept cpath wpath recvfd sendfd unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
     utmp_update(pts_name, 0, false);
