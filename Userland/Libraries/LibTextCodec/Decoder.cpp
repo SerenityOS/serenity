@@ -47,6 +47,14 @@ UTF8Decoder& utf8_decoder()
     return *decoder;
 }
 
+UTF16BEDecoder& utf16be_decoder()
+{
+    static UTF16BEDecoder* decoder;
+    if (!decoder)
+        decoder = new UTF16BEDecoder;
+    return *decoder;
+}
+
 Latin2Decoder& latin2_decoder()
 {
     static Latin2Decoder* decoder = nullptr;
@@ -64,6 +72,8 @@ Decoder* decoder_for(const String& a_encoding)
         return &latin1_decoder();
     if (encoding.equals_ignoring_case("utf-8"))
         return &utf8_decoder();
+    if (encoding.equals_ignoring_case("utf-16be"))
+        return &utf16be_decoder();
     if (encoding.equals_ignoring_case("iso-8859-2"))
         return &latin2_decoder();
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
@@ -168,6 +178,16 @@ bool is_standardized_encoding(const String& encoding)
 String UTF8Decoder::to_utf8(const StringView& input)
 {
     return input;
+}
+
+String UTF16BEDecoder::to_utf8(const StringView& input)
+{
+    StringBuilder builder(input.length() / 2);
+    for (size_t i = 0; i < input.length(); i += 2) {
+        u16 code_point = (input[i] << 8) | input[i + 1];
+        builder.append_code_point(code_point);
+    }
+    return builder.to_string();
 }
 
 String Latin1Decoder::to_utf8(const StringView& input)

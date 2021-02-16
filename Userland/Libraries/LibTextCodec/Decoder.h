@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,11 @@ public:
 };
 
 class UTF8Decoder final : public Decoder {
+public:
+    virtual String to_utf8(const StringView&) override;
+};
+
+class UTF16BEDecoder final : public Decoder {
 public:
     virtual String to_utf8(const StringView&) override;
 };
