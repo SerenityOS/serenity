@@ -31,7 +31,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Typeface.h>
 #include <LibTTF/Font.h>
-#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -159,7 +158,6 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
 
 RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight)
 {
-    dbgln("FontDatabase: Request font {} {} {}", family, size, weight);
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight)
             return typeface->get_font(size);
@@ -169,7 +167,6 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigne
 
 RefPtr<Gfx::Font> FontDatabase::get(const String& family, const String& variant, unsigned size)
 {
-    dbgln("FontDatabase: Request font {} {} {}", family, variant, size);
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
             return typeface->get_font(size);
