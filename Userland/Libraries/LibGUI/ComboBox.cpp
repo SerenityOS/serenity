@@ -244,6 +244,13 @@ void ComboBox::open()
         // change the list view's selected item without triggering a change to it.
         m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
     }
+
+    // Set the minimum minimum height of the list window to the height of three
+    // items or the row count, whichever is smaller, plus the frame thickness.
+    // This prevents the list from becoming infinitesimally small when pushed
+    // up against the screen edge.
+    m_list_window->set_minimum_size(1, min(3, model()->row_count()) * m_list_view->item_height() + m_list_view->frame_thickness() * 2);
+
     m_list_window->set_rect(list_window_rect);
     m_list_window->show();
 }
