@@ -256,7 +256,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::MenuItemActiva
 {
     auto* menu = Menu::from_menu_id(message.menu_id());
     if (!menu) {
-        dbgprintf("EventLoop received event for invalid menu ID %d\n", message.menu_id());
+        dbgln("EventLoop received event for invalid menu ID {}", message.menu_id());
         return;
     }
     if (auto* action = menu->action_at(message.identifier()))
