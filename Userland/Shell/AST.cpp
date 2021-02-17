@@ -124,9 +124,7 @@ namespace Shell::AST {
 
 static inline void print_indented(const String& str, int indent)
 {
-    for (auto i = 0; i < indent; ++i)
-        dbgprintf("  ");
-    dbgprintf("%s\n", str.characters());
+    dbgln("{}{}", String::repeated(' ', indent * 2), str);
 }
 
 static inline Optional<Position> merge_positions(const Optional<Position>& left, const Optional<Position>& right)
