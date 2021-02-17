@@ -45,19 +45,26 @@ namespace Web {
 
 void dump_tree(const DOM::Node& node)
 {
+    StringBuilder builder;
+    dump_tree(builder, node);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_tree(StringBuilder& builder, const DOM::Node& node)
+{
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
-        dbgprintf("  ");
+        builder.append("  ");
     if (is<DOM::Element>(node)) {
-        dbgprintf("<%s", downcast<DOM::Element>(node).local_name().characters());
-        downcast<DOM::Element>(node).for_each_attribute([](auto& name, auto& value) {
-            dbgprintf(" %s=%s", name.characters(), value.characters());
+        builder.appendff("<{}", downcast<DOM::Element>(node).local_name());
+        downcast<DOM::Element>(node).for_each_attribute([&](auto& name, auto& value) {
+            builder.appendff(" {}={}", name, value);
         });
-        dbgprintf(">\n");
+        builder.append(">\n");
     } else if (is<DOM::Text>(node)) {
-        dbgprintf("\"%s\"\n", downcast<DOM::Text>(node).data().characters());
+        builder.appendff("\"{}\"\n", downcast<DOM::Text>(node).data());
     } else {
-        dbgprintf("%s\n", node.node_name().characters());
+        builder.appendff("{}\n", node.node_name());
     }
     ++indent;
     if (is<DOM::Element>(node) && downcast<DOM::Element>(node).shadow_root()) {
@@ -80,7 +87,7 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
 {
     StringBuilder builder;
     dump_tree(builder, layout_node, show_box_model, show_specified_style, true);
-    dbgprintf("%s", builder.to_string().characters());
+    dbgln("{}", builder.string_view());
 }
 
 void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool show_box_model, bool show_specified_style, bool interactive)
@@ -265,10 +272,17 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
 
 void dump_selector(const CSS::Selector& selector)
 {
-    dbgprintf("  CSS::Selector:\n");
+    StringBuilder builder;
+    dump_selector(builder, selector);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
+{
+    builder.append("  CSS::Selector:\n");
 
     for (auto& complex_selector : selector.complex_selectors()) {
-        dbgprintf("    ");
+        builder.append("    ");
 
         const char* relation_description = "";
         switch (complex_selector.relation) {
@@ -290,7 +304,7 @@ void dump_selector(const CSS::Selector& selector)
         }
 
         if (*relation_description)
-            dbgprintf("{%s} ", relation_description);
+            builder.appendff("{{{}}} ", relation_description);
 
         for (size_t i = 0; i < complex_selector.compound_selector.size(); ++i) {
             auto& simple_selector = complex_selector.compound_selector[i];
@@ -361,38 +375,52 @@ void dump_selector(const CSS::Selector& selector)
                 break;
             }
 
-            dbgprintf("%s:%s", type_description, simple_selector.value.characters());
+            builder.appendff("{}:{}", type_description, simple_selector.value);
             if (simple_selector.pseudo_class != CSS::Selector::SimpleSelector::PseudoClass::None)
-                dbgprintf(" pseudo_class=%s", pseudo_class_description);
+                builder.appendff(" pseudo_class={}", pseudo_class_description);
             if (simple_selector.attribute_match_type != CSS::Selector::SimpleSelector::AttributeMatchType::None) {
-                dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, simple_selector.attribute_name.characters(), simple_selector.attribute_value.characters());
+                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute_name, simple_selector.attribute_value);
             }
 
             if (i != complex_selector.compound_selector.size() - 1)
-                dbgprintf(", ");
+                builder.append(", ");
         }
-        dbgprintf("\n");
+        builder.append("\n");
     }
 }
 
 void dump_rule(const CSS::StyleRule& rule)
 {
-    dbgprintf("Rule:\n");
+    StringBuilder builder;
+    dump_rule(builder, rule);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_rule(StringBuilder& builder, const CSS::StyleRule& rule)
+{
+    builder.append("Rule:\n");
     for (auto& selector : rule.selectors()) {
-        dump_selector(selector);
+        dump_selector(builder, selector);
     }
-    dbgprintf("  Declarations:\n");
+    builder.append("  Declarations:\n");
     for (auto& property : rule.declaration().properties()) {
-        dbgprintf("    %s: '%s'\n", CSS::string_from_property_id(property.property_id), property.value->to_string().characters());
+        builder.appendff("    {}: '{}'\n", CSS::string_from_property_id(property.property_id), property.value->to_string());
     }
 }
 
 void dump_sheet(const CSS::StyleSheet& sheet)
 {
-    dbgprintf("StyleSheet{%p}: %zu rule(s)\n", &sheet, sheet.rules().size());
+    StringBuilder builder;
+    dump_sheet(builder, sheet);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_sheet(StringBuilder& builder, const CSS::StyleSheet& sheet)
+{
+    builder.appendff("StyleSheet{{{}}}: {} rule(s)", &sheet, sheet.rules().size());
 
     for (auto& rule : sheet.rules()) {
-        dump_rule(rule);
+        dump_rule(builder, rule);
     }
 }
 
