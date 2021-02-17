@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,6 +107,17 @@ static void report_parsing_error(StringView message, StringView filename, String
 
 namespace IDL {
 
+template<typename FunctionType>
+static size_t get_function_length(FunctionType& function)
+{
+    size_t length = 0;
+    for (auto& parameter : function.parameters) {
+        if (!parameter.optional)
+            length++;
+    }
+    return length;
+}
+
 struct Type {
     String name;
     bool nullable { false };
@@ -123,15 +135,14 @@ struct Function {
     Vector<Parameter> parameters;
     HashMap<String, String> extended_attributes;
 
-    size_t length() const
-    {
-        size_t length = 0;
-        for (auto& parameter : parameters) {
-            if (!parameter.optional)
-                length++;
-        }
-        return length;
-    }
+    size_t length() const { return get_function_length(*this); }
+};
+
+struct Constructor {
+    String name;
+    Vector<Parameter> parameters;
+
+    size_t length() const { return get_function_length(*this); }
 };
 
 struct Constant {
@@ -157,6 +168,7 @@ struct Interface {
 
     Vector<Attribute> attributes;
     Vector<Constant> constants;
+    Vector<Constructor> constructors;
     Vector<Function> functions;
 
     // Added for convenience after parsing
@@ -262,17 +274,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         interface->constants.append(move(constant));
     };
 
-    auto parse_function = [&](HashMap<String, String>& extended_attributes) {
-        auto return_type = parse_type();
+    auto parse_parameters = [&] {
         consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
-        consume_whitespace();
-        assert_specific('(');
-
         Vector<Parameter> parameters;
-
         for (;;) {
-            if (lexer.consume_specific(')'))
+            if (lexer.next_is(')'))
                 break;
             bool optional = lexer.consume_specific("optional");
             if (optional)
@@ -281,16 +287,38 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
             parameters.append({ move(type), move(name), optional });
-            if (lexer.consume_specific(')'))
+            if (lexer.next_is(')'))
                 break;
             assert_specific(',');
             consume_whitespace();
         }
+        return parameters;
+    };
 
+    auto parse_function = [&](HashMap<String, String>& extended_attributes) {
+        auto return_type = parse_type();
+        consume_whitespace();
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
+        consume_whitespace();
+        assert_specific('(');
+        auto parameters = parse_parameters();
+        assert_specific(')');
         consume_whitespace();
         assert_specific(';');
 
         interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+    };
+
+    auto parse_constructor = [&] {
+        assert_string("constructor");
+        consume_whitespace();
+        assert_specific('(');
+        auto parameters = parse_parameters();
+        assert_specific(')');
+        consume_whitespace();
+        assert_specific(';');
+
+        interface->constructors.append(Constructor { interface->name, move(parameters) });
     };
 
     auto parse_extended_attributes = [&] {
@@ -325,6 +353,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
         if (lexer.consume_specific('[')) {
             extended_attributes = parse_extended_attributes();
+        }
+
+        if (lexer.next_is("constructor")) {
+            parse_constructor();
+            continue;
         }
 
         if (lexer.next_is("const")) {
