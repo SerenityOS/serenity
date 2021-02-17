@@ -125,8 +125,6 @@ struct Function {
 
     size_t length() const
     {
-        // FIXME: This seems to produce a length that is way over what it's supposed to be.
-        //        For example, getElementsByTagName has its length set to 20 when it should be 1.
         size_t length = 0;
         for (auto& parameter : parameters) {
             if (!parameter.optional)
@@ -990,10 +988,10 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
         function_generator.set("function.name:snakecase", snake_name(function.name));
-        function_generator.set("function.name:length", String::number(function.name.length()));
+        function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
-    define_native_function("@function.name@", @function.name:snakecase@, @function.name:length@, default_attributes);
+    define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
 )~~~");
     }
 
