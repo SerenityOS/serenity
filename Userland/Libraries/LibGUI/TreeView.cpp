@@ -601,7 +601,7 @@ void TreeView::update_column_sizes()
         return IterationDecision::Continue;
     });
 
-    set_column_width(tree_column, max(this->column_width(tree_column), tree_column_width));
+    set_column_width(tree_column, tree_column_width);
 }
 
 int TreeView::tree_column_x_offset() const
