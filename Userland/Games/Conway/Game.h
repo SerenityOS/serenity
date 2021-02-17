@@ -34,6 +34,9 @@ public:
     virtual ~Game() override;
     void reset();
 
+    int rows() const { return m_rows; };
+    int columns() const { return m_columns; };
+
 private:
     Game();
     virtual void paint_event(GUI::PaintEvent&) override;
