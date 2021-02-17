@@ -45,3 +45,5 @@ constexpr bool all_of(
 }
 
 }
+
+using AK::all_of;
