@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/Node.h>
 
@@ -45,6 +46,10 @@ public:
     static NonnullRefPtr<Range> create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
     {
         return adopt(*new Range(start_container, start_offset, end_container, end_offset));
+    }
+    static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject& window)
+    {
+        return Range::create(window.impl());
     }
 
     // FIXME: There are a ton of methods missing here.
