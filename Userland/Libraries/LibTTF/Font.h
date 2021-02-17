@@ -121,8 +121,8 @@ private:
 
 class ScaledFont : public Gfx::Font {
 public:
-    ScaledFont(RefPtr<TTF::Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
-        : m_font(font)
+    ScaledFont(NonnullRefPtr<TTF::Font> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
+        : m_font(move(font))
         , m_point_width(point_width)
         , m_point_height(point_height)
     {
@@ -163,7 +163,7 @@ public:
     virtual const Font& bold_variant() const override { return *this; } // FIXME: Perhaps remove this from the Gfx::Font interface
 
 private:
-    RefPtr<TTF::Font> m_font;
+    NonnullRefPtr<TTF::Font> m_font;
     float m_x_scale { 0.0f };
     float m_y_scale { 0.0f };
     float m_point_width { 0.0f };
