@@ -916,7 +916,8 @@ bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
     u8 threshold = alpha_hit_threshold() * 255;
     if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel())
         return true;
-    auto color = m_backing_store->get_pixel(point.translated(-rect().location()));
+    auto relative_point = point.translated(-rect().location()) * m_backing_store->scale();
+    auto color = m_backing_store->get_pixel(relative_point);
     return color.alpha() >= threshold;
 }
 
