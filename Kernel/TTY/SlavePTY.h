@@ -66,7 +66,7 @@ private:
     RefPtr<MasterPTY> m_master;
     time_t m_time_of_last_write { 0 };
     unsigned m_index { 0 };
-    char m_tty_name[32];
+    String m_tty_name;
 };
 
 }
