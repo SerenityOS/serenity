@@ -673,7 +673,7 @@ void sysbeep()
 
 int fsync([[maybe_unused]] int fd)
 {
-    dbgprintf("FIXME: Implement fsync()\n");
+    dbgln("FIXME: Implement fsync()");
     return 0;
 }
 

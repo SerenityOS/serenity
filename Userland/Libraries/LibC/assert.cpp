@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,9 +39,9 @@ extern bool __stdio_is_initialized;
 #ifdef DEBUG
 void __assertion_failed(const char* msg)
 {
-    dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
+    dbgln("USERSPACE({}) ASSERTION FAILED: {}", getpid(), msg);
     if (__stdio_is_initialized)
-        fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
+        warnln("ASSERTION FAILED: {}", msg);
 
     Syscall::SC_set_coredump_metadata_params params {
         { "assertion", strlen("assertion") },
