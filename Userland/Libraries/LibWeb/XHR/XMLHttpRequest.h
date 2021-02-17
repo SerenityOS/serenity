@@ -30,6 +30,7 @@
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <AK/Weakable.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
@@ -51,7 +52,14 @@ public:
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
-    static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window) { return adopt(*new XMLHttpRequest(window)); }
+    static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window)
+    {
+        return adopt(*new XMLHttpRequest(window));
+    }
+    static NonnullRefPtr<XMLHttpRequest> create_with_global_object(Bindings::WindowObject& window)
+    {
+        return XMLHttpRequest::create(window.impl());
+    }
 
     virtual ~XMLHttpRequest() override;
 
