@@ -27,7 +27,6 @@
 #include <AK/Debug.h>
 #include <LibCore/NetworkJob.h>
 #include <LibCore/NetworkResponse.h>
-#include <stdio.h>
 
 namespace Core {
 
@@ -68,9 +67,7 @@ void NetworkJob::did_fail(Error error)
     NonnullRefPtr<NetworkJob> protector(*this);
 
     m_error = error;
-#if CNETWORKJOB_DEBUG
-    dbgprintf("%s{%p} job did_fail! error: %u (%s)\n", class_name(), this, (unsigned)error, to_string(error));
-#endif
+    dbgln_if(CNETWORKJOB_DEBUG, "{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, (unsigned)error, to_string(error));
     ASSERT(on_finish);
     on_finish(false);
     shutdown();
