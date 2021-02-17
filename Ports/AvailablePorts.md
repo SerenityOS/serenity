@@ -68,6 +68,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`stress-ng`](stress-ng/)      | stress-ng                                     | 0.11.23           | https://github.com/ColinIanKing/stress-ng             |
 | [`termcap`](termcap/)          | GNU termcap                                   | 1.3.1             | https://www.gnu.org/software/termutils/               |
 | [`tinycc`](tinycc/)            | Tiny C Compiler (TinyCC)                      | dev               | https://github.com/TinyCC/tinycc                      |
+| [`tinyscheme`](tinyscheme/)    | TinyScheme Interpreter                        | 1.42              | https://sourceforge.net/projects/tinyscheme/          |
 | [`tr`](tr/)                    | tr (OpenBSD)                                  | 6.7               | https://github.com/ibara/libpuffy                     |
 | [`vim`](vim/)                  | Vim                                           |                   | https://www.vim.org/                                  |
 | [`vttest`](vttest/)            | vttest                                        | 20200610          | https://invisible-island.net/vttest/                  |
