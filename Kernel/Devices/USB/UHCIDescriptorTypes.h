@@ -124,12 +124,10 @@ struct alignas(16) TransferDescriptor final {
 
     void print()
     {
-        // FIXME: Use dbgln() or klog() when we have something working.
-        // We're using kprintf() for now because the output stands out from the rest of the text in the log
-        kprintf("UHCI: TD(%p) @ 0x%08x: link_ptr=0x%08x, status=0x%08x, token=0x%08x, buffer_ptr=0x%08x\n", this, m_paddr, m_link_ptr, m_control_status, m_token, m_buffer_ptr);
+        dbgln("UHCI: TD({}) @ {}: link_ptr={}, status={}, token={}, buffer_ptr={}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
 
         // Now let's print the flags!
-        kprintf("UHCI: TD(%p) @ 0x%08x: link_ptr=%s%s%s, status=%s%s%s%s%s%s%s\n",
+        dbgln("UHCI: TD({}) @ {}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
             this,
             m_paddr,
             (last_in_chain()) ? "T " : "",
@@ -266,7 +264,7 @@ struct alignas(16) QueueHead {
 
     void print()
     {
-        kprintf("UHCI: QH(%p) @ 0x%08x: link_ptr=0x%08x, element_link_ptr=0x%08x\n", this, m_paddr, m_link_ptr, m_element_link_ptr);
+        dbgln("UHCI: QH({}) @ {}: link_ptr={}, element_link_ptr={}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
     }
 
 private:
