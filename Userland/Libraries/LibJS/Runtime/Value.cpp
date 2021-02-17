@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/AllOf.h>
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -59,16 +60,12 @@ static const double INVALID { 0 };
 
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
-static bool is_valid_bigint_value(String string)
+static bool is_valid_bigint_value(StringView string)
 {
     string = string.trim_whitespace();
     if (string.length() > 1 && (string[0] == '-' || string[0] == '+'))
         string = string.substring_view(1, string.length() - 1);
-    for (auto& ch : string) {
-        if (!isdigit(ch))
-            return false;
-    }
-    return true;
+    return all_of(string.begin(), string.end(), [](auto ch) { return isdigit(ch); });
 }
 
 ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
