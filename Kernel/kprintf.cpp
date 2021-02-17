@@ -183,11 +183,6 @@ static void debugger_out(char ch)
     IO::out8(0xe9, ch);
 }
 
-static void debugger_putch(char*&, char ch)
-{
-    debugger_out(ch);
-}
-
 extern "C" int dbgputstr(const char* characters, int length)
 {
     if (!characters)
@@ -206,22 +201,4 @@ extern "C" int kernelputstr(const char* characters, int length)
     for (int i = 0; i < length; ++i)
         console_out(characters[i]);
     return 0;
-}
-
-static int vdbgprintf(const char* fmt, va_list ap)
-{
-    ScopedSpinLock lock(s_log_lock);
-    color_on();
-    int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
-    color_off();
-    return ret;
-}
-
-extern "C" int dbgprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = vdbgprintf(fmt, ap);
-    va_end(ap);
-    return ret;
 }

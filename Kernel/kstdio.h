@@ -29,7 +29,6 @@
 #include <AK/Types.h>
 
 extern "C" {
-int dbgprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 int dbgputstr(const char*, int);
 int kernelputstr(const char*, int);
 int kprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
