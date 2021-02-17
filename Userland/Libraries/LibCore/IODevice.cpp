@@ -184,7 +184,7 @@ String IODevice::read_line(size_t max_size)
         return {};
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            dbgprintf("IODevice::read_line: At EOF but there's more than max_size(%zu) buffered\n", max_size);
+            dbgln("IODevice::read_line: At EOF but there's more than max_size({}) buffered", max_size);
             return {};
         }
         auto line = String((const char*)m_buffered_data.data(), m_buffered_data.size(), Chomp);
