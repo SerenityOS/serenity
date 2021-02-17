@@ -255,3 +255,13 @@ struct AK::Formatter<Kernel::PCI::Address> : Formatter<FormatString> {
             "PCI [{:04x}:{:02x}:{:02x}:{:02x}]", value.seg(), value.bus(), value.device(), value.function());
     }
 };
+
+template<>
+struct AK::Formatter<Kernel::PCI::ID> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::PCI::ID value)
+    {
+        return Formatter<FormatString>::format(
+            builder,
+            "PCI::ID [{:04x}:{:04x}]", value.vendor_id, value.device_id);
+    }
+};

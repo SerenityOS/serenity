@@ -106,9 +106,9 @@ UHCIController::UHCIController(PCI::Address address, PCI::ID id)
     : PCI::Device(address)
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
 {
-    klog() << "UHCI: Controller found " << id << " @ " << address;
-    klog() << "UHCI: I/O base " << m_io_base;
-    klog() << "UHCI: Interrupt line: " << PCI::get_interrupt_line(pci_address());
+    dmesgln("UHCI: Controller found {} @ {}", id, address);
+    dmesgln("UHCI: I/O base {}", m_io_base);
+    dmesgln("UHCI: Interrupt line: {}", PCI::get_interrupt_line(pci_address()));
 
     reset();
     start();
@@ -199,8 +199,6 @@ void UHCIController::create_structures()
         transfer_descriptor->print();
 #endif
     }
-
-    kprintf("Done!\n");
 
     m_free_td_pool.resize(MAXIMUM_NUMBER_OF_TDS);
     for (size_t i = 0; i < m_free_td_pool.size(); i++) {
@@ -364,7 +362,7 @@ void UHCIController::do_debug_transfer()
     auto data_td = allocate_transfer_descriptor();
     auto response_td = allocate_transfer_descriptor();
 
-    kprintf("BUFFER PHYSICAL ADDRESS = 0x%08x\n", m_td_buffer_region->physical_page(0)->paddr().get());
+    dbgln("BUFFER PHYSICAL ADDRESS = {}", m_td_buffer_region->physical_page(0)->paddr());
 
     setup_packet* packet = reinterpret_cast<setup_packet*>(m_td_buffer_region->vaddr().as_ptr());
     packet->bmRequestType = 0x81;
@@ -400,7 +398,7 @@ void UHCIController::do_debug_transfer()
 void UHCIController::spawn_port_proc()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    timespec sleep_time;
+    timespec sleep_time {};
 
     sleep_time.tv_sec = 1;
     Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&, sleep_time] {
@@ -414,7 +412,7 @@ void UHCIController::spawn_port_proc()
                     port_data = read_portsc1();
                     if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
                         if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
-                            klog() << "UHCI: Device attach detected on Root Port 1!";
+                            dmesgln("UHCI: Device attach detected on Root Port 1!");
 
                             // Reset the port
                             port_data = read_portsc1();
@@ -428,21 +426,21 @@ void UHCIController::spawn_port_proc()
 
                             write_portsc1(port_data & (~UHCI_PORTSC_PORT_ENABLE_CHANGED | ~UHCI_PORTSC_CONNECT_STATUS_CHANGED));
                         } else {
-                            klog() << "UHCI: Device detach detected on Root Port 1!";
+                            dmesgln("UHCI: Device detach detected on Root Port 1!");
                         }
 
                         port_data = read_portsc1();
                         write_portsc1(port_data | UHCI_PORTSC_PORT_ENABLED);
-                        kprintf("port should be enabled now: 0x%x\n", read_portsc1());
+                        dbgln("port should be enabled now: {:#04x}\n", read_portsc1());
                         do_debug_transfer();
                     }
                 } else {
                     port_data = UHCIController::the().read_portsc2();
                     if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
                         if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
-                            klog() << "UHCI: Device attach detected on Root Port 2!";
+                            dmesgln("UHCI: Device attach detected on Root Port 2!");
                         } else {
-                            klog() << "UHCI: Device detach detected on Root Port 2!";
+                            dmesgln("UHCI: Device detach detected on Root Port 2!");
                         }
 
                         UHCIController::the().write_portsc2(
@@ -461,10 +459,10 @@ void UHCIController::handle_irq(const RegisterState&)
     if (!read_usbsts())
         return;
 
-#if UHCI_DEBUG
-    klog() << "UHCI: Interrupt happened!";
-    klog() << "Value of USBSTS: " << read_usbsts();
-#endif
+    if constexpr (UHCI_DEBUG) {
+        dbgln("UHCI: Interrupt happened!");
+        dbgln("Value of USBSTS: {:#04x}", read_usbsts());
+    }
 }
 
 }
