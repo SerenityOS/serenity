@@ -7,6 +7,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`bash`](bash/)                | GNU Bash                                      | 5.0               | https://www.gnu.org/software/bash/                    |
 | [`bc`](bc/)                    | bc                                            | 2.5.1             | https://github.com/gavinhoward/bc                     |
 | [`binutils`](binutils/)        | GNU Binutils                                  | 2.32              | https://www.gnu.org/software/binutils/                |
+| [`bison`](bison/)              | GNU Bison                                     | 1.25              | https://www.gnu.org/software/bison/                   |
 | [`byacc`](byacc/)              | Berkeley Yacc                                 | 20191125          | https://invisible-island.net/byacc/byacc.html         |
 | [`c-ray`](c-ray/)              | C-Ray                                         |                   | https://github.com/vkoskiv/c-ray                      |
 | [`cmake`](cmake/)              | CMake                                         | 3.19.4            | https://cmake.org/                                    |
