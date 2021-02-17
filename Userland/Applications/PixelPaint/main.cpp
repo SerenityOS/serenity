@@ -36,6 +36,8 @@
 #include "Tool.h"
 #include "ToolPropertiesWidget.h"
 #include "ToolboxWidget.h"
+#include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -65,6 +67,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    const char* image_file = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(image_file, "PixelPaint image file (*.pp) to open", "path", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
 
     auto window = GUI::Window::construct();
@@ -93,6 +100,9 @@ int main(int argc, char** argv)
     right_panel.set_layout<GUI::VerticalBoxLayout>();
 
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
+    layer_list_widget.on_layer_select = [&](auto* layer) {
+        image_editor.set_active_layer(layer);
+    };
 
     auto& layer_properties_widget = right_panel.add<PixelPaint::LayerPropertiesWidget>();
 
@@ -107,6 +117,16 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("PixelPaint");
+
+    auto open_image_file = [&](auto& path) {
+        auto image = PixelPaint::Image::create_from_file(path);
+        if (!image) {
+            GUI::MessageBox::show_error(window, String::formatted("Invalid image file: {}", path));
+            return;
+        }
+        image_editor.set_image(image);
+        layer_list_widget.set_image(image);
+    };
 
     app_menu.add_action(
         GUI::Action::create(
@@ -130,9 +150,7 @@ int main(int argc, char** argv)
         if (!open_path.has_value())
             return;
 
-        auto image = PixelPaint::Image::create_from_file(open_path.value());
-        image_editor.set_image(image);
-        layer_list_widget.set_image(image);
+        open_image_file(open_path.value());
     }));
     app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         if (!image_editor.image())
@@ -372,30 +390,31 @@ int main(int argc, char** argv)
         layer_properties_widget.set_layer(layer);
     };
 
-    auto image = PixelPaint::Image::create_with_size({ 640, 480 });
+    auto image_file_real_path = Core::File::real_path_for(image_file);
+    if (Core::File::exists(image_file_real_path)) {
+        open_image_file(image_file_real_path);
+    } else {
+        auto image = PixelPaint::Image::create_with_size({ 640, 480 });
 
-    auto bg_layer = PixelPaint::Layer::create_with_size(*image, { 640, 480 }, "Background");
-    image->add_layer(*bg_layer);
-    bg_layer->bitmap().fill(Color::White);
+        auto bg_layer = PixelPaint::Layer::create_with_size(*image, { 640, 480 }, "Background");
+        image->add_layer(*bg_layer);
+        bg_layer->bitmap().fill(Color::White);
 
-    auto fg_layer1 = PixelPaint::Layer::create_with_size(*image, { 200, 200 }, "FG Layer 1");
-    fg_layer1->set_location({ 50, 50 });
-    image->add_layer(*fg_layer1);
-    fg_layer1->bitmap().fill(Color::Yellow);
+        auto fg_layer1 = PixelPaint::Layer::create_with_size(*image, { 200, 200 }, "FG Layer 1");
+        fg_layer1->set_location({ 50, 50 });
+        image->add_layer(*fg_layer1);
+        fg_layer1->bitmap().fill(Color::Yellow);
 
-    auto fg_layer2 = PixelPaint::Layer::create_with_size(*image, { 100, 100 }, "FG Layer 2");
-    fg_layer2->set_location({ 300, 300 });
-    image->add_layer(*fg_layer2);
-    fg_layer2->bitmap().fill(Color::Blue);
+        auto fg_layer2 = PixelPaint::Layer::create_with_size(*image, { 100, 100 }, "FG Layer 2");
+        fg_layer2->set_location({ 300, 300 });
+        image->add_layer(*fg_layer2);
+        fg_layer2->bitmap().fill(Color::Blue);
 
-    layer_list_widget.on_layer_select = [&](auto* layer) {
-        image_editor.set_active_layer(layer);
-    };
+        layer_list_widget.set_image(image);
 
-    layer_list_widget.set_image(image);
-
-    image_editor.set_image(image);
-    image_editor.set_active_layer(bg_layer);
+        image_editor.set_image(image);
+        image_editor.set_active_layer(bg_layer);
+    }
 
     return app->exec();
 }
