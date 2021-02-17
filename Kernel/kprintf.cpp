@@ -49,23 +49,6 @@ int get_serial_debug()
     return serial_debug;
 }
 
-static void color_on()
-{
-    IO::out8(0xe9, 0x1b);
-    IO::out8(0xe9, '[');
-    IO::out8(0xe9, '3');
-    IO::out8(0xe9, '6');
-    IO::out8(0xe9, 'm');
-}
-
-static void color_off()
-{
-    IO::out8(0xe9, 0x1b);
-    IO::out8(0xe9, '[');
-    IO::out8(0xe9, '0');
-    IO::out8(0xe9, 'm');
-}
-
 static void serial_putch(char ch)
 {
     static bool serial_ready = false;
@@ -109,23 +92,6 @@ static void console_out(char ch)
     } else {
         IO::out8(0xe9, ch);
     }
-}
-
-static void console_putch(char*&, char ch)
-{
-    console_out(ch);
-}
-
-int kprintf(const char* fmt, ...)
-{
-    ScopedSpinLock lock(s_log_lock);
-    color_on();
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = printf_internal(console_putch, nullptr, fmt, ap);
-    va_end(ap);
-    color_off();
-    return ret;
 }
 
 static void buffer_putch(char*& bufptr, char ch)

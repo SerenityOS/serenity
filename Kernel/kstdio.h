@@ -31,7 +31,6 @@
 extern "C" {
 int dbgputstr(const char*, int);
 int kernelputstr(const char*, int);
-int kprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 int snprintf(char* buf, size_t, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
 void set_serial_debug(bool on_or_off);
 int get_serial_debug();

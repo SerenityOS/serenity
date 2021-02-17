@@ -222,17 +222,10 @@ start:
     call init
     add $4, %esp
 
-    pushl $exit_message
-    call kprintf
-    add $4, %esp
     cli
-
 loop:
     hlt
     jmp loop
-
-exit_message:
-    .asciz "Kernel exited."
 
 .extern init_ap
 .type init_ap, @function
