@@ -65,10 +65,8 @@ RefPtr<Font> Typeface::get_font(unsigned size)
             return font;
     }
 
-    if (m_ttf_font) {
-        auto font = adopt(*new TTF::ScaledFont(m_ttf_font, size, size));
-        return font;
-    }
+    if (m_ttf_font)
+        return adopt(*new TTF::ScaledFont(*m_ttf_font, size, size));
 
     return {};
 }
