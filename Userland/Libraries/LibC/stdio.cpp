@@ -1194,12 +1194,12 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
 
 void flockfile([[maybe_unused]] FILE* filehandle)
 {
-    dbgprintf("FIXME: Implement flockfile()\n");
+    dbgln("FIXME: Implement flockfile()");
 }
 
 void funlockfile([[maybe_unused]] FILE* filehandle)
 {
-    dbgprintf("FIXME: Implement funlockfile()\n");
+    dbgln("FIXME: Implement funlockfile()");
 }
 
 FILE* tmpfile()
