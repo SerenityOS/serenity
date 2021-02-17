@@ -163,7 +163,7 @@ void IconView::update_content_size()
             m_visual_row_count = ceil_div(model()->row_count(), m_visual_column_count);
         else
             m_visual_row_count = 0;
-        content_width = available_size().width();
+        content_width = m_visual_column_count * effective_item_size().width();
         content_height = m_visual_row_count * effective_item_size().height();
     } else {
         m_visual_row_count = max(1, available_size().height() / effective_item_size().height());
