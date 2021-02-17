@@ -44,7 +44,7 @@ static inline int inet_aton(const char* cp, struct in_addr* inp)
 
 char* inet_ntoa(struct in_addr);
 
-inline uint16_t htons(uint16_t value)
+static inline uint16_t htons(uint16_t value)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap16(value);
@@ -53,12 +53,12 @@ inline uint16_t htons(uint16_t value)
 #endif
 }
 
-inline uint16_t ntohs(uint16_t value)
+static inline uint16_t ntohs(uint16_t value)
 {
     return htons(value);
 }
 
-inline uint32_t htonl(uint32_t value)
+static inline uint32_t htonl(uint32_t value)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap32(value);
@@ -67,7 +67,7 @@ inline uint32_t htonl(uint32_t value)
 #endif
 }
 
-inline uint32_t ntohl(uint32_t value)
+static inline uint32_t ntohl(uint32_t value)
 {
     return htonl(value);
 }
