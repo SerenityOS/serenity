@@ -1,5 +1,7 @@
 interface Document : Node {
 
+    constructor();
+
     readonly attribute DOMImplementation implementation;
 
     readonly attribute DOMString characterSet;
