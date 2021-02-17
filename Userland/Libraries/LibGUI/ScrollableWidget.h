@@ -57,6 +57,7 @@ public:
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
 
     Gfx::IntSize available_size() const;
+    Gfx::IntSize excess_size() const;
 
     ScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
     const ScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
