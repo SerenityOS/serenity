@@ -75,9 +75,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child_tss.gs = regs.gs;
     child_tss.ss = regs.userspace_ss;
 
-#if FORK_DEBUG
-    dbgln("fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
-#endif
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
 
     {
         ScopedSpinLock lock(space().get_lock());
