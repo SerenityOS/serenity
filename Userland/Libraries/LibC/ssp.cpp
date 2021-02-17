@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/Types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,9 +42,9 @@ u32 __stack_chk_guard = (u32)0xc6c7c8c9;
 
 [[noreturn]] void __stack_chk_fail()
 {
-    dbgprintf("Error: USERSPACE(%d) Stack protector failure, stack smashing detected!\n", getpid());
+    dbgln("Error: USERSPACE({}) Stack protector failure, stack smashing detected!", getpid());
     if (__stdio_is_initialized)
-        fprintf(stderr, "Error: Stack protector failure, stack smashing detected!\n");
+        warnln("Error: Stack protector failure, stack smashing detected!");
     abort();
 }
 
