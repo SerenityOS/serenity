@@ -560,16 +560,16 @@ bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
     auto relative_point = point.translated(-render_rect().location());
     if (point.y() < window_rect.y()) {
         if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point).alpha();
+            alpha = m_top_bottom->get_pixel(relative_point * m_top_bottom->scale()).alpha();
     } else if (point.y() > window_rect.bottom()) {
         if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point.x(), m_bottom_y + point.y() - window_rect.bottom() - 1).alpha();
+            alpha = m_top_bottom->get_pixel(relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1).alpha();
     } else if (point.x() < window_rect.x()) {
         if (m_left_right)
-            alpha = m_left_right->get_pixel(relative_point.x(), relative_point.y() - m_bottom_y).alpha();
+            alpha = m_left_right->get_pixel(relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
     } else if (point.x() > window_rect.right()) {
         if (m_left_right)
-            alpha = m_left_right->get_pixel(m_right_x + point.x() - window_rect.right() - 1, relative_point.y() - m_bottom_y).alpha();
+            alpha = m_left_right->get_pixel(m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
     } else {
         return false;
     }
