@@ -66,6 +66,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& game = window->set_main_widget<Game>();
+    window->set_minimum_size(game.columns(), game.rows());
 
     auto menubar = GUI::MenuBar::construct();
 
