@@ -1260,9 +1260,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
                 callback({ { entry.name, strlen(entry.name) }, to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
         }
         for (auto pid_child : Process::all_pids()) {
-            char name[16];
-            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", pid_child.value());
-            callback({ { name, name_length }, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
+            callback({ String::number(pid_child.value()), to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
 
@@ -1305,9 +1303,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             auto description = process->file_description(i);
             if (!description)
                 continue;
-            char name[16];
-            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", i);
-            callback({ { name, name_length }, to_identifier_with_fd(fsid(), pid, i), 0 });
+            callback({ String::number(i), to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;
 
@@ -1318,9 +1314,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             return ENOENT;
         process->for_each_thread([&](Thread& thread) -> IterationDecision {
             int tid = thread.tid().value();
-            char name[16];
-            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", tid);
-            callback({ { name, name_length }, to_identifier_with_stack(fsid(), tid), 0 });
+            callback({ String::number(tid), to_identifier_with_stack(fsid(), tid), 0 });
             return IterationDecision::Continue;
         });
     } break;
