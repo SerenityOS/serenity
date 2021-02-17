@@ -374,7 +374,7 @@ Vector<u32> IndexedProperties::indices() const
         }
     } else {
         const auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
-        const auto packed_elements = storage.packed_elements();
+        const auto& packed_elements = storage.packed_elements();
         indices.ensure_capacity(storage.array_like_size());
         for (size_t i = 0; i < packed_elements.size(); ++i) {
             if (!packed_elements.at(i).value.is_empty())
