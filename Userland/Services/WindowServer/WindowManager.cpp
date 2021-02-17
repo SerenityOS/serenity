@@ -418,7 +418,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     bool new_window_picked = false;
     Window* first_candidate = nullptr;
     for_each_visible_window_from_front_to_back([&](Window& candidate) {
-        if (candidate.type() != WindowType::Normal && candidate.type() == WindowType::ToolWindow)
+        if (candidate.type() != WindowType::Normal && candidate.type() != WindowType::ToolWindow)
             return IterationDecision::Continue;
         if (candidate.is_destroyed())
             return IterationDecision::Continue;
