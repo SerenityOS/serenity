@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
 
@@ -63,6 +64,10 @@ public:
     static NonnullRefPtr<Event> create(const FlyString& event_name)
     {
         return adopt(*new Event(event_name));
+    }
+    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name)
+    {
+        return Event::create(event_name);
     }
 
     virtual ~Event() { }
