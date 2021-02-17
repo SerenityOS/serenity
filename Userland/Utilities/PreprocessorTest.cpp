@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AK/Forward.h"
 #include <LibCore/File.h>
 #include <LibCpp/Preprocessor.h>
 
@@ -37,5 +36,5 @@ int main(int, char**)
     }
     auto content = file->read_all();
     Cpp::Preprocessor cpp(StringView { content });
-    dbgprintf("%s\n", cpp.process().characters());
+    dbgln("{}", cpp.process());
 }
