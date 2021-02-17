@@ -36,6 +36,7 @@
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
@@ -60,7 +61,15 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const URL& url = "about:blank") { return adopt(*new Document(url)); }
+    static NonnullRefPtr<Document> create(const URL& url = "about:blank")
+    {
+        return adopt(*new Document(url));
+    }
+    static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&)
+    {
+        return Document::create();
+    }
+
     virtual ~Document() override;
 
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
