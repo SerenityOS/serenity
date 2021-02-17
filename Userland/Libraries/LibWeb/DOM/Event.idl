@@ -1,5 +1,8 @@
 interface Event {
 
+    // FIXME: second parameter: 'optional EventInit eventInitDict = {}'
+    constructor(DOMString type);
+
     readonly attribute DOMString type;
     readonly attribute EventTarget? target;
     readonly attribute EventTarget? srcTarget;
