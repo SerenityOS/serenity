@@ -106,31 +106,38 @@ Gfx::IntSize ScrollableWidget::available_size() const
     return { available_width, available_height };
 }
 
-void ScrollableWidget::update_scrollbar_ranges()
+Gfx::IntSize ScrollableWidget::excess_size() const
 {
     auto available_size = this->available_size();
-
     int excess_height = max(0, m_content_size.height() - available_size.height());
     int excess_width = max(0, m_content_size.width() - available_size.width());
+    return { excess_width, excess_height };
+}
 
-    auto vertical_initial_visibility = m_vertical_scrollbar->is_visible();
-    auto horizontal_initial_visibility = m_horizontal_scrollbar->is_visible();
-
+void ScrollableWidget::update_scrollbar_ranges()
+{
     if (should_hide_unnecessary_scrollbars()) {
-        m_vertical_scrollbar->set_visible(excess_height > 0);
-        m_horizontal_scrollbar->set_visible(excess_width > 0);
+        if (excess_size().height() - height_occupied_by_horizontal_scrollbar() <= 0 && excess_size().width() - width_occupied_by_vertical_scrollbar() <= 0) {
+            m_horizontal_scrollbar->set_visible(false);
+            m_vertical_scrollbar->set_visible(false);
+        } else {
+            auto vertical_initial_visibility = m_vertical_scrollbar->is_visible();
+            auto horizontal_initial_visibility = m_horizontal_scrollbar->is_visible();
+
+            m_vertical_scrollbar->set_visible(excess_size().height() > 0);
+            m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
+
+            if (m_vertical_scrollbar->is_visible() != vertical_initial_visibility)
+                m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
+            if (m_horizontal_scrollbar->is_visible() != horizontal_initial_visibility)
+                m_vertical_scrollbar->set_visible(excess_size().height() > 0);
+        }
     }
 
-    if (m_vertical_scrollbar->is_visible() != vertical_initial_visibility || m_horizontal_scrollbar->is_visible() != horizontal_initial_visibility) {
-        available_size = this->available_size();
-        excess_height = max(0, m_content_size.height() - available_size.height());
-        excess_width = max(0, m_content_size.width() - available_size.width());
-    }
-
-    m_horizontal_scrollbar->set_range(0, excess_width);
+    m_horizontal_scrollbar->set_range(0, excess_size().width());
     m_horizontal_scrollbar->set_page_step(visible_content_rect().width() - m_horizontal_scrollbar->step());
 
-    m_vertical_scrollbar->set_range(0, excess_height);
+    m_vertical_scrollbar->set_range(0, excess_size().height());
     m_vertical_scrollbar->set_page_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }
 
