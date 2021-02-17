@@ -520,6 +520,140 @@ static bool is_wrappable_type(const IDL::Type& type)
     return false;
 }
 
+template<typename ParameterType>
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false)
+{
+    auto scoped_generator = generator.fork();
+    scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
+    scoped_generator.set("js_name", js_name);
+    scoped_generator.set("js_suffix", js_suffix);
+    scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
+    scoped_generator.set("parameter.type.name", parameter.type.name);
+
+    if (return_void)
+        scoped_generator.set("return_statement", "return;");
+    else
+        scoped_generator.set("return_statement", "return {};");
+
+    // FIXME: Add support for optional to all types
+    if (parameter.type.name == "DOMString") {
+        if (!optional) {
+            scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+    if (vm.exception())
+        @return_statement@
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    String @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+        if (vm.exception())
+            @return_statement@
+    }
+)~~~");
+        }
+    } else if (parameter.type.name == "EventListener") {
+        scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_function()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+        @return_statement@
+    }
+    auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+)~~~");
+    } else if (is_wrappable_type(parameter.type)) {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
+    if (vm.exception())
+        @return_statement@
+
+    if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
+        @return_statement@
+    }
+
+    auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
+)~~~");
+    } else if (parameter.type.name == "double") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
+    } else if (parameter.type.name == "boolean") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_boolean();
+)~~~");
+    } else if (parameter.type.name == "unsigned long") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
+    } else if (parameter.type.name == "EventHandler") {
+        // x.onfoo = function() { ... }
+        scoped_generator.append(R"~~~(
+    HTML::EventHandler @cpp_name@;
+    if (@js_name@@js_suffix@.is_function()) {
+        @cpp_name@.callback = JS::make_handle(&@js_name@@js_suffix@.as_function());
+    } else if (@js_name@@js_suffix@.is_string()) {
+        @cpp_name@.string = @js_name@@js_suffix@.as_string().string();
+    } else {
+        @return_statement@
+    }
+)~~~");
+    } else {
+        dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
+        ASSERT_NOT_REACHED();
+    }
+};
+
+template<typename FunctionType>
+static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function)
+{
+    auto argument_count_check_generator = generator.fork();
+    argument_count_check_generator.set("function.name", function.name);
+    argument_count_check_generator.set("function.nargs", String::number(function.length()));
+
+    if (function.length() == 0)
+        return;
+    if (function.length() == 1) {
+        argument_count_check_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountOne");
+        argument_count_check_generator.set(".arg_count_suffix", "");
+    } else {
+        argument_count_check_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountMany");
+        argument_count_check_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", function.length()));
+    }
+
+    argument_count_check_generator.append(R"~~~(
+    if (vm.argument_count() < @function.nargs@) {
+        vm.throw_exception<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
+        return {};
+    }
+)~~~");
+};
+
+static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Parameter>& parameters, StringBuilder& arguments_builder, bool return_void = false)
+{
+    auto arguments_generator = generator.fork();
+
+    Vector<String> parameter_names;
+    size_t argument_index = 0;
+    for (auto& parameter : parameters) {
+        parameter_names.append(make_input_acceptable_cpp(snake_name(parameter.name)));
+        arguments_generator.set("argument.index", String::number(argument_index));
+
+        arguments_generator.append(R"~~~(
+    auto arg@argument.index@ = vm.argument(@argument.index@);
+)~~~");
+        // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), snake_name(parameter.name), return_void, false, parameter.optional);
+        ++argument_index;
+    }
+
+    arguments_builder.join(", ", parameter_names);
+};
+
 static void generate_header(const IDL::Interface& interface)
 {
     StringBuilder builder;
@@ -566,6 +700,8 @@ namespace Web::Bindings {
 class @wrapper_class@ : public @wrapper_base_class@ {
     JS_OBJECT(@wrapper_class@, @wrapper_base_class@);
 public:
+    static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
+
     @wrapper_class@(JS::GlobalObject&, @fully_qualified_name@&);
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@wrapper_class@() override;
@@ -655,6 +791,11 @@ using namespace Web::DOM;
 using namespace Web::HTML;
 
 namespace Web::Bindings {
+
+@wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
+{
+    return global_object.heap().allocate<@wrapper_class@>(global_object, global_object, impl);
+}
 
 )~~~");
 
@@ -798,12 +939,52 @@ JS::Value @constructor_class@::call()
 
 JS::Value @constructor_class@::construct(Function&)
 {
+)~~~");
+
+    if (interface.constructors.is_empty()) {
+        // No constructor
+        generator.set("constructor.length", "0");
+        generator.append(R"~~~(
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::NotAConstructor, "@name@");
     return {};
-#if 0
-    // FIXME: It would be cool to construct stuff!
-    auto& window = static_cast<WindowObject&>(global_object());
-    return heap().allocate<@wrapper_class@>(window, window, @fully_qualified_name@::create(window.impl()));
-#endif
+)~~~");
+    } else if (interface.constructors.size() == 1) {
+        // Single constructor
+
+        auto& constructor = interface.constructors[0];
+        generator.set("constructor.length", String::number(constructor.length()));
+
+        generator.append(R"~~~(
+    [[maybe_unused]] auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto& window = static_cast<WindowObject&>(global_object);
+)~~~");
+
+        if (!constructor.parameters.is_empty()) {
+            generate_argument_count_check(generator, constructor);
+
+            StringBuilder arguments_builder;
+            generate_arguments(generator, constructor.parameters, arguments_builder);
+            generator.set(".constructor_arguments", arguments_builder.string_view());
+
+            generator.append(R"~~~(
+    auto impl = @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@);
+)~~~");
+        } else {
+            generator.append(R"~~~(
+    auto impl = @fully_qualified_name@::create_with_global_object(window);
+)~~~");
+        }
+        generator.append(R"~~~(
+    return @wrapper_class@::create(global_object, impl);
+)~~~");
+    } else {
+        // Multiple constructor overloads - can't do that yet.
+        TODO();
+    }
+
+    generator.append(R"~~~(
 }
 
 void @constructor_class@::initialize(JS::GlobalObject& global_object)
@@ -814,7 +995,7 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
 
     NativeFunction::initialize(global_object);
     define_property(vm.names.prototype, &window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
-    define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+    define_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
 )~~~");
 
@@ -1061,112 +1242,6 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
     }
 
-    auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false) {
-        auto scoped_generator = generator.fork();
-        scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
-        scoped_generator.set("js_name", js_name);
-        scoped_generator.set("js_suffix", js_suffix);
-        scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
-        scoped_generator.set("parameter.type.name", parameter.type.name);
-
-        if (return_void)
-            scoped_generator.set("return_statement", "return;");
-        else
-            scoped_generator.set("return_statement", "return {};");
-
-        // FIXME: Add support for optional to all types
-        if (parameter.type.name == "DOMString") {
-            if (!optional) {
-                scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
-    if (vm.exception())
-        @return_statement@
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-    String @cpp_name@;
-    if (!@js_name@@js_suffix@.is_undefined()) {
-        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
-        if (vm.exception())
-            @return_statement@
-    }
-)~~~");
-            }
-        } else if (parameter.type.name == "EventListener") {
-            scoped_generator.append(R"~~~(
-    if (!@js_name@@js_suffix@.is_function()) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
-        @return_statement@
-    }
-    auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
-)~~~");
-        } else if (is_wrappable_type(parameter.type)) {
-            scoped_generator.append(R"~~~(
-    auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
-    if (vm.exception())
-        @return_statement@
-
-    if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
-        @return_statement@
-    }
-
-    auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
-)~~~");
-        } else if (parameter.type.name == "double") {
-            scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
-    if (vm.exception())
-        @return_statement@
-)~~~");
-        } else if (parameter.type.name == "boolean") {
-            scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_boolean();
-)~~~");
-        } else if (parameter.type.name == "unsigned long") {
-            scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
-    if (vm.exception())
-        @return_statement@
-)~~~");
-        } else if (parameter.type.name == "EventHandler") {
-            // x.onfoo = function() { ... }
-            scoped_generator.append(R"~~~(
-    HTML::EventHandler @cpp_name@;
-    if (@js_name@@js_suffix@.is_function()) {
-        @cpp_name@.callback = JS::make_handle(&@js_name@@js_suffix@.as_function());
-    } else if (@js_name@@js_suffix@.is_string()) {
-        @cpp_name@.string = @js_name@@js_suffix@.as_string().string();
-    } else {
-        @return_statement@
-    }
-)~~~");
-        } else {
-            dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
-            ASSERT_NOT_REACHED();
-        }
-    };
-
-    auto generate_arguments = [&](auto& parameters, auto& arguments_builder, bool return_void = false) {
-        auto arguments_generator = generator.fork();
-
-        Vector<String> parameter_names;
-        size_t argument_index = 0;
-        for (auto& parameter : parameters) {
-            parameter_names.append(make_input_acceptable_cpp(snake_name(parameter.name)));
-            arguments_generator.set("argument.index", String::number(argument_index));
-
-            arguments_generator.append(R"~~~(
-    auto arg@argument.index@ = vm.argument(@argument.index@);
-)~~~");
-            // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-            generate_to_cpp(parameter, "arg", String::number(argument_index), snake_name(parameter.name), return_void, false, parameter.optional);
-            ++argument_index;
-        }
-
-        arguments_builder.join(", ", parameter_names);
-    };
-
     auto generate_return_statement = [&](auto& return_type) {
         auto scoped_generator = generator.fork();
         scoped_generator.set("return_type", return_type.name);
@@ -1292,7 +1367,7 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
         return;
 )~~~");
 
-            generate_to_cpp(attribute, "value", "", "cpp_value", true, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", true, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type.name != "boolean") {
@@ -1324,7 +1399,6 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
         function_generator.set("function.name:snakecase", snake_name(function.name));
-        function_generator.set("function.nargs", String::number(function.length()));
 
         function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
@@ -1334,26 +1408,10 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
         return {};
 )~~~");
 
-        if (function.length() > 0) {
-            if (function.length() == 1) {
-                function_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountOne");
-                function_generator.set(".arg_count_suffix", "");
-            } else {
-                function_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountMany");
-                function_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", function.length()));
-            }
-
-            function_generator.append(R"~~~(
-    if (vm.argument_count() < @function.nargs@) {
-        vm.throw_exception<JS::TypeError>(global_object, @.bad_arg_count@, "@function.name@"@.arg_count_suffix@);
-        return {};
-    }
-)~~~");
-        }
+        generate_argument_count_check(generator, function);
 
         StringBuilder arguments_builder;
-        generate_arguments(function.parameters, arguments_builder);
-
+        generate_arguments(generator, function.parameters, arguments_builder);
         function_generator.set(".arguments", arguments_builder.string_view());
 
         if (function.return_type.name != "undefined") {
