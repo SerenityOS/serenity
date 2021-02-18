@@ -102,6 +102,7 @@ private:
         bool is_tls_template() const { return type() == PT_TLS; }
         bool is_load() const { return type() == PT_LOAD; }
         bool is_dynamic() const { return type() == PT_DYNAMIC; }
+        bool is_relro() const { return type() == PT_GNU_RELRO; }
 
     private:
         Elf32_Phdr m_program_header; // Explicitly a copy of the PHDR in the image
@@ -144,6 +145,9 @@ private:
 
     VirtualAddress m_text_segment_load_address;
     size_t m_text_segment_size { 0 };
+
+    VirtualAddress m_relro_segment_address;
+    size_t m_relro_segment_size { 0 };
 
     VirtualAddress m_tls_segment_address;
     VirtualAddress m_dynamic_section_address;

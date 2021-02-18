@@ -234,6 +234,20 @@ RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_t
         return nullptr;
     }
 
+    if (m_relro_segment_size) {
+        if (mprotect(m_relro_segment_address.as_ptr(), m_relro_segment_size, PROT_READ) < 0) {
+            perror("mprotect .relro: PROT_READ");
+            return nullptr;
+        }
+
+#if __serenity__
+        if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, String::formatted("{}: .relro", m_filename).characters()) < 0) {
+            perror("set_mmap_name .relro");
+            return nullptr;
+        }
+#endif
+    }
+
     call_object_init_functions();
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Loaded {}", m_filename);
@@ -255,11 +269,12 @@ void DynamicLoader::load_program_headers()
     Optional<ProgramHeaderRegion> text_region;
     Optional<ProgramHeaderRegion> data_region;
     Optional<ProgramHeaderRegion> tls_region;
+    Optional<ProgramHeaderRegion> relro_region;
 
     VirtualAddress dynamic_region_desired_vaddr;
 
     m_elf_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
-        ProgramHeaderRegion region;
+        ProgramHeaderRegion region {};
         region.set_program_header(program_header.raw_header());
         if (region.is_tls_template()) {
             ASSERT(!tls_region.has_value());
@@ -274,6 +289,9 @@ void DynamicLoader::load_program_headers()
             }
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
+        } else if (region.is_relro()) {
+            ASSERT(!relro_region.has_value());
+            relro_region = region;
         }
         return IterationDecision::Continue;
     });
@@ -335,6 +353,11 @@ void DynamicLoader::load_program_headers()
     ASSERT(requested_load_address == nullptr || requested_load_address == text_segment_begin);
     m_text_segment_size = text_segment_size;
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
+
+    if (relro_region.has_value()) {
+        m_relro_segment_size = relro_region->size_in_memory();
+        m_relro_segment_address = m_text_segment_load_address.offset(relro_region->desired_load_address().get());
+    }
 
     if (m_elf_image.is_dynamic())
         m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
