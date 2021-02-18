@@ -461,35 +461,34 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     return interpreter_load_result;
 }
 
-int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header)
+KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header)
 {
     ASSERT(is_user_process());
     ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
-#if EXEC_DEBUG
-    dbgln("do_exec({})", path);
-#endif
+
+    dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
 
     // FIXME: How much stack space does process startup need?
     if (!validate_stack_size(arguments, environment))
-        return -E2BIG;
+        return E2BIG;
 
     auto parts = path.split('/');
     if (parts.is_empty())
-        return -ENOENT;
+        return ENOENT;
 
     auto main_program_metadata = main_program_description->metadata();
 
     auto load_result_or_error = load(main_program_description, interpreter_description, main_program_header);
     if (load_result_or_error.is_error()) {
-        dbgln("do_exec({}): Failed to load main program or interpreter", path);
+        dbgln("do_exec: Failed to load main program or interpreter for {}", path);
         return load_result_or_error.error();
     }
 
     auto signal_trampoline_range = load_result_or_error.value().space->allocate_range({}, PAGE_SIZE);
     if (!signal_trampoline_range.has_value()) {
         dbgln("do_exec: Failed to allocate VM for signal trampoline");
-        return -ENOMEM;
+        return ENOMEM;
     }
 
     // We commit to the new executable at this point. There is no turning back!
@@ -631,7 +630,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
-    return 0;
+    return KSuccess;
 }
 
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd)
@@ -718,10 +717,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     }
 
     if (!interpreter_path.is_empty()) {
-
-#if EXEC_DEBUG
-        dbgln("exec({}): Using program interpreter {}", path, interpreter_path);
-#endif
+        dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
         auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
             dbgln("exec({}): Unable to open program interpreter {}", path, interpreter_path);
@@ -784,11 +780,11 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     return KResult(KSuccess);
 }
 
-int Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
+KResult Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
-        return -ELOOP;
+        return ELOOP;
     }
 
     // Open the file to check what kind of binary format it is
@@ -798,15 +794,15 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto result = VFS::the().open(path, O_EXEC, 0, current_directory());
-    if (result.is_error())
-        return result.error();
-    auto description = result.release_value();
+    auto file_or_error = VFS::the().open(path, O_EXEC, 0, current_directory());
+    if (file_or_error.is_error())
+        return file_or_error.error();
+    auto description = file_or_error.release_value();
     auto metadata = description->metadata();
 
     // Always gonna need at least 3 bytes. these are for #!X
     if (metadata.size < 3)
-        return -ENOEXEC;
+        return ENOEXEC;
 
     ASSERT(description->inode());
 
@@ -815,7 +811,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
     auto nread_or_error = description->read(first_page_buffer, sizeof(first_page));
     if (nread_or_error.is_error())
-        return -ENOEXEC;
+        return ENOEXEC;
 
     // 1) #! interpreted file
     auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread_or_error.value());
@@ -833,12 +829,12 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // #2) ELF32 for i386
 
     if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
-        return -ENOEXEC;
+        return ENOEXEC;
     auto main_program_header = (Elf32_Ehdr*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
-        return -ENOEXEC;
+        return ENOEXEC;
     }
 
     auto elf_result = find_elf_interpreter_for_executable(path, *main_program_header, nread_or_error.value(), metadata.size);
@@ -855,10 +851,9 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     // are cleaned up by the time we yield-teleport below.
     Thread* new_main_thread = nullptr;
     u32 prev_flags = 0;
-    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
-
-    if (rc < 0)
-        return rc;
+    auto result = do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
+    if (result.is_error())
+        return result;
 
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
@@ -877,7 +872,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     }
 
     Processor::current().leave_critical(prev_flags);
-    return 0;
+    return KSuccess;
 }
 
 int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
@@ -929,9 +924,9 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     if (!copy_user_strings(params.environment, environment))
         return -EFAULT;
 
-    int rc = exec(move(path), move(arguments), move(environment));
-    ASSERT(rc < 0); // We should never continue after a successful exec!
-    return rc;
+    auto result = exec(move(path), move(arguments), move(environment));
+    ASSERT(result.is_error()); // We should never continue after a successful exec!
+    return result.error();
 }
 
 }
