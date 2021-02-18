@@ -82,13 +82,37 @@ SetOptionCommand SetOptionCommand::from_string(const StringView& command)
     auto tokens = command.split_view(' ');
     ASSERT(tokens[0] == "setoption");
     ASSERT(tokens[1] == "name");
-    if (tokens.size() == 3) {
-        return SetOptionCommand(tokens[1]);
-    } else if (tokens.size() == 4) {
-        ASSERT(tokens[2] == "value");
-        return SetOptionCommand(tokens[1], tokens[3]);
+    ASSERT(tokens.size() > 2);
+
+    StringBuilder name;
+    StringBuilder value;
+    bool in_name = false;
+    bool in_value = false;
+    for (auto& part : tokens) {
+        if (in_name) {
+            if (part == "value") {
+                in_name = false;
+                in_value = true;
+                continue;
+            }
+            name.append(part);
+            name.append(' ');
+            continue;
+        }
+        if (in_value) {
+            value.append(part);
+            value.append(' ');
+            continue;
+        }
+        if (part == "name") {
+            in_name = true;
+            continue;
+        }
     }
-    ASSERT_NOT_REACHED();
+
+    ASSERT(!name.is_empty());
+
+    return SetOptionCommand(name.to_string().trim_whitespace(), value.to_string().trim_whitespace());
 }
 
 String SetOptionCommand::to_string() const
