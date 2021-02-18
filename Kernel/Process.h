@@ -387,7 +387,7 @@ public:
         return m_max_open_file_descriptors;
     }
 
-    int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
+    KResult exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
 
@@ -477,7 +477,7 @@ private:
     bool dump_core();
     bool dump_perfcore();
 
-    int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
+    KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     ssize_t do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& elf_header, int nread, size_t file_size);
