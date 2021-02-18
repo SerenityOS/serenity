@@ -575,9 +575,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         }
         if (m_move_window->rect().contains(event.position()))
             hovered_window = m_move_window;
-        return true;
     }
-    return false;
+    return true;
 }
 
 bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Window*& hovered_window)
@@ -607,7 +606,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     }
 
     if (event.type() != Event::MouseMove)
-        return false;
+        return true;
 
     int diff_x = event.x() - m_resize_origin.x();
     int diff_y = event.y() - m_resize_origin.y();
