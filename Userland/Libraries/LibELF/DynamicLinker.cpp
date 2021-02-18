@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
@@ -50,7 +51,6 @@ namespace ELF {
 
 namespace {
 HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> g_loaders;
-HashMap<String, NonnullRefPtr<ELF::DynamicObject>> g_loaded_objects;
 Vector<NonnullRefPtr<ELF::DynamicObject>> g_global_objects;
 
 using MainFunction = int (*)(int, char**, char**);
@@ -178,29 +178,37 @@ static void initialize_libc(DynamicObject& libc)
     ((libc_init_func*)res.value().address)();
 }
 
+template<typename Callback>
+static void for_each_dependency_of_impl(const String& name, HashTable<String>& seen_names, Callback callback)
+{
+    if (seen_names.contains(name))
+        return;
+    seen_names.set(name);
+
+    for (const auto& needed_name : get_dependencies(name))
+        for_each_dependency_of_impl(get_library_name(needed_name), seen_names, callback);
+
+    callback(*g_loaders.get(name).value());
+}
+
+template<typename Callback>
+static void for_each_dependency_of(const String& name, Callback callback)
+{
+    HashTable<String> seen_names;
+    for_each_dependency_of_impl(name, seen_names, move(callback));
+}
+
 static void load_elf(const String& name)
 {
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "load_elf: {}", name);
-    auto loader = g_loaders.get(name).value();
-
-    auto dynamic_object = loader->map();
-    ASSERT(dynamic_object);
-
-    for (const auto& needed_name : get_dependencies(name)) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name);
-        String library_name = get_library_name(needed_name);
-        if (!g_loaded_objects.contains(library_name)) {
-            load_elf(library_name);
-        }
-    }
-
-    bool success = loader->link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
-    ASSERT(success);
-
-    g_loaded_objects.set(name, *dynamic_object);
-    g_global_objects.append(*dynamic_object);
-
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "load_elf: done {}", name);
+    for_each_dependency_of(name, [](auto& loader) {
+        auto dynamic_object = loader.map();
+        ASSERT(dynamic_object);
+        g_global_objects.append(*dynamic_object);
+    });
+    for_each_dependency_of(name, [](auto& loader) {
+        bool success = loader.link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
+        ASSERT(success);
+    });
 }
 
 static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
