@@ -24,9 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "cp.h"
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -71,6 +73,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto my_umask = umask(0);
+    umask(my_umask);
+
     for (auto& old_path : paths) {
         String combined_new_path;
         const char* new_path = original_new_path;
@@ -82,11 +87,19 @@ int main(int argc, char** argv)
 
         rc = rename(old_path, new_path);
         if (rc < 0) {
-            perror("rename");
-            return 1;
+            if (errno == EXDEV) {
+                bool recursion_allowed = true;
+                bool link = false;
+                bool ok = copy_file_or_directory(old_path, new_path, recursion_allowed, link);
+                if (!ok)
+                    return 1;
+                rc = unlink(old_path);
+                if (rc < 0)
+                    fprintf(stderr, "mv: unlink '%s': %s\n", old_path, strerror(errno));
+            }
         }
 
-        if (verbose)
+        if (verbose && rc == 0)
             printf("renamed '%s' -> '%s'\n", old_path, new_path);
     }
 
