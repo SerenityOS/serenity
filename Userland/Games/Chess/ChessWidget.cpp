@@ -168,7 +168,11 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     GUI::Widget::mousedown_event(event);
 
     if (event.button() == GUI::MouseButton::Right) {
-        m_current_marking.from = mouse_to_square(event);
+        if (m_dragging_piece) {
+            m_dragging_piece = false;
+        } else {
+            m_current_marking.from = mouse_to_square(event);
+        }
         return;
     }
     m_board_markings.clear();
