@@ -85,7 +85,14 @@ public:
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(const RangeAllocator&);
 
-    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
+    enum class GuardSide {
+        Neither,
+        Low,
+        High,
+        Both,
+        Default = Both,
+    };
+    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE, GuardSide guard_side = GuardSide::Default);
     Optional<Range> allocate_specific(VirtualAddress, size_t);
     Optional<Range> allocate_randomized(size_t, size_t alignment);
     void deallocate(const Range&);

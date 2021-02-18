@@ -163,7 +163,7 @@ public:
     void deallocate_supervisor_physical_page(const PhysicalPage&);
 
     OwnPtr<Region> allocate_contiguous_kernel_region(size_t, String name, u8 access, size_t physical_alignment = PAGE_SIZE, Region::Cacheable = Region::Cacheable::Yes);
-    OwnPtr<Region> allocate_kernel_region(size_t, String name, u8 access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region(size_t, String name, u8 access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes, RangeAllocator::GuardSide guard_side = RangeAllocator::GuardSide::Default);
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, String name, u8 access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, String name, u8 access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, String name, u8 access, Region::Cacheable = Region::Cacheable::Yes);

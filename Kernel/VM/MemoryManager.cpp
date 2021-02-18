@@ -479,11 +479,11 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     return allocate_kernel_region_with_vmobject(range.value(), vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u8 access, AllocationStrategy strategy, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u8 access, AllocationStrategy strategy, Region::Cacheable cacheable, RangeAllocator::GuardSide guard_side)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
-    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size, PAGE_SIZE, guard_side);
     if (!range.has_value())
         return {};
     auto vmobject = AnonymousVMObject::create_with_size(size, strategy);

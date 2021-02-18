@@ -31,8 +31,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>
 
-#define VM_GUARD_PAGES
-
 namespace Kernel {
 
 RangeAllocator::RangeAllocator()
@@ -117,7 +115,7 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
     return allocate_anywhere(size, alignment);
 }
 
-Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
+Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment, GuardSide guard_side)
 {
     if (!size)
         return {};
@@ -125,17 +123,16 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
     ASSERT((size % PAGE_SIZE) == 0);
     ASSERT((alignment % PAGE_SIZE) == 0);
 
-#ifdef VM_GUARD_PAGES
-    // NOTE: We pad VM allocations with a guard page on each side.
-    if (Checked<size_t>::addition_would_overflow(size, PAGE_SIZE * 2))
-        return {};
-
-    size_t effective_size = size + PAGE_SIZE * 2;
-    size_t offset_from_effective_base = PAGE_SIZE;
-#else
     size_t effective_size = size;
     size_t offset_from_effective_base = 0;
-#endif
+    if (guard_side == GuardSide::Low || guard_side == GuardSide::Both) {
+        effective_size += PAGE_SIZE;
+        offset_from_effective_base = PAGE_SIZE;
+    }
+
+    if (guard_side == GuardSide::High || guard_side == GuardSide::Both) {
+        effective_size += PAGE_SIZE;
+    }
 
     if (Checked<size_t>::addition_would_overflow(effective_size, alignment))
         return {};
