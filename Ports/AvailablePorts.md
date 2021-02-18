@@ -35,6 +35,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libexpat`](libexpat/)        | Expat                                         | 2.2.9             | https://libexpat.github.io/                           |
 | [`libffi`](libffi/)            | libffi                                        | 3.3               | https://www.sourceware.org/libffi/                    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
+| [`libjpeg`](libjpeg/)          | libjpeg                                       | 9d                | https://ijg.org/                                      |
 | [`libpuffy`](libpuffy/)        | libpuffy                                      | 1.0               | https://github.com/ibara/libpuffy                     |
 | [`libtiff`](libtiff/)          | libtiff                                       | 4.2.0             | http://www.libtiff.org/                               |
 | [`links`](links/)              | Links web browser                             | 2.19              | http://links.twibright.com/                           |
