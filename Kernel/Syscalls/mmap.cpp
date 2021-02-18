@@ -267,6 +267,23 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     return region->vaddr().as_ptr();
 }
 
+static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t size)
+{
+    if (page_round_up_would_wrap(size))
+        return EINVAL;
+
+    if ((address + size) < address)
+        return EINVAL;
+
+    if (page_round_up_would_wrap(address + size))
+        return EINVAL;
+
+    auto base = VirtualAddress { address }.page_base();
+    auto end = page_round_up(address + size);
+
+    return Range { base, end - base.get() };
+}
+
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
@@ -275,11 +292,11 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         REQUIRE_PROMISE(prot_exec);
     }
 
-    if (page_round_up_would_wrap(size))
-        return -EINVAL;
+    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)addr, size);
+    if (range_or_error.is_error())
+        return range_or_error.error();
 
-    Range range_to_mprotect = { VirtualAddress((FlatPtr)addr & PAGE_MASK), page_round_up(size) };
-
+    auto range_to_mprotect = range_or_error.value();
     if (!range_to_mprotect.size())
         return -EINVAL;
 
@@ -349,10 +366,11 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
-    if (page_round_up_would_wrap(size))
-        return -EINVAL;
+    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)address, size);
+    if (range_or_error.is_error())
+        return range_or_error.error();
 
-    Range range_to_madvise { VirtualAddress((FlatPtr)address & PAGE_MASK), page_round_up(size) };
+    auto range_to_madvise = range_or_error.value();
 
     if (!range_to_madvise.size())
         return -EINVAL;
@@ -408,7 +426,13 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
     if (name.is_null())
         return -EFAULT;
 
-    auto* region = space().find_region_from_range({ VirtualAddress(params.addr), params.size });
+    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.addr, params.size);
+    if (range_or_error.is_error())
+        return range_or_error.error();
+
+    auto range = range_or_error.value();
+
+    auto* region = space().find_region_from_range(range);
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -424,10 +448,11 @@ int Process::sys$munmap(void* addr, size_t size)
     if (!size)
         return -EINVAL;
 
-    if (page_round_up_would_wrap(size))
-        return -EINVAL;
+    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)addr, size);
+    if (range_or_error.is_error())
+        return range_or_error.error();
 
-    Range range_to_unmap { VirtualAddress(addr), page_round_up(size) };
+    auto range_to_unmap = range_or_error.value();
 
     if (!is_user_range(range_to_unmap))
         return -EFAULT;
@@ -473,13 +498,13 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
     if (!copy_from_user(&params, user_params))
         return (void*)-EFAULT;
 
-    if (page_round_up_would_wrap(params.old_size))
-        return (void*)-EINVAL;
+    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size);
+    if (range_or_error.is_error())
+        return (void*)range_or_error.error().error();
 
-    auto old_address = page_round_down(params.old_address);
-    auto old_size = page_round_up(params.old_size);
+    auto old_range = range_or_error.value();
 
-    auto* old_region = space().find_region_from_range(Range { VirtualAddress { old_address }, old_size });
+    auto* old_region = space().find_region_from_range(old_range);
     if (!old_region)
         return (void*)-EINVAL;
 
