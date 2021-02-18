@@ -103,8 +103,6 @@ private:
         bool is_load() const { return type() == PT_LOAD; }
         bool is_dynamic() const { return type() == PT_DYNAMIC; }
 
-        u32 required_load_size() { return ALIGN_ROUND_UP(m_program_header.p_memsz, m_program_header.p_align); }
-
     private:
         Elf32_Phdr m_program_header; // Explicitly a copy of the PHDR in the image
     };
