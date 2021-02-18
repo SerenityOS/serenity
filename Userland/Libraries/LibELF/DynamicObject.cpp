@@ -160,6 +160,9 @@ void DynamicObject::parse()
             m_soname_index = entry.val();
             m_has_soname = true;
             break;
+        case DT_BIND_NOW:
+            m_dt_flags |= DF_BIND_NOW;
+            break;
         case DT_DEBUG:
             break;
         case DT_FLAGS_1:
