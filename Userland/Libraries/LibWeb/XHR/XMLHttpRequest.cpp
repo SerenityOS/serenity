@@ -124,7 +124,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, 
     return {};
 }
 
-void XMLHttpRequest::open(const String& method, const String& url)
+DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& url)
 {
     // FIXME: Let settingsObject be this’s relevant settings object.
 
@@ -132,19 +132,15 @@ void XMLHttpRequest::open(const String& method, const String& url)
 
     // FIXME: Check that the method matches the method token production. https://tools.ietf.org/html/rfc7230#section-3.1.1
 
-    if (is_forbidden_method(method)) {
-        // FIXME: Throw a "SecurityError" DOMException.
-        return;
-    }
+    if (is_forbidden_method(method))
+        return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     String normalized_method = normalize_method(method);
 
     // FIXME: Pass in settingObject's API base URL and API URL character encoding.
     URL parsed_url(url);
-    if (!parsed_url.is_valid()) {
-        // FIXME: Throw a "SyntaxError" DOMException.
-        return;
-    }
+    if (!parsed_url.is_valid())
+        return DOM::SyntaxError::create("Invalid URL");
 
     if (!parsed_url.host().is_null()) {
         // FIXME: If the username argument is not null, set the username given parsedURL and username.
@@ -173,6 +169,7 @@ void XMLHttpRequest::open(const String& method, const String& url)
 
     if (m_ready_state != ReadyState::Opened)
         set_ready_state(ReadyState::Opened);
+    return {};
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
