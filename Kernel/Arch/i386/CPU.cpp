@@ -53,6 +53,8 @@
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/mallocdefs.h>
 
+extern FlatPtr start_of_unmap_after_init;
+extern FlatPtr end_of_unmap_after_init;
 extern FlatPtr start_of_ro_after_init;
 extern FlatPtr end_of_ro_after_init;
 
@@ -260,6 +262,11 @@ void page_fault_handler(TrapFrame* trap)
     if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
         dump(regs);
         PANIC("Attempt to write into READONLY_AFTER_INIT section");
+    }
+
+    if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
+        dump(regs);
+        PANIC("Attempt to access UNMAP_AFTER_INIT section");
     }
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));

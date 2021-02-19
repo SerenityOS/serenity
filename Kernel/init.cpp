@@ -299,6 +299,9 @@ void init_stage2(void*)
     // NOTE: Everything marked READONLY_AFTER_INIT becomes non-writable after this point.
     MM.protect_readonly_after_init_memory();
 
+    // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
+    MM.unmap_memory_after_init();
+
     int error;
 
     // FIXME: It would be nicer to set the mode from userspace.
