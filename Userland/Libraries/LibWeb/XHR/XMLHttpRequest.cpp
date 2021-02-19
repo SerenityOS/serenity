@@ -27,10 +27,12 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -103,26 +105,23 @@ static String normalize_header_value(const String& header_value)
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-void XMLHttpRequest::set_request_header(const String& header, const String& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, const String& value)
 {
-    if (m_ready_state != ReadyState::Opened) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_ready_state != ReadyState::Opened)
+        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
-    if (m_send) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_send)
+        return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // FIXME: Check if name matches the name production.
     // FIXME: Check if value matches the value production.
 
     if (is_forbidden_header_name(header))
-        return;
+        return {};
 
     // FIXME: Combine
     m_request_headers.set(header, normalize_header_value(value));
+    return {};
 }
 
 void XMLHttpRequest::open(const String& method, const String& url)
