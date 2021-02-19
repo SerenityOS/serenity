@@ -41,6 +41,7 @@
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/DOMImplementation.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -105,7 +106,7 @@ public:
     const HTML::HTMLHtmlElement* html_element() const;
     const HTML::HTMLHeadElement* head() const;
     const HTML::HTMLElement* body() const;
-    void set_body(HTML::HTMLElement& new_body);
+    ExceptionOr<void> set_body(HTML::HTMLElement& new_body);
 
     String title() const;
     void set_title(const String&);
