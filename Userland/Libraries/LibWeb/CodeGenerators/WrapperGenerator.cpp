@@ -1153,7 +1153,13 @@ namespace Web::Bindings {
 {
 )~~~");
 
-    if (!interface.parent_name.is_empty()) {
+    if (interface.name == "DOMException") {
+        // https://heycam.github.io/webidl/#es-DOMException-specialness
+        // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
+        generator.append(R"~~~(
+    set_prototype(global_object.error_prototype());
+)~~~");
+    } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
     set_prototype(&static_cast<WindowObject&>(global_object).ensure_web_prototype<@prototype_base_class@>("@parent_name@"));
 )~~~");
