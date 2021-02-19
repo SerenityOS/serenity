@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+REGISTER_WIDGET(GUI, MultiView)
+
 namespace GUI {
 
 MultiView::MultiView()
