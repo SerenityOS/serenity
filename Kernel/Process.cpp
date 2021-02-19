@@ -78,7 +78,7 @@ ProcessID Process::allocate_pid()
     return next_pid.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
 }
 
-void Process::initialize()
+UNMAP_AFTER_INIT void Process::initialize()
 {
     g_modules = new HashMap<String, OwnPtr<Module>>;
 

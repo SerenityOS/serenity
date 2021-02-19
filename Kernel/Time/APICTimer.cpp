@@ -36,7 +36,7 @@ namespace Kernel {
 
 #define APIC_TIMER_MEASURE_CPU_CLOCK
 
-APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibration_source)
+UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibration_source)
 {
     auto* timer = new APICTimer(interrupt_number, nullptr);
     if (!timer->calibrate(calibration_source)) {
@@ -46,13 +46,13 @@ APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibra
     return timer;
 }
 
-APICTimer::APICTimer(u8 interrupt_number, Function<void(const RegisterState&)> callback)
+UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void(const RegisterState&)> callback)
     : HardwareTimer<GenericInterruptHandler>(interrupt_number, move(callback))
 {
     disable_remap();
 }
 
-bool APICTimer::calibrate(HardwareTimerBase& calibration_source)
+UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source)
 {
     ASSERT_INTERRUPTS_DISABLED();
 

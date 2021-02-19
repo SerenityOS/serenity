@@ -116,7 +116,7 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 // Once multi-tasking is ready, we spawn a new thread that starts in the
 // init_stage2() function. Initialization continues there.
 
-extern "C" [[noreturn]] void init()
+extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 {
     setup_serial_debug();
 
@@ -196,7 +196,7 @@ extern "C" [[noreturn]] void init()
 //
 // The purpose of init_ap() is to initialize APs for multi-tasking.
 //
-extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
+extern "C" UNMAP_AFTER_INIT [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 {
     processor_info->early_initialize(cpu);
 
@@ -213,7 +213,7 @@ extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info)
 // This method is called once a CPU enters the scheduler and its idle thread
 // At this point the initial boot stack can be freed
 //
-extern "C" void init_finished(u32 cpu)
+extern "C" UNMAP_AFTER_INIT void init_finished(u32 cpu)
 {
     if (cpu == 0) {
         // TODO: we can reuse the boot stack, maybe for kmalloc()?
@@ -323,7 +323,7 @@ void init_stage2(void*)
     ASSERT_NOT_REACHED();
 }
 
-void setup_serial_debug()
+UNMAP_AFTER_INIT void setup_serial_debug()
 {
     // serial_debug will output all the klog() and dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot

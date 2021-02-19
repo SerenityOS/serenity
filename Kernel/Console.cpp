@@ -36,7 +36,7 @@
 static AK::Singleton<Console> s_the;
 static Kernel::SpinLock g_console_lock;
 
-void Console::initialize()
+UNMAP_AFTER_INIT void Console::initialize()
 {
     s_the.ensure_instance();
 }
@@ -51,7 +51,7 @@ bool Console::is_initialized()
     return s_the.is_initialized();
 }
 
-Console::Console()
+UNMAP_AFTER_INIT Console::Console()
     : CharacterDevice(5, 1)
 {
 }

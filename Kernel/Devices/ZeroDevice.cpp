@@ -30,12 +30,12 @@
 
 namespace Kernel {
 
-ZeroDevice::ZeroDevice()
+UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
     : CharacterDevice(1, 5)
 {
 }
 
-ZeroDevice::~ZeroDevice()
+UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice()
 {
 }
 

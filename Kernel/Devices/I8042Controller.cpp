@@ -33,7 +33,7 @@ namespace Kernel {
 
 static I8042Controller* s_the;
 
-void I8042Controller::initialize()
+UNMAP_AFTER_INIT void I8042Controller::initialize()
 {
     if (ACPI::Parser::the()->have_8042())
         new I8042Controller;
@@ -45,7 +45,7 @@ I8042Controller& I8042Controller::the()
     return *s_the;
 }
 
-I8042Controller::I8042Controller()
+UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
     ASSERT(!s_the);
     s_the = this;
