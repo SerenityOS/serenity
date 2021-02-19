@@ -35,6 +35,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/SyntaxHighlighter.h>
+#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -99,7 +100,12 @@ ConsoleWidget::ConsoleWidget()
 
         if (m_interpreter->exception()) {
             output_html.append("Uncaught exception: ");
-            output_html.append(JS::MarkupGenerator::html_from_value(m_interpreter->exception()->value()));
+            auto error = m_interpreter->exception()->value();
+            if (error.is_object() && is<Web::Bindings::DOMExceptionWrapper>(error.as_object())) {
+                auto& dom_exception_wrapper = static_cast<Web::Bindings::DOMExceptionWrapper&>(error.as_object());
+                error = JS::Error::create(m_interpreter->global_object(), dom_exception_wrapper.impl().name(), dom_exception_wrapper.impl().message());
+            }
+            output_html.append(JS::MarkupGenerator::html_from_value(error));
             print_html(output_html.string_view());
 
             m_interpreter->vm().clear_exception();
