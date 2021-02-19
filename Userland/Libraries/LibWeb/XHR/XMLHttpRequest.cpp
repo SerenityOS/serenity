@@ -173,17 +173,13 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-void XMLHttpRequest::send()
+DOM::ExceptionOr<void> XMLHttpRequest::send()
 {
-    if (m_ready_state != ReadyState::Opened) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_ready_state != ReadyState::Opened)
+        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
-    if (m_send) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_send)
+        return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // FIXME: If this’s request method is `GET` or `HEAD`, then set body to null.
 
@@ -199,10 +195,10 @@ void XMLHttpRequest::send()
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->document().url(), request_url);
         auto weak_this = make_weak_ptr();
         if (!weak_this)
-            return;
+            return {};
         const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
         const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
-        return;
+        return {};
     }
 
     LoadRequest request;
@@ -226,7 +222,7 @@ void XMLHttpRequest::send()
         //        then fire a progress event named loadstart at this’s upload object with 0 and req’s body’s total bytes.
 
         if (m_ready_state != ReadyState::Opened || !m_send)
-            return;
+            return {};
 
         // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
@@ -262,6 +258,7 @@ void XMLHttpRequest::send()
     } else {
         TODO();
     }
+    return {};
 }
 
 bool XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
