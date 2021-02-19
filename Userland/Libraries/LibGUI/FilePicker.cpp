@@ -32,9 +32,9 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/FilePickerDialogGML.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/MultiView.h>
 #include <LibGUI/SortingProxyModel.h>
@@ -45,9 +45,9 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, Options options)
+Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Open, options);
+    auto picker = FilePicker::construct(parent_window, Mode::Open);
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -63,9 +63,9 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, const Stri
     return {};
 }
 
-Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension, Options options)
+Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Save, options, String::formatted("{}.{}", title, extension));
+    auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension));
 
     if (picker->exec() == Dialog::ExecOK) {
         String file_path = picker->selected_file().string();
@@ -78,7 +78,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
     return {};
 }
 
-FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const StringView& file_name, const StringView& path)
+FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_name, const StringView& path)
     : Dialog(parent_window)
     , m_model(FileSystemModel::create())
     , m_mode(mode)
@@ -95,28 +95,18 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         break;
     }
     resize(560, 320);
-    auto& horizontal_container = set_main_widget<Widget>();
-    horizontal_container.set_layout<HorizontalBoxLayout>();
-    horizontal_container.layout()->set_margins({ 4, 4, 4, 4 });
-    horizontal_container.set_fill_with_background_color(true);
 
-    auto& vertical_container = horizontal_container.add<Widget>();
-    vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_spacing(4);
+    auto& widget = set_main_widget<GUI::Widget>();
+    if (!widget.load_from_gml(file_picker_dialog_gml))
+        ASSERT_NOT_REACHED();
 
-    auto& upper_container = vertical_container.add<Widget>();
-    upper_container.set_layout<HorizontalBoxLayout>();
-    upper_container.layout()->set_spacing(2);
-    upper_container.set_fixed_height(26);
-
-    auto& toolbar = upper_container.add<ToolBar>();
-    toolbar.set_fixed_width(165);
+    auto& toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("toolbar");
     toolbar.set_has_frame(false);
 
-    m_location_textbox = upper_container.add<TextBox>();
+    m_location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
     m_location_textbox->set_text(path);
 
-    m_view = vertical_container.add<MultiView>();
+    m_view = *widget.find_descendant_of_type_named<GUI::MultiView>("view");
     m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
@@ -167,18 +157,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     toolbar.add_action(m_view->view_as_table_action());
     toolbar.add_action(m_view->view_as_columns_action());
 
-    auto& lower_container = vertical_container.add<Widget>();
-    lower_container.set_layout<VerticalBoxLayout>();
-    lower_container.layout()->set_spacing(4);
-    lower_container.set_fixed_height(48);
-
-    auto& filename_container = lower_container.add<Widget>();
-    filename_container.set_fixed_height(22);
-    filename_container.set_layout<HorizontalBoxLayout>();
-    auto& filename_label = filename_container.add<Label>("File name:");
-    filename_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    filename_label.set_fixed_width(60);
-    m_filename_textbox = filename_container.add<TextBox>();
+    m_filename_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
     m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
         m_filename_textbox->set_text(file_name);
@@ -195,30 +174,17 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         const FileSystemModel::Node& node = m_model->node(local_index);
         LexicalPath path { node.full_path() };
 
-        if (have_preview())
-            clear_preview();
-
         if (!node.is_directory())
             m_filename_textbox->set_text(node.name);
-        if (have_preview())
-            set_preview(path);
     };
 
-    auto& button_container = lower_container.add<Widget>();
-    button_container.set_fixed_height(22);
-    button_container.set_layout<HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(4);
-    button_container.layout()->add_spacer();
-
-    auto& ok_button = button_container.add<Button>();
-    ok_button.set_fixed_width(80);
+    auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
     ok_button.set_text(ok_button_name(m_mode));
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
 
-    auto& cancel_button = button_container.add<Button>();
-    cancel_button.set_fixed_width(80);
+    auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
@@ -237,26 +203,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
             on_file_return();
         }
     };
-
-    if (!((unsigned)options & (unsigned)Options::DisablePreview)) {
-        m_preview_container = horizontal_container.add<Frame>();
-        m_preview_container->set_visible(false);
-        m_preview_container->set_fixed_width(180);
-        m_preview_container->set_layout<VerticalBoxLayout>();
-        m_preview_container->layout()->set_margins({ 8, 8, 8, 8 });
-
-        m_preview_image = m_preview_container->add<ImageWidget>();
-        m_preview_image->set_should_stretch(true);
-        m_preview_image->set_auto_resize(false);
-        m_preview_image->set_fixed_size(160, 160);
-
-        m_preview_name_label = m_preview_container->add<Label>();
-        m_preview_name_label->set_font(Gfx::FontDatabase::default_bold_font());
-        m_preview_name_label->set_fixed_height(m_preview_name_label->font().glyph_height());
-
-        m_preview_geometry_label = m_preview_container->add<Label>();
-        m_preview_geometry_label->set_fixed_height(m_preview_name_label->font().glyph_height());
-    }
 }
 
 FilePicker::~FilePicker()
@@ -267,33 +213,6 @@ FilePicker::~FilePicker()
 void FilePicker::model_did_update(unsigned)
 {
     m_location_textbox->set_text(m_model->root_path());
-    if (have_preview())
-        clear_preview();
-}
-
-void FilePicker::set_preview(const LexicalPath& path)
-{
-    if (Gfx::Bitmap::is_path_a_supported_image_format(path.string())) {
-        auto bitmap = Gfx::Bitmap::load_from_file(path.string());
-        if (!bitmap) {
-            clear_preview();
-            return;
-        }
-        bool should_stretch = bitmap->width() > m_preview_image->width() || bitmap->height() > m_preview_image->height();
-        m_preview_name_label->set_text(path.basename());
-        m_preview_geometry_label->set_text(bitmap->size().to_string());
-        m_preview_image->set_should_stretch(should_stretch);
-        m_preview_image->set_bitmap(move(bitmap));
-        m_preview_container->set_visible(true);
-    }
-}
-
-void FilePicker::clear_preview()
-{
-    m_preview_image->set_bitmap(nullptr);
-    m_preview_name_label->set_text(String::empty());
-    m_preview_geometry_label->set_text(String::empty());
-    m_preview_container->set_visible(false);
 }
 
 void FilePicker::on_file_return()

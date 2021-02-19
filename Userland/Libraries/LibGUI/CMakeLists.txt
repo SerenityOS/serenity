@@ -1,4 +1,5 @@
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
+compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
 
 set(SOURCES
     AboutDialog.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     Event.cpp
     FileIconProvider.cpp
     FilePicker.cpp
+    FilePickerDialogGML.h
     FileSystemModel.cpp
     FilteringProxyModel.cpp
     FontPicker.cpp
