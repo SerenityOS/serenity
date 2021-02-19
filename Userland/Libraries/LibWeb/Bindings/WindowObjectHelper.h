@@ -34,6 +34,8 @@
 #include <LibWeb/Bindings/CharacterDataPrototype.h>
 #include <LibWeb/Bindings/CommentConstructor.h>
 #include <LibWeb/Bindings/CommentPrototype.h>
+#include <LibWeb/Bindings/DOMExceptionConstructor.h>
+#include <LibWeb/Bindings/DOMExceptionPrototype.h>
 #include <LibWeb/Bindings/DOMImplementationConstructor.h>
 #include <LibWeb/Bindings/DOMImplementationPrototype.h>
 #include <LibWeb/Bindings/DocumentConstructor.h>
@@ -237,6 +239,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)         \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                 \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentType)             \
+    ADD_WINDOW_OBJECT_INTERFACE(DOMException)             \
     ADD_WINDOW_OBJECT_INTERFACE(DOMImplementation)        \
     ADD_WINDOW_OBJECT_INTERFACE(Element)                  \
     ADD_WINDOW_OBJECT_INTERFACE(Event)                    \
