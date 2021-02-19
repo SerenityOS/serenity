@@ -34,12 +34,14 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Comment.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
@@ -215,28 +217,26 @@ const HTML::HTMLElement* Document::body() const
     return nullptr;
 }
 
-void Document::set_body(HTML::HTMLElement& new_body)
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-body
+ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
 {
-    if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body)) {
-        // FIXME: throw a "HierarchyRequestError" DOMException.
-        return;
-    }
+    if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body))
+        return DOM::HierarchyRequestError::create("Invalid document body element, must be 'body' or 'frameset'");
 
     auto* existing_body = body();
     if (existing_body) {
         TODO();
-        return;
+        return {};
     }
 
     auto* html = document_element();
-    if (!html) {
-        // FIXME: throw a "HierarchyRequestError" DOMException.
-        return;
-    }
+    if (!html)
+        return DOM::HierarchyRequestError::create("Missing document element");
 
     // FIXME: Implement this once there's a non-const first_child_of_type:
     //        "Otherwise, the body element is null, but there's a document element. Append the new value to the document element."
     TODO();
+    return {};
 }
 
 String Document::title() const
