@@ -69,7 +69,8 @@ public:
 
     ReadyState ready_state() const { return m_ready_state; };
     String response_text() const;
-    void open(const String& method, const String& url);
+
+    DOM::ExceptionOr<void> open(const String& method, const String& url);
     void send();
 
     DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
