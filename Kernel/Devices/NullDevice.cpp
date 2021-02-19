@@ -32,7 +32,7 @@ namespace Kernel {
 
 static AK::Singleton<NullDevice> s_the;
 
-void NullDevice::initialize()
+UNMAP_AFTER_INIT void NullDevice::initialize()
 {
     s_the.ensure_instance();
 }
