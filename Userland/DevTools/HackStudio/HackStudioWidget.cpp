@@ -538,7 +538,7 @@ void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 {
     return GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [this](auto&) {
-        if (!GUI::FilePicker::file_exists(get_project_executable_path())) {
+        if (!Core::File::exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), String::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error", GUI::MessageBox::Type::Error);
             return;
         }

@@ -199,7 +199,7 @@ bool PropertiesWindow::apply_changes()
         String new_name = m_name_box->text();
         String new_file = make_full_path(new_name).characters();
 
-        if (GUI::FilePicker::file_exists(new_file)) {
+        if (Core::File::exists(new_file)) {
             GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
