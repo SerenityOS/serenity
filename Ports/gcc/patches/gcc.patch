@@ -102,7 +102,7 @@ diff -ruN a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
 diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 --- a/gcc/config/serenity.h	1970-01-01 02:00:00.000000000 +0200
 +++ b/gcc/config/serenity.h	2020-12-12 10:43:35.280270540 +0200
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,37 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -115,7 +115,7 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared|pie:crtbeginS.o%s; :crtbegin.o%s}"
++#define STARTFILE_SPEC "%{static:crt0.o%s} crti.o%s %{!static: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|pie:crtbeginS.o%s; :crtbegin.o%s}"
 +
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
@@ -123,6 +123,12 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:-lgcc_s -dynamic-linker /usr/lib/Loader.so}}"
++
++#undef CC1_SPEC
++#define CC1_SPEC "-fno-exceptions -ftls-model=initial-exec"
++
++#undef CC1PLUS_SPEC
++#define CC1PLUS_SPEC "-fno-exceptions -ftls-model=initial-exec"
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
