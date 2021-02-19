@@ -20,6 +20,14 @@ SECTIONS
         end_of_safemem_atomic_text = .;
 
         *(.text*)
+    }
+
+    .unmap_after_init ALIGN(4K) : AT (ADDR(.unmap_after_init) - 0xc0000000)
+    {
+        start_of_unmap_after_init = .;
+        *(.unmap_after_init*);
+        end_of_unmap_after_init = .;
+
         end_of_kernel_text = .;
     }
 
