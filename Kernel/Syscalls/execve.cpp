@@ -584,8 +584,11 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         return make_stack_result.error();
     u32 new_userspace_esp = make_stack_result.value();
 
-    if (wait_for_tracer_at_next_execve())
+    if (wait_for_tracer_at_next_execve()) {
+        // Make sure we release the ptrace lock here or the tracer will block forever.
+        ptrace_locker.unlock();
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
+    }
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
