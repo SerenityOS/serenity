@@ -35,7 +35,7 @@
 #define IRQ_TIMER 0
 namespace Kernel {
 
-NonnullRefPtr<PIT> PIT::initialize(Function<void(const RegisterState&)> callback)
+UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(const RegisterState&)> callback)
 {
     return adopt(*new PIT(move(callback)));
 }

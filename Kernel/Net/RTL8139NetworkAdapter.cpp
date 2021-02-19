@@ -282,7 +282,7 @@ void RTL8139NetworkAdapter::reset()
     out16(REG_ISR, 0xffff);
 }
 
-void RTL8139NetworkAdapter::read_mac_address()
+UNMAP_AFTER_INIT void RTL8139NetworkAdapter::read_mac_address()
 {
     MACAddress mac {};
     for (int i = 0; i < 6; i++)

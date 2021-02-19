@@ -2049,7 +2049,7 @@ void Processor::Processor::halt()
     halt_this();
 }
 
-void Processor::deferred_call_pool_init()
+UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
 {
     size_t pool_count = sizeof(m_deferred_call_pool) / sizeof(m_deferred_call_pool[0]);
     for (size_t i = 0; i < pool_count; i++) {
