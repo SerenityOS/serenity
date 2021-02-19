@@ -49,7 +49,6 @@ public:
 
     static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {});
     static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension);
-    static bool file_exists(const StringView& path);
 
     virtual ~FilePicker() override;
 

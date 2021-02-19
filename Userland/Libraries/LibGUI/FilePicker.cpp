@@ -26,6 +26,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -219,7 +220,7 @@ void FilePicker::on_file_return()
 {
     LexicalPath path(String::formatted("{}/{}", m_model->root_path(), m_filename_textbox->text()));
 
-    if (FilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
+    if (Core::File::exists(path.string()) && m_mode == Mode::Save) {
         auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
@@ -227,20 +228,6 @@ void FilePicker::on_file_return()
 
     m_selected_file = path;
     done(ExecOK);
-}
-
-bool FilePicker::file_exists(const StringView& path)
-{
-    struct stat st;
-    int rc = stat(path.to_string().characters(), &st);
-    if (rc < 0) {
-        if (errno == ENOENT)
-            return false;
-    }
-    if (rc == 0) {
-        return true;
-    }
-    return false;
 }
 
 void FilePicker::set_path(const String& path)
