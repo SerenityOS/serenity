@@ -720,12 +720,12 @@ void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
-void write_cr0(u32 value)
+NEVER_INLINE UNMAP_AFTER_INIT void write_cr0(u32 value)
 {
     asm volatile("movl %%eax, %%cr0" ::"a"(value));
 }
 
-void write_cr4(u32 value)
+NEVER_INLINE UNMAP_AFTER_INIT void write_cr4(u32 value)
 {
     asm volatile("movl %%eax, %%cr4" ::"a"(value));
 }
