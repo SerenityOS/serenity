@@ -154,6 +154,7 @@ set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu,-z,relro,-z,now")
 set(CMAKE_SKIP_RPATH TRUE)
 
 add_compile_options(-Os -g1 -fno-exceptions -fstack-protector-strong -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined)
+add_compile_options(-fstack-clash-protection)
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 add_compile_definitions(DEBUG SANITIZE_PTRS)
