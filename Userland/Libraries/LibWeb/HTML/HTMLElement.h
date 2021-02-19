@@ -45,7 +45,7 @@ public:
 
     virtual bool is_editable() const final;
     String content_editable() const;
-    void set_content_editable(const String&);
+    DOM::ExceptionOr<void> set_content_editable(const String&);
 
     String inner_text();
     void set_inner_text(StringView);

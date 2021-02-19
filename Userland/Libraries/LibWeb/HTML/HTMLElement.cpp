@@ -28,8 +28,10 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ScriptFunction.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -89,21 +91,22 @@ String HTMLElement::content_editable() const
     }
 }
 
-void HTMLElement::set_content_editable(const String& content_editable)
+// https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
+DOM::ExceptionOr<void> HTMLElement::set_content_editable(const String& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit")) {
         remove_attribute(HTML::AttributeNames::contenteditable);
-        return;
+        return {};
     }
     if (content_editable.equals_ignoring_case("true")) {
         set_attribute(HTML::AttributeNames::contenteditable, "true");
-        return;
+        return {};
     }
     if (content_editable.equals_ignoring_case("false")) {
         set_attribute(HTML::AttributeNames::contenteditable, "false");
-        return;
+        return {};
     }
-    // FIXME: otherwise the attribute setter must throw a "SyntaxError" DOMException.
+    return DOM::SyntaxError::create("Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
 }
 
 void HTMLElement::set_inner_text(StringView text)
