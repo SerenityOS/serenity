@@ -69,17 +69,19 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
         builder.append('\n');
     };
 
+    auto& backtrace_entries = backtrace.entries();
+
+    if (coredump.metadata().contains("assertion"))
+        prepend_metadata("assertion", "ASSERTION FAILED: {}");
+    else if (coredump.metadata().contains("pledge_violation"))
+        prepend_metadata("pledge_violation", "Has not pledged {}");
+
     auto first_entry = true;
     for (auto& entry : backtrace.entries()) {
-        if (first_entry) {
-            if (entry.function_name.starts_with("__assertion_failed"))
-                prepend_metadata("assertion", "ASSERTION FAILED: {}");
-            else if (coredump.metadata().contains("pledge_violation"))
-                prepend_metadata("pledge_violation", "Has not pledged {}");
+        if (first_entry)
             first_entry = false;
-        } else {
+        else
             builder.append('\n');
-        }
         builder.append(entry.to_string());
     }
 
