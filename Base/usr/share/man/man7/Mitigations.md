@@ -17,7 +17,7 @@ to collect and describe the mitigations in one centralized place.
 of Intel CPUs which allows the kernel to instruct the CPU
 to disable execution of code residing in user space.
 
-It was enabled in the following commit:
+It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
 ```
 commit 8602fa5b49aa4e2b039764a14698f0baa3ad0532
 Author: Andreas Kling <awesomekling@gmail.com>
@@ -33,7 +33,7 @@ Kernel: Enable x86 SMEP (Supervisor Mode Execution Protection)
 SMEP, it allows a kernel to set user-space memory mappings
 that will cause a trap when accessing user-space memory.
 
-It was enabled in the following commit:
+It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9eef39d68a99c5e29099ae4eb4a56934b35eecde):
 
 ```
 commit 9eef39d68a99c5e29099ae4eb4a56934b35eecde
@@ -50,7 +50,8 @@ It enables a program to voluntarily restrict its access to the kernel's syscall
 surface area. The allows the program to reduce the potential attack surface
 available if the program in question was exploited.
 
-It was first added in the following commit, and the majority of programs were enlightened later:
+It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/41c504a33becea8aa9b437cd3c0dc312b2bf1fe9),
+and the majority of programs were enlightened later:
 
 ```
 commit 41c504a33becea8aa9b437cd3c0dc312b2bf1fe9
@@ -66,7 +67,8 @@ Kernel: Add pledge() syscall :^)
 It enables a program to voluntarily restrict its access to the filesystem.
 This reduces the potential surface area available if the program in question was exploited.
 
-It was first added in the following commit, and the majority of programs were enlightened later:
+It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/0569123ad7cb9c54df724c2bb85933ea3cf97134),
+and the majority of programs were enlightened later:
 
 ```
 commit 0569123ad7cb9c54df724c2bb85933ea3cf97134
@@ -75,6 +77,7 @@ Date:   Mon Jan 20 22:12:04 2020 +0100
 
 Kernel: Add a basic implementation of unveil()
 ```
+
 ### syscall call-from verification
 
 [syscall call-from verification](https://marc.info/?l=openbsd-tech&m=157488907117170&w=2) is
@@ -86,7 +89,7 @@ on boot, which makes finding syscall stubs in libc difficult
 for attackers. On serenity it is mostly just an inconvenience,
 as there currently is no libc random-relinking.
 
-It was first enabled in the following commit:
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/823186031d9250217f9a51829d34a96b74113334):
 
 ```
 commit 823186031d9250217f9a51829d34a96b74113334
@@ -104,7 +107,8 @@ It tracks data that is initialized once during kernel boot and never
 touched again, post kernel initialization the memory is marked
 read only to protect it from potentially being modified by exploits.
 
-It was first enabled in the following commit and other kernel data structures were enlightened later:
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d8013c60bb52756788e747183572067d6e3f204a)
+and other kernel data structures were enlightened later:
 
 ```
 commit d8013c60bb52756788e747183572067d6e3f204a
@@ -112,7 +116,6 @@ Author: Andreas Kling <kling@serenityos.org>
 Date:   Sun Feb 14 17:35:07 2021 +0100
 
 Kernel: Add mechanism to make some memory read-only after init finishes
-
 ```
 
 ### KUBSAN (Kernel Undefined Behavior Sanitizer)
@@ -123,13 +126,122 @@ It can find various issues including, overflows, out of bounds array
 accesses, type corruption, and many more. Undefined behavior bugs can often
 be exploited, KUBSAN allows developers to catch them during testing instead.
 
-It was first enabled in the following commit:
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d44be968938ecf95023351a358c43c4957638d87):
 ```
 commit d44be968938ecf95023351a358c43c4957638d87
 Author: Andreas Kling <kling@serenityos.org>
 Date:   Fri Feb 5 19:44:26 2021 +0100
 
 Kernel: KUBSAN! (Kernel Undefined Behavior SANitizer) :^)
+```
+
+### Kernel Unmap after init
+
+Umap after init allows the kerenel to remove functions which contain potentially
+dangerous [ROP gadgets](https://en.wikipedia.org/wiki/Return-oriented_programming)
+from kernel memory after they have been used and are no longer needed. Notably the
+`write_cr4(..)` function used to control processor features like the SMEP/SMAP bits
+in the CR4 register, and the `write_cr0(..)` function used to control processor features
+like write protection, etc.
+
+With this mitigation it is now more difficult to craft a kernel exploit to do something
+like disabling SMEP / SMAP.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/6136faa4ebf6a878606f33bc03c5e62de9d5e662):
+```
+commit 6136faa4ebf6a878606f33bc03c5e62de9d5e662
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Fri Feb 19 18:21:54 2021 +0100
+
+Kernel: Add .unmap_after_init section for code we don't need after init
+```
+
+### Reloaction Read-Only (RELRO)
+
+[RELRO](https://hockeyinjune.medium.com/relro-relocation-read-only-c8d0933faef3) is a mitigation
+in the linker and loader that hardens the data sections of an ELF binary.
+When linked with the relro option the resulting binary will have new sections emitted which
+contain the relro data (`.data.rel.ro` and `.data.rel.ro.local`). The sections will be placed
+into a program segment of type `PT_GNU_RELRO` which contains the relro sections.
+The loader can then detect the `PT_GNU_RELRO` segment and then make the regions read only after
+relocations have been performed.
+
+This mitigates attacks which for example attempt to overwrite the [Global Offset Table (GOT)](https://en.wikipedia.org/wiki/Global_Offset_Table).
+
+It was first enabled for executables in the following [commit](https://github.com/SerenityOS/serenity/commit/fa4c249425a65076ca04a3cb0c173d49472796fb):
+```
+commit fa4c249425a65076ca04a3cb0c173d49472796fb
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Thu Feb 18 18:43:20 2021 +0100
+
+LibELF+Userland: Enable RELRO for all userland executables :^)
+```
+
+Shared libraries were enabled in a folow up [commit](https://github.com/SerenityOS/serenity/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
+```
+commit 713b3b36be4f659e58e253b6c830509898dbd2fa
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Thu Feb 18 22:49:58 2021 +0100
+
+DynamicLoader+Userland: Enable RELRO for shared libraries as well :^)
+```
+
+### -fstack-clash-protection
+
+The GCC compiler option [`-fstack-clash-protection`](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
+is a mitigation which helps prevent [stack clash](https://blog.qualys.com/vulnerabilities-research/2017/06/19/the-stack-clash)
+style attacks by generating code which allocates and immediately accesses one page of stack at a time.
+This prevents attackers from creating situations in which stack allocations jump over a guard page into whatever lies after.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/7142562310e631156d1f64aff22f068ae2c48a5e):
+```
+commit 7142562310e631156d1f64aff22f068ae2c48a5e
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Fri Feb 19 09:11:02 2021 +0100
+
+Everywhere: Build with -fstack-clash-protection
+```
+
+### -fstack-protector / -fstack-protector-strong
+
+The GCC compiler provides a few variants of the `-fstack-protector` option mitigation.
+This family of flags enables [buffer overflow protection](https://en.wikipedia.org/wiki/Buffer_overflow_protection)
+to mitigate [stack-smashing attacks](https://en.wikipedia.org/wiki/Stack_buffer_overflow). 
+
+The compiler implements the mitigation by storing a canary value randomized on program startup into the preamble of all
+functions. Code is then generated to check that stack canary on function return and crash if the value has been changed,
+and hence a stack corruption has been detected.
+
+`-fstack-protector` was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/67142562310e631156d1f64aff22f068ae2c48a5e):
+
+```
+commit 842716a0b5eceb8db31416cd643720c1037032b2
+Author: Andreas Kling <awesomekling@gmail.com>
+Date:   Fri Dec 20 20:51:50 2019 +0100
+
+Kernel+LibC: Build with basic -fstack-protector support
+```
+
+It was later re-enabled and refined to `-fstack-protector-strong` in the following commits: 
+```
+
+commit fd08c93ef57f71360d74b035214c71d7f7bfc5b8
+Author: Brian Gianforcaro <b.gianfo@gmail.com>
+Date:   Sat Jan 2 04:27:35 2021 -0800
+
+LibC: Randomize the stack check cookie value on initialization
+
+commit 79328b2aba6192caf28f560881e56ff23fcb7294
+Author: Brian Gianforcaro <b.gianfo@gmail.com>
+Date:   Sat Jan 2 03:02:42 2021 -0800
+
+Kernel: Enable -fstack-protector-strong (again)
+
+commit 06da50afc71a5ab2bc63de54c66930a2dbe379cd
+Author: Brian Gianforcaro <b.gianfo@gmail.com>
+Date:   Fri Jan 1 15:27:42 2021 -0800
+
+Build + LibC: Enable -fstack-protector-strong in user space
 ```
 
 ## See also
