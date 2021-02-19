@@ -526,9 +526,13 @@ inline FlatPtr offset_in_page(const void* address)
 }
 
 u32 read_cr0();
+u32 read_cr2();
 u32 read_cr3();
-void write_cr3(u32);
 u32 read_cr4();
+
+void write_cr0(u32);
+void write_cr3(u32);
+void write_cr4(u32);
 
 u32 read_dr6();
 
