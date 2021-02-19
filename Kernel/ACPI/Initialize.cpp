@@ -37,7 +37,7 @@ enum class FeatureLevel {
     Disabled,
 };
 
-static FeatureLevel determine_feature_level()
+UNMAP_AFTER_INIT static FeatureLevel determine_feature_level()
 {
     auto value = kernel_command_line().lookup("acpi").value_or("on");
     if (value == "limited")
@@ -47,7 +47,7 @@ static FeatureLevel determine_feature_level()
     return FeatureLevel::Enabled;
 }
 
-void initialize()
+UNMAP_AFTER_INIT void initialize()
 {
     auto feature_level = determine_feature_level();
     if (feature_level == FeatureLevel::Disabled)

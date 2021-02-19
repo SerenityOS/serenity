@@ -34,7 +34,7 @@
 
 namespace Kernel {
 
-void SharedIRQHandler::initialize(u8 interrupt_number)
+UNMAP_AFTER_INIT void SharedIRQHandler::initialize(u8 interrupt_number)
 {
     new SharedIRQHandler(interrupt_number);
 }

@@ -37,7 +37,7 @@ namespace PCI {
 
 static bool test_pci_io();
 
-static Access::Type detect_optimal_access_type(bool mmio_allowed)
+UNMAP_AFTER_INIT static Access::Type detect_optimal_access_type(bool mmio_allowed)
 {
     if (mmio_allowed && ACPI::is_enabled() && !ACPI::Parser::the()->find_table("MCFG").is_null())
         return Access::Type::MMIO;
@@ -48,7 +48,7 @@ static Access::Type detect_optimal_access_type(bool mmio_allowed)
     PANIC("No PCI bus access method detected!");
 }
 
-void initialize()
+UNMAP_AFTER_INIT void initialize()
 {
     bool mmio_allowed = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
 
@@ -61,7 +61,7 @@ void initialize()
     });
 }
 
-bool test_pci_io()
+UNMAP_AFTER_INIT bool test_pci_io()
 {
     klog() << "Testing PCI via manual probing... ";
     u32 tmp = 0x80000000;

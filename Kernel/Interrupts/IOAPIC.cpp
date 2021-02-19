@@ -45,7 +45,7 @@ enum DeliveryMode {
     External = 7
 };
 
-IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
+UNMAP_AFTER_INIT IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
     : m_address(address)
     , m_regs(map_typed_writable<ioapic_mmio_regs>(m_address))
     , m_gsi_base(gsi_base)
@@ -60,7 +60,7 @@ IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
     mask_all_redirection_entries();
 }
 
-void IOAPIC::initialize()
+UNMAP_AFTER_INIT void IOAPIC::initialize()
 {
 }
 

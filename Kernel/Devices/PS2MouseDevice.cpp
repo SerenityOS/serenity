@@ -51,14 +51,14 @@ namespace Kernel {
 
 static AK::Singleton<PS2MouseDevice> s_the;
 
-PS2MouseDevice::PS2MouseDevice()
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(IRQ_MOUSE)
     , CharacterDevice(10, 1)
     , m_controller(I8042Controller::the())
 {
 }
 
-PS2MouseDevice::~PS2MouseDevice()
+UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice()
 {
 }
 
@@ -222,7 +222,7 @@ void PS2MouseDevice::set_sample_rate(u8 rate)
     send_command(PS2MOUSE_SET_SAMPLE_RATE, rate);
 }
 
-bool PS2MouseDevice::initialize()
+UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
 {
     if (!m_controller.reset_device(I8042Controller::Device::Mouse)) {
         dbgln("PS2MouseDevice: I8042 controller failed to reset device");

@@ -42,7 +42,7 @@ KernelRng& KernelRng::the()
     return *s_the;
 }
 
-KernelRng::KernelRng()
+UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);

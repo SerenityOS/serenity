@@ -54,7 +54,7 @@ bool Access::is_initialized()
     return (s_access != nullptr);
 }
 
-Access::Access()
+UNMAP_AFTER_INIT Access::Access()
 {
     s_access = this;
 }
