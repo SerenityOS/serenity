@@ -73,9 +73,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
     #        Disable -Werror for now.
-    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always -ftls-model=initial-exec)
+    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
 else()
-    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always -ftls-model=initial-exec)
+    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
