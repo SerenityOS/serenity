@@ -168,7 +168,7 @@ void Scheduler::queue_runnable_thread(Thread& thread)
         g_ready_queues_mask |= (1u << priority);
 }
 
-void Scheduler::start()
+UNMAP_AFTER_INIT void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
 
@@ -488,7 +488,7 @@ Process* Scheduler::colonel()
     return s_colonel_process;
 }
 
-void Scheduler::initialize()
+UNMAP_AFTER_INIT void Scheduler::initialize()
 {
     ASSERT(&Processor::current() != nullptr); // sanity check
 

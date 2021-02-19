@@ -44,7 +44,7 @@ static AK::Singleton<VFS> s_the;
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
 static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 
-void VFS::initialize()
+UNMAP_AFTER_INIT void VFS::initialize()
 {
     s_the.ensure_instance();
 }
@@ -54,14 +54,14 @@ VFS& VFS::the()
     return *s_the;
 }
 
-VFS::VFS()
+UNMAP_AFTER_INIT VFS::VFS()
 {
 #if VFS_DEBUG
     klog() << "VFS: Constructing VFS";
 #endif
 }
 
-VFS::~VFS()
+UNMAP_AFTER_INIT VFS::~VFS()
 {
 }
 

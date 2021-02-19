@@ -42,7 +42,7 @@ PTYMultiplexer& PTYMultiplexer::the()
     return *s_the;
 }
 
-PTYMultiplexer::PTYMultiplexer()
+UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
     m_freelist.ensure_capacity(s_max_pty_pairs);
@@ -50,7 +50,7 @@ PTYMultiplexer::PTYMultiplexer()
         m_freelist.unchecked_append(i - 1);
 }
 
-PTYMultiplexer::~PTYMultiplexer()
+UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
 {
 }
 

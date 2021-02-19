@@ -32,12 +32,12 @@
 
 namespace Kernel {
 
-FullDevice::FullDevice()
+UNMAP_AFTER_INIT FullDevice::FullDevice()
     : CharacterDevice(1, 7)
 {
 }
 
-FullDevice::~FullDevice()
+UNMAP_AFTER_INIT FullDevice::~FullDevice()
 {
 }
 

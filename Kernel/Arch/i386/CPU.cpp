@@ -454,24 +454,24 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
     ASSERT_NOT_REACHED();
 }
 
-void register_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
     s_idt[index].high = ((u32)(f)&0xffff0000) | 0x8e00;
 }
 
-void register_user_callable_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
     s_idt[index].high = ((u32)(f)&0xffff0000) | 0xef00;
 }
 
-void flush_idt()
+UNMAP_AFTER_INIT void flush_idt()
 {
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-static void idt_init()
+UNMAP_AFTER_INIT static void idt_init()
 {
     s_idtr.address = s_idt;
     s_idtr.limit = 256 * 8 - 1;
@@ -815,7 +815,7 @@ Processor& Processor::by_id(u32 cpu)
     }
 }
 
-void Processor::cpu_detect()
+UNMAP_AFTER_INIT void Processor::cpu_detect()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -900,7 +900,7 @@ void Processor::cpu_detect()
         set_feature(CPUFeature::RDSEED);
 }
 
-void Processor::cpu_setup()
+UNMAP_AFTER_INIT void Processor::cpu_setup()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -1013,7 +1013,7 @@ String Processor::features_string() const
     return builder.build();
 }
 
-void Processor::early_initialize(u32 cpu)
+UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
 
@@ -1048,7 +1048,7 @@ void Processor::early_initialize(u32 cpu)
     ASSERT(&current() == this); // sanity check
 }
 
-void Processor::initialize(u32 cpu)
+UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
 {
     ASSERT(m_self == this);
     ASSERT(&current() == this); // sanity check
@@ -1774,7 +1774,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     return did_wake_count;
 }
 
-void Processor::smp_enable()
+UNMAP_AFTER_INIT void Processor::smp_enable()
 {
     size_t msg_pool_size = Processor::count() * 100u;
     size_t msg_entries_cnt = Processor::count();
@@ -2167,7 +2167,7 @@ void Processor::deferred_call_queue(void (*callback)(void*), void* data, void (*
     cur_proc.deferred_call_queue_entry(entry);
 }
 
-void Processor::gdt_init()
+UNMAP_AFTER_INIT void Processor::gdt_init()
 {
     m_gdt_length = 0;
     m_gdtr.address = nullptr;

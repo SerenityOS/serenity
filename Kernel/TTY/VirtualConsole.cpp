@@ -49,7 +49,7 @@ void VirtualConsole::flush_vga_cursor()
     IO::out8(0x3d5, LSB(value));
 }
 
-void VirtualConsole::initialize()
+UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
     s_vga_buffer = (u8*)0xc00b8000;
     s_active_console = -1;
@@ -63,7 +63,7 @@ void VirtualConsole::set_graphical(bool graphical)
     m_graphical = graphical;
 }
 
-VirtualConsole::VirtualConsole(const unsigned index)
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     : TTY(4, index)
     , m_index(index)
     , m_terminal(*this)
@@ -76,7 +76,7 @@ VirtualConsole::VirtualConsole(const unsigned index)
     s_consoles[index] = this;
 }
 
-VirtualConsole::~VirtualConsole()
+UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
 {
     ASSERT_NOT_REACHED();
 }

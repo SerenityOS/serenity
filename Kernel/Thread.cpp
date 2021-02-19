@@ -48,7 +48,7 @@ namespace Kernel {
 SpinLock<u8> Thread::g_tid_map_lock;
 READONLY_AFTER_INIT HashMap<ThreadID, Thread*>* Thread::g_tid_map;
 
-void Thread::initialize()
+UNMAP_AFTER_INIT void Thread::initialize()
 {
     g_tid_map = new HashMap<ThreadID, Thread*>();
 }

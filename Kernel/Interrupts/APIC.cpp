@@ -146,7 +146,7 @@ APIC& APIC::the()
     return *s_apic;
 }
 
-void APIC::initialize()
+UNMAP_AFTER_INIT void APIC::initialize()
 {
     ASSERT(!APIC::initialized());
     s_apic.ensure_instance();
@@ -234,7 +234,7 @@ u8 APIC::spurious_interrupt_vector()
         + reinterpret_cast<ptrdiff_t>(&varname)                        \
         - reinterpret_cast<ptrdiff_t>(&apic_ap_start))
 
-bool APIC::init_bsp()
+UNMAP_AFTER_INIT bool APIC::init_bsp()
 {
     // FIXME: Use the ACPI MADT table
     if (!MSR::have())
@@ -300,7 +300,7 @@ bool APIC::init_bsp()
     return true;
 }
 
-void APIC::do_boot_aps()
+UNMAP_AFTER_INIT void APIC::do_boot_aps()
 {
     ASSERT(m_processor_enabled_cnt > 1);
     u32 aps_to_enable = m_processor_enabled_cnt - 1;
@@ -400,7 +400,7 @@ void APIC::do_boot_aps()
 #endif
 }
 
-void APIC::boot_aps()
+UNMAP_AFTER_INIT void APIC::boot_aps()
 {
     if (m_processor_enabled_cnt <= 1)
         return;
@@ -421,7 +421,7 @@ void APIC::boot_aps()
     m_apic_ap_continue.store(1, AK::MemoryOrder::memory_order_release);
 }
 
-void APIC::enable(u32 cpu)
+UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
 {
     if (cpu >= 8) {
         // TODO: x2apic support?
@@ -472,7 +472,7 @@ Thread* APIC::get_idle_thread(u32 cpu) const
     return m_ap_idle_threads[cpu - 1];
 }
 
-void APIC::init_finished(u32 cpu)
+UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 {
     // This method is called once the boot stack is no longer needed
     ASSERT(cpu > 0);
@@ -525,7 +525,7 @@ void APIC::send_ipi(u32 cpu)
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, cpu));
 }
 
-APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
+UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
 {
     if (!m_apic_base)
         return nullptr;
