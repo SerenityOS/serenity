@@ -47,17 +47,8 @@ public:
         Save
     };
 
-    enum class Options : unsigned {
-        None = 0,
-        DisablePreview = (1 << 0)
-    };
-
-    static Optional<String> get_open_filepath(Window* parent_window, Options options)
-    {
-        return get_open_filepath(parent_window, {}, options);
-    }
-    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {}, Options options = Options::None);
-    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension, Options options = Options::None);
+    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {});
+    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension);
     static bool file_exists(const StringView& path);
 
     virtual ~FilePicker() override;
@@ -65,9 +56,6 @@ public:
     LexicalPath selected_file() const { return m_selected_file; }
 
 private:
-    bool have_preview() const { return m_preview_container; }
-    void set_preview(const LexicalPath&);
-    void clear_preview();
     void on_file_return();
 
     void set_path(const String&);
@@ -75,7 +63,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
+    FilePicker(Window* parent_window, Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
 
     static String ok_button_name(Mode mode)
     {
@@ -96,10 +84,6 @@ private:
 
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
-    RefPtr<Frame> m_preview_container;
-    RefPtr<ImageWidget> m_preview_image;
-    RefPtr<Label> m_preview_name_label;
-    RefPtr<Label> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
 };
 
