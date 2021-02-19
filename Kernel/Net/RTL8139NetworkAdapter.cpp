@@ -125,7 +125,7 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-void RTL8139NetworkAdapter::detect()
+UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
 {
     static const PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
@@ -138,7 +138,7 @@ void RTL8139NetworkAdapter::detect()
     });
 }
 
-RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
     , m_rx_buffer(MM.allocate_contiguous_kernel_region(page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Region::Access::Read | Region::Access::Write))
@@ -174,7 +174,7 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     enable_irq();
 }
 
-RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 

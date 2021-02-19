@@ -68,7 +68,7 @@ const KernelSymbol* symbolicate_kernel_address(u32 address)
     return nullptr;
 }
 
-static void load_kernel_sybols_from_data(const KBuffer& buffer)
+UNMAP_AFTER_INIT static void load_kernel_sybols_from_data(const KBuffer& buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
@@ -182,7 +182,7 @@ void dump_backtrace()
     dump_backtrace_impl(ebp, g_kernel_symbols_available);
 }
 
-void load_kernel_symbol_table()
+UNMAP_AFTER_INIT void load_kernel_symbol_table()
 {
     auto result = VFS::the().open("/res/kernel.map", O_RDONLY, 0, VFS::the().root_custody());
     if (!result.is_error()) {

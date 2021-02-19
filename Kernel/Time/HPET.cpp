@@ -130,7 +130,7 @@ HPET& HPET::the()
     return *s_hpet;
 }
 
-bool HPET::test_and_initialize()
+UNMAP_AFTER_INIT bool HPET::test_and_initialize()
 {
     ASSERT(!HPET::initialized());
     hpet_initialized = true;
@@ -154,7 +154,7 @@ bool HPET::test_and_initialize()
     return true;
 }
 
-bool HPET::check_for_exisiting_periodic_timers()
+UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
 {
     auto hpet = ACPI::Parser::the()->find_table("HPET");
     if (hpet.is_null())
@@ -396,7 +396,7 @@ u64 HPET::calculate_ticks_in_nanoseconds() const
     return ((u64)registers().capabilities.main_counter_tick_period * 100ull) / ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD;
 }
 
-HPET::HPET(PhysicalAddress acpi_hpet)
+UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     : m_physical_acpi_hpet_table(acpi_hpet)
     , m_physical_acpi_hpet_registers(find_acpi_hpet_registers_block())
     , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO", Region::Access::Read | Region::Access::Write))

@@ -31,12 +31,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool periodic_capable)
+UNMAP_AFTER_INIT NonnullRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool periodic_capable)
 {
     return adopt(*new HPETComparator(number, irq, periodic_capable));
 }
 
-HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
+UNMAP_AFTER_INIT HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
     : HardwareTimer(irq)
     , m_periodic(false)
     , m_periodic_capable(periodic_capable)

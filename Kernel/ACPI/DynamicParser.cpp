@@ -30,7 +30,7 @@
 namespace Kernel {
 namespace ACPI {
 
-DynamicParser::DynamicParser(PhysicalAddress rsdp)
+UNMAP_AFTER_INIT DynamicParser::DynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
     , Parser(rsdp)
 {

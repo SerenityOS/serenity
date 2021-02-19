@@ -33,12 +33,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
+UNMAP_AFTER_INIT NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
 {
     return adopt(*new PATADiskDevice(controller, channel, type, interface_type, cylinders, heads, spt, capabilities, major, minor));
 }
 
-PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
+UNMAP_AFTER_INIT PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 cylinders, u16 heads, u16 spt, u16 capabilities, int major, int minor)
     : StorageDevice(controller, major, minor, 512, 0)
     , m_cylinders(cylinders)
     , m_heads(heads)
@@ -50,7 +50,7 @@ PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& chan
 {
 }
 
-PATADiskDevice::~PATADiskDevice()
+UNMAP_AFTER_INIT PATADiskDevice::~PATADiskDevice()
 {
 }
 

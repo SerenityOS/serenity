@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-void SpuriousInterruptHandler::initialize(u8 interrupt_number)
+UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(u8 interrupt_number)
 {
     new SpuriousInterruptHandler(interrupt_number);
 }

@@ -179,7 +179,7 @@ static bool is_valid_device_id(u16 device_id)
     }
 }
 
-void E1000NetworkAdapter::detect()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
 {
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
@@ -193,7 +193,7 @@ void E1000NetworkAdapter::detect()
     });
 }
 
-E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
+UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR1(pci_address()) & ~1)
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
@@ -235,7 +235,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     enable_irq();
 }
 
-E1000NetworkAdapter::~E1000NetworkAdapter()
+UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 

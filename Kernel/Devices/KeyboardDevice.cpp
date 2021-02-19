@@ -404,7 +404,7 @@ static const Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
 };
 // clang-format on
 
-KeyboardDevice::KeyboardDevice()
+UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
     , m_controller(I8042Controller::the())
@@ -412,11 +412,11 @@ KeyboardDevice::KeyboardDevice()
 {
 }
 
-KeyboardDevice::~KeyboardDevice()
+UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::initialize()
+UNMAP_AFTER_INIT bool KeyboardDevice::initialize()
 {
     if (!m_controller.reset_device(I8042Controller::Device::Keyboard)) {
         dbgln("KeyboardDevice: I8042 controller failed to reset device");

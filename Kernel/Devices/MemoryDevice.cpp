@@ -33,12 +33,12 @@
 
 namespace Kernel {
 
-MemoryDevice::MemoryDevice()
+UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()
     : CharacterDevice(1, 1)
 {
 }
 
-MemoryDevice::~MemoryDevice()
+UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice()
 {
 }
 

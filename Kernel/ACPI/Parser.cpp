@@ -56,7 +56,7 @@ static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt, const StringVi
 static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt, const StringView& signature);
 static bool validate_table(const Structures::SDTHeader&, size_t length);
 
-void Parser::locate_static_data()
+UNMAP_AFTER_INIT void Parser::locate_static_data()
 {
     locate_main_system_description_table();
     initialize_main_system_description_table();
@@ -64,7 +64,7 @@ void Parser::locate_static_data()
     init_facs();
 }
 
-PhysicalAddress Parser::find_table(const StringView& signature)
+UNMAP_AFTER_INIT PhysicalAddress Parser::find_table(const StringView& signature)
 {
     dbgln_if(ACPI_DEBUG, "ACPI: Calling Find Table method!");
     for (auto p_sdt : m_sdt_pointers) {
@@ -78,12 +78,12 @@ PhysicalAddress Parser::find_table(const StringView& signature)
     return {};
 }
 
-void Parser::init_facs()
+UNMAP_AFTER_INIT void Parser::init_facs()
 {
     m_facs = find_table("FACS");
 }
 
-void Parser::init_fadt()
+UNMAP_AFTER_INIT void Parser::init_fadt()
 {
     klog() << "ACPI: Initializing Fixed ACPI data";
     klog() << "ACPI: Searching for the Fixed ACPI Data Table";
@@ -250,7 +250,7 @@ u8 Parser::get_table_revision(PhysicalAddress table_header)
     return map_typed<Structures::SDTHeader>(table_header)->revision;
 }
 
-void Parser::initialize_main_system_description_table()
+UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 {
 #if ACPI_DEBUG
     dbgln("ACPI: Checking Main SDT Length to choose the correct mapping size");
@@ -284,7 +284,7 @@ void Parser::initialize_main_system_description_table()
     }
 }
 
-void Parser::locate_main_system_description_table()
+UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
 {
     auto rsdp = map_typed<Structures::RSDPDescriptor20>(m_rsdp);
     if (rsdp->base.revision == 0) {
@@ -303,7 +303,7 @@ void Parser::locate_main_system_description_table()
     }
 }
 
-Parser::Parser(PhysicalAddress rsdp)
+UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
     : m_rsdp(rsdp)
 {
     klog() << "ACPI: Using RSDP @ " << rsdp;
@@ -321,7 +321,7 @@ static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
     return false;
 }
 
-Optional<PhysicalAddress> StaticParsing::find_rsdp()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
 {
     StringView signature("RSD PTR ");
     auto rsdp = map_ebda().find_chunk_starting_with(signature, 16);
@@ -330,7 +330,7 @@ Optional<PhysicalAddress> StaticParsing::find_rsdp()
     return map_bios().find_chunk_starting_with(signature, 16);
 }
 
-PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
+UNMAP_AFTER_INIT PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     ASSERT(signature.length() == 4);
@@ -348,7 +348,7 @@ PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const St
     ASSERT_NOT_REACHED();
 }
 
-static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     ASSERT(signature.length() == 4);
@@ -371,7 +371,7 @@ static bool match_table_signature(PhysicalAddress table_header, const StringView
     return !strncmp(table->h.sig, signature.characters_without_null_termination(), 4);
 }
 
-static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
+UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     ASSERT(signature.length() == 4);

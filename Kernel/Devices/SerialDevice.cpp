@@ -29,14 +29,14 @@
 
 namespace Kernel {
 
-SerialDevice::SerialDevice(int base_addr, unsigned minor)
+UNMAP_AFTER_INIT SerialDevice::SerialDevice(int base_addr, unsigned minor)
     : CharacterDevice(4, minor)
     , m_base_addr(base_addr)
 {
     initialize();
 }
 
-SerialDevice::~SerialDevice()
+UNMAP_AFTER_INIT SerialDevice::~SerialDevice()
 {
 }
 
@@ -92,7 +92,7 @@ String SerialDevice::device_name() const
     return String::formatted("ttyS{}", minor() - 64);
 }
 
-void SerialDevice::initialize()
+UNMAP_AFTER_INIT void SerialDevice::initialize()
 {
     set_interrupts(0);
     set_baud(Baud38400);
@@ -101,7 +101,7 @@ void SerialDevice::initialize()
     set_modem_control(RequestToSend | DataTerminalReady);
 }
 
-void SerialDevice::set_interrupts(char interrupt_enable)
+UNMAP_AFTER_INIT void SerialDevice::set_interrupts(char interrupt_enable)
 {
     m_interrupt_enable = interrupt_enable;
 

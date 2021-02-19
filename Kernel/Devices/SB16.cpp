@@ -78,18 +78,18 @@ void SB16::set_sample_rate(uint16_t hz)
 
 static AK::Singleton<SB16> s_the;
 
-SB16::SB16()
+UNMAP_AFTER_INIT SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
     , CharacterDevice(42, 42) // ### ?
 {
     initialize();
 }
 
-SB16::~SB16()
+UNMAP_AFTER_INIT SB16::~SB16()
 {
 }
 
-void SB16::detect()
+UNMAP_AFTER_INIT void SB16::detect()
 {
     IO::out8(0x226, 1);
     IO::delay(32);
@@ -102,7 +102,7 @@ void SB16::detect()
     SB16::create();
 }
 
-void SB16::create()
+UNMAP_AFTER_INIT void SB16::create()
 {
     s_the.ensure_instance();
 }
@@ -112,7 +112,7 @@ SB16& SB16::the()
     return *s_the;
 }
 
-void SB16::initialize()
+UNMAP_AFTER_INIT void SB16::initialize()
 {
     disable_irq();
 
