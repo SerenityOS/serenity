@@ -81,7 +81,7 @@ bool MemoryManager::is_initialized()
     return s_the != nullptr;
 }
 
-MemoryManager::MemoryManager()
+UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 {
     ScopedSpinLock lock(s_mm_lock);
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
@@ -104,11 +104,11 @@ MemoryManager::MemoryManager()
     m_lazy_committed_page = allocate_committed_user_physical_page();
 }
 
-MemoryManager::~MemoryManager()
+UNMAP_AFTER_INIT MemoryManager::~MemoryManager()
 {
 }
 
-void MemoryManager::protect_kernel_image()
+UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
 {
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
     // Disable writing to the kernel text and rodata segments.
@@ -125,7 +125,7 @@ void MemoryManager::protect_kernel_image()
     }
 }
 
-void MemoryManager::protect_readonly_after_init_memory()
+UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 {
     ScopedSpinLock mm_lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
@@ -153,9 +153,10 @@ void MemoryManager::unmap_memory_after_init()
     }
 
     dmesgln("Unmapped {} KiB of kernel text after init! :^)", (end - start) / KiB);
+    //Processor::halt();
 }
 
-void MemoryManager::register_reserved_ranges()
+UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 {
     ASSERT(!m_physical_memory_ranges.is_empty());
     ContiguousReservedMemoryRange range;
@@ -194,7 +195,7 @@ bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_addres
     return false;
 }
 
-void MemoryManager::parse_memory_map()
+UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> physical_region;
 
@@ -414,7 +415,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
     }
 }
 
-void MemoryManager::initialize(u32 cpu)
+UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 {
     auto mm_data = new MemoryManagerData;
     Processor::current().set_mm_data(*mm_data);

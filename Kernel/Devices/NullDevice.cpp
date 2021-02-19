@@ -42,12 +42,12 @@ NullDevice& NullDevice::the()
     return *s_the;
 }
 
-NullDevice::NullDevice()
+UNMAP_AFTER_INIT NullDevice::NullDevice()
     : CharacterDevice(1, 3)
 {
 }
 
-NullDevice::~NullDevice()
+UNMAP_AFTER_INIT NullDevice::~NullDevice()
 {
 }
 

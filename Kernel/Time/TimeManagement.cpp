@@ -145,7 +145,7 @@ u64 TimeManagement::uptime_ms() const
     return ms;
 }
 
-void TimeManagement::initialize(u32 cpu)
+UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
 {
     if (cpu == 0) {
         ASSERT(!s_the.is_initialized());
@@ -187,7 +187,7 @@ time_t TimeManagement::boot_time() const
     return RTC::boot_time();
 }
 
-TimeManagement::TimeManagement()
+UNMAP_AFTER_INIT TimeManagement::TimeManagement()
 {
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().lookup("time").value_or("modern") == "legacy");
     if (ACPI::is_enabled()) {
@@ -255,7 +255,7 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
     ASSERT_NOT_REACHED();
 }
 
-bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
 {
     if (!ACPI::is_enabled())
         return false;
@@ -309,7 +309,7 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     return true;
 }
 
-bool TimeManagement::probe_and_set_legacy_hardware_timers()
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_legacy_hardware_timers()
 {
     if (ACPI::is_enabled()) {
         if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {

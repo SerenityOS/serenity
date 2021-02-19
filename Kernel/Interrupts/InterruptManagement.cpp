@@ -56,7 +56,7 @@ InterruptManagement& InterruptManagement::the()
     return *s_interrupt_management;
 }
 
-void InterruptManagement::initialize()
+UNMAP_AFTER_INIT void InterruptManagement::initialize()
 {
     ASSERT(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
@@ -125,7 +125,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 int
     ASSERT_NOT_REACHED();
 }
 
-PhysicalAddress InterruptManagement::search_for_madt()
+UNMAP_AFTER_INIT PhysicalAddress InterruptManagement::search_for_madt()
 {
     dbgln("Early access to ACPI tables for interrupt setup");
     auto rsdp = ACPI::StaticParsing::find_rsdp();
@@ -134,13 +134,13 @@ PhysicalAddress InterruptManagement::search_for_madt()
     return ACPI::StaticParsing::find_table(rsdp.value(), "APIC");
 }
 
-InterruptManagement::InterruptManagement()
+UNMAP_AFTER_INIT InterruptManagement::InterruptManagement()
     : m_madt(search_for_madt())
 {
     m_interrupt_controllers.resize(1);
 }
 
-void InterruptManagement::switch_to_pic_mode()
+UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
 {
     klog() << "Interrupts: Switch to Legacy PIC mode";
     InterruptDisabler disabler;
@@ -159,7 +159,7 @@ void InterruptManagement::switch_to_pic_mode()
     }
 }
 
-void InterruptManagement::switch_to_ioapic_mode()
+UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
 {
     klog() << "Interrupts: Switch to IOAPIC mode";
     InterruptDisabler disabler;
@@ -196,7 +196,7 @@ void InterruptManagement::switch_to_ioapic_mode()
     APIC::the().init_bsp();
 }
 
-void InterruptManagement::locate_apic_data()
+UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 {
     ASSERT(!m_madt.is_null());
     auto madt = map_typed<ACPI::Structures::MADT>(m_madt);

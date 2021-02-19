@@ -141,7 +141,7 @@ void for_each_allocator(Callback callback)
     callback(s_slab_allocator_128);
 }
 
-void slab_alloc_init()
+UNMAP_AFTER_INIT void slab_alloc_init()
 {
     s_slab_allocator_16.init(128 * KiB);
     s_slab_allocator_32.init(128 * KiB);

@@ -54,7 +54,7 @@ extern "C" PageDirectoryEntry* boot_pdpt[4];
 extern "C" PageDirectoryEntry boot_pd0[1024];
 extern "C" PageDirectoryEntry boot_pd3[1024];
 
-PageDirectory::PageDirectory()
+UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
     m_range_allocator.initialize_with_range(VirtualAddress(0xc0800000), 0x3f000000);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);

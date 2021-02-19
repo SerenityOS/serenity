@@ -211,7 +211,7 @@ void kmalloc_enable_expand()
     g_kmalloc_global->allocate_backup_memory();
 }
 
-void kmalloc_init()
+UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
     memset(kmalloc_eternal_heap, 0, sizeof(kmalloc_eternal_heap));

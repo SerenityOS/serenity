@@ -29,12 +29,12 @@
 
 namespace Kernel {
 
-RandomDevice::RandomDevice()
+UNMAP_AFTER_INIT RandomDevice::RandomDevice()
     : CharacterDevice(1, 8)
 {
 }
 
-RandomDevice::~RandomDevice()
+UNMAP_AFTER_INIT RandomDevice::~RandomDevice()
 {
 }
 
