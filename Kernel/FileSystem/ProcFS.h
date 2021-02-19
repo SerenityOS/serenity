@@ -114,6 +114,8 @@ private:
 
     KResult refresh_data(FileDescription&) const;
 
+    RefPtr<Process> process() const;
+
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
     ProcFSInode(ProcFS&, InodeIndex);
