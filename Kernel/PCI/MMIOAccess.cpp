@@ -49,7 +49,7 @@ private:
 
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
 
-DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_address, const MMIOSegment& mmio_segment)
+UNMAP_AFTER_INIT DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_address, const MMIOSegment& mmio_segment)
     : m_device_address(device_address)
     , m_mapped_region(MM.allocate_kernel_region(page_round_up(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Region::Access::Read | Region::Access::Write).release_nonnull())
 {
@@ -79,7 +79,7 @@ uint8_t MMIOAccess::segment_end_bus(u32 seg) const
     return segment.value().get_end_bus();
 }
 
-void MMIOAccess::initialize(PhysicalAddress mcfg)
+UNMAP_AFTER_INIT void MMIOAccess::initialize(PhysicalAddress mcfg)
 {
     if (!Access::is_initialized()) {
         new MMIOAccess(mcfg);
@@ -89,7 +89,7 @@ void MMIOAccess::initialize(PhysicalAddress mcfg)
     }
 }
 
-MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
+UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     : m_mcfg(p_mcfg)
 {
     klog() << "PCI: Using MMIO for PCI configuration space access";
@@ -131,7 +131,7 @@ MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     });
 }
 
-Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
+UNMAP_AFTER_INIT Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Getting device configuration space for {}", address);
     for (auto& mapping : m_mapped_device_regions) {

@@ -32,7 +32,7 @@ namespace Kernel {
 static char s_cmd_line[1024];
 static CommandLine* s_the;
 
-void CommandLine::early_initialize(const char* cmd_line)
+UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
 {
     if (!cmd_line)
         return;
@@ -49,13 +49,13 @@ const CommandLine& kernel_command_line()
     return *s_the;
 }
 
-void CommandLine::initialize()
+UNMAP_AFTER_INIT void CommandLine::initialize()
 {
     ASSERT(!s_the);
     s_the = new CommandLine(s_cmd_line);
 }
 
-CommandLine::CommandLine(const String& string)
+UNMAP_AFTER_INIT CommandLine::CommandLine(const String& string)
     : m_string(string)
 {
     s_the = this;

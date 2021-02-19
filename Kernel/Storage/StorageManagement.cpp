@@ -41,7 +41,7 @@ namespace Kernel {
 
 static StorageManagement* s_the;
 
-StorageManagement::StorageManagement(String boot_argument, bool force_pio)
+UNMAP_AFTER_INIT StorageManagement::StorageManagement(String boot_argument, bool force_pio)
     : m_boot_argument(boot_argument)
     , m_controllers(enumerate_controllers(force_pio))
     , m_storage_devices(enumerate_storage_devices())
@@ -195,7 +195,7 @@ bool StorageManagement::initialized()
     return (s_the != nullptr);
 }
 
-void StorageManagement::initialize(String root_device, bool force_pio)
+UNMAP_AFTER_INIT void StorageManagement::initialize(String root_device, bool force_pio)
 {
     ASSERT(!StorageManagement::initialized());
     s_the = new StorageManagement(root_device, force_pio);

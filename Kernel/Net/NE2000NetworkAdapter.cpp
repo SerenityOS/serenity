@@ -155,7 +155,7 @@ struct [[gnu::packed]] received_packet_header {
     u16 length;
 };
 
-void NE2000NetworkAdapter::detect()
+UNMAP_AFTER_INIT void NE2000NetworkAdapter::detect()
 {
     static const auto ne2k_ids = Array<PCI::ID, 11> {
         PCI::ID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
@@ -182,7 +182,7 @@ void NE2000NetworkAdapter::detect()
     });
 }
 
-NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq)
+UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~3)
 {
@@ -203,7 +203,7 @@ NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq)
     enable_irq();
 }
 
-NE2000NetworkAdapter::~NE2000NetworkAdapter()
+UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
 {
 }
 

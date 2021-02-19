@@ -56,7 +56,7 @@ UNMAP_AFTER_INIT Console::Console()
 {
 }
 
-Console::~Console()
+UNMAP_AFTER_INIT Console::~Console()
 {
 }
 

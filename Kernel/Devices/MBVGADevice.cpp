@@ -40,7 +40,7 @@ MBVGADevice& MBVGADevice::the()
     return *s_the;
 }
 
-MBVGADevice::MBVGADevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
+UNMAP_AFTER_INIT MBVGADevice::MBVGADevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
     : BlockDevice(29, 0)
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)

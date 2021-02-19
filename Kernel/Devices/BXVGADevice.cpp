@@ -60,7 +60,7 @@ namespace Kernel {
 
 static AK::Singleton<BXVGADevice> s_the;
 
-void BXVGADevice::initialize()
+UNMAP_AFTER_INIT void BXVGADevice::initialize()
 {
     s_the.ensure_instance();
 }
@@ -70,7 +70,7 @@ BXVGADevice& BXVGADevice::the()
     return *s_the;
 }
 
-BXVGADevice::BXVGADevice()
+UNMAP_AFTER_INIT BXVGADevice::BXVGADevice()
     : BlockDevice(29, 0)
 
 {
@@ -157,7 +157,7 @@ void BXVGADevice::set_y_offset(size_t y_offset)
     set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)y_offset);
 }
 
-u32 BXVGADevice::find_framebuffer_address()
+UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
 {
     // NOTE: The QEMU card has the same PCI ID as the Bochs one.
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };

@@ -86,7 +86,7 @@ UHCIController& UHCIController::the()
     return *s_the;
 }
 
-void UHCIController::detect()
+UNMAP_AFTER_INIT void UHCIController::detect()
 {
 #if !UHCI_ENABLED
     return;
@@ -102,7 +102,7 @@ void UHCIController::detect()
     });
 }
 
-UHCIController::UHCIController(PCI::Address address, PCI::ID id)
+UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address, PCI::ID id)
     : PCI::Device(address)
     , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
 {
@@ -116,7 +116,7 @@ UHCIController::UHCIController(PCI::Address address, PCI::ID id)
     spawn_port_proc();
 }
 
-UHCIController::~UHCIController()
+UNMAP_AFTER_INIT UHCIController::~UHCIController()
 {
 }
 
@@ -151,7 +151,7 @@ void UHCIController::reset()
     klog() << "UHCI: Reset completed!";
 }
 
-void UHCIController::create_structures()
+UNMAP_AFTER_INIT void UHCIController::create_structures()
 {
     // Let's allocate memory for botht the QH and TD pools
     // First the QH pool and all of the Interrupt QH's
@@ -224,7 +224,7 @@ void UHCIController::create_structures()
 #endif
 }
 
-void UHCIController::setup_schedule()
+UNMAP_AFTER_INIT void UHCIController::setup_schedule()
 {
     //
     // https://github.com/alkber/minix3-usbsubsystem/blob/master/usb/uhci-hcd.c

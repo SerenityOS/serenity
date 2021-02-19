@@ -730,7 +730,7 @@ NEVER_INLINE UNMAP_AFTER_INIT void write_cr4(u32 value)
     asm volatile("movl %%eax, %%cr4" ::"a"(value));
 }
 
-static void sse_init()
+UNMAP_AFTER_INIT static void sse_init()
 {
     write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
     write_cr4(read_cr4() | 0x600);
@@ -1540,7 +1540,7 @@ void Processor::assume_context(Thread& thread, u32 flags)
     ASSERT_NOT_REACHED();
 }
 
-extern "C" void pre_init_finished(void)
+extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
     ASSERT(g_scheduler_lock.own_lock());
 
@@ -1553,14 +1553,14 @@ extern "C" void pre_init_finished(void)
     Scheduler::leave_on_first_switch(prev_flags);
 }
 
-extern "C" void post_init_finished(void)
+extern "C" UNMAP_AFTER_INIT void post_init_finished(void)
 {
     // We need to re-acquire the scheduler lock before a context switch
     // transfers control into the idle loop, which needs the lock held
     Scheduler::prepare_for_idle_loop();
 }
 
-void Processor::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
 {
     ASSERT(initial_thread.process().is_kernel_process());
 

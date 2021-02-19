@@ -36,7 +36,7 @@
 
 namespace Kernel {
 
-OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
+UNMAP_AFTER_INIT OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
 {
     auto floating_pointer = find_floating_pointer();
     if (!floating_pointer.has_value())
@@ -44,7 +44,7 @@ OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
     return adopt_own(*new MultiProcessorParser(floating_pointer.value()));
 }
 
-MultiProcessorParser::MultiProcessorParser(PhysicalAddress floating_pointer)
+UNMAP_AFTER_INIT MultiProcessorParser::MultiProcessorParser(PhysicalAddress floating_pointer)
     : m_floating_pointer(floating_pointer)
 {
     klog() << "MultiProcessor: Floating Pointer Structure @ " << m_floating_pointer;
@@ -52,14 +52,14 @@ MultiProcessorParser::MultiProcessorParser(PhysicalAddress floating_pointer)
     parse_configuration_table();
 }
 
-void MultiProcessorParser::parse_floating_pointer_data()
+UNMAP_AFTER_INIT void MultiProcessorParser::parse_floating_pointer_data()
 {
     auto floating_pointer = map_typed<MultiProcessor::FloatingPointer>(m_floating_pointer);
     m_configuration_table = PhysicalAddress(floating_pointer->physical_address_ptr);
     dbgln("Features {}, IMCR? {}", floating_pointer->feature_info[0], (floating_pointer->feature_info[0] & (1 << 7)));
 }
 
-void MultiProcessorParser::parse_configuration_table()
+UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
 {
     auto configuration_table_length = map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table)->length;
     auto config_table = map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table, configuration_table_length);
@@ -102,7 +102,7 @@ void MultiProcessorParser::parse_configuration_table()
     }
 }
 
-Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
 {
     StringView signature("_MP_");
     auto mp_floating_pointer = map_ebda().find_chunk_starting_with(signature, 16);
@@ -111,7 +111,7 @@ Optional<PhysicalAddress> MultiProcessorParser::find_floating_pointer()
     return map_bios().find_chunk_starting_with(signature, 16);
 }
 
-Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
+UNMAP_AFTER_INIT Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
 {
     Vector<u8> pci_bus_ids;
     for (auto& entry : m_bus_entries) {
@@ -121,7 +121,7 @@ Vector<u8> MultiProcessorParser::get_pci_bus_ids() const
     return pci_bus_ids;
 }
 
-Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_redirections()
+UNMAP_AFTER_INIT Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_redirections()
 {
     dbgln("MultiProcessor: Get PCI IOAPIC redirections");
     Vector<PCIInterruptOverrideMetadata> overrides;
@@ -148,7 +148,7 @@ Vector<PCIInterruptOverrideMetadata> MultiProcessorParser::get_pci_interrupt_red
     return overrides;
 }
 
-PCIInterruptOverrideMetadata::PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, u8 source_irq, u32 ioapic_id, u16 ioapic_int_pin)
+UNMAP_AFTER_INIT PCIInterruptOverrideMetadata::PCIInterruptOverrideMetadata(u8 bus_id, u8 polarity, u8 trigger_mode, u8 source_irq, u32 ioapic_id, u16 ioapic_int_pin)
     : m_bus_id(bus_id)
     , m_polarity(polarity)
     , m_trigger_mode(trigger_mode)

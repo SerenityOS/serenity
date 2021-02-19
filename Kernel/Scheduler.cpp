@@ -506,13 +506,13 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     set_idle_thread(idle_thread);
 }
 
-void Scheduler::set_idle_thread(Thread* idle_thread)
+UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
     Processor::current().set_idle_thread(*idle_thread);
     Processor::current().set_current_thread(*idle_thread);
 }
 
-Thread* Scheduler::create_ap_idle_thread(u32 cpu)
+UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 {
     ASSERT(cpu != 0);
     // This function is called on the bsp, but creates an idle thread for another AP

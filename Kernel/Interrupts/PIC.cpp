@@ -87,7 +87,7 @@ void PIC::disable(const GenericInterruptHandler& handler)
     m_cached_irq_mask |= 1 << irq;
 }
 
-PIC::PIC()
+UNMAP_AFTER_INIT PIC::PIC()
 {
     initialize();
 }
@@ -203,7 +203,7 @@ void PIC::remap(u8 offset)
     enable_vector(2);
 }
 
-void PIC::initialize()
+UNMAP_AFTER_INIT void PIC::initialize()
 {
     /* ICW1 (edge triggered mode, cascading controllers, expect ICW4) */
     IO::out8(PIC0_CTL, ICW1_INIT | ICW1_ICW4);

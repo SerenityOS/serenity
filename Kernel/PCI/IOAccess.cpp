@@ -31,7 +31,7 @@
 namespace Kernel {
 namespace PCI {
 
-void IOAccess::initialize()
+UNMAP_AFTER_INIT void IOAccess::initialize()
 {
     if (!Access::is_initialized()) {
         new IOAccess();
@@ -39,7 +39,7 @@ void IOAccess::initialize()
     }
 }
 
-IOAccess::IOAccess()
+UNMAP_AFTER_INIT IOAccess::IOAccess()
 {
     klog() << "PCI: Using I/O instructions for PCI configuration space access";
     enumerate_hardware([&](const Address& address, ID id) {

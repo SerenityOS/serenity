@@ -42,7 +42,7 @@ namespace Kernel {
 
 AK::Singleton<DMIExpose> s_the;
 
-void DMIExpose::set_64_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void DMIExpose::set_64_bit_entry_initialization_values()
 {
     klog() << "DMIExpose: SMBIOS 64bit Entry point @ " << m_entry_point;
     auto smbios_entry = map_typed<SMBIOS::EntryPoint64bit>(PhysicalAddress(m_entry_point), SMBIOS_SEARCH_AREA_SIZE);
@@ -51,7 +51,7 @@ void DMIExpose::set_64_bit_entry_initialization_values()
     m_structure_table_length = smbios_entry.ptr()->table_maximum_size;
 }
 
-void DMIExpose::set_32_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void DMIExpose::set_32_bit_entry_initialization_values()
 {
     klog() << "DMIExpose: SMBIOS 32bit Entry point @ " << m_entry_point;
     auto smbios_entry = map_typed<SMBIOS::EntryPoint32bit>(PhysicalAddress(m_entry_point), SMBIOS_SEARCH_AREA_SIZE);
@@ -60,7 +60,7 @@ void DMIExpose::set_32_bit_entry_initialization_values()
     m_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
 }
 
-void DMIExpose::initialize()
+UNMAP_AFTER_INIT void DMIExpose::initialize()
 {
     s_the.ensure_instance();
 }
@@ -79,7 +79,7 @@ size_t DMIExpose::structure_table_length() const
     return m_structure_table_length;
 }
 
-void DMIExpose::initialize_exposer()
+UNMAP_AFTER_INIT void DMIExpose::initialize_exposer()
 {
     ASSERT(!(m_entry_point.is_null()));
     if (m_using_64bit_entry_point) {
@@ -101,7 +101,7 @@ OwnPtr<KBuffer> DMIExpose::structure_table() const
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_structure_table_length });
 }
 
-DMIExpose::DMIExpose()
+UNMAP_AFTER_INIT DMIExpose::DMIExpose()
 {
     auto entry_32bit = find_entry32bit_point();
     m_entry_point = entry_32bit.value();
@@ -117,12 +117,12 @@ DMIExpose::DMIExpose()
     initialize_exposer();
 }
 
-Optional<PhysicalAddress> DMIExpose::find_entry64bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> DMIExpose::find_entry64bit_point()
 {
     return map_bios().find_chunk_starting_with("_SM3_", 16);
 }
 
-Optional<PhysicalAddress> DMIExpose::find_entry32bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> DMIExpose::find_entry32bit_point()
 {
     return map_bios().find_chunk_starting_with("_SM_", 16);
 }
