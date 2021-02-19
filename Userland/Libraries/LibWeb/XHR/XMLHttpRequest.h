@@ -33,6 +33,7 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
@@ -71,7 +72,7 @@ public:
     void open(const String& method, const String& url);
     void send();
 
-    void set_request_header(const String& header, const String& value);
+    DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
 
 private:
     virtual void ref_event_target() override { ref(); }
