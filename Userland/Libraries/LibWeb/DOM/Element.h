@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/AttributeNames.h>
@@ -63,7 +64,7 @@ public:
     bool has_attributes() const { return !m_attributes.is_empty(); }
     String attribute(const FlyString& name) const;
     String get_attribute(const FlyString& name) const { return attribute(name); }
-    void set_attribute(const FlyString& name, const String& value);
+    ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
     void remove_attribute(const FlyString& name);
 
     template<typename Callback>

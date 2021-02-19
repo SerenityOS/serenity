@@ -30,8 +30,10 @@
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
@@ -82,8 +84,12 @@ String Element::attribute(const FlyString& name) const
     return {};
 }
 
-void Element::set_attribute(const FlyString& name, const String& value)
+ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
 {
+    // FIXME: Proper name validation
+    if (name.is_empty())
+        return InvalidCharacterError::create("Attribute name must not be empty");
+
     CSS::StyleInvalidator style_invalidator(document());
 
     if (auto* attribute = find_attribute(name))
@@ -92,6 +98,7 @@ void Element::set_attribute(const FlyString& name, const String& value)
         m_attributes.empend(name, value);
 
     parse_attribute(name, value);
+    return {};
 }
 
 void Element::remove_attribute(const FlyString& name)
