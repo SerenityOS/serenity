@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <AK/ScopeGuard.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
@@ -1048,10 +1049,31 @@ ProcFSInode::~ProcFSInode()
         fs().m_inodes.remove(it);
 }
 
+RefPtr<Process> ProcFSInode::process() const
+{
+    return Process::from_pid(to_pid(identifier()));
+}
+
 KResult ProcFSInode::refresh_data(FileDescription& description) const
 {
     if (Kernel::is_directory(identifier()))
         return KSuccess;
+
+    // For process-specific inodes, hold the process's ptrace lock across refresh
+    // and refuse to load data if the process is not dumpable.
+    // Without this, files opened before a process went non-dumpable could still be used for dumping.
+    auto process = this->process();
+    if (process) {
+        process->ptrace_lock().lock();
+        if (!process->is_dumpable()) {
+            process->ptrace_lock().unlock();
+            return EPERM;
+        }
+    }
+    ScopeGuard guard = [&] {
+        if (process)
+            process->ptrace_lock().unlock();
+    };
 
     auto& cached_data = description.data();
     auto* directory_entry = fs().get_directory_entry(identifier());
@@ -1440,6 +1462,22 @@ void ProcFSInode::flush_metadata()
 
 ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
+    // For process-specific inodes, hold the process's ptrace lock across the write
+    // and refuse to write at all data if the process is not dumpable.
+    // Without this, files opened before a process went non-dumpable could still be used for dumping.
+    auto process = this->process();
+    if (process) {
+        process->ptrace_lock().lock();
+        if (!process->is_dumpable()) {
+            process->ptrace_lock().unlock();
+            return EPERM;
+        }
+    }
+    ScopeGuard guard = [&] {
+        if (process)
+            process->ptrace_lock().unlock();
+    };
+
     auto result = prepare_to_write_data();
     if (result.is_error())
         return result;
