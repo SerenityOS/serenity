@@ -149,18 +149,7 @@ static void dump(const RegisterState& regs)
     dbgln("    ds={:04x} es={:04x} fs={:04x} gs={:04x}", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
     dbgln("   eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
     dbgln("   ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
-
-    u32 cr0;
-    asm("movl %%cr0, %%eax"
-        : "=a"(cr0));
-    u32 cr2;
-    asm("movl %%cr2, %%eax"
-        : "=a"(cr2));
-    u32 cr3 = read_cr3();
-    u32 cr4;
-    asm("movl %%cr4, %%eax"
-        : "=a"(cr4));
-    dbgln("   cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4);
+    dbgln("   cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", read_cr0(), read_cr2(), read_cr3(), read_cr4());
 }
 
 void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
@@ -364,20 +353,11 @@ void breakpoint_handler(TrapFrame* trap)
     current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
 
-#define EH(i, msg)                                                                \
-    static void _exception##i()                                                   \
-    {                                                                             \
-        dbgln("{}", msg);                                                         \
-        u32 cr0, cr2, cr3, cr4;                                                   \
-        asm("movl %%cr0, %%eax"                                                   \
-            : "=a"(cr0));                                                         \
-        asm("movl %%cr2, %%eax"                                                   \
-            : "=a"(cr2));                                                         \
-        asm("movl %%cr3, %%eax"                                                   \
-            : "=a"(cr3));                                                         \
-        asm("movl %%cr4, %%eax"                                                   \
-            : "=a"(cr4));                                                         \
-        PANIC("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", cr0, cr2, cr3, cr4); \
+#define EH(i, msg)                                                                                            \
+    static void _exception##i()                                                                               \
+    {                                                                                                         \
+        dbgln("{}", msg);                                                                                     \
+        PANIC("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", read_cr0(), read_cr2(), read_cr3(), read_cr4()); \
     }
 
 EH(2, "Unknown error")
@@ -733,16 +713,20 @@ void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
+void write_cr0(u32 value)
+{
+    asm volatile("movl %%eax, %%cr0" ::"a"(value));
+}
+
+void write_cr4(u32 value)
+{
+    asm volatile("movl %%eax, %%cr4" ::"a"(value));
+}
+
 static void sse_init()
 {
-    asm volatile(
-        "mov %cr0, %eax\n"
-        "andl $0xfffffffb, %eax\n"
-        "orl $0x2, %eax\n"
-        "mov %eax, %cr0\n"
-        "mov %cr4, %eax\n"
-        "orl $0x600, %eax\n"
-        "mov %eax, %cr4\n");
+    write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
+    write_cr4(read_cr4() | 0x600);
 }
 
 u32 read_cr0()
@@ -751,6 +735,14 @@ u32 read_cr0()
     asm("movl %%cr0, %%eax"
         : "=a"(cr0));
     return cr0;
+}
+
+u32 read_cr2()
+{
+    u32 cr2;
+    asm("movl %%cr2, %%eax"
+        : "=a"(cr2));
+    return cr2;
 }
 
 u32 read_cr3()
@@ -911,18 +903,11 @@ void Processor::cpu_setup()
     if (has_feature(CPUFeature::SSE))
         sse_init();
 
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x00010000, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
+    write_cr0(read_cr0() | 0x00010000);
 
     if (has_feature(CPUFeature::PGE)) {
         // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x80, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x80);
     }
 
     if (has_feature(CPUFeature::NX)) {
@@ -936,32 +921,20 @@ void Processor::cpu_setup()
 
     if (has_feature(CPUFeature::SMEP)) {
         // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x100000);
     }
 
     if (has_feature(CPUFeature::SMAP)) {
         // Turn on CR4.SMAP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x200000);
     }
 
     if (has_feature(CPUFeature::UMIP)) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x800, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x800);
     }
 
     if (has_feature(CPUFeature::TSC)) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x4, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x4);
     }
 }
 
