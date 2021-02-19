@@ -125,10 +125,10 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:-lgcc_s -dynamic-linker /usr/lib/Loader.so}}"
 +
 +#undef CC1_SPEC
-+#define CC1_SPEC "-fno-exceptions"
++#define CC1_SPEC "-fno-exceptions -ftls-model=initial-exec"
 +
 +#undef CC1PLUS_SPEC
-+#define CC1PLUS_SPEC "-fno-exceptions"
++#define CC1PLUS_SPEC "-fno-exceptions -ftls-model=initial-exec"
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
