@@ -113,7 +113,7 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-NonnullOwnPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
+UNMAP_AFTER_INIT NonnullOwnPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
 {
     return make<IDEChannel>(controller, io_group, type, force_pio);
 }
@@ -128,7 +128,7 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
     return m_slave;
 }
 
-IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
     : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
     , m_io_group(io_group)
@@ -153,7 +153,7 @@ void IDEChannel::clear_pending_interrupts() const
     m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 }
 
-IDEChannel::~IDEChannel()
+UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
 {
 }
 
@@ -215,7 +215,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     });
 }
 
-void IDEChannel::initialize(bool force_pio)
+UNMAP_AFTER_INIT void IDEChannel::initialize(bool force_pio)
 {
     m_parent_controller->enable_pin_based_interrupts();
 
@@ -368,7 +368,7 @@ String IDEChannel::channel_type_string() const
     return "Secondary";
 }
 
-void IDEChannel::detect_disks()
+UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 {
     auto channel_string = [](u8 i) -> const char* {
         if (i == 0)

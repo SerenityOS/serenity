@@ -263,7 +263,7 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
 }
 
-void E1000NetworkAdapter::detect_eeprom()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
 {
     out32(REG_EEPROM, 0x1);
     for (int i = 0; i < 999; ++i) {
@@ -276,7 +276,7 @@ void E1000NetworkAdapter::detect_eeprom()
     m_has_eeprom = false;
 }
 
-u32 E1000NetworkAdapter::read_eeprom(u8 address)
+UNMAP_AFTER_INIT u32 E1000NetworkAdapter::read_eeprom(u8 address)
 {
     u16 data = 0;
     u32 tmp = 0;
@@ -293,7 +293,7 @@ u32 E1000NetworkAdapter::read_eeprom(u8 address)
     return data;
 }
 
-void E1000NetworkAdapter::read_mac_address()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
     if (m_has_eeprom) {
         MACAddress mac {};
@@ -317,7 +317,7 @@ bool E1000NetworkAdapter::link_up()
     return (in32(REG_STATUS) & STATUS_LU);
 }
 
-void E1000NetworkAdapter::initialize_rx_descriptors()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
@@ -338,7 +338,7 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
     out32(REG_RCTRL, RCTL_EN | RCTL_SBP | RCTL_UPE | RCTL_MPE | RCTL_LBM_NONE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_SECRC | RCTL_BSIZE_8192);
 }
 
-void E1000NetworkAdapter::initialize_tx_descriptors()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
