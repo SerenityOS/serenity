@@ -230,13 +230,13 @@ void Terminal::SGR(const ParamVector& params)
     }
 }
 
-void Terminal::escape$s(const ParamVector&)
+void Terminal::SCOSC(const ParamVector&)
 {
     m_saved_cursor_row = m_cursor_row;
     m_saved_cursor_column = m_cursor_column;
 }
 
-void Terminal::escape$u(const ParamVector&)
+void Terminal::SCORC(const ParamVector&)
 {
     set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
@@ -668,10 +668,10 @@ void Terminal::execute_escape_sequence(u8 final)
         SGR(params);
         break;
     case 's':
-        escape$s(params);
+        SCOSC(params);
         break;
     case 'u':
-        escape$u(params);
+        SCORC(params);
         break;
     case 't':
         escape$t(params);
