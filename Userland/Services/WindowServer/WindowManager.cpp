@@ -1138,6 +1138,10 @@ void WindowManager::event(Core::Event& event)
             }
         }
 
+        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Q) {
+            m_active_window->request_close();
+        }
+
         if (MenuManager::the().current_menu()) {
             MenuManager::the().dispatch_event(event);
             return;
