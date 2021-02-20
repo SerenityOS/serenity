@@ -43,9 +43,10 @@ namespace TLS {
 
 inline void print_buffer(ReadonlyBytes buffer)
 {
-    for (size_t i { 0 }; i < buffer.size(); ++i)
-        dbgprintf("%02x ", buffer[i]);
-    dbgprintf("\n");
+    StringBuilder builder(buffer.size() * 2);
+    for (auto b : buffer)
+        builder.appendff("{:02x} ", b);
+    dbgln("{}", builder.string_view());
 }
 
 inline void print_buffer(const ByteBuffer& buffer)
