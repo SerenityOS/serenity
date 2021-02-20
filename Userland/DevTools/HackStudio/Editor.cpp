@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -213,18 +213,19 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
         return;
 
     bool hide_tooltip = true;
-    bool is_over_link = false;
+    bool is_over_clickable = false;
 
     auto ruler_line_rect = ruler_content_rect(text_position.line());
     auto hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
     if (hovering_lines_ruler && !is_in_drag_select())
         set_override_cursor(Gfx::StandardCursor::Arrow);
     else if (m_hovering_editor)
-        set_override_cursor(m_hovering_link && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
+        set_override_cursor(m_hovering_clickable && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
+        bool is_clickable = (highlighter->is_navigatable(span.data) || highlighter->is_identifier(span.data));
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
-            if (highlighter->is_navigatable(span.data) && span.attributes.underline) {
+            if (is_clickable && span.attributes.underline) {
                 span.attributes.underline = false;
                 wrapper().editor().update();
             }
@@ -239,14 +240,15 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             dbgln("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 #endif
 
-            if (highlighter->is_navigatable(span.data)) {
-                is_over_link = true;
+            if (is_clickable) {
+                is_over_clickable = true;
                 bool was_underlined = span.attributes.underline;
                 span.attributes.underline = event.modifiers() & Mod_Ctrl;
                 if (span.attributes.underline != was_underlined) {
                     wrapper().editor().update();
                 }
             }
+
             if (highlighter->is_identifier(span.data)) {
                 show_documentation_tooltip_if_available(hovered_span_text, event.position().translated(screen_relative_rect().location()));
                 hide_tooltip = false;
@@ -258,7 +260,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (hide_tooltip)
         m_documentation_tooltip_window->hide();
 
-    m_hovering_link = is_over_link && (event.modifiers() & Mod_Ctrl);
+    m_hovering_clickable = (is_over_clickable) && (event.modifiers() & Mod_Ctrl);
 }
 
 void Editor::mousedown_event(GUI::MouseEvent& event)
@@ -292,20 +294,10 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     }
 
     if (auto* span = document().span_at(text_position)) {
-        if (!highlighter->is_navigatable(span->data)) {
-            GUI::TextEditor::mousedown_event(event);
+        if (highlighter->is_navigatable(span->data)) {
+            on_navigatable_link_click(*span);
             return;
         }
-
-        auto adjusted_range = span->range;
-        adjusted_range.end().set_column(adjusted_range.end().column() + 1);
-        auto span_text = document().text_in_range(adjusted_range);
-        auto header_path = span_text.substring(1, span_text.length() - 2);
-#if EDITOR_DEBUG
-        dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
-#endif
-        navigate_to_include_if_available(header_path);
-        return;
     }
 
     GUI::TextEditor::mousedown_event(event);
@@ -524,5 +516,17 @@ void Editor::flush_file_content_to_langauge_server()
     m_language_client->set_file_content(
         code_document().file_path(),
         document().text());
+}
+
+void Editor::on_navigatable_link_click(const GUI::TextDocumentSpan& span)
+{
+    auto adjusted_range = span.range;
+    adjusted_range.end().set_column(adjusted_range.end().column() + 1);
+    auto span_text = document().text_in_range(adjusted_range);
+    auto header_path = span_text.substring(1, span_text.length() - 2);
+#if EDITOR_DEBUG
+    dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
+#endif
+    navigate_to_include_if_available(header_path);
 }
 }
