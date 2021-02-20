@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_app(SpaceAnalyzer ICON app-space-analyzer)
-target_link_libraries(SpaceAnalyzer LibGfx LibGUI)
+target_link_libraries(SpaceAnalyzer LibDesktop LibGfx LibGUI)

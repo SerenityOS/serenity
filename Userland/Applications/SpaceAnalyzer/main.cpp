@@ -27,15 +27,19 @@
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <AK/RefCounted.h>
+#include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BreadcrumbBar.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/StatusBar.h>
 #include <sys/stat.h>
 
@@ -241,6 +245,28 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     treemapwidget.set_tree(tree);
 }
 
+static bool is_removable(const String& absolute_path)
+{
+    ASSERT(!absolute_path.is_empty());
+    int access_result = access(absolute_path.characters(), W_OK);
+    if (access_result != 0 && errno != EACCES)
+        perror("access");
+    return access_result == 0;
+}
+
+static String get_absolute_path_to_selected_node(const SpaceAnalyzer::TreeMapWidget& treemapwidget, bool include_last_node = true)
+{
+    StringBuilder path_builder;
+    for (size_t k = 0; k < treemapwidget.path_size() - (include_last_node ? 0 : 1); k++) {
+        if (k != 0) {
+            path_builder.append('/');
+        }
+        const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
+        path_builder.append(node->name());
+    }
+    return path_builder.build();
+}
+
 int main(int argc, char* argv[])
 {
     auto app = GUI::Application::construct(argc, argv);
@@ -274,6 +300,57 @@ int main(int argc, char* argv[])
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
     app->set_menubar(move(menubar));
 
+    // Configure the nodes context menu.
+    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol(get_absolute_path_to_selected_node(treemapwidget)));
+    });
+    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol(get_absolute_path_to_selected_node(treemapwidget, false)));
+    });
+    auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](auto&) {
+        GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
+    });
+    auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+        String selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
+        bool try_again = true;
+        while (try_again) {
+            try_again = false;
+
+            auto deletion_result = Core::File::remove(selected_node_path, Core::File::RecursionMode::Allowed, true);
+            if (deletion_result.is_error()) {
+                auto retry_message_result = GUI::MessageBox::show(window,
+                    String::formatted("Failed to delete \"{}\": {}. Retry?",
+                        deletion_result.error().file,
+                        deletion_result.error().error_code.string()),
+                    "Deletion failed",
+                    GUI::MessageBox::Type::Error,
+                    GUI::MessageBox::InputType::YesNo);
+                if (retry_message_result == GUI::MessageBox::ExecYes) {
+                    try_again = true;
+                }
+            } else {
+                GUI::MessageBox::show(window,
+                    String::formatted("Successfuly deleted \"{}\".", selected_node_path),
+                    "Deletion completed",
+                    GUI::MessageBox::Type::Information,
+                    GUI::MessageBox::InputType::OK);
+            }
+        }
+
+        // TODO: Refreshing data always causes resetting the viewport back to "/".
+        // It would be great if we found a way to preserve viewport across refreshes.
+        analyze(tree, treemapwidget, statusbar);
+    });
+    // TODO: Both these menus could've been implemented as one, but it's impossible to change action text after it's shown once.
+    auto folder_node_context_menu = GUI::Menu::construct();
+    folder_node_context_menu->add_action(*open_folder_action);
+    folder_node_context_menu->add_action(*copy_path_action);
+    folder_node_context_menu->add_action(*delete_action);
+    auto file_node_context_menu = GUI::Menu::construct();
+    file_node_context_menu->add_action(*open_containing_folder_action);
+    file_node_context_menu->add_action(*copy_path_action);
+    file_node_context_menu->add_action(*delete_action);
+
     // Configure event handlers.
     breadcrumbbar.on_segment_click = [&](size_t index) {
         ASSERT(index < treemapwidget.path_size());
@@ -290,6 +367,17 @@ int main(int argc, char* argv[])
             }
         }
         breadcrumbbar.set_selected_segment(treemapwidget.viewpoint());
+    };
+    treemapwidget.on_context_menu_request = [&](const GUI::ContextMenuEvent& event) {
+        String selected_node_path = get_absolute_path_to_selected_node(treemapwidget);
+        if (selected_node_path.is_empty())
+            return;
+        delete_action->set_enabled(is_removable(selected_node_path));
+        if (Core::File::is_directory(selected_node_path)) {
+            folder_node_context_menu->popup(event.screen_position());
+        } else {
+            file_node_context_menu->popup(event.screen_position());
+        }
     };
 
     // At startup automatically do an analysis of root.
