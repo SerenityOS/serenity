@@ -212,7 +212,7 @@ The compiler implements the mitigation by storing a canary value randomized on p
 functions. Code is then generated to check that stack canary on function return and crash if the value has been changed,
 and hence a stack corruption has been detected.
 
-`-fstack-protector` was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/67142562310e631156d1f64aff22f068ae2c48a5e):
+`-fstack-protector` was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/842716a0b5eceb8db31416cd643720c1037032b2):
 
 ```
 commit 842716a0b5eceb8db31416cd643720c1037032b2
