@@ -420,18 +420,18 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             dbgln("ERROR: symbol not found: {}.", symbol.name());
             ASSERT_NOT_REACHED();
         }
-        u32 symbol_address = res.value().address;
-        *patch_ptr += symbol_address;
+        auto symbol_address = res.value().address;
+        *patch_ptr += symbol_address.get();
         dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
     case R_386_PC32: {
         auto symbol = relocation.symbol();
         dbgln_if(DYNAMIC_LOAD_DEBUG, "PC-relative relocation: '{}', value: {:p}", symbol.name(), symbol.value());
-        auto res = lookup_symbol(symbol);
-        ASSERT(res.has_value());
-        u32 relative_offset = (res.value().address - (FlatPtr)(m_dynamic_object->base_address().as_ptr() + relocation.offset()));
-        *patch_ptr += relative_offset;
+        auto result = lookup_symbol(symbol);
+        ASSERT(result.has_value());
+        auto relative_offset = result.value().address - m_dynamic_object->base_address().offset(relocation.offset());
+        *patch_ptr += relative_offset.get();
         dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
@@ -455,9 +455,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol found, location: {:#08x}", res.value().address);
         dbgln_if(DYNAMIC_LOAD_DEBUG, "object: {}", m_filename);
 
-        u32 symbol_location = res.value().address;
-        ASSERT(symbol_location != (FlatPtr)m_dynamic_object->base_address().as_ptr());
-        *patch_ptr = symbol_location;
+        auto symbol_location = res.value().address;
+        ASSERT(symbol_location != m_dynamic_object->base_address());
+        *patch_ptr = symbol_location.get();
         dbgln_if(DYNAMIC_LOAD_DEBUG, "   Symbol address: {:p}", *patch_ptr);
         break;
     }
@@ -500,7 +500,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
             dbgln_if(DYNAMIC_LOAD_DEBUG, "patching plt reloaction: {:p}", relocation.offset_in_section());
-            [[maybe_unused]] auto rc = m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
+            m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
             u8* relocation_address = relocation.address().as_ptr();
 
@@ -536,10 +536,10 @@ void DynamicLoader::setup_plt_trampoline()
 
 // Called from our ASM routine _plt_trampoline.
 // Tell the compiler that it might be called from other places:
-extern "C" Elf32_Addr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset);
-extern "C" Elf32_Addr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset)
+extern "C" FlatPtr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset);
+extern "C" FlatPtr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset)
 {
-    return object->patch_plt_entry(relocation_offset);
+    return object->patch_plt_entry(relocation_offset).get();
 }
 
 void DynamicLoader::call_object_init_functions()
