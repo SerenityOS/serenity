@@ -238,6 +238,10 @@
 #cmakedefine01 LEXER_DEBUG
 #endif
 
+#ifndef LINE_EDITOR_DEBUG
+#cmakedefine01 LINE_EDITOR_DEBUG
+#endif
+
 #ifndef LOG_DEBUG
 #cmakedefine01 LOG_DEBUG
 #endif
