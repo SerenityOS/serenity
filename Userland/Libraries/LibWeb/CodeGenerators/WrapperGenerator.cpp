@@ -1091,7 +1091,6 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 
     generator.append(R"~~~(
 #include <AK/Function.h>
-#include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -1101,12 +1100,12 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
@@ -1117,7 +1116,6 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -1410,55 +1408,6 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
         function_generator.set("function.name:snakecase", snake_name(function.name));
 
         function_generator.append(R"~~~(
-#ifndef EXCEPTION_OR_TEMPLATES
-#define EXCEPTION_OR_TEMPLATES
-
-template<typename>
-struct IsExceptionOr : AK::FalseType {
-};
-
-template<typename T>
-struct IsExceptionOr<ExceptionOr<T>> : AK::TrueType {
-};
-
-template<typename T>
-ALWAYS_INLINE bool throw_dom_exception(JS::VM& vm, JS::GlobalObject& global_object, ExceptionOr<T>& result)
-{
-    if (result.is_exception()) {
-        vm.throw_exception(global_object, DOMExceptionWrapper::create(global_object, const_cast<DOM::DOMException&>(result.exception())));
-        return true;
-    }
-    return false;
-}
-
-template<typename F, typename T = decltype(declval<F>()()), typename Ret = typename Conditional<!IsExceptionOr<T>::value && !IsVoid<T>::value, T, JS::Value>::Type>
-Ret throw_dom_exception_if_needed(auto&& vm, auto&& global_object, F&& fn) {
-    if constexpr (IsExceptionOr<T>::value) {
-        auto&& result = fn();
-        if (throw_dom_exception(vm, global_object, result))
-            return JS::Value();
-        if constexpr (requires(T v) { v.value(); })
-            return result.value();
-        return JS::Value();
-    } else if constexpr (IsVoid<T>::value) {
-        fn();
-        return JS::js_undefined();
-    } else {
-        return fn();
-    }
-}
-
-template <typename T>
-bool should_return_empty(T&& value)
-{
-    if constexpr (IsSame<JS::Value, T>::value)
-        return value.is_empty();
-    return false;
-}
-
-
-#endif
-
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
 {
     auto* impl = impl_from(vm, global_object);
