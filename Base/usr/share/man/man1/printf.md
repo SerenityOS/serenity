@@ -5,7 +5,7 @@ printf - format and print data
 ## Synopsis
 
 ```**sh
-printf <format> [arguments...]
+$ printf <format> [arguments...]
 ```
 
 ## Description

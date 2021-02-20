@@ -4,7 +4,9 @@ SystemServer - services configuration
 
 ## Synopsis
 
-`/etc/SystemServer.ini`
+```**
+/etc/SystemServer.ini
+```
 
 ## Description
 
