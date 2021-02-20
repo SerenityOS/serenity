@@ -69,6 +69,7 @@ void WindowObject::initialize()
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
+    define_native_function("prompt", prompt);
     define_native_function("setInterval", set_interval, 1);
     define_native_function("setTimeout", set_timeout, 1);
     define_native_function("clearInterval", clear_interval, 1);
@@ -121,6 +122,10 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
 {
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#simple-dialogs
+    // Note: This method is defined using two overloads, instead of using an optional argument,
+    //       for historical reasons. The practical impact of this is that alert(undefined) is
+    //       treated as alert("undefined"), but alert() is treated as alert("").
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
@@ -140,12 +145,35 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
     if (!impl)
         return {};
     String message = "";
-    if (vm.argument_count()) {
+    if (!vm.argument(0).is_undefined()) {
         message = vm.argument(0).to_string(global_object);
         if (vm.exception())
             return {};
     }
     return JS::Value(impl->confirm(message));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    String message = "";
+    String default_ = "";
+    if (!vm.argument(0).is_undefined()) {
+        message = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+    if (!vm.argument(1).is_undefined()) {
+        default_ = vm.argument(1).to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+    auto response = impl->prompt(message, default_);
+    if (response.is_null())
+        return JS::js_null();
+    return JS::js_string(vm, response);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
