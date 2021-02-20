@@ -389,6 +389,11 @@ String String::to_uppercase() const
     return m_impl->to_uppercase();
 }
 
+String String::to_snakecase() const
+{
+    return StringUtils::to_snakecase(*this);
+}
+
 bool operator<(const char* characters, const String& string)
 {
     if (!characters)

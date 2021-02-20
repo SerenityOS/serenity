@@ -72,6 +72,8 @@ bool contains(const StringView&, const StringView&, CaseSensitivity);
 bool is_whitespace(const StringView&);
 StringView trim_whitespace(const StringView&, TrimMode mode);
 Optional<size_t> find(const StringView& haystack, const StringView& needle);
+String to_snakecase(const StringView&);
+
 }
 
 }

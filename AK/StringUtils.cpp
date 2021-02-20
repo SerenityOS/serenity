@@ -29,6 +29,7 @@
 #include <AK/Memory.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -350,6 +351,33 @@ Optional<size_t> find(const StringView& haystack, const StringView& needle)
         haystack.characters_without_null_termination(), haystack.length(),
         needle.characters_without_null_termination(), needle.length());
 }
+
+String to_snakecase(const StringView& str)
+{
+    auto should_insert_underscore = [&](auto i, auto current_char) {
+        if (i == 0)
+            return false;
+        auto previous_ch = str[i - 1];
+        if (islower(previous_ch) && isupper(current_char))
+            return true;
+        if (i >= str.length() - 1)
+            return false;
+        auto next_ch = str[i + 1];
+        if (isupper(current_char) && islower(next_ch))
+            return true;
+        return false;
+    };
+
+    StringBuilder builder;
+    for (size_t i = 0; i < str.length(); ++i) {
+        auto ch = str[i];
+        if (should_insert_underscore(i, ch))
+            builder.append('_');
+        builder.append(tolower(ch));
+    }
+    return builder.to_string();
+}
+
 }
 
 }
