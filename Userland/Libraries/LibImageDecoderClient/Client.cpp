@@ -56,7 +56,12 @@ Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
     }
 
     memcpy(encoded_buffer.data<void>(), encoded_data.data(), encoded_data.size());
-    auto response = send_sync<Messages::ImageDecoderServer::DecodeImage>(move(encoded_buffer));
+    auto response = send_sync_but_allow_failure<Messages::ImageDecoderServer::DecodeImage>(move(encoded_buffer));
+
+    if (!response) {
+        dbgln("ImageDecoder died heroically");
+        return {};
+    }
 
     DecodedImage image;
     image.is_animated = response->is_animated();
