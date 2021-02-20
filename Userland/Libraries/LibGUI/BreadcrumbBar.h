@@ -37,7 +37,7 @@ public:
     virtual ~BreadcrumbBar() override;
 
     void clear_segments();
-    void append_segment(const String& text, const Gfx::Bitmap* icon = nullptr, const String& data = {});
+    void append_segment(String text, const Gfx::Bitmap* icon = nullptr, String data = {}, String tooltip = {});
 
     size_t segment_count() const { return m_segments.size(); }
     String segment_data(size_t index) const { return m_segments[index].data; }
