@@ -1115,7 +1115,7 @@ void Terminal::unimplemented_escape()
         for (size_t i = 0; i < m_intermediates.size(); ++i)
             builder.append((char)m_intermediates[i]);
     }
-    dbgln(builder.string_view());
+    dbgln("{}", builder.string_view());
 }
 
 void Terminal::unimplemented_xterm_escape()
