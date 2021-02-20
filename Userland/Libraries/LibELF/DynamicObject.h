@@ -72,26 +72,7 @@ public:
             , m_sym(sym)
             , m_index(index)
         {
-            if (section_index() == 0)
-                m_is_undefined = true;
         }
-
-        Symbol(const Symbol& other)
-            : m_dynamic(other.m_dynamic)
-            , m_sym(other.m_sym)
-            , m_index(other.m_index)
-            , m_is_undefined(other.m_is_undefined)
-        {
-        }
-
-        static Symbol create_undefined(const DynamicObject& dynamic)
-        {
-            auto s = Symbol(dynamic, 0, {});
-            s.m_is_undefined = true;
-            return s;
-        }
-
-        ~Symbol() { }
 
         StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
@@ -101,10 +82,8 @@ public:
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
 
-        bool is_undefined() const
-        {
-            return m_is_undefined;
-        }
+        bool is_undefined() const { return section_index() == 0; }
+
         VirtualAddress address() const
         {
             if (m_dynamic.elf_is_dynamic())
@@ -117,7 +96,6 @@ public:
         const DynamicObject& m_dynamic;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
-        bool m_is_undefined { false };
     };
 
     class Section {
