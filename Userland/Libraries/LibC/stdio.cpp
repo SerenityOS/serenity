@@ -841,20 +841,6 @@ void rewind(FILE* stream)
     ASSERT(rc == 0);
 }
 
-int vdbgprintf(const char* fmt, va_list ap)
-{
-    return printf_internal([](char*&, char ch) { dbgputch(ch); }, nullptr, fmt, ap);
-}
-
-int dbgprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = printf_internal([](char*&, char ch) { dbgputch(ch); }, nullptr, fmt, ap);
-    va_end(ap);
-    return ret;
-}
-
 ALWAYS_INLINE void stdout_putch(char*&, char ch)
 {
     putchar(ch);
