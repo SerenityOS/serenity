@@ -31,7 +31,7 @@
 
 namespace GUI {
 
-class ScrollBar final : public AbstractSlider {
+class ScrollBar : public AbstractSlider {
     C_OBJECT(ScrollBar);
 
 public:
@@ -49,7 +49,7 @@ public:
         Scrubber,
     };
 
-private:
+protected:
     explicit ScrollBar(Gfx::Orientation = Gfx::Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
@@ -60,6 +60,7 @@ private:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
+private:
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
