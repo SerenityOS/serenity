@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * 2018-2021, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -153,9 +154,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
-#if EDITOR_DEBUG
-        dbgln("no man path for {}", hovered_token);
-#endif
+        dbgln_if(EDITOR_DEBUG, "no man path for {}", hovered_token);
         m_documentation_tooltip_window->hide();
         return;
     }
@@ -164,9 +163,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-#if EDITOR_DEBUG
-    dbgln("opening {}", it->value);
-#endif
+    dbgln(EDITOR_DEBUG, "opening {}", it->value);
     auto file = Core::File::construct(it->value);
     if (!file->open(Core::File::ReadOnly)) {
         dbgln("failed to open {}, {}", it->value, file->error_string());
@@ -236,9 +233,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             auto end_line_length = document().line(span.range.end().line()).length();
             adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
-#if EDITOR_DEBUG
-            dbgln("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
-#endif
+            dbgln_if(EDITOR_DEBUG, "Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 
             if (is_clickable) {
                 is_over_clickable = true;
@@ -298,6 +293,10 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
             on_navigatable_link_click(*span);
             return;
         }
+        if (highlighter->is_identifier(span->data)) {
+            on_identifier_click(*span);
+            return;
+        }
     }
 
     GUI::TextEditor::mousedown_event(event);
@@ -325,9 +324,7 @@ static HashMap<String, String>& include_paths()
             auto path = it.next_full_path();
             if (!Core::File::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
-#if EDITOR_DEBUG
-                dbgln("Adding header \"{}\" in path \"{}\"", key, path);
-#endif
+                dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);
                 paths.set(key, path);
             } else {
                 handle_directory(base, path, handle_directory);
@@ -349,9 +346,7 @@ void Editor::navigate_to_include_if_available(String path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
-#if EDITOR_DEBUG
-        dbgln("no header {} found.", path);
-#endif
+        dbgln_if(EDITOR_DEBUG, "no header {} found.", path);
         return;
     }
 
@@ -523,9 +518,23 @@ void Editor::on_navigatable_link_click(const GUI::TextDocumentSpan& span)
     adjusted_range.end().set_column(adjusted_range.end().column() + 1);
     auto span_text = document().text_in_range(adjusted_range);
     auto header_path = span_text.substring(1, span_text.length() - 2);
-#if EDITOR_DEBUG
-    dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
-#endif
+    dbgln_if(EDITOR_DEBUG, "Ctrl+click: {} \"{}\"", adjusted_range, header_path);
     navigate_to_include_if_available(header_path);
 }
+
+void Editor::open_and_set_cursor(const String& file, size_t line, size_t column)
+{
+    if (code_document().file_path() != file)
+        on_open(file);
+    set_cursor(GUI::TextPosition { line, column });
+}
+
+void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
+{
+    m_language_client->on_declaration_found = [this](const String& file, size_t line, size_t column) {
+        open_and_set_cursor(file, line, column);
+    };
+    m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
+}
+
 }

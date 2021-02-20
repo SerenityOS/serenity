@@ -90,6 +90,7 @@ public:
 
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
+    virtual void handle(const Messages::LanguageClient::DeclarationLocation&) override;
 
     String m_project_path;
     WeakPtr<LanguageClient> m_language_client;
@@ -123,11 +124,14 @@ public:
     virtual void remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
     virtual void request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column);
     virtual void set_autocomplete_mode(const String& mode);
+    virtual void search_declaration(const String& path, size_t line, size_t column);
 
     void provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>&);
+    void declaration_found(const String& file, size_t line, size_t column);
     void on_server_crash();
 
     Function<void(Vector<GUI::AutocompleteProvider::Entry>)> on_autocomplete_suggestions;
+    Function<void(const String&, size_t, size_t)> on_declaration_found;
 
 private:
     WeakPtr<ServerConnection> m_server_connection;

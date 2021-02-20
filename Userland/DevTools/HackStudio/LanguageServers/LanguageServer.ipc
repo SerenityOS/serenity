@@ -9,4 +9,6 @@ endpoint LanguageServer = 8001
 
     AutoCompleteSuggestions(String file_name, i32 cursor_line, i32 cursor_column) =|
     SetAutoCompleteMode(String mode) =|
+    FindDeclaration(String file_name, i32 line, i32 column) =|
+
 }

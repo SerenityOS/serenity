@@ -33,16 +33,6 @@
 #include <LibCpp/Preprocessor.h>
 #include <LibRegex/Regex.h>
 
-// #define AUTOCOMPLETE_VERBOSE
-
-#ifdef AUTOCOMPLETE_VERBOSE
-#    define VERBOSE(fmt, ...) dbgln(fmt, ##__VA_ARGS__)
-#else
-#    define VERBOSE(fmt, ...) \
-        do {                  \
-        } while (0)
-#endif
-
 namespace LanguageServers::Cpp {
 
 ParserAutoComplete::ParserAutoComplete(const FileDB& filedb)
@@ -77,7 +67,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     for (auto& path : document_data->preprocessor.included_paths()) {
         get_or_create_document_data(document_path_from_include_path(path));
     }
-#ifdef DEBUG_AUTOCOMPLETE
+#ifdef CPP_LANGUAGE_SERVER_DEBUG
     root->dump(0);
 #endif
     return move(document_data);
@@ -99,12 +89,12 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
 {
     Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
 
-    VERBOSE("ParserAutoComplete position {}:{}", position.line, position.column);
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "ParserAutoComplete position {}:{}", position.line, position.column);
 
     const auto& document = get_or_create_document_data(file);
     auto node = document.parser.node_at(position);
     if (!node) {
-        VERBOSE("no node at position {}:{}", position.line, position.column);
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
         return {};
     }
 
@@ -130,17 +120,22 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     return autocomplete_name(document, *node, partial_text.view());
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const StringView& partial_text) const
+NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(const DocumentData& document, const ASTNode& node) const
 {
     const Cpp::ASTNode* current = &node;
-    NonnullRefPtrVector<Cpp::Declaration> available_declarations;
+    NonnullRefPtrVector<Declaration> available_declarations;
     while (current) {
         available_declarations.append(current->declarations());
         current = current->parent();
     }
 
     available_declarations.append(get_declarations_in_outer_scope_including_headers(document));
+    return available_declarations;
+}
 
+Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const StringView& partial_text) const
+{
+    auto available_declarations = get_available_declarations(document, node);
     Vector<StringView> available_names;
     auto add_name = [&available_names](auto& name) {
         if (name.is_null() || name.is_empty())
@@ -173,7 +168,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_proper
 {
     auto type = type_of(document, *parent.m_object);
     if (type.is_null()) {
-        VERBOSE("Could not infer type of object");
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "Could not infer type of object");
         return {};
     }
 
@@ -319,6 +314,49 @@ void ParserAutoComplete::on_edit(const String& file)
 void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
 {
     set_document_data(file, create_document_data_for(file));
+}
+
+Optional<AutoCompleteEngine::ProjectPosition> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
+{
+    const auto& document = get_or_create_document_data(file_name);
+    auto node = document.parser.node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
+    if (!node) {
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
+        return {};
+    }
+    auto decl = find_declaration_of(document, *node);
+    if (!decl)
+        return {};
+
+    return ProjectPosition { decl->filename(), decl->start().line, decl->start().column };
+}
+
+RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
+{
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {}", document_data.parser.text_of_node(node));
+    auto declarations = get_available_declarations(document_data, node);
+    for (auto& decl : declarations) {
+        if (node.is_identifier() && decl.is_variable_or_parameter_declaration()) {
+            if (((Cpp::VariableOrParameterDeclaration&)decl).m_name == static_cast<const Identifier&>(node).m_name)
+                return decl;
+        }
+        if (node.is_type() && decl.is_struct_or_class()) {
+            if (((Cpp::StructOrClassDeclaration&)decl).m_name == static_cast<const Type&>(node).m_name)
+                return decl;
+        }
+        if (node.is_function_call() && decl.is_function()) {
+            if (((Cpp::FunctionDeclaration&)decl).m_name == static_cast<const FunctionCall&>(node).m_name)
+                return decl;
+        }
+        if (is_property(node) && decl.is_struct_or_class()) {
+            for (auto& member : ((Cpp::StructOrClassDeclaration&)decl).m_members) {
+                ASSERT(node.is_identifier());
+                if (member.m_name == ((const Identifier&)node).m_name)
+                    return member;
+            }
+        }
+    }
+    return {};
 }
 
 }
