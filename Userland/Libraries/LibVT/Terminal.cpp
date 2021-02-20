@@ -104,19 +104,16 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
 
 void Terminal::RM(bool question_param, const ParamVector& params)
 {
-    // RM – Reset Mode
     alter_mode(true, question_param, params);
 }
 
 void Terminal::SM(bool question_param, const ParamVector& params)
 {
-    // SM – Set Mode
     alter_mode(false, question_param, params);
 }
 
 void Terminal::SGR(const ParamVector& params)
 {
-    // SGR – Select Graphic Rendition
     if (params.is_empty()) {
         m_current_attribute.reset();
         return;
@@ -250,7 +247,6 @@ void Terminal::escape$t(const ParamVector& params)
 
 void Terminal::DECSTBM(const ParamVector& params)
 {
-    // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     unsigned top = 1;
     unsigned bottom = m_rows;
     if (params.size() >= 1)
@@ -280,7 +276,6 @@ void Terminal::CUP(const ParamVector& params)
 
 void Terminal::HVP(const ParamVector& params)
 {
-    // HVP – Horizontal and Vertical Position
     unsigned row = 1;
     unsigned col = 1;
     if (params.size() >= 1)
@@ -292,7 +287,6 @@ void Terminal::HVP(const ParamVector& params)
 
 void Terminal::CUU(const ParamVector& params)
 {
-    // CUU – Cursor Up
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -306,7 +300,6 @@ void Terminal::CUU(const ParamVector& params)
 
 void Terminal::CUD(const ParamVector& params)
 {
-    // CUD – Cursor Down
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -320,7 +313,6 @@ void Terminal::CUD(const ParamVector& params)
 
 void Terminal::CUF(const ParamVector& params)
 {
-    // CUF – Cursor Forward
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -334,7 +326,6 @@ void Terminal::CUF(const ParamVector& params)
 
 void Terminal::CUB(const ParamVector& params)
 {
-    // CUB – Cursor Backward
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -421,7 +412,6 @@ void Terminal::EL(const ParamVector& params)
 
 void Terminal::ED(const ParamVector& params)
 {
-    // ED - Erase in Display
     int mode = 0;
     if (params.size() >= 1)
         mode = params[0];
@@ -498,7 +488,6 @@ void Terminal::escape$L(const ParamVector& params)
 
 void Terminal::DA(const ParamVector&)
 {
-    // DA - Device Attributes
     emit_string("\033[?1;0c");
 }
 
@@ -770,19 +759,16 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 
 void Terminal::NEL()
 {
-    // NEL - Next Line
     newline();
 }
 
 void Terminal::IND()
 {
-    // IND - Index (move down)
     CUD({});
 }
 
 void Terminal::RI()
 {
-    // RI - Reverse Index (move up)
     CUU({});
 }
 

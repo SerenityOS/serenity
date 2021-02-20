@@ -144,19 +144,28 @@ private:
 
     void alter_mode(bool should_set, bool question_param, const ParamVector&);
 
+    // CUU – Cursor Up
     void CUU(const ParamVector&);
+
+    // CUD – Cursor Down
     void CUD(const ParamVector&);
+
+    // CUF – Cursor Forward
     void CUF(const ParamVector&);
+
+    // CUB – Cursor Backward
     void CUB(const ParamVector&);
+
+    // CUP - Cursor Position
     void CUP(const ParamVector&);
+
+    // ED - Erase in Display
     void ED(const ParamVector&);
+
+    // EL - Erase in Line
     void EL(const ParamVector&);
-    void escape$M(const ParamVector&);
-    void escape$P(const ParamVector&);
-    void escape$G(const ParamVector&);
-    void escape$X(const ParamVector&);
-    void escape$b(const ParamVector&);
-    void escape$d(const ParamVector&);
+
+    // SGR – Select Graphic Rendition
     void SGR(const ParamVector&);
 
     // Save Current Cursor Position
@@ -165,20 +174,47 @@ private:
     // Restore Saved Cursor Position
     void SCORC(const ParamVector&);
 
-    void escape$t(const ParamVector&);
+    // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     void DECSTBM(const ParamVector&);
+
+    // RM – Reset Mode
+    void RM(bool question_param, const ParamVector&);
+
+    // SM – Set Mode
+    void SM(bool question_param, const ParamVector&);
+
+    // DA - Device Attributes
+    void DA(const ParamVector&);
+
+    // HVP – Horizontal and Vertical Position
+    void HVP(const ParamVector&);
+
+    // NEL - Next Line
+    void NEL();
+
+    // IND - Index (move down)
+    void IND();
+
+    // RI - Reverse Index (move up)
+    void RI();
+
+    // DSR - Device Status Reports
+    void DSR(const ParamVector&);
+
+    // ICH - Insert Character
+    void ICH(const ParamVector&);
+
+    // FIXME: Find the right names for these.
+    void escape$t(const ParamVector&);
     void escape$S(const ParamVector&);
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
-    void RM(bool question_param, const ParamVector&);
-    void SM(bool question_param, const ParamVector&);
-    void DA(const ParamVector&);
-    void HVP(const ParamVector&);
-    void NEL();
-    void IND();
-    void RI();
-    void DSR(const ParamVector&);
-    void ICH(const ParamVector&);
+    void escape$M(const ParamVector&);
+    void escape$P(const ParamVector&);
+    void escape$G(const ParamVector&);
+    void escape$X(const ParamVector&);
+    void escape$b(const ParamVector&);
+    void escape$d(const ParamVector&);
 
     TerminalClient& m_client;
 
