@@ -119,4 +119,19 @@ String LexicalPath::canonicalized_path(const StringView& path)
     return LexicalPath(path).string();
 }
 
+String LexicalPath::relative_path(const String absolute_path, const String& prefix)
+{
+    if (!LexicalPath { absolute_path }.is_absolute() || !LexicalPath { prefix }.is_absolute())
+        return {};
+
+    if (!absolute_path.starts_with(prefix))
+        return absolute_path;
+
+    size_t prefix_length = LexicalPath { prefix }.string().length() + 1;
+    if (prefix_length >= absolute_path.length())
+        return {};
+
+    return absolute_path.substring(prefix_length);
+}
+
 }
