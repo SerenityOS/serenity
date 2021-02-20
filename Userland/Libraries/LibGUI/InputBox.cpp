@@ -34,8 +34,9 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, const StringView& prompt, const StringView& title)
+InputBox::InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
     : Dialog(parent_window)
+    , m_text_value(text_value)
     , m_prompt(prompt)
 {
     set_title(title);
@@ -48,7 +49,7 @@ InputBox::~InputBox()
 
 int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
 {
-    auto box = InputBox::construct(parent_window, prompt, title);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());
@@ -81,6 +82,7 @@ void InputBox::build()
 
     m_text_editor = label_editor_container.add<TextBox>();
     m_text_editor->set_fixed_height(19);
+    m_text_editor->set_text(m_text_value);
 
     auto& button_container_outer = widget.add<Widget>();
     button_container_outer.set_fixed_height(20);
