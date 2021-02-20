@@ -238,11 +238,11 @@ void Terminal::SCORC(const ParamVector&)
     set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
 
-void Terminal::escape$t(const ParamVector& params)
+void Terminal::XTERM_WM(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
-    dbgln("FIXME: escape$t: Ps: {} (param count: {})", params[0], params.size());
+    dbgln("FIXME: XTERM_WM: Ps: {} (param count: {})", params[0], params.size());
 }
 
 void Terminal::DECSTBM(const ParamVector& params)
@@ -337,7 +337,7 @@ void Terminal::CUB(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$G(const ParamVector& params)
+void Terminal::CHA(const ParamVector& params)
 {
     int new_column = 1;
     if (params.size() >= 1)
@@ -347,7 +347,7 @@ void Terminal::escape$G(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$b(const ParamVector& params)
+void Terminal::REP(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
@@ -356,7 +356,7 @@ void Terminal::escape$b(const ParamVector& params)
         put_character_at(m_cursor_row, m_cursor_column++, m_last_code_point);
 }
 
-void Terminal::escape$d(const ParamVector& params)
+void Terminal::VPA(const ParamVector& params)
 {
     int new_row = 1;
     if (params.size() >= 1)
@@ -366,7 +366,7 @@ void Terminal::escape$d(const ParamVector& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$X(const ParamVector& params)
+void Terminal::ECH(const ParamVector& params)
 {
     // Erase characters (without moving cursor)
     int num = 1;
@@ -469,7 +469,7 @@ void Terminal::SD(const ParamVector& params)
         scroll_down();
 }
 
-void Terminal::escape$L(const ParamVector& params)
+void Terminal::IL(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -491,7 +491,7 @@ void Terminal::DA(const ParamVector&)
     emit_string("\033[?1;0c");
 }
 
-void Terminal::escape$M(const ParamVector& params)
+void Terminal::DL(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -514,7 +514,7 @@ void Terminal::escape$M(const ParamVector& params)
     }
 }
 
-void Terminal::escape$P(const ParamVector& params)
+void Terminal::DCH(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -627,10 +627,10 @@ void Terminal::execute_escape_sequence(u8 final)
         EL(params);
         break;
     case 'M':
-        escape$M(params);
+        DL(params);
         break;
     case 'P':
-        escape$P(params);
+        DCH(params);
         break;
     case 'S':
         SU(params);
@@ -639,19 +639,19 @@ void Terminal::execute_escape_sequence(u8 final)
         SD(params);
         break;
     case 'L':
-        escape$L(params);
+        IL(params);
         break;
     case 'G':
-        escape$G(params);
+        CHA(params);
         break;
     case 'X':
-        escape$X(params);
+        ECH(params);
         break;
     case 'b':
-        escape$b(params);
+        REP(params);
         break;
     case 'd':
-        escape$d(params);
+        VPA(params);
         break;
     case 'm':
         SGR(params);
@@ -663,7 +663,7 @@ void Terminal::execute_escape_sequence(u8 final)
         SCORC(params);
         break;
     case 't':
-        escape$t(params);
+        XTERM_WM(params);
         break;
     case 'r':
         DECSTBM(params);
