@@ -372,6 +372,9 @@ int main(int argc, char** argv)
     terminal.on_title_change = [&](auto& title) {
         window->set_title(title);
     };
+    terminal.on_terminal_size_change = [&](auto& size) {
+        window->resize(size);
+    };
     terminal.apply_size_increments_to_window(*window);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
