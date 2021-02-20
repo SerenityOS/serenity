@@ -1104,25 +1104,23 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 void Terminal::unimplemented_escape()
 {
     StringBuilder builder;
-    builder.appendf("((Unimplemented escape: %c", m_final);
+    builder.appendff("Unimplemented escape: {:c}", m_final);
     if (!m_parameters.is_empty()) {
-        builder.append(" parameters:");
+        builder.append(", parameters:");
         for (size_t i = 0; i < m_parameters.size(); ++i)
             builder.append((char)m_parameters[i]);
     }
     if (!m_intermediates.is_empty()) {
-        builder.append(" intermediates:");
+        builder.append(", intermediates:");
         for (size_t i = 0; i < m_intermediates.size(); ++i)
             builder.append((char)m_intermediates[i]);
     }
-    builder.append("))");
-    inject_string(builder.to_string());
+    dbgln(builder.string_view());
 }
 
 void Terminal::unimplemented_xterm_escape()
 {
-    auto message = String::format("((Unimplemented xterm escape: %c))\n", m_final);
-    inject_string(message);
+    dbgln("Unimplemented xterm escape: {:c}", m_final);
 }
 
 void Terminal::set_size(u16 columns, u16 rows)
