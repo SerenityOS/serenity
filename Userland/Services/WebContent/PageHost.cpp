@@ -181,4 +181,9 @@ bool PageHost::page_did_request_confirm(const String& message)
     return m_client.send_sync<Messages::WebContentClient::DidRequestConfirm>(message)->result();
 }
 
+String PageHost::page_did_request_prompt(const String& message, const String& default_)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestPrompt>(message, default_)->response();
+}
+
 }

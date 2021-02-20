@@ -69,6 +69,7 @@ private:
     virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_request_alert(const String&) override;
     virtual bool page_did_request_confirm(const String&) override;
+    virtual String page_did_request_prompt(const String&, const String&) override;
 
     explicit PageHost(ClientConnection&);
 

@@ -30,6 +30,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -423,6 +424,14 @@ bool InProcessWebView::page_did_request_confirm(const String& message)
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
+String InProcessWebView::page_did_request_prompt(const String& message, const String& default_)
+{
+    String value { default_ };
+    if (GUI::InputBox::show(window(), value, message, "Prompt") == GUI::InputBox::ExecOK)
+        return value;
+    return {};
 }
 
 }

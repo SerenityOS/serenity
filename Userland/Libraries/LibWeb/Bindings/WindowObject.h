@@ -86,6 +86,7 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
+    JS_DECLARE_NATIVE_FUNCTION(prompt);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);
