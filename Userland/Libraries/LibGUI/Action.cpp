@@ -184,19 +184,12 @@ NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shor
 }
 
 Action::Action(String text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
-    : Core::Object(parent)
-    , on_activation(move(on_activation_callback))
-    , m_text(move(text))
-    , m_checkable(checkable)
+    : Action(move(text), Shortcut {}, nullptr, move(on_activation_callback), parent, checkable)
 {
 }
 
 Action::Action(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
-    : Core::Object(parent)
-    , on_activation(move(on_activation_callback))
-    , m_text(move(text))
-    , m_icon(move(icon))
-    , m_checkable(checkable)
+    : Action(move(text), Shortcut {}, move(icon), move(on_activation_callback), parent, checkable)
 {
 }
 
