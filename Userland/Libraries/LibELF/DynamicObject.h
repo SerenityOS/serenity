@@ -255,14 +255,14 @@ public:
 
     struct SymbolLookupResult {
         FlatPtr value { 0 };
-        FlatPtr address { 0 };
+        VirtualAddress address;
         unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
     Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
-    Elf32_Addr patch_plt_entry(u32 relocation_offset);
+    VirtualAddress patch_plt_entry(u32 relocation_offset);
 
     Optional<SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
 

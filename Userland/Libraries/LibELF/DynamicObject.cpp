@@ -466,7 +466,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const S
     auto symbol = result.value();
     if (symbol.is_undefined())
         return {};
-    return SymbolLookupResult { symbol.value(), symbol.address().get(), symbol.bind(), this };
+    return SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, VirtualAddress dynamic_section_address)
@@ -475,27 +475,23 @@ NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, 
 }
 
 // offset is in PLT relocation table
-Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
+VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
-
     ASSERT(relocation.type() == R_386_JMP_SLOT);
-
-    auto sym = relocation.symbol();
-
+    auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
-    auto result = lookup_symbol(sym);
 
+    auto result = lookup_symbol(symbol);
     if (!result.has_value()) {
-        dbgln("did not find symbol: {}", sym.name());
+        dbgln("did not find symbol: {}", symbol.name());
         ASSERT_NOT_REACHED();
     }
 
-    u32 symbol_location = result.value().address;
+    auto symbol_location = result.value().address;
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({}) into PLT at {}", symbol.name(), symbol_location, (void*)relocation_address);
 
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({:p}) into PLT at {}", sym.name(), symbol_location, (void*)relocation_address);
-
-    *(u32*)relocation_address = symbol_location;
+    *(FlatPtr*)relocation_address = symbol_location.get();
 
     return symbol_location;
 }
@@ -508,7 +504,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const E
 
     if (!symbol.is_undefined()) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol is defined in its object");
-        return SymbolLookupResult { symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
+        return SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), &symbol.object() };
     }
     return DynamicLinker::lookup_global_symbol(symbol.name());
 }
