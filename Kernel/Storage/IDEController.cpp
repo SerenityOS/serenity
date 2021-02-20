@@ -32,7 +32,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<IDEController> IDEController::initialize(PCI::Address address, bool force_pio)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::Address address, bool force_pio)
 {
     return adopt(*new IDEController(address, force_pio));
 }
@@ -67,18 +67,18 @@ void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
     ASSERT_NOT_REACHED();
 }
 
-IDEController::IDEController(PCI::Address address, bool force_pio)
+UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_pio)
     : StorageController()
     , PCI::DeviceController(address)
 {
     initialize(force_pio);
 }
 
-IDEController::~IDEController()
+UNMAP_AFTER_INIT IDEController::~IDEController()
 {
 }
 
-void IDEController::initialize(bool force_pio)
+UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
 
