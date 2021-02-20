@@ -5,7 +5,7 @@ keymap - load a keyboard layout
 ## Synopsis
 
 ```**sh
-# keymap [name|file]
+$ keymap [name|file]
 ```
 
 ## Description

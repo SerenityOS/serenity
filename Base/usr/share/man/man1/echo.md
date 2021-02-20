@@ -4,7 +4,9 @@ echo - print the given text
 
 ## Synopsis
 
-`echo text...`
+```**sh
+$ echo text...
+```
 
 ## Description
 

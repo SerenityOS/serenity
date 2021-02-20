@@ -4,8 +4,8 @@ adjtime - print remaining system clock adjustment, and optionally set it
 
 ## Synopsis
 
-```sh
-adjtime [options...]
+```**sh
+$ adjtime [options...]
 ```
 
 ## Description

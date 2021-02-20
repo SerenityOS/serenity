@@ -4,7 +4,9 @@ watch - execute a program periodically
 
 ## Synopsis
 
-`watch [-n interval] [-t] [-b] command`
+```**sh
+$ watch [-n interval] [-t] [-b] command`
+```
 
 ## Description
 
