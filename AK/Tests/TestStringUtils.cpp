@@ -310,4 +310,18 @@ TEST_CASE(find)
     EXPECT_EQ(AK::StringUtils::find(test_string, "78").has_value(), false);
 }
 
+TEST_CASE(to_snakecase)
+{
+    EXPECT_EQ(AK::StringUtils::to_snakecase("foobar"), "foobar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("Foobar"), "foobar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("FOOBAR"), "foobar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("fooBar"), "foo_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("FooBar"), "foo_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("fooBAR"), "foo_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("FOOBar"), "foo_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("foo_bar"), "foo_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("FBar"), "f_bar");
+    EXPECT_EQ(AK::StringUtils::to_snakecase("FooB"), "foo_b");
+}
+
 TEST_MAIN(StringUtils)
