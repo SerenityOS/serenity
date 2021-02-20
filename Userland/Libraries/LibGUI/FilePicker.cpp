@@ -126,29 +126,34 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
         set_path(m_location_textbox->text());
     };
 
-    auto open_parent_directory_action = Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
-        set_path(String::formatted("{}/..", m_model->root_path()));
-    });
+    auto open_parent_directory_action = Action::create(
+        "Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const Action&) {
+            set_path(String::formatted("{}/..", m_model->root_path()));
+        },
+        this);
     toolbar.add_action(*open_parent_directory_action);
 
     auto go_home_action = CommonActions::make_go_home_action([this](auto&) {
         set_path(Core::StandardPaths::home_directory());
-    });
+    },
+        this);
     toolbar.add_action(go_home_action);
     toolbar.add_separator();
 
-    auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
-        String value;
-        if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
-            int rc = mkdir(new_dir_path.characters(), 0777);
-            if (rc < 0) {
-                MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error", MessageBox::Type::Error);
-            } else {
-                m_model->update();
+    auto mkdir_action = Action::create(
+        "New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
+            String value;
+            if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
+                auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
+                int rc = mkdir(new_dir_path.characters(), 0777);
+                if (rc < 0) {
+                    MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error", MessageBox::Type::Error);
+                } else {
+                    m_model->update();
+                }
             }
-        }
-    });
+        },
+        this);
 
     toolbar.add_action(*mkdir_action);
 
