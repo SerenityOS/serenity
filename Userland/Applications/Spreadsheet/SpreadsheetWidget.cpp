@@ -100,7 +100,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
         auto& sheet = m_tab_context_menu_sheet_view->sheet();
         String new_name;
-        if (GUI::InputBox::show(new_name, window(), String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
             sheet.set_name(new_name);
             sheet.update();
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
@@ -109,7 +109,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     m_tab_context_menu->add_action(rename_action);
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", [this](auto&) {
         String name;
-        if (GUI::InputBox::show(name, window(), "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
             NonnullRefPtrVector<Sheet> new_sheets;
             new_sheets.append(m_workbook->add_sheet(name));
             setup_tabs(move(new_sheets));

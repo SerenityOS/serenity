@@ -139,7 +139,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
 
     auto mkdir_action = Action::create("New directory...", Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
         String value;
-        if (InputBox::show(value, this, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
+        if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {

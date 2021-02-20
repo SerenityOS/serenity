@@ -77,7 +77,7 @@ HexEditorWidget::HexEditorWidget()
         }
 
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 m_document_dirty = false;
@@ -143,7 +143,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter Decimal offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter Decimal offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = value.to_int();
             if (new_offset.has_value())
                 m_editor->set_position(new_offset.value());
@@ -152,7 +152,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_goto_hex_offset_action = GUI::Action::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter Hex offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter Hex offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = strtol(value.characters(), nullptr, 16);
             m_editor->set_position(new_offset);
         }
@@ -161,7 +161,7 @@ HexEditorWidget::HexEditorWidget()
     auto& edit_menu = menubar->add_menu("Edit");
     edit_menu.add_action(GUI::Action::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
         }
