@@ -120,7 +120,7 @@ void Image::dump() const
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
-        auto& section = this->section(i);
+        const auto& section = this->section(i);
         dbgln("    Section {}: {{", i);
         dbgln("        name: {}", section.name());
         dbgln("        type: {:x}", section.type());
@@ -132,7 +132,7 @@ void Image::dump() const
 
     dbgln("Symbol count: {} (table is {})", symbol_count(), m_symbol_table_section_index);
     for (unsigned i = 1; i < symbol_count(); ++i) {
-        auto& sym = symbol(i);
+        const auto& sym = symbol(i);
         dbgln("Symbol @{}:", i);
         dbgln("    Name: {}", sym.name());
         dbgln("    In section: {}", section_index_to_string(sym.section_index()));
