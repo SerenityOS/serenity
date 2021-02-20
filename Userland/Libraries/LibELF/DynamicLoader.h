@@ -38,8 +38,6 @@
 
 namespace ELF {
 
-#define ALIGN_ROUND_UP(x, align) ((((size_t)(x)) + align - 1) & (~(align - 1)))
-
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
     static RefPtr<DynamicLoader> try_create(int fd, String filename);
@@ -61,13 +59,6 @@ public:
     RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
     // Intended for use by dlsym or other internal methods
     void* symbol_for_name(const StringView&);
-
-    void dump();
-
-    // Requested program interpreter from program headers. May be empty string
-    StringView program_interpreter() const { return m_program_interpreter; }
-
-    VirtualAddress text_segment_load_addresss() const { return m_text_segment_load_address; }
 
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
     size_t tls_size() const { return m_tls_size; }
@@ -127,7 +118,7 @@ private:
         Success = 1,
         ResolveLater = 2,
     };
-    RelocationResult do_relocation(size_t total_tls_size, DynamicObject::Relocation relocation);
+    RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&);
     size_t calculate_tls_size() const;
 
     Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
@@ -148,7 +139,6 @@ private:
     VirtualAddress m_relro_segment_address;
     size_t m_relro_segment_size { 0 };
 
-    VirtualAddress m_tls_segment_address;
     VirtualAddress m_dynamic_section_address;
 
     size_t m_tls_offset { 0 };

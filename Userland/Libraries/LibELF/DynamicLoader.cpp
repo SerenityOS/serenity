@@ -60,7 +60,7 @@ RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
     }
 
     ASSERT(stat.st_size >= 0);
-    size_t size = static_cast<size_t>(stat.st_size);
+    auto size = static_cast<size_t>(stat.st_size);
     if (size < sizeof(Elf32_Ehdr))
         return {};
 
@@ -203,12 +203,11 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 
 void DynamicLoader::do_main_relocations(size_t total_tls_size)
 {
-    auto do_single_relocation = [&](ELF::DynamicObject::Relocation relocation) {
+    auto do_single_relocation = [&](const ELF::DynamicObject::Relocation& relocation) {
         switch (do_relocation(total_tls_size, relocation)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             ASSERT_NOT_REACHED();
-            break;
         case RelocationResult::ResolveLater:
             m_unresolved_relocations.append(relocation);
             break;
@@ -394,7 +393,7 @@ void DynamicLoader::load_program_headers()
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
-DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, ELF::DynamicObject::Relocation relocation)
+DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, const ELF::DynamicObject::Relocation& relocation)
 {
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Relocation symbol: {}, type: {}", relocation.symbol().name(), relocation.type());
     FlatPtr* patch_ptr = nullptr;
@@ -516,7 +515,6 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         dbgln("Found a new exciting relocation type {}", relocation.type());
         // printf("DynamicLoader: Found unknown relocation type %d\n", relocation.type());
         ASSERT_NOT_REACHED();
-        break;
     }
     return RelocationResult::Success;
 }
@@ -530,7 +528,7 @@ void DynamicLoader::setup_plt_trampoline()
     ASSERT(m_dynamic_object->has_plt());
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
-    FlatPtr* got_ptr = (FlatPtr*)got_address.as_ptr();
+    auto* got_ptr = (FlatPtr*)got_address.as_ptr();
     got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
     got_ptr[2] = (FlatPtr)&_plt_trampoline;
 
