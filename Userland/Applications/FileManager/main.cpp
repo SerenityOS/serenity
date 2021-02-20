@@ -778,7 +778,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             } else {
                 breadcrumb_bar.clear_segments();
 
-                breadcrumb_bar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/");
+                breadcrumb_bar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
                 StringBuilder builder;
 
                 for (auto& part : lexical_path.parts()) {
@@ -786,7 +786,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     builder.append('/');
                     builder.append(part);
 
-                    breadcrumb_bar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view());
+                    breadcrumb_bar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
                 }
 
                 breadcrumb_bar.set_selected_segment(breadcrumb_bar.segment_count() - 1);
