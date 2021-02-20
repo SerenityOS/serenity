@@ -312,6 +312,8 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
 
 void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 {
+    if (event.button() != GUI::MouseButton::Left)
+        return;
     const TreeMapNode* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
@@ -339,6 +341,12 @@ void TreeMapWidget::mousewheel_event(GUI::MouseEvent& event)
         size_t step_up = (-delta) / step_size;
         set_viewpoint(m_viewpoint + step_up);
     }
+}
+
+void TreeMapWidget::context_menu_event(GUI::ContextMenuEvent& context_menu_event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(context_menu_event);
 }
 
 void TreeMapWidget::set_tree(RefPtr<TreeMap> tree)
