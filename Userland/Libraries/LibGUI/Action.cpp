@@ -143,32 +143,72 @@ NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, C
 
 }
 
-Action::Action(const StringView& text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+NonnullRefPtr<Action> Action::create(String text, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), move(callback), parent));
+}
+
+NonnullRefPtr<Action> Action::create(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), move(icon), move(callback), parent));
+}
+
+NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), shortcut, move(callback), parent));
+}
+
+NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent));
+}
+
+NonnullRefPtr<Action> Action::create_checkable(String text, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), move(callback), parent, true));
+}
+
+NonnullRefPtr<Action> Action::create_checkable(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), move(icon), move(callback), parent, true));
+}
+
+NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), shortcut, move(callback), parent, true));
+}
+
+NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+{
+    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent, true));
+}
+
+Action::Action(String text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
-    , m_text(text)
+    , m_text(move(text))
     , m_checkable(checkable)
 {
 }
 
-Action::Action(const StringView& text, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+Action::Action(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
-    , m_text(text)
+    , m_text(move(text))
     , m_icon(move(icon))
     , m_checkable(checkable)
 {
 }
 
-Action::Action(const StringView& text, const Shortcut& shortcut, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
-    : Action(text, shortcut, nullptr, move(on_activation_callback), parent, checkable)
+Action::Action(String text, const Shortcut& shortcut, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+    : Action(move(text), shortcut, nullptr, move(on_activation_callback), parent, checkable)
 {
 }
 
-Action::Action(const StringView& text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap>&& icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+Action::Action(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
-    , m_text(text)
+    , m_text(move(text))
     , m_icon(move(icon))
     , m_shortcut(shortcut)
     , m_checkable(checkable)
