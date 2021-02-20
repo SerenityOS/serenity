@@ -158,8 +158,13 @@ private:
     void escape$b(const ParamVector&);
     void escape$d(const ParamVector&);
     void SGR(const ParamVector&);
-    void escape$s(const ParamVector&);
-    void escape$u(const ParamVector&);
+
+    // Save Current Cursor Position
+    void SCOSC(const ParamVector&);
+
+    // Restore Saved Cursor Position
+    void SCORC(const ParamVector&);
+
     void escape$t(const ParamVector&);
     void DECSTBM(const ParamVector&);
     void escape$S(const ParamVector&);
