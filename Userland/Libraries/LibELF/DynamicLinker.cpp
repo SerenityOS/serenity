@@ -65,11 +65,11 @@ bool g_allowed_to_check_environment_variables { false };
 bool g_do_breakpoint_trap_before_entry { false };
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const char* symbol_name)
+Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& symbol)
 {
     Optional<DynamicObject::SymbolLookupResult> weak_result;
     for (auto& lib : g_global_objects) {
-        auto res = lib->lookup_symbol(symbol_name);
+        auto res = lib->lookup_symbol(symbol);
         if (!res.has_value())
             continue;
         if (res.value().bind == STB_GLOBAL)

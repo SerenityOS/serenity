@@ -31,7 +31,6 @@
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/exec_elf.h>
-#include <stdio.h>
 #include <string.h>
 
 namespace ELF {
@@ -71,7 +70,7 @@ void DynamicObject::dump() const
     });
 
     if (m_has_soname)
-        builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
+        builder.appendff("DT_SONAME: {}\n", soname()); // FIXME: Valdidate that this string is null terminated?
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
@@ -249,17 +248,16 @@ const DynamicObject::RelocationSection DynamicObject::plt_relocation_section() c
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-u32 DynamicObject::HashSection::calculate_elf_hash(const char* name) const
+u32 DynamicObject::HashSection::calculate_elf_hash(const StringView& name) const
 {
     // SYSV ELF hash algorithm
     // Note that the GNU HASH algorithm has less collisions
 
     uint32_t hash = 0;
 
-    while (*name != '\0') {
+    for (auto ch : name) {
         hash = hash << 4;
-        hash += *name;
-        name++;
+        hash += ch;
 
         const uint32_t top_nibble_of_hash = hash & 0xF0000000U;
         hash ^= top_nibble_of_hash >> 24;
@@ -269,24 +267,23 @@ u32 DynamicObject::HashSection::calculate_elf_hash(const char* name) const
     return hash;
 }
 
-u32 DynamicObject::HashSection::calculate_gnu_hash(const char* name) const
+u32 DynamicObject::HashSection::calculate_gnu_hash(const StringView& name) const
 {
     // GNU ELF hash algorithm
     u32 hash = 5381;
 
-    for (; *name != '\0'; ++name) {
-        hash = hash * 33 + *name;
-    }
+    for (auto ch : name)
+        hash = hash * 33 + ch;
 
     return hash;
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char* name) const
+auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> Symbol
 {
     return (this->*(m_lookup_function))(name);
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const char* name) const
+const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const
 {
     u32 hash_value = calculate_elf_hash(name);
 
@@ -305,7 +302,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
 
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
-        if (strcmp(name, symbol.name()) == 0) {
+        if (name == symbol.name()) {
             dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
@@ -313,7 +310,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
     return Symbol::create_undefined(m_dynamic);
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const char* name) const
+const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     // TODO: Handle 64bit bloomwords for ELF_CLASS64
@@ -350,7 +347,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const 
     for (hash1 &= ~1;; ++current_sym) {
         hash2 = *(current_chain++);
         const auto symbol = m_dynamic.symbol(current_sym);
-        if ((hash1 == (hash2 & ~1)) && strcmp(name, symbol.name()) == 0) {
+        if ((hash1 == (hash2 & ~1)) && name == symbol.name()) {
             dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
@@ -362,9 +359,9 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const 
     return Symbol::create_undefined(m_dynamic);
 }
 
-const char* DynamicObject::symbol_string_table_string(Elf32_Word index) const
+StringView DynamicObject::symbol_string_table_string(Elf32_Word index) const
 {
-    return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
+    return StringView { (const char*)base_address().offset(m_string_table_offset + index).as_ptr() };
 }
 
 DynamicObject::InitializationFunction DynamicObject::init_section_function() const
@@ -465,7 +462,7 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
     }
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const char* name) const
+Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const StringView& name) const
 {
     auto res = hash_section().lookup_symbol(name);
     if (res.is_undefined())

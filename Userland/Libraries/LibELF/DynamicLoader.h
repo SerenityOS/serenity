@@ -60,7 +60,7 @@ public:
     // Stage 3 of loading: lazy relocations and initializers
     RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
     // Intended for use by dlsym or other internal methods
-    void* symbol_for_name(const char*);
+    void* symbol_for_name(const StringView&);
 
     void dump();
 

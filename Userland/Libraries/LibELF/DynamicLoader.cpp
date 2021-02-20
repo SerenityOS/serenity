@@ -140,7 +140,7 @@ bool DynamicLoader::validate()
     return true;
 }
 
-void* DynamicLoader::symbol_for_name(const char* name)
+void* DynamicLoader::symbol_for_name(const StringView& name)
 {
     auto symbol = m_dynamic_object->hash_section().lookup_symbol(name);
 
@@ -445,10 +445,8 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             // We do not support these
             // TODO: Can we tell gcc not to generate the piece of code that uses these?
             // (--disable-tm-clone-registry flag in gcc conifugraion?)
-            if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
-                || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")) {
+            if (symbol.name().is_one_of("__deregister_frame_info", "_ITM_registerTMCloneTable", "_ITM_deregisterTMCloneTable", "__register_frame_info"))
                 break;
-            }
 
             if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
