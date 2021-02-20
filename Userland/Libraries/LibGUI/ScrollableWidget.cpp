@@ -31,14 +31,14 @@ namespace GUI {
 
 ScrollableWidget::ScrollableWidget()
 {
-    m_vertical_scrollbar = add<ScrollBar>(Orientation::Vertical);
+    m_vertical_scrollbar = add<ScrollableWidgetScrollBar>(*this, Orientation::Vertical);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this](int) {
         did_scroll();
         update();
     };
 
-    m_horizontal_scrollbar = add<ScrollBar>(Orientation::Horizontal);
+    m_horizontal_scrollbar = add<ScrollableWidgetScrollBar>(*this, Orientation::Horizontal);
     m_horizontal_scrollbar->set_step(4);
     m_horizontal_scrollbar->set_page_step(30);
     m_horizontal_scrollbar->on_change = [this](int) {
@@ -54,18 +54,23 @@ ScrollableWidget::~ScrollableWidget()
 {
 }
 
-void ScrollableWidget::mousewheel_event(MouseEvent& event)
+void ScrollableWidget::handle_wheel_event(MouseEvent& event, Widget& event_source)
 {
     if (!m_scrollbars_enabled) {
         event.ignore();
         return;
     }
     // FIXME: The wheel delta multiplier should probably come from... somewhere?
-    if (event.shift()) {
+    if (event.shift() || &event_source == m_horizontal_scrollbar.ptr()) {
         horizontal_scrollbar().set_value(horizontal_scrollbar().value() + event.wheel_delta() * 60);
     } else {
         vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
     }
+}
+
+void ScrollableWidget::mousewheel_event(MouseEvent& event)
+{
+    handle_wheel_event(event, *this);
 }
 
 void ScrollableWidget::custom_layout()
