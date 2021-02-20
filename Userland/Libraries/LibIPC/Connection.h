@@ -55,6 +55,7 @@ public:
     {
         m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
         m_notifier->on_ready_to_read = [this] {
+            NonnullRefPtr protect = *this;
             drain_messages_from_peer();
             handle_messages();
         };
@@ -123,6 +124,13 @@ public:
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         ASSERT(response);
         return response;
+    }
+
+    template<typename RequestType, typename... Args>
+    OwnPtr<typename RequestType::ResponseType> send_sync_but_allow_failure(Args&&... args)
+    {
+        post_message(RequestType(forward<Args>(args)...));
+        return wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
     }
 
     virtual void may_have_become_unresponsive() { }
