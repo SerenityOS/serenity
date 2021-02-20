@@ -431,7 +431,6 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     if (m_language_client) {
         set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
-        dbgln("Opening {}", code_document.file_path());
         int fd = open(code_document.file_path().characters(), O_RDONLY | O_NOCTTY);
         if (fd < 0) {
             perror("open");
