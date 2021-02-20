@@ -41,8 +41,8 @@ DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic
     : m_base_address(base_address)
     , m_dynamic_address(dynamic_section_addresss)
 {
-    Elf32_Ehdr* header = (Elf32_Ehdr*)base_address.as_ptr();
-    Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
+    auto* header = (Elf32_Ehdr*)base_address.as_ptr();
+    auto* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
     m_elf_base_address = VirtualAddress(pheader->p_vaddr - pheader->p_offset);
     if (header->e_type == ET_DYN)
         m_is_elf_dynamic = true;
@@ -190,7 +190,7 @@ void DynamicObject::parse()
     m_symbol_count = num_hash_chains;
 }
 
-const DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
+DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < entry_count());
     unsigned offset_in_section = index * entry_size();
@@ -198,57 +198,57 @@ const DynamicObject::Relocation DynamicObject::RelocationSection::relocation(uns
     return Relocation(m_dynamic, *relocation_address, offset_in_section);
 }
 
-const DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
+DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
     ASSERT(offset <= (m_section_size_bytes - m_entry_size));
     auto relocation_address = (Elf32_Rel*)address().offset(offset).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset);
 }
 
-const DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
+DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 {
     auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB");
     auto symbol_entry = (Elf32_Sym*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
     return Symbol(*this, index, *symbol_entry);
 }
 
-const DynamicObject::Section DynamicObject::init_section() const
+DynamicObject::Section DynamicObject::init_section() const
 {
     return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
 }
 
-const DynamicObject::Section DynamicObject::fini_section() const
+DynamicObject::Section DynamicObject::fini_section() const
 {
     return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
 }
 
-const DynamicObject::Section DynamicObject::init_array_section() const
+DynamicObject::Section DynamicObject::init_array_section() const
 {
     return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
 }
 
-const DynamicObject::Section DynamicObject::fini_array_section() const
+DynamicObject::Section DynamicObject::fini_array_section() const
 {
     return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
 }
 
-const DynamicObject::HashSection DynamicObject::hash_section() const
+DynamicObject::HashSection DynamicObject::hash_section() const
 {
     const char* section_name = m_hash_type == HashType::SYSV ? "DT_HASH" : "DT_GNU_HASH";
     return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
 }
 
-const DynamicObject::RelocationSection DynamicObject::relocation_section() const
+DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
     return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
 }
 
-const DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
+DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-u32 DynamicObject::HashSection::calculate_elf_hash(const StringView& name) const
+u32 DynamicObject::HashSection::calculate_elf_hash(const StringView& name)
 {
     // SYSV ELF hash algorithm
     // Note that the GNU HASH algorithm has less collisions
@@ -267,7 +267,7 @@ u32 DynamicObject::HashSection::calculate_elf_hash(const StringView& name) const
     return hash;
 }
 
-u32 DynamicObject::HashSection::calculate_gnu_hash(const StringView& name) const
+u32 DynamicObject::HashSection::calculate_gnu_hash(const StringView& name)
 {
     // GNU ELF hash algorithm
     u32 hash = 5381;
@@ -283,7 +283,7 @@ auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> 
     return (this->*(m_lookup_function))(name);
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const
+DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const
 {
     u32 hash_value = calculate_elf_hash(name);
 
@@ -310,7 +310,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
     return Symbol::create_undefined(m_dynamic);
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
+DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     // TODO: Handle 64bit bloomwords for ELF_CLASS64
