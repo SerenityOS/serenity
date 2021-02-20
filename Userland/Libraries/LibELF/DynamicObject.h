@@ -36,7 +36,7 @@ namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> construct(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     ~DynamicObject();
     void dump() const;

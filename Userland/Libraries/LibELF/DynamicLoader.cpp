@@ -110,7 +110,7 @@ const DynamicObject& DynamicLoader::dynamic_object() const
         });
         ASSERT(!dynamic_section_address.is_null());
 
-        m_cached_dynamic_object = ELF::DynamicObject::construct(VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
+        m_cached_dynamic_object = ELF::DynamicObject::create(VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
     }
     return *m_cached_dynamic_object;
 }
@@ -161,7 +161,7 @@ RefPtr<DynamicObject> DynamicLoader::map()
 
     load_program_headers();
 
-    m_dynamic_object = DynamicObject::construct(m_text_segment_load_address, m_dynamic_section_address);
+    m_dynamic_object = DynamicObject::create(m_text_segment_load_address, m_dynamic_section_address);
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size);
 
