@@ -5,13 +5,17 @@ echo - print the given text
 ## Synopsis
 
 ```**sh
-$ echo text...
+$ echo [-n] text...
 ```
 
 ## Description
 
 Print the given *text*, which is passed as argv, to the standard output,
 separating arguments with a space character.
+
+## Options
+
+* `-n`: Do not output a trailing newline
 
 ## Examples
 
