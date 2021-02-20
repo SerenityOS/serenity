@@ -35,6 +35,8 @@ namespace Line {
 
 class Style {
 public:
+    bool operator==(const Style&) const = default;
+
     enum class XtermColor : int {
         Default = 9,
         Black = 0,
@@ -57,6 +59,8 @@ public:
     struct ItalicTag {
     };
     struct Color {
+        bool operator==(const Color&) const = default;
+
         explicit Color(XtermColor color)
             : m_xterm_color(color)
             , m_is_rgb(false)
@@ -104,6 +108,8 @@ public:
     };
 
     struct Hyperlink {
+        bool operator==(const Hyperlink&) const = default;
+
         explicit Hyperlink(const StringView& link)
             : m_link(link)
         {

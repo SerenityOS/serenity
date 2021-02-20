@@ -26,6 +26,7 @@
  */
 
 #include "Editor.h"
+#include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/ScopeGuard.h>
@@ -355,7 +356,7 @@ void Editor::insert(const u32 cp)
     }
 
     m_buffer.insert(m_cursor, cp);
-    ++m_chars_inserted_in_the_middle;
+    ++m_chars_touched_in_the_middle;
     ++m_cursor;
     m_inline_search_cursor = m_cursor;
 }
@@ -443,8 +444,8 @@ void Editor::stylize(const Span& span, const Style& style)
         end = offsets.end;
     }
 
-    auto& spans_starting = style.is_anchored() ? m_anchored_spans_starting : m_spans_starting;
-    auto& spans_ending = style.is_anchored() ? m_anchored_spans_ending : m_spans_ending;
+    auto& spans_starting = style.is_anchored() ? m_current_spans.m_anchored_spans_starting : m_current_spans.m_spans_starting;
+    auto& spans_ending = style.is_anchored() ? m_current_spans.m_anchored_spans_ending : m_current_spans.m_spans_ending;
 
     auto starting_map = spans_starting.get(start).value_or({});
 
@@ -1168,6 +1169,7 @@ void Editor::refresh_display()
         // Probably just moving around.
         reposition_cursor();
         m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_drawn_end_of_line_offset = m_buffer.size();
         return;
     }
 
@@ -1183,32 +1185,20 @@ void Editor::refresh_display()
             fputs((char*)m_pending_chars.data(), stderr);
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
+            m_drawn_end_of_line_offset = m_buffer.size();
             m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+            m_drawn_spans = m_current_spans;
             fflush(stderr);
             return;
         }
     }
 
-    // Ouch, reflow entire line.
-    if (!has_cleaned_up) {
-        cleanup();
-    }
-    VT::move_absolute(m_origin_row, m_origin_column);
+    auto apply_styles = [&, empty_styles = HashMap<u32, Style> {}](size_t i) {
+        auto ends = m_current_spans.m_spans_ending.get(i).value_or(empty_styles);
+        auto starts = m_current_spans.m_spans_starting.get(i).value_or(empty_styles);
 
-    fputs(m_new_prompt.characters(), stderr);
-
-    VT::clear_to_end_of_line();
-    HashMap<u32, Style> empty_styles {};
-    StringBuilder builder;
-    for (size_t i = 0; i < m_buffer.size(); ++i) {
-        auto ends = m_spans_ending.get(i).value_or(empty_styles);
-        auto starts = m_spans_starting.get(i).value_or(empty_styles);
-
-        auto anchored_ends = m_anchored_spans_ending.get(i).value_or(empty_styles);
-        auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
-
-        auto c = m_buffer[i];
-        bool should_print_caret = isascii(c) && iscntrl(c) && c != '\n';
+        auto anchored_ends = m_current_spans.m_anchored_spans_ending.get(i).value_or(empty_styles);
+        auto anchored_starts = m_current_spans.m_anchored_spans_starting.get(i).value_or(empty_styles);
 
         if (ends.size() || anchored_ends.size()) {
             Style style;
@@ -1238,8 +1228,12 @@ void Editor::refresh_display()
             // Set new styles.
             VT::apply_style(style, true);
         }
+    };
 
-        builder.clear();
+    auto print_character_at = [this](size_t i) {
+        StringBuilder builder;
+        auto c = m_buffer[i];
+        bool should_print_caret = isascii(c) && iscntrl(c) && c != '\n';
         if (should_print_caret)
             builder.appendff("^{:c}", c + 64);
         else
@@ -1252,6 +1246,63 @@ void Editor::refresh_display()
 
         if (should_print_caret)
             fputs("\033[27m", stderr);
+    };
+
+    // If there have been no changes to previous sections of the line (style or text)
+    // just append the new text with the appropriate styles.
+    if (m_cached_prompt_valid && m_chars_touched_in_the_middle == 0 && m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor)) {
+        auto initial_style = find_applicable_style(m_drawn_end_of_line_offset);
+        VT::apply_style(initial_style);
+
+        for (size_t i = m_drawn_end_of_line_offset; i < m_buffer.size(); ++i) {
+            apply_styles(i);
+            print_character_at(i);
+        }
+
+        VT::apply_style(Style::reset_style());
+        m_pending_chars.clear();
+        m_refresh_needed = false;
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_chars_touched_in_the_middle = 0;
+        m_drawn_end_of_line_offset = m_buffer.size();
+
+        // No need to reposition the cursor, the cursor is already where it needs to be.
+        return;
+    }
+
+    if constexpr (LINE_EDITOR_DEBUG) {
+        if (m_cached_prompt_valid && m_chars_touched_in_the_middle == 0) {
+            auto x = m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor);
+            dbgln("Contains: {} At offset: {}", x, m_drawn_cursor);
+            dbgln("Drawn Spans:");
+            for (auto& sentry : m_drawn_spans.m_spans_starting) {
+                for (auto& entry : sentry.value) {
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                }
+            }
+            dbgln("==========================================================================");
+            dbgln("Current Spans:");
+            for (auto& sentry : m_current_spans.m_spans_starting) {
+                for (auto& entry : sentry.value) {
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                }
+            }
+        }
+    }
+
+    // Ouch, reflow entire line.
+    if (!has_cleaned_up) {
+        cleanup();
+    }
+    VT::move_absolute(m_origin_row, m_origin_column);
+
+    fputs(m_new_prompt.characters(), stderr);
+
+    VT::clear_to_end_of_line();
+    StringBuilder builder;
+    for (size_t i = 0; i < m_buffer.size(); ++i) {
+        apply_styles(i);
+        print_character_at(i);
     }
 
     VT::apply_style(Style::reset_style()); // don't bleed to EOL
@@ -1259,10 +1310,10 @@ void Editor::refresh_display()
     m_pending_chars.clear();
     m_refresh_needed = false;
     m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
-    m_chars_inserted_in_the_middle = 0;
-    if (!m_cached_prompt_valid) {
-        m_cached_prompt_valid = true;
-    }
+    m_chars_touched_in_the_middle = 0;
+    m_drawn_spans = m_current_spans;
+    m_drawn_end_of_line_offset = m_buffer.size();
+    m_cached_prompt_valid = true;
 
     reposition_cursor();
     fflush(stderr);
@@ -1270,12 +1321,12 @@ void Editor::refresh_display()
 
 void Editor::strip_styles(bool strip_anchored)
 {
-    m_spans_starting.clear();
-    m_spans_ending.clear();
+    m_current_spans.m_spans_starting.clear();
+    m_current_spans.m_spans_ending.clear();
 
     if (strip_anchored) {
-        m_anchored_spans_starting.clear();
-        m_anchored_spans_ending.clear();
+        m_current_spans.m_anchored_spans_starting.clear();
+        m_current_spans.m_anchored_spans_ending.clear();
     }
 
     m_refresh_needed = true;
@@ -1346,11 +1397,11 @@ Style Editor::find_applicable_style(size_t offset) const
         }
     };
 
-    for (auto& entry : m_spans_starting) {
+    for (auto& entry : m_current_spans.m_spans_starting) {
         unify(entry);
     }
 
-    for (auto& entry : m_anchored_spans_starting) {
+    for (auto& entry : m_current_spans.m_anchored_spans_starting) {
         unify(entry);
     }
 
@@ -1693,6 +1744,7 @@ void Editor::remove_at_index(size_t index)
     m_buffer.remove(index);
     if (cp == '\n')
         ++m_extra_forward_lines;
+    ++m_chars_touched_in_the_middle;
 }
 
 void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modification)
@@ -1706,7 +1758,7 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     auto index_shift = modification == ModificationKind::Insertion ? 1 : -1;
     auto forced_removal = modification == ModificationKind::ForcedOverlapRemoval;
 
-    for (auto& start_entry : m_anchored_spans_starting) {
+    for (auto& start_entry : m_current_spans.m_anchored_spans_starting) {
         for (auto& end_entry : start_entry.value) {
             if (forced_removal) {
                 if (start_entry.key <= hint_index && end_entry.key > hint_index) {
@@ -1732,8 +1784,8 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
         }
     }
 
-    m_anchored_spans_ending.clear();
-    m_anchored_spans_starting.clear();
+    m_current_spans.m_anchored_spans_ending.clear();
+    m_current_spans.m_anchored_spans_starting.clear();
     // Pass over the relocations and update the stale entries.
     for (auto& relocation : anchors_to_relocate) {
         stylize(relocation.new_span, relocation.style);
@@ -1765,6 +1817,49 @@ size_t StringMetrics::offset_with_addition(const StringMetrics& offset, size_t c
     auto last = line_metrics.last().total_length();
     last += offset.line_metrics.first().total_length();
     return last % column_width;
+}
+
+bool Editor::Spans::contains_up_to_offset(const Spans& other, size_t offset) const
+{
+    auto compare = [&]<typename K, typename V>(const HashMap<K, HashMap<K, V>>& left, const HashMap<K, HashMap<K, V>>& right) -> bool {
+        for (auto& entry : right) {
+            if (entry.key > offset + 1)
+                continue;
+
+            auto left_map = left.get(entry.key);
+            if (!left_map.has_value())
+                return false;
+
+            for (auto& left_entry : left_map.value()) {
+                if (auto value = entry.value.get(left_entry.key); !value.has_value()) {
+                    // Might have the same thing with a longer span
+                    bool found = false;
+                    for (auto& possibly_longer_span_entry : entry.value) {
+                        if (possibly_longer_span_entry.key > left_entry.key && possibly_longer_span_entry.key > offset && left_entry.value == possibly_longer_span_entry.value) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                        continue;
+                    if constexpr (LINE_EDITOR_DEBUG) {
+                        dbgln("Compare for {}-{} failed, no entry", entry.key, left_entry.key);
+                        for (auto& x : entry.value)
+                            dbgln("Have: {}-{} = {}", entry.key, x.key, x.value.to_string());
+                    }
+                    return false;
+                } else if (value.value() != left_entry.value) {
+                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value.value().to_string(), left_entry.value.to_string());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
+    return compare(m_spans_starting, other.m_spans_starting)
+        && compare(m_anchored_spans_starting, other.m_anchored_spans_starting);
 }
 
 }
