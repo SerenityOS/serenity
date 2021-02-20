@@ -67,7 +67,7 @@ static void perform_self_relocations(auxv_t* auxvp)
     if (!dynamic_section_addr)
         exit(1);
 
-    auto dynamic_object = ELF::DynamicObject::construct((VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
+    auto dynamic_object = ELF::DynamicObject::create((VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
 
     dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
         if (reloc.type() != R_386_RELATIVE)
