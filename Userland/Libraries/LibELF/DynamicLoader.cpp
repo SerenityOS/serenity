@@ -49,8 +49,6 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-static bool s_always_bind_now = false;
-
 RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
 {
     struct stat stat;
@@ -497,7 +495,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     }
     case R_386_JMP_SLOT: {
         // FIXME: Or BIND_NOW flag passed in?
-        if (m_dynamic_object->must_bind_now() || s_always_bind_now) {
+        if (m_dynamic_object->must_bind_now()) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
             dbgln_if(DYNAMIC_LOAD_DEBUG, "patching plt reloaction: {:p}", relocation.offset_in_section());
