@@ -108,10 +108,10 @@ class NonnullRefPtr;
 template<typename T>
 class NonnullOwnPtr;
 
-template<typename T, int inline_capacity = 0>
+template<typename T, size_t inline_capacity = 0>
 class NonnullRefPtrVector;
 
-template<typename T, int inline_capacity = 0>
+template<typename T, size_t inline_capacity = 0>
 class NonnullOwnPtrVector;
 
 template<typename T>
