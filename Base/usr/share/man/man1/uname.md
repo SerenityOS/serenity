@@ -4,7 +4,9 @@ uname - print kernel information
 
 ## Synopsis
 
-`uname [-s] [-n] [-r] [-m] [-a]`
+```**sh
+$ uname [-s] [-n] [-r] [-m] [-a]`
+```
 
 ## Description
 
