@@ -470,7 +470,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const S
     return SymbolLookupResult { res.value(), (FlatPtr)res.address().as_ptr(), res.bind(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::construct(VirtualAddress base_address, VirtualAddress dynamic_section_address)
+NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
     return adopt(*new DynamicObject(base_address, dynamic_section_address));
 }
