@@ -45,8 +45,7 @@ public:
         return adopt(*new DOMImplementation(document));
     }
 
-    // FIXME: snake_case in WrapperGenerator turns "createHTMLDocument" into "create_htmldocument"
-    const NonnullRefPtr<Document> create_htmldocument(const String& title) const;
+    const NonnullRefPtr<Document> create_html_document(const String& title) const;
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     bool has_feature() const { return true; }
