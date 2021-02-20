@@ -38,13 +38,13 @@ public:
     static int show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title);
 
 private:
-    explicit InputBox(Window* parent_window, const StringView& prompt, const StringView& title);
+    explicit InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title);
 
     String text_value() const { return m_text_value; }
 
     void build();
-    String m_prompt;
     String m_text_value;
+    String m_prompt;
 
     RefPtr<Button> m_ok_button;
     RefPtr<Button> m_cancel_button;
