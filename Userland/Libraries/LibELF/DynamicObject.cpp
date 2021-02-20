@@ -28,7 +28,7 @@
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibELF/DynamicLinker.h>
+#include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/exec_elf.h>
 #include <string.h>
@@ -458,7 +458,7 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
     }
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const StringView& name) const
+auto DynamicObject::lookup_symbol(const StringView& name) const -> Optional<SymbolLookupResult>
 {
     auto result = hash_section().lookup_symbol(name);
     if (!result.has_value())
@@ -482,7 +482,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
     auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
 
-    auto result = lookup_symbol(symbol);
+    auto result = DynamicLoader::lookup_symbol(symbol);
     if (!result.has_value()) {
         dbgln("did not find symbol: {}", symbol.name());
         ASSERT_NOT_REACHED();
@@ -494,19 +494,6 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
     *(FlatPtr*)relocation_address = symbol_location.get();
 
     return symbol_location;
-}
-
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
-{
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "looking up symbol: {}", symbol.name());
-    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
-        return DynamicLinker::lookup_global_symbol(symbol.name());
-
-    if (!symbol.is_undefined()) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol is defined in its object");
-        return SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), &symbol.object() };
-    }
-    return DynamicLinker::lookup_global_symbol(symbol.name());
 }
 
 } // end namespace ELF

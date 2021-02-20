@@ -71,6 +71,8 @@ public:
     VirtualAddress text_segment_load_address() const { return m_text_segment_load_address; }
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
+    static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
+
 private:
     DynamicLoader(int fd, String filename, void* file_data, size_t file_size);
 
@@ -120,8 +122,6 @@ private:
     };
     RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&);
     size_t calculate_tls_size() const;
-
-    Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
 
     String m_filename;
     String m_program_interpreter;
