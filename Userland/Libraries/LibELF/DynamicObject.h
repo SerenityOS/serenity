@@ -93,7 +93,7 @@ public:
 
         ~Symbol() { }
 
-        const char* name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
+        StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
@@ -122,7 +122,7 @@ public:
 
     class Section {
     public:
-        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const char* name)
+        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const StringView& name)
             : m_dynamic(dynamic)
             , m_section_offset(section_offset)
             , m_section_size_bytes(section_size_bytes)
@@ -132,7 +132,7 @@ public:
         }
         ~Section() { }
 
-        const char* name() const { return m_name; }
+        StringView name() const { return m_name; }
         unsigned offset() const { return m_section_offset; }
         unsigned size() const { return m_section_size_bytes; }
         unsigned entry_size() const { return m_entry_size; }
@@ -152,7 +152,7 @@ public:
         unsigned m_section_offset;
         unsigned m_section_size_bytes;
         unsigned m_entry_size;
-        const char* m_name { nullptr };
+        StringView m_name;
     };
 
     class RelocationSection : public Section {
@@ -220,17 +220,17 @@ public:
             }
         }
 
-        const Symbol lookup_symbol(const char*) const;
+        Symbol lookup_symbol(const StringView& name) const;
 
     private:
-        u32 calculate_elf_hash(const char* name) const;
-        u32 calculate_gnu_hash(const char* name) const;
+        u32 calculate_elf_hash(const StringView& name) const;
+        u32 calculate_gnu_hash(const StringView& name) const;
 
-        const DynamicObject::Symbol lookup_elf_symbol(const char* name) const;
-        const DynamicObject::Symbol lookup_gnu_symbol(const char* name) const;
+        const DynamicObject::Symbol lookup_elf_symbol(const StringView& name) const;
+        const DynamicObject::Symbol lookup_gnu_symbol(const StringView& name) const;
 
-        typedef const DynamicObject::Symbol (HashSection::*LookupFunction)(const char*) const;
-        LookupFunction m_lookup_function;
+        typedef const DynamicObject::Symbol (HashSection::*LookupFunction)(const StringView&) const;
+        LookupFunction m_lookup_function {};
     };
 
     unsigned symbol_count() const { return m_symbol_count; }
@@ -263,7 +263,7 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
-    const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
+    StringView soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : StringView {}; }
 
     Optional<FlatPtr> tls_offset() const { return m_tls_offset; }
     Optional<FlatPtr> tls_size() const { return m_tls_size; }
@@ -282,7 +282,7 @@ public:
         unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
-    Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
+    Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     Elf32_Addr patch_plt_entry(u32 relocation_offset);
@@ -294,7 +294,7 @@ public:
 private:
     explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
-    const char* symbol_string_table_string(Elf32_Word) const;
+    StringView symbol_string_table_string(Elf32_Word) const;
     void parse();
 
     template<typename F>
@@ -390,7 +390,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return IterationDecision::Continue;
         Elf32_Word offset = entry.val();
-        const char* name = (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr();
+        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
         if (func(StringView(name)) == IterationDecision::Break)
             return IterationDecision::Break;
         return IterationDecision::Continue;
