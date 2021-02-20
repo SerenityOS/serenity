@@ -5,7 +5,7 @@ mkdir - create directories
 ## Synopsis
 
 ```**sh
-$ mkdir [ options...] directories...
+$ mkdir [options...] directories...
 ```
 
 ## Description

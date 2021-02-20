@@ -4,7 +4,7 @@ beep - beep the pc speaker
 
 ## Synopsis
 
-```sh
+```**sh
 $ beep
 ```
 
