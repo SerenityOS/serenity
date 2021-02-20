@@ -35,6 +35,12 @@ Client::Client()
     handshake();
 }
 
+void Client::die()
+{
+    if (on_death)
+        on_death();
+}
+
 void Client::handshake()
 {
     send_sync<Messages::ImageDecoderServer::Greet>();

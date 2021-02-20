@@ -48,6 +48,18 @@ int ImageResource::frame_duration(size_t frame_index) const
     return m_decoded_frames[frame_index].duration;
 }
 
+static ImageDecoderClient::Client& image_decoder_client()
+{
+    static RefPtr<ImageDecoderClient::Client> image_decoder_client;
+    if (!image_decoder_client) {
+        image_decoder_client = ImageDecoderClient::Client::construct();
+        image_decoder_client->on_death = [&] {
+            image_decoder_client = nullptr;
+        };
+    }
+    return *image_decoder_client;
+}
+
 void ImageResource::decode_if_needed() const
 {
     if (!has_encoded_data())
@@ -59,8 +71,9 @@ void ImageResource::decode_if_needed() const
     if (!m_decoded_frames.is_empty())
         return;
 
-    auto image_decoder_client = ImageDecoderClient::Client::construct();
-    auto image = image_decoder_client->decode_image(encoded_data());
+    NonnullRefPtr decoder = image_decoder_client();
+    auto image = decoder->decode_image(encoded_data());
+
     if (image.has_value()) {
         m_loop_count = image.value().loop_count;
         m_animated = image.value().is_animated;
