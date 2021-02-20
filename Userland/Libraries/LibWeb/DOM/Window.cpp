@@ -71,6 +71,13 @@ bool Window::confirm(const String& message)
     return false;
 }
 
+String Window::prompt(const String& message, const String& default_)
+{
+    if (auto* page = m_document.page())
+        return page->client().page_did_request_prompt(message, default_);
+    return {};
+}
+
 i32 Window::set_interval(JS::Function& callback, i32 interval)
 {
     auto timer = Timer::create_interval(*this, interval, callback);

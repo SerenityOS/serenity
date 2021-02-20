@@ -139,8 +139,14 @@ OwnPtr<Messages::WebContentClient::DidRequestAlertResponse> WebContentClient::ha
 
 OwnPtr<Messages::WebContentClient::DidRequestConfirmResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestConfirm& message)
 {
-    bool result = m_view.notify_server_did_request_confirm({}, message.message());
+    auto result = m_view.notify_server_did_request_confirm({}, message.message());
     return make<Messages::WebContentClient::DidRequestConfirmResponse>(result);
+}
+
+OwnPtr<Messages::WebContentClient::DidRequestPromptResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestPrompt& message)
+{
+    auto result = m_view.notify_server_did_request_prompt({}, message.message(), message.default_());
+    return make<Messages::WebContentClient::DidRequestPromptResponse>(result);
 }
 
 }

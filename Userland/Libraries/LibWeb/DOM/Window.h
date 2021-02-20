@@ -57,6 +57,7 @@ public:
 
     void alert(const String&);
     bool confirm(const String&);
+    String prompt(const String&, const String&);
     i32 request_animation_frame(JS::Function&);
     void cancel_animation_frame(i32);
 

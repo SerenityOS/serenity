@@ -28,6 +28,7 @@
 #include "WebContentClient.h"
 #include <AK/String.h>
 #include <AK/URLParser.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -291,6 +292,14 @@ bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClie
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
+String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_)
+{
+    String response { default_ };
+    if (GUI::InputBox::show(window(), response, message, "Prompt") == GUI::InputBox::ExecOK)
+        return response;
+    return {};
 }
 
 void OutOfProcessWebView::did_scroll()
