@@ -449,7 +449,7 @@ void Terminal::ED(const ParamVector& params)
     }
 }
 
-void Terminal::escape$S(const ParamVector& params)
+void Terminal::SU(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -459,7 +459,7 @@ void Terminal::escape$S(const ParamVector& params)
         scroll_up();
 }
 
-void Terminal::escape$T(const ParamVector& params)
+void Terminal::SD(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -633,10 +633,10 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$P(params);
         break;
     case 'S':
-        escape$S(params);
+        SU(params);
         break;
     case 'T':
-        escape$T(params);
+        SD(params);
         break;
     case 'L':
         escape$L(params);

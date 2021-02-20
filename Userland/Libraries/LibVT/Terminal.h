@@ -204,10 +204,14 @@ private:
     // ICH - Insert Character
     void ICH(const ParamVector&);
 
+    // SU - Scroll Up (called "Pan Down" in VT510)
+    void SU(const ParamVector&);
+
+    // SD - Scroll Down (called "Pan Up" in VT510)
+    void SD(const ParamVector&);
+
     // FIXME: Find the right names for these.
     void escape$t(const ParamVector&);
-    void escape$S(const ParamVector&);
-    void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
     void escape$M(const ParamVector&);
     void escape$P(const ParamVector&);
