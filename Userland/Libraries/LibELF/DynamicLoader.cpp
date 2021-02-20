@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +29,7 @@
 #include <AK/Debug.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
@@ -570,9 +572,14 @@ void DynamicLoader::call_object_init_functions()
     }
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
+Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol)
 {
-    return m_dynamic_object->lookup_symbol(symbol);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "looking up symbol: {}", symbol.name());
+    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
+        return DynamicLinker::lookup_global_symbol(symbol.name());
+
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "symbol is defined in its object");
+    return DynamicObject::SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), &symbol.object() };
 }
 
 } // end namespace ELF
