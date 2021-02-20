@@ -264,8 +264,6 @@ public:
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     VirtualAddress patch_plt_entry(u32 relocation_offset);
 
-    Optional<SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
-
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
 private:
