@@ -50,7 +50,7 @@ public:
 
     class DynamicEntry {
     public:
-        DynamicEntry(const Elf32_Dyn& dyn)
+        explicit DynamicEntry(const Elf32_Dyn& dyn)
             : m_dyn(dyn)
         {
         }
@@ -157,13 +157,13 @@ public:
 
     class RelocationSection : public Section {
     public:
-        RelocationSection(const Section& section)
+        explicit RelocationSection(const Section& section)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
         {
         }
         unsigned relocation_count() const { return entry_count(); }
-        const Relocation relocation(unsigned index) const;
-        const Relocation relocation_at_offset(unsigned offset) const;
+        Relocation relocation(unsigned index) const;
+        Relocation relocation_at_offset(unsigned offset) const;
         template<typename F>
         void for_each_relocation(F) const;
     };
@@ -183,7 +183,7 @@ public:
         unsigned offset() const { return m_rel.r_offset; }
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        const Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
+        Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
         VirtualAddress address() const
         {
             if (m_dynamic.elf_is_dynamic())
@@ -216,41 +216,40 @@ public:
                 break;
             default:
                 ASSERT_NOT_REACHED();
-                break;
             }
         }
 
         Symbol lookup_symbol(const StringView& name) const;
 
     private:
-        u32 calculate_elf_hash(const StringView& name) const;
-        u32 calculate_gnu_hash(const StringView& name) const;
+        static u32 calculate_elf_hash(const StringView& name);
+        static u32 calculate_gnu_hash(const StringView& name);
 
-        const DynamicObject::Symbol lookup_elf_symbol(const StringView& name) const;
-        const DynamicObject::Symbol lookup_gnu_symbol(const StringView& name) const;
+        DynamicObject::Symbol lookup_elf_symbol(const StringView& name) const;
+        DynamicObject::Symbol lookup_gnu_symbol(const StringView& name) const;
 
-        typedef const DynamicObject::Symbol (HashSection::*LookupFunction)(const StringView&) const;
+        typedef DynamicObject::Symbol (HashSection::*LookupFunction)(const StringView&) const;
         LookupFunction m_lookup_function {};
     };
 
     unsigned symbol_count() const { return m_symbol_count; }
 
-    const Symbol symbol(unsigned) const;
+    Symbol symbol(unsigned) const;
 
     typedef void (*InitializationFunction)();
 
     bool has_init_section() const { return m_init_offset != 0; }
     bool has_init_array_section() const { return m_init_array_offset != 0; }
-    const Section init_section() const;
+    Section init_section() const;
     InitializationFunction init_section_function() const;
-    const Section fini_section() const;
-    const Section init_array_section() const;
-    const Section fini_array_section() const;
+    Section fini_section() const;
+    Section init_array_section() const;
+    Section fini_array_section() const;
 
-    const HashSection hash_section() const;
+    HashSection hash_section() const;
 
-    const RelocationSection relocation_section() const;
-    const RelocationSection plt_relocation_section() const;
+    RelocationSection relocation_section() const;
+    RelocationSection plt_relocation_section() const;
 
     bool should_process_origin() const { return m_dt_flags & DF_ORIGIN; }
     bool requires_symbolic_symbol_resolution() const { return m_dt_flags & DF_SYMBOLIC; }

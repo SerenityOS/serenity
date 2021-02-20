@@ -33,17 +33,13 @@
 #include <AK/LogStream.h>
 #include <AK/ScopeGuard.h>
 #include <LibC/mman.h>
-#include <LibC/stdio.h>
-#include <LibC/sys/internals.h>
 #include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
-#include <LibELF/Image.h>
 #include <dlfcn.h>
 #include <fcntl.h>
-#include <string.h>
 #include <sys/types.h>
 #include <syscall.h>
 

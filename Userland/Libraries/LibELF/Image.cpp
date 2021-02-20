@@ -188,7 +188,7 @@ bool Image::parse()
 
     // Then create a name-to-index map.
     for (unsigned i = 0; i < section_count(); ++i) {
-        auto& section = this->section(i);
+        auto section = this->section(i);
         m_sections.set(section.name(), move(i));
     }
 
@@ -250,7 +250,7 @@ const Elf32_Shdr& Image::section_header(unsigned index) const
     return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
-const Image::Symbol Image::symbol(unsigned index) const
+Image::Symbol Image::symbol(unsigned index) const
 {
     ASSERT(m_valid);
     ASSERT(index < symbol_count());
@@ -258,33 +258,28 @@ const Image::Symbol Image::symbol(unsigned index) const
     return Symbol(*this, index, raw_syms[index]);
 }
 
-const Image::Section Image::section(unsigned index) const
+Image::Section Image::section(unsigned index) const
 {
     ASSERT(m_valid);
     ASSERT(index < section_count());
     return Section(*this, index);
 }
 
-const Image::ProgramHeader Image::program_header(unsigned index) const
+Image::ProgramHeader Image::program_header(unsigned index) const
 {
     ASSERT(m_valid);
     ASSERT(index < program_header_count());
     return ProgramHeader(*this, index);
 }
 
-FlatPtr Image::program_header_table_offset() const
-{
-    return header().e_phoff;
-}
-
-const Image::Relocation Image::RelocationSection::relocation(unsigned index) const
+Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < relocation_count());
     auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
 
-const Image::RelocationSection Image::Section::relocations() const
+Image::RelocationSection Image::Section::relocations() const
 {
     StringBuilder builder;
     builder.append(".rel");
@@ -300,7 +295,7 @@ const Image::RelocationSection Image::Section::relocations() const
     return static_cast<const RelocationSection>(relocation_section);
 }
 
-const Image::Section Image::lookup_section(const String& name) const
+Image::Section Image::lookup_section(const String& name) const
 {
     ASSERT(m_valid);
     if (auto it = m_sections.find(name); it != m_sections.end())
@@ -310,14 +305,14 @@ const Image::Section Image::lookup_section(const String& name) const
 
 StringView Image::Symbol::raw_data() const
 {
-    auto& section = this->section();
+    auto section = this->section();
     return { section.raw_data() + (value() - section.address()), size() };
 }
 
 Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
 {
     Optional<Image::Symbol> found;
-    for_each_symbol([&](const Image::Symbol symbol) {
+    for_each_symbol([&](const Image::Symbol& symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
         if (symbol.is_undefined())
@@ -344,7 +339,7 @@ Optional<Image::Symbol> Image::find_symbol(u32 address, u32* out_offset) const
     SortedSymbol* sorted_symbols = nullptr;
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](auto& symbol) {
+        for_each_symbol([this](const auto& symbol) {
             m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
             return IterationDecision::Continue;
         });
@@ -376,10 +371,9 @@ String Image::symbolicate(u32 address, u32* out_offset) const
         return "??";
     }
     SortedSymbol* sorted_symbols = nullptr;
-
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](auto& symbol) {
+        for_each_symbol([this](const auto& symbol) {
             m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
             return IterationDecision::Continue;
         });

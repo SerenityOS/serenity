@@ -29,7 +29,6 @@
 #include <LibCoreDump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
-#include <sys/stat.h>
 
 namespace CoreDump {
 
