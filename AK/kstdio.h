@@ -40,7 +40,6 @@ int snprintf(char* buffer, size_t, const char* fmt, ...) __attribute__((format(p
 #    endif
 #else
 #    include <stdio.h>
-#    define kprintf printf
 inline int dbgputstr(const char* characters, ssize_t length)
 {
     fwrite(characters, 1, length, stderr);
