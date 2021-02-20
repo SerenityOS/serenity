@@ -210,8 +210,13 @@ Vector<String> HackStudioWidget::selected_file_names() const
     return files;
 }
 
-void HackStudioWidget::open_file(const String& filename)
+void HackStudioWidget::open_file(const String& full_filename)
 {
+    String filename = full_filename;
+    if (full_filename.starts_with(project().root_path())) {
+        filename = LexicalPath::relative_path(full_filename, project().root_path());
+    }
+    dbgln("HackStudio is opening {}", filename);
     if (Core::File::is_directory(filename))
         return;
 
