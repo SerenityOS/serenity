@@ -719,35 +719,47 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
     // The containing_rect should have been inflated appropriately
     ASSERT(containing_rect.size().contains(Gfx::IntSize { base_size, base_size }));
 
-    auto half_width = containing_rect.width() / 2;
+    auto sides_height = containing_rect.height() - 2 * base_size;
+    auto half_height = sides_height / 2;
+    auto containing_horizontal_rect = containing_rect;
+
+    int horizontal_shift = 0;
+    if (half_height < base_size) {
+        // If the height is too small we need to shift the left/right accordingly
+        horizontal_shift = base_size - half_height;
+        containing_horizontal_rect.set_left(containing_horizontal_rect.left() + horizontal_shift);
+        containing_horizontal_rect.set_right(containing_horizontal_rect.right() - 2 * horizontal_shift);
+    }
+    auto half_width = containing_horizontal_rect.width() / 2;
     auto paint_horizontal = [&](int y, int src_row) {
+        if (half_width <= 0)
+            return;
         Gfx::PainterStateSaver save(painter);
-        painter.add_clip_rect({ containing_rect.left(), y, containing_rect.width(), base_size });
-        int corner_piece_width = base_size * 2;
-        int left_corners_right = min(half_width, corner_piece_width);
-        int right_corners_left = max(half_width, containing_rect.width() - corner_piece_width);
-        painter.blit({ containing_rect.left() + left_corners_right - corner_piece_width, y }, shadow_bitmap, { 0, src_row * base_size, corner_piece_width, base_size });
-        painter.blit({ containing_rect.left() + right_corners_left, y }, shadow_bitmap, { corner_piece_width + base_size, src_row * base_size, corner_piece_width, base_size });
-        for (int x = left_corners_right; x < right_corners_left; x += base_size) {
-            auto width = min(right_corners_left - x, base_size);
-            painter.blit({ containing_rect.left() + x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
+        painter.add_clip_rect({ containing_horizontal_rect.left(), y, containing_horizontal_rect.width(), base_size });
+        int corner_piece_width = min(containing_horizontal_rect.width() / 2, base_size * 2);
+        int left_corners_right = containing_horizontal_rect.left() + corner_piece_width;
+        int right_corners_left = max(containing_horizontal_rect.right() - corner_piece_width + 1, left_corners_right + 1);
+        painter.blit({ containing_horizontal_rect.left(), y }, shadow_bitmap, { 0, src_row * base_size, corner_piece_width, base_size });
+        painter.blit({ right_corners_left, y }, shadow_bitmap, { 5 * base_size - corner_piece_width, src_row * base_size, corner_piece_width, base_size });
+        if (containing_horizontal_rect.width() > 2 * corner_piece_width) {
+            for (int x = left_corners_right; x < right_corners_left; x += base_size) {
+                auto width = min(right_corners_left - x, base_size);
+                painter.blit({ x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
+            }
         }
     };
 
     paint_horizontal(containing_rect.top(), 0);
     paint_horizontal(containing_rect.bottom() - base_size + 1, 1);
 
-    auto sides_height = containing_rect.height() - 2 * base_size;
-    auto half_height = sides_height / 2;
-    auto paint_vertical = [&](int x, int src_row) {
+    auto paint_vertical = [&](int x, int src_row, int hshift, int hsrcshift) {
         Gfx::PainterStateSaver save(painter);
         painter.add_clip_rect({ x, containing_rect.y() + base_size, base_size, containing_rect.height() - 2 * base_size });
-        int top_corners_bottom = base_size + min(half_height, base_size);
-        int top_corner_height = top_corners_bottom - base_size;
-        int bottom_corners_top = base_size + max(half_height, sides_height - base_size);
-        int bottom_corner_height = sides_height + base_size - bottom_corners_top;
-        painter.blit({ x, containing_rect.top() + top_corners_bottom - top_corner_height }, shadow_bitmap, { base_size * 5, src_row * base_size, base_size, top_corner_height });
-        painter.blit({ x, containing_rect.top() + bottom_corners_top }, shadow_bitmap, { base_size * 7, src_row * base_size + base_size - bottom_corner_height, base_size, bottom_corner_height });
+        int corner_piece_height = min(half_height, base_size);
+        int top_corners_bottom = base_size + corner_piece_height;
+        int bottom_corners_top = base_size + max(half_height, sides_height - corner_piece_height);
+        painter.blit({ x + hshift, containing_rect.top() + top_corners_bottom - corner_piece_height }, shadow_bitmap, { base_size * 5 + hsrcshift, src_row * base_size, base_size - hsrcshift, corner_piece_height });
+        painter.blit({ x + hshift, containing_rect.top() + bottom_corners_top }, shadow_bitmap, { base_size * 7 + hsrcshift, src_row * base_size + base_size - corner_piece_height, base_size - hsrcshift, corner_piece_height });
         if (sides_height > 2 * base_size) {
             for (int y = top_corners_bottom; y < bottom_corners_top; y += base_size) {
                 auto height = min(bottom_corners_top - y, base_size);
@@ -756,8 +768,8 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
         }
     };
 
-    paint_vertical(containing_rect.left(), 0);
-    paint_vertical(containing_rect.right() - base_size + 1, 1);
+    paint_vertical(containing_rect.left(), 0, horizontal_shift, 0);
+    paint_vertical(containing_rect.right() - base_size + 1, 1, 0, horizontal_shift);
 }
 
 }
