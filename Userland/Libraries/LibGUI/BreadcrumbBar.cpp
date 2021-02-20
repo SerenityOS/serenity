@@ -92,12 +92,13 @@ void BreadcrumbBar::clear_segments()
     remove_all_children();
 }
 
-void BreadcrumbBar::append_segment(const String& text, const Gfx::Bitmap* icon, const String& data)
+void BreadcrumbBar::append_segment(String text, const Gfx::Bitmap* icon, String data, String tooltip)
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::CoolBar);
     button.set_text(text);
     button.set_icon(icon);
+    button.set_tooltip(move(tooltip));
     button.set_focus_policy(FocusPolicy::TabFocus);
     button.set_checkable(true);
     button.set_exclusive(true);
