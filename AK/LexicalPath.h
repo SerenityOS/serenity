@@ -50,6 +50,7 @@ public:
     bool has_extension(const StringView&) const;
 
     static String canonicalized_path(const StringView&);
+    static String relative_path(const String absolute_path, const String& prefix);
 
 private:
     void canonicalize();
