@@ -46,7 +46,7 @@ InputBox::~InputBox()
 {
 }
 
-int InputBox::show(String& text_value, Window* parent_window, const StringView& prompt, const StringView& title)
+int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
 {
     auto box = InputBox::construct(parent_window, prompt, title);
     box->set_resizable(false);

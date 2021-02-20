@@ -153,7 +153,7 @@ void GitWidget::unstage_file(const LexicalPath& file)
 void GitWidget::commit()
 {
     String message;
-    auto res = GUI::InputBox::show(message, window(), "Commit message:", "Commit");
+    auto res = GUI::InputBox::show(window(), message, "Commit message:", "Commit");
     if (res != GUI::InputBox::ExecOK || message.is_empty())
         return;
     dbgln("commit message: {}", message);

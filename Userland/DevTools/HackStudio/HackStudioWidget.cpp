@@ -310,7 +310,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 {
     return GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         String filename;
-        if (GUI::InputBox::show(filename, window(), "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
@@ -325,7 +325,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
     return GUI::Action::create("Add new directory to project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
         String directory_name;
-        if (GUI::InputBox::show(directory_name, window(), "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
             return;
         auto formatted_dir_name = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_project->model().root_path(), directory_name));
         int rc = mkdir(formatted_dir_name.characters(), 0755);

@@ -462,7 +462,7 @@ int main(int argc, char** argv)
     auto& input_button = input_button_container.add<GUI::Button>("Input...");
     String value;
     input_button.on_click = [&](auto) {
-        if (GUI::InputBox::show(value, window, "Enter input:", "Input Box") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(window, value, "Enter input:", "Input Box") == GUI::InputBox::ExecOK && !value.is_empty())
             input_label.set_text(value);
     };
 
