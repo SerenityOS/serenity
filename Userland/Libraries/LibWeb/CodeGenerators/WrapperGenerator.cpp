@@ -36,25 +36,6 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String snake_name(const StringView& title_name)
-{
-    StringBuilder builder;
-    bool first = true;
-    bool last_was_uppercase = false;
-    for (auto ch : title_name) {
-        if (isupper(ch)) {
-            if (!first && !last_was_uppercase)
-                builder.append('_');
-            builder.append(tolower(ch));
-        } else {
-            builder.append(ch);
-        }
-        first = false;
-        last_was_uppercase = isupper(ch);
-    }
-    return builder.to_string();
-}
-
 static String make_input_acceptable_cpp(const String& input)
 {
     if (input.is_one_of("class", "template", "for", "default", "char", "namespace")) {
@@ -250,8 +231,8 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         attribute.readonly = readonly;
         attribute.type = type;
         attribute.name = name;
-        attribute.getter_callback_name = String::formatted("{}_getter", snake_name(attribute.name));
-        attribute.setter_callback_name = String::formatted("{}_setter", snake_name(attribute.name));
+        attribute.getter_callback_name = String::formatted("{}_getter", attribute.name.to_snakecase());
+        attribute.setter_callback_name = String::formatted("{}_setter", attribute.name.to_snakecase());
         attribute.extended_attributes = move(extended_attributes);
         interface->attributes.append(move(attribute));
     };
@@ -640,14 +621,14 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
     Vector<String> parameter_names;
     size_t argument_index = 0;
     for (auto& parameter : parameters) {
-        parameter_names.append(make_input_acceptable_cpp(snake_name(parameter.name)));
+        parameter_names.append(make_input_acceptable_cpp(parameter.name.to_snakecase()));
         arguments_generator.set("argument.index", String::number(argument_index));
 
         arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
         // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), snake_name(parameter.name), return_void, false, parameter.optional);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional);
         ++argument_index;
     }
 
@@ -663,7 +644,7 @@ static void generate_header(const IDL::Interface& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
     generator.set("wrapper_class", interface.wrapper_class);
-    generator.set("wrapper_class:snakecase", snake_name(interface.wrapper_class));
+    generator.set("wrapper_class:snakecase", interface.wrapper_class.to_snakecase());
 
     generator.append(R"~~~(
 #pragma once
@@ -852,7 +833,7 @@ static void generate_constructor_header(const IDL::Interface& interface)
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("constructor_class", interface.constructor_class);
-    generator.set("constructor_class:snakecase", snake_name(interface.constructor_class));
+    generator.set("constructor_class:snakecase", interface.constructor_class.to_snakecase());
 
     generator.append(R"~~~(
 #pragma once
@@ -890,7 +871,7 @@ void generate_constructor_implementation(const IDL::Interface& interface)
     generator.set("prototype_class", interface.prototype_class);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("constructor_class", interface.constructor_class);
-    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
@@ -1026,7 +1007,7 @@ static void generate_prototype_header(const IDL::Interface& interface)
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("prototype_class", interface.prototype_class);
-    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
 
     generator.append(R"~~~(
 #pragma once
@@ -1046,7 +1027,7 @@ private:
 
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", snake_name(function.name));
+        function_generator.set("function.name:snakecase", function.name.to_snakecase());
         function_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
         )~~~");
@@ -1054,7 +1035,7 @@ private:
 
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
-        attribute_generator.set("attribute.name:snakecase", snake_name(attribute.name));
+        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
         attribute_generator.append(R"~~~(
     JS_DECLARE_NATIVE_GETTER(@attribute.name:snakecase@_getter);
 )~~~");
@@ -1086,7 +1067,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
     generator.set("prototype_base_class", interface.prototype_base_class);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("constructor_class", interface.constructor_class);
-    generator.set("prototype_class:snakecase", snake_name(interface.prototype_class));
+    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
@@ -1208,7 +1189,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", snake_name(function.name));
+        function_generator.set("function.name:snakecase", function.name.to_snakecase());
         function_generator.set("function.length", String::number(function.length()));
 
         function_generator.append(R"~~~(
@@ -1315,7 +1296,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
         attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
-        attribute_generator.set("attribute.name:snakecase", snake_name(attribute.name));
+        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
 
         if (attribute.extended_attributes.contains("Reflect")) {
             auto attribute_name = attribute.extended_attributes.get("Reflect").value();
@@ -1325,7 +1306,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
             attribute_generator.set("attribute.reflect_name", attribute_name);
         } else {
-            attribute_generator.set("attribute.reflect_name", snake_name(attribute.name));
+            attribute_generator.set("attribute.reflect_name", attribute.name.to_snakecase());
         }
 
         attribute_generator.append(R"~~~(
@@ -1405,7 +1386,7 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", snake_name(function.name));
+        function_generator.set("function.name:snakecase", function.name.to_snakecase());
 
         function_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)

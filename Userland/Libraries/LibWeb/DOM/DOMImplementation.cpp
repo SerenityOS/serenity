@@ -39,7 +39,7 @@ DOMImplementation::DOMImplementation(Document& document)
 {
 }
 
-const NonnullRefPtr<Document> DOMImplementation::create_htmldocument(const String& title) const
+const NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& title) const
 {
     auto html_document = Document::create();
 
