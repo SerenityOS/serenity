@@ -954,6 +954,9 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_width = pixel_size.width();
     m_pixel_height = pixel_size.height();
 
+    if (on_terminal_size_change)
+        on_terminal_size_change(Gfx::IntSize { m_pixel_width, m_pixel_height });
+
     if (m_automatic_size_policy) {
         set_fixed_size(m_pixel_width, m_pixel_height);
     }

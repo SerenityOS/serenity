@@ -101,6 +101,7 @@ public:
     void clear_including_history();
 
     Function<void(const StringView&)> on_title_change;
+    Function<void(const Gfx::IntSize&)> on_terminal_size_change;
     Function<void()> on_command_exit;
 
     GUI::Menu& context_menu() { return *m_context_menu; }
