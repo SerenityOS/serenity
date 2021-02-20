@@ -33,8 +33,6 @@
 #        include <AK/Types.h>
 #        include <stdarg.h>
 extern "C" {
-int vdbgprintf(const char* fmt, va_list) __attribute__((format(printf, 1, 0)));
-int dbgprintf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 int dbgputstr(const char*, ssize_t);
 int sprintf(char* buf, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 int snprintf(char* buffer, size_t, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
@@ -43,7 +41,6 @@ int snprintf(char* buffer, size_t, const char* fmt, ...) __attribute__((format(p
 #else
 #    include <stdio.h>
 #    define kprintf printf
-#    define dbgprintf(...) fprintf(stderr, __VA_ARGS__)
 inline int dbgputstr(const char* characters, ssize_t length)
 {
     fwrite(characters, 1, length, stderr);

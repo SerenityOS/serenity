@@ -62,7 +62,6 @@ TEST_CASE(load_form)
         auto& widget_object = widget_value.as_object();
         auto widget_class = widget_object.get("class").as_string();
         widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
-            //dbgprintf("Set property %s.%s to '%s'\n", widget_class.characters(), property_name.characters(), property_value.serialized().characters());
         });
     });
 }
