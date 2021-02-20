@@ -31,7 +31,7 @@ Run `help()` in REPL mode to see its available built-in functions.
 Here's how you execute a script:
 
 ```sh
-$ js ~/js/type-play.js
+$ js ~/Source/js/type-play.js
 ```
 
 And here's an example of an interactive REPL session:
