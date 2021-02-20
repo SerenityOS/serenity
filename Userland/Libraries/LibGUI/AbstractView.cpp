@@ -500,6 +500,11 @@ void AbstractView::hide_event(HideEvent& event)
 
 void AbstractView::keydown_event(KeyEvent& event)
 {
+    if (event.alt()) {
+        event.ignore();
+        return;
+    }
+
     if (event.key() == KeyCode::Key_F2) {
         if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
             begin_editing(cursor_index());
