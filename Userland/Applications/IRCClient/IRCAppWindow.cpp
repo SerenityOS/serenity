@@ -93,7 +93,7 @@ void IRCAppWindow::setup_client()
 
     if (m_client->hostname().is_empty()) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel)
+        if (GUI::InputBox::show(this, value, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel)
             ::exit(0);
 
         m_client->set_server(value, 6667);
@@ -107,7 +107,7 @@ void IRCAppWindow::setup_actions()
 {
     m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter channel name:", "Join channel") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter channel name:", "Join channel") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_join_action(value);
     });
 
@@ -125,13 +125,13 @@ void IRCAppWindow::setup_actions()
 
     m_whois_action = GUI::Action::create("Whois user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "IRC WHOIS lookup") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "IRC WHOIS lookup") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_whois_action(value);
     });
 
     m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "Open IRC query with...") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Open IRC query with...") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_open_query_action(value);
     });
 
@@ -141,7 +141,7 @@ void IRCAppWindow::setup_actions()
 
     m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "Change nickname") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Change nickname") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_nick_action(value);
     });
 
@@ -151,7 +151,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter topic:", "Change topic") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter topic:", "Change topic") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_topic_action(window->channel().name(), value);
     });
 
@@ -161,7 +161,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Invite user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Invite user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_invite_user_action(window->channel().name(), value);
     });
 
@@ -179,7 +179,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Voice user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Voice user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_voice_user_action(window->channel().name(), value);
     });
 
@@ -189,7 +189,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeVoice user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeVoice user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_devoice_user_action(window->channel().name(), value);
     });
 
@@ -199,7 +199,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Hop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Hop user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_hop_user_action(window->channel().name(), value);
     });
 
@@ -209,7 +209,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeHop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeHop user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_dehop_user_action(window->channel().name(), value);
     });
 
@@ -219,7 +219,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Op user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Op user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_op_user_action(window->channel().name(), value);
     });
 
@@ -229,7 +229,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeOp user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeOp user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_deop_user_action(window->channel().name(), value);
     });
 
@@ -239,10 +239,10 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String nick_value;
-        if (GUI::InputBox::show(nick_value, this, "Enter nick:", "Kick user") != GUI::InputBox::ExecOK || nick_value.is_empty())
+        if (GUI::InputBox::show(this, nick_value, "Enter nick:", "Kick user") != GUI::InputBox::ExecOK || nick_value.is_empty())
             return;
         String reason_value;
-        if (GUI::InputBox::show(reason_value, this, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(this, reason_value, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
             m_client->handle_kick_user_action(window->channel().name(), nick_value, reason_value.characters());
     });
 

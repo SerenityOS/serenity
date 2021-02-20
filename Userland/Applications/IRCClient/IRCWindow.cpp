@@ -142,7 +142,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 if (IRCClient::is_nick_prefix(nick[0]))
                     nick = nick.substring(1, nick.length() - 1);
                 String value;
-                if (GUI::InputBox::show(value, window(), "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
+                if (GUI::InputBox::show(window(), value, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
                     m_client->handle_kick_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()), value);
             }));
 
