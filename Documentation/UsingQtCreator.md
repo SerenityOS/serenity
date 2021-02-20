@@ -35,6 +35,8 @@ Build/Userland/Libraries/
 AK/
 ```
 
+Finally, search in the options for "BOM" (Text Editor > Behavior > File Encodings > UTF-8 BOM), and switch to "Always delete".
+
 Qt Creator should be set up correctly now, go ahead and explore the project and try making changes. Have fun! :^)
 
 ## Auto-Formatting
