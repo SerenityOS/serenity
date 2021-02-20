@@ -88,6 +88,14 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
         }
     } else {
         switch (mode) {
+        case 3: {
+            // 80/132-column mode (DECCOLM)
+            unsigned new_columns = should_set ? 80 : 132;
+            dbgln("Setting {}-column mode", new_columns);
+            set_size(new_columns, rows());
+            clear();
+            break;
+        }
         case 25:
             // Hide cursor command, but doesn't need to be run (for now, because
             // we don't do inverse control codes anyways)
@@ -97,6 +105,7 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
                 dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
             break;
         default:
+            dbgln("Set Mode: Unimplemented mode {}", mode);
             break;
         }
     }
