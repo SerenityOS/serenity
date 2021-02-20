@@ -278,17 +278,15 @@ u32 DynamicObject::HashSection::calculate_gnu_hash(const StringView& name)
     return hash;
 }
 
-auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> Symbol
+auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> Optional<Symbol>
 {
     return (this->*(m_lookup_function))(name);
 }
 
-DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const
+auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const -> Optional<Symbol>
 {
     u32 hash_value = calculate_elf_hash(name);
-
     u32* hash_table_begin = (u32*)address().as_ptr();
-
     size_t num_buckets = hash_table_begin[0];
 
     // This is here for completeness, but, since we're using the fact that every chain
@@ -307,10 +305,10 @@ DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const String
             return symbol;
         }
     }
-    return Symbol::create_undefined(m_dynamic);
+    return {};
 }
 
-DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
+auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     // TODO: Handle 64bit bloomwords for ELF_CLASS64
@@ -334,19 +332,17 @@ DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const String
     BloomWord hash2 = hash1 >> shift2;
     const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
 
-    if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask) {
-        return Symbol::create_undefined(m_dynamic);
-    }
+    if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask)
+        return {};
 
     size_t current_sym = buckets[hash1 % num_buckets];
-    if (current_sym == 0) {
-        return Symbol::create_undefined(m_dynamic);
-    }
+    if (current_sym == 0)
+        return {};
     const u32* current_chain = &chains[current_sym - num_omitted_symbols];
 
     for (hash1 &= ~1;; ++current_sym) {
         hash2 = *(current_chain++);
-        const auto symbol = m_dynamic.symbol(current_sym);
+        auto symbol = m_dynamic.symbol(current_sym);
         if ((hash1 == (hash2 & ~1)) && name == symbol.name()) {
             dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
             return symbol;
@@ -356,7 +352,7 @@ DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const String
         }
     }
 
-    return Symbol::create_undefined(m_dynamic);
+    return {};
 }
 
 StringView DynamicObject::symbol_string_table_string(Elf32_Word index) const
@@ -464,10 +460,13 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
 
 Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const StringView& name) const
 {
-    auto res = hash_section().lookup_symbol(name);
-    if (res.is_undefined())
+    auto result = hash_section().lookup_symbol(name);
+    if (!result.has_value())
         return {};
-    return SymbolLookupResult { res.value(), (FlatPtr)res.address().as_ptr(), res.bind(), this };
+    auto symbol = result.value();
+    if (symbol.is_undefined())
+        return {};
+    return SymbolLookupResult { symbol.value(), symbol.address().get(), symbol.bind(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, VirtualAddress dynamic_section_address)

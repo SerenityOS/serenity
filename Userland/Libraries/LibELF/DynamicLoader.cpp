@@ -140,11 +140,12 @@ bool DynamicLoader::validate()
 
 void* DynamicLoader::symbol_for_name(const StringView& name)
 {
-    auto symbol = m_dynamic_object->hash_section().lookup_symbol(name);
-
+    auto result = m_dynamic_object->hash_section().lookup_symbol(name);
+    if (!result.has_value())
+        return nullptr;
+    auto symbol = result.value();
     if (symbol.is_undefined())
         return nullptr;
-
     return m_dynamic_object->base_address().offset(symbol.value()).as_ptr();
 }
 

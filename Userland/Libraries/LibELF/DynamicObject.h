@@ -219,16 +219,16 @@ public:
             }
         }
 
-        Symbol lookup_symbol(const StringView& name) const;
+        Optional<Symbol> lookup_symbol(const StringView& name) const;
 
     private:
         static u32 calculate_elf_hash(const StringView& name);
         static u32 calculate_gnu_hash(const StringView& name);
 
-        DynamicObject::Symbol lookup_elf_symbol(const StringView& name) const;
-        DynamicObject::Symbol lookup_gnu_symbol(const StringView& name) const;
+        Optional<Symbol> lookup_elf_symbol(const StringView& name) const;
+        Optional<Symbol> lookup_gnu_symbol(const StringView& name) const;
 
-        typedef DynamicObject::Symbol (HashSection::*LookupFunction)(const StringView&) const;
+        typedef Optional<Symbol> (HashSection::*LookupFunction)(const StringView&) const;
         LookupFunction m_lookup_function {};
     };
 
