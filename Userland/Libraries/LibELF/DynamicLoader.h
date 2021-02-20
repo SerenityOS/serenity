@@ -95,7 +95,6 @@ private:
         u32 size_in_memory() const { return m_program_header.p_memsz; }
         u32 size_in_image() const { return m_program_header.p_filesz; }
         u32 alignment() const { return m_program_header.p_align; }
-        u32 mmap_prot() const;
         bool is_readable() const { return flags() & PF_R; }
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
