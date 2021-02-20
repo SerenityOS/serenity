@@ -410,8 +410,9 @@ private:
 
     size_t m_cursor { 0 };
     size_t m_drawn_cursor { 0 };
+    size_t m_drawn_end_of_line_offset { 0 };
     size_t m_inline_search_cursor { 0 };
-    size_t m_chars_inserted_in_the_middle { 0 };
+    size_t m_chars_touched_in_the_middle { 0 };
     size_t m_times_tab_pressed { 0 };
     size_t m_num_columns { 0 };
     size_t m_num_lines { 1 };
@@ -470,11 +471,14 @@ private:
     };
     InputState m_state { InputState::Free };
 
-    HashMap<u32, HashMap<u32, Style>> m_spans_starting;
-    HashMap<u32, HashMap<u32, Style>> m_spans_ending;
+    struct Spans {
+        HashMap<u32, HashMap<u32, Style>> m_spans_starting;
+        HashMap<u32, HashMap<u32, Style>> m_spans_ending;
+        HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
+        HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
 
-    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_starting;
-    HashMap<u32, HashMap<u32, Style>> m_anchored_spans_ending;
+        bool contains_up_to_offset(const Spans& other, size_t offset) const;
+    } m_drawn_spans, m_current_spans;
 
     RefPtr<Core::Notifier> m_notifier;
 
