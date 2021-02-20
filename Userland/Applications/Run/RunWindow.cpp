@@ -101,6 +101,8 @@ void RunWindow::event(Core::Event& event)
             // Escape key pressed, close dialog
             close();
             return;
+        } else if ((key_event.key() == Key_Up || key_event.key() == Key_Down) && m_path_history.is_empty()) {
+            return;
         }
     }
 
