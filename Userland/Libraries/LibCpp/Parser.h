@@ -34,7 +34,7 @@ namespace Cpp {
 
 class Parser final {
 public:
-    explicit Parser(const StringView&);
+    explicit Parser(const StringView& program, const String& filename);
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
@@ -137,7 +137,7 @@ private:
     NonnullRefPtr<T>
     create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
     {
-        auto node = adopt(*new T(&parent, start, end, forward<Args>(args)...));
+        auto node = adopt(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
         m_nodes.append(node);
         return node;
     }
@@ -145,7 +145,7 @@ private:
     NonnullRefPtr<TranslationUnit>
     create_root_ast_node(const Position& start, Position end)
     {
-        auto node = adopt(*new TranslationUnit(nullptr, start, end));
+        auto node = adopt(*new TranslationUnit(nullptr, start, end, m_filename));
         m_nodes.append(node);
         m_root_node = node;
         return node;
@@ -153,6 +153,7 @@ private:
 
     StringView m_program;
     Vector<StringView> m_lines;
+    String m_filename;
     Vector<Token> m_tokens;
     State m_state;
     Vector<State> m_saved_states;

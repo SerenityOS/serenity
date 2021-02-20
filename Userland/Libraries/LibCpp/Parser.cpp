@@ -38,9 +38,10 @@
 
 namespace Cpp {
 
-Parser::Parser(const StringView& program)
+Parser::Parser(const StringView& program, const String& filename)
     : m_program(program)
     , m_lines(m_program.split_view("\n", true))
+    , m_filename(filename)
 {
     Lexer lexer(m_program);
     for (auto& token : lexer.lex()) {
