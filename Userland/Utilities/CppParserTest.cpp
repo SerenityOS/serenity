@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     }
     auto content = file->read_all();
     StringView content_view(content);
-    ::Cpp::Parser parser(content_view);
+    ::Cpp::Parser parser(content_view, path);
     if (tokens_mode) {
         parser.print_tokens();
         return 0;
