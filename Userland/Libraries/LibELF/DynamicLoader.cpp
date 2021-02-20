@@ -372,7 +372,7 @@ void DynamicLoader::load_program_headers()
     auto* data_segment = (u8*)mmap_with_name(
         data_segment_address,
         data_segment_size,
-        data_region.value().mmap_prot(),
+        PROT_READ | PROT_WRITE,
         MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
         0,
         0,
@@ -573,15 +573,6 @@ void DynamicLoader::call_object_init_functions()
             ++init_begin;
         }
     }
-}
-
-u32 DynamicLoader::ProgramHeaderRegion::mmap_prot() const
-{
-    int prot = 0;
-    prot |= is_executable() ? PROT_EXEC : 0;
-    prot |= is_readable() ? PROT_READ : 0;
-    prot |= is_writable() ? PROT_WRITE : 0;
-    return prot;
 }
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
