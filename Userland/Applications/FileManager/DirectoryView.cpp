@@ -499,7 +499,7 @@ void DirectoryView::setup_actions()
 {
     m_mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
@@ -511,7 +511,7 @@ void DirectoryView::setup_actions()
 
     m_touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);

@@ -126,7 +126,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
             return;
 
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter new value:", "Set variable value") == GUI::InputBox::ExecOK) {
+        if (GUI::InputBox::show(window(), value, "Enter new value:", "Set variable value") == GUI::InputBox::ExecOK) {
             auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
             model.set_variable_value(index, value, window());
         }

@@ -35,7 +35,7 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override;
 
-    static int show(String& text_value, Window* parent_window, const StringView& prompt, const StringView& title);
+    static int show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title);
 
 private:
     explicit InputBox(Window* parent_window, const StringView& prompt, const StringView& title);
