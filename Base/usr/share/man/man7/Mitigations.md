@@ -1,6 +1,6 @@
 ## Name
 
-Mitigations - Security mitigations implemented by SerenityOS.
+Mitigations - Security mitigations implemented by SerenityOS
 
 ## Description
 
@@ -13,9 +13,8 @@ to collect and describe the mitigations in one centralized place.
 
 ### SMEP (Supervisor Mode Execution Protection)
 
-[Supervisor Mode Execution Protection](https://software.intel.com/security-software-guidance/best-practices/related-intel-security-features-technologies) is a feature
-of Intel CPUs which allows the kernel to instruct the CPU
-to disable execution of code residing in user space.
+[Supervisor Mode Execution Protection](https://software.intel.com/security-software-guidance/best-practices/related-intel-security-features-technologies) is an Intel CPU feature which prevents execution
+of userspace code with kernel privileges.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
 ```
@@ -29,9 +28,9 @@ Kernel: Enable x86 SMEP (Supervisor Mode Execution Protection)
 
 ### SMAP (Supervisor Mode Access Prevention)
 
-[Supervisor Mode Access Prevention](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention) compliments
-SMEP, it allows a kernel to set user-space memory mappings
-that will cause a trap when accessing user-space memory.
+[Supervisor Mode Access Prevention](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention)
+compliments SMEP by also guarding read/write access to
+userspace memory while executing in kernel mode.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9eef39d68a99c5e29099ae4eb4a56934b35eecde):
 
@@ -45,10 +44,9 @@ Kernel: Start implementing x86 SMAP support
 
 ### Pledge
 
-[pledge](https://marc.info/?l=openbsd-tech&m=143725996614627&w=2) is a mitigation which originated from OpenBSD (originally named tame).
-It enables a program to voluntarily restrict its access to the kernel's syscall
-surface area. The allows the program to reduce the potential attack surface
-available if the program in question was exploited.
+[pledge](https://marc.info/?l=openbsd-tech&m=143725996614627&w=2) is a mitigation which originated from OpenBSD.
+It allows a program to voluntarily restrict its access to system calls
+and kernel facilities.
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/41c504a33becea8aa9b437cd3c0dc312b2bf1fe9),
 and the majority of programs were enlightened later:
@@ -63,9 +61,8 @@ Kernel: Add pledge() syscall :^)
 
 ### Unveil
 
-[unveil](https://lwn.net/Articles/767137/) is a mitigation which originated from OpenBSD.
-It enables a program to voluntarily restrict its access to the filesystem.
-This reduces the potential surface area available if the program in question was exploited.
+[unveil](https://lwn.net/Articles/767137/) is a mitigation originating from OpenBSD.
+It allows a program to voluntarily restrict its access to the filesystem.
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/0569123ad7cb9c54df724c2bb85933ea3cf97134),
 and the majority of programs were enlightened later:
@@ -83,7 +80,7 @@ Kernel: Add a basic implementation of unveil()
 [syscall call-from verification](https://marc.info/?l=openbsd-tech&m=157488907117170&w=2) is
 a mitigation which originated from OpenBSD.
 In short the kernel checks that all syscalls originate
-from the address of the systems libc. This makes attacks
+from the address of the system's libc. This makes attacks
 on OpenBSD more difficult as they random-relink their libc
 on boot, which makes finding syscall stubs in libc difficult
 for attackers. On serenity it is mostly just an inconvenience,
@@ -103,9 +100,9 @@ Kernel: Add a way to specify which memory regions can make syscalls
 
 [Post-init read-only memory](https://lwn.net/Articles/666550/) is
 a mitigation which originated from the Linux Kernel.
-It tracks data that is initialized once during kernel boot and never
-touched again, post kernel initialization the memory is marked
-read only to protect it from potentially being modified by exploits.
+It tracks data that is initialized during kernel boot and never
+changed again. Post kernel initialization, the memory is marked
+read-only to protect it from potentially being modified by exploits.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d8013c60bb52756788e747183572067d6e3f204a)
 and other kernel data structures were enlightened later:
@@ -120,11 +117,10 @@ Kernel: Add mechanism to make some memory read-only after init finishes
 
 ### KUBSAN (Kernel Undefined Behavior Sanitizer)
 
-Undefined behavior sanitizer is a dynamic analysis tool, implemented in GCC,
+UndefinedBehaviorSANitizer is a dynamic analysis tool, implemented in GCC,
 which instruments generated code to flag undefined behavior at runtime.
-It can find various issues including, overflows, out of bounds array
-accesses, type corruption, and many more. Undefined behavior bugs can often
-be exploited, KUBSAN allows developers to catch them during testing instead.
+It can find various issues, including integer overflows, out-of-bounds array
+accesses, type corruption, and more.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d44be968938ecf95023351a358c43c4957638d87):
 ```
@@ -135,11 +131,11 @@ Date:   Fri Feb 5 19:44:26 2021 +0100
 Kernel: KUBSAN! (Kernel Undefined Behavior SANitizer) :^)
 ```
 
-### Kernel Unmap after init
+### Kernel unmap-after-init
 
-Umap after init allows the kerenel to remove functions which contain potentially
+Umap-after-init allows the kerenel to remove functions which contain potentially
 dangerous [ROP gadgets](https://en.wikipedia.org/wiki/Return-oriented_programming)
-from kernel memory after they have been used and are no longer needed. Notably the
+from kernel memory after we've booted up and they are no longer needed. Notably the
 `write_cr4(..)` function used to control processor features like the SMEP/SMAP bits
 in the CR4 register, and the `write_cr0(..)` function used to control processor features
 like write protection, etc.
@@ -156,17 +152,16 @@ Date:   Fri Feb 19 18:21:54 2021 +0100
 Kernel: Add .unmap_after_init section for code we don't need after init
 ```
 
-### Reloaction Read-Only (RELRO)
+### Relocation Read-Only (RELRO)
 
 [RELRO](https://hockeyinjune.medium.com/relro-relocation-read-only-c8d0933faef3) is a mitigation
 in the linker and loader that hardens the data sections of an ELF binary.
-When linked with the relro option the resulting binary will have new sections emitted which
-contain the relro data (`.data.rel.ro` and `.data.rel.ro.local`). The sections will be placed
-into a program segment of type `PT_GNU_RELRO` which contains the relro sections.
-The loader can then detect the `PT_GNU_RELRO` segment and then make the regions read only after
-relocations have been performed.
 
-This mitigates attacks which for example attempt to overwrite the [Global Offset Table (GOT)](https://en.wikipedia.org/wiki/Global_Offset_Table).
+When enabled, it segregates function pointers resolved by the dynamic loader
+into a separate section of the runtie executable memory, and allows the loader
+to make that memory read-only before passing control to the main executable.
+
+This prevents attackers from overwriting the [Global Offset Table (GOT)](https://en.wikipedia.org/wiki/Global_Offset_Table).
 
 It was first enabled for executables in the following [commit](https://github.com/SerenityOS/serenity/commit/fa4c249425a65076ca04a3cb0c173d49472796fb):
 ```
@@ -177,7 +172,7 @@ Date:   Thu Feb 18 18:43:20 2021 +0100
 LibELF+Userland: Enable RELRO for all userland executables :^)
 ```
 
-Shared libraries were enabled in a folow up [commit](https://github.com/SerenityOS/serenity/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
+Shared libraries were enabled in a follow-up [commit](https://github.com/SerenityOS/serenity/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
 ```
 commit 713b3b36be4f659e58e253b6c830509898dbd2fa
 Author: Andreas Kling <kling@serenityos.org>
@@ -190,8 +185,8 @@ DynamicLoader+Userland: Enable RELRO for shared libraries as well :^)
 
 The GCC compiler option [`-fstack-clash-protection`](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
 is a mitigation which helps prevent [stack clash](https://blog.qualys.com/vulnerabilities-research/2017/06/19/the-stack-clash)
-style attacks by generating code which allocates and immediately accesses one page of stack at a time.
-This prevents attackers from creating situations in which stack allocations jump over a guard page into whatever lies after.
+style attacks by generating code that probes the stack in page-sized increments to ensure a fault is provoked.
+This prevents attackers from using a large stack allocation to "jump over" the stack guard page into adjacent memory.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/7142562310e631156d1f64aff22f068ae2c48a5e):
 ```
@@ -209,8 +204,8 @@ This family of flags enables [buffer overflow protection](https://en.wikipedia.o
 to mitigate [stack-smashing attacks](https://en.wikipedia.org/wiki/Stack_buffer_overflow). 
 
 The compiler implements the mitigation by storing a canary value randomized on program startup into the preamble of all
-functions. Code is then generated to check that stack canary on function return and crash if the value has been changed,
-and hence a stack corruption has been detected.
+functions. Code is then generated to validate that stack canary on function return and crash if the value has been changed
+(and hence a stack corruption has been detected.)
 
 `-fstack-protector` was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/842716a0b5eceb8db31416cd643720c1037032b2):
 
