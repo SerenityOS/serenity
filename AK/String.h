@@ -131,6 +131,7 @@ public:
 
     String to_lowercase() const;
     String to_uppercase() const;
+    String to_snakecase() const;
 
     bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
