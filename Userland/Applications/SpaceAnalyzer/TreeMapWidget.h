@@ -50,6 +50,7 @@ class TreeMapWidget final : public GUI::Frame {
 public:
     virtual ~TreeMapWidget() override;
     Function<void()> on_path_change;
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
     size_t path_size() const;
     const TreeMapNode* path_node(size_t n) const;
     size_t viewpoint() const;
@@ -62,6 +63,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
 
     bool rect_can_contain_children(const Gfx::IntRect& rect) const;
     bool rect_can_contain_label(const Gfx::IntRect& rect) const;
