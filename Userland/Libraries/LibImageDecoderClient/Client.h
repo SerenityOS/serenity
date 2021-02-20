@@ -44,7 +44,7 @@ struct DecodedImage {
     Vector<Frame> frames;
 };
 
-class Client
+class Client final
     : public IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
     , public ImageDecoderClientEndpoint {
     C_OBJECT(Client);
@@ -54,8 +54,12 @@ public:
 
     Optional<DecodedImage> decode_image(const ByteBuffer&);
 
+    Function<void()> on_death;
+
 private:
     Client();
+
+    virtual void die() override;
 
     virtual void handle(const Messages::ImageDecoderClient::Dummy&) override;
 };
