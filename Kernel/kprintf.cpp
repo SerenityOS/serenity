@@ -105,7 +105,6 @@ extern "C" int sprintf(char* buffer, const char* fmt, ...);
 
 int sprintf(char* buffer, const char* fmt, ...)
 {
-    ScopedSpinLock lock(s_log_lock);
     va_list ap;
     va_start(ap, fmt);
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
