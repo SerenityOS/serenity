@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,7 @@ private:
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::IntPoint& screen_location);
     void navigate_to_include_if_available(String);
+    void on_navigatable_link_click(const GUI::TextDocumentSpan&);
 
     Gfx::IntRect breakpoint_icon_rect(size_t line_number) const;
     static const Gfx::Bitmap& breakpoint_icon_bitmap();
@@ -109,7 +110,7 @@ private:
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
-    bool m_hovering_link { false };
+    bool m_hovering_clickable { false };
     bool m_autocomplete_in_focus { false };
 
     OwnPtr<LanguageClient> m_language_client;
