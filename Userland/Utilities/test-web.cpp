@@ -306,9 +306,6 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     ASSERT(m_page_view->document());
     auto& old_interpreter = m_page_view->document()->interpreter();
 
-    // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
-    JS::VM::InterpreterExecutionScope scope(old_interpreter);
-
     if (!m_js_test_common) {
         auto result = parse_file(String::format("%s/test-common.js", m_js_test_root.characters()));
         if (result.is_error()) {
@@ -353,6 +350,9 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             auto document = Web::DOM::Document::create();
             Web::HTML::HTMLDocumentParser parser(document, data, "utf-8");
             auto& new_interpreter = parser.document().interpreter();
+
+            // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
+            JS::VM::InterpreterExecutionScope scope(new_interpreter);
 
             // Setup the test environment and call "__BeforeInitialPageLoad__"
             new_interpreter.global_object().define_property(
