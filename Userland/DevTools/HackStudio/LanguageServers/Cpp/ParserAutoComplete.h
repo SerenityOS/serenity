@@ -47,10 +47,11 @@ public:
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
     virtual void on_edit(const String& file) override;
     virtual void file_opened([[maybe_unused]] const String& file) override;
+    virtual Optional<ProjectPosition> find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position) override;
 
 private:
     struct DocumentData {
-        DocumentData(String&& text);
+        DocumentData(String&& text, const String& filename);
         String text;
         Preprocessor preprocessor;
         Parser parser;
@@ -63,6 +64,8 @@ private:
     String type_of_variable(const Identifier&) const;
     bool is_property(const ASTNode&) const;
     bool is_empty_property(const DocumentData&, const ASTNode&, const Position& autocomplete_position) const;
+    RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
+    NonnullRefPtrVector<Declaration> get_available_declarations(const DocumentData&, const ASTNode&) const;
 
     struct PropertyInfo {
         StringView name;
