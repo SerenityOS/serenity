@@ -1,6 +1,6 @@
 ## Name
 
-ddate - prints the current date in Discordian date format.
+ddate - print the current date in Discordian date format
 
 ## Synopsis
 
