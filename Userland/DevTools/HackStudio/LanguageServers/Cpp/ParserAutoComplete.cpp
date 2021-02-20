@@ -72,7 +72,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     auto document = filedb().get(file);
     ASSERT(document);
     auto content = document->text();
-    auto document_data = make<DocumentData>(document->text());
+    auto document_data = make<DocumentData>(document->text(), file);
     auto root = document_data->parser.parse();
     for (auto& path : document_data->preprocessor.included_paths()) {
         get_or_create_document_data(document_path_from_include_path(path));
@@ -88,10 +88,10 @@ void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentDa
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-ParserAutoComplete::DocumentData::DocumentData(String&& _text)
+ParserAutoComplete::DocumentData::DocumentData(String&& _text, const String& filename)
     : text(move(_text))
     , preprocessor(text.view())
-    , parser(preprocessor.process().view())
+    , parser(preprocessor.process().view(), filename)
 {
 }
 
