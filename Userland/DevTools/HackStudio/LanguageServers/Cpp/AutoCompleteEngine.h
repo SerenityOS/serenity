@@ -41,6 +41,13 @@ public:
     virtual void on_edit([[maybe_unused]] const String& file) {};
     virtual void file_opened([[maybe_unused]] const String& file) {};
 
+    struct ProjectPosition {
+        String file;
+        size_t line;
+        size_t column;
+    };
+    virtual Optional<ProjectPosition> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; };
+
 protected:
     const FileDB& filedb() const { return m_filedb; }
 

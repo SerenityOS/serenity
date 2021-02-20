@@ -40,6 +40,14 @@ void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSugges
     }
     m_language_client->provide_autocomplete_suggestions(message.suggestions());
 }
+void ServerConnection::handle(const Messages::LanguageClient::DeclarationLocation& message)
+{
+    if (!m_language_client) {
+        dbgln("Language Server connection has no attached language client");
+        return;
+    }
+    m_language_client->declaration_found(message.file_name(), message.line(), message.column());
+}
 
 void ServerConnection::die()
 {
@@ -87,8 +95,6 @@ void LanguageClient::request_autocomplete(const String& path, size_t cursor_line
 
 void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
 {
-    if (!m_server_connection)
-        return;
     if (on_autocomplete_suggestions)
         on_autocomplete_suggestions(suggestions);
 
@@ -145,6 +151,24 @@ void ServerConnection::remove_instance_for_project(const String& project_path)
 {
     auto key = LexicalPath { project_path }.string();
     s_instances_for_projects.remove(key);
+}
+
+void LanguageClient::search_declaration(const String& path, size_t line, size_t column)
+{
+    if (!m_server_connection)
+        return;
+    set_active_client();
+    m_server_connection->post_message(Messages::LanguageServer::FindDeclaration(path, line, column));
+}
+
+void LanguageClient::declaration_found(const String& file, size_t line, size_t column)
+{
+    if (!on_declaration_found) {
+        dbgln("on_declaration_found callback is not set");
+        return;
+    }
+    dbgln("calling on_declaration_found");
+    on_declaration_found(file, line, column);
 }
 
 }

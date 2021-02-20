@@ -128,13 +128,32 @@ void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& me
 
 void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMode& message)
 {
-#ifdef DEBUG_CPP_LANGUAGE_SERVER
+#ifdef CPP_LANGUAGE_SERVER_DEBUG
     dbgln("SetAutoCompleteMode: {}", message.mode());
 #endif
     if (message.mode() == "Parser")
         m_autocomplete_engine = make<ParserAutoComplete>(m_filedb);
     else
         m_autocomplete_engine = make<LexerAutoComplete>(m_filedb);
+}
+
+void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& message)
+{
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.file_name(), message.line(), message.column());
+    auto document = m_filedb.get(message.file_name());
+    if (!document) {
+        dbgln("file {} has not been opened", message.file_name());
+        return;
+    }
+
+    GUI::TextPosition identifier_position = { (size_t)message.line(), (size_t)message.column() };
+    auto location = m_autocomplete_engine->find_declaration_of(message.file_name(), identifier_position);
+    if (!location.has_value()) {
+        dbgln("could not find declaration");
+        return;
+    }
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
+    post_message(Messages::LanguageClient::DeclarationLocation(location.value().file, location.value().line, location.value().column));
 }
 
 }
