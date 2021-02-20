@@ -210,15 +210,29 @@ private:
     // SD - Scroll Down (called "Pan Up" in VT510)
     void SD(const ParamVector&);
 
+    // IL - Insert Line
+    void IL(const ParamVector&);
+
+    // DCH - Delete Character
+    void DCH(const ParamVector&);
+
+    // DL - Delete Line
+    void DL(const ParamVector&);
+
+    // CHA - Cursor Horizontal Absolute
+    void CHA(const ParamVector&);
+
+    // REP - Repeat
+    void REP(const ParamVector&);
+
+    // VPA - Vertical Line Position Absolute
+    void VPA(const ParamVector&);
+
+    // ECH - Erase Character
+    void ECH(const ParamVector&);
+
     // FIXME: Find the right names for these.
-    void escape$t(const ParamVector&);
-    void escape$L(const ParamVector&);
-    void escape$M(const ParamVector&);
-    void escape$P(const ParamVector&);
-    void escape$G(const ParamVector&);
-    void escape$X(const ParamVector&);
-    void escape$b(const ParamVector&);
-    void escape$d(const ParamVector&);
+    void XTERM_WM(const ParamVector&);
 
     TerminalClient& m_client;
 
