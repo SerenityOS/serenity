@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGUI/ScrollBar.h>
 
 namespace GUI {
 
@@ -91,10 +92,31 @@ protected:
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
 
 private:
-    void update_scrollbar_ranges();
+    class ScrollableWidgetScrollBar final : public ScrollBar {
+        C_OBJECT(ScrollableWidgetScrollBar);
 
-    RefPtr<ScrollBar> m_vertical_scrollbar;
-    RefPtr<ScrollBar> m_horizontal_scrollbar;
+    protected:
+        explicit ScrollableWidgetScrollBar(ScrollableWidget& owner, Gfx::Orientation orientation)
+            : ScrollBar(orientation)
+            , m_owner(owner)
+        {
+        }
+
+        virtual void mousewheel_event(MouseEvent& event) override
+        {
+            m_owner.handle_wheel_event(event, *this);
+        }
+
+    private:
+        ScrollableWidget& m_owner;
+    };
+    friend class ScrollableWidgetScrollBar;
+
+    void update_scrollbar_ranges();
+    void handle_wheel_event(MouseEvent&, Widget&);
+
+    RefPtr<ScrollableWidgetScrollBar> m_vertical_scrollbar;
+    RefPtr<ScrollableWidgetScrollBar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
     Gfx::IntSize m_content_size;
     Gfx::IntSize m_size_occupied_by_fixed_elements;
