@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
@@ -27,22 +26,32 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <LibWeb/Forward.h>
+#include <AK/URL.h>
+#include <LibWeb/CSS/CSSRule.h>
 
-namespace Web {
+namespace Web::CSS {
 
-void dump_tree(StringBuilder&, const DOM::Node&);
-void dump_tree(const DOM::Node&);
-void dump_tree(StringBuilder&, const Layout::Node&, bool show_box_model = false, bool show_specified_style = false, bool colorize = false);
-void dump_tree(const Layout::Node&, bool show_box_model = false, bool show_specified_style = false);
-void dump_sheet(StringBuilder&, const CSS::StyleSheet&);
-void dump_sheet(const CSS::StyleSheet&);
-void dump_rule(StringBuilder&, const CSS::CSSRule&);
-void dump_rule(const CSS::CSSRule&);
-void dump_style_rule(StringBuilder&, const CSS::StyleRule&);
-void dump_import_rule(StringBuilder&, const CSS::CSSImportRule&);
-void dump_selector(StringBuilder&, const CSS::Selector&);
-void dump_selector(const CSS::Selector&);
+class CSSImportRule : public CSSRule {
+    AK_MAKE_NONCOPYABLE(CSSImportRule);
+    AK_MAKE_NONMOVABLE(CSSImportRule);
+
+public:
+    static NonnullRefPtr<CSSImportRule> create(URL url)
+    {
+        return adopt(*new CSSImportRule(move(url)));
+    }
+
+    ~CSSImportRule();
+
+    const URL& url() const { return m_url; }
+
+    virtual StringView class_name() const { return "CSSImportRule"; };
+    virtual Type type() const { return Type::Import; };
+
+private:
+    CSSImportRule(URL);
+
+    URL m_url;
+};
 
 }

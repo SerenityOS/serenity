@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/String.h>
 #include <LibWeb/CSS/StyleSheet.h>
 
 namespace Web::CSS {
@@ -37,6 +38,8 @@ public:
     explicit ParsingContext(const DOM::ParentNode&);
 
     bool in_quirks_mode() const;
+
+    URL complete_url(const String&) const;
 
 private:
     const DOM::Document* m_document { nullptr };
