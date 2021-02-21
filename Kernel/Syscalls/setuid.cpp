@@ -150,7 +150,7 @@ int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
 
     Vector<gid_t> gids;
     gids.resize(count);
-    if (!copy_from_user(gids.data(), user_gids.unsafe_userspace_ptr(), sizeof(gid_t) * count))
+    if (!copy_n_from_user(gids.data(), user_gids, count))
         return -EFAULT;
 
     HashTable<gid_t> unique_extra_gids;
