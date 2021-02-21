@@ -162,11 +162,6 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     return button;
 }
 
-static bool should_include_window(GUI::WindowType window_type, bool is_frameless)
-{
-    return window_type == GUI::WindowType::Normal && !is_frameless;
-}
-
 void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& identifier)
 {
     if (window.button())
@@ -272,8 +267,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             changed_event.is_active(),
             changed_event.is_minimized());
 #endif
-        if (!should_include_window(changed_event.window_type(), changed_event.is_frameless()))
+        if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
+            if (auto* window = WindowList::the().window(identifier))
+                remove_window_button(*window, false);
             break;
+        }
         auto& window = WindowList::the().ensure_window(identifier);
         window.set_parent_identifier({ changed_event.parent_client_id(), changed_event.parent_window_id() });
         if (!window.is_modal())
