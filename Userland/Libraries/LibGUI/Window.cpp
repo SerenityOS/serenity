@@ -751,7 +751,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
     // Copy whatever was painted from the front to the back.
     Painter painter(m_back_store->bitmap());
     for (auto& dirty_rect : dirty_rects)
-        painter.blit(dirty_rect.location(), m_front_store->bitmap(), dirty_rect);
+        painter.blit(dirty_rect.location(), m_front_store->bitmap(), dirty_rect, 1.0f, false);
 
     m_back_store->bitmap().set_volatile();
 }
