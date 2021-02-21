@@ -137,6 +137,8 @@ public:
 
     void mousemove_event(GUI::MouseEvent& event) override
     {
+        if (m_temp_pos == event.position())
+            return;
         m_temp_pos = event.position();
         m_timer.start();
         if (m_sleeping) {
