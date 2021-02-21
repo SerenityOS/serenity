@@ -29,6 +29,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
@@ -492,6 +493,8 @@ void TerminalWidget::relayout(const Gfx::IntSize& size)
     if (!m_scrollbar)
         return;
 
+    TemporaryChange change(m_in_relayout, true);
+
     auto base_size = compute_base_size();
     int new_columns = (size.width() - base_size.width()) / font().glyph_width('x');
     int new_rows = (size.height() - base_size.height()) / m_line_height;
@@ -953,8 +956,10 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_width = pixel_size.width();
     m_pixel_height = pixel_size.height();
 
-    if (on_terminal_size_change)
-        on_terminal_size_change(Gfx::IntSize { m_pixel_width, m_pixel_height });
+    if (!m_in_relayout) {
+        if (on_terminal_size_change)
+            on_terminal_size_change(Gfx::IntSize { m_pixel_width, m_pixel_height });
+    }
 
     if (m_automatic_size_policy) {
         set_fixed_size(m_pixel_width, m_pixel_height);
