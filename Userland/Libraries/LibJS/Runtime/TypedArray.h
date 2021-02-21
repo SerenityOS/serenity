@@ -50,7 +50,7 @@ public:
     virtual size_t element_size() const = 0;
 
 protected:
-    TypedArrayBase(Object& prototype)
+    explicit TypedArrayBase(Object& prototype)
         : Object(prototype)
     {
     }
@@ -116,7 +116,14 @@ public:
         }
     }
 
-    T* data() const { return reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data()); }
+    Span<const T> data() const
+    {
+        return { reinterpret_cast<const T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+    }
+    Span<T> data()
+    {
+        return { reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+    }
 
     virtual size_t element_size() const override { return sizeof(T); };
 
@@ -127,7 +134,7 @@ protected:
         ASSERT(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(T)));
         m_viewed_array_buffer = ArrayBuffer::create(global_object(), array_length * sizeof(T));
         if (array_length)
-            ASSERT(data() != nullptr);
+            ASSERT(!data().is_null());
         m_array_length = array_length;
         m_byte_length = m_viewed_array_buffer->byte_length();
     }
