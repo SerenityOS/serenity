@@ -138,6 +138,8 @@ off_t FileDescription::seek(off_t offset, int whence)
         new_offset = offset;
         break;
     case SEEK_CUR:
+        if (Checked<off_t>::addition_would_overflow(m_current_offset, offset))
+            return -EOVERFLOW;
         new_offset = m_current_offset + offset;
         break;
     case SEEK_END:
