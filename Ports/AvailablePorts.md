@@ -60,7 +60,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`pkgconf`](pkgconf/)          | pkgconf                                       | 1.7.3             | https://github.com/pkgconf/pkgconf                    |
 | [`printf`](printf/)            | printf (OpenBSD)                              | 6.6               | https://github.com/ibara/libpuffy                     |
 | [`pt2-clone`](pt2-clone/)      | ProTracker 2 clone                            | 1.28              | https://github.com/8bitbubsy/pt2-clone                |
-| [`python3`](python3/)          | Python                                        | 3.9.1             | https://www.python.org/                               |
+| [`python3`](python3/)          | Python                                        | 3.9.2             | https://www.python.org/                               |
 | [`quake`](quake/)              | Quake                                         | 0.65              | https://github.com/SerenityOS/SerenityQuake           |
 | [`rsync`](rsync/)              | rsync                                         | 3.1.3             | https://rsync.samba.org/                              |
 | [`SDL2`](SDL2/)                | Simple DirectMedia Layer (SDL2)               |                   | https://github.com/SerenityOS/SDL                     |

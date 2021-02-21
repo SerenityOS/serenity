@@ -1,5 +1,5 @@
---- Python-3.9.1/Python/getversion.c	2021-01-18 08:31:52.780000000 +0100
-+++ Python-3.9.1/Python/getversion.c	2021-01-18 08:32:14.176848948 +0100
+--- Python-3.9.2/Python/getversion.c	2021-02-21 20:22:44.092438528 +0100
++++ Python-3.9.2/Python/getversion.c	2021-02-21 20:36:51.249477963 +0100
 @@ -9,7 +9,7 @@
  Py_GetVersion(void)
  {
@@ -9,8 +9,8 @@
                    PY_VERSION, Py_GetBuildInfo(), Py_GetCompiler());
      return version;
  }
---- Python-3.9.1/Modules/getbuildinfo.c	2021-01-18 08:54:23.766207240 +0100
-+++ Python-3.9.1/Modules/getbuildinfo.c	2021-01-18 08:54:09.757000000 +0100
+--- Python-3.9.2/Modules/getbuildinfo.c	2021-02-21 20:22:43.945286288 +0100
++++ Python-3.9.2/Modules/getbuildinfo.c	2021-02-21 20:38:09.187987432 +0100
 @@ -43,7 +43,7 @@
      if (!(*gitid))
          gitid = "default";
