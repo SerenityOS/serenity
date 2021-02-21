@@ -9,6 +9,8 @@ interface Document : Node {
     readonly attribute DOMString inputEncoding;
     readonly attribute DOMString contentType;
 
+    readonly attribute Window? defaultView;
+
     Element? getElementById(DOMString id);
     ArrayFromVector getElementsByName(DOMString name);
     ArrayFromVector getElementsByTagName(DOMString tagName);
