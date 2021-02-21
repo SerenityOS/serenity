@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,11 +209,11 @@ public:
 
     ALWAYS_INLINE constexpr T& operator[](size_t index) const
     {
-        return this->m_values[index];
+        return at(index);
     }
     ALWAYS_INLINE constexpr T& operator[](size_t index)
     {
-        return this->m_values[index];
+        return at(index);
     }
 
     ALWAYS_INLINE constexpr Span& operator=(const Span<T>& other)
