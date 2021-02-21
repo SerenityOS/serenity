@@ -390,8 +390,7 @@ void kgettimeofday(timeval& tv)
 
 siginfo_t Process::wait_info()
 {
-    siginfo_t siginfo;
-    memset(&siginfo, 0, sizeof(siginfo));
+    siginfo_t siginfo {};
     siginfo.si_signo = SIGCHLD;
     siginfo.si_pid = pid().value();
     siginfo.si_uid = uid();
