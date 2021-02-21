@@ -1,5 +1,5 @@
---- Python-3.9.1/Modules/posixmodule.h	2021-01-17 20:56:14.590000000 +0100
-+++ Python-3.9.1/Modules/posixmodule.h	2021-01-17 20:56:34.207894812 +0100
+--- Python-3.9.2/Modules/posixmodule.h	2021-02-21 20:22:43.839024851 +0100
++++ Python-3.9.2/Modules/posixmodule.h	2021-02-21 20:28:35.823057995 +0100
 @@ -19,7 +19,8 @@
  #endif /* MS_WINDOWS */
  
