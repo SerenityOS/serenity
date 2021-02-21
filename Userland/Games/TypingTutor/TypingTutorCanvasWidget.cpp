@@ -1,24 +1,24 @@
-﻿/*
- * Copyright (c) 2021, Davide Carella <carelladavide1@gmail.com>
+/*
+ * Copyright (c) 2021, Davide Carella <carelladavide1@gmail.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- *     1. Redistributions of source code must retain the above copyright notice, this
- *        list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- *        2. Redistributions in binary form must reproduce the above copyright notice,
- *        this list of conditions and the following disclaimer in the documentation
- *        and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- *        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- *        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- *        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *        DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- *        FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- *        DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- *                 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -92,21 +92,21 @@ void TypingTutorCanvasWidget::generate_new_wave()
             .value = m_wordlist[random_between(0, m_wordlist.size() - 1)],
         };
 
-        for (size_t j = 0; j < m_wave.size(); ++j) {
-            while (word.value == m_wave[j].value)
+        for (auto& other_word : m_wave) {
+            while (word.value == other_word.value)
                 word.value = m_wordlist[random_between(0, m_wordlist.size() - 1)];
 
-            if (word.y == m_wave[j].y) {
+            if (word.y == other_word.y) {
                 size_t word_width = font().width(word.value);
-                if (word.x + word_width >= m_wave[j].x) {
+                if (word.x + word_width >= other_word.x) {
                     float random_offset = word.x;
-                    word.x = m_wave[j].x - word_width;
+                    word.x = other_word.x - word_width;
                     word.x -= random_offset + 10;
                 }
-
-                if (word.velocity > m_wave[j].velocity)
-                    word.velocity = m_wave[j].velocity;
             }
+
+            if (word.velocity > other_word.velocity)
+                word.velocity = other_word.velocity;
         }
 
         m_wave.append(word);
@@ -158,8 +158,8 @@ void TypingTutorCanvasWidget::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect({ 0, glyph_height, s_width, s_height }, Color::from_rgb(0x2631ad));
 
-    for (size_t i = 0; i < m_wave.size(); ++i)
-        draw_word(m_wave[i], painter);
+    for (auto& word : m_wave)
+        draw_word(word, painter);
 }
 
 void TypingTutorCanvasWidget::draw_word(const Word& word, Gfx::Painter& painter)
