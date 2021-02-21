@@ -1,5 +1,5 @@
---- Python-3.9.1/Python/preconfig.c	2021-01-17 21:03:08.698000000 +0100
-+++ Python-3.9.1/Python/preconfig.c	2021-01-17 21:03:47.828031544 +0100
+--- Python-3.9.2/Python/preconfig.c	2021-02-21 20:22:44.076023521 +0100
++++ Python-3.9.2/Python/preconfig.c	2021-02-21 20:36:10.936698893 +0100
 @@ -790,16 +790,6 @@
  
      preconfig_get_global_vars(config);
