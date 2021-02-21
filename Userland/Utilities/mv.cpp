@@ -24,14 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cp.h"
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -88,11 +86,11 @@ int main(int argc, char** argv)
         rc = rename(old_path, new_path);
         if (rc < 0) {
             if (errno == EXDEV) {
-                bool recursion_allowed = true;
-                bool link = false;
-                bool ok = copy_file_or_directory(old_path, new_path, recursion_allowed, link);
-                if (!ok)
+                auto result = Core::File::copy_file_or_directory(new_path, old_path, Core::File::RecursionMode::Allowed, Core::File::LinkMode::Disallowed, Core::File::AddDuplicateFileMarker::No);
+                if (result.is_error()) {
+                    warnln("mv: could not move '{}': {}", old_path, result.error().error_code);
                     return 1;
+                }
                 rc = unlink(old_path);
                 if (rc < 0)
                     fprintf(stderr, "mv: unlink '%s': %s\n", old_path, strerror(errno));
