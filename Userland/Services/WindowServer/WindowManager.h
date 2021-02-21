@@ -189,7 +189,7 @@ public:
 
     bool update_theme(String theme_path, String theme_name);
 
-    void set_hovered_window(Window*);
+    bool set_hovered_window(Window*);
     void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
@@ -233,6 +233,9 @@ public:
 
     int compositor_icon_scale() const;
     void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
+
+    void reevaluate_hovered_window(Window* = nullptr);
+    Window* hovered_window() const { return m_hovered_window.ptr(); }
 
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
