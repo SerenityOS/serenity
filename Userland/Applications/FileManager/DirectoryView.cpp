@@ -580,8 +580,8 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         if (url_to_copy.path() == new_path)
             continue;
 
-        if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
-            auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
+        if (auto result = Core::File::copy_file_or_directory(new_path, url_to_copy.path()); result.is_error()) {
+            auto error_message = String::formatted("Could not copy {} into {}: {}", url_to_copy.to_string(), new_path, result.error().error_code);
             GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
         } else {
             had_accepted_drop = true;

@@ -33,6 +33,7 @@
 #include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -171,8 +172,8 @@ void do_paste(const String& target_directory, GUI::Window* window)
         }
 
         auto new_path = String::formatted("{}/{}", target_directory, url.basename());
-        if (!FileUtils::copy_file_or_directory(url.path(), new_path)) {
-            auto error_message = String::formatted("Could not paste {}.", url.path());
+        if (auto result = Core::File::copy_file_or_directory(new_path, url.path()); result.is_error()) {
+            auto error_message = String::formatted("Could not paste '{}': {}", url.path(), result.error().error_code);
             GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
         } else if (should_delete_src) {
             FileUtils::delete_path(url.path(), window);
@@ -184,8 +185,8 @@ void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* wind
 {
     auto path = selected_file_paths.first();
     auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath { path }.basename());
-    if (!FileUtils::link_file(path, destination)) {
-        GUI::MessageBox::show(window, "Could not create desktop shortcut", "File Manager",
+    if (auto result = Core::File::link_file(destination, path); result.is_error()) {
+        GUI::MessageBox::show(window, String::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager",
             GUI::MessageBox::Type::Error);
     }
 }
@@ -984,8 +985,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (url_to_copy.path() == new_path)
                 continue;
 
-            if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
-                auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
+            if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
+                auto error_message = String::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, result.error().error_code);
                 GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
                 had_accepted_copy = true;
