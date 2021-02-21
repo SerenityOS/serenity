@@ -67,6 +67,7 @@ RunWindow::RunWindow()
 
     m_path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path");
     m_path_combo_box->set_model(m_path_history_model);
+    m_path_combo_box->set_selected_index(0);
     m_path_combo_box->on_return_pressed = [this] {
         m_ok_button->click();
     };
