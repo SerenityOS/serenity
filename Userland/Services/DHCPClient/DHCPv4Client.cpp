@@ -114,7 +114,7 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
         auto buffer = m_server->receive(sizeof(DHCPv4Packet));
-        dbgln("Received {} bytes", buffer.size());
+        dbgln_if(DHCPV4CLIENT_DEBUG, "Received {} bytes", buffer.size());
         if (buffer.size() < sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1 || buffer.size() > sizeof(DHCPv4Packet)) {
             dbgln("we expected {}-{} bytes, this is a bad packet", sizeof(DHCPv4Packet) - DHCPV4_OPTION_FIELD_MAX_LENGTH + 1, sizeof(DHCPv4Packet));
             return;
