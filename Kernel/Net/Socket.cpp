@@ -134,8 +134,12 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     case SO_TIMESTAMP:
         if (user_value_size != sizeof(int))
             return EINVAL;
-        if (!copy_from_user(&m_timestamp, static_ptr_cast<const int*>(user_value)))
-            return EFAULT;
+        {
+            int timestamp;
+            if (!copy_from_user(&timestamp, static_ptr_cast<const int*>(user_value)))
+                return EFAULT;
+            m_timestamp = timestamp;
+        }
         if (m_timestamp && (domain() != AF_INET || type() == SOCK_STREAM)) {
             // FIXME: Support SO_TIMESTAMP for more protocols?
             m_timestamp = 0;
