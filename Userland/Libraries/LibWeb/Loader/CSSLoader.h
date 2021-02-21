@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,33 @@
 
 #pragma once
 
-#include <AK/URL.h>
-#include <LibWeb/CSS/CSSRule.h>
+#include <AK/Function.h>
+#include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/Loader/Resource.h>
 
-namespace Web::CSS {
+namespace Web {
 
-class CSSImportRule : public CSSRule {
-    AK_MAKE_NONCOPYABLE(CSSImportRule);
-    AK_MAKE_NONMOVABLE(CSSImportRule);
-
+class CSSLoader : public ResourceClient {
 public:
-    static NonnullRefPtr<CSSImportRule> create(URL url)
-    {
-        return adopt(*new CSSImportRule(move(url)));
-    }
+    CSSLoader(DOM::Document& document);
 
-    ~CSSImportRule();
+    void load_from_text(const String&);
+    void load_from_url(const URL&);
 
-    const URL& url() const { return m_url; }
+    void load_next_import_if_needed();
 
-    bool has_import_result() const { return !m_style_sheet.is_null(); }
-    RefPtr<StyleSheet> loaded_style_sheet() { return m_style_sheet; }
-    const RefPtr<StyleSheet> loaded_style_sheet() const { return m_style_sheet; }
-    void set_style_sheet(const RefPtr<StyleSheet>& style_sheet) { m_style_sheet = style_sheet; }
+    RefPtr<CSS::StyleSheet> style_sheet() const { return m_style_sheet; };
 
-    virtual StringView class_name() const { return "CSSImportRule"; };
-    virtual Type type() const { return Type::Import; };
+    Function<void()> on_load;
+    Function<void()> on_fail;
 
 private:
-    CSSImportRule(URL);
+    // ^ResourceClient
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
 
-    URL m_url;
-    RefPtr<StyleSheet> m_style_sheet;
+    RefPtr<CSS::StyleSheet> m_style_sheet;
+    const DOM::Document* m_document;
 };
 
 }

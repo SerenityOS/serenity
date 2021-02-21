@@ -78,6 +78,10 @@
 #cmakedefine01 CSOCKET_DEBUG
 #endif
 
+#ifndef CSS_LOADER_DEBUG
+#cmakedefine01 CSS_LOADER_DEBUG
+#endif
+
 #ifndef CURSOR_TOOL_DEBUG
 #cmakedefine01 CURSOR_TOOL_DEBUG
 #endif
