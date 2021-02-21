@@ -38,15 +38,7 @@ bool ByteBuffer::operator==(const ByteBuffer& other) const
         return false;
 
     // So they both have data, and the same length.
-    // Avoid hitting conditionals in ever iteration.
-    size_t n = size();
-    const u8* this_data = data();
-    const u8* other_data = other.data();
-    for (size_t i = 0; i < n; ++i) {
-        if (this_data[i] != other_data[i])
-            return false;
-    }
-    return true;
+    return !__builtin_memcmp(data(), other.data(), size());
 }
 
 }
