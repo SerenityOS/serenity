@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,12 +28,13 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleDeclaration.h>
 
 namespace Web::CSS {
 
-class StyleRule : public RefCounted<StyleRule> {
+class StyleRule : public CSSRule {
     AK_MAKE_NONCOPYABLE(StyleRule);
     AK_MAKE_NONMOVABLE(StyleRule);
 
@@ -46,6 +48,9 @@ public:
 
     const Vector<Selector>& selectors() const { return m_selectors; }
     const StyleDeclaration& declaration() const { return m_declaration; }
+
+    virtual StringView class_name() const { return "StyleRule"; };
+    virtual Type type() const { return Type::Style; };
 
 private:
     StyleRule(Vector<Selector>&&, NonnullRefPtr<StyleDeclaration>&&);

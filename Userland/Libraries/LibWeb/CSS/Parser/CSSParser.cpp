@@ -25,8 +25,10 @@
  */
 
 #include <AK/HashMap.h>
+#include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <ctype.h>
@@ -853,7 +855,7 @@ public:
 private:
     CSS::ParsingContext m_context;
 
-    NonnullRefPtrVector<CSS::StyleRule> rules;
+    NonnullRefPtrVector<CSS::CSSRule> rules;
 
     struct CurrentRule {
         Vector<CSS::Selector> selectors;

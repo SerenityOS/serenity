@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +29,7 @@
 
 namespace Web::CSS {
 
-StyleSheet::StyleSheet(NonnullRefPtrVector<StyleRule>&& rules)
+StyleSheet::StyleSheet(NonnullRefPtrVector<CSSRule>&& rules)
     : m_rules(move(rules))
 {
 }
