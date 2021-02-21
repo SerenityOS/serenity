@@ -343,7 +343,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
 
         auto dind_block_contents = ByteBuffer::create_uninitialized(block_size());
         if (dind_block_new) {
-            memset(dind_block_contents.data(), 0, dind_block_contents.size());
+            dind_block_contents.zero_fill();
             dind_block_dirty = true;
         } else {
             auto buffer = UserOrKernelBuffer::for_kernel_buffer(dind_block_contents.data());
@@ -370,7 +370,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
 
             auto ind_block_contents = ByteBuffer::create_uninitialized(block_size());
             if (ind_block_new) {
-                memset(ind_block_contents.data(), 0, dind_block_contents.size());
+                ind_block_contents.zero_fill();
                 ind_block_dirty = true;
             } else {
                 auto buffer = UserOrKernelBuffer::for_kernel_buffer(ind_block_contents.data());
