@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cp.h"
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -51,13 +51,21 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
     args_parser.parse(argc, argv);
 
-    auto my_umask = umask(0);
-    umask(my_umask);
-
     for (auto& source : sources) {
-        bool ok = copy_file_or_directory(source, destination, recursion_allowed, link);
-        if (!ok)
+        auto result = Core::File::copy_file_or_directory(
+            destination, source,
+            recursion_allowed ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed,
+            link ? Core::File::LinkMode::Allowed : Core::File::LinkMode::Disallowed,
+            Core::File::AddDuplicateFileMarker::No);
+
+        if (result.is_error()) {
+            if (result.error().tried_recursing)
+                warnln("cp: -R not specified; omitting directory '{}'", source);
+            else
+                warnln("cp: unable to copy '{}': {}", source, result.error().error_code);
             return 1;
+        }
+
         if (verbose)
             printf("'%s' -> '%s'\n", source, destination);
     }
