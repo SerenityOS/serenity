@@ -118,12 +118,14 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
     case FUTEX_REQUEUE:
     case FUTEX_CMP_REQUEUE: {
         if (params.timeout) {
-            timespec ts_stimeout { 0, 0 };
-            if (!copy_from_user(&ts_stimeout, params.timeout))
+            auto timeout_time = copy_time_from_user(params.timeout);
+            if (!timeout_time.has_value())
                 return EFAULT;
             clockid_t clock_id = (params.futex_op & FUTEX_CLOCK_REALTIME) ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             bool is_absolute = cmd != FUTEX_WAIT;
-            timeout = Thread::BlockTimeout(is_absolute, &ts_stimeout, nullptr, clock_id);
+            // FIXME: Should use AK::Time internally
+            timespec timeout_copy = timeout_time->to_timespec();
+            timeout = Thread::BlockTimeout(is_absolute, &timeout_copy, nullptr, clock_id);
         }
         if (cmd == FUTEX_WAIT_BITSET && params.val3 == FUTEX_BITSET_MATCH_ANY)
             cmd = FUTEX_WAIT;
