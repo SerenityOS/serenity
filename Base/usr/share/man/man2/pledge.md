@@ -54,6 +54,7 @@ If the process later attempts to use any system functionality it has previously 
 * `recvfd`: Receive file descriptors over a local socket
 * `ptrace`: The [`ptrace(2)`](ptrace.md) syscall (\*)
 * `prot_exec`: [`mmap(2)`](mmap.md) and [`mprotect(2)`](mprotect.md) with `PROT_EXEC`
+* `map_fixed`: [`mmap(2)`](mmap.md) with `MAP_FIXED` (\*)
 
 Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
 
