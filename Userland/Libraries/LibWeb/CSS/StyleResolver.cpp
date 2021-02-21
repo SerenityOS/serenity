@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +29,7 @@
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -86,7 +88,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
     size_t style_sheet_index = 0;
     for_each_stylesheet([&](auto& sheet) {
         size_t rule_index = 0;
-        for (auto& rule : sheet.rules()) {
+        sheet.for_each_effective_style_rule([&](auto& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
@@ -96,7 +98,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
                 ++selector_index;
             }
             ++rule_index;
-        }
+        });
         ++style_sheet_index;
     });
 
