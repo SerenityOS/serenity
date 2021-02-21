@@ -63,8 +63,8 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        struct sockaddr_in sa;
-        memset(&sa, 0, sizeof sa);
+        struct sockaddr_in sa {
+        };
         sa.sin_family = AF_INET;
         sa.sin_port = htons(port);
         sa.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -133,9 +133,8 @@ int main(int argc, char** argv)
 
         char addr_str[INET_ADDRSTRLEN];
 
-        struct sockaddr_in dst_addr;
-        memset(&dst_addr, 0, sizeof(dst_addr));
-
+        struct sockaddr_in dst_addr {
+        };
         dst_addr.sin_family = AF_INET;
         dst_addr.sin_port = htons(port);
         if (inet_pton(AF_INET, addr, &dst_addr.sin_addr) < 0) {
