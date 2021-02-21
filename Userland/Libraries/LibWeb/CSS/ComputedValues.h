@@ -36,6 +36,7 @@ class InitialValues {
 public:
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
+    static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
     static CSS::Position position() { return CSS::Position::Static; }
@@ -60,6 +61,7 @@ class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
+    CSS::Cursor cursor() const { return m_inherited.cursor; }
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
@@ -102,6 +104,7 @@ public:
 protected:
     struct {
         Color color { InitialValues::color() };
+        CSS::Cursor cursor { InitialValues::cursor() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
@@ -141,6 +144,7 @@ class ImmutableComputedValues final : public ComputedValues {
 class MutableComputedValues final : public ComputedValues {
 public:
     void set_color(const Color& color) { m_inherited.color = color; }
+    void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
