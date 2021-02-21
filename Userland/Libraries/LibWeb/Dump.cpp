@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +28,9 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
@@ -389,16 +392,27 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
     }
 }
 
-void dump_rule(const CSS::StyleRule& rule)
+void dump_rule(const CSS::CSSRule& rule)
 {
     StringBuilder builder;
     dump_rule(builder, rule);
     dbgln("{}", builder.string_view());
 }
 
-void dump_rule(StringBuilder& builder, const CSS::StyleRule& rule)
+void dump_rule(StringBuilder& builder, const CSS::CSSRule& rule)
 {
-    builder.append("Rule:\n");
+    builder.appendff("{}:\n", rule.class_name());
+    switch (rule.type()) {
+    case CSS::CSSRule::Type::Style:
+        dump_style_rule(builder, downcast<const CSS::StyleRule>(rule));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void dump_style_rule(StringBuilder& builder, const CSS::StyleRule& rule)
+{
     for (auto& selector : rule.selectors()) {
         dump_selector(builder, selector);
     }
@@ -417,7 +431,7 @@ void dump_sheet(const CSS::StyleSheet& sheet)
 
 void dump_sheet(StringBuilder& builder, const CSS::StyleSheet& sheet)
 {
-    builder.appendff("StyleSheet{{{}}}: {} rule(s)", &sheet, sheet.rules().size());
+    builder.appendff("StyleSheet{{{}}}: {} rule(s)\n", &sheet, sheet.rules().size());
 
     for (auto& rule : sheet.rules()) {
         dump_rule(builder, rule);
