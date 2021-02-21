@@ -248,7 +248,7 @@ void* kmalloc_impl(size_t size)
 
     void* ptr = g_kmalloc_global->m_heap.allocate(size);
     if (!ptr) {
-        PANIC("kmalloc: Out of memory (requested size: {})");
+        PANIC("kmalloc: Out of memory (requested size: {})", size);
     }
 
     return ptr;
