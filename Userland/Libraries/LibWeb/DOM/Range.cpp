@@ -31,11 +31,27 @@
 
 namespace Web::DOM {
 
-Range::Range(Window& window)
-    : m_start_container(window.document())
-    , m_start_offset(0)
-    , m_end_container(window.document())
-    , m_end_offset(0)
+NonnullRefPtr<Range> Range::create(Window& window)
+{
+    return Range::create(window.document());
+}
+
+NonnullRefPtr<Range> Range::create(Document& document)
+{
+    return adopt(*new Range(document));
+}
+
+NonnullRefPtr<Range> Range::create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
+{
+    return adopt(*new Range(start_container, start_offset, end_container, end_offset));
+}
+NonnullRefPtr<Range> Range::create_with_global_object(Bindings::WindowObject& window)
+{
+    return Range::create(window.impl());
+}
+
+Range::Range(Document& document)
+    : Range(document, 0, document, 0)
 {
 }
 
