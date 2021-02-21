@@ -45,11 +45,11 @@ Print the value of EXPRESSION to standard output.)");
     exit(0);
 }
 
-template<typename... Args>
-[[noreturn]] void fail(Args&&... args)
+template<typename Fmt, typename... Args>
+[[noreturn]] void fail(Fmt&& fmt, Args&&... args)
 {
     warn("ERROR: \e[31m");
-    warnln(args...);
+    warnln(StringView { fmt }, args...);
     warn("\e[0m");
     exit(1);
 }

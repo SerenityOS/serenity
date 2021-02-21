@@ -27,11 +27,12 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/CheckedFormatString.h>
 
 namespace AK {
 
 template<typename... Parameters>
-void warnln(const char* fmtstr, const Parameters&...);
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&...);
 
 }
 
