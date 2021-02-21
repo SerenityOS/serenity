@@ -547,9 +547,7 @@ void Thread::clear_signals()
     m_signal_mask = 0;
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
-
-    Span<SignalActionData> action_data(m_signal_action_data);
-    action_data.fill({});
+    m_signal_action_data.fill({});
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a
@@ -868,7 +866,8 @@ RefPtr<Thread> Thread::clone(Process& process)
     if (thread_or_error.is_error())
         return {};
     auto& clone = thread_or_error.value();
-    memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
+    auto signal_action_data_span = m_signal_action_data.span();
+    signal_action_data_span.copy_to(clone->m_signal_action_data.span());
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_thread_specific_data = m_thread_specific_data;
