@@ -140,47 +140,50 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading gcc"
     fi
 
-    if [ ! -d ${BINUTILS_NAME} ]; then
-        echo "Extracting binutils..."
-        tar -xzf ${BINUTILS_PKG}
-
-        pushd ${BINUTILS_NAME}
-            if [ "$git_patch" = "1" ]; then
-                git init > /dev/null
-                git add . > /dev/null
-                git commit -am "BASE" > /dev/null
-                git apply "$DIR"/Patches/binutils.patch > /dev/null
-            else
-                patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
-            fi
-        popd
-    else
-        echo "Skipped extracting binutils"
+    if [ -d ${BINUTILS_NAME} ]; then
+        rm -rf "${BINUTILS_NAME}"
+        rm -rf "$DIR/Build/$ARCH/$BINUTILS_NAME"
     fi
+    echo "Extracting binutils..."
+    tar -xzf ${BINUTILS_PKG}
 
-    if [ ! -d $GCC_NAME ]; then
-        echo "Extracting gcc..."
-        tar -xzf $GCC_PKG
-        pushd $GCC_NAME
-            if [ "$git_patch" = "1" ]; then
-                git init > /dev/null
-                git add . > /dev/null
-                git commit -am "BASE" > /dev/null
-                git apply "$DIR"/Patches/gcc.patch > /dev/null
-            else
-                patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
-            fi
-        popd
-    else
-        echo "Skipped extracting gcc"
+    pushd ${BINUTILS_NAME}
+        if [ "$git_patch" = "1" ]; then
+            git init > /dev/null
+            git add . > /dev/null
+            git commit -am "BASE" > /dev/null
+            git apply "$DIR"/Patches/binutils.patch > /dev/null
+        else
+            patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
+        fi
+        $MD5SUM "$DIR"/Patches/binutils.patch > .patch.applied
+    popd
+
+    if [ -d ${GCC_NAME} ]; then
+        # Drop the previously patched extracted dir
+        rm -rf "${GCC_NAME}"
+        # Also drop the build dir
+        rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
     fi
+    echo "Extracting gcc..."
+    tar -xzf $GCC_PKG
+    pushd $GCC_NAME
+        if [ "$git_patch" = "1" ]; then
+            git init > /dev/null
+            git add . > /dev/null
+            git commit -am "BASE" > /dev/null
+            git apply "$DIR"/Patches/gcc.patch > /dev/null
+        else
+            patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
+        fi
+        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
+    popd
 
     if [ "$(uname)" = "Darwin" ]; then
         pushd "gcc-${GCC_VERSION}"
         ./contrib/download_prerequisites
         popd
     fi
-
 popd
 
 
