@@ -84,7 +84,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     }
     if constexpr (THREAD_DEBUG)
         dbgln("Created new thread {}({}:{})", m_process->name(), m_process->pid().value(), m_tid.value());
-    set_default_signal_dispositions();
+
     m_fpu_state = (FPUState*)kmalloc_aligned<16>(sizeof(FPUState));
     reset_fpu_state();
     m_tss.iomapbase = sizeof(TSS32);
@@ -547,6 +547,9 @@ void Thread::clear_signals()
     m_signal_mask = 0;
     m_pending_signals = 0;
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
+
+    Span<SignalActionData> action_data(m_signal_action_data);
+    action_data.fill({});
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a
@@ -840,14 +843,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
 #endif
     return DispatchSignalResult::Continue;
-}
-
-void Thread::set_default_signal_dispositions()
-{
-    // FIXME: Set up all the right default actions. See signal(7).
-    memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress(SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
 }
 
 RegisterState& Thread::get_register_dump_from_stack()
