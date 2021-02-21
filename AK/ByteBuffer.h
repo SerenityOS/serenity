@@ -89,6 +89,8 @@ public:
 
     void grow(size_t size);
 
+    void zero_fill();
+
 private:
     explicit ByteBufferImpl(size_t);
     ByteBufferImpl(const void*, size_t);
@@ -248,6 +250,11 @@ public:
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
 
+    void zero_fill()
+    {
+        m_impl->zero_fill();
+    }
+
     operator Bytes() { return bytes(); }
     operator ReadonlyBytes() const { return bytes(); }
 
@@ -293,6 +300,11 @@ inline void ByteBufferImpl::grow(size_t size)
     m_size = size;
     if (old_data)
         kfree(old_data);
+}
+
+inline void ByteBufferImpl::zero_fill()
+{
+    __builtin_memset(m_data, 0, m_size);
 }
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(size_t size)
