@@ -217,7 +217,7 @@ void AssignmentExpression::dump(size_t indent) const
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
     ASSERT(op_string);
-    outln("{}");
+    outln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
 
