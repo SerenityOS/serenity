@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <AK/OSError.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <LibCore/IODevice.h>
+#include <sys/stat.h>
 
 namespace Core {
 
@@ -46,9 +48,41 @@ public:
     static bool is_directory(const String& filename);
 
     static bool exists(const String& filename);
+    static bool ensure_parent_directories(const String& path);
+
+    enum class RecursionMode {
+        Allowed,
+        Disallowed
+    };
+
+    enum class LinkMode {
+        Allowed,
+        Disallowed
+    };
+
+    enum class AddDuplicateFileMarker {
+        Yes,
+        No,
+    };
+
+    struct CopyError {
+        OSError error_code;
+        bool tried_recursing;
+    };
+
+    static Result<void, CopyError> copy_file(const String& dst_path, const struct stat& src_stat, File& source);
+    static Result<void, CopyError> copy_directory(const String& dst_path, const String& src_path, const struct stat& src_stat, LinkMode = LinkMode::Disallowed);
+    static Result<void, CopyError> copy_file_or_directory(const String& dst_path, const String& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes);
+
     static String real_path_for(const String& filename);
     static String read_link(const StringView& link_path);
-    static bool ensure_parent_directories(const String& path);
+    static Result<void, OSError> link_file(const String& dst_path, const String& src_path);
+
+    struct RemoveError {
+        String file;
+        OSError error_code;
+    };
+    static Result<void, RemoveError> remove(const String& path, RecursionMode, bool force);
 
     virtual bool open(IODevice::OpenMode) override;
 
