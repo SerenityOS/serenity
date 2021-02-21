@@ -1069,6 +1069,8 @@ public:
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     void set_thread_specific(u8* data, size_t len);
+
+    String platform_string() const;
 };
 
 class ScopedCritical {
