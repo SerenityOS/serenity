@@ -50,13 +50,14 @@ KResultOr<int> Process::sys$clock_settime(clockid_t clock_id, Userspace<const ti
     if (!is_superuser())
         return EPERM;
 
-    timespec ts;
-    if (!copy_from_user(&ts, user_ts))
+    auto ts = copy_time_from_user(user_ts);
+    if (!ts.has_value())
         return EFAULT;
 
     switch (clock_id) {
     case CLOCK_REALTIME:
-        TimeManagement::the().set_epoch_time(ts);
+        // FIXME: Should use AK::Time internally
+        TimeManagement::the().set_epoch_time(ts->to_timespec());
         break;
     default:
         return EINVAL;
@@ -72,9 +73,9 @@ KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_na
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    timespec requested_sleep;
-    if (!copy_from_user(&requested_sleep, params.requested_sleep))
-        return EFAULT;
+    Optional<Time> requested_sleep = copy_time_from_user(params.requested_sleep);
+    if (!requested_sleep.has_value())
+        return -EFAULT;
 
     bool is_absolute;
     switch (params.flags) {
@@ -93,10 +94,12 @@ KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_na
 
     bool was_interrupted;
     if (is_absolute) {
-        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
+        // FIXME: Should use AK::Time internally
+        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep->to_timespec()).was_interrupted();
     } else {
         timespec remaining_sleep;
-        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
+        // FIXME: Should use AK::Time internally
+        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep->to_timespec(), &remaining_sleep).was_interrupted();
         if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
             return EFAULT;
     }
@@ -119,16 +122,12 @@ KResultOr<int> Process::sys$adjtime(Userspace<const timeval*> user_delta, Usersp
         REQUIRE_PROMISE(settime);
         if (!is_superuser())
             return EPERM;
-        timeval delta;
-        if (!copy_from_user(&delta, user_delta))
+        auto delta = copy_time_from_user(user_delta);
+        if (!delta.has_value())
             return EFAULT;
 
-        if (delta.tv_usec < 0 || delta.tv_usec >= 1'000'000)
-            return EINVAL;
-
-        timespec delta_ts;
-        timeval_to_timespec(delta, delta_ts);
-        TimeManagement::the().set_remaining_epoch_time_adjustment(delta_ts);
+        // FIXME: Should use AK::Time internally
+        TimeManagement::the().set_remaining_epoch_time_adjustment(delta->to_timespec());
     }
 
     return 0;
