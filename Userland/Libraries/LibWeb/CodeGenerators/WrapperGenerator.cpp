@@ -1093,10 +1093,12 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
+#include <LibWeb/Bindings/RangeWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLElement.h>
