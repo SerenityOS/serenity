@@ -147,8 +147,7 @@ Building the toolchain will also automatically create a `Build/` directory for t
 
 Once the toolchain has been built, go into the `Build/` directory and run the commands. Note that while `ninja` seems to be faster, you can also just use GNU make, by omitting `-G Ninja` and calling `make` instead of `ninja`:
 ```bash
-$ cd ..
-$ cd Build
+$ cd ../Build
 $ cmake .. -G Ninja
 $ ninja
 $ ninja install
