@@ -1531,12 +1531,16 @@ void VT::apply_style(const Style& style, bool is_starting)
 
 void VT::clear_lines(size_t count_above, size_t count_below)
 {
-    // Go down count_below lines.
-    if (count_below > 0)
-        fprintf(stderr, "\033[%dB", (int)count_below);
-    // Then clear lines going upwards.
-    for (size_t i = count_below + count_above; i > 0; --i)
-        fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
+    if (count_below + count_above == 0) {
+        fputs("\033[2K", stderr);
+    } else {
+        // Go down count_below lines.
+        if (count_below > 0)
+            fprintf(stderr, "\033[%dB", (int)count_below);
+        // Then clear lines going upwards.
+        for (size_t i = count_below + count_above; i > 0; --i)
+            fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
+    }
 }
 
 void VT::save_cursor()
