@@ -82,6 +82,7 @@ void kgettimeofday(timeval&);
     __ENUMERATE_PLEDGE_PROMISE(sigaction) \
     __ENUMERATE_PLEDGE_PROMISE(setkeymap) \
     __ENUMERATE_PLEDGE_PROMISE(prot_exec) \
+    __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
     __ENUMERATE_PLEDGE_PROMISE(getkeymap)
 
 enum class Pledge : u32 {
