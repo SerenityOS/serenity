@@ -283,10 +283,10 @@ void TTY::generate_signal(int signal)
         return;
     if (should_flush_on_signal())
         flush_input();
-    dbgln("{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
+    dbgln_if(TTY_DEBUG, "{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-        dbgln("{}: Send signal {} to {}", tty_name(), signal, process);
+        dbgln_if(TTY_DEBUG, "{}: Send signal {} to {}", tty_name(), signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
