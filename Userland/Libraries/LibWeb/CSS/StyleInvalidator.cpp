@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/CSS/StyleInvalidator.h>
+#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 

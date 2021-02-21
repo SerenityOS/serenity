@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
@@ -25,40 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/NonnullRefPtrVector.h>
-#include <AK/TypeCasts.h>
 #include <LibWeb/CSS/CSSRule.h>
-#include <LibWeb/Loader/Resource.h>
 
 namespace Web::CSS {
 
-class StyleSheet : public RefCounted<StyleSheet> {
-public:
-    static NonnullRefPtr<StyleSheet> create(NonnullRefPtrVector<CSSRule>&& rules)
-    {
-        return adopt(*new StyleSheet(move(rules)));
-    }
-
-    ~StyleSheet();
-
-    const NonnullRefPtrVector<CSSRule>& rules() const { return m_rules; }
-    NonnullRefPtrVector<CSSRule>& rules() { return m_rules; }
-
-    template<typename Callback>
-    void for_each_effective_style_rule(Callback callback) const
-    {
-        for (auto& rule : m_rules)
-            if (rule.type() == CSSRule::Type::Style) {
-                callback(downcast<StyleRule>(rule));
-            }
-    }
-
-private:
-    explicit StyleSheet(NonnullRefPtrVector<CSSRule>&&);
-
-    NonnullRefPtrVector<CSSRule> m_rules;
-};
+CSSRule::~CSSRule()
+{
+}
 
 }
