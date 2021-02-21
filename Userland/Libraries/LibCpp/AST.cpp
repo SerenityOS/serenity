@@ -99,12 +99,12 @@ void FunctionDefinition::dump(size_t indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    outln("{");
+    outln("{{");
     for (const auto& statement : m_statements) {
         statement.dump(indent + 1);
     }
     print_indent(indent);
-    outln("}");
+    outln("}}");
 }
 
 NonnullRefPtrVector<Declaration> FunctionDefinition::declarations() const
