@@ -169,7 +169,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         if (nfds_checked.has_overflow())
             return -EFAULT;
         fds_copy.resize(params.nfds);
-        if (!copy_from_user(&fds_copy[0], &params.fds[0], params.nfds * sizeof(pollfd)))
+        if (!copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()))
             return -EFAULT;
     }
 
@@ -242,7 +242,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
             fds_with_revents++;
     }
 
-    if (params.nfds > 0 && !copy_to_user(&params.fds[0], &fds_copy[0], params.nfds * sizeof(pollfd)))
+    if (params.nfds > 0 && !copy_to_user(&params.fds[0], fds_copy.data(), params.nfds * sizeof(pollfd)))
         return -EFAULT;
 
     return fds_with_revents;
