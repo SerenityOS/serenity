@@ -127,8 +127,10 @@ void Compositor::compose()
 
     {
         auto& current_cursor = wm.active_cursor();
-        if (m_current_cursor != &current_cursor)
+        if (m_current_cursor != &current_cursor) {
             change_cursor(&current_cursor);
+            m_invalidated_cursor = m_invalidated_any = true;
+        }
     }
 
     if (!m_invalidated_any) {

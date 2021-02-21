@@ -603,6 +603,8 @@ void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& m
     auto& window = *(*it).value;
     for (auto& rect : message.rects())
         window.invalidate(rect);
+    if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0)
+        WindowManager::the().reevaluate_hovered_window(&window);
 
     WindowSwitcher::the().refresh_if_needed();
 }
@@ -661,7 +663,8 @@ OwnPtr<Messages::WindowServer::SetWindowCursorResponse> ClientConnection::handle
         return {};
     }
     window.set_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
-    Compositor::the().invalidate_cursor();
+    if (&window == WindowManager::the().hovered_window())
+        Compositor::the().invalidate_cursor();
     return make<Messages::WindowServer::SetWindowCursorResponse>();
 }
 
