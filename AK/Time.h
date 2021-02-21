@@ -99,17 +99,6 @@ inline void timespec_sub(const TimespecType& a, const TimespecType& b, TimespecT
     }
 }
 
-template<typename TimespecType, typename TimevalType>
-inline void timespec_sub_timeval(const TimespecType& a, const TimevalType& b, TimespecType& result)
-{
-    result.tv_sec = a.tv_sec - b.tv_sec;
-    result.tv_nsec = a.tv_nsec - b.tv_usec * 1000;
-    if (result.tv_nsec < 0) {
-        --result.tv_sec;
-        result.tv_nsec += 1'000'000'000;
-    }
-}
-
 template<typename TimespecType>
 inline void timespec_add(const TimespecType& a, const TimespecType& b, TimespecType& result)
 {
@@ -192,7 +181,6 @@ using AK::is_leap_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
-using AK::timespec_sub_timeval;
 using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;
