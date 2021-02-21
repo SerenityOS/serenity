@@ -157,6 +157,10 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         REQUIRE_PROMISE(prot_exec);
     }
 
+    if (prot & MAP_FIXED) {
+        REQUIRE_PROMISE(map_fixed);
+    }
+
     if (alignment & ~PAGE_MASK)
         return (void*)-EINVAL;
 
