@@ -45,10 +45,16 @@ private:
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
     virtual void did_change_text() override;
 
     void update_tooltip_if_needed();
+    void setup_actions();
+
+    RefPtr<Menu> m_context_menu;
+    RefPtr<Action> m_open_action;
+    RefPtr<Action> m_copy_action;
 
     bool m_hovered { false };
 };
