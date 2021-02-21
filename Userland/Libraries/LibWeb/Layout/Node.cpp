@@ -268,6 +268,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (overflow_y.has_value())
         computed_values.set_overflow_y(overflow_y.value());
 
+    auto cursor = specified_style.cursor();
+    if (cursor.has_value())
+        computed_values.set_cursor(cursor.value());
+
     auto text_decoration_line = specified_style.text_decoration_line();
     if (text_decoration_line.has_value())
         computed_values.set_text_decoration_line(text_decoration_line.value());
