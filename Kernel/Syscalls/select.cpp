@@ -45,9 +45,11 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        timespec timeout_copy;
-        if (!copy_from_user(&timeout_copy, params.timeout))
+        Optional<Time> timeout_time = copy_time_from_user(params.timeout);
+        if (!timeout_time.has_value())
             return EFAULT;
+        auto timeout_copy = timeout_time->to_timespec();
+        // FIXME: Should use AK::Time internally
         timeout = Thread::BlockTimeout(false, &timeout_copy);
     }
 
@@ -142,7 +144,6 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
 {
     REQUIRE_PROMISE(stdio);
 
-    // FIXME: Return -EINVAL if timeout is invalid.
     Syscall::SC_poll_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
@@ -152,9 +153,11 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        timespec timeout_copy;
-        if (!copy_from_user(&timeout_copy, params.timeout))
+        auto timeout_time = copy_time_from_user(params.timeout);
+        if (!timeout_time.has_value())
             return EFAULT;
+        timespec timeout_copy = timeout_time->to_timespec();
+        // FIXME: Should use AK::Time internally
         timeout = Thread::BlockTimeout(false, &timeout_copy);
     }
 
