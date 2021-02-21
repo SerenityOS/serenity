@@ -544,7 +544,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     m_coredump_metadata.clear();
 
     auto current_thread = Thread::current();
-    current_thread->set_default_signal_dispositions();
     current_thread->clear_signals();
 
     clear_futex_queues_on_exec();

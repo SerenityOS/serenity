@@ -1007,8 +1007,6 @@ public:
 
     FPUState& fpu_state() { return *m_fpu_state; }
 
-    void set_default_signal_dispositions();
-
     KResult make_thread_specific_region(Badge<Process>);
 
     unsigned syscall_count() const { return m_syscall_count; }
@@ -1241,7 +1239,7 @@ private:
     u32 m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
-    SignalActionData m_signal_action_data[32];
+    SignalActionData m_signal_action_data[32] { };
     Blocker* m_blocker { nullptr };
 
 #if LOCK_DEBUG
