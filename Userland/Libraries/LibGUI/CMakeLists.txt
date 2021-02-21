@@ -97,6 +97,10 @@ set(SOURCES
     Widget.cpp
     Window.cpp
     WindowServerConnection.cpp
+    Wizards/WizardDialog.cpp
+    Wizards/AbstractWizardPage.cpp
+    Wizards/CoverWizardPage.cpp
+    Wizards/WizardPage.cpp
 )
 
 set(GENERATED_SOURCES
