@@ -106,14 +106,24 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     case SO_SNDTIMEO:
         if (user_value_size != sizeof(timeval))
             return EINVAL;
-        if (!copy_from_user(&m_send_timeout, static_ptr_cast<const timeval*>(user_value)))
-            return EFAULT;
+        {
+            auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
+            if (!timeout.has_value())
+                return EFAULT;
+            // FIXME: Should use AK::Time internally
+            m_send_timeout = timeout->to_timeval();
+        }
         return KSuccess;
     case SO_RCVTIMEO:
         if (user_value_size != sizeof(timeval))
             return EINVAL;
-        if (!copy_from_user(&m_receive_timeout, static_ptr_cast<const timeval*>(user_value)))
-            return EFAULT;
+        {
+            auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
+            if (!timeout.has_value())
+                return EFAULT;
+            // FIXME: Should use AK::Time internally
+            m_receive_timeout = timeout->to_timeval();
+        }
         return KSuccess;
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
