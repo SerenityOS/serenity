@@ -88,6 +88,7 @@ endpoint WindowServer = 2
     SetWindowHasAlphaChannel(i32 window_id, bool has_alpha_channel) => ()
     MoveWindowToFront(i32 window_id) => ()
     SetFullscreen(i32 window_id, bool fullscreen) => ()
+    SetFrameless(i32 window_id, bool frameless) => ()
     PopupMenu(i32 menu_id, Gfx::IntPoint screen_position) => ()
     DismissMenu(i32 menu_id) => ()
 

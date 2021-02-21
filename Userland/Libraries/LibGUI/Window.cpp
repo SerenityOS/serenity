@@ -871,6 +871,16 @@ void Window::set_fullscreen(bool fullscreen)
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
 
+void Window::set_frameless(bool frameless)
+{
+    if (m_frameless == frameless)
+        return;
+    m_frameless = frameless;
+    if (!is_visible())
+        return;
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetFrameless>(m_window_id, frameless);
+}
+
 bool Window::is_maximized() const
 {
     if (!is_visible())

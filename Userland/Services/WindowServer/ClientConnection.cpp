@@ -286,6 +286,18 @@ OwnPtr<Messages::WindowServer::SetFullscreenResponse> ClientConnection::handle(c
     return make<Messages::WindowServer::SetFullscreenResponse>();
 }
 
+OwnPtr<Messages::WindowServer::SetFramelessResponse> ClientConnection::handle(const Messages::WindowServer::SetFrameless& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetFrameless: Bad window ID");
+        return {};
+    }
+    it->value->set_frameless(message.frameless());
+    WindowManager::the().tell_wm_listeners_window_state_changed(*it->value);
+    return make<Messages::WindowServer::SetFramelessResponse>();
+}
+
 OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowOpacity& message)
 {
     auto it = m_windows.find(message.window_id());
