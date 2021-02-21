@@ -35,8 +35,14 @@ Console::Console(GlobalObject& global_object)
 {
 }
 
+VM& Console::vm()
+{
+    return m_global_object.vm();
+}
+
 Value Console::debug()
 {
+    dbgln("\033[32;1m(js debug)\033[0m {}", vm().join_arguments());
     if (m_client)
         return m_client->debug();
     return js_undefined();
@@ -44,6 +50,7 @@ Value Console::debug()
 
 Value Console::error()
 {
+    dbgln("\033[32;1m(js error)\033[0m {}", vm().join_arguments());
     if (m_client)
         return m_client->error();
     return js_undefined();
@@ -51,6 +58,7 @@ Value Console::error()
 
 Value Console::info()
 {
+    dbgln("\033[32;1m(js info)\033[0m {}", vm().join_arguments());
     if (m_client)
         return m_client->info();
     return js_undefined();
@@ -58,6 +66,7 @@ Value Console::info()
 
 Value Console::log()
 {
+    dbgln("\033[32;1m(js log)\033[0m {}", vm().join_arguments());
     if (m_client)
         return m_client->log();
     return js_undefined();
@@ -65,6 +74,7 @@ Value Console::log()
 
 Value Console::warn()
 {
+    dbgln("\033[32;1m(js warn)\033[0m {}", vm().join_arguments());
     if (m_client)
         return m_client->warn();
     return js_undefined();

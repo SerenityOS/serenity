@@ -47,6 +47,8 @@ public:
     GlobalObject& global_object() { return m_global_object; }
     const GlobalObject& global_object() const { return m_global_object; }
 
+    VM& vm();
+
     HashMap<String, unsigned>& counters() { return m_counters; }
     const HashMap<String, unsigned>& counters() const { return m_counters; }
 
