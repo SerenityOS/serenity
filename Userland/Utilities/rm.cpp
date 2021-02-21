@@ -24,54 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
-#include <dirent.h>
+#include <LibCore/File.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
-
-static int remove(bool recursive, bool force, String path)
-{
-    struct stat path_stat;
-    if (lstat(path.characters(), &path_stat) < 0) {
-        if (!force)
-            perror("lstat");
-        return force ? 0 : 1;
-    }
-
-    if (S_ISDIR(path_stat.st_mode) && recursive) {
-        auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
-        if (di.has_error()) {
-            if (!force)
-                fprintf(stderr, "DirIterator: %s\n", di.error_string());
-            return 1;
-        }
-
-        while (di.has_next()) {
-            int s = remove(true, force, di.next_full_path());
-            if (s != 0 && !force)
-                return s;
-        }
-
-        int s = rmdir(path.characters());
-        if (s < 0 && !force) {
-            perror("rmdir");
-            return 1;
-        }
-    } else {
-        int rc = unlink(path.characters());
-        if (rc < 0 && !force) {
-            perror("unlink");
-            return 1;
-        }
-    }
-    return 0;
-}
 
 int main(int argc, char** argv)
 {
@@ -92,11 +50,17 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(paths, "Path(s) to remove", "path");
     args_parser.parse(argc, argv);
 
-    int rc = 0;
+    bool had_errors = false;
     for (auto& path : paths) {
-        rc |= remove(recursive, force, path);
-        if (verbose && rc == 0)
-            printf("removed '%s'\n", path);
+        auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed, force);
+
+        if (result.is_error()) {
+            warnln("rm: cannot remove '{}': {}", path, result.error().error_code);
+            had_errors = true;
+        }
+
+        if (verbose)
+            outln("removed '{}'", path);
     }
-    return rc;
+    return had_errors ? 1 : 0;
 }
