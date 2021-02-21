@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
@@ -34,7 +34,11 @@ namespace Web::HTML {
 
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_css_loader(document)
 {
+    m_css_loader.on_load = [&] {
+        document.update_style();
+    };
 }
 
 HTMLStyleElement::~HTMLStyleElement()
@@ -48,17 +52,15 @@ void HTMLStyleElement::children_changed()
         if (is<DOM::Text>(child))
             builder.append(downcast<DOM::Text>(child).text_content());
     });
-    m_stylesheet = parse_css(CSS::ParsingContext(document()), builder.to_string());
-    if (m_stylesheet)
-        document().style_sheets().add_sheet(*m_stylesheet);
-    else
-        document().style_sheets().add_sheet(CSS::StyleSheet::create({}));
+    m_css_loader.load_from_text(builder.to_string());
+    document().style_sheets().add_sheet(m_css_loader.style_sheet().release_nonnull());
+
     HTMLElement::children_changed();
 }
 
 void HTMLStyleElement::removed_from(Node& old_parent)
 {
-    if (m_stylesheet) {
+    if (m_css_loader.style_sheet()) {
         // FIXME: Remove the sheet from the document
     }
     return HTMLElement::removed_from(old_parent);

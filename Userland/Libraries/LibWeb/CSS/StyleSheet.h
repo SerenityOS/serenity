@@ -29,6 +29,7 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/TypeCasts.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -52,7 +53,30 @@ public:
         for (auto& rule : m_rules)
             if (rule.type() == CSSRule::Type::Style) {
                 callback(downcast<StyleRule>(rule));
+            } else if (rule.type() == CSSRule::Type::Import) {
+                const CSSImportRule& import_rule = downcast<CSSImportRule>(rule);
+                if (import_rule.has_import_result())
+                    import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             }
+    }
+
+    template<typename Callback>
+    bool for_first_not_loaded_import_rule(Callback callback)
+    {
+        for (auto& rule : m_rules)
+            if (rule.type() == CSSRule::Type::Import) {
+                CSSImportRule& import_rule = downcast<CSSImportRule>(rule);
+                if (!import_rule.has_import_result()) {
+                    callback(import_rule);
+                    return true;
+                }
+
+                if (import_rule.loaded_style_sheet()->for_first_not_loaded_import_rule(callback)) {
+                    return true;
+                }
+            }
+
+        return false;
     }
 
 private:
