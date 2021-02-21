@@ -63,6 +63,32 @@ String copy_string_from_user(Userspace<const char*> user_str, size_t user_str_si
     return copy_string_from_user(user_str.unsafe_userspace_ptr(), user_str_size);
 }
 
+[[nodiscard]] Optional<Time> copy_time_from_user(const timespec* ts_user)
+{
+    timespec ts;
+    if (!copy_from_user(&ts, ts_user, sizeof(timespec))) {
+        return {};
+    }
+    return Time::from_timespec(ts);
+}
+[[nodiscard]] Optional<Time> copy_time_from_user(const timeval* tv_user)
+{
+    timeval tv;
+    if (!copy_from_user(&tv, tv_user, sizeof(timeval))) {
+        return {};
+    }
+    return Time::from_timeval(tv);
+}
+
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<const timeval>(Userspace<const timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<const timespec>(Userspace<const timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+
 Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
