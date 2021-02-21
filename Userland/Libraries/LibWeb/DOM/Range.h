@@ -39,28 +39,22 @@ class Range final
 public:
     using WrapperType = Bindings::RangeWrapper;
 
-    static NonnullRefPtr<Range> create(Window& window)
-    {
-        return adopt(*new Range(window));
-    }
-    static NonnullRefPtr<Range> create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
-    {
-        return adopt(*new Range(start_container, start_offset, end_container, end_offset));
-    }
-    static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject& window)
-    {
-        return Range::create(window.impl());
-    }
+    static NonnullRefPtr<Range> create(Document&);
+    static NonnullRefPtr<Range> create(Window&);
+    static NonnullRefPtr<Range> create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset);
+    static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject&);
 
     // FIXME: There are a ton of methods missing here.
 
     Node* start_container() { return m_start_container; }
-    unsigned start_offset() { return m_start_offset; }
+    const Node* start_container() const { return m_start_container; }
+    unsigned start_offset() const { return m_start_offset; }
 
     Node* end_container() { return m_end_container; }
-    unsigned end_offset() { return m_end_offset; }
+    const Node* end_container() const { return m_end_container; }
+    unsigned end_offset() const { return m_end_offset; }
 
-    bool collapsed()
+    bool collapsed() const
     {
         return start_container() == end_container() && start_offset() == end_offset();
     }
@@ -82,7 +76,8 @@ public:
     NonnullRefPtr<Range> clone_range() const;
 
 private:
-    explicit Range(Window&);
+    explicit Range(Document&);
+
     Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset);
 
     NonnullRefPtr<Node> m_start_container;

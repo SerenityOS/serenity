@@ -42,6 +42,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
@@ -585,6 +586,11 @@ NonnullRefPtr<Text> Document::create_text_node(const String& data)
 NonnullRefPtr<Comment> Document::create_comment(const String& data)
 {
     return adopt(*new Comment(*this, data));
+}
+
+NonnullRefPtr<Range> Document::create_range()
+{
+    return Range::create(*this);
 }
 
 void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)

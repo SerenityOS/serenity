@@ -27,6 +27,7 @@ interface Document : Node {
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);
+    Range createRange();
 
     readonly attribute DOMString compatMode;
     readonly attribute DocumentType? doctype;
