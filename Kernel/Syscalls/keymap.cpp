@@ -44,15 +44,15 @@ int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_p
 
     Keyboard::CharacterMapData character_map_data;
 
-    if (!copy_from_user(character_map_data.map, params.map, CHAR_MAP_SIZE * sizeof(u32)))
+    if (!copy_n_from_user(character_map_data.map, params.map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!copy_from_user(character_map_data.shift_map, params.shift_map, CHAR_MAP_SIZE * sizeof(u32)))
+    if (!copy_n_from_user(character_map_data.shift_map, params.shift_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!copy_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE * sizeof(u32)))
+    if (!copy_n_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32)))
+    if (!copy_n_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE))
         return -EFAULT;
-    if (!copy_from_user(character_map_data.shift_altgr_map, params.shift_altgr_map, CHAR_MAP_SIZE * sizeof(u32)))
+    if (!copy_n_from_user(character_map_data.shift_altgr_map, params.shift_altgr_map, CHAR_MAP_SIZE))
         return -EFAULT;
 
     auto map_name = get_syscall_path_argument(params.map_name);
