@@ -58,7 +58,7 @@ public:
     bool is_maximized() const;
 
     bool is_frameless() const { return m_frameless; }
-    void set_frameless(bool frameless) { m_frameless = frameless; }
+    void set_frameless(bool);
 
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }

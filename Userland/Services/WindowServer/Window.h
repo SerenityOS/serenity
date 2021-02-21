@@ -299,7 +299,7 @@ public:
     bool is_accessory() const;
     bool is_accessory_of(Window&) const;
 
-    void set_frameless(bool frameless) { m_frameless = frameless; }
+    void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
 
     int progress() const { return m_progress; }
