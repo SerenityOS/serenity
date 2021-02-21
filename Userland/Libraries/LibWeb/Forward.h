@@ -29,6 +29,7 @@
 
 namespace Web::CSS {
 class CSSRule;
+class CSSImportRule;
 class Length;
 class Selector;
 class StyleDeclaration;
