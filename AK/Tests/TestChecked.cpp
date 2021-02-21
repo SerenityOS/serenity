@@ -95,6 +95,29 @@ TEST_CASE(operator_arith)
     EXPECT_EQ(b / a, 28);
 }
 
+TEST_CASE(detects_signed_overflow)
+{
+    EXPECT(!(Checked<int>(0x40000000) + Checked<int>(0x3fffffff)).has_overflow());
+    EXPECT((Checked<int>(0x40000000) + Checked<int>(0x40000000)).has_overflow());
+    EXPECT(!(Checked<int>(-0x40000000) + Checked<int>(-0x40000000)).has_overflow());
+    EXPECT((Checked<int>(-0x40000001) + Checked<int>(-0x40000000)).has_overflow());
+
+    EXPECT(!(Checked<int>(0x40000000) - Checked<int>(-0x3fffffff)).has_overflow());
+    EXPECT((Checked<int>(0x40000000) - Checked<int>(-0x40000000)).has_overflow());
+    EXPECT(!(Checked<int>(-0x40000000) - Checked<int>(0x40000000)).has_overflow());
+    EXPECT((Checked<int>(-0x40000000) - Checked<int>(0x40000001)).has_overflow());
+
+    EXPECT(!(Checked<i64>(0x4000000000000000) + Checked<i64>(0x3fffffffffffffff)).has_overflow());
+    EXPECT((Checked<i64>(0x4000000000000000) + Checked<i64>(0x4000000000000000)).has_overflow());
+    EXPECT(!(Checked<i64>(-0x4000000000000000) + Checked<i64>(-0x4000000000000000)).has_overflow());
+    EXPECT((Checked<i64>(-0x4000000000000001) + Checked<i64>(-0x4000000000000000)).has_overflow());
+
+    EXPECT(!(Checked<i64>(0x4000000000000000) - Checked<i64>(-0x3fffffffffffffff)).has_overflow());
+    EXPECT((Checked<i64>(0x4000000000000000) - Checked<i64>(-0x4000000000000000)).has_overflow());
+    EXPECT(!(Checked<i64>(-0x4000000000000000) - Checked<i64>(0x4000000000000000)).has_overflow());
+    EXPECT((Checked<i64>(-0x4000000000000000) - Checked<i64>(0x4000000000000001)).has_overflow());
+}
+
 TEST_CASE(should_constexpr_default_construct)
 {
     constexpr Checked<int> checked_value {};
