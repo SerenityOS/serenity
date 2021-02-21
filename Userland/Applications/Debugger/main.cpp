@@ -213,8 +213,8 @@ int main(int argc, char** argv)
     }
     g_debug_session = result.release_nonnull();
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
+    struct sigaction sa {
+    };
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
