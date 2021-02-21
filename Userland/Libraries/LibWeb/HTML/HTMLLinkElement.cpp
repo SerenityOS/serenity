@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +36,11 @@ namespace Web::HTML {
 
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_css_loader(document)
 {
+    m_css_loader.on_load = [&] {
+        document.update_style();
+    };
 }
 
 HTMLLinkElement::~HTMLLinkElement()
@@ -46,44 +51,10 @@ void HTMLLinkElement::inserted_into(Node& node)
 {
     HTMLElement::inserted_into(node);
 
-    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate))
-        load_stylesheet(document().complete_url(href()));
-}
-
-void HTMLLinkElement::resource_did_fail()
-{
-}
-
-void HTMLLinkElement::resource_did_load()
-{
-    VERIFY(resource());
-    if (!resource()->has_encoded_data())
-        return;
-
-    dbgln("HTMLLinkElement: Resource did load, looks good! {}", href());
-
-    auto sheet = parse_css(CSS::ParsingContext(document()), resource()->encoded_data());
-    if (!sheet) {
-        dbgln("HTMLLinkElement: Failed to parse stylesheet: {}", href());
-        return;
+    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
+        m_css_loader.load_from_url(document().complete_url(href()));
+        document().style_sheets().add_sheet(m_css_loader.style_sheet().release_nonnull());
     }
-
-    // Transfer the rules from the successfully parsed sheet into the sheet we've already inserted.
-    m_style_sheet->rules() = sheet->rules();
-
-    document().update_style();
-}
-
-void HTMLLinkElement::load_stylesheet(const URL& url)
-{
-    // First insert an empty style sheet in the document sheet list.
-    // There's probably a nicer way to do this, but this ensures that sheets are in document order.
-    m_style_sheet = CSS::StyleSheet::create({});
-    document().style_sheets().add_sheet(*m_style_sheet);
-
-    LoadRequest request;
-    request.set_url(url);
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
 void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value)
