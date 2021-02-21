@@ -500,6 +500,19 @@ void Window::set_visible(bool b)
         Compositor::the().invalidate_screen(frame().render_rect());
 }
 
+void Window::set_frameless(bool frameless)
+{
+    if (m_frameless == frameless)
+        return;
+    auto render_rect_before = frame().render_rect();
+    m_frameless = frameless;
+    if (m_visible) {
+        Compositor::the().invalidate_occlusions();
+        invalidate(true, true);
+        Compositor::the().invalidate_screen(frameless ? render_rect_before : frame().render_rect());
+    }
+}
+
 void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 {
     m_invalidated = true;
