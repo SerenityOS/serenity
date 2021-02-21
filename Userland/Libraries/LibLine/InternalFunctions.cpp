@@ -244,6 +244,9 @@ void Editor::enter_search()
         add_child(*m_search_editor);
 
         m_search_editor->on_display_refresh = [this](Editor& search_editor) {
+            // Remove the search editor prompt before updating ourselves (this avoids artifacts when we move the search editor around).
+            search_editor.cleanup();
+
             StringBuilder builder;
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
             if (!search(builder.build(), false, false)) {
@@ -252,7 +255,13 @@ void Editor::enter_search()
                 m_buffer.clear();
                 m_cursor = 0;
             }
+
             refresh_display();
+
+            // Move the search prompt below ours and tell it to redraw itself.
+            auto prompt_end_line = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
+            search_editor.set_origin(prompt_end_line + 1, 1);
+            search_editor.m_refresh_needed = true;
         };
 
         // Whenever the search editor gets a ^R, cycle between history entries.
