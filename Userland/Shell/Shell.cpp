@@ -1894,16 +1894,16 @@ void Shell::possibly_print_error() const
                 warn("\x1b[31m");
                 size_t length_written_so_far = 0;
                 if (line == (i64)source_position.position->start_line.line_number) {
-                    warn("{:~>{}}", "", 5 + source_position.position->start_line.line_column);
+                    warn(StringView { "{:~>{}}" }, "", 5 + source_position.position->start_line.line_column);
                     length_written_so_far += source_position.position->start_line.line_column;
                 } else {
-                    warn("{:~>{}}", "", 5);
+                    warn(StringView { "{:~>{}}" }, "", 5);
                 }
                 if (line == (i64)source_position.position->end_line.line_number) {
-                    warn("{:^>{}}", "", source_position.position->end_line.line_column - length_written_so_far);
+                    warn(StringView { "{:^>{}}" }, "", source_position.position->end_line.line_column - length_written_so_far);
                     length_written_so_far += source_position.position->start_line.line_column;
                 } else {
-                    warn("{:^>{}}", "", current_line.length() - length_written_so_far);
+                    warn(StringView { "{:^>{}}" }, "", current_line.length() - length_written_so_far);
                 }
                 warnln("\x1b[0m");
             }
