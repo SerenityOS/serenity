@@ -185,6 +185,7 @@ private:
     int m_ptm_fd { -1 };
 
     bool m_has_logical_focus { false };
+    bool m_in_relayout { false };
 
     RefPtr<Core::Notifier> m_notifier;
 
