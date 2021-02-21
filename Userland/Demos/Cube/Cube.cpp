@@ -28,6 +28,8 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -47,9 +49,21 @@ class Cube final : public GUI::Widget {
 public:
     virtual ~Cube() override;
     void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; };
+    void set_show_window_frame(bool);
+    bool show_window_frame() const { return m_show_window_frame; }
+
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
+
+protected:
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
+    {
+        if (on_context_menu_request)
+            on_context_menu_request(event);
+    }
 
 private:
     Cube();
+
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<GUI::Label> m_stats;
 
@@ -59,6 +73,7 @@ private:
     int m_accumulated_time;
     int m_cycles;
     int m_phase;
+    bool m_show_window_frame { true };
 };
 
 Cube::Cube()
@@ -143,7 +158,10 @@ void Cube::timer_event(Core::TimerEvent&)
     }
 
     GUI::Painter painter(*m_bitmap);
-    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, m_bitmap->rect(), Gfx::Color::White, Gfx::Color::Blue);
+    if (m_show_window_frame)
+        painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, m_bitmap->rect(), Gfx::Color::White, Gfx::Color::Blue);
+    else
+        painter.clear_rect(m_bitmap->rect(), Gfx::Color::Transparent);
 
     auto to_point = [](const FloatVector3& v) {
         return Gfx::IntPoint(v.x(), v.y());
@@ -189,6 +207,18 @@ void Cube::timer_event(Core::TimerEvent&)
     m_cycles++;
 }
 
+void Cube::set_show_window_frame(bool show)
+{
+    if (show == m_show_window_frame)
+        return;
+    m_show_window_frame = show;
+    m_stats->set_visible(m_show_window_frame);
+    auto& w = *window();
+    w.set_frameless(!m_show_window_frame);
+    w.set_has_alpha_channel(!m_show_window_frame);
+    w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
+}
+
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
@@ -213,6 +243,8 @@ int main(int argc, char** argv)
     window->set_title("Cube");
     window->set_resizable(false);
     window->resize(WIDTH, HEIGHT);
+    window->set_has_alpha_channel(true);
+    window->set_alpha_hit_threshold(1);
 
     auto& cube = window->set_main_widget<Cube>();
 
@@ -221,10 +253,27 @@ int main(int argc, char** argv)
     time.move_by({ window->width() - time.width(), 0 });
     cube.set_stat_label(time);
 
-    window->show();
-
     auto app_icon = GUI::Icon::default_icon("app-cube");
     window->set_icon(app_icon.bitmap_for_size(16));
+
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("Cube Demo");
+    auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
+        cube.set_show_window_frame(action.is_checked());
+    });
+    show_window_frame_action->set_checked(cube.show_window_frame());
+    app_menu.add_action(move(show_window_frame_action));
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window));
+    app->set_menubar(move(menubar));
+
+    cube.on_context_menu_request = [&](auto& event) {
+        app_menu.popup(event.screen_position());
+    };
+
+    window->show();
 
     return app->exec();
 }
