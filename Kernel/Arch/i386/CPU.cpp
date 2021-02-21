@@ -1013,6 +1013,11 @@ String Processor::features_string() const
     return builder.build();
 }
 
+String Processor::platform_string() const
+{
+    return "i386";
+}
+
 UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
