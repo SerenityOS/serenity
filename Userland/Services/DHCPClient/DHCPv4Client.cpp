@@ -29,6 +29,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Function.h>
+#include <AK/Random.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
@@ -239,7 +240,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 
 void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface, IPv4Address previous)
 {
-    auto transaction_id = rand();
+    auto transaction_id = get_random<u32>();
 
     if constexpr (DHCPV4CLIENT_DEBUG) {
         dbgln("Trying to lease an IP for {} with ID {}", iface.m_ifname, transaction_id);
