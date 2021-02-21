@@ -1043,6 +1043,52 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         clear_resize_candidate();
 }
 
+void WindowManager::reevaluate_hovered_window(Window* updated_window)
+{
+    if (m_dnd_client || m_resize_window || m_move_window || m_cursor_tracking_button || MenuManager::the().has_open_menu())
+        return;
+
+    auto cursor_location = Screen::the().cursor_location();
+    auto* currently_hovered = hovered_window();
+    if (updated_window) {
+        if (!(updated_window == currently_hovered || updated_window->frame().rect().contains(cursor_location) || (currently_hovered && currently_hovered->frame().rect().contains(cursor_location))))
+            return;
+    }
+
+    Window* hovered_window = nullptr;
+    if (auto* fullscreen_window = active_fullscreen_window()) {
+        if (fullscreen_window->hit_test(cursor_location))
+            hovered_window = fullscreen_window;
+    } else {
+        for_each_visible_window_from_front_to_back([&](Window& window) {
+            if (!window.hit_test(cursor_location))
+                return IterationDecision::Continue;
+            hovered_window = &window;
+            return IterationDecision::Break;
+        });
+    }
+
+    if (set_hovered_window(hovered_window)) {
+        if (currently_hovered && m_resize_candidate == currently_hovered)
+            clear_resize_candidate();
+
+        if (hovered_window) {
+            // Send a fake MouseMove event. This allows the new hovering window
+            // to determine which widget we're hovering, and also update the cursor
+            // accordingly. We do this because this re-evaluation of the currently
+            // hovered window wasn't triggered by a mouse move event, but rather
+            // e.g. a hit-test result change due to a transparent window repaint.
+            if (hovered_window->hit_test(cursor_location, false)) {
+                MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->rect().location()), 0, MouseButton::None, 0);
+                hovered_window->event(event);
+            } else if (!hovered_window->is_frameless()) {
+                MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->frame().rect().location()), 0, MouseButton::None, 0);
+                hovered_window->frame().on_mouse_event(event);
+            }
+        }
+    }
+}
+
 void WindowManager::clear_resize_candidate()
 {
     if (m_resize_candidate)
@@ -1315,10 +1361,10 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     Compositor::the().invalidate_occlusions();
 }
 
-void WindowManager::set_hovered_window(Window* window)
+bool WindowManager::set_hovered_window(Window* window)
 {
     if (m_hovered_window == window)
-        return;
+        return false;
 
     if (m_hovered_window)
         Core::EventLoop::current().post_event(*m_hovered_window, make<Event>(Event::WindowLeft));
@@ -1327,6 +1373,7 @@ void WindowManager::set_hovered_window(Window* window)
 
     if (m_hovered_window)
         Core::EventLoop::current().post_event(*m_hovered_window, make<Event>(Event::WindowEntered));
+    return true;
 }
 
 const ClientConnection* WindowManager::active_client() const
