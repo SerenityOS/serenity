@@ -319,6 +319,9 @@ private:
         m_refresh_needed = true;
         m_input_error.clear();
         m_returned_line = String::empty();
+        m_chars_touched_in_the_middle = 0;
+        m_drawn_end_of_line_offset = 0;
+        m_drawn_spans = {};
     }
 
     void refresh_display();

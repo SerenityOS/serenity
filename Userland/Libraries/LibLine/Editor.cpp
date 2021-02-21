@@ -317,6 +317,7 @@ void Editor::clear_line()
     fputs("\033[K", stderr);
     fflush(stderr);
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_cursor = 0;
     m_inline_search_cursor = m_cursor;
 }
@@ -550,6 +551,7 @@ void Editor::interrupted()
     fprintf(stderr, "\n");
     fflush(stderr);
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
     restore();
     m_notifier->set_enabled(false);
@@ -568,6 +570,7 @@ void Editor::really_quit_event_loop()
     fflush(stderr);
     auto string = line();
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
     restore();
 
@@ -697,6 +700,7 @@ void Editor::handle_interrupt_event()
         on_interrupt_handled();
 
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_cursor = 0;
 
     finish();
@@ -973,9 +977,12 @@ void Editor::handle_read_event()
             m_cursor = new_cursor;
             m_inline_search_cursor = new_cursor;
             m_refresh_needed = true;
+            m_chars_touched_in_the_middle++;
 
             for (auto& view : completion_result.insert)
                 insert(view);
+
+            reposition_cursor();
 
             if (completion_result.style_to_apply.has_value()) {
                 // Apply the style of the last suggestion.
@@ -1250,7 +1257,7 @@ void Editor::refresh_display()
 
     // If there have been no changes to previous sections of the line (style or text)
     // just append the new text with the appropriate styles.
-    if (m_cached_prompt_valid && m_chars_touched_in_the_middle == 0 && m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor)) {
+    if (!m_always_refresh && m_cached_prompt_valid && m_chars_touched_in_the_middle == 0 && m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor)) {
         auto initial_style = find_applicable_style(m_drawn_end_of_line_offset);
         VT::apply_style(initial_style);
 

@@ -65,6 +65,7 @@ void Editor::search_forwards()
         }
     } else {
         m_search_offset_state = SearchOffsetState::Unbiased;
+        m_chars_touched_in_the_middle = buffer().size();
         m_cursor = 0;
         m_buffer.clear();
         insert(search_phrase);
@@ -218,6 +219,7 @@ void Editor::transpose_characters()
         swap(m_buffer[m_cursor - 1], m_buffer[m_cursor - 2]);
         // FIXME: Update anchored styles too.
         m_refresh_needed = true;
+        m_chars_touched_in_the_middle += 2;
     }
 }
 
@@ -245,6 +247,8 @@ void Editor::enter_search()
             StringBuilder builder;
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
             if (!search(builder.build(), false, false)) {
+                m_chars_touched_in_the_middle = m_buffer.size();
+                m_refresh_needed = true;
                 m_buffer.clear();
                 m_cursor = 0;
             }
@@ -405,6 +409,7 @@ void Editor::transpose_words()
         m_cursor = cursor;
         // FIXME: Update anchored styles too.
         m_refresh_needed = true;
+        m_chars_touched_in_the_middle += end - start;
     }
 }
 
@@ -428,6 +433,7 @@ void Editor::clear_screen()
     VT::move_absolute(1, 1);
     set_origin(1, 1);
     m_refresh_needed = true;
+    m_cached_prompt_valid = false;
 }
 
 void Editor::insert_last_words()
