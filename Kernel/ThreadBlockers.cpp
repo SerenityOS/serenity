@@ -739,11 +739,10 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
         // more than once!
         do_set_result(process.wait_info());
     } else {
-        siginfo_t siginfo;
-        memset(&siginfo, 0, sizeof(siginfo));
+        siginfo_t siginfo {};
         {
             ScopedSpinLock lock(g_scheduler_lock);
-            // We need to gather the information before we release the sheduler lock!
+            // We need to gather the information before we release the scheduler lock!
             siginfo.si_signo = SIGCHLD;
             siginfo.si_pid = process.pid().value();
             siginfo.si_uid = process.uid();

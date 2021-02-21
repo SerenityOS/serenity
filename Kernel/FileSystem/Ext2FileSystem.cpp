@@ -822,8 +822,7 @@ KResult Ext2FSInode::resize(u64 new_size)
         // FIXME: There are definitely more efficient ways to achieve this.
         size_t bytes_to_clear = new_size - old_size;
         size_t clear_from = old_size;
-        u8 zero_buffer[PAGE_SIZE];
-        memset(zero_buffer, 0, sizeof(zero_buffer));
+        u8 zero_buffer[PAGE_SIZE] {};
         while (bytes_to_clear) {
             auto nwritten = write_bytes(clear_from, min(sizeof(zero_buffer), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr);
             if (nwritten < 0)
@@ -1429,8 +1428,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
 
     struct timeval now;
     kgettimeofday(now);
-    ext2_inode e2inode;
-    memset(&e2inode, 0, sizeof(ext2_inode));
+    ext2_inode e2inode {};
     e2inode.i_mode = mode;
     e2inode.i_uid = uid;
     e2inode.i_gid = gid;
