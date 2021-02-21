@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -68,6 +69,11 @@ ParsingContext::ParsingContext(const DOM::ParentNode& parent_node)
 bool ParsingContext::in_quirks_mode() const
 {
     return m_document ? m_document->in_quirks_mode() : false;
+}
+
+URL ParsingContext::complete_url(const String& addr) const
+{
+    return m_document ? m_document->url().complete_url(addr) : URL::create_with_url_or_path(addr);
 }
 
 }
@@ -664,6 +670,11 @@ public:
         return ch && ch != '!' && ch != ';' && ch != '}';
     }
 
+    bool is_valid_string_quotes_char(char ch) const
+    {
+        return ch == '\'' || ch == '\"';
+    }
+
     struct ValueAndImportant {
         String value;
         bool important { false };
@@ -785,31 +796,8 @@ public:
         }
     }
 
-    void parse_rule()
+    void parse_style_rule()
     {
-        consume_whitespace_or_comments();
-        if (!peek())
-            return;
-
-        // FIXME: We ignore @-rules for now.
-        if (peek() == '@') {
-            while (peek() != '{')
-                consume_one();
-            int level = 0;
-            for (;;) {
-                auto ch = consume_one();
-                if (ch == '{') {
-                    ++level;
-                } else if (ch == '}') {
-                    --level;
-                    if (level == 0)
-                        break;
-                }
-            }
-            consume_whitespace_or_comments();
-            return;
-        }
-
         parse_selector_list();
         if (!consume_specific('{')) {
             PARSE_ERROR();
@@ -820,7 +808,129 @@ public:
             PARSE_ERROR();
             return;
         }
+
         rules.append(CSS::StyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
+    }
+
+    Optional<String> parse_string()
+    {
+        if (!is_valid_string_quotes_char(peek())) {
+            PARSE_ERROR();
+            return {};
+        }
+
+        char end_char = consume_one();
+        buffer.clear();
+        while (peek() && peek() != end_char) {
+            if (peek() == '\\') {
+                consume_specific('\\');
+                if (peek() == 0)
+                    break;
+            }
+            buffer.append(consume_one());
+        }
+
+        String string_value(String::copy(buffer));
+        buffer.clear();
+
+        if (consume_specific(end_char)) {
+            return { string_value };
+        }
+        return {};
+    }
+
+    Optional<String> parse_url()
+    {
+        if (is_valid_string_quotes_char(peek()))
+            return parse_string();
+
+        buffer.clear();
+        while (peek() && peek() != ')')
+            buffer.append(consume_one());
+
+        String url_value(String::copy(buffer));
+        buffer.clear();
+
+        if (peek() == ')')
+            return { url_value };
+        return {};
+    }
+
+    void parse_at_import_rule()
+    {
+        consume_whitespace_or_comments();
+        Optional<String> imported_address;
+        if (is_valid_string_quotes_char(peek())) {
+            imported_address = parse_string();
+        } else if (next_is("url")) {
+            consume_specific('u');
+            consume_specific('r');
+            consume_specific('l');
+
+            consume_whitespace_or_comments();
+
+            if (!consume_specific('('))
+                return;
+            imported_address = parse_url();
+            if (!consume_specific(')'))
+                return;
+        } else {
+            PARSE_ERROR();
+            return;
+        }
+
+        if (imported_address.has_value())
+            rules.append(CSS::CSSImportRule::create(m_context.complete_url(imported_address.value())));
+
+        // FIXME: We ignore possilbe media query list
+        while (peek() && peek() != ';')
+            consume_one();
+
+        consume_specific(';');
+    }
+
+    void parse_at_rule()
+    {
+        HashMap<String, void (CSSParser::*)()> at_rules_parsers({ { "@import", &CSSParser::parse_at_import_rule } });
+
+        for (const auto& rule_parser_pair : at_rules_parsers) {
+            if (next_is(rule_parser_pair.key.characters())) {
+                for (char c : rule_parser_pair.key) {
+                    consume_specific(c);
+                }
+                (this->*(rule_parser_pair.value))();
+                return;
+            }
+        }
+
+        // FIXME: We ignore other @-rules completely for now.
+        while (peek() != 0 && peek() != '{')
+            consume_one();
+        int level = 0;
+        for (;;) {
+            auto ch = consume_one();
+            if (ch == '{') {
+                ++level;
+            } else if (ch == '}') {
+                --level;
+                if (level == 0)
+                    break;
+            }
+        }
+    }
+
+    void parse_rule()
+    {
+        consume_whitespace_or_comments();
+        if (!peek())
+            return;
+
+        if (peek() == '@') {
+            parse_at_rule();
+        } else {
+            parse_style_rule();
+        }
+
         consume_whitespace_or_comments();
     }
 

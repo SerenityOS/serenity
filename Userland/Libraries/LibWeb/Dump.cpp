@@ -28,6 +28,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleRule.h>
@@ -406,9 +407,17 @@ void dump_rule(StringBuilder& builder, const CSS::CSSRule& rule)
     case CSS::CSSRule::Type::Style:
         dump_style_rule(builder, downcast<const CSS::StyleRule>(rule));
         break;
+    case CSS::CSSRule::Type::Import:
+        dump_import_rule(builder, downcast<const CSS::CSSImportRule>(rule));
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+void dump_import_rule(StringBuilder& builder, const CSS::CSSImportRule& rule)
+{
+    builder.appendff("  Document URL: {}\n", rule.url());
 }
 
 void dump_style_rule(StringBuilder& builder, const CSS::StyleRule& rule)

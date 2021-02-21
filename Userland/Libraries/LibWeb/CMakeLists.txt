@@ -9,6 +9,7 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
+    CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
