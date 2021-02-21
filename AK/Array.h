@@ -78,6 +78,14 @@ struct Array {
     constexpr operator Span<const T>() const { return span(); }
     constexpr operator Span<T>() { return span(); }
 
+    constexpr size_t fill(const T& value)
+    {
+        for (size_t idx = 0; idx < Size; ++idx)
+            __data[idx] = value;
+
+        return Size;
+    }
+
     T __data[Size];
 };
 
