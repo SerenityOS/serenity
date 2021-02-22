@@ -50,8 +50,8 @@ void GroupBox::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     Gfx::IntRect frame_rect {
-        0, font().glyph_height() / 2,
-        width(), height() - font().glyph_height() / 2
+        0, (!m_title.is_empty() ? font().glyph_height() / 2 : 0),
+        width(), height() - (!m_title.is_empty() ? font().glyph_height() / 2 : 0)
     };
     Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
 
