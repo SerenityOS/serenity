@@ -1253,7 +1253,7 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     }
 
     IntRect rect { physical_position, { thickness, thickness } };
-    rect.intersect(clip_rect());
+    rect.intersect(clip_rect() * scale());
     fill_physical_rect(rect, color);
 }
 
