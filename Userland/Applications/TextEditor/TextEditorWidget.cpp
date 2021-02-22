@@ -40,9 +40,11 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -60,7 +62,6 @@
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
-#include <string.h>
 
 TextEditorWidget::TextEditorWidget()
 {
@@ -108,26 +109,42 @@ TextEditorWidget::TextEditorWidget()
         }
     };
 
-    m_find_replace_widget = *find_descendant_of_type_named<GUI::Widget>("find_replace_widget");
-
+    m_find_replace_widget = *find_descendant_of_type_named<GUI::GroupBox>("find_replace_widget");
     m_find_widget = *find_descendant_of_type_named<GUI::Widget>("find_widget");
-
     m_replace_widget = *find_descendant_of_type_named<GUI::Widget>("replace_widget");
 
-    m_find_textbox = m_find_widget->add<GUI::TextBox>();
-    m_replace_textbox = m_replace_widget->add<GUI::TextBox>();
+    m_find_textbox = *find_descendant_of_type_named<GUI::TextBox>("find_textbox");
+    m_find_textbox->set_placeholder("Find");
+
+    m_replace_textbox = *find_descendant_of_type_named<GUI::TextBox>("replace_textbox");
+    m_replace_textbox->set_placeholder("Replace");
+
+    m_match_case_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("match_case_checkbox");
+    m_match_case_checkbox->on_checked = [this] {
+        m_match_case = m_match_case_checkbox->is_checked();
+    };
+    m_match_case_checkbox->set_checked(true);
+
+    m_regex_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("regex_checkbox");
+    m_regex_checkbox->on_checked = [this] {
+        m_use_regex = m_regex_checkbox->is_checked();
+    };
+    m_regex_checkbox->set_checked(false);
+
+    m_wrap_around_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("wrap_around_checkbox");
+    m_wrap_around_checkbox->on_checked = [this] {
+        m_should_wrap = m_wrap_around_checkbox->is_checked();
+    };
+    m_wrap_around_checkbox->set_checked(true);
 
     m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
-        if (needle.is_empty()) {
-            dbgln("find_next(\"\")");
+        if (needle.is_empty())
             return;
-        }
-
-        if (m_find_use_regex)
+        if (m_use_regex)
             m_editor->document().update_regex_matches(needle);
 
-        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end(), GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
+        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end(), m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
         dbgln("find_next('{}') returned {}", needle, found_range);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
@@ -139,27 +156,18 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_regex_action = GUI::Action::create("Find regex", { Mod_Ctrl | Mod_Shift, Key_R }, [&](auto&) {
-        m_find_regex_button->set_checked(!m_find_regex_button->is_checked());
-        m_find_use_regex = m_find_regex_button->is_checked();
-    });
-
-    m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
+    m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
-        if (needle.is_empty()) {
-            dbgln("find_prev(\"\")");
+        if (needle.is_empty())
             return;
-        }
+        if (m_use_regex)
+            m_editor->document().update_regex_matches(needle);
 
         auto selection_start = m_editor->normalized_selection().start();
         if (!selection_start.is_valid())
             selection_start = m_editor->normalized_selection().end();
 
-        if (m_find_use_regex)
-            m_editor->document().update_regex_matches(needle);
-
-        auto found_range = m_editor->document().find_previous(needle, selection_start, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
-
+        auto found_range = m_editor->document().find_previous(needle, selection_start, m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
         dbgln("find_prev(\"{}\") returned {}", needle, found_range);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
@@ -171,48 +179,15 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_replace_next_action = GUI::Action::create("Replace next", { Mod_Ctrl, Key_F1 }, [&](auto&) {
-        auto needle = m_find_textbox->text();
-        auto substitute = m_replace_textbox->text();
-
-        if (needle.is_empty())
-            return;
-
-        auto selection_start = m_editor->normalized_selection().start();
-        if (!selection_start.is_valid())
-            selection_start = m_editor->normalized_selection().start();
-
-        if (m_find_use_regex)
-            m_editor->document().update_regex_matches(needle);
-
-        auto found_range = m_editor->document().find_next(needle, selection_start, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
-
-        if (found_range.is_valid()) {
-            m_editor->set_selection(found_range);
-            m_editor->insert_at_cursor_or_replace_selection(substitute);
-        } else {
-            GUI::MessageBox::show(window(),
-                String::formatted("Not found: \"{}\"", needle),
-                "Not found",
-                GUI::MessageBox::Type::Information);
-        }
-    });
-
-    m_replace_previous_action = GUI::Action::create("Replace previous", { Mod_Ctrl | Mod_Shift, Key_F1 }, [&](auto&) {
+    m_replace_action = GUI::Action::create("Replace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
             return;
-
-        auto selection_start = m_editor->normalized_selection().start();
-        if (!selection_start.is_valid())
-            selection_start = m_editor->normalized_selection().start();
-
-        if (m_find_use_regex)
+        if (m_use_regex)
             m_editor->document().update_regex_matches(needle);
 
-        auto found_range = m_editor->document().find_previous(needle, selection_start);
-
+        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().start(), m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
@@ -229,47 +204,42 @@ TextEditorWidget::TextEditorWidget()
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
             return;
-        if (m_find_use_regex)
+        if (m_use_regex)
             m_editor->document().update_regex_matches(needle);
 
-        auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
+        auto found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_use_regex, m_match_case);
         while (found_range.is_valid()) {
             m_editor->set_selection(found_range);
             m_editor->insert_at_cursor_or_replace_selection(substitute);
-            found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_find_use_regex);
+            found_range = m_editor->document().find_next(needle, {}, GUI::TextDocument::SearchShouldWrap::Yes, m_use_regex, m_match_case);
         }
     });
 
     m_find_previous_button = *find_descendant_of_type_named<GUI::Button>("find_previous_button");
     m_find_previous_button->set_action(*m_find_previous_action);
+    m_find_previous_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"));
 
     m_find_next_button = *find_descendant_of_type_named<GUI::Button>("find_next_button");
     m_find_next_button->set_action(*m_find_next_action);
+    m_find_next_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"));
 
     m_find_textbox->on_return_pressed = [this] {
         m_find_next_button->click();
     };
-
-    m_find_regex_button = m_find_widget->add<GUI::Button>(".*");
-    m_find_regex_button->set_fixed_width(20);
-    m_find_regex_button->set_action(*m_find_regex_action);
 
     m_find_textbox->on_escape_pressed = [this] {
         m_find_replace_widget->set_visible(false);
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = *find_descendant_of_type_named<GUI::Button>("replace_previous_button");
-    m_replace_previous_button->set_action(*m_replace_previous_action);
-
-    m_replace_next_button = *find_descendant_of_type_named<GUI::Button>("replace_next_button");
-    m_replace_next_button->set_action(*m_replace_next_action);
+    m_replace_button = *find_descendant_of_type_named<GUI::Button>("replace_button");
+    m_replace_button->set_action(*m_replace_action);
 
     m_replace_all_button = *find_descendant_of_type_named<GUI::Button>("replace_all_button");
     m_replace_all_button->set_action(*m_replace_all_action);
 
     m_replace_textbox->on_return_pressed = [this] {
-        m_replace_next_button->click();
+        m_replace_button->click();
     };
 
     m_replace_textbox->on_escape_pressed = [this] {
@@ -393,10 +363,8 @@ TextEditorWidget::TextEditorWidget()
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_replace_action);
     edit_menu.add_action(*m_find_next_action);
-    edit_menu.add_action(*m_find_regex_action);
     edit_menu.add_action(*m_find_previous_action);
-    edit_menu.add_action(*m_replace_next_action);
-    edit_menu.add_action(*m_replace_previous_action);
+    edit_menu.add_action(*m_replace_action);
     edit_menu.add_action(*m_replace_all_action);
 
     m_no_preview_action = GUI::Action::create_checkable(
