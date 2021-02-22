@@ -46,14 +46,14 @@ public:
     static constexpr u8 s_frame_rate = 60;
     static constexpr u8 s_increase_difficulty_frequency = 60;
 
-    virtual ~TypingTutorCanvasWidget() override;
-
     struct Word {
         float x { 0 };
         int y { 0 };
         float velocity { 0 };
         StringView value;
     };
+
+    virtual ~TypingTutorCanvasWidget() override;
 
     const String& wordlist_path() { return m_wordlist_path; }
     void set_wordlist_path(const String& path);
@@ -68,19 +68,6 @@ public:
     void reset();
 
 private:
-    String m_wordlist_path;
-    bool m_wordlist_loaded;
-
-    Vector<Word> m_wave;
-    Vector<String> m_wordlist;
-    size_t m_frame_count;
-    u8 m_current_wave_size;
-    u8 m_wave_frequency;
-    u8 m_next_wave_countdown;
-    u8 m_max_velocity;
-    size_t m_total_characters_wrote;
-    u8 m_lives;
-
     TypingTutorCanvasWidget();
 
     void load_wordlist();
@@ -90,4 +77,17 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+
+    String m_wordlist_path;
+    bool m_wordlist_loaded;
+    Vector<String> m_wordlist;
+
+    Vector<Word> m_wave;
+    size_t m_frame_count;
+    u8 m_current_wave_size;
+    u8 m_wave_frequency;
+    u8 m_next_wave_countdown;
+    u8 m_max_velocity;
+    size_t m_total_characters_wrote;
+    u8 m_lives;
 };

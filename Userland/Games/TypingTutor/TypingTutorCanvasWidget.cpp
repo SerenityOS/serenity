@@ -33,9 +33,9 @@ static int random_between(int min, int max)
 
 TypingTutorCanvasWidget::TypingTutorCanvasWidget()
 {
-    srand(time(NULL));
+    srand(time(nullptr));
 
-    set_fixed_size({ s_width, s_height });
+    set_fixed_size(s_width, s_height);
 
     set_font(Gfx::FontDatabase::default_bold_fixed_width_font());
 

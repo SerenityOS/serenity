@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     g_canvas = widget->canvas_widget();
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Type Tutor");
+    auto& app_menu = menubar->add_menu("Typing Tutor");
 
     app_menu.add_action(GUI::Action::create("New game", { Mod_Ctrl, Key_N }, [&](auto&) {
         widget->reset();

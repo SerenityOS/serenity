@@ -30,7 +30,7 @@ TypingTutorWidget::TypingTutorWidget()
 {
     set_fill_with_background_color(true);
 
-    set_fixed_size({ TypingTutorCanvasWidget::s_width, TypingTutorCanvasWidget::s_height + 23 });
+    set_fixed_size(TypingTutorCanvasWidget::s_width, TypingTutorCanvasWidget::s_height + 23);
 
     set_layout<GUI::VerticalBoxLayout>();
     m_canvas = add<TypingTutorCanvasWidget>();
@@ -62,16 +62,17 @@ TypingTutorWidget::~TypingTutorWidget()
 
 void TypingTutorWidget::game_over()
 {
-    if (m_canvas->is_game_over()) {
-        stop_timer();
-        auto result = GUI::MessageBox::show(window(), "Game Over! Do you want to restart?", window()->title(), GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-        if (result == GUI::MessageBox::ExecResult::ExecYes) {
-            reset();
-            return;
-        }
+    if (!m_canvas->is_game_over())
+        return;
 
-        window()->close();
+    stop_timer();
+    auto result = GUI::MessageBox::show(window(), "Game Over! Do you want to restart?", window()->title(), GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+    if (result == GUI::MessageBox::ExecResult::ExecYes) {
+        reset();
+        return;
     }
+
+    window()->close();
 }
 
 void TypingTutorWidget::reset()

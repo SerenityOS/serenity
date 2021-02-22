@@ -41,15 +41,15 @@ public:
     void reset();
 
 private:
-    RefPtr<TypingTutorCanvasWidget> m_canvas;
-    RefPtr<GUI::Label> m_cpm_label;
-    RefPtr<GUI::Label> m_score_label;
-    RefPtr<GUI::Label> m_lives_label;
-
     TypingTutorWidget();
     void game_over();
 
     virtual ~TypingTutorWidget() override;
 
     virtual void timer_event(Core::TimerEvent&) override;
+
+    RefPtr<TypingTutorCanvasWidget> m_canvas;
+    RefPtr<GUI::Label> m_cpm_label;
+    RefPtr<GUI::Label> m_score_label;
+    RefPtr<GUI::Label> m_lives_label;
 };
