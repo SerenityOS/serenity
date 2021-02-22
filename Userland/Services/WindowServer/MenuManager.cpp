@@ -97,7 +97,7 @@ void MenuManager::draw()
 
     for_each_active_menubar_menu([&](Menu& menu) {
         Color text_color = palette.window_text();
-        if (is_open(menu)) {
+        if (is_open(menu) && &menu == m_current_menu_bar_menu) {
             painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
             painter.draw_rect(menu.rect_in_menubar(), palette.menu_selection().darkened());
             text_color = palette.menu_selection_text();
@@ -173,7 +173,7 @@ void MenuManager::event(Core::Event& event)
                     else {
                         auto* target_menu = previous_menu(m_current_menu);
                         if (target_menu)
-                            open_menu(*target_menu);
+                            open_menu(*target_menu, true);
                     }
                 }
                 close_everyone_not_in_lineage(*m_current_menu);
@@ -187,7 +187,7 @@ void MenuManager::event(Core::Event& event)
                 else if (m_open_menu_stack.size() <= 1) {
                     auto* target_menu = next_menu(m_current_menu);
                     if (target_menu) {
-                        open_menu(*target_menu);
+                        open_menu(*target_menu, true);
                         close_everyone_not_in_lineage(*target_menu);
                     }
                 }
@@ -294,14 +294,14 @@ void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
         && has_open_menu()
         && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
     bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
-    bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
+    bool should_open_menu = (&menu != m_current_menu || !m_current_menu_bar_menu) && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
     if (is_mousedown_with_left_button)
         m_bar_open = !m_bar_open;
 
     if (should_open_menu && m_bar_open) {
         close_everyone();
-        open_menu(menu);
+        open_menu(menu, true);
         return;
     }
 
@@ -383,17 +383,11 @@ void MenuManager::close_menu_and_descendants(Menu& menu)
     close_menus(menus_to_close);
 }
 
-void MenuManager::toggle_menu(Menu& menu)
+void MenuManager::open_menu(Menu& menu, bool from_menu_bar, bool as_current_menu)
 {
-    if (is_open(menu)) {
-        close_menu_and_descendants(menu);
-        return;
-    }
-    open_menu(menu);
-}
+    if (from_menu_bar)
+        m_current_menu_bar_menu = &menu;
 
-void MenuManager::open_menu(Menu& menu, bool as_current_menu)
-{
     if (is_open(menu)) {
         if (as_current_menu || current_menu() != &menu) {
             // This menu is already open. If requested, or if the current
@@ -405,10 +399,13 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 
     if (!menu.is_empty()) {
         menu.redraw_if_theme_changed();
+        bool should_update_position = from_menu_bar;
         if (!menu.menu_window()) {
-            auto& menu_window = menu.ensure_menu_window();
-            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
+            should_update_position = true;
+            menu.ensure_menu_window();
         }
+        if (should_update_position)
+            menu.menu_window()->move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
         menu.menu_window()->set_visible(true);
     }
 
@@ -428,6 +425,7 @@ void MenuManager::clear_current_menu()
 {
     Menu* previous_current_menu = m_current_menu;
     m_current_menu = nullptr;
+    m_current_menu_bar_menu = nullptr;
     if (previous_current_menu) {
         // When closing the last menu, restore the previous active input window
         auto& wm = WindowManager::the();
