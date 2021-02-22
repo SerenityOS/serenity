@@ -57,8 +57,7 @@ public:
     Menu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(Menu*);
     void clear_current_menu();
-    void open_menu(Menu&, bool as_current_menu = true);
-    void toggle_menu(Menu&);
+    void open_menu(Menu&, bool from_menu_bar, bool as_current_menu = true);
 
     MenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(MenuBar*);
@@ -108,6 +107,7 @@ private:
     RefPtr<Window> m_window;
 
     WeakPtr<Menu> m_current_menu;
+    WeakPtr<Menu> m_current_menu_bar_menu;
     WeakPtr<Window> m_previous_input_window;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
