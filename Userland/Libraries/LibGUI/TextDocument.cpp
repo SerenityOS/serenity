@@ -387,7 +387,7 @@ void TextDocument::update_regex_matches(const StringView& needle)
     }
 }
 
-TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
+TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -450,7 +450,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     do {
         auto ch = code_point_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
-        if (ch == (u32)needle[needle_index]) {
+        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
             if (needle_index == 0)
                 start_of_potential_match = position;
             ++needle_index;
@@ -467,7 +467,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     return {};
 }
 
-TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
+TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -524,6 +524,8 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
 
     TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     position = previous_position_before(position, should_wrap);
+    if (position.line() >= line_count())
+        return {};
     TextPosition original_position = position;
 
     TextPosition end_of_potential_match;
@@ -532,7 +534,7 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     do {
         auto ch = code_point_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
-        if (ch == (u32)needle[needle_index]) {
+        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
             if (needle_index == needle.length() - 1)
                 end_of_potential_match = position;
             if (needle_index == 0)

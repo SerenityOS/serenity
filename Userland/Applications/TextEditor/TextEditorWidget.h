@@ -78,10 +78,8 @@ private:
     RefPtr<GUI::Action> m_vim_emulation_setting_action;
 
     RefPtr<GUI::Action> m_find_next_action;
-    RefPtr<GUI::Action> m_find_regex_action;
     RefPtr<GUI::Action> m_find_previous_action;
-    RefPtr<GUI::Action> m_replace_next_action;
-    RefPtr<GUI::Action> m_replace_previous_action;
+    RefPtr<GUI::Action> m_replace_action;
     RefPtr<GUI::Action> m_replace_all_action;
 
     RefPtr<GUI::Action> m_layout_toolbar_action;
@@ -99,13 +97,14 @@ private:
     RefPtr<GUI::TextBox> m_replace_textbox;
     RefPtr<GUI::Button> m_find_previous_button;
     RefPtr<GUI::Button> m_find_next_button;
-    RefPtr<GUI::Button> m_find_regex_button;
-    RefPtr<GUI::Button> m_replace_previous_button;
-    RefPtr<GUI::Button> m_replace_next_button;
+    RefPtr<GUI::Button> m_replace_button;
     RefPtr<GUI::Button> m_replace_all_button;
     RefPtr<GUI::Widget> m_find_replace_widget;
     RefPtr<GUI::Widget> m_find_widget;
     RefPtr<GUI::Widget> m_replace_widget;
+    RefPtr<GUI::CheckBox> m_regex_checkbox;
+    RefPtr<GUI::CheckBox> m_match_case_checkbox;
+    RefPtr<GUI::CheckBox> m_wrap_around_checkbox;
 
     GUI::ActionGroup m_wrapping_mode_actions;
     RefPtr<GUI::Action> m_no_wrapping_action;
@@ -126,7 +125,9 @@ private:
     bool m_document_dirty { false };
     bool m_document_opening { false };
     bool m_auto_detect_preview_mode { false };
-    bool m_find_use_regex { false };
+    bool m_use_regex { false };
+    bool m_match_case { true };
+    bool m_should_wrap { true };
 
     PreviewMode m_preview_mode { PreviewMode::None };
 };
