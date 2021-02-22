@@ -183,6 +183,11 @@ bool Document::is_child_allowed(const Node& node) const
     }
 }
 
+Element* Document::document_element()
+{
+    return first_child_of_type<Element>();
+}
+
 const Element* Document::document_element() const
 {
     return first_child_of_type<Element>();
@@ -230,13 +235,11 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
         return {};
     }
 
-    auto* html = document_element();
-    if (!html)
+    auto* document_element = this->document_element();
+    if (!document_element)
         return DOM::HierarchyRequestError::create("Missing document element");
 
-    // FIXME: Implement this once there's a non-const first_child_of_type:
-    //        "Otherwise, the body element is null, but there's a document element. Append the new value to the document element."
-    TODO();
+    document_element->append_child(new_body);
     return {};
 }
 
