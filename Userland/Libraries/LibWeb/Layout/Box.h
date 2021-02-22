@@ -52,6 +52,27 @@ public:
     float width() const { return m_size.width(); }
     float height() const { return m_size.height(); }
 
+    Gfx::FloatRect padded_rect() const
+    {
+        Gfx::FloatRect rect;
+        rect.set_x(absolute_x() - box_model().padding.left);
+        rect.set_width(width() + box_model().padding.left + box_model().padding.right);
+        rect.set_y(absolute_y() - box_model().padding.top);
+        rect.set_height(height() + box_model().padding.top + box_model().padding.bottom);
+        return rect;
+    }
+
+    Gfx::FloatRect bordered_rect() const
+    {
+        auto padded_rect = this->padded_rect();
+        Gfx::FloatRect rect;
+        rect.set_x(padded_rect.x() - box_model().border.left);
+        rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
+        rect.set_y(padded_rect.y() - box_model().border.top);
+        rect.set_height(padded_rect.height() + box_model().border.top + box_model().border.bottom);
+        return rect;
+    }
+
     float margin_box_width() const
     {
         auto margin_box = box_model().margin_box();
