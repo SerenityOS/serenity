@@ -90,6 +90,8 @@ private:
     void create_client();
     WebContentClient& client();
 
+    void handle_web_content_process_crash();
+
     URL m_url;
 
     struct ClientState {
