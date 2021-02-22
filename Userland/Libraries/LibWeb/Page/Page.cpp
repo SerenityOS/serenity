@@ -72,6 +72,11 @@ Gfx::Palette Page::palette() const
     return m_client.palette();
 }
 
+bool Page::handle_mousewheel(const Gfx::IntPoint& position, unsigned button, unsigned modifiers, int wheel_delta)
+{
+    return main_frame().event_handler().handle_mousewheel(position, button, modifiers, wheel_delta);
+}
+
 bool Page::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     return main_frame().event_handler().handle_mouseup(position, button, modifiers);

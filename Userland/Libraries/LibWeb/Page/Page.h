@@ -69,6 +69,7 @@ public:
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(const Gfx::IntPoint&, unsigned button, unsigned modifiers, int wheel_delta);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 

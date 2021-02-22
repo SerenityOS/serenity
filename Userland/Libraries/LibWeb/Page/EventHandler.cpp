@@ -73,6 +73,11 @@ Layout::InitialContainingBlockBox* EventHandler::layout_root()
     return m_frame.document()->layout_node();
 }
 
+bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta)
+{
+    return false;
+}
+
 bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
     if (!layout_root())

@@ -166,6 +166,11 @@ void ClientConnection::handle(const Messages::WebContentServer::MouseUp& message
     page().handle_mouseup(message.position(), message.button(), message.modifiers());
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::MouseWheel& message)
+{
+    page().handle_mousewheel(message.position(), message.button(), message.modifiers(), message.wheel_delta());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::KeyDown& message)
 {
     page().handle_keydown((KeyCode)message.key(), message.modifiers(), message.code_point());
