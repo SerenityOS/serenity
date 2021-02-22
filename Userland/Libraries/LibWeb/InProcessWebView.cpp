@@ -296,6 +296,12 @@ void InProcessWebView::mouseup_event(GUI::MouseEvent& event)
     GUI::ScrollableWidget::mouseup_event(event);
 }
 
+void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
+{
+    page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta());
+    GUI::ScrollableWidget::mousewheel_event(event);
+}
+
 void InProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
     bool page_accepted_event = page().handle_keydown(event.key(), event.modifiers(), event.code_point());
