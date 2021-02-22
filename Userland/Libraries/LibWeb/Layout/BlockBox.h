@@ -53,10 +53,17 @@ public:
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
+    const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
+    void set_scroll_offset(const Gfx::FloatPoint&);
+
 private:
     virtual bool is_block_box() const final { return true; }
+    virtual bool wants_mouse_events() const override { return true; }
+    virtual void handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta) override;
 
     bool should_clip_overflow() const;
+
+    Gfx::FloatPoint m_scroll_offset;
 };
 
 template<>

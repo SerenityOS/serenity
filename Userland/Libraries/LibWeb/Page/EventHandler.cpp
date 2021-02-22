@@ -75,6 +75,17 @@ Layout::InitialContainingBlockBox* EventHandler::layout_root()
 
 bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta)
 {
+    if (!layout_root())
+        return false;
+
+    // FIXME: Support wheel events in subframes.
+
+    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+    if (result.layout_node) {
+        result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta);
+        return true;
+    }
+
     return false;
 }
 
