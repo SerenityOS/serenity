@@ -271,6 +271,22 @@
     "inherited": false,
     "initial": "0"
   },
+  "overflow": {
+    "longhands": [
+      "overflow-x",
+      "overflow-y"
+    ],
+    "inherited": false,
+    "initial": "visible"
+  },
+  "overflow-x": {
+    "inherited": false,
+    "initial": "visible"
+  },
+  "overflow-y": {
+    "inherited": false,
+    "initial": "visible"
+  },
   "padding": {
     "longhands": [
       "padding-top",

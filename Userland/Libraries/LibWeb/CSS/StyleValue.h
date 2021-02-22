@@ -142,6 +142,14 @@ enum class ListStyleType {
     Decimal,
 };
 
+enum class Overflow : u8 {
+    Auto,
+    Clip,
+    Hidden,
+    Scroll,
+    Visible,
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
