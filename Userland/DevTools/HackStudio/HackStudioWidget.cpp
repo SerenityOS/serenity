@@ -695,8 +695,8 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
     };
 
     m_project_tree_view->on_activation = [this](auto& index) {
-        auto filename = index.data().as_string();
-        open_file(filename);
+        auto full_path_to_file = m_project->model().full_path(index);
+        open_file(full_path_to_file);
     };
 }
 
