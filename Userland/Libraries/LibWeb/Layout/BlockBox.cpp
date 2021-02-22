@@ -68,6 +68,7 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
         context.painter().add_clip_rect(enclosing_int_rect(padded_rect()));
+        context.painter().translate(-m_scroll_offset.to_type<int>());
     }
 
     for (auto& line_box : m_line_boxes) {
@@ -139,6 +140,21 @@ void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode lay
         line_box = &containing_block.add_line_box();
     }
     line_box->add_fragment(*this, 0, 0, border_box_width(), height());
+}
+
+void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
+{
+    if (m_scroll_offset == offset)
+        return;
+    m_scroll_offset = offset;
+    set_needs_display();
+}
+
+void BlockBox::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
+{
+    auto new_offset = m_scroll_offset;
+    new_offset.move_by(0, wheel_delta);
+    set_scroll_offset(new_offset);
 }
 
 }
