@@ -351,8 +351,10 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
             box.set_width(content_width);
     }
 
-    // FIXME: It's not right to always shrink-wrap the box to the content here.
-    box.set_height(content_height);
+    if (box.computed_values().height().is_undefined_or_auto())
+        box.set_height(content_height);
+    else
+        box.set_height(box.computed_values().height().resolved_or_zero(box, context_box().height()).to_px(box));
 }
 
 void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
