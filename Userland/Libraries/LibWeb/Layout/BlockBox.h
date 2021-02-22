@@ -55,6 +55,8 @@ public:
 
 private:
     virtual bool is_block_box() const final { return true; }
+
+    bool should_clip_overflow() const;
 };
 
 template<>
