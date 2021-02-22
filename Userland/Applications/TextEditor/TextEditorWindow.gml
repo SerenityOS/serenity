@@ -25,14 +25,15 @@
         }
     }
 
-    @GUI::Widget {
+    @GUI::GroupBox {
         name: "find_replace_widget"
         visible: false
         fill_with_background_color: true
-        fixed_height: 48
+        fixed_height: 56
 
         layout: @GUI::VerticalBoxLayout {
-            margins: [2, 2, 2, 4]
+            spacing: 2
+            margins: [5, 5, 5, 5]
         }
 
         @GUI::Widget {
@@ -41,18 +42,33 @@
             fixed_height: 22
 
             layout: @GUI::HorizontalBoxLayout {
+                spacing: 4
             }
 
             @GUI::Button {
                 name: "find_previous_button"
-                text: "Find previous"
-                fixed_width: 150
+                fixed_width: 38
             }
 
             @GUI::Button {
                 name: "find_next_button"
-                text: "Find next"
-                fixed_width: 150
+                fixed_width: 38
+            }
+
+            @GUI::TextBox {
+                name: "find_textbox"
+            }
+
+            @GUI::CheckBox {
+                name: "regex_checkbox"
+                text: "Use RegEx"
+                fixed_width: 80
+            }
+
+            @GUI::CheckBox {
+                name: "match_case_checkbox"
+                text: "Match case"
+                fixed_width: 85
             }
         }
 
@@ -62,24 +78,29 @@
             fixed_height: 22
 
             layout: @GUI::HorizontalBoxLayout {
+                spacing: 4
             }
 
             @GUI::Button {
-                name: "replace_previous_button"
-                text: "Replace previous"
-                fixed_width: 100
+                name: "replace_button"
+                text: "Replace"
+                fixed_width: 80
             }
 
-            @GUI::Button {
-                name: "replace_next_button"
-                text: "Replace next"
-                fixed_width: 100
+            @GUI::TextBox {
+                name: "replace_textbox"
             }
 
             @GUI::Button {
                 name: "replace_all_button"
                 text: "Replace all"
-                fixed_width: 100
+                fixed_width: 80
+            }
+
+            @GUI::CheckBox {
+                name: "wrap_around_checkbox"
+                text: "Wrap around"
+                fixed_width: 85
             }
         }
     }
