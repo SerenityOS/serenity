@@ -195,6 +195,11 @@ void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
     client().post_message(Messages::WebContentServer::MouseMove(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
+void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
+{
+    client().post_message(Messages::WebContentServer::MouseWheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+}
+
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     GUI::ScrollableWidget::theme_change_event(event);

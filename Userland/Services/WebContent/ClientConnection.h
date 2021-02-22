@@ -59,6 +59,7 @@ private:
     virtual void handle(const Messages::WebContentServer::MouseDown&) override;
     virtual void handle(const Messages::WebContentServer::MouseMove&) override;
     virtual void handle(const Messages::WebContentServer::MouseUp&) override;
+    virtual void handle(const Messages::WebContentServer::MouseWheel&) override;
     virtual void handle(const Messages::WebContentServer::KeyDown&) override;
     virtual void handle(const Messages::WebContentServer::AddBackingStore&) override;
     virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
