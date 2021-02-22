@@ -291,7 +291,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
 {
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove
-        && has_open_menu()
+        && has_open_menu() && m_current_menu_bar_menu
         && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
     bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = (&menu != m_current_menu || !m_current_menu_bar_menu) && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
@@ -305,7 +305,7 @@ void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
         return;
     }
 
-    if (!m_bar_open)
+    if (!m_bar_open && m_current_menu_bar_menu)
         close_everyone();
 }
 
