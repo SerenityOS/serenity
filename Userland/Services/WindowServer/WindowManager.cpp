@@ -1178,7 +1178,7 @@ void WindowManager::event(Core::Event& event)
                 if (MenuManager::the().has_open_menu()) {
                     MenuManager::the().close_everyone();
                 } else {
-                    MenuManager::the().open_menu(*MenuManager::the().system_menu());
+                    MenuManager::the().open_menu(*MenuManager::the().system_menu(), true);
                 }
                 return;
             }

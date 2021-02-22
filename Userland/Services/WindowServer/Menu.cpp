@@ -323,7 +323,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     ASSERT(hovered_item());
     auto submenu = hovered_item()->submenu();
     ASSERT(submenu);
-    MenuManager::the().open_menu(*submenu, false);
+    MenuManager::the().open_menu(*submenu, false, false);
     submenu->set_hovered_item(0);
     ASSERT(submenu->hovered_item()->type() != MenuItem::Separator);
 }
@@ -554,7 +554,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    MenuManager::the().open_menu(*this, make_input);
+    MenuManager::the().open_menu(*this, false, make_input);
     WindowManager::the().did_popup_a_menu({});
 }
 
