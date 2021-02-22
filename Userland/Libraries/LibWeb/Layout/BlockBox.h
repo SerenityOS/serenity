@@ -53,6 +53,7 @@ public:
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
+    bool is_scrollable() const;
     const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(const Gfx::FloatPoint&);
 

@@ -321,6 +321,8 @@ void Node::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned,
 void Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned, int wheel_delta)
 {
     if (auto* containing_block = this->containing_block()) {
+        if (!containing_block->is_scrollable())
+            return;
         auto new_offset = containing_block->scroll_offset();
         new_offset.move_by(0, wheel_delta);
         containing_block->set_scroll_offset(new_offset);
