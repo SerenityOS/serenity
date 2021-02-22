@@ -46,6 +46,7 @@ public:
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
+    static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
 struct BorderData {
@@ -82,6 +83,9 @@ public:
     const BorderData& border_top() const { return m_noninherited.border_top; }
     const BorderData& border_right() const { return m_noninherited.border_right; }
     const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
+
+    CSS::Overflow overflow_x() const { return m_noninherited.overflow_x; }
+    CSS::Overflow overflow_y() const { return m_noninherited.overflow_y; }
 
     Color color() const { return m_inherited.color; }
     Color background_color() const { return m_noninherited.background_color; }
@@ -126,6 +130,8 @@ protected:
         BorderData border_bottom;
         Color background_color { InitialValues::background_color() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
+        CSS::Overflow overflow_x { InitialValues::overflow() };
+        CSS::Overflow overflow_y { InitialValues::overflow() };
     } m_noninherited;
 };
 
@@ -153,6 +159,8 @@ public:
     void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
+    void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }
+    void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
     BorderData& border_left() { return m_noninherited.border_left; }

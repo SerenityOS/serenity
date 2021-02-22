@@ -243,6 +243,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Overflow) {
+        style.set_property(CSS::PropertyID::OverflowX, value);
+        style.set_property(CSS::PropertyID::OverflowY, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Border) {
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document);

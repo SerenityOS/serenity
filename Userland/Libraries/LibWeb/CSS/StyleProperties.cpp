@@ -497,4 +497,36 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
     }
 }
 
+Optional<CSS::Overflow> StyleProperties::overflow_x() const
+{
+    return overflow(CSS::PropertyID::OverflowX);
+}
+
+Optional<CSS::Overflow> StyleProperties::overflow_y() const
+{
+    return overflow(CSS::PropertyID::OverflowY);
+}
+
+Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) const
+{
+    auto value = property(property_id);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::Overflow::Auto;
+    case CSS::ValueID::Visible:
+        return CSS::Overflow::Visible;
+    case CSS::ValueID::Hidden:
+        return CSS::Overflow::Hidden;
+    case CSS::ValueID::Clip:
+        return CSS::Overflow::Clip;
+    case CSS::ValueID::Scroll:
+        return CSS::Overflow::Scroll;
+    default:
+        return {};
+    }
+}
+
 }

@@ -70,6 +70,8 @@ public:
     Optional<CSS::TextTransform> text_transform() const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::FlexDirection> flex_direction() const;
+    Optional<CSS::Overflow> overflow_x() const;
+    Optional<CSS::Overflow> overflow_y() const;
 
     const Gfx::Font& font() const
     {
@@ -88,6 +90,7 @@ public:
 
 private:
     HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
+    Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     void load_font() const;
 
