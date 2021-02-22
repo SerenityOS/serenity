@@ -52,31 +52,38 @@ OutOfProcessWebView::~OutOfProcessWebView()
 {
 }
 
+void OutOfProcessWebView::handle_web_content_process_crash()
+{
+    create_client();
+    ASSERT(m_client_state.client);
+
+    // Don't keep a stale backup bitmap around.
+    m_backup_bitmap = nullptr;
+
+    handle_resize();
+    StringBuilder builder;
+    builder.append("<html><head><title>Crashed: ");
+    builder.append(escape_html_entities(m_url.to_string()));
+    builder.append("</title></head><body>");
+    builder.append("<h1>Web page crashed");
+    if (!m_url.host().is_empty()) {
+        builder.appendff(" on {}", escape_html_entities(m_url.host()));
+    }
+    builder.append("</h1>");
+    builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escape_html_entities(m_url.to_string_encoded()), escape_html_entities(m_url.to_string()));
+    builder.append("</body></html>");
+    load_html(builder.to_string(), m_url);
+}
+
 void OutOfProcessWebView::create_client()
 {
     m_client_state = {};
 
     m_client_state.client = WebContentClient::construct(*this);
     m_client_state.client->on_web_content_process_crash = [this] {
-        create_client();
-        ASSERT(m_client_state.client);
-
-        // Don't keep a stale backup bitmap around.
-        m_backup_bitmap = nullptr;
-
-        handle_resize();
-        StringBuilder builder;
-        builder.append("<html><head><title>Crashed: ");
-        builder.append(escape_html_entities(m_url.to_string()));
-        builder.append("</title></head><body>");
-        builder.append("<h1>Web page crashed");
-        if (!m_url.host().is_empty()) {
-            builder.appendff(" on {}", escape_html_entities(m_url.host()));
-        }
-        builder.append("</h1>");
-        builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escape_html_entities(m_url.to_string_encoded()), escape_html_entities(m_url.to_string()));
-        builder.append("</body></html>");
-        load_html(builder.to_string(), m_url);
+        deferred_invoke([this] {
+            handle_web_content_process_crash();
+        });
     };
 
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
