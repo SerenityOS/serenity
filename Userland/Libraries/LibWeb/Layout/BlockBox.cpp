@@ -142,6 +142,12 @@ void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode lay
     line_box->add_fragment(*this, 0, 0, border_box_width(), height());
 }
 
+bool BlockBox::is_scrollable() const
+{
+    // FIXME: Support horizontal scroll as well (overflow-x)
+    return computed_values().overflow_y() == CSS::Overflow::Scroll;
+}
+
 void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
 {
     if (m_scroll_offset == offset)
@@ -152,6 +158,8 @@ void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
 
 void BlockBox::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
 {
+    if (!is_scrollable())
+        return;
     auto new_offset = m_scroll_offset;
     new_offset.move_by(0, wheel_delta);
     set_scroll_offset(new_offset);
