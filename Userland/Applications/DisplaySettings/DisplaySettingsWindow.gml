@@ -73,20 +73,19 @@
         @GUI::Label {
             text: "Display scale:"
             text_alignment: "CenterLeft"
-            fixed_width: 75
+            fixed_width: 95
         }
 
         @GUI::RadioButton {
             name: "scale_1x"
-            text: "100%"
+            text: "1x"
         }
 
         @GUI::RadioButton {
             name: "scale_2x"
-            text: "200%"
+            text: "2x"
         }
     }
-
 
     @GUI::Widget {
         shrink_to_fit: true
@@ -119,19 +118,19 @@
         @GUI::Button {
             name: "ok_button"
             text: "OK"
-            fixed_width: 60
+            fixed_width: 75
         }
 
         @GUI::Button {
             name: "cancel_button"
             text: "Cancel"
-            fixed_width: 60
+            fixed_width: 75
         }
 
         @GUI::Button {
             name: "apply_button"
             text: "Apply"
-            fixed_width: 60
+            fixed_width: 75
         }
     }
 }
