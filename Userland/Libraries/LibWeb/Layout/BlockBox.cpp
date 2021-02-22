@@ -49,6 +49,11 @@ BlockBox::~BlockBox()
 {
 }
 
+bool BlockBox::should_clip_overflow() const
+{
+    return computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
+}
+
 void BlockBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
@@ -59,12 +64,22 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
     if (!children_are_inline())
         return;
 
+    if (should_clip_overflow()) {
+        context.painter().save();
+        // FIXME: Handle overflow-x and overflow-y being different values.
+        context.painter().add_clip_rect(enclosing_int_rect(padded_rect()));
+    }
+
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())
                 context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
             fragment.paint(context, phase);
         }
+    }
+
+    if (should_clip_overflow()) {
+        context.painter().restore();
     }
 
     // FIXME: Merge this loop with the above somehow..
