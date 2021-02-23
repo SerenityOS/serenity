@@ -396,15 +396,13 @@ inline void warnln() { outln(stderr); }
 
 void vdbgln(StringView fmtstr, TypeErasedFormatParams);
 
-template<bool enabled = true, typename... Parameters>
+template<typename... Parameters>
 void dbgln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
 {
-    if constexpr (enabled)
-        vdbgln(fmtstr.view(), VariadicFormatParams { parameters... });
+    vdbgln(fmtstr.view(), VariadicFormatParams { parameters... });
 }
 
-template<bool enabled = true>
-void dbgln() { dbgln<enabled>(""); }
+inline void dbgln() { dbgln(""); }
 
 void set_debug_enabled(bool);
 
@@ -488,4 +486,8 @@ using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
 
-#define dbgln_if(flag, fmt, ...) dbgln<flag>(fmt, ##__VA_ARGS__)
+#define dbgln_if(flag, fmt, ...)       \
+    do {                               \
+        if constexpr (flag)            \
+            dbgln(fmt, ##__VA_ARGS__); \
+    } while (0)

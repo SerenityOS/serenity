@@ -714,7 +714,7 @@ void Parser::error(StringView message)
             m_tokens[m_state.token_index].m_start.column);
     }
     m_errors.append(formatted_message);
-    dbgln<CPP_DEBUG>("{}", formatted_message);
+    dbgln_if(CPP_DEBUG, "{}", formatted_message);
 }
 
 bool Parser::match_expression()
