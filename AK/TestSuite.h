@@ -45,13 +45,6 @@ using AK::warnln;
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: VERIFY({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
 
-#undef RELEASE_ASSERT
-#define RELEASE_ASSERT(x)                                                                                    \
-    do {                                                                                                     \
-        if (!(x))                                                                                            \
-            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: RELEASE_ASSERT({}) failed", __FILE__, __LINE__, #x); \
-    } while (false)
-
 #undef VERIFY_NOT_REACHED
 #define VERIFY_NOT_REACHED()                                                                           \
     do {                                                                                               \

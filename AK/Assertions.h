@@ -33,7 +33,6 @@
 #    ifndef __serenity__
 #        define VERIFY assert
 #        define VERIFY_NOT_REACHED() assert(false)
-#        define RELEASE_ASSERT assert
 #        define TODO VERIFY_NOT_REACHED
 #    endif
 #endif
