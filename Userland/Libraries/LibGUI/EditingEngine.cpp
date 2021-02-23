@@ -302,7 +302,6 @@ void EditingEngine::move_one_down(const KeyEvent& event)
         }
         TextPosition new_cursor;
         if (m_editor->is_wrapping_enabled()) {
-            new_cursor = m_editor->text_position_at_content_position(m_editor->cursor_content_rect().location().translated(0, m_editor->line_height()));
             auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_below);
         } else {
