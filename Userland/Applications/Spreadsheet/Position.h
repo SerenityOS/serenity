@@ -32,9 +32,25 @@
 
 namespace Spreadsheet {
 
+class Sheet;
+
 struct Position {
-    String column;
-    size_t row { 0 };
+    Position() = default;
+
+    Position(size_t column, size_t row)
+        : column(column)
+        , row(row)
+        , m_hash(pair_int_hash(column, row))
+    {
+    }
+
+    ALWAYS_INLINE u32 hash() const
+    {
+        if (m_hash == 0)
+            return m_hash = int_hash(column * 65537 + row);
+
+        return m_hash;
+    }
 
     bool operator==(const Position& other) const
     {
@@ -46,15 +62,13 @@ struct Position {
         return !(other == *this);
     }
 
-    URL to_url() const
-    {
-        URL url;
-        url.set_protocol("spreadsheet");
-        url.set_host("cell");
-        url.set_path(String::formatted("/{}", getpid()));
-        url.set_fragment(String::formatted("{}{}", column, row));
-        return url;
-    }
+    URL to_url(const Sheet& sheet) const;
+
+    size_t column { 0 };
+    size_t row { 0 };
+
+private:
+    mutable u32 m_hash { 0 };
 };
 
 }

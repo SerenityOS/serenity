@@ -57,7 +57,7 @@ void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
         return StringModelEditingDelegate::set_value(value);
 
     m_has_set_initial_value = true;
-    const auto option = m_sheet.at({ m_sheet.column(index().column()), (size_t)index().row() });
+    const auto option = m_sheet.at({ (size_t)index().column(), (size_t)index().row() });
     if (option)
         return StringModelEditingDelegate::set_value(option->source());
 
@@ -198,7 +198,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->on_selection_change = [&] {
         m_sheet->selected_cells().clear();
         for (auto& index : m_table_view->selection().indexes()) {
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            Position position { (size_t)index.column(), (size_t)index.row() };
             m_sheet->selected_cells().set(position);
         }
 
@@ -208,7 +208,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
         for (auto& selection : m_table_view->selection().indexes())
-            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
+            selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         if (on_selection_changed) {
             on_selection_changed(move(selected_positions));
@@ -229,13 +229,13 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_cell_range_context_menu->add_action(GUI::Action::create("Type and Formatting...", [this](auto&) {
         Vector<Position> positions;
         for (auto& index : m_table_view->selection().indexes()) {
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }
 
         if (positions.is_empty()) {
             auto& index = m_table_view->cursor_index();
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }
 
@@ -270,7 +270,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             }
 
             // Drop always has a single target.
-            Position target { m_sheet->column(index.column()), (size_t)index.row() };
+            Position target { (size_t)index.column(), (size_t)index.row() };
             target_positions.append(move(target));
 
             if (source_positions.is_empty())
@@ -283,7 +283,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         if (event.mime_data().has_text()) {
-            auto* target_cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+            auto* target_cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
             VERIFY(target_cell);
 
             target_cell->set_data(event.text());
@@ -304,7 +304,7 @@ void SpreadsheetView::show_event(GUI::ShowEvent&)
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
         for (auto& selection : m_table_view->selection().indexes())
-            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
+            selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         on_selection_changed(move(selected_positions));
     }
