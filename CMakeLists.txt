@@ -17,13 +17,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
 
 # Central location for all custom options used in the Serenity build.
-option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" FALSE)
-option(ENABLE_KERNEL_ADDRESS_SANITIZER "Enable kernel address sanitizer testing in gcc/clang" FALSE)
-option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
-option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
-option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" FALSE)
-option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" FALSE)
-option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" FALSE)
+option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" OFF)
+option(ENABLE_KERNEL_ADDRESS_SANITIZER "Enable kernel address sanitizer testing in gcc/clang" OFF)
+option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" OFF)
+option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" OFF)
+option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" OFF)
+option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" OFF)
+option(ENABLE_COMPILETIME_FORMAT_CHECK "Disable compiletime format string checks" ON)
+option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
@@ -164,8 +165,8 @@ add_compile_definitions(DEBUG SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
 
-if (DBGLN_NO_COMPILETIME_FORMAT_CHECK)
-    add_compile_definitions(DBGLN_NO_COMPILETIME_FORMAT_CHECK)
+if (ENABLE_COMPILETIME_FORMAT_CHECK)
+    add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
 endif()
 
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
