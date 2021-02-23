@@ -310,13 +310,10 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 h
     for (hash1 &= ~1;; ++current_sym) {
         hash2 = *(current_chain++);
         auto symbol = m_dynamic.symbol(current_sym);
-        if ((hash1 == (hash2 & ~1)) && name == symbol.name()) {
-            dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
+        if ((hash1 == (hash2 & ~1)) && name == symbol.raw_name())
             return symbol;
-        }
-        if (hash2 & 1) {
+        if (hash2 & 1)
             break;
-        }
     }
 
     return {};
@@ -325,6 +322,11 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 h
 StringView DynamicObject::symbol_string_table_string(Elf32_Word index) const
 {
     return StringView { (const char*)base_address().offset(m_string_table_offset + index).as_ptr() };
+}
+
+const char* DynamicObject::raw_symbol_string_table_string(Elf32_Word index) const
+{
+    return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
 }
 
 DynamicObject::InitializationFunction DynamicObject::init_section_function() const

@@ -75,6 +75,7 @@ public:
         }
 
         StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
+        const char* raw_name() const { return m_dynamic.raw_symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
@@ -264,6 +265,7 @@ private:
     explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     StringView symbol_string_table_string(Elf32_Word) const;
+    const char* raw_symbol_string_table_string(Elf32_Word) const;
     void parse();
 
     template<typename F>
