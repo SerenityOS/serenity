@@ -144,11 +144,15 @@ public:
             return !cstring;
         if (!cstring)
             return false;
-        size_t other_length = __builtin_strlen(cstring);
-        if (m_length != other_length)
-            return false;
-        return !__builtin_memcmp(m_characters, cstring, m_length);
+        // NOTE: `m_characters` is not guaranteed to be null-terminated, but `cstring` is.
+        const char* cp = cstring;
+        for (size_t i = 0; i < m_length; ++i) {
+            if (m_characters[i] != *(cp++))
+                return false;
+        }
+        return !*cp;
     }
+
     bool operator!=(const char* cstring) const
     {
         return !(*this == cstring);
