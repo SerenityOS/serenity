@@ -91,7 +91,10 @@ RefPtr<Image> Image::create_from_file(const String& file_path)
         auto width = json_layer_object.get("width").to_i32();
         auto height = json_layer_object.get("height").to_i32();
         auto name = json_layer_object.get("name").as_string();
+
         auto layer = Layer::create_with_size(*image, { width, height }, name);
+        image->add_layer(*layer);
+
         layer->set_location({ json_layer_object.get("locationx").to_i32(), json_layer_object.get("locationy").to_i32() });
         layer->set_opacity_percent(json_layer_object.get("opacity_percent").to_i32());
         layer->set_visible(json_layer_object.get("visible").as_bool());
@@ -101,7 +104,6 @@ RefPtr<Image> Image::create_from_file(const String& file_path)
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
         auto image_decoder = Gfx::ImageDecoder::create(bitmap_data);
         layer->set_bitmap(*image_decoder->bitmap());
-        image->add_layer(*layer);
     });
 
     return image;
@@ -182,7 +184,7 @@ RefPtr<Image> Image::take_snapshot() const
 {
     auto snapshot = create_with_size(m_size);
     for (const auto& layer : m_layers)
-        snapshot->add_layer(*Layer::create_snapshot(*snapshot, layer));
+        Layer::create_snapshot_onto_image(*snapshot, layer);
     return snapshot;
 }
 
@@ -191,10 +193,9 @@ void Image::restore_snapshot(const Image& snapshot)
     m_layers.clear();
     select_layer(nullptr);
     for (const auto& snapshot_layer : snapshot.m_layers) {
-        auto layer = Layer::create_snapshot(*this, snapshot_layer);
+        auto layer = Layer::create_snapshot_onto_image(*this, snapshot_layer);
         if (layer->is_selected())
             select_layer(layer.ptr());
-        add_layer(*layer);
     }
 
     did_modify_layer_stack();

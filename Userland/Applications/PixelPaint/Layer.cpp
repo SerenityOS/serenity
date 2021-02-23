@@ -52,9 +52,10 @@ RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap,
     return adopt(*new Layer(image, bitmap, name));
 }
 
-RefPtr<Layer> Layer::create_snapshot(Image& image, const Layer& layer)
+RefPtr<Layer> Layer::create_snapshot_onto_image(Image& image, const Layer& layer)
 {
     auto snapshot = create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
+    image.add_layer(*snapshot);
     snapshot->set_opacity_percent(layer.opacity_percent());
     snapshot->set_visible(layer.is_visible());
     snapshot->set_selected(layer.is_selected());
