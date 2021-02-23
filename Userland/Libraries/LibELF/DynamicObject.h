@@ -191,12 +191,12 @@ public:
         Optional<Symbol> lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const
         {
             if (m_hash_type == HashType::SYSV)
-                return lookup_elf_symbol(name, sysv_hash);
+                return lookup_sysv_symbol(name, sysv_hash);
             return lookup_gnu_symbol(name, gnu_hash);
         }
 
     private:
-        Optional<Symbol> lookup_elf_symbol(const StringView& name, u32 hash) const;
+        Optional<Symbol> lookup_sysv_symbol(const StringView& name, u32 hash_value) const;
         Optional<Symbol> lookup_gnu_symbol(const StringView& name, u32 hash) const;
 
         HashType m_hash_type {};
