@@ -184,27 +184,22 @@ public:
     public:
         HashSection(const Section& section, HashType hash_type)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
+            , m_hash_type(hash_type)
         {
-            switch (hash_type) {
-            case HashType::SYSV:
-                m_lookup_function = &HashSection::lookup_elf_symbol;
-                break;
-            case HashType::GNU:
-                m_lookup_function = &HashSection::lookup_gnu_symbol;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-            }
         }
 
-        Optional<Symbol> lookup_symbol(const StringView& name) const;
+        Optional<Symbol> lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const
+        {
+            if (m_hash_type == HashType::SYSV)
+                return lookup_elf_symbol(name, sysv_hash);
+            return lookup_gnu_symbol(name, gnu_hash);
+        }
 
     private:
-        Optional<Symbol> lookup_elf_symbol(const StringView& name) const;
-        Optional<Symbol> lookup_gnu_symbol(const StringView& name) const;
+        Optional<Symbol> lookup_elf_symbol(const StringView& name, u32 hash) const;
+        Optional<Symbol> lookup_gnu_symbol(const StringView& name, u32 hash) const;
 
-        typedef Optional<Symbol> (HashSection::*LookupFunction)(const StringView&) const;
-        LookupFunction m_lookup_function {};
+        HashType m_hash_type {};
     };
 
     unsigned symbol_count() const { return m_symbol_count; }
@@ -256,7 +251,9 @@ public:
         unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
     };
+
     Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
+    Optional<SymbolLookupResult> lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     VirtualAddress patch_plt_entry(u32 relocation_offset);
