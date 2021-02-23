@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
+#include <LibELF/Hashes.h>
 #include <LibELF/exec_elf.h>
 #include <string.h>
 
@@ -248,36 +249,6 @@ DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-u32 DynamicObject::HashSection::calculate_elf_hash(const StringView& name)
-{
-    // SYSV ELF hash algorithm
-    // Note that the GNU HASH algorithm has less collisions
-
-    uint32_t hash = 0;
-
-    for (auto ch : name) {
-        hash = hash << 4;
-        hash += ch;
-
-        const uint32_t top_nibble_of_hash = hash & 0xF0000000U;
-        hash ^= top_nibble_of_hash >> 24;
-        hash &= ~top_nibble_of_hash;
-    }
-
-    return hash;
-}
-
-u32 DynamicObject::HashSection::calculate_gnu_hash(const StringView& name)
-{
-    // GNU ELF hash algorithm
-    u32 hash = 5381;
-
-    for (auto ch : name)
-        hash = hash * 33 + ch;
-
-    return hash;
-}
-
 auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> Optional<Symbol>
 {
     return (this->*(m_lookup_function))(name);
@@ -285,7 +256,7 @@ auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> 
 
 auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const -> Optional<Symbol>
 {
-    u32 hash_value = calculate_elf_hash(name);
+    u32 hash_value = compute_sysv_hash(name);
     u32* hash_table_begin = (u32*)address().as_ptr();
     size_t num_buckets = hash_table_begin[0];
 
@@ -328,7 +299,7 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
     const u32* const buckets = &bloom_words[num_maskwords];
     const u32* const chains = &buckets[num_buckets];
 
-    BloomWord hash1 = calculate_gnu_hash(name);
+    BloomWord hash1 = compute_gnu_hash(name);
     BloomWord hash2 = hash1 >> shift2;
     const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
 
