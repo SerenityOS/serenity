@@ -163,7 +163,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    dbgln(EDITOR_DEBUG, "opening {}", it->value);
+    dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
     auto file = Core::File::construct(it->value);
     if (!file->open(Core::File::ReadOnly)) {
         dbgln("failed to open {}, {}", it->value, file->error_string());
