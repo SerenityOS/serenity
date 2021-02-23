@@ -170,18 +170,18 @@ int main(int argc, char* argv[])
         bool first = true;
         auto cursor = spreadsheet_widget.current_selection_cursor();
         if (cursor) {
-            Spreadsheet::Position position { spreadsheet_widget.current_worksheet().column(cursor->column()), (size_t)cursor->row() };
-            url_builder.append(position.to_url().to_string());
+            Spreadsheet::Position position { (size_t)cursor->column(), (size_t)cursor->row() };
+            url_builder.append(position.to_url(spreadsheet_widget.current_worksheet()).to_string());
             url_builder.append('\n');
         }
 
         for (auto& cell : cells) {
             if (first && !cursor) {
-                url_builder.append(cell.to_url().to_string());
+                url_builder.append(cell.to_url(spreadsheet_widget.current_worksheet()).to_string());
                 url_builder.append('\n');
             }
 
-            url_builder.append(cell.to_url().to_string());
+            url_builder.append(cell.to_url(spreadsheet_widget.current_worksheet()).to_string());
             url_builder.append('\n');
 
             auto cell_data = spreadsheet_widget.current_worksheet().at(cell);
