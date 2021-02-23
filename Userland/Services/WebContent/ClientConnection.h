@@ -64,6 +64,7 @@ private:
     virtual void handle(const Messages::WebContentServer::AddBackingStore&) override;
     virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
     virtual void handle(const Messages::WebContentServer::DebugRequest&) override;
+    virtual void handle(const Messages::WebContentServer::GetSource&) override;
 
     void flush_pending_paint_requests();
 

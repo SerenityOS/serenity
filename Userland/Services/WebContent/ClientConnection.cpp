@@ -209,4 +209,11 @@ void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& me
     }
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::GetSource&)
+{
+    if (auto* doc = page().main_frame().document()) {
+        post_message(Messages::WebContentClient::DidGetSource(doc->url(), doc->source()));
+    }
+}
+
 }
