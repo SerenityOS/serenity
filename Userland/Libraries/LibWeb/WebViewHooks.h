@@ -46,6 +46,7 @@ public:
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<void(const URL&)> on_url_drop;
     Function<void(DOM::Document*)> on_set_document;
+    Function<void(const URL&, const String&)> on_get_source;
 };
 
 }
