@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringUtils.h>
 #include <AK/TestSuite.h>
+
+#include <AK/StringUtils.h>
 
 TEST_CASE(matches_null)
 {

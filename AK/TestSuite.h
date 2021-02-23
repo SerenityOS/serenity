@@ -26,7 +26,7 @@
 
 #pragma once
 
-#define AK_TEST_SUITE
+#include <AK/Assertions.h>
 
 namespace AK {
 
@@ -37,39 +37,40 @@ void warnln(const char* fmtstr, const Parameters&...);
 
 using AK::warnln;
 
+#undef ASSERT
 #define ASSERT(x)                                                                                    \
     do {                                                                                             \
         if (!(x))                                                                                    \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: ASSERT({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
 
+#undef RELEASE_ASSERT
 #define RELEASE_ASSERT(x)                                                                                    \
     do {                                                                                                     \
         if (!(x))                                                                                            \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: RELEASE_ASSERT({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
 
+#undef ASSERT_NOT_REACHED
 #define ASSERT_NOT_REACHED()                                                                           \
     do {                                                                                               \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: ASSERT_NOT_REACHED() called", __FILE__, __LINE__); \
         ::abort();                                                                                     \
     } while (false)
 
+#undef TODO
 #define TODO()                                                                                   \
     do {                                                                                         \
         ::AK::warnln(stderr, "\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
         ::abort();                                                                               \
     } while (false)
 
-#include <stdlib.h>
-
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-
 #include <LibCore/ArgsParser.h>
-
+#include <stdlib.h>
 #include <sys/time.h>
 
 namespace AK {
