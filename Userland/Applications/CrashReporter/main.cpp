@@ -60,7 +60,7 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
 
     StringBuilder builder;
 
-    auto prepend_metadata = [&](auto& key, auto& fmt) {
+    auto prepend_metadata = [&](auto& key, StringView fmt) {
         auto maybe_value = coredump.metadata().get(key);
         if (!maybe_value.has_value() || maybe_value.value().is_empty())
             return;
