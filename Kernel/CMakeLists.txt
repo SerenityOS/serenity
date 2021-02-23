@@ -291,10 +291,9 @@ set(KERNEL_FSANITIZE_FLAGS
     "enum"
     "vptr"
     "builtin"
-    # following flags will cause triple faults:
-    # "alignment"
-    # "null"
-    # "pointer-overflow"
+    "alignment"
+    "null"
+    "pointer-overflow"
     )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
