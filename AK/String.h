@@ -270,9 +270,9 @@ public:
     static String vformatted(StringView fmtstr, TypeErasedFormatParams);
 
     template<typename... Parameters>
-    static String formatted(StringView fmtstr, const Parameters&... parameters)
+    static String formatted(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
-        return vformatted(fmtstr, VariadicFormatParams { parameters... });
+        return vformatted(fmtstr.view(), VariadicFormatParams { parameters... });
     }
 
     template<typename T>

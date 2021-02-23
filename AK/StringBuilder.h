@@ -52,9 +52,9 @@ public:
     void append_escaped_for_json(const StringView&);
 
     template<typename... Parameters>
-    void appendff(StringView fmtstr, const Parameters&... parameters)
+    void appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
-        vformat(*this, fmtstr, VariadicFormatParams { parameters... });
+        vformat(*this, fmtstr.view(), VariadicFormatParams { parameters... });
     }
 
     String build() const;
