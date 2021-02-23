@@ -91,6 +91,8 @@ extern "C" u8* end_of_safemem_atomic_text;
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
+extern "C" const char kernel_cmdline[4096];
+
 namespace Kernel {
 
 [[noreturn]] static void init_stage2(void*);
@@ -122,7 +124,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
-    CommandLine::early_initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
+    CommandLine::early_initialize(kernel_cmdline);
     memcpy(multiboot_copy_boot_modules_array, (u8*)low_physical_to_virtual(multiboot_info_ptr->mods_addr), multiboot_info_ptr->mods_count * sizeof(multiboot_module_entry_t));
     multiboot_copy_boot_modules_count = multiboot_info_ptr->mods_count;
     s_bsp_processor.early_initialize(0);
@@ -328,9 +330,9 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // serial_debug will output all the klog() and dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    u32 cmdline = low_physical_to_virtual(multiboot_info_ptr->cmdline);
-    if (cmdline && StringView(reinterpret_cast<const char*>(cmdline)).contains("serial_debug"))
+    if (StringView(kernel_cmdline).contains("serial_debug")) {
         set_serial_debug(true);
+    }
 }
 
 extern "C" {
