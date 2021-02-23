@@ -43,7 +43,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return {};
 
     if (role == GUI::ModelRole::Display) {
-        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return String::empty();
 
@@ -73,10 +73,10 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     if (role == GUI::ModelRole::MimeData)
-        return Position { m_sheet->column(index.column()), (size_t)index.row() }.to_url().to_string();
+        return Position { (size_t)index.column(), (size_t)index.row() }.to_url(m_sheet).to_string();
 
     if (role == GUI::ModelRole::TextAlignment) {
-        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 
@@ -84,7 +84,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     if (role == GUI::ModelRole::ForegroundColor) {
-        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 
@@ -103,7 +103,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     if (role == GUI::ModelRole::BackgroundColor) {
-        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        const auto* cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
         if (!cell)
             return {};
 
@@ -134,9 +134,9 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
 
     VERIFY(cursor);
 
-    Position cursor_position { m_sheet->column(cursor->column()), (size_t)cursor->row() };
+    Position cursor_position { (size_t)cursor->column(), (size_t)cursor->row() };
     auto new_data = String::formatted("{}\n{}",
-        cursor_position.to_url().to_string(),
+        cursor_position.to_url(m_sheet).to_string(),
         StringView(mime_data->data("text/x-spreadsheet-data")));
     mime_data->set_data("text/x-spreadsheet-data", new_data.to_byte_buffer());
 
@@ -164,7 +164,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
     if (!index.is_valid())
         return;
 
-    auto& cell = m_sheet->ensure({ m_sheet->column(index.column()), (size_t)index.row() });
+    auto& cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
     cell.set_data(value.to_string());
     update();
 }
