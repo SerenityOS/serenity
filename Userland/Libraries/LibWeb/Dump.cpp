@@ -143,7 +143,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     }
 
     if (!is<Layout::Box>(layout_node)) {
-        builder.appendff("{}{}{} <{}{}{}>",
+        builder.appendff("{}{}{} <{}{}{}{}>",
             nonbox_color_on,
             layout_node.class_name().substring_view(13),
             color_off,
