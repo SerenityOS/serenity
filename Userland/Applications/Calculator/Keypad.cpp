@@ -164,8 +164,11 @@ String Keypad::to_string() const
         builder.append("-");
     builder.appendff("{}", m_int_value);
 
-    if (m_frac_length > 0)
-        builder.appendff(".{:0{}}", m_frac_value, m_frac_length);
+    if (m_frac_length > 0) {
+        // FIXME: This disables the compiletime format string check since we can't parse '}}' here correctly.
+        //        remove the 'StringView { }' when that's fixed.
+        builder.appendff(StringView { ".{:0{}}" }, m_frac_value, m_frac_length);
+    }
 
     return builder.to_string();
 }
