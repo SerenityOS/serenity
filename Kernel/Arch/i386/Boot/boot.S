@@ -31,6 +31,10 @@ stack_bottom:
 .skip 32768
 stack_top:
 
+.global kernel_cmdline
+kernel_cmdline:
+.skip 4096
+
 .section .page_tables, "aw", @nobits
 .align 4096
 .global boot_pdpt
@@ -92,6 +96,19 @@ the 9 page tables each contain 512 pte's that map individual 4KB pages
 start:
     cli
     cld
+
+    /* We don't know where the bootloader might have put the command line.
+     * It might be at an inconvenient location that we're not about to map,
+     * so let's just copy it to a convenient location while we have the whole
+     * memory space identity-mapped anyway. :^)
+     */
+
+    movl %ebx, %esi
+    addl $16, %esi
+    movl (%esi), %esi
+    movl $1024, %ecx
+    movl $(kernel_cmdline - 0xc0000000), %edi
+    rep movsl
 
     /* clear pdpt */
     movl $(boot_pdpt - 0xc0000000), %edi
