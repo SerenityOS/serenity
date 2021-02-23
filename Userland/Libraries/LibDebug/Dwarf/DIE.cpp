@@ -76,6 +76,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::StringPointer: {
         u32 offset;
         debug_info_stream >> offset;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::String;
 
         auto strings_data = m_compilation_unit.dwarf_info().debug_strings_data();
@@ -85,6 +86,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data1: {
         u8 data;
         debug_info_stream >> data;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -92,6 +94,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data2: {
         u16 data;
         debug_info_stream >> data;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -99,6 +102,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Addr: {
         u32 address;
         debug_info_stream >> address;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = address;
         break;
@@ -106,6 +110,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::SData: {
         ssize_t data;
         debug_info_stream.read_LEB128_signed(data);
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SignedNumber;
         value.data.as_i32 = data;
         break;
@@ -113,6 +118,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::SecOffset: {
         u32 data;
         debug_info_stream >> data;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SecOffset;
         value.data.as_u32 = data;
         break;
@@ -120,6 +126,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data4: {
         u32 data;
         debug_info_stream >> data;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -127,6 +134,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Ref4: {
         u32 data;
         debug_info_stream >> data;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DieReference;
         value.data.as_u32 = data + m_compilation_unit.offset();
         break;
@@ -139,6 +147,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::ExprLoc: {
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DwarfExpression;
         assign_raw_bytes_value(length);
         break;
@@ -147,6 +156,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         String str;
         u32 str_offset = debug_info_stream.offset();
         debug_info_stream >> str;
+        ASSERT(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::String;
         value.data.as_string = reinterpret_cast<const char*>(str_offset + m_compilation_unit.dwarf_info().debug_info_data().data());
         break;
@@ -155,6 +165,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u8 length;
         debug_info_stream >> length;
+        ASSERT(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -162,6 +173,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u16 length;
         debug_info_stream >> length;
+        ASSERT(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -169,6 +181,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u32 length;
         debug_info_stream >> length;
+        ASSERT(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -176,6 +189,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
+        ASSERT(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
