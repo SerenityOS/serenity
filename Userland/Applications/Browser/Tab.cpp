@@ -85,6 +85,20 @@ static void start_download(const URL& url)
     [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
+static void view_source(const String& url, const String& source)
+{
+    auto window = GUI::Window::construct();
+    auto& editor = window->set_main_widget<GUI::TextEditor>();
+    editor.set_text(source);
+    editor.set_mode(GUI::TextEditor::ReadOnly);
+    editor.set_ruler_visible(true);
+    window->resize(640, 480);
+    window->set_title(url);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
+    window->show();
+    [[maybe_unused]] auto& unused = window.leak_ref();
+}
+
 Tab::Tab(Type type)
     : m_type(type)
 {
@@ -232,6 +246,10 @@ Tab::Tab(Type type)
             on_favicon_change(icon);
     };
 
+    hooks().on_get_source = [this](auto& url, auto& source) {
+        view_source(url.to_string(), source);
+    };
+
     // FIXME: Support JS console in multi-process mode.
     if (m_type == Type::InProcessWebView) {
         hooks().on_set_document = [this](auto* document) {
@@ -303,18 +321,9 @@ Tab::Tab(Type type)
                 ASSERT(m_page_view->document());
                 auto url = m_page_view->document()->url().to_string();
                 auto source = m_page_view->document()->source();
-                auto window = GUI::Window::construct();
-                auto& editor = window->set_main_widget<GUI::TextEditor>();
-                editor.set_text(source);
-                editor.set_mode(GUI::TextEditor::ReadOnly);
-                editor.set_ruler_visible(true);
-                window->resize(640, 480);
-                window->set_title(url);
-                window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
-                window->show();
-                [[maybe_unused]] auto& unused = window.leak_ref();
+                view_source(url, source);
             } else {
-                TODO();
+                m_web_content_view->get_source();
             }
         },
         this);
