@@ -31,15 +31,15 @@
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 
-#ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
+#ifdef ENABLE_COMPILETIME_FORMAT_CHECK
 // FIXME: Seems like clang doesn't like calling 'consteval' functions inside 'consteval' functions quite the same way as GCC does,
 //        it seems to entirely forget that it accepted that parameters to a 'consteval' function to begin with.
 #    ifdef __clang__
-#        define DBGLN_NO_COMPILETIME_FORMAT_CHECK
+#        undef ENABLE_COMPILETIME_FORMAT_CHECK
 #    endif
 #endif
 
-#ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
+#ifdef ENABLE_COMPILETIME_FORMAT_CHECK
 namespace AK::Format::Detail {
 
 // We have to define a local "purely constexpr" Array that doesn't lead back to us (via e.g. VERIFY)
@@ -163,7 +163,7 @@ struct CheckedFormatString {
     consteval CheckedFormatString(const char (&fmt)[N])
         : m_string { fmt }
     {
-#ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
+#ifdef ENABLE_COMPILETIME_FORMAT_CHECK
         check_format_parameter_consistency<N, sizeof...(Args)>(fmt);
 #endif
     }
@@ -177,7 +177,7 @@ struct CheckedFormatString {
     auto view() const { return m_string; }
 
 private:
-#ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
+#ifdef ENABLE_COMPILETIME_FORMAT_CHECK
     template<size_t N, size_t param_count>
     consteval static bool check_format_parameter_consistency(const char (&fmt)[N])
     {
