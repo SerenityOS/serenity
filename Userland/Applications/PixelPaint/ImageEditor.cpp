@@ -60,8 +60,15 @@ void ImageEditor::set_image(RefPtr<Image> image)
     update();
     relayout();
 
-    if (m_image)
+    if (m_image) {
+        for (size_t index = 0; index < m_image->layer_count(); ++index) {
+            const auto layer = &m_image->layer(index);
+            if (layer->is_selected())
+                set_active_layer(layer);
+        }
+
         m_image->add_client(*this);
+    }
 }
 
 void ImageEditor::did_complete_action()
