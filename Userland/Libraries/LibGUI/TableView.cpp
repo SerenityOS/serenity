@@ -73,8 +73,8 @@ void TableView::paint_event(PaintEvent& event)
     int y_offset = column_header().is_visible() ? column_header().height() : 0;
 
     bool dummy;
-    int first_visible_row = index_at_event_position(frame_inner_rect().top_left(), dummy).row();
-    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right(), dummy).row();
+    int first_visible_row = index_at_event_position(frame_inner_rect().top_left().translated(x_offset, y_offset), dummy).row();
+    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right().translated(x_offset, y_offset), dummy).row();
 
     if (first_visible_row == -1)
         first_visible_row = 0;
