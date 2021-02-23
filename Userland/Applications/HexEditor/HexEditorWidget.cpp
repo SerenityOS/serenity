@@ -191,7 +191,7 @@ HexEditorWidget::HexEditorWidget()
     }
 
     auto& search_menu = menubar->add_menu("Search");
-    search_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, [&](const GUI::Action&) {
+    search_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer.isolated_copy();
         if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
 
@@ -211,7 +211,7 @@ HexEditorWidget::HexEditorWidget()
         }
     }));
 
-    search_menu.add_action(GUI::Action::create("Find", { Mod_None, Key_F3 }, [&](const GUI::Action&) {
+    search_menu.add_action(GUI::Action::create("Find next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty() || m_search_buffer.is_null()) {
             GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
             return;
