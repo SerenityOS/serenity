@@ -217,7 +217,13 @@ public:
     Section init_array_section() const;
     Section fini_array_section() const;
 
-    HashSection hash_section() const;
+    HashSection hash_section() const
+    {
+        auto section_name = m_hash_type == HashType::SYSV
+            ? StringView { "DT_HASH", 7 }
+            : StringView { "DT_GNU_HASH", 11 };
+        return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
+    }
 
     RelocationSection relocation_section() const;
     RelocationSection plt_relocation_section() const;

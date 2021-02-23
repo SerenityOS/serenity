@@ -233,14 +233,6 @@ DynamicObject::Section DynamicObject::fini_array_section() const
     return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
 }
 
-DynamicObject::HashSection DynamicObject::hash_section() const
-{
-    auto section_name = m_hash_type == HashType::SYSV
-        ? StringView { "DT_HASH", 7 }
-        : StringView { "DT_GNU_HASH", 11 };
-    return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
-}
-
 DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
     return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
