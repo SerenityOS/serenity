@@ -235,7 +235,9 @@ DynamicObject::Section DynamicObject::fini_array_section() const
 
 DynamicObject::HashSection DynamicObject::hash_section() const
 {
-    const char* section_name = m_hash_type == HashType::SYSV ? "DT_HASH" : "DT_GNU_HASH";
+    auto section_name = m_hash_type == HashType::SYSV
+        ? StringView { "DT_HASH", 7 }
+        : StringView { "DT_GNU_HASH", 11 };
     return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
 }
 
