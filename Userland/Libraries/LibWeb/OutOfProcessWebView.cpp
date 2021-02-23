@@ -314,6 +314,12 @@ String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentCli
     return {};
 }
 
+void OutOfProcessWebView::notify_server_did_get_source(const URL& url, const String& source)
+{
+    if (on_get_source)
+        on_get_source(url, source);
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
@@ -338,6 +344,11 @@ WebContentClient& OutOfProcessWebView::client()
 void OutOfProcessWebView::debug_request(const String& request, const String& argument)
 {
     client().post_message(Messages::WebContentServer::DebugRequest(request, argument));
+}
+
+void OutOfProcessWebView::get_source()
+{
+    client().post_message(Messages::WebContentServer::GetSource());
 }
 
 }

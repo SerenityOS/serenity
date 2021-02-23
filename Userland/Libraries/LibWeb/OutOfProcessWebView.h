@@ -50,6 +50,7 @@ public:
     void load_empty_document();
 
     void debug_request(const String& request, const String& argument = {});
+    void get_source();
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id);
@@ -68,6 +69,7 @@ public:
     void notify_server_did_request_alert(Badge<WebContentClient>, const String& message);
     bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
+    void notify_server_did_get_source(const URL& url, const String& source);
 
 private:
     OutOfProcessWebView();
