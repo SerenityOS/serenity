@@ -80,7 +80,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
         if (!section.size())
             return IterationDecision::Continue;
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
-        ASSERT(section_storage);
+        VERIFY(section_storage);
         section.relocations().for_each_relocation([&](const ELF::Image::Relocation& relocation) {
             auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(section_storage + relocation.offset());
             switch (relocation.type()) {
@@ -100,7 +100,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
 
                 if (relocation.symbol().bind() == STB_LOCAL) {
                     auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
-                    ASSERT(section_storage_containing_symbol);
+                    VERIFY(section_storage_containing_symbol);
                     u32 symbol_address = (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
                     if (symbol_address == 0)
                         missing_symbols = true;
@@ -113,7 +113,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
                     dbgln("   Symbol address: {:p}", symbol_address);
                     patch_ptr += symbol_address;
                 } else {
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 break;
             }

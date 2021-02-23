@@ -53,12 +53,12 @@ public:
     ASTNode* parent() const { return m_parent; }
     Position start() const
     {
-        ASSERT(m_start.has_value());
+        VERIFY(m_start.has_value());
         return m_start.value();
     }
     Position end() const
     {
-        ASSERT(m_end.has_value());
+        VERIFY(m_end.has_value());
         return m_end.value();
     }
     const FlyString& filename() const

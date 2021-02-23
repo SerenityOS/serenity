@@ -41,10 +41,10 @@ void ChessEngine::handle_uci()
 void ChessEngine::handle_position(const PositionCommand& command)
 {
     // FIXME: Implement fen board position.
-    ASSERT(!command.fen().has_value());
+    VERIFY(!command.fen().has_value());
     m_board = Chess::Board();
     for (auto& move : command.moves()) {
-        ASSERT(m_board.apply_move(move));
+        VERIFY(m_board.apply_move(move));
     }
 }
 
@@ -52,7 +52,7 @@ void ChessEngine::handle_go(const GoCommand& command)
 {
     // FIXME: A better algorithm than naive mcts.
     // FIXME: Add different ways to terminate search.
-    ASSERT(command.movetime.has_value());
+    VERIFY(command.movetime.has_value());
 
     srand(arc4random());
 

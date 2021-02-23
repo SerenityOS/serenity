@@ -44,7 +44,7 @@ char IniLexer::peek(size_t offset) const
 
 char IniLexer::consume()
 {
-    ASSERT(m_index < m_input.length());
+    VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
     m_previous_position = m_position;
     if (ch == '\n') {

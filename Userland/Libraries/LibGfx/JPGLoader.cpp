@@ -661,7 +661,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
-        ASSERT(huffman_table.size() <= 2);
+        VERIFY(huffman_table.size() <= 2);
 
         bytes_to_read -= 1 + 16 + total_codes;
     }
@@ -1167,7 +1167,7 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& context)
@@ -1213,7 +1213,7 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static bool decode_jpg(JPGLoadingContext& context)

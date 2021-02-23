@@ -131,7 +131,7 @@ RefPtr<Layout::Node> Element::create_layout_node()
 
     switch (display) {
     case CSS::Display::None:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     case CSS::Display::Block:
         return adopt(*new Layout::BlockBox(document(), this, move(style)));
@@ -164,7 +164,7 @@ RefPtr<Layout::Node> Element::create_layout_node()
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
         return adopt(*new Layout::BlockBox(document(), this, move(style)));
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Element::parse_attribute(const FlyString& name, const String& value)
@@ -214,7 +214,7 @@ static StyleDifference compute_style_difference(const CSS::StyleProperties& old_
 void Element::recompute_style()
 {
     set_needs_style_update(false);
-    ASSERT(parent());
+    VERIFY(parent());
     auto old_specified_css_values = m_specified_css_values;
     auto new_specified_css_values = document().style_resolver().resolve_style(*this);
     m_specified_css_values = new_specified_css_values;

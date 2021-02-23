@@ -45,7 +45,7 @@ Exception::Exception(Value value)
     auto& node_stack = vm().node_stack();
     for (ssize_t i = node_stack.size() - 1; i >= 0; --i) {
         auto* node = node_stack[i];
-        ASSERT(node);
+        VERIFY(node);
         m_source_ranges.append(node->source_range());
     }
 }

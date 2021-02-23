@@ -53,7 +53,7 @@ void SuggestionManager::set_suggestions(Vector<CompletionSuggestion>&& suggestio
 
     // make sure we were not given invalid suggestions
     for (auto& suggestion : m_suggestions)
-        ASSERT(suggestion.is_valid);
+        VERIFY(suggestion.is_valid);
 
     size_t common_suggestion_prefix { 0 };
     if (m_suggestions.size() == 1) {

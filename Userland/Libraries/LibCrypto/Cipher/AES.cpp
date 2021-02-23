@@ -65,9 +65,9 @@ void AESCipherKey::expand_encrypt_key(ReadonlyBytes user_key, size_t bits)
     u32 temp;
     size_t i { 0 };
 
-    ASSERT(!user_key.is_null());
-    ASSERT(is_valid_key_size(bits));
-    ASSERT(user_key.size() == bits / 8);
+    VERIFY(!user_key.is_null());
+    VERIFY(is_valid_key_size(bits));
+    VERIFY(user_key.size() == bits / 8);
 
     round_key = round_keys();
 
@@ -401,7 +401,7 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
     auto data = bytes.data();
     auto length = bytes.size();
 
-    ASSERT(length <= this->data_size());
+    VERIFY(length <= this->data_size());
     this->bytes().overwrite(0, data, length);
     if (length < this->data_size()) {
         switch (padding_mode()) {
@@ -419,7 +419,7 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
             break;
         default:
             // FIXME: We should handle the rest of the common padding modes
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }

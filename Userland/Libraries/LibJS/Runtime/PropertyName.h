@@ -60,7 +60,7 @@ public:
         : m_type(Type::Number)
         , m_number(index)
     {
-        ASSERT(index >= 0);
+        VERIFY(index >= 0);
     }
 
     PropertyName(const char* chars)
@@ -73,21 +73,21 @@ public:
         : m_type(Type::String)
         , m_string(FlyString(string))
     {
-        ASSERT(!string.is_null());
+        VERIFY(!string.is_null());
     }
 
     PropertyName(const FlyString& string)
         : m_type(Type::String)
         , m_string(string)
     {
-        ASSERT(!string.is_null());
+        VERIFY(!string.is_null());
     }
 
     PropertyName(Symbol* symbol)
         : m_type(Type::Symbol)
         , m_symbol(symbol)
     {
-        ASSERT(symbol);
+        VERIFY(symbol);
     }
 
     PropertyName(const StringOrSymbol& string_or_symbol)
@@ -108,26 +108,26 @@ public:
 
     i32 as_number() const
     {
-        ASSERT(is_number());
+        VERIFY(is_number());
         return m_number;
     }
 
     const FlyString& as_string() const
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return m_string;
     }
 
     const Symbol* as_symbol() const
     {
-        ASSERT(is_symbol());
+        VERIFY(is_symbol());
         return m_symbol;
     }
 
     String to_string() const
     {
-        ASSERT(is_valid());
-        ASSERT(!is_symbol());
+        VERIFY(is_valid());
+        VERIFY(!is_symbol());
         if (is_string())
             return as_string();
         return String::number(as_number());
@@ -135,8 +135,8 @@ public:
 
     StringOrSymbol to_string_or_symbol() const
     {
-        ASSERT(is_valid());
-        ASSERT(!is_number());
+        VERIFY(is_valid());
+        VERIFY(!is_number());
         if (is_string())
             return StringOrSymbol(as_string());
         return StringOrSymbol(as_symbol());

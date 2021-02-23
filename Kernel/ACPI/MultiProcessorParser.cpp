@@ -96,7 +96,7 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
             entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::CompatibilityBusAddressSpaceModifierEntry);
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         --entry_count;
     }

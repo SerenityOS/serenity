@@ -165,7 +165,7 @@ bool VolatilePageRanges::remove(const VolatilePageRange& range, bool& was_purged
         m_ranges.remove(nearby_index);
     } else {
         // See if we need to remove any of the following ranges
-        ASSERT(existing_range == &m_ranges[nearby_index]); // sanity check
+        VERIFY(existing_range == &m_ranges[nearby_index]); // sanity check
         while (nearby_index < m_ranges.size()) {
             existing_range = &m_ranges[nearby_index];
             if (!existing_range->intersects(range))
@@ -228,7 +228,7 @@ auto PurgeablePageRanges::remove_volatile_range(const VolatilePageRange& range, 
     }
     ScopedSpinLock vmobject_lock(m_vmobject->m_lock); // see comment in add_volatile_range
     ScopedSpinLock lock(m_volatile_ranges_lock);
-    ASSERT(m_vmobject);
+    VERIFY(m_vmobject);
 
     // Before we actually remove this range, we need to check if we need
     // to commit any pages, which may fail. If it fails, we don't actually
@@ -259,7 +259,7 @@ auto PurgeablePageRanges::remove_volatile_range(const VolatilePageRange& range, 
         return RemoveVolatileError::Success;
     }
 
-    ASSERT(need_commit_pages == 0); // We should have not touched anything
+    VERIFY(need_commit_pages == 0); // We should have not touched anything
     return RemoveVolatileError::SuccessNoChange;
 }
 
@@ -287,10 +287,10 @@ void PurgeablePageRanges::set_vmobject(AnonymousVMObject* vmobject)
 {
     // No lock needed here
     if (vmobject) {
-        ASSERT(!m_vmobject);
+        VERIFY(!m_vmobject);
         m_vmobject = vmobject;
     } else {
-        ASSERT(m_vmobject);
+        VERIFY(m_vmobject);
         m_vmobject = nullptr;
     }
 }
@@ -309,7 +309,7 @@ CommittedCowPages::~CommittedCowPages()
 
 NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
 {
-    ASSERT(m_committed_pages > 0);
+    VERIFY(m_committed_pages > 0);
     m_committed_pages--;
 
     return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
@@ -317,7 +317,7 @@ NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
 
 bool CommittedCowPages::return_one()
 {
-    ASSERT(m_committed_pages > 0);
+    VERIFY(m_committed_pages > 0);
     m_committed_pages--;
 
     MM.uncommit_user_physical_pages(1);

@@ -85,7 +85,7 @@ public:
 
         void remove(GUI::Widget& widget)
         {
-            ASSERT(m_widgets.contains(&widget));
+            VERIFY(m_widgets.contains(&widget));
             m_widgets.remove(&widget);
             if (m_hooks_enabled && on_remove)
                 on_remove(widget);

@@ -55,7 +55,7 @@ String HTMLToken::to_string() const
         builder.append("EndOfFile");
         break;
     case HTMLToken::Type::Invalid:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (type() == HTMLToken::Type::StartTag || type() == HTMLToken::Type::EndTag) {

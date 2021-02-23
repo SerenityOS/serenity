@@ -191,7 +191,7 @@ inline void JsonValue::serialize(Builder& builder) const
         builder.append("null");
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

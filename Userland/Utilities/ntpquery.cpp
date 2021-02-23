@@ -74,7 +74,7 @@ const unsigned SecondsFrom1900To1970 = (70u * 365u + 70u / 4u) * 24u * 60u * 60u
 
 static NtpTimestamp ntp_timestamp_from_timeval(const timeval& t)
 {
-    ASSERT(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
+    VERIFY(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
 
     // Seconds just need translation to the different origin.
     uint32_t seconds = t.tv_sec + SecondsFrom1900To1970;
@@ -100,9 +100,9 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
     struct tm tm;
     gmtime_r(&t.tv_sec, &tm);
     size_t written = strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T.", &tm);
-    ASSERT(written == 20);
+    VERIFY(written == 20);
     written += snprintf(buffer + written, sizeof(buffer) - written, "%06d", (int)t.tv_usec);
-    ASSERT(written == 26);
+    VERIFY(written == 26);
     buffer[written++] = 'Z';
     buffer[written] = '\0';
     return buffer;
@@ -231,9 +231,9 @@ int main(int argc, char** argv)
     }
 
     cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-    ASSERT(cmsg->cmsg_level == SOL_SOCKET);
-    ASSERT(cmsg->cmsg_type == SCM_TIMESTAMP);
-    ASSERT(!CMSG_NXTHDR(&msg, cmsg));
+    VERIFY(cmsg->cmsg_level == SOL_SOCKET);
+    VERIFY(cmsg->cmsg_type == SCM_TIMESTAMP);
+    VERIFY(!CMSG_NXTHDR(&msg, cmsg));
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 

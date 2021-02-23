@@ -85,7 +85,7 @@ struct MultiHashDigestVariant {
             return sha512.value().immutable_data();
         default:
         case HashKind::None:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -103,7 +103,7 @@ struct MultiHashDigestVariant {
             return sha512.value().data_length();
         default:
         case HashKind::None:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -179,7 +179,7 @@ public:
     inline void initialize(HashKind kind)
     {
         if (m_kind != HashKind::None) {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         m_kind = kind;
@@ -248,7 +248,7 @@ public:
             return { m_sha512->peek() };
         default:
         case HashKind::None:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }

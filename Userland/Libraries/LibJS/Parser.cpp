@@ -94,7 +94,7 @@ public:
         int p = m_token_precedence[static_cast<size_t>(token)];
         if (p == 0) {
             warnln("Internal Error: No precedence for operator {}", Token::name(token));
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             return -1;
         }
 
@@ -827,7 +827,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         }
 
         if (match(TokenType::ParenOpen)) {
-            ASSERT(property_name);
+            VERIFY(property_name);
             u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
             if (property_type == ObjectProperty::Type::Getter)
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
@@ -905,7 +905,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_t
         } else if (status == Token::StringValueStatus::UnicodeEscapeOverflow) {
             message = "Unicode code_point must not be greater than 0x10ffff in escape sequence";
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         if (!message.is_empty())
@@ -1158,7 +1158,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
 NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(AssignmentOp assignment_op, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity)
 {
     auto rule_start = push_start();
-    ASSERT(match(TokenType::Equals)
+    VERIFY(match(TokenType::Equals)
         || match(TokenType::PlusEquals)
         || match(TokenType::MinusEquals)
         || match(TokenType::AsteriskEquals)
@@ -1315,7 +1315,7 @@ template<typename FunctionNodeType>
 NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 {
     auto rule_start = push_start();
-    ASSERT(!(parse_options & FunctionNodeParseOptions::IsGetterFunction && parse_options & FunctionNodeParseOptions::IsSetterFunction));
+    VERIFY(!(parse_options & FunctionNodeParseOptions::IsGetterFunction && parse_options & FunctionNodeParseOptions::IsSetterFunction));
 
     TemporaryChange super_property_access_rollback(m_parser_state.m_allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
     TemporaryChange super_constructor_call_rollback(m_parser_state.m_allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
@@ -1427,7 +1427,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         declaration_kind = DeclarationKind::Const;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     consume();
 
@@ -2037,7 +2037,7 @@ void Parser::save_state()
 
 void Parser::load_state()
 {
-    ASSERT(!m_saved_state.is_empty());
+    VERIFY(!m_saved_state.is_empty());
     m_parser_state = m_saved_state.take_last();
 }
 

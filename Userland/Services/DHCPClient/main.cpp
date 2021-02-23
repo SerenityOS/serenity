@@ -45,7 +45,7 @@ static u8 mac_part(const Vector<String>& parts, size_t index)
 static MACAddress mac_from_string(const String& str)
 {
     auto chunks = str.split(':');
-    ASSERT(chunks.size() == 6); // should we...worry about this?
+    VERIFY(chunks.size() == 6); // should we...worry about this?
     return {
         mac_part(chunks, 0), mac_part(chunks, 1), mac_part(chunks, 2),
         mac_part(chunks, 3), mac_part(chunks, 4), mac_part(chunks, 5)

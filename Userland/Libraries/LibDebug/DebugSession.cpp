@@ -73,7 +73,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
         }
 
         auto parts = command.split(' ');
-        ASSERT(!parts.is_empty());
+        VERIFY(!parts.is_empty());
         const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
@@ -155,7 +155,7 @@ bool DebugSession::insert_breakpoint(void* address)
     if (!original_bytes.has_value())
         return false;
 
-    ASSERT((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
+    VERIFY((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
 
     BreakPoint breakpoint { address, original_bytes.value(), BreakPointState::Disabled };
 
@@ -169,7 +169,7 @@ bool DebugSession::insert_breakpoint(void* address)
 bool DebugSession::disable_breakpoint(void* address)
 {
     auto breakpoint = m_breakpoints.get(address);
-    ASSERT(breakpoint.has_value());
+    VERIFY(breakpoint.has_value());
     if (!poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.value().address)), breakpoint.value().original_first_word))
         return false;
 
@@ -182,9 +182,9 @@ bool DebugSession::disable_breakpoint(void* address)
 bool DebugSession::enable_breakpoint(void* address)
 {
     auto breakpoint = m_breakpoints.get(address);
-    ASSERT(breakpoint.has_value());
+    VERIFY(breakpoint.has_value());
 
-    ASSERT(breakpoint.value().state == BreakPointState::Disabled);
+    VERIFY(breakpoint.value().state == BreakPointState::Disabled);
 
     if (!poke(reinterpret_cast<u32*>(breakpoint.value().address), (breakpoint.value().original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
         return false;
@@ -214,7 +214,7 @@ PtraceRegisters DebugSession::get_registers() const
     PtraceRegisters regs;
     if (ptrace(PT_GETREGS, m_debuggee_pid, &regs, 0) < 0) {
         perror("PT_GETREGS");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return regs;
 }
@@ -223,7 +223,7 @@ void DebugSession::set_registers(const PtraceRegisters& regs)
 {
     if (ptrace(PT_SETREGS, m_debuggee_pid, reinterpret_cast<void*>(&const_cast<PtraceRegisters&>(regs)), 0) < 0) {
         perror("PT_SETREGS");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -232,7 +232,7 @@ void DebugSession::continue_debuggee(ContinueType type)
     int command = (type == ContinueType::FreeRun) ? PT_CONTINUE : PT_SYSCALL;
     if (ptrace(command, m_debuggee_pid, 0, 0) < 0) {
         perror("continue");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -242,7 +242,7 @@ int DebugSession::continue_debuggee_and_wait(ContinueType type)
     int wstatus = 0;
     if (waitpid(m_debuggee_pid, &wstatus, WSTOPPED | WEXITED) != m_debuggee_pid) {
         perror("waitpid");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return wstatus;
 }
@@ -264,7 +264,7 @@ void* DebugSession::single_step()
 
     if (waitpid(m_debuggee_pid, 0, WSTOPPED) != m_debuggee_pid) {
         perror("waitpid");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     regs = get_registers();
@@ -316,7 +316,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
         return {};
 
     auto lib = library_at(address);
-    ASSERT(lib);
+    VERIFY(lib);
 
     return InsertBreakpointAtSourcePositionResult { lib->name, address_and_source_position.value().file, address_and_source_position.value().line, address };
 }
@@ -325,11 +325,11 @@ void DebugSession::update_loaded_libs()
 {
     auto file = Core::File::construct(String::format("/proc/%u/vm", m_debuggee_pid));
     bool rc = file->open(Core::IODevice::ReadOnly);
-    ASSERT(rc);
+    VERIFY(rc);
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     auto vm_entries = json.value().as_array();
     Regex<PosixExtended> re("(.+): \\.text");

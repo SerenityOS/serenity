@@ -30,7 +30,7 @@ namespace Gfx {
 
 unsigned Typeface::weight() const
 {
-    ASSERT(m_ttf_font || m_bitmap_fonts.size() > 0);
+    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
 
     if (is_fixed_size())
         return m_bitmap_fonts[0]->weight();
@@ -40,7 +40,7 @@ unsigned Typeface::weight() const
 
 bool Typeface::is_fixed_width() const
 {
-    ASSERT(m_ttf_font || m_bitmap_fonts.size() > 0);
+    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
 
     if (is_fixed_size())
         return m_bitmap_fonts[0]->is_fixed_width();

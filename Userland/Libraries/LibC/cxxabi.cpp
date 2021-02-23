@@ -110,7 +110,7 @@ void __cxa_finalize(void* dso_handle)
 
 [[noreturn]] void __cxa_pure_virtual()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 } // extern "C"

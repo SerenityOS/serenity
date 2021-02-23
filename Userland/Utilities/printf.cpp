@@ -205,7 +205,7 @@ template<typename V>
 struct ArgvNextArgument<int*, V> {
     ALWAYS_INLINE int* operator()(V) const
     {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return nullptr;
     }
 };

@@ -73,7 +73,7 @@ public:
     // FIXME: This overload throws away the auth stuff, think up a better way to return more than a single bytebuffer.
     virtual void encrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}, Bytes* = nullptr) override
     {
-        ASSERT(!ivec.is_empty());
+        VERIFY(!ivec.is_empty());
 
         static ByteBuffer dummy;
 

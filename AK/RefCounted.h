@@ -70,8 +70,8 @@ public:
     ALWAYS_INLINE void ref() const
     {
         auto old_ref_count = m_ref_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
-        ASSERT(old_ref_count > 0);
-        ASSERT(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
+        VERIFY(old_ref_count > 0);
+        VERIFY(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
     [[nodiscard]] ALWAYS_INLINE bool try_ref() const
@@ -80,7 +80,7 @@ public:
         for (;;) {
             if (expected == 0)
                 return false;
-            ASSERT(!Checked<RefCountType>::addition_would_overflow(expected, 1));
+            VERIFY(!Checked<RefCountType>::addition_would_overflow(expected, 1));
             if (m_ref_count.compare_exchange_strong(expected, expected + 1, AK::MemoryOrder::memory_order_acquire))
                 return true;
         }
@@ -95,13 +95,13 @@ protected:
     RefCountedBase() = default;
     ALWAYS_INLINE ~RefCountedBase()
     {
-        ASSERT(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
+        VERIFY(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
     }
 
     ALWAYS_INLINE RefCountType deref_base() const
     {
         auto old_ref_count = m_ref_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-        ASSERT(old_ref_count > 0);
+        VERIFY(old_ref_count > 0);
         return old_ref_count - 1;
     }
 

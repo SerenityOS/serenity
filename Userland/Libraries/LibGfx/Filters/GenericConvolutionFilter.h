@@ -85,7 +85,7 @@ public:
 
     virtual void apply(Bitmap& target_bitmap, const IntRect& target_rect, const Bitmap& source_bitmap, const IntRect& source_rect, const Filter::Parameters& parameters) override
     {
-        ASSERT(parameters.is_generic_convolution_filter());
+        VERIFY(parameters.is_generic_convolution_filter());
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
         ApplyCache apply_cache;
@@ -98,10 +98,10 @@ public:
         // contained by the source area. source_rect should be describing
         // the pixels that can be accessed to apply this filter, while
         // target_rect should describe the area where to apply the filter on.
-        ASSERT(source_rect.contains(target_rect));
-        ASSERT(source.size().contains(target.size()));
-        ASSERT(target.rect().contains(target_rect));
-        ASSERT(source.rect().contains(source_rect));
+        VERIFY(source_rect.contains(target_rect));
+        VERIFY(source.size().contains(target.size()));
+        VERIFY(target.rect().contains(target_rect));
+        VERIFY(source.rect().contains(source_rect));
 
         // If source is different from target, it should still be describing
         // essentially the same bitmap. But it allows us to modify target

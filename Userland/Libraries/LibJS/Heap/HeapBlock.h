@@ -51,7 +51,7 @@ public:
     {
         if (!m_freelist)
             return nullptr;
-        ASSERT(is_valid_cell_pointer(m_freelist));
+        VERIFY(is_valid_cell_pointer(m_freelist));
         return exchange(m_freelist, m_freelist->next);
     }
 

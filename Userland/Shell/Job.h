@@ -72,12 +72,12 @@ public:
     bool signaled() const { return m_term_sig != -1; }
     int exit_code() const
     {
-        ASSERT(exited());
+        VERIFY(exited());
         return m_exit_code;
     }
     int termination_signal() const
     {
-        ASSERT(signaled());
+        VERIFY(signaled());
         return m_term_sig;
     }
     bool should_be_disowned() const { return m_should_be_disowned; }

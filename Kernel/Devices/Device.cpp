@@ -61,7 +61,7 @@ Device::Device(unsigned major, unsigned minor)
     if (it != all_devices().end()) {
         dbgln("Already registered {},{}: {}", major, minor, it->value->class_name());
     }
-    ASSERT(!all_devices().contains(device_id));
+    VERIFY(!all_devices().contains(device_id));
     all_devices().set(device_id, this);
 }
 
@@ -86,8 +86,8 @@ void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncD
 
     {
         ScopedSpinLock lock(m_requests_lock);
-        ASSERT(!m_requests.is_empty());
-        ASSERT(m_requests.first().ptr() == &completed_request);
+        VERIFY(!m_requests.is_empty());
+        VERIFY(m_requests.first().ptr() == &completed_request);
         m_requests.remove(m_requests.begin());
         if (!m_requests.is_empty())
             next_request = m_requests.first().ptr();

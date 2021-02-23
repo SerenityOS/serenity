@@ -48,7 +48,7 @@ Cell* Allocator::allocate_cell(Heap& heap)
 
     auto& block = *m_usable_blocks.last();
     auto* cell = block.allocate();
-    ASSERT(cell);
+    VERIFY(cell);
     if (block.is_full())
         m_full_blocks.append(*m_usable_blocks.last());
     return cell;
@@ -62,7 +62,7 @@ void Allocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
 
 void Allocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)
 {
-    ASSERT(!block.is_full());
+    VERIFY(!block.is_full());
     m_usable_blocks.append(block);
 }
 

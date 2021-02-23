@@ -259,14 +259,14 @@ private:
 
     void increment_referencing_node_count()
     {
-        ASSERT(!m_deletion_has_begun);
+        VERIFY(!m_deletion_has_begun);
         ++m_referencing_node_count;
     }
 
     void decrement_referencing_node_count()
     {
-        ASSERT(!m_deletion_has_begun);
-        ASSERT(m_referencing_node_count);
+        VERIFY(!m_deletion_has_begun);
+        VERIFY(m_referencing_node_count);
         --m_referencing_node_count;
         if (!m_referencing_node_count && !ref_count()) {
             m_deletion_has_begun = true;

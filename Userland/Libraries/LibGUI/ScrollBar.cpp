@@ -279,7 +279,7 @@ void ScrollBar::mousedown_event(MouseEvent& event)
     if (event.shift()) {
         scroll_to_position(event.position());
         m_pressed_component = component_at_position(event.position());
-        ASSERT(m_pressed_component == Component::Scrubber);
+        VERIFY(m_pressed_component == Component::Scrubber);
     }
     if (m_pressed_component == Component::Scrubber) {
         m_scrub_start_value = value();
@@ -287,9 +287,9 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         update();
         return;
     }
-    ASSERT(!event.shift());
+    VERIFY(!event.shift());
 
-    ASSERT(m_pressed_component == Component::Gutter);
+    VERIFY(m_pressed_component == Component::Gutter);
     set_automatic_scrolling_active(true, Component::Gutter);
     update();
 }

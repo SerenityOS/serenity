@@ -157,7 +157,7 @@ String Shell::prompt() const
 
 String Shell::expand_tilde(const String& expression)
 {
-    ASSERT(expression.starts_with('~'));
+    VERIFY(expression.starts_with('~'));
 
     StringBuilder login_name;
     size_t first_slash_index = expression.length();
@@ -177,7 +177,7 @@ String Shell::expand_tilde(const String& expression)
         const char* home = getenv("HOME");
         if (!home) {
             auto passwd = getpwuid(getuid());
-            ASSERT(passwd && passwd->pw_dir);
+            VERIFY(passwd && passwd->pw_dir);
             return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
         }
         return String::format("%s/%s", home, path.to_string().characters());
@@ -186,7 +186,7 @@ String Shell::expand_tilde(const String& expression)
     auto passwd = getpwnam(login_name.to_string().characters());
     if (!passwd)
         return expression;
-    ASSERT(passwd->pw_dir);
+    VERIFY(passwd->pw_dir);
 
     return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
 }
@@ -515,7 +515,7 @@ Shell::Frame Shell::push_frame(String name)
 
 void Shell::pop_frame()
 {
-    ASSERT(m_local_frames.size() > 1);
+    VERIFY(m_local_frames.size() > 1);
     m_local_frames.take_last();
 }
 
@@ -528,7 +528,7 @@ Shell::Frame::~Frame()
         dbgln("Current frames:");
         for (auto& frame : frames)
             dbgln("- {:p}: {}", &frame, frame.name);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     frames.take_last();
 }
@@ -554,7 +554,7 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
 {
     // The default-constructed mode of the shell
     // should not be used for execution!
-    ASSERT(!m_default_constructed);
+    VERIFY(!m_default_constructed);
 
     take_error();
 
@@ -640,7 +640,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         } else if (rewiring->fd_action == AST::Rewiring::Close::ImmediatelyCloseNew) {
             fds.add(rewiring->new_fd);
         } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshNew) {
-            ASSERT(rewiring->other_pipe_end);
+            VERIFY(rewiring->other_pipe_end);
 
             int pipe_fd[2];
             int rc = pipe(pipe_fd);
@@ -652,7 +652,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             rewiring->other_pipe_end->new_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
             fds.add(pipe_fd[1]);
         } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshOld) {
-            ASSERT(rewiring->other_pipe_end);
+            VERIFY(rewiring->other_pipe_end);
 
             int pipe_fd[2];
             int rc = pipe(pipe_fd);
@@ -795,7 +795,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             tcsetattr(0, TCSANOW, &default_termios);
 
         if (command.should_immediately_execute_next) {
-            ASSERT(command.argv.is_empty());
+            VERIFY(command.argv.is_empty());
 
             Core::EventLoop mainloop;
             setup_signals();
@@ -816,7 +816,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         jobs.clear();
 
         execute_process(move(argv));
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     close(sync_pipe[0]);
@@ -924,7 +924,7 @@ void Shell::execute_process(Vector<const char*>&& argv)
         }
         _exit(126);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAction& next_in_chain, int head_exit_code)
@@ -998,7 +998,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
                 auto close_redir = (const AST::CloseRedirection*)&redir;
                 dbgln("close fd {}", close_redir->fd);
             } else {
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 #endif
@@ -1623,7 +1623,7 @@ void Shell::notify_child_event()
 #ifdef ENSURE_WAITID_ONCE
             // Theoretically, this should never trip, as jobs are removed from
             // the job table when waitpid() succeeds *and* the child is dead.
-            ASSERT(!s_waited_for_pids.contains(job.pid()));
+            VERIFY(!s_waited_for_pids.contains(job.pid()));
 #endif
 
             int wstatus = 0;
@@ -1641,7 +1641,7 @@ void Shell::notify_child_event()
                     // FIXME: This should never happen, the child should stay around until we do the waitpid above.
                     child_pid = job.pid();
                 } else {
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             }
             if (child_pid == 0) {
@@ -1985,7 +1985,7 @@ SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiri
 
         auto flags = fcntl(new_fd, F_GETFL);
         auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
 
         m_saves.append({ rewiring.new_fd, new_fd });
         m_collector.add(new_fd);

@@ -91,7 +91,7 @@ public:
     void revoke()
     {
         auto current_consumers = m_consumers.fetch_or(1u, AK::MemoryOrder::memory_order_relaxed);
-        ASSERT(!(current_consumers & 1u));
+        VERIFY(!(current_consumers & 1u));
         // We flagged revokation, now wait until everyone trying to obtain
         // a strong reference is done
         while (current_consumers > 0) {

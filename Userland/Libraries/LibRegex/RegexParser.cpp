@@ -313,7 +313,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
 
                 // FIXME: Parse collating element, this is needed when we have locale support
                 //        This could have impact on length parameter, I guess.
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
                 consume(TokenType::Period, Error::InvalidCollationElement);
                 consume(TokenType::RightBracket, Error::MismatchingBracket);
@@ -322,7 +322,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
                 consume();
                 // FIXME: Parse collating element, this is needed when we have locale support
                 //        This could have impact on length parameter, I guess.
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
                 consume(TokenType::EqualSign, Error::InvalidCollationElement);
                 consume(TokenType::RightBracket, Error::MismatchingBracket);
@@ -529,16 +529,16 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
 
                 } else if (match(TokenType::EqualSign)) { // positive lookahead
                     consume();
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 } else if (consume("!")) { // negative lookahead
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 } else if (consume("<")) {
                     if (match(TokenType::EqualSign)) { // positive lookbehind
                         consume();
-                        ASSERT_NOT_REACHED();
+                        VERIFY_NOT_REACHED();
                     }
                     if (consume("!")) // negative lookbehind
-                        ASSERT_NOT_REACHED();
+                        VERIFY_NOT_REACHED();
                 } else {
                     return set_error(Error::InvalidRepetitionMarker);
                 }
@@ -926,7 +926,7 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         match_length_minimum *= repeat_min.value();
         break;
     case Repetition::None:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     return true;
@@ -1370,8 +1370,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 return false;
             }
 
-            ASSERT(!first_atom.value().is_negated);
-            ASSERT(!second_atom.value().is_negated);
+            VERIFY(!first_atom.value().is_negated);
+            VERIFY(!second_atom.value().is_negated);
 
             ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharRange, CharRange { first_atom.value().code_point, second_atom.value().code_point } });
             continue;
@@ -1386,7 +1386,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::TemporaryInverse, 0 });
             ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)first_atom.value().character_class });
         } else {
-            ASSERT(!atom.is_negated);
+            VERIFY(!atom.is_negated);
             ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, first_atom.value().code_point });
         }
     }

@@ -40,7 +40,7 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
         struct stat statbuf;
         if (stat(coredump_path.characters(), &statbuf) < 0) {
             perror("stat");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         if (statbuf.st_mode & 0400) // Check if readable
             break;
@@ -92,7 +92,7 @@ int main()
     Core::BlockingFileWatcher watcher { "/tmp/coredump" };
     while (true) {
         auto event = watcher.wait_for_event();
-        ASSERT(event.has_value());
+        VERIFY(event.has_value());
         if (event.value().type != Core::FileWatcherEvent::Type::ChildAdded)
             continue;
         auto coredump_path = event.value().child_path;

@@ -187,8 +187,8 @@ private:
         ~RulePosition()
         {
             auto last = m_parser.m_rule_starts.take_last();
-            ASSERT(last.line == m_position.line);
-            ASSERT(last.column == m_position.column);
+            VERIFY(last.line == m_position.line);
+            VERIFY(last.column == m_position.column);
         }
 
         const Position& position() const { return m_position; }

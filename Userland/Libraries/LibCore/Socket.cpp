@@ -86,21 +86,21 @@ bool Socket::connect(const String& hostname, int port)
 void Socket::set_blocking(bool blocking)
 {
     int flags = fcntl(fd(), F_GETFL, 0);
-    ASSERT(flags >= 0);
+    VERIFY(flags >= 0);
     if (blocking)
         flags = fcntl(fd(), F_SETFL, flags & ~O_NONBLOCK);
     else
         flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
-    ASSERT(flags == 0);
+    VERIFY(flags == 0);
 }
 
 bool Socket::connect(const SocketAddress& address, int port)
 {
-    ASSERT(!is_connected());
-    ASSERT(address.type() == SocketAddress::Type::IPv4);
+    VERIFY(!is_connected());
+    VERIFY(address.type() == SocketAddress::Type::IPv4);
     dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
-    ASSERT(port > 0 && port <= 65535);
+    VERIFY(port > 0 && port <= 65535);
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -117,8 +117,8 @@ bool Socket::connect(const SocketAddress& address, int port)
 
 bool Socket::connect(const SocketAddress& address)
 {
-    ASSERT(!is_connected());
-    ASSERT(address.type() == SocketAddress::Type::Local);
+    VERIFY(!is_connected());
+    VERIFY(address.type() == SocketAddress::Type::Local);
     dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
     sockaddr_un saddr;
@@ -183,7 +183,7 @@ bool Socket::send(ReadonlyBytes data)
         set_error(errno);
         return false;
     }
-    ASSERT(static_cast<size_t>(nsent) == data.size());
+    VERIFY(static_cast<size_t>(nsent) == data.size());
     return true;
 }
 
@@ -204,13 +204,13 @@ void Socket::did_update_fd(int fd)
         ensure_read_notifier();
     } else {
         // I don't think it would be right if we updated the fd while not connected *but* while having a notifier..
-        ASSERT(!m_read_notifier);
+        VERIFY(!m_read_notifier);
     }
 }
 
 void Socket::ensure_read_notifier()
 {
-    ASSERT(m_connected);
+    VERIFY(m_connected);
     m_read_notifier = Notifier::construct(fd(), Notifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
         if (!can_read())

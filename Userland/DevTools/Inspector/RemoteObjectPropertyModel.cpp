@@ -61,7 +61,7 @@ String RemoteObjectPropertyModel::column_name(int column) const
     case Column::Value:
         return "Value";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

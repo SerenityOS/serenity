@@ -41,7 +41,7 @@ UUID::UUID(Array<u8, 16> uuid_buffer)
 
 void UUID::convert_string_view_to_uuid(const StringView& uuid_string_view)
 {
-    ASSERT(uuid_string_view.length() == 36);
+    VERIFY(uuid_string_view.length() == 36);
     auto first_unit = decode_hex(uuid_string_view.substring_view(0, 8));
     auto second_unit = decode_hex(uuid_string_view.substring_view(9, 4));
     auto third_unit = decode_hex(uuid_string_view.substring_view(14, 4));

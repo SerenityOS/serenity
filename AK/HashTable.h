@@ -157,7 +157,7 @@ public:
 
     void ensure_capacity(size_t capacity)
     {
-        ASSERT(capacity >= size());
+        VERIFY(capacity >= size());
         rehash(capacity * 2);
     }
 
@@ -256,11 +256,11 @@ public:
 
     void remove(Iterator iterator)
     {
-        ASSERT(iterator.m_bucket);
+        VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
-        ASSERT(bucket.used);
-        ASSERT(!bucket.end);
-        ASSERT(!bucket.deleted);
+        VERIFY(bucket.used);
+        VERIFY(!bucket.end);
+        VERIFY(!bucket.deleted);
         bucket.slot()->~T();
         bucket.used = false;
         bucket.deleted = true;

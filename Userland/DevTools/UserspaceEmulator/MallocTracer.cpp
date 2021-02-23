@@ -60,8 +60,8 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
     if (m_emulator.is_in_loader_code())
         return;
     auto* region = m_emulator.mmu().find_region({ 0x23, address });
-    ASSERT(region);
-    ASSERT(is<MmapRegion>(*region));
+    VERIFY(region);
+    VERIFY(is<MmapRegion>(*region));
     auto& mmap_region = static_cast<MmapRegion&>(*region);
 
     // Mark the containing mmap region as a malloc block!
@@ -71,7 +71,7 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
     memset(shadow_bits, 0, size);
 
     if (auto* existing_mallocation = find_mallocation(address)) {
-        ASSERT(existing_mallocation->freed);
+        VERIFY(existing_mallocation->freed);
         existing_mallocation->size = size;
         existing_mallocation->freed = false;
         existing_mallocation->malloc_backtrace = m_emulator.raw_backtrace();
@@ -110,7 +110,7 @@ ALWAYS_INLINE size_t MallocRegionMetadata::chunk_index_for_address(FlatPtr addre
         return 0;
     }
     auto chunk_offset = address - (this->address + sizeof(ChunkedBlock));
-    ASSERT(this->chunk_size);
+    VERIFY(this->chunk_size);
     return chunk_offset / this->chunk_size;
 }
 
@@ -143,15 +143,15 @@ void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t si
     if (m_emulator.is_in_loader_code())
         return;
     auto* region = m_emulator.mmu().find_region({ 0x23, address });
-    ASSERT(region);
-    ASSERT(is<MmapRegion>(*region));
+    VERIFY(region);
+    VERIFY(is<MmapRegion>(*region));
     auto& mmap_region = static_cast<MmapRegion&>(*region);
 
-    ASSERT(mmap_region.is_malloc_block());
+    VERIFY(mmap_region.is_malloc_block());
 
     auto* existing_mallocation = find_mallocation(address);
-    ASSERT(existing_mallocation);
-    ASSERT(!existing_mallocation->freed);
+    VERIFY(existing_mallocation);
+    VERIFY(!existing_mallocation->freed);
 
     size_t old_size = existing_mallocation->size;
 
@@ -296,7 +296,7 @@ void MallocTracer::audit_write(const Region& region, FlatPtr address, size_t siz
 
 bool MallocTracer::is_reachable(const Mallocation& mallocation) const
 {
-    ASSERT(!mallocation.freed);
+    VERIFY(!mallocation.freed);
 
     bool reachable = false;
 

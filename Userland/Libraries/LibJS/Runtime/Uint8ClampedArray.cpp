@@ -47,7 +47,7 @@ Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)
 
 Uint8ClampedArray::~Uint8ClampedArray()
 {
-    ASSERT(m_data);
+    VERIFY(m_data);
     free(m_data);
     m_data = nullptr;
 }

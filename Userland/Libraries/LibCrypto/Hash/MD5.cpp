@@ -88,7 +88,7 @@ void MD5::update(const u8* input, size_t length)
         index = 0;
     }
 
-    ASSERT(length < part_length || length - offset <= 64);
+    VERIFY(length < part_length || length - offset <= 64);
     m_buffer.overwrite(index, &input[offset], length - offset);
 }
 MD5::DigestType MD5::digest()

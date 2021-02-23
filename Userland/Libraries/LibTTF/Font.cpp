@@ -117,7 +117,7 @@ IndexToLocFormat Head::index_to_loc_format() const
     case 1:
         return IndexToLocFormat::Offset32;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -207,7 +207,7 @@ String Name::string_for_id(NameId id) const
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
-    ASSERT(glyph_id < m_num_glyphs);
+    VERIFY(glyph_id < m_num_glyphs);
     if (glyph_id < m_number_of_h_metrics) {
         auto offset = glyph_id * (u32)Sizes::LongHorMetric;
         u16 advance_width = be_u16(m_slice.offset_pointer(offset));

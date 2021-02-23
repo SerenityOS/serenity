@@ -62,7 +62,7 @@ void RealTimeClock::reset_to_default_ticks_per_second()
 {
     InterruptDisabler disabler;
     bool success = try_to_set_frequency(1024);
-    ASSERT(success);
+    VERIFY(success);
 }
 
 // FIXME: This is a quick & dirty log base 2 with a parameter. Please provide something better in the future.
@@ -91,7 +91,7 @@ bool RealTimeClock::try_to_set_frequency(size_t frequency)
 }
 bool RealTimeClock::is_capable_of_frequency(size_t frequency) const
 {
-    ASSERT(frequency != 0);
+    VERIFY(frequency != 0);
     if (frequency > MAX_FREQUENCY)
         return false;
     if (32768 % frequency)
@@ -102,7 +102,7 @@ bool RealTimeClock::is_capable_of_frequency(size_t frequency) const
 }
 size_t RealTimeClock::calculate_nearest_possible_frequency(size_t frequency) const
 {
-    ASSERT(frequency != 0);
+    VERIFY(frequency != 0);
     return frequency;
 }
 

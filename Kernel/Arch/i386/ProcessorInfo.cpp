@@ -52,7 +52,7 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
         m_cpuid = builder.build();
     }
     {
-        ASSERT(max_leaf >= 1);
+        VERIFY(max_leaf >= 1);
         CPUID cpuid(1);
         m_stepping = cpuid.eax() & 0xf;
         u32 model = (cpuid.eax() >> 4) & 0xf;

@@ -66,7 +66,7 @@ static const char* get_syslog_ident(struct syslog_data* data)
     else if (program_name_set)
         return program_name_buffer;
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void openlog_r(const char* ident, int logopt, int facility, struct syslog_data* data)

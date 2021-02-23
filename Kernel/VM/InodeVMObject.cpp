@@ -53,7 +53,7 @@ InodeVMObject::~InodeVMObject()
 size_t InodeVMObject::amount_clean() const
 {
     size_t count = 0;
-    ASSERT(page_count() == m_dirty_pages.size());
+    VERIFY(page_count() == m_dirty_pages.size());
     for (size_t i = 0; i < page_count(); ++i) {
         if (!m_dirty_pages.get(i) && m_physical_pages[i])
             ++count;
@@ -91,7 +91,7 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
 void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, [[maybe_unused]] ssize_t size, [[maybe_unused]] const UserOrKernelBuffer& data)
 {
     InterruptDisabler disabler;
-    ASSERT(offset >= 0);
+    VERIFY(offset >= 0);
 
     // FIXME: Only invalidate the parts that actually changed.
     for (auto& physical_page : m_physical_pages)

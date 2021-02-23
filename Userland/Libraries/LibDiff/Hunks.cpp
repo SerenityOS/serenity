@@ -110,13 +110,13 @@ HunkLocation parse_hunk_location(const String& location_line)
     };
     while (char_index < location_line.length() && location_line[char_index++] != '-') {
     }
-    ASSERT(char_index < location_line.length());
+    VERIFY(char_index < location_line.length());
 
     size_t original_location_start_index = char_index;
 
     while (char_index < location_line.length() && location_line[char_index++] != ' ') {
     }
-    ASSERT(char_index < location_line.length() && location_line[char_index] == '+');
+    VERIFY(char_index < location_line.length() && location_line[char_index] == '+');
     size_t original_location_end_index = char_index - 2;
 
     size_t target_location_start_index = char_index + 1;
@@ -124,7 +124,7 @@ HunkLocation parse_hunk_location(const String& location_line)
     char_index += 1;
     while (char_index < location_line.length() && location_line[char_index++] != ' ') {
     }
-    ASSERT(char_index < location_line.length());
+    VERIFY(char_index < location_line.length());
 
     size_t target_location_end_index = char_index - 2;
 

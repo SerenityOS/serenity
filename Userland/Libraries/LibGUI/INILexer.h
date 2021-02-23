@@ -62,7 +62,7 @@ struct IniToken {
             FOR_EACH_TOKEN_TYPE
 #undef __TOKEN
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     Type m_type { Type::Unknown };

@@ -167,7 +167,7 @@ ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowS
     case WindowState::Inactive:
         return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2(), palette.inactive_window_title_stripes(), palette.inactive_window_title_shadow() };
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

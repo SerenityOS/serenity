@@ -140,8 +140,8 @@ void AbstractView::update_edit_widget_position()
 
 void AbstractView::begin_editing(const ModelIndex& index)
 {
-    ASSERT(is_editable());
-    ASSERT(model());
+    VERIFY(is_editable());
+    VERIFY(model());
     if (m_edit_index == index)
         return;
     if (!model()->is_editable(index))
@@ -152,7 +152,7 @@ void AbstractView::begin_editing(const ModelIndex& index)
     }
     m_edit_index = index;
 
-    ASSERT(aid_create_editing_delegate);
+    VERIFY(aid_create_editing_delegate);
     m_editing_delegate = aid_create_editing_delegate(index);
     m_editing_delegate->bind(*model(), index);
     m_editing_delegate->set_value(index.data());
@@ -164,12 +164,12 @@ void AbstractView::begin_editing(const ModelIndex& index)
     m_edit_widget->set_focus(true);
     m_editing_delegate->will_begin_editing();
     m_editing_delegate->on_commit = [this] {
-        ASSERT(model());
+        VERIFY(model());
         model()->set_data(m_edit_index, m_editing_delegate->value());
         stop_editing();
     };
     m_editing_delegate->on_rollback = [this] {
-        ASSERT(model());
+        VERIFY(model());
         stop_editing();
     };
 }
@@ -298,7 +298,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     if (distance_travelled_squared <= drag_distance_threshold)
         return ScrollableWidget::mousemove_event(event);
 
-    ASSERT(!data_type.is_null());
+    VERIFY(!data_type.is_null());
 
     if (m_is_dragging)
         return;
@@ -323,7 +323,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
         dbgln("Drag was cancelled!");
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 }

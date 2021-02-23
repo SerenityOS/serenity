@@ -308,7 +308,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
         mac[5] = tmp >> 8;
         set_mac_address(mac);
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -323,7 +323,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 RX buffer", Region::Access::Read | Region::Access::Write);
-        ASSERT(region);
+        VERIFY(region);
         m_rx_buffers_regions.append(region.release_nonnull());
         descriptor.addr = m_rx_buffers_regions[i].physical_page(0)->paddr().get();
         descriptor.status = 0;
@@ -344,7 +344,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(8192, "E1000 TX buffer", Region::Access::Read | Region::Access::Write);
-        ASSERT(region);
+        VERIFY(region);
         m_tx_buffers_regions.append(region.release_nonnull());
         descriptor.addr = m_tx_buffers_regions[i].physical_page(0)->paddr().get();
         descriptor.cmd = 0;
@@ -426,7 +426,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 #endif
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     auto& descriptor = tx_descriptors[tx_current];
-    ASSERT(payload.size() <= 8192);
+    VERIFY(payload.size() <= 8192);
     auto* vptr = (void*)m_tx_buffers_regions[tx_current].vaddr().as_ptr();
     memcpy(vptr, payload.data(), payload.size());
     descriptor.length = payload.size();
@@ -464,7 +464,7 @@ void E1000NetworkAdapter::receive()
             break;
         auto* buffer = m_rx_buffers_regions[rx_current].vaddr().as_ptr();
         u16 length = rx_descriptors[rx_current].length;
-        ASSERT(length <= 8192);
+        VERIFY(length <= 8192);
 #if E1000_DEBUG
         klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
 #endif

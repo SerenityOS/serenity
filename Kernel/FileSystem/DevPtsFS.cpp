@@ -63,7 +63,7 @@ bool DevPtsFS::initialize()
 
 static unsigned inode_index_to_pty_index(InodeIndex inode_index)
 {
-    ASSERT(inode_index > 1);
+    VERIFY(inode_index > 1);
     return inode_index.value() - 2;
 }
 
@@ -84,7 +84,7 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 
     unsigned pty_index = inode_index_to_pty_index(inode_id.index());
     auto* device = Device::get_device(201, pty_index);
-    ASSERT(device);
+    VERIFY(device);
 
     auto inode = adopt(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
     inode->m_metadata.inode = inode_id;
@@ -122,12 +122,12 @@ DevPtsFSInode::~DevPtsFSInode()
 
 ssize_t DevPtsFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 InodeMetadata DevPtsFSInode::metadata() const
@@ -159,14 +159,14 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEn
 
 KResultOr<size_t> DevPtsFSInode::directory_entry_count() const
 {
-    ASSERT(identifier().index() == 1);
+    VERIFY(identifier().index() == 1);
 
     return 2 + s_ptys->size();
 }
 
 RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
 {
-    ASSERT(identifier().index() == 1);
+    VERIFY(identifier().index() == 1);
 
     if (name == "." || name == "..")
         return this;

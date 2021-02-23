@@ -121,7 +121,7 @@ public:
             return IO::in16(get());
         if constexpr (sizeof(T) == 1)
             return IO::in8(get());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     template<typename T>
@@ -139,7 +139,7 @@ public:
             IO::out8(get(), value);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     inline void out(u32 value, u8 bit_width)
@@ -156,7 +156,7 @@ public:
             IO::out8(get(), value);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     bool is_null() const { return m_address == 0; }

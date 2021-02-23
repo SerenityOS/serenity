@@ -90,7 +90,7 @@ static StorageFormat determine_storage_format(BitmapFormat format)
     case BitmapFormat::Indexed8:
         return StorageFormat::Indexed8;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -198,7 +198,7 @@ public:
         case BitmapFormat::RGBA32:
             return 32;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case BitmapFormat::Invalid:
             return 0;
         }
@@ -274,13 +274,13 @@ private:
 
 inline u8* Bitmap::scanline_u8(int y)
 {
-    ASSERT(y >= 0 && y < physical_height());
+    VERIFY(y >= 0 && y < physical_height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
 inline const u8* Bitmap::scanline_u8(int y) const
 {
-    ASSERT(y >= 0 && y < physical_height());
+    VERIFY(y >= 0 && y < physical_height());
     return reinterpret_cast<const u8*>(m_data) + (y * m_pitch);
 }
 
@@ -297,21 +297,21 @@ inline const RGBA32* Bitmap::scanline(int y) const
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGB32>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGBA32>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgba(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
@@ -325,20 +325,20 @@ inline Color Bitmap::get_pixel(int x, int y) const
     case StorageFormat::Indexed8:
         return get_pixel<StorageFormat::Indexed8>(x, y);
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value();
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
 inline void Bitmap::set_pixel(int x, int y, Color color)
@@ -351,9 +351,9 @@ inline void Bitmap::set_pixel(int x, int y, Color color)
         set_pixel<StorageFormat::RGBA32>(x, y, color);
         break;
     case StorageFormat::Indexed8:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

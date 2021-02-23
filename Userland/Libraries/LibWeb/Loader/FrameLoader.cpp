@@ -227,7 +227,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
     ResourceLoader::the().load(
         error_page_url,
         [this, failed_url, error](auto data, auto&) {
-            ASSERT(!data.is_null());
+            VERIFY(!data.is_null());
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
             auto html = String::format(
                 String::copy(data).characters(),
@@ -235,12 +235,12 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
                 escape_html_entities(error).characters());
 #pragma GCC diagnostic pop
             auto document = HTML::parse_html_document(html, failed_url, "utf-8");
-            ASSERT(document);
+            VERIFY(document);
             frame().set_document(document);
         },
         [](auto error) {
             dbgln("Failed to load error page: {}", error);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         });
 }
 
@@ -279,7 +279,7 @@ void FrameLoader::resource_did_load()
 
     if (auto* host_element = frame().host_element()) {
         // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
-        ASSERT(is<HTML::HTMLIFrameElement>(*host_element));
+        VERIFY(is<HTML::HTMLIFrameElement>(*host_element));
         downcast<HTML::HTMLIFrameElement>(*host_element).content_frame_did_load({});
     }
 

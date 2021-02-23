@@ -42,7 +42,7 @@ const char* OpCode::name(OpCodeId opcode_id)
         ENUMERATE_OPCODES
 #undef __ENUMERATE_OPCODE
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -61,7 +61,7 @@ const char* execution_result_name(ExecutionResult result)
         ENUMERATE_EXECUTION_RESULTS
 #undef __ENUMERATE_EXECUTION_RESULT
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -75,7 +75,7 @@ const char* boundary_check_type_name(BoundaryCheckType ty)
         ENUMERATE_BOUNDARY_CHECK_TYPES
 #undef __ENUMERATE_BOUNDARY_CHECK_TYPE
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -89,7 +89,7 @@ const char* character_compare_type_name(CharacterCompareType ch_compare_type)
         ENUMERATE_CHARACTER_COMPARE_TYPES
 #undef __ENUMERATE_CHARACTER_COMPARE_TYPE
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -103,7 +103,7 @@ static const char* character_class_name(CharClass ch_class)
         ENUMERATE_CHARACTER_CLASSES
 #undef __ENUMERATE_CHARACTER_CLASS
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -222,7 +222,7 @@ ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(const MatchInput&, MatchSta
 
 ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(const MatchInput& input, MatchState&, MatchOutput&) const
 {
-    ASSERT(count() > 0);
+    VERIFY(count() > 0);
 
     input.fail_counter += count() - 1;
     return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -291,7 +291,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(const MatchInput& in
         return ExecutionResult::Failed_ExecuteLowPrioForks;
     }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
@@ -335,7 +335,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(const MatchI
     if (start_position < match.column)
         return ExecutionResult::Continue;
 
-    ASSERT(start_position + length <= input.view.length());
+    VERIFY(start_position + length <= input.view.length());
 
     auto view = input.view.substring_view(start_position, length);
 
@@ -371,11 +371,11 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const M
         auto& map = output.named_capture_group_matches.at(input.match_index);
 
         if constexpr (REGEX_DEBUG) {
-            ASSERT(start_position + length <= input.view.length());
+            VERIFY(start_position + length <= input.view.length());
             dbgln("Save named capture group with name={} and content='{}'", capture_group_name, input.view.substring_view(start_position, length));
         }
 
-        ASSERT(start_position + length <= input.view.length());
+        VERIFY(start_position + length <= input.view.length());
         auto view = input.view.substring_view(start_position, length);
         if (input.regex_options & AllFlags::StringCopyMatches) {
             map.set(capture_group_name, { view.to_string(), input.line, start_position, input.global_offset + start_position }); // create a copy of the original string
@@ -420,7 +420,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
         else if (compare_type == CharacterCompareType::TemporaryInverse) {
             // If "TemporaryInverse" is given, negate the current inversion state only for the next opcode.
             // it follows that this cannot be the last compare element.
-            ASSERT(i != arguments_count() - 1);
+            VERIFY(i != arguments_count() - 1);
 
             temporary_inverse = true;
             reset_temp_inverse = false;
@@ -439,11 +439,11 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             if (input.view.length() - state.string_position < 1)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            ASSERT(!current_inversion_state());
+            VERIFY(!current_inversion_state());
             ++state.string_position;
 
         } else if (compare_type == CharacterCompareType::String) {
-            ASSERT(!current_inversion_state());
+            VERIFY(!current_inversion_state());
 
             const auto& length = m_bytecode->at(offset++);
             StringBuilder str_builder;
@@ -511,7 +511,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
 
         } else {
             fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }

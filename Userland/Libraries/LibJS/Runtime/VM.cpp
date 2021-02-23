@@ -64,7 +64,7 @@ VM::~VM()
 
 Interpreter& VM::interpreter()
 {
-    ASSERT(!m_interpreters.is_empty());
+    VERIFY(!m_interpreters.is_empty());
     return *m_interpreters.last();
 }
 
@@ -82,9 +82,9 @@ void VM::push_interpreter(Interpreter& interpreter)
 
 void VM::pop_interpreter(Interpreter& interpreter)
 {
-    ASSERT(!m_interpreters.is_empty());
+    VERIFY(!m_interpreters.is_empty());
     auto* popped_interpreter = m_interpreters.take_last();
-    ASSERT(popped_interpreter == &interpreter);
+    VERIFY(popped_interpreter == &interpreter);
 }
 
 VM::InterpreterExecutionScope::InterpreterExecutionScope(Interpreter& interpreter)
@@ -256,7 +256,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
-        ASSERT(is<LexicalEnvironment>(current_scope()));
+        VERIFY(is<LexicalEnvironment>(current_scope()));
         static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -319,18 +319,18 @@ const ScopeObject* VM::find_this_scope() const
         if (scope->has_this_binding())
             return scope;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value VM::get_new_target() const
 {
-    ASSERT(is<LexicalEnvironment>(find_this_scope()));
+    VERIFY(is<LexicalEnvironment>(find_this_scope()));
     return static_cast<const LexicalEnvironment*>(find_this_scope())->new_target();
 }
 
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
-    ASSERT(!exception());
+    VERIFY(!exception());
 
     CallFrame call_frame;
     call_frame.is_strict_mode = function.is_strict_mode();
@@ -342,7 +342,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     auto* environment = function.create_environment();
     call_frame.scope = environment;
 
-    ASSERT(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+    VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
     environment->bind_this_value(function.global_object(), call_frame.this_value);
     if (exception())
         return {};

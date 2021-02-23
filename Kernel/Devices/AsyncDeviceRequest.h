@@ -87,7 +87,7 @@ public:
 
     void set_private(void* priv)
     {
-        ASSERT(!m_private || !priv);
+        VERIFY(!m_private || !priv);
         m_private = priv;
     }
     void* get_private() const { return m_private; }

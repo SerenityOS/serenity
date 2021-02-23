@@ -244,7 +244,7 @@ private:
             return;
 
         if (m_history.size() < max_history_size()) {
-            ASSERT(m_history_start == 0);
+            VERIFY(m_history_start == 0);
             m_history.append(move(line));
             return;
         }

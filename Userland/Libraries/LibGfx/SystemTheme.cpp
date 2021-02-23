@@ -36,13 +36,13 @@ static Core::AnonymousBuffer theme_buffer;
 
 const SystemTheme& current_system_theme()
 {
-    ASSERT(theme_page);
+    VERIFY(theme_page);
     return *theme_page;
 }
 
 Core::AnonymousBuffer& current_system_theme_buffer()
 {
-    ASSERT(theme_buffer.is_valid());
+    VERIFY(theme_buffer.is_valid());
     return theme_buffer;
 }
 

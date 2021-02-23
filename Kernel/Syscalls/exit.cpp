@@ -37,7 +37,7 @@ void Process::sys$exit(int status)
     m_termination_signal = 0;
     die();
     Thread::current()->die_if_needed();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

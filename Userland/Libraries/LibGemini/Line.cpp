@@ -81,7 +81,7 @@ String Control::render_to_html() const
         return "</ul>";
     default:
         dbgln("Unknown control kind _{}_", (int)m_kind);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "";
     }
 }

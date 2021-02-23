@@ -58,7 +58,7 @@ void KeysWidget::set_key(int key, Switch switch_key)
         if (m_key_on[key] >= 1)
             --m_key_on[key];
     }
-    ASSERT(m_key_on[key] <= 2);
+    VERIFY(m_key_on[key] <= 2);
 
     m_track_manager.set_note_current_octave(key, switch_key);
 }

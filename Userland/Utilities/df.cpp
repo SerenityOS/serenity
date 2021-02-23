@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    ASSERT(json_result.has_value());
+    VERIFY(json_result.has_value());
     auto json = json_result.value().as_array();
     json.for_each([](auto& value) {
         auto fs_object = value.as_object();

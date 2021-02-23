@@ -232,14 +232,14 @@ public:
 
     Vector<u8>& get_output()
     {
-        ASSERT(m_current_code <= m_code_table.size());
+        VERIFY(m_current_code <= m_code_table.size());
         if (m_current_code < m_code_table.size()) {
             Vector<u8> new_entry = m_output;
             m_output = m_code_table.at(m_current_code);
             new_entry.append(m_output[0]);
             extend_code_table(new_entry);
         } else if (m_current_code == m_code_table.size()) {
-            ASSERT(!m_output.is_empty());
+            VERIFY(!m_output.is_empty());
             m_output.append(m_output[0]);
             extend_code_table(m_output);
         }
@@ -285,7 +285,7 @@ private:
 
 static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
 {
-    ASSERT(dest.size_in_bytes() == src.size_in_bytes());
+    VERIFY(dest.size_in_bytes() == src.size_in_bytes());
     memcpy(dest.scanline(0), src.scanline(0), dest.size_in_bytes());
 }
 
@@ -294,7 +294,7 @@ static void clear_rect(Bitmap& bitmap, const IntRect& rect, Color color)
     if (rect.is_empty())
         return;
 
-    ASSERT(bitmap.rect().contains(rect));
+    VERIFY(bitmap.rect().contains(rect));
 
     RGBA32* dst = bitmap.scanline(rect.top()) + rect.left();
     const size_t dst_skip = bitmap.pitch() / sizeof(RGBA32);

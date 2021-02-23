@@ -104,7 +104,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     output.operations = 0;
 
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-        ASSERT(views.size() == 1);
+        VERIFY(views.size() == 1);
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -130,7 +130,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         if (output.matches.size() == input.match_index)
             output.matches.empend();
 
-        ASSERT(start_position + state.string_position - start_position <= input.view.length());
+        VERIFY(start_position + state.string_position - start_position <= input.view.length());
         if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
             output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
@@ -360,7 +360,7 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 template<class Parser>

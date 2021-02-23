@@ -80,7 +80,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             active_low = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED(); // Reserved value
+            VERIFY_NOT_REACHED(); // Reserved value
         case 3:
             active_low = true;
             break;
@@ -96,7 +96,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             trigger_level_mode = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED(); // Reserved value
+            VERIFY_NOT_REACHED(); // Reserved value
         case 3:
             trigger_level_mode = true;
             break;
@@ -127,8 +127,8 @@ bool IOAPIC::is_enabled() const
 void IOAPIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
-    ASSERT(handler.interrupt_number() == APIC::spurious_interrupt_vector());
+    VERIFY(handler.type() == HandlerType::SpuriousInterruptHandler);
+    VERIFY(handler.interrupt_number() == APIC::spurious_interrupt_vector());
     klog() << "IOAPIC::spurious_eoi - Spurious Interrupt occurred";
 }
 
@@ -148,7 +148,7 @@ void IOAPIC::map_isa_interrupts()
             active_low = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case 3:
             active_low = true;
             break;
@@ -164,7 +164,7 @@ void IOAPIC::map_isa_interrupts()
             trigger_level_mode = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case 3:
             trigger_level_mode = true;
             break;
@@ -196,7 +196,7 @@ void IOAPIC::reset_redirection_entry(int index) const
 void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
 {
     InterruptDisabler disabler;
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
@@ -219,7 +219,7 @@ void IOAPIC::mask_all_redirection_entries() const
 
 void IOAPIC::mask_redirection_entry(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (redirection_entry & (1 << 16))
         return;
@@ -228,13 +228,13 @@ void IOAPIC::mask_redirection_entry(u8 index) const
 
 bool IOAPIC::is_redirection_entry_masked(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & (1 << 16)) != 0;
 }
 
 void IOAPIC::unmask_redirection_entry(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (!(redirection_entry & (1 << 16)))
         return;
@@ -249,7 +249,7 @@ bool IOAPIC::is_vector_enabled(u8 interrupt_vector) const
 
 u8 IOAPIC::read_redirection_entry_vector(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & 0xFF);
 }
 
@@ -266,52 +266,52 @@ Optional<int> IOAPIC::find_redirection_entry_by_vector(u8 vector) const
 void IOAPIC::disable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
-    ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
         found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(found_index.has_value());
+    VERIFY(found_index.has_value());
     mask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::enable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
-    ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
         found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(found_index.has_value());
+    VERIFY(found_index.has_value());
     unmask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
-    ASSERT(handler.type() != HandlerType::SpuriousInterruptHandler);
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(handler.type() != HandlerType::SpuriousInterruptHandler);
     APIC::the().eoi();
 }
 
 u16 IOAPIC::get_isr() const
 {
     InterruptDisabler disabler;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 u16 IOAPIC::get_irr() const
 {
     InterruptDisabler disabler;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void IOAPIC::write_register(u32 index, u32 value) const

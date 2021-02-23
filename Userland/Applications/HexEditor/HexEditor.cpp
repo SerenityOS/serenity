@@ -418,8 +418,8 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
     if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
         if (m_buffer.is_empty())
             return;
-        ASSERT(m_position >= 0);
-        ASSERT(m_position < static_cast<int>(m_buffer.size()));
+        VERIFY(m_position >= 0);
+        VERIFY(m_position < static_cast<int>(m_buffer.size()));
 
         // yes, this is terrible... but it works.
         auto value = (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9)
@@ -447,8 +447,8 @@ void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
 {
     if (m_buffer.is_empty())
         return;
-    ASSERT(m_position >= 0);
-    ASSERT(m_position < static_cast<int>(m_buffer.size()));
+    VERIFY(m_position >= 0);
+    VERIFY(m_position < static_cast<int>(m_buffer.size()));
 
     if (event.code_point() == 0) // This is a control key
         return;

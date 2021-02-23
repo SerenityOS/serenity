@@ -129,7 +129,7 @@ void DynamicObject::parse()
             break;
         case DT_PLTREL:
             m_procedure_linkage_table_relocation_type = entry.val();
-            ASSERT(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
+            VERIFY(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
             break;
         case DT_JMPREL:
             m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
@@ -172,7 +172,7 @@ void DynamicObject::parse()
             break;
         default:
             dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{}", name_for_dtag(entry.tag()));
-            ASSERT_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
+            VERIFY_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
         return IterationDecision::Continue;
@@ -193,7 +193,7 @@ void DynamicObject::parse()
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
 {
-    ASSERT(index < entry_count());
+    VERIFY(index < entry_count());
     unsigned offset_in_section = index * entry_size();
     auto relocation_address = (Elf32_Rel*)address().offset(offset_in_section).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset_in_section);
@@ -201,7 +201,7 @@ DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned 
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
-    ASSERT(offset <= (m_section_size_bytes - m_entry_size));
+    VERIFY(offset <= (m_section_size_bytes - m_entry_size));
     auto relocation_address = (Elf32_Rel*)address().offset(offset).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset);
 }
@@ -323,7 +323,7 @@ const char* DynamicObject::raw_symbol_string_table_string(Elf32_Word index) cons
 
 DynamicObject::InitializationFunction DynamicObject::init_section_function() const
 {
-    ASSERT(has_init_section());
+    VERIFY(has_init_section());
     return (InitializationFunction)init_section().address().as_ptr();
 }
 
@@ -444,14 +444,14 @@ NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, 
 VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
-    ASSERT(relocation.type() == R_386_JMP_SLOT);
+    VERIFY(relocation.type() == R_386_JMP_SLOT);
     auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
 
     auto result = DynamicLoader::lookup_symbol(symbol);
     if (!result.has_value()) {
         dbgln("did not find symbol: {}", symbol.name());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto symbol_location = result.value().address;

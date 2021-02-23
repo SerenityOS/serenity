@@ -160,8 +160,8 @@ bool Object::prevent_extensions()
 
 Value Object::get_own_property(const PropertyName& property_name, Value receiver) const
 {
-    ASSERT(property_name.is_valid());
-    ASSERT(!receiver.is_empty());
+    VERIFY(property_name.is_valid());
+    VERIFY(!receiver.is_empty());
 
     Value value_here;
 
@@ -177,7 +177,7 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
         value_here = m_storage[metadata.value().offset].value_or(js_undefined());
     }
 
-    ASSERT(!value_here.is_empty());
+    VERIFY(!value_here.is_empty());
     if (value_here.is_accessor())
         return value_here.as_accessor().call_getter(receiver);
     if (value_here.is_native_property())
@@ -263,7 +263,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
 
 Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyName& property_name) const
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     Value value;
     PropertyAttributes attributes;
@@ -304,7 +304,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
 
 Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     auto& vm = this->vm();
     auto descriptor_opt = get_own_property_descriptor(property_name);
@@ -433,7 +433,7 @@ bool Object::define_property_without_transition(const PropertyName& property_nam
 
 bool Object::define_property(const PropertyName& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
         return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
@@ -448,7 +448,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
 
 bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     Accessor* accessor { nullptr };
     auto property_metadata = shape().lookup(property_name.to_string_or_symbol());
@@ -475,7 +475,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
 
 bool Object::put_own_property(Object& this_object, const StringOrSymbol& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
-    ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
+    VERIFY(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
     if (value.is_accessor()) {
         auto& accessor = value.as_accessor();
@@ -523,7 +523,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
             m_storage.resize(m_shape->property_count());
         }
         metadata = shape().lookup(property_name);
-        ASSERT(metadata.has_value());
+        VERIFY(metadata.has_value());
     }
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
@@ -569,7 +569,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
 
 bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
-    ASSERT(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
+    VERIFY(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
     auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
     auto new_property = !existing_property.has_value();
@@ -623,7 +623,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 
 Value Object::delete_property(const PropertyName& property_name)
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
         return Value(m_indexed_properties.remove(property_name.as_number()));
@@ -684,7 +684,7 @@ Value Object::get_by_index(u32 property_index) const
 
 Value Object::get(const PropertyName& property_name, Value receiver) const
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
@@ -714,7 +714,7 @@ Value Object::get(const PropertyName& property_name, Value receiver) const
 
 bool Object::put_by_index(u32 property_index, Value value)
 {
-    ASSERT(!value.is_empty());
+    VERIFY(!value.is_empty());
 
     // If there's a setter in the prototype chain, we go to the setter.
     // Otherwise, it goes in the own property storage.
@@ -743,12 +743,12 @@ bool Object::put_by_index(u32 property_index, Value value)
 
 bool Object::put(const PropertyName& property_name, Value value, Value receiver)
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
         return put_by_index(property_name.as_number(), value);
 
-    ASSERT(!value.is_empty());
+    VERIFY(!value.is_empty());
 
     if (property_name.is_string()) {
         auto& property_string = property_name.as_string();
@@ -837,7 +837,7 @@ bool Object::has_property(const PropertyName& property_name) const
 
 bool Object::has_own_property(const PropertyName& property_name) const
 {
-    ASSERT(property_name.is_valid());
+    VERIFY(property_name.is_valid());
 
     auto has_indexed_property = [&](u32 index) -> bool {
         if (is<StringObject>(*this))
@@ -859,7 +859,7 @@ bool Object::has_own_property(const PropertyName& property_name) const
 
 Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
 {
-    ASSERT(preferred_type == Value::PreferredType::String || preferred_type == Value::PreferredType::Number);
+    VERIFY(preferred_type == Value::PreferredType::String || preferred_type == Value::PreferredType::Number);
 
     auto& vm = this->vm();
 

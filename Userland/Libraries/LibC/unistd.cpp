@@ -592,7 +592,7 @@ long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
         return _POSIX_VDISABLE;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 long pathconf([[maybe_unused]] const char* path, int name)
@@ -604,13 +604,13 @@ long pathconf([[maybe_unused]] const char* path, int name)
         return PIPE_BUF;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void _exit(int status)
 {
     syscall(SC_exit, status);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void sync()

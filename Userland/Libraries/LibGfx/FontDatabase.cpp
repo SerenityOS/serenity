@@ -50,7 +50,7 @@ Font& FontDatabase::default_font()
     static Font* font;
     if (!font) {
         font = FontDatabase::the().get_by_name("Katica 10 400");
-        ASSERT(font);
+        VERIFY(font);
     }
     return *font;
 }
@@ -60,7 +60,7 @@ Font& FontDatabase::default_fixed_width_font()
     static Font* font;
     if (!font) {
         font = FontDatabase::the().get_by_name("Csilla 10 400");
-        ASSERT(font);
+        VERIFY(font);
     }
     return *font;
 }
@@ -70,7 +70,7 @@ Font& FontDatabase::default_bold_fixed_width_font()
     static Font* font;
     if (!font) {
         font = FontDatabase::the().get_by_name("Csilla 10 700");
-        ASSERT(font);
+        VERIFY(font);
     }
     return *font;
 }
@@ -80,7 +80,7 @@ Font& FontDatabase::default_bold_font()
     static Font* font;
     if (!font) {
         font = FontDatabase::the().get_by_name("Katica 10 700");
-        ASSERT(font);
+        VERIFY(font);
     }
     return *font;
 }

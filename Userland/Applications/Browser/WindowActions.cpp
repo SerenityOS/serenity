@@ -35,13 +35,13 @@ static WindowActions* s_the;
 
 WindowActions& WindowActions::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 WindowActions::WindowActions(GUI::Window& window)
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
     m_create_new_tab_action = GUI::Action::create(
         "New tab", { Mod_Ctrl, Key_T }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [this](auto&) {

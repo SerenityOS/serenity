@@ -56,7 +56,7 @@ void HTMLLinkElement::resource_did_fail()
 
 void HTMLLinkElement::resource_did_load()
 {
-    ASSERT(resource());
+    VERIFY(resource());
     if (!resource()->has_encoded_data())
         return;
 

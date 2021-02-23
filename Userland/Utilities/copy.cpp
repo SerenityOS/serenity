@@ -60,7 +60,7 @@ static Options parse_options(int argc, char* argv[])
             STDIN_FILENO,
             Core::IODevice::OpenMode::ReadOnly,
             Core::File::ShouldCloseFileDescriptor::No);
-        ASSERT(success);
+        VERIFY(success);
         auto buffer = c_stdin->read_all();
         dbgln("Read size {}", buffer.size());
         options.data = String((char*)buffer.data(), buffer.size());

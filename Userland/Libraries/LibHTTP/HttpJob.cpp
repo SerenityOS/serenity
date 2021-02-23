@@ -35,7 +35,7 @@
 namespace HTTP {
 void HttpJob::start()
 {
-    ASSERT(!m_socket);
+    VERIFY(!m_socket);
     m_socket = Core::TCPSocket::construct(this);
     m_socket->on_connected = [this] {
 #if CHTTPJOB_DEBUG

@@ -168,7 +168,7 @@ void Image::export_png(const String& file_path)
 void Image::add_layer(NonnullRefPtr<Layer> layer)
 {
     for (auto& existing_layer : m_layers) {
-        ASSERT(&existing_layer != layer.ptr());
+        VERIFY(&existing_layer != layer.ptr());
     }
     m_layers.append(move(layer));
 
@@ -206,7 +206,7 @@ size_t Image::index_of(const Layer& layer) const
         if (&m_layers.at(i) == &layer)
             return i;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Image::move_layer_to_back(Layer& layer)
@@ -255,8 +255,8 @@ void Image::move_layer_up(Layer& layer)
 
 void Image::change_layer_index(size_t old_index, size_t new_index)
 {
-    ASSERT(old_index < m_layers.size());
-    ASSERT(new_index < m_layers.size());
+    VERIFY(old_index < m_layers.size());
+    VERIFY(new_index < m_layers.size());
     auto layer = m_layers.take(old_index);
     m_layers.insert(new_index, move(layer));
     did_modify_layer_stack();
@@ -290,13 +290,13 @@ void Image::select_layer(Layer* layer)
 
 void Image::add_client(ImageClient& client)
 {
-    ASSERT(!m_clients.contains(&client));
+    VERIFY(!m_clients.contains(&client));
     m_clients.set(&client);
 }
 
 void Image::remove_client(ImageClient& client)
 {
-    ASSERT(m_clients.contains(&client));
+    VERIFY(m_clients.contains(&client));
     m_clients.remove(&client);
 }
 

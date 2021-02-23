@@ -91,7 +91,7 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 
     // We're temporarily "committing" to two pages that we need to allocate below
     if (!commit_user_physical_pages(2))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     m_shared_zero_page = allocate_committed_user_physical_page();
 
@@ -158,7 +158,7 @@ void MemoryManager::unmap_memory_after_init()
 
 UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 {
-    ASSERT(!m_physical_memory_ranges.is_empty());
+    VERIFY(!m_physical_memory_ranges.is_empty());
     ContiguousReservedMemoryRange range;
     for (auto& current_range : m_physical_memory_ranges) {
         if (current_range.type != PhysicalMemoryRangeType::Reserved) {
@@ -182,7 +182,7 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
 
 bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, const Range& range) const
 {
-    ASSERT(!m_reserved_memory_ranges.is_empty());
+    VERIFY(!m_reserved_memory_ranges.is_empty());
     for (auto& current_range : m_reserved_memory_ranges) {
         if (!(current_range.start <= start_address))
             continue;
@@ -310,8 +310,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
     }
 
-    ASSERT(m_super_physical_pages > 0);
-    ASSERT(m_user_physical_pages > 0);
+    VERIFY(m_super_physical_pages > 0);
+    VERIFY(m_user_physical_pages > 0);
 
     // We start out with no committed pages
     m_user_physical_pages_uncommitted = m_user_physical_pages.load();
@@ -323,9 +323,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(s_mm_lock.own_lock());
-    ASSERT(page_directory.get_lock().own_lock());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(s_mm_lock.own_lock());
+    VERIFY(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -340,9 +340,9 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
 
 PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(s_mm_lock.own_lock());
-    ASSERT(page_directory.get_lock().own_lock());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(s_mm_lock.own_lock());
+    VERIFY(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -361,9 +361,9 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             // of the purging process. So we need to re-map the pd in this case to ensure
             // we're writing to the correct underlying physical page
             pd = quickmap_pd(page_directory, page_directory_table_index);
-            ASSERT(&pde == &pd[page_directory_index]); // Sanity check
+            VERIFY(&pde == &pd[page_directory_index]); // Sanity check
 
-            ASSERT(!pde.is_present()); // Should have not changed
+            VERIFY(!pde.is_present()); // Should have not changed
         }
         pde.set_page_table_base(page_table->paddr().get());
         pde.set_user_allowed(true);
@@ -373,7 +373,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         // Use page_directory_table_index and page_directory_index as key
         // This allows us to release the page table entry when no longer needed
         auto result = page_directory.m_page_tables.set(vaddr.get() & ~0x1fffff, move(page_table));
-        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
     }
 
     return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
@@ -381,9 +381,9 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 
 void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, bool is_last_release)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(s_mm_lock.own_lock());
-    ASSERT(page_directory.get_lock().own_lock());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(s_mm_lock.own_lock());
+    VERIFY(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -409,7 +409,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
                 pde.clear();
 
                 auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
-                ASSERT(result);
+                VERIFY(result);
             }
         }
     }
@@ -463,13 +463,13 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     auto page_directory = PageDirectory::find_by_cr3(read_cr3());
     if (!page_directory)
         return nullptr;
-    ASSERT(page_directory->space());
+    VERIFY(page_directory->space());
     return user_region_from_vaddr(*page_directory->space(), vaddr);
 }
 
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_mm_lock);
     if (Processor::current().in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
@@ -491,7 +491,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 
 OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, String name, u8 access, size_t physical_alignment, Region::Cacheable cacheable)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
@@ -502,7 +502,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u8 access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
@@ -515,7 +515,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
@@ -528,7 +528,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().identity_range_allocator().allocate_specific(VirtualAddress(paddr.get()), size);
     if (!range.has_value())
@@ -550,7 +550,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& 
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, String name, u8 access, Region::Cacheable cacheable)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
@@ -560,7 +560,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
 
 bool MemoryManager::commit_user_physical_pages(size_t page_count)
 {
-    ASSERT(page_count > 0);
+    VERIFY(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
     if (m_user_physical_pages_uncommitted < page_count)
         return false;
@@ -572,9 +572,9 @@ bool MemoryManager::commit_user_physical_pages(size_t page_count)
 
 void MemoryManager::uncommit_user_physical_pages(size_t page_count)
 {
-    ASSERT(page_count > 0);
+    VERIFY(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
-    ASSERT(m_user_physical_pages_committed >= page_count);
+    VERIFY(m_user_physical_pages_committed >= page_count);
 
     m_user_physical_pages_uncommitted += page_count;
     m_user_physical_pages_committed -= page_count;
@@ -598,16 +598,16 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
     }
 
     dmesgln("MM: deallocate_user_physical_page couldn't figure out region for user page @ {}", page.paddr());
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
 {
-    ASSERT(s_mm_lock.is_locked());
+    VERIFY(s_mm_lock.is_locked());
     RefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
-        ASSERT(m_user_physical_pages_committed > 0);
+        VERIFY(m_user_physical_pages_committed > 0);
         m_user_physical_pages_committed--;
     } else {
         // We need to make sure we don't touch pages that we have committed to
@@ -622,7 +622,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
             break;
         }
     }
-    ASSERT(!committed || !page.is_null());
+    VERIFY(!committed || !page.is_null());
     return page;
 }
 
@@ -655,7 +655,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
                 dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
                 page = find_free_user_physical_page(false);
                 purged_pages = true;
-                ASSERT(page);
+                VERIFY(page);
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
@@ -692,12 +692,12 @@ void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page
     }
 
     dbgln("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ {}", page.paddr());
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size, size_t physical_alignment)
 {
-    ASSERT(!(size % PAGE_SIZE));
+    VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     size_t count = ceil_div(size, PAGE_SIZE);
     NonnullRefPtrVector<PhysicalPage> physical_pages;
@@ -714,7 +714,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
         }
 
         dmesgln("MM: no super physical pages available");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 
@@ -741,7 +741,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
         }
 
         dmesgln("MM: no super physical pages available");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 
@@ -758,7 +758,7 @@ void MemoryManager::enter_process_paging_scope(Process& process)
 void MemoryManager::enter_space(Space& space)
 {
     auto current_thread = Thread::current();
-    ASSERT(current_thread != nullptr);
+    VERIFY(current_thread != nullptr);
     ScopedSpinLock lock(s_mm_lock);
 
     current_thread->tss().cr3 = space.page_directory().cr3();
@@ -779,7 +779,7 @@ extern "C" PageTableEntry boot_pd3_pt1023[1024];
 
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
-    ASSERT(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
@@ -805,7 +805,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
-    ASSERT(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[0];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
@@ -830,7 +830,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 
 u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_mm_lock);
@@ -851,10 +851,10 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 
 void MemoryManager::unquickmap_page()
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_mm_lock);
     auto& mm_data = get_data();
-    ASSERT(mm_data.m_quickmap_in_use.is_locked());
+    VERIFY(mm_data.m_quickmap_in_use.is_locked());
     u32 pte_idx = 8 + Processor::id();
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
     auto& pte = boot_pd3_pt1023[pte_idx];

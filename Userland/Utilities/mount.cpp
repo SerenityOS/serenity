@@ -145,7 +145,7 @@ static bool print_mounts()
 
     auto content = df->read_all();
     auto json = JsonValue::from_string(content);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     json.value().as_array().for_each([](auto& value) {
         auto fs_object = value.as_object();

@@ -194,7 +194,7 @@ int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result)
 
 int dirfd(DIR* dirp)
 {
-    ASSERT(dirp);
+    VERIFY(dirp);
     return dirp->fd;
 }
 }

@@ -170,7 +170,7 @@ int main(int argc, char** argv)
         }
 
         // FIXME: we could miss some leaf functions that were called with a jump
-        ASSERT(instruction.mnemonic() == "CALL");
+        VERIFY(instruction.mnemonic() == "CALL");
 
         ++depth;
         new_function = true;

@@ -112,7 +112,7 @@ public:
     {
         OwnPtr ptr(move(other));
         swap(ptr);
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return *this;
     }
 
@@ -147,14 +147,14 @@ public:
 
     NonnullOwnPtr<T> release_nonnull()
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *leak_ptr());
     }
 
     template<typename U>
     NonnullOwnPtr<U> release_nonnull()
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 
@@ -163,25 +163,25 @@ public:
 
     T* operator->()
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return m_ptr;
     }
 
     const T* operator->() const
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return m_ptr;
     }
 
     T& operator*()
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return *m_ptr;
     }
 
     const T& operator*() const
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return *m_ptr;
     }
 

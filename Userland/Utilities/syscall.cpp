@@ -143,7 +143,7 @@ static FlatPtr parse_parameter_buffer(ArgIter& iter)
 
     fprintf(stderr, "Error: Unmatched '['?!\n");
     exit(1);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static FlatPtr parse_from(ArgIter& iter)

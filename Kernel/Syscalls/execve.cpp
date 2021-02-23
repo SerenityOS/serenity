@@ -195,7 +195,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
         return IterationDecision::Continue;
     });
 
-    ASSERT(range.end > range.start);
+    VERIFY(range.end > range.start);
     return range;
 };
 
@@ -283,15 +283,15 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
     FlatPtr load_base_address = 0;
 
     String elf_name = object_description.absolute_path();
-    ASSERT(!Processor::current().in_critical());
+    VERIFY(!Processor::current().in_critical());
 
     MemoryManager::enter_space(*new_space);
 
     KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
-            ASSERT(should_allocate_tls == ShouldAllocateTls::Yes);
-            ASSERT(program_header.size_in_memory());
+            VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
+            VERIFY(program_header.size_in_memory());
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! ELF PT_TLS header sneaks outside of executable.");
@@ -325,8 +325,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
 
         if (program_header.is_writable()) {
             // Writable section: create a copy in memory.
-            ASSERT(program_header.size_in_memory());
-            ASSERT(program_header.alignment() == PAGE_SIZE);
+            VERIFY(program_header.size_in_memory());
+            VERIFY(program_header.alignment() == PAGE_SIZE);
 
             if (!elf_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
                 dbgln("Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.");
@@ -368,8 +368,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
         }
 
         // Non-writable section: map the executable itself in memory.
-        ASSERT(program_header.size_in_memory());
-        ASSERT(program_header.alignment() == PAGE_SIZE);
+        VERIFY(program_header.size_in_memory());
+        VERIFY(program_header.alignment() == PAGE_SIZE);
         int prot = 0;
         if (program_header.is_readable())
             prot |= PROT_READ;
@@ -454,17 +454,17 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         return interpreter_load_result.error();
 
     // TLS allocation will be done in userspace by the loader
-    ASSERT(!interpreter_load_result.value().tls_region);
-    ASSERT(!interpreter_load_result.value().tls_alignment);
-    ASSERT(!interpreter_load_result.value().tls_size);
+    VERIFY(!interpreter_load_result.value().tls_region);
+    VERIFY(!interpreter_load_result.value().tls_alignment);
+    VERIFY(!interpreter_load_result.value().tls_size);
 
     return interpreter_load_result;
 }
 
 KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header)
 {
-    ASSERT(is_user_process());
-    ASSERT(!Processor::current().in_critical());
+    VERIFY(is_user_process());
+    VERIFY(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
@@ -522,7 +522,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range.value(), g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
     if (signal_trampoline_region.is_error()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     signal_trampoline_region.value()->set_syscall_region(true);
@@ -557,7 +557,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     int main_program_fd = -1;
     if (interpreter_description) {
         main_program_fd = alloc_fd();
-        ASSERT(main_program_fd >= 0);
+        VERIFY(main_program_fd >= 0);
         main_program_description->seek(0, SEEK_SET);
         main_program_description->set_readable(true);
         m_fds[main_program_fd].set(move(main_program_description), FD_CLOEXEC);
@@ -572,7 +572,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
             return IterationDecision::Break;
         });
     }
-    ASSERT(new_main_thread);
+    VERIFY(new_main_thread);
 
     auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, m_uid, m_euid, m_gid, m_egid, path, main_program_fd);
 
@@ -604,7 +604,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     auto tsr_result = new_main_thread->make_thread_specific_region({});
     if (tsr_result.is_error()) {
         // FIXME: We cannot fail this late. Refactor this so the allocation happens before we commit to the new executable.
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     new_main_thread->reset_fpu_state();
 
@@ -630,8 +630,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     u32 lock_count_to_restore;
     [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(Processor::current().in_critical());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(Processor::current().in_critical());
     return KSuccess;
 }
 
@@ -727,7 +727,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         auto interpreter_description = interp_result.value();
         auto interp_metadata = interpreter_description->metadata();
 
-        ASSERT(interpreter_description->inode());
+        VERIFY(interpreter_description->inode());
 
         // Validate the program interpreter as a valid elf binary.
         // If your program interpreter is a #! file or something, it's time to stop playing games :)
@@ -805,7 +805,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     if (metadata.size < 3)
         return ENOEXEC;
 
-    ASSERT(description->inode());
+    VERIFY(description->inode());
 
     // Read the first page of the program into memory so we can validate the binfmt of it
     char first_page[PAGE_SIZE];
@@ -856,20 +856,20 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     if (result.is_error())
         return result;
 
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(Processor::current().in_critical());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(Processor::current().in_critical());
 
     auto current_thread = Thread::current();
     if (current_thread == new_main_thread) {
         // We need to enter the scheduler lock before changing the state
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
-        ASSERT(!g_scheduler_lock.own_lock());
-        ASSERT(Processor::current().in_critical() == 1);
+        VERIFY(!g_scheduler_lock.own_lock());
+        VERIFY(Processor::current().in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
         Processor::assume_context(*current_thread, prev_flags);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     Processor::current().leave_critical(prev_flags);
@@ -926,7 +926,7 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
         return -EFAULT;
 
     auto result = exec(move(path), move(arguments), move(environment));
-    ASSERT(result.is_error()); // We should never continue after a successful exec!
+    VERIFY(result.is_error()); // We should never continue after a successful exec!
     return result.error();
 }
 

@@ -100,9 +100,9 @@ int main()
     all_good &= check_result("getcwd", expected_str, getcwd(nullptr, 0));
     all_good &= check_result("realpath", expected_str, realpath(".", nullptr));
 
-    ASSERT(strlen(PATH_LOREM_250) == 250);
-    ASSERT(strlen(TMPDIR_PATTERN) + ITERATION_DEPTH * (1 + strlen(PATH_LOREM_250)) == expected_str.length());
-    ASSERT(expected_str.length() > PATH_MAX);
+    VERIFY(strlen(PATH_LOREM_250) == 250);
+    VERIFY(strlen(TMPDIR_PATTERN) + ITERATION_DEPTH * (1 + strlen(PATH_LOREM_250)) == expected_str.length());
+    VERIFY(expected_str.length() > PATH_MAX);
 
     if (all_good) {
         printf("Overall: %sPASS%s\n", TEXT_PASS, TEXT_RESET);

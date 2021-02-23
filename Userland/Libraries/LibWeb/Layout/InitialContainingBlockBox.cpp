@@ -51,11 +51,11 @@ void InitialContainingBlockBox::build_stacking_context_tree()
         if (&box == this)
             return IterationDecision::Continue;
         if (!box.establishes_stacking_context()) {
-            ASSERT(!box.stacking_context());
+            VERIFY(!box.stacking_context());
             return IterationDecision::Continue;
         }
         auto* parent_context = box.enclosing_stacking_context();
-        ASSERT(parent_context);
+        VERIFY(parent_context);
         box.set_stacking_context(make<StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });

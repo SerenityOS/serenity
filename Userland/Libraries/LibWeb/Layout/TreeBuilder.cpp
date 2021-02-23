@@ -115,7 +115,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
                     if (!m_parent_stack[i]->is_inline() || m_parent_stack[i]->is_inline_block())
                         return *m_parent_stack[i];
                 }
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }();
             auto& insertion_point = insertion_parent_for_block_node(nearest_non_inline_ancestor, *layout_node);
             insertion_point.append_child(*layout_node);
@@ -260,7 +260,7 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
 template<typename WrapperBoxType>
 static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest_sibling)
 {
-    ASSERT(!sequence.is_empty());
+    VERIFY(!sequence.is_empty());
     auto& parent = *sequence.first().parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
     static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());

@@ -62,7 +62,7 @@ FutexQueue::~FutexQueue()
 
 void FutexQueue::vmobject_deleted(VMObject& vmobject)
 {
-    ASSERT(m_is_global); // If we got called we must be a global futex
+    VERIFY(m_is_global); // If we got called we must be a global futex
     // Because we're taking ourselves out of the global queue, we need
     // to make sure we have at last a reference until we're done
     NonnullRefPtr<FutexQueue> own_ref(*this);
@@ -88,7 +88,7 @@ void FutexQueue::vmobject_deleted(VMObject& vmobject)
             dbgln("Futex @ {} unblocked {} waiters due to vmobject free", this, wake_count);
     }
 
-    ASSERT(did_wake_all); // No one should be left behind...
+    VERIFY(did_wake_all); // No one should be left behind...
 }
 
 void Process::clear_futex_queues_on_exec()
@@ -97,7 +97,7 @@ void Process::clear_futex_queues_on_exec()
     for (auto& it : m_futex_queues) {
         bool did_wake_all;
         it.value->wake_all(did_wake_all);
-        ASSERT(did_wake_all); // No one should be left behind...
+        VERIFY(did_wake_all); // No one should be left behind...
     }
     m_futex_queues.clear();
 }
@@ -172,16 +172,16 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (create_if_not_found) {
             // TODO: is there a better way than setting and finding it again?
             auto result = global_queues.set(&vmobject, {});
-            ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+            VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             it = global_queues.find(&vmobject);
-            ASSERT(it != global_queues.end());
+            VERIFY(it != global_queues.end());
             return &it->value;
         }
         return nullptr;
     };
 
     auto find_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset, bool create_if_not_found) -> RefPtr<FutexQueue> {
-        ASSERT(is_private || vmobject);
+        VERIFY(is_private || vmobject);
         auto* queues = is_private ? &m_futex_queues : find_global_futex_queues(*vmobject, create_if_not_found);
         if (!queues)
             return {};
@@ -191,7 +191,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (create_if_not_found) {
             auto futex_queue = adopt(*new FutexQueue(user_address_or_offset, vmobject));
             auto result = queues->set(user_address_or_offset, futex_queue);
-            ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+            VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             return futex_queue;
         }
         return {};
@@ -234,7 +234,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
         auto futex_queue = find_futex_queue(vmobject.ptr(), user_address_or_offset, true);
-        ASSERT(futex_queue);
+        VERIFY(futex_queue);
 
         // We need to release the lock before blocking. But we have a reference
         // to the FutexQueue so that we can keep it alive.
@@ -358,13 +358,13 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         return do_requeue(params.val3);
 
     case FUTEX_WAIT_BITSET:
-        ASSERT(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAIT
+        VERIFY(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAIT
         if (params.val3 == 0)
             return -EINVAL;
         return do_wait(params.val3);
 
     case FUTEX_WAKE_BITSET:
-        ASSERT(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAKE
+        VERIFY(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAKE
         if (params.val3 == 0)
             return -EINVAL;
         return do_wake(vmobject.ptr(), user_address_or_offset, params.val, params.val3);

@@ -52,13 +52,13 @@ public:
 
     constexpr const u8& operator[](unsigned i) const
     {
-        ASSERT(i < s_mac_address_length);
+        VERIFY(i < s_mac_address_length);
         return m_data[i];
     }
 
     constexpr u8& operator[](unsigned i)
     {
-        ASSERT(i < s_mac_address_length);
+        VERIFY(i < s_mac_address_length);
         return m_data[i];
     }
 

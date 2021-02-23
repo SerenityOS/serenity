@@ -42,7 +42,7 @@ double Calculator::begin_operation(Operation operation, double argument)
 
     switch (operation) {
     case Operation::None:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     case Operation::Add:
     case Operation::Subtract:
@@ -128,7 +128,7 @@ double Calculator::finish_operation(double argument)
     case Operation::MemRecall:
     case Operation::MemSave:
     case Operation::MemAdd:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     clear_operation();

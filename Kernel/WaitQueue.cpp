@@ -32,9 +32,9 @@ namespace Kernel {
 
 bool WaitQueue::should_add_blocker(Thread::Blocker& b, void* data)
 {
-    ASSERT(data != nullptr); // Thread that is requesting to be blocked
-    ASSERT(m_lock.is_locked());
-    ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+    VERIFY(data != nullptr); // Thread that is requesting to be blocked
+    VERIFY(m_lock.is_locked());
+    VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
     if (m_wake_requested || !m_should_block) {
         m_wake_requested = false;
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: do not block thread {}, {}", this, data, m_should_block ? "wake was pending" : "not blocking");
@@ -50,8 +50,8 @@ u32 WaitQueue::wake_one()
     ScopedSpinLock lock(m_lock);
     dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one", this);
     bool did_unblock_one = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one unblocking {}", this, data);
         if (blocker.unblock()) {
@@ -75,11 +75,11 @@ u32 WaitQueue::wake_n(u32 wake_count)
     u32 did_wake = 0;
 
     bool did_unblock_some = do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n unblocking {}", this, data);
-        ASSERT(did_wake < wake_count);
+        VERIFY(did_wake < wake_count);
         if (blocker.unblock()) {
             if (++did_wake >= wake_count)
                 stop_iterating = true;
@@ -100,8 +100,8 @@ u32 WaitQueue::wake_all()
     u32 did_wake = 0;
 
     bool did_unblock_any = do_unblock([&](Thread::Blocker& b, void* data, bool&) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Queue);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
         auto& blocker = static_cast<Thread::QueueBlocker&>(b);
 
         dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all unblocking {}", this, data);

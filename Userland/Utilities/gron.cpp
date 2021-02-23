@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     if (use_color) {
         color_name = "\033[33;1m";

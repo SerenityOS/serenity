@@ -54,12 +54,12 @@ public:
 
     u8& operator[](size_t i)
     {
-        ASSERT(i < m_size);
+        VERIFY(i < m_size);
         return m_data[i];
     }
     const u8& operator[](size_t i) const
     {
-        ASSERT(i < m_size);
+        VERIFY(i < m_size);
         return m_data[i];
     }
     bool is_empty() const { return !m_size; }
@@ -83,7 +83,7 @@ public:
     // NOTE: trim() does not reallocate.
     void trim(size_t size)
     {
-        ASSERT(size <= m_size);
+        VERIFY(size <= m_size);
         m_size = size;
     }
 
@@ -145,12 +145,12 @@ public:
 
     u8& operator[](size_t i)
     {
-        ASSERT(m_impl);
+        VERIFY(m_impl);
         return (*m_impl)[i];
     }
     u8 operator[](size_t i) const
     {
-        ASSERT(m_impl);
+        VERIFY(m_impl);
         return (*m_impl)[i];
     }
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
@@ -215,7 +215,7 @@ public:
             return {};
 
         // I cannot hand you a slice I don't have
-        ASSERT(offset + size <= this->size());
+        VERIFY(offset + size <= this->size());
 
         return copy(offset_pointer(offset), size);
     }
@@ -232,7 +232,7 @@ public:
     {
         if (data_size == 0)
             return;
-        ASSERT(data != nullptr);
+        VERIFY(data != nullptr);
         int old_size = size();
         grow(size() + data_size);
         __builtin_memcpy(this->data() + old_size, data, data_size);
@@ -246,7 +246,7 @@ public:
     void overwrite(size_t offset, const void* data, size_t data_size)
     {
         // make sure we're not told to write past the end
-        ASSERT(offset + data_size <= size());
+        VERIFY(offset + data_size <= size());
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
 
@@ -285,7 +285,7 @@ inline ByteBufferImpl::ByteBufferImpl(const void* data, size_t size)
 
 inline void ByteBufferImpl::grow(size_t size)
 {
-    ASSERT(size > m_size);
+    VERIFY(size > m_size);
     if (size == 0) {
         if (m_data)
             kfree(m_data);

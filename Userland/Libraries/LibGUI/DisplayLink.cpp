@@ -73,7 +73,7 @@ i32 DisplayLink::register_callback(Function<void(i32)> callback)
 
 bool DisplayLink::unregister_callback(i32 callback_id)
 {
-    ASSERT(callbacks().contains(callback_id));
+    VERIFY(callbacks().contains(callback_id));
     callbacks().remove(callback_id);
 
     if (callbacks().is_empty())

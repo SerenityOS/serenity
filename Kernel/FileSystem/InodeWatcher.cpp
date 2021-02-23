@@ -60,7 +60,7 @@ bool InodeWatcher::can_write(const FileDescription&, size_t) const
 KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
     LOCKER(m_lock);
-    ASSERT(!m_queue.is_empty() || !m_inode);
+    VERIFY(!m_queue.is_empty() || !m_inode);
 
     if (!m_inode)
         return 0;

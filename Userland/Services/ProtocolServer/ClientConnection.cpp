@@ -103,7 +103,7 @@ void ClientConnection::did_receive_headers(Badge<Download>, Download& download)
 
 void ClientConnection::did_finish_download(Badge<Download>, Download& download, bool success)
 {
-    ASSERT(download.total_size().has_value());
+    VERIFY(download.total_size().has_value());
 
     post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value()));
 

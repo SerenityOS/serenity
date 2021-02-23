@@ -53,7 +53,7 @@ public:
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
-        ASSERT(is_locked());
+        VERIFY(is_locked());
         m_lock.store(0, AK::memory_order_release);
         Processor::current().leave_critical(prev_flags);
     }
@@ -98,8 +98,8 @@ public:
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
-        ASSERT(m_recursions > 0);
-        ASSERT(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
+        VERIFY(m_recursions > 0);
+        VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
         Processor::current().leave_critical(prev_flags);
@@ -137,7 +137,7 @@ public:
     ScopedSpinLock(LockType& lock)
         : m_lock(&lock)
     {
-        ASSERT(m_lock);
+        VERIFY(m_lock);
         m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
@@ -161,16 +161,16 @@ public:
 
     ALWAYS_INLINE void lock()
     {
-        ASSERT(m_lock);
-        ASSERT(!m_have_lock);
+        VERIFY(m_lock);
+        VERIFY(!m_have_lock);
         m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
 
     ALWAYS_INLINE void unlock()
     {
-        ASSERT(m_lock);
-        ASSERT(m_have_lock);
+        VERIFY(m_lock);
+        VERIFY(m_have_lock);
         m_lock->unlock(m_prev_flags);
         m_prev_flags = 0;
         m_have_lock = false;

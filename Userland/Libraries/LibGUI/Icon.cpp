@@ -49,7 +49,7 @@ Icon::Icon(RefPtr<Gfx::Bitmap>&& bitmap)
     : Icon()
 {
     if (bitmap) {
-        ASSERT(bitmap->width() == bitmap->height());
+        VERIFY(bitmap->width() == bitmap->height());
         int size = bitmap->width();
         set_bitmap_for_size(size, move(bitmap));
     }
@@ -59,7 +59,7 @@ Icon::Icon(RefPtr<Gfx::Bitmap>&& bitmap1, RefPtr<Gfx::Bitmap>&& bitmap2)
     : Icon(move(bitmap1))
 {
     if (bitmap2) {
-        ASSERT(bitmap2->width() == bitmap2->height());
+        VERIFY(bitmap2->width() == bitmap2->height());
         int size = bitmap2->width();
         set_bitmap_for_size(size, move(bitmap2));
     }

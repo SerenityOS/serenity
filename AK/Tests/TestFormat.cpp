@@ -177,7 +177,7 @@ TEST_CASE(pointers)
         EXPECT_EQ(String::formatted("{:p}", ptr), "0x0000000000004000");
         EXPECT_EQ(String::formatted("{}", ptr), "0x0000000000004000");
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

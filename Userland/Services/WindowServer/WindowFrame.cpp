@@ -232,7 +232,7 @@ bool WindowFrame::frame_has_alpha() const
 
 void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 {
-    ASSERT(m_maximize_button);
+    VERIFY(m_maximize_button);
     m_maximize_button->set_icon(maximized ? *s_restore_icon : *s_maximize_icon);
 }
 
@@ -427,7 +427,7 @@ void WindowFrame::render_to_cache()
 
     if (m_top_bottom && top_bottom_height > 0) {
         m_bottom_y = window_rect.y() - total_frame_rect.y();
-        ASSERT(m_bottom_y >= 0);
+        VERIFY(m_bottom_y >= 0);
 
         Gfx::Painter top_bottom_painter(*m_top_bottom);
         top_bottom_painter.add_clip_rect({ update_location, { frame_rect_to_update.width(), top_bottom_height - update_location.y() - (total_frame_rect.bottom() - frame_rect_to_update.bottom()) } });
@@ -441,7 +441,7 @@ void WindowFrame::render_to_cache()
 
     if (left_right_width > 0) {
         m_right_x = window_rect.x() - total_frame_rect.x();
-        ASSERT(m_right_x >= 0);
+        VERIFY(m_right_x >= 0);
 
         Gfx::Painter left_right_painter(*m_left_right);
         left_right_painter.add_clip_rect({ update_location, { left_right_width - update_location.x() - (total_frame_rect.right() - frame_rect_to_update.right()), window_rect.height() } });
@@ -578,7 +578,7 @@ bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
 
 void WindowFrame::on_mouse_event(const MouseEvent& event)
 {
-    ASSERT(!m_window.is_fullscreen());
+    VERIFY(!m_window.is_fullscreen());
 
     auto& wm = WindowManager::the();
     if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::ToolWindow && m_window.type() != WindowType::Notification)
@@ -657,7 +657,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
             { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
         };
         Gfx::IntRect outer_rect = { {}, rect().size() };
-        ASSERT(outer_rect.contains(event.position()));
+        VERIFY(outer_rect.contains(event.position()));
         int window_relative_x = event.x() - outer_rect.x();
         int window_relative_y = event.y() - outer_rect.y();
         int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
@@ -675,7 +675,7 @@ void WindowFrame::start_flash_animation()
 {
     if (!m_flash_timer) {
         m_flash_timer = Core::Timer::construct(100, [this] {
-            ASSERT(m_flash_counter);
+            VERIFY(m_flash_counter);
             invalidate_title_bar();
             if (!--m_flash_counter)
                 m_flash_timer->stop();
@@ -717,7 +717,7 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
     }
 
     // The containing_rect should have been inflated appropriately
-    ASSERT(containing_rect.size().contains(Gfx::IntSize { base_size, base_size }));
+    VERIFY(containing_rect.size().contains(Gfx::IntSize { base_size, base_size }));
 
     auto sides_height = containing_rect.height() - 2 * base_size;
     auto half_height = sides_height / 2;

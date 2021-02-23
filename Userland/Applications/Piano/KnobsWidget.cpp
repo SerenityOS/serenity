@@ -82,7 +82,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_octave = octave_max - value;
         if (m_change_underlying)
             m_main_widget.set_octave_and_ensure_note_change(new_octave);
-        ASSERT(new_octave == m_track_manager.octave());
+        VERIFY(new_octave == m_track_manager.octave());
         m_octave_value->set_text(String::number(new_octave));
     };
 
@@ -94,7 +94,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_wave = last_wave - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_wave(new_wave);
-        ASSERT(new_wave == m_track_manager.current_track().wave());
+        VERIFY(new_wave == m_track_manager.current_track().wave());
         m_wave_value->set_text(wave_strings[new_wave]);
     };
 
@@ -106,7 +106,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_attack = max_attack - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_attack(new_attack);
-        ASSERT(new_attack == m_track_manager.current_track().attack());
+        VERIFY(new_attack == m_track_manager.current_track().attack());
         m_attack_value->set_text(String::number(new_attack));
     };
 
@@ -118,7 +118,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_decay = max_decay - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_decay(new_decay);
-        ASSERT(new_decay == m_track_manager.current_track().decay());
+        VERIFY(new_decay == m_track_manager.current_track().decay());
         m_decay_value->set_text(String::number(new_decay));
     };
 
@@ -130,7 +130,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_sustain = max_sustain - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_sustain(new_sustain);
-        ASSERT(new_sustain == m_track_manager.current_track().sustain());
+        VERIFY(new_sustain == m_track_manager.current_track().sustain());
         m_sustain_value->set_text(String::number(new_sustain));
     };
 
@@ -142,7 +142,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_release = max_release - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_release(new_release);
-        ASSERT(new_release == m_track_manager.current_track().release());
+        VERIFY(new_release == m_track_manager.current_track().release());
         m_release_value->set_text(String::number(new_release));
     };
 
@@ -153,7 +153,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         int new_delay = max_delay - value;
         if (m_change_underlying)
             m_track_manager.current_track().set_delay(new_delay);
-        ASSERT(new_delay == m_track_manager.current_track().delay());
+        VERIFY(new_delay == m_track_manager.current_track().delay());
         m_delay_value->set_text(String::number(new_delay));
     };
 }

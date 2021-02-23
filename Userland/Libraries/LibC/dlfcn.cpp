@@ -104,7 +104,7 @@ void* dlopen(const char* filename, int flags)
 void* dlsym(void* handle, const char* symbol_name)
 {
     // FIXME: When called with a NULL handle we're supposed to search every dso in the process... that'll get expensive
-    ASSERT(handle);
+    VERIFY(handle);
     auto* dso = reinterpret_cast<ELF::DynamicLoader*>(handle);
     void* symbol = dso->symbol_for_name(symbol_name);
     if (!symbol) {

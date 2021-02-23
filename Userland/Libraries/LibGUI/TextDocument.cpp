@@ -210,7 +210,7 @@ void TextDocumentLine::remove(TextDocument& document, size_t index)
 
 void TextDocumentLine::remove_range(TextDocument& document, size_t start, size_t length)
 {
-    ASSERT(length <= m_text.size());
+    VERIFY(length <= m_text.size());
 
     Vector<u32> new_data;
     new_data.ensure_capacity(m_text.size() - length);
@@ -332,7 +332,7 @@ String TextDocument::text_in_range(const TextRange& a_range) const
 
 u32 TextDocument::code_point_at(const TextPosition& position) const
 {
-    ASSERT(position.line() < line_count());
+    VERIFY(position.line() < line_count());
     auto& line = this->line(position.line());
     if (position.column() == line.length())
         return '\n';
@@ -814,7 +814,7 @@ void TextDocument::remove(const TextRange& unnormalized_range)
         }
     } else {
         // Delete across a newline, merging lines.
-        ASSERT(range.start().line() == range.end().line() - 1);
+        VERIFY(range.start().line() == range.end().line() - 1);
         auto& first_line = line(range.start().line());
         auto& second_line = line(range.end().line());
         Vector<u32> code_points;

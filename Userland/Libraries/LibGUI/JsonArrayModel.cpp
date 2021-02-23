@@ -43,8 +43,8 @@ void JsonArrayModel::update()
 
     auto json = JsonValue::from_string(file->read_all());
 
-    ASSERT(json.has_value());
-    ASSERT(json.value().is_array());
+    VERIFY(json.has_value());
+    VERIFY(json.value().is_array());
     m_array = json.value().as_array();
 
     did_update();
@@ -65,7 +65,7 @@ bool JsonArrayModel::store()
 
 bool JsonArrayModel::add(const Vector<JsonValue>&& values)
 {
-    ASSERT(values.size() == m_fields.size());
+    VERIFY(values.size() == m_fields.size());
     JsonObject obj;
     for (size_t i = 0; i < m_fields.size(); ++i) {
         auto& field_spec = m_fields[i];

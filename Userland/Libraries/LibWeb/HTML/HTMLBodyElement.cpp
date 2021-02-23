@@ -53,7 +53,7 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
             if (color.has_value())
                 style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()));
         } else if (name.equals_ignoring_case("background")) {
-            ASSERT(m_background_style_value);
+            VERIFY(m_background_style_value);
             style.set_property(CSS::PropertyID::BackgroundImage, *m_background_style_value);
         }
     });

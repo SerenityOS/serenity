@@ -88,9 +88,9 @@ static inline size_t allocation_size_for_stringimpl(size_t length)
 
 NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
 {
-    ASSERT(length);
+    VERIFY(length);
     void* slot = kmalloc(allocation_size_for_stringimpl(length));
-    ASSERT(slot);
+    VERIFY(slot);
     auto new_stringimpl = adopt(*new (slot) StringImpl(ConstructWithInlineBuffer, length));
     buffer = const_cast<char*>(new_stringimpl->characters());
     buffer[length] = '\0';

@@ -55,11 +55,11 @@ int main(int argc, char** argv)
             STDIN_FILENO,
             Core::IODevice::OpenMode::ReadOnly,
             Core::File::ShouldCloseFileDescriptor::Yes);
-        ASSERT(success);
+        VERIFY(success);
         buffer = file->read_all();
     } else {
         auto result = Core::File::open(filepath, Core::IODevice::OpenMode::ReadOnly);
-        ASSERT(!result.is_error());
+        VERIFY(!result.is_error());
         auto file = result.value();
         buffer = file->read_all();
     }

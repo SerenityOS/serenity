@@ -51,7 +51,7 @@ public:
     }
     ~Timer()
     {
-        ASSERT(!is_queued());
+        VERIFY(!is_queued());
     }
 
     timespec remaining() const;
@@ -121,7 +121,7 @@ private:
         case CLOCK_REALTIME_COARSE:
             return m_timer_queue_realtime;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

@@ -91,22 +91,22 @@ public:
 
     T& first()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_head->value;
     }
     const T& first() const
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_head->value;
     }
     T& last()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_tail->value;
     }
     const T& last() const
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_tail->value;
     }
 
@@ -117,13 +117,13 @@ public:
             requires { T(value); }, "Conversion operator is missing.");
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
-            ASSERT(!m_tail);
+            VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
             return;
         }
-        ASSERT(m_tail);
-        ASSERT(!node->next);
+        VERIFY(m_tail);
+        VERIFY(!node->next);
         m_tail->next = node;
         node->prev = m_tail;
         m_tail = node;
@@ -135,13 +135,13 @@ public:
         static_assert(IsSame<T, U>::value);
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
-            ASSERT(!m_tail);
+            VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
             return;
         }
-        ASSERT(m_tail);
-        ASSERT(!node->prev);
+        VERIFY(m_tail);
+        VERIFY(!node->prev);
         m_head->prev = node;
         node->next = m_head;
         m_head = node;
@@ -174,20 +174,20 @@ public:
 
     void remove(Iterator it)
     {
-        ASSERT(it.m_node);
+        VERIFY(it.m_node);
         auto* node = it.m_node;
         if (node->prev) {
-            ASSERT(node != m_head);
+            VERIFY(node != m_head);
             node->prev->next = node->next;
         } else {
-            ASSERT(node == m_head);
+            VERIFY(node == m_head);
             m_head = node->next;
         }
         if (node->next) {
-            ASSERT(node != m_tail);
+            VERIFY(node != m_tail);
             node->next->prev = node->prev;
         } else {
-            ASSERT(node == m_tail);
+            VERIFY(node == m_tail);
             m_tail = node->prev;
         }
         delete node;

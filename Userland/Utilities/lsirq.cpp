@@ -59,7 +59,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     printf("%4s  %-10s\n", " ", "CPU0");
     auto file_contents = proc_interrupts->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
     json.value().as_array().for_each([](auto& value) {
         auto handler = value.as_object();
         auto purpose = handler.get("purpose").to_string();

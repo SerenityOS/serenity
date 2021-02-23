@@ -37,7 +37,7 @@ OpacitySlider::OpacitySlider(Gfx::Orientation orientation)
     : AbstractSlider(orientation)
 {
     // FIXME: Implement vertical mode.
-    ASSERT(orientation == Gfx::Orientation::Horizontal);
+    VERIFY(orientation == Gfx::Orientation::Horizontal);
 
     set_min(0);
     set_max(100);

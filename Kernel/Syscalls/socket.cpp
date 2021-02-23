@@ -122,7 +122,7 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
         }
     }
     auto accepted_socket = socket.accept();
-    ASSERT(accepted_socket);
+    VERIFY(accepted_socket);
 
     if (user_address) {
         u8 address_buffer[sizeof(sockaddr_un)];
@@ -263,7 +263,7 @@ ssize_t Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int
     int msg_flags = 0;
 
     if (result.value() > iovs[0].iov_len) {
-        ASSERT(socket.type() != SOCK_STREAM);
+        VERIFY(socket.type() != SOCK_STREAM);
         msg_flags |= MSG_TRUNC;
     }
 

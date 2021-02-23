@@ -40,39 +40,39 @@ UNMAP_AFTER_INIT DynamicParser::DynamicParser(PhysicalAddress rsdp)
 void DynamicParser::handle_irq(const RegisterState&)
 {
     // FIXME: Implement IRQ handling of ACPI signals!
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void DynamicParser::enable_aml_interpretation()
 {
     // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void DynamicParser::enable_aml_interpretation(File&)
 {
     // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void DynamicParser::enable_aml_interpretation(u8*, u32)
 {
     // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void DynamicParser::disable_aml_interpretation()
 {
     // FIXME: Implement AML Interpretation
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void DynamicParser::try_acpi_shutdown()
 {
     // FIXME: Implement AML Interpretation to perform ACPI shutdown
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void DynamicParser::build_namespace()
 {
     // FIXME: Implement AML Interpretation to build the ACPI namespace
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

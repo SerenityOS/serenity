@@ -31,7 +31,7 @@ namespace AK {
 
 int day_of_year(int year, unsigned month, int day)
 {
-    ASSERT(month >= 1 && month <= 12);
+    VERIFY(month >= 1 && month <= 12);
 
     static const int seek_table[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
     int day_of_year = seek_table[month - 1] + day - 1;
@@ -44,7 +44,7 @@ int day_of_year(int year, unsigned month, int day)
 
 int days_in_month(int year, unsigned month)
 {
-    ASSERT(month >= 1 && month <= 12);
+    VERIFY(month >= 1 && month <= 12);
     if (month == 2)
         return is_leap_year(year) ? 29 : 28;
 
@@ -54,7 +54,7 @@ int days_in_month(int year, unsigned month)
 
 unsigned day_of_week(int year, unsigned month, int day)
 {
-    ASSERT(month >= 1 && month <= 12);
+    VERIFY(month >= 1 && month <= 12);
     static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
     if (month < 3)
         --year;

@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     auto server = Core::LocalServer::construct();
 
     bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {

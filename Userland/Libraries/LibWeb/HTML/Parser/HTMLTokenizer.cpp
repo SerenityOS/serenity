@@ -189,7 +189,7 @@ namespace Web::HTML {
             {
 
 #define END_STATE         \
-    ASSERT_NOT_REACHED(); \
+    VERIFY_NOT_REACHED(); \
     break;                \
     }                     \
     }                     \
@@ -2610,7 +2610,7 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
-    ASSERT(decoder);
+    VERIFY(decoder);
     m_decoded_input = decoder->to_utf8(input);
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
@@ -2640,7 +2640,7 @@ void HTMLTokenizer::will_emit(HTMLToken& token)
 
 bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
 {
-    ASSERT(m_current_token.is_end_tag());
+    VERIFY(m_current_token.is_end_tag());
     if (!m_last_emitted_start_tag.is_start_tag())
         return false;
     return m_current_token.tag_name() == m_last_emitted_start_tag.tag_name();

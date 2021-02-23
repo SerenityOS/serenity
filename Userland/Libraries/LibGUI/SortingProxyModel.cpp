@@ -83,12 +83,12 @@ ModelIndex SortingProxyModel::map_to_source(const ModelIndex& proxy_index) const
     if (!proxy_index.is_valid())
         return {};
 
-    ASSERT(proxy_index.model() == this);
-    ASSERT(proxy_index.internal_data());
+    VERIFY(proxy_index.model() == this);
+    VERIFY(proxy_index.internal_data());
 
     auto& index_mapping = *static_cast<Mapping*>(proxy_index.internal_data());
     auto it = m_mappings.find(index_mapping.source_parent);
-    ASSERT(it != m_mappings.end());
+    VERIFY(it != m_mappings.end());
 
     auto& mapping = *it->value;
     if (static_cast<size_t>(proxy_index.row()) >= mapping.source_rows.size() || proxy_index.column() >= column_count())
@@ -103,7 +103,7 @@ ModelIndex SortingProxyModel::map_to_proxy(const ModelIndex& source_index) const
     if (!source_index.is_valid())
         return {};
 
-    ASSERT(source_index.model() == m_source);
+    VERIFY(source_index.model() == m_source);
 
     auto source_parent = source_index.parent();
     auto it = const_cast<SortingProxyModel*>(this)->build_mapping(source_parent);
@@ -158,7 +158,7 @@ ModelIndex SortingProxyModel::index(int row, int column, const ModelIndex& paren
     const_cast<SortingProxyModel*>(this)->build_mapping(source_parent);
 
     auto it = m_mappings.find(source_parent);
-    ASSERT(it != m_mappings.end());
+    VERIFY(it != m_mappings.end());
     auto& mapping = *it->value;
     if (row >= static_cast<int>(mapping.source_rows.size()) || column >= column_count())
         return {};
@@ -170,12 +170,12 @@ ModelIndex SortingProxyModel::parent_index(const ModelIndex& proxy_index) const
     if (!proxy_index.is_valid())
         return {};
 
-    ASSERT(proxy_index.model() == this);
-    ASSERT(proxy_index.internal_data());
+    VERIFY(proxy_index.model() == this);
+    VERIFY(proxy_index.internal_data());
 
     auto& index_mapping = *static_cast<Mapping*>(proxy_index.internal_data());
     auto it = m_mappings.find(index_mapping.source_parent);
-    ASSERT(it != m_mappings.end());
+    VERIFY(it != m_mappings.end());
 
     return map_to_proxy(it->value->source_parent);
 }

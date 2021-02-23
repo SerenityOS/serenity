@@ -57,7 +57,7 @@ Interpreter::~Interpreter()
 Value Interpreter::run(GlobalObject& global_object, const Program& program)
 {
     auto& vm = this->vm();
-    ASSERT(!vm.exception());
+    VERIFY(!vm.exception());
 
     VM::InterpreterExecutionScope scope(*this);
 
@@ -66,10 +66,10 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     static FlyString global_execution_context_name = "(global execution context)";
     global_call_frame.function_name = global_execution_context_name;
     global_call_frame.scope = &global_object;
-    ASSERT(!vm.exception());
+    VERIFY(!vm.exception());
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);
-    ASSERT(!vm.exception());
+    VERIFY(!vm.exception());
     auto result = program.execute(*this, global_object);
     vm.pop_call_frame();
     return result;
@@ -185,7 +185,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
 
 LexicalEnvironment* Interpreter::current_environment()
 {
-    ASSERT(is<LexicalEnvironment>(vm().call_frame().scope));
+    VERIFY(is<LexicalEnvironment>(vm().call_frame().scope));
     return static_cast<LexicalEnvironment*>(vm().call_frame().scope);
 }
 

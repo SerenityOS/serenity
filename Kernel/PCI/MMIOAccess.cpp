@@ -68,14 +68,14 @@ uint32_t MMIOAccess::segment_count() const
 uint8_t MMIOAccess::segment_start_bus(u32 seg) const
 {
     auto segment = m_segments.get(seg);
-    ASSERT(segment.has_value());
+    VERIFY(segment.has_value());
     return segment.value().get_start_bus();
 }
 
 uint8_t MMIOAccess::segment_end_bus(u32 seg) const
 {
     auto segment = m_segments.get(seg);
-    ASSERT(segment.has_value());
+    VERIFY(segment.has_value());
     return segment.value().get_end_bus();
 }
 
@@ -153,7 +153,7 @@ UNMAP_AFTER_INIT Optional<VirtualAddress> MMIOAccess::get_device_configuration_s
 u8 MMIOAccess::read8_field(Address address, u32 field)
 {
     InterruptDisabler disabler;
-    ASSERT(field <= 0xfff);
+    VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 8-bit field {:#08x} for {}", field, address);
     return *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -161,7 +161,7 @@ u8 MMIOAccess::read8_field(Address address, u32 field)
 u16 MMIOAccess::read16_field(Address address, u32 field)
 {
     InterruptDisabler disabler;
-    ASSERT(field < 0xfff);
+    VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 16-bit field {:#08x} for {}", field, address);
     return *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -169,7 +169,7 @@ u16 MMIOAccess::read16_field(Address address, u32 field)
 u32 MMIOAccess::read32_field(Address address, u32 field)
 {
     InterruptDisabler disabler;
-    ASSERT(field <= 0xffc);
+    VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 32-bit field {:#08x} for {}", field, address);
     return *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
 }
@@ -177,21 +177,21 @@ u32 MMIOAccess::read32_field(Address address, u32 field)
 void MMIOAccess::write8_field(Address address, u32 field, u8 value)
 {
     InterruptDisabler disabler;
-    ASSERT(field <= 0xfff);
+    VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }
 void MMIOAccess::write16_field(Address address, u32 field, u16 value)
 {
     InterruptDisabler disabler;
-    ASSERT(field < 0xfff);
+    VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }
 void MMIOAccess::write32_field(Address address, u32 field, u32 value)
 {
     InterruptDisabler disabler;
-    ASSERT(field <= 0xffc);
+    VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
     *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
 }

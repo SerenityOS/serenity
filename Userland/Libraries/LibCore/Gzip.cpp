@@ -46,7 +46,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     size_t current = 0;
     auto read_byte = [&]() {
         if (current >= data.size()) {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             return (u8)0;
         }
         return data[current++];
@@ -108,7 +108,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
 
 Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 {
-    ASSERT(is_compressed(data));
+    VERIFY(is_compressed(data));
 
     dbgln_if(GZIP_DEBUG, "Gzip::decompress: Decompressing gzip compressed data. size={}", data.size());
     auto optional_payload = get_gzip_payload(data);
@@ -150,7 +150,7 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
             destination.grow(destination.size() * 2);
         } else {
             dbgln("Gzip::decompress: Error. puff() returned: {}", puff_ret);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

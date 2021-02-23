@@ -101,7 +101,7 @@ u16 BXVGADevice::get_register(u16 index)
 void BXVGADevice::revert_resolution()
 {
     set_resolution_registers(m_framebuffer_width, m_framebuffer_height);
-    ASSERT(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
+    VERIFY(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
 }
 
 void BXVGADevice::set_resolution_registers(size_t width, size_t height)
@@ -152,7 +152,7 @@ bool BXVGADevice::validate_setup_resolution(size_t width, size_t height)
 
 void BXVGADevice::set_y_offset(size_t y_offset)
 {
-    ASSERT(y_offset == 0 || y_offset == m_framebuffer_height);
+    VERIFY(y_offset == 0 || y_offset == m_framebuffer_height);
     m_y_offset = y_offset;
     set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)y_offset);
 }

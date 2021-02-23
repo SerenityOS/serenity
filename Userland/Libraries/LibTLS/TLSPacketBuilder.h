@@ -107,7 +107,7 @@ public:
     }
     inline void set(size_t offset, u8 value)
     {
-        ASSERT(offset < m_current_length);
+        VERIFY(offset < m_current_length);
         m_packet_data[offset] = value;
     }
     size_t length() const { return m_current_length; }

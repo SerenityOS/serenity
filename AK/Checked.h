@@ -156,13 +156,13 @@ public:
 
     ALWAYS_INLINE constexpr bool operator!() const
     {
-        ASSERT(!m_overflow);
+        VERIFY(!m_overflow);
         return !m_value;
     }
 
     ALWAYS_INLINE constexpr T value() const
     {
-        ASSERT(!m_overflow);
+        VERIFY(!m_overflow);
         return m_value;
     }
 

@@ -33,11 +33,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PARSE_ASSERT(x)                                     \
+#define PARSE_VERIFY(x)                                     \
     if (!(x)) {                                             \
         dbgln("CSS PARSER ASSERTION FAILED: {}", #x);       \
         dbgln("At character# {} in CSS: _{}_", index, css); \
-        ASSERT_NOT_REACHED();                               \
+        VERIFY_NOT_REACHED();                               \
     }
 
 #define PARSE_ERROR()             \
@@ -344,7 +344,7 @@ public:
 
     char consume_one()
     {
-        PARSE_ASSERT(index < css.length());
+        PARSE_VERIFY(index < css.length());
         return css[index++];
     };
 
@@ -424,7 +424,7 @@ public:
         if (type != CSS::Selector::SimpleSelector::Type::Universal) {
             while (is_valid_selector_char(peek()))
                 buffer.append(consume_one());
-            PARSE_ASSERT(!buffer.is_null());
+            PARSE_VERIFY(!buffer.is_null());
         }
 
         auto value = String::copy(buffer);
@@ -593,7 +593,7 @@ public:
                 break;
             simple_selectors.append(component.value());
             // If this assert triggers, we're most likely up to no good.
-            PARSE_ASSERT(simple_selectors.size() < 100);
+            PARSE_VERIFY(simple_selectors.size() < 100);
         }
 
         if (simple_selectors.is_empty())
@@ -682,7 +682,7 @@ public:
                 continue;
             }
             if (ch == ')') {
-                PARSE_ASSERT(paren_nesting_level > 0);
+                PARSE_VERIFY(paren_nesting_level > 0);
                 --paren_nesting_level;
                 buffer.append(consume_one());
                 continue;

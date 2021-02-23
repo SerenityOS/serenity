@@ -50,8 +50,8 @@ String Color::to_string_without_alpha() const
 
 static Optional<Color> parse_rgb_color(const StringView& string)
 {
-    ASSERT(string.starts_with("rgb("));
-    ASSERT(string.ends_with(")"));
+    VERIFY(string.starts_with("rgb("));
+    VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(4, string.length() - 5);
     auto parts = substring.split_view(',');
@@ -71,8 +71,8 @@ static Optional<Color> parse_rgb_color(const StringView& string)
 
 static Optional<Color> parse_rgba_color(const StringView& string)
 {
-    ASSERT(string.starts_with("rgba("));
-    ASSERT(string.ends_with(")"));
+    VERIFY(string.starts_with("rgba("));
+    VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(5, string.length() - 6);
     auto parts = substring.split_view(',');

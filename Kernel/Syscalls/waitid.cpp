@@ -34,7 +34,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
     KResultOr<siginfo_t> result = KResult(KSuccess);
     if (Thread::current()->block<Thread::WaitBlocker>({}, options, idtype, id, result).was_interrupted())
         return EINTR;
-    ASSERT(!result.is_error() || (options & WNOHANG) || result.error() != KSuccess);
+    VERIFY(!result.is_error() || (options & WNOHANG) || result.error() != KSuccess);
     return result;
 }
 

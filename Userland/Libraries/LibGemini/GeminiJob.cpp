@@ -36,7 +36,7 @@ namespace Gemini {
 
 void GeminiJob::start()
 {
-    ASSERT(!m_socket);
+    VERIFY(!m_socket);
     m_socket = TLS::TLSv12::construct(this);
     m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_connected = [this] {
@@ -98,7 +98,7 @@ void GeminiJob::set_certificate(String certificate, String private_key)
     if (!m_socket->add_client_key(certificate.bytes(), private_key.bytes())) {
         dbgln("LibGemini: Failed to set a client certificate");
         // FIXME: Do something about this failure
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

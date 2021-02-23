@@ -114,25 +114,25 @@ HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) co
 
 const Frame& Node::frame() const
 {
-    ASSERT(document().frame());
+    VERIFY(document().frame());
     return *document().frame();
 }
 
 Frame& Node::frame()
 {
-    ASSERT(document().frame());
+    VERIFY(document().frame());
     return *document().frame();
 }
 
 const InitialContainingBlockBox& Node::root() const
 {
-    ASSERT(document().layout_node());
+    VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
 InitialContainingBlockBox& Node::root()
 {
-    ASSERT(document().layout_node());
+    VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
@@ -159,7 +159,7 @@ Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
         return downcast<Box>(*this).absolute_position();
-    ASSERT(is_inline());
+    VERIFY(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {

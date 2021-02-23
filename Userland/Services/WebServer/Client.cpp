@@ -174,7 +174,7 @@ static String folder_image_data()
     static String cache;
     if (cache.is_empty()) {
         auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-folder.png");
-        ASSERT(!file_or_error.is_error());
+        VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
     return cache;
@@ -185,7 +185,7 @@ static String file_image_data()
     static String cache;
     if (cache.is_empty()) {
         auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-unknown.png");
-        ASSERT(!file_or_error.is_error());
+        VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
     return cache;

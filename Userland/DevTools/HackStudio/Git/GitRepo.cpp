@@ -49,7 +49,7 @@ RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_roo
     if (res.is_null())
         return {};
 
-    ASSERT(git_repo_exists(repository_root));
+    VERIFY(git_repo_exists(repository_root));
     return adopt(*new GitRepo(repository_root));
 }
 

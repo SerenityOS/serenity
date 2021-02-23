@@ -127,7 +127,7 @@ void Highlighter::highlight_matching_token_pair()
 
 void Highlighter::attach(HighlighterClient& client)
 {
-    ASSERT(!m_client);
+    VERIFY(!m_client);
     m_client = &client;
 }
 

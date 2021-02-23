@@ -116,7 +116,7 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
             break;
         }
 
-        ASSERT(!(appears_unordered && appears_ordered));
+        VERIFY(!(appears_unordered && appears_ordered));
 
         if (appears_unordered || appears_ordered) {
             if (first)
@@ -142,7 +142,7 @@ OwnPtr<List> List::parse(Vector<StringView>::ConstIterator& lines)
         first = false;
         if (!item_builder.is_empty())
             item_builder.append(' ');
-        ASSERT(offset <= line.length());
+        VERIFY(offset <= line.length());
         item_builder.append(line.substring_view(offset, line.length() - offset));
         ++lines;
         offset = 0;

@@ -51,7 +51,7 @@ public:
     }
     Utf32CodepointIterator& operator++()
     {
-        ASSERT(m_length > 0);
+        VERIFY(m_length > 0);
         m_ptr++;
         m_length--;
         return *this;
@@ -62,7 +62,7 @@ public:
     }
     u32 operator*() const
     {
-        ASSERT(m_length > 0);
+        VERIFY(m_length > 0);
         return *m_ptr;
     }
 
@@ -88,7 +88,7 @@ public:
         : m_code_points(code_points)
         , m_length(length)
     {
-        ASSERT(code_points || length == 0);
+        VERIFY(code_points || length == 0);
     }
 
     Utf32CodepointIterator begin() const
@@ -107,8 +107,8 @@ public:
 
     size_t iterator_offset(const Utf32CodepointIterator& it) const
     {
-        ASSERT(it.m_ptr >= m_code_points);
-        ASSERT(it.m_ptr < m_code_points + m_length);
+        VERIFY(it.m_ptr >= m_code_points);
+        VERIFY(it.m_ptr < m_code_points + m_length);
         return ((ptrdiff_t)it.m_ptr - (ptrdiff_t)m_code_points) / sizeof(u32);
     }
 
@@ -116,9 +116,9 @@ public:
     {
         if (length == 0)
             return {};
-        ASSERT(offset < m_length);
-        ASSERT(!Checked<size_t>::addition_would_overflow(offset, length));
-        ASSERT((offset + length) <= m_length);
+        VERIFY(offset < m_length);
+        VERIFY(!Checked<size_t>::addition_would_overflow(offset, length));
+        VERIFY((offset + length) <= m_length);
         return Utf32View(m_code_points + offset, length);
     }
 

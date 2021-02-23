@@ -32,9 +32,9 @@ namespace Kernel {
 
 bool FutexQueue::should_add_blocker(Thread::Blocker& b, void* data)
 {
-    ASSERT(data != nullptr); // Thread that is requesting to be blocked
-    ASSERT(m_lock.is_locked());
-    ASSERT(b.blocker_type() == Thread::Blocker::Type::Futex);
+    VERIFY(data != nullptr); // Thread that is requesting to be blocked
+    VERIFY(m_lock.is_locked());
+    VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
 
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: should block thread {}", this, *static_cast<Thread*>(data));
 
@@ -50,12 +50,12 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
 
     u32 did_wake = 0, did_requeue = 0;
     do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Futex);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
         dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue unblocking {}", this, *static_cast<Thread*>(data));
-        ASSERT(did_wake < wake_count);
+        VERIFY(did_wake < wake_count);
         if (blocker.unblock()) {
             if (++did_wake >= wake_count)
                 stop_iterating = true;
@@ -72,7 +72,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
 
                 // While still holding m_lock, notify each blocker
                 for (auto& info : blockers_to_requeue) {
-                    ASSERT(info.blocker->blocker_type() == Thread::Blocker::Type::Futex);
+                    VERIFY(info.blocker->blocker_type() == Thread::Blocker::Type::Futex);
                     auto& blocker = *static_cast<Thread::FutexBlocker*>(info.blocker);
                     blocker.begin_requeue();
                 }
@@ -84,7 +84,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
                 // Now that we have the lock of the target, append the blockers
                 // and notify them that they completed the move
                 for (auto& info : blockers_to_requeue) {
-                    ASSERT(info.blocker->blocker_type() == Thread::Blocker::Type::Futex);
+                    VERIFY(info.blocker->blocker_type() == Thread::Blocker::Type::Futex);
                     auto& blocker = *static_cast<Thread::FutexBlocker*>(info.blocker);
                     blocker.finish_requeue(*target_futex_queue);
                 }
@@ -107,12 +107,12 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
     do_unblock([&](Thread::Blocker& b, void* data, bool& stop_iterating) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Futex);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
 
         dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n unblocking {}", this, *static_cast<Thread*>(data));
-        ASSERT(did_wake < wake_count);
+        VERIFY(did_wake < wake_count);
         if (bitset.has_value() ? blocker.unblock_bitset(bitset.value()) : blocker.unblock()) {
             if (++did_wake >= wake_count)
                 stop_iterating = true;
@@ -130,8 +130,8 @@ u32 FutexQueue::wake_all(bool& is_empty)
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all", this);
     u32 did_wake = 0;
     do_unblock([&](Thread::Blocker& b, void* data, bool&) {
-        ASSERT(data);
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Futex);
+        VERIFY(data);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
         auto& blocker = static_cast<Thread::FutexBlocker&>(b);
         dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_all unblocking {}", this, *static_cast<Thread*>(data));
         if (blocker.unblock(true)) {

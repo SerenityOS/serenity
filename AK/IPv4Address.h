@@ -65,7 +65,7 @@ public:
 
     constexpr u8 operator[](int i) const
     {
-        ASSERT(i >= 0 && i < 4);
+        VERIFY(i >= 0 && i < 4);
         return octet(SubnetClass(i));
     }
 

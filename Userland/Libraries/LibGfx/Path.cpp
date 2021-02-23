@@ -70,7 +70,7 @@ void Path::close_all_subpaths()
                 // This is a move from a subpath to another
                 // connect the two ends of this subpath before
                 // moving on to the next one
-                ASSERT(start_of_subpath.has_value());
+                VERIFY(start_of_subpath.has_value());
 
                 append_segment<MoveSegment>(cursor.value());
                 append_segment<LineSegment>(start_of_subpath.value());
@@ -89,7 +89,7 @@ void Path::close_all_subpaths()
             cursor = segment.point();
             break;
         case Segment::Type::Invalid:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -216,7 +216,7 @@ void Path::segmentize_path()
             break;
         }
         case Segment::Type::Invalid:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         first = false;

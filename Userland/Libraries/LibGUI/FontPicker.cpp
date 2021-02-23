@@ -96,7 +96,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
 
     auto& widget = set_main_widget<GUI::Widget>();
     if (!widget.load_from_gml(font_picker_dialog_gml))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     m_family_list_view = *widget.find_descendant_of_type_named<ListView>("family_list_view");
     m_family_list_view->set_model(ItemListModel<String>::create(m_families));

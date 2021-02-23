@@ -112,12 +112,12 @@ bool LocalServer::listen(const String& address)
     ioctl(m_fd, FIONBIO, &option);
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
 #endif
-    ASSERT(m_fd >= 0);
+    VERIFY(m_fd >= 0);
 #ifndef __APPLE__
     rc = fchmod(m_fd, 0600);
     if (rc < 0) {
         perror("fchmod");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #endif
 
@@ -147,7 +147,7 @@ bool LocalServer::listen(const String& address)
 
 RefPtr<LocalSocket> LocalServer::accept()
 {
-    ASSERT(m_listening);
+    VERIFY(m_listening);
     sockaddr_un un;
     socklen_t un_size = sizeof(un);
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);

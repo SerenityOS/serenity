@@ -91,7 +91,7 @@ public:
             case Type::Composite:
                 return raster_composite(x_scale, y_scale, glyph_callback);
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         int ascender() const { return m_ymax; }
         int descender() const { return m_ymin; }

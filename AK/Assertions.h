@@ -31,9 +31,9 @@
 #else
 #    include <assert.h>
 #    ifndef __serenity__
-#        define ASSERT assert
-#        define ASSERT_NOT_REACHED() assert(false)
+#        define VERIFY assert
+#        define VERIFY_NOT_REACHED() assert(false)
 #        define RELEASE_ASSERT assert
-#        define TODO ASSERT_NOT_REACHED
+#        define TODO VERIFY_NOT_REACHED
 #    endif
 #endif

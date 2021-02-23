@@ -45,8 +45,8 @@ void LineProgram::parse_unit_header()
 {
     m_stream >> Bytes { &m_unit_header, sizeof(m_unit_header) };
 
-    ASSERT(m_unit_header.version == DWARF_VERSION);
-    ASSERT(m_unit_header.opcode_base == SPECIAL_OPCODES_BASE);
+    VERIFY(m_unit_header.version == DWARF_VERSION);
+    VERIFY(m_unit_header.opcode_base == SPECIAL_OPCODES_BASE);
 
 #if DWARF_DEBUG
     dbgln("unit length: {}", m_unit_header.length);
@@ -67,7 +67,7 @@ void LineProgram::parse_source_directories()
     }
     m_stream.handle_recoverable_error();
     m_stream.discard_or_error(1);
-    ASSERT(!m_stream.has_any_error());
+    VERIFY(!m_stream.has_any_error());
 }
 
 void LineProgram::parse_source_files()
@@ -87,7 +87,7 @@ void LineProgram::parse_source_files()
         m_source_files.append({ file_name, directory_index });
     }
     m_stream.discard_or_error(1);
-    ASSERT(!m_stream.has_any_error());
+    VERIFY(!m_stream.has_any_error());
 }
 
 void LineProgram::append_to_line_info()
@@ -131,7 +131,7 @@ void LineProgram::handle_extended_opcode()
         break;
     }
     case ExtendedOpcodes::SetAddress: {
-        ASSERT(length == sizeof(size_t) + 1);
+        VERIFY(length == sizeof(size_t) + 1);
         m_stream >> m_address;
 #if DWARF_DEBUG
         dbgln("SetAddress: {:p}", m_address);
@@ -149,7 +149,7 @@ void LineProgram::handle_extended_opcode()
 #if DWARF_DEBUG
         dbgln("offset: {:p}", m_stream.offset());
 #endif
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 void LineProgram::handle_standard_opcode(u8 opcode)
@@ -191,7 +191,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
     case StandardOpcodes::AdvanceLine: {
         ssize_t line_delta;
         m_stream.read_LEB128_signed(line_delta);
-        ASSERT(line_delta >= 0 || m_line >= (size_t)(-line_delta));
+        VERIFY(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
 #if DWARF_DEBUG
         dbgln("AdvanceLine: {}", m_line);
@@ -223,7 +223,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
     }
     default:
         dbgln("Unhandled LineProgram opcode {}", opcode);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 void LineProgram::handle_sepcial_opcode(u8 opcode)

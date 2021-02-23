@@ -36,7 +36,7 @@ Wrappable::~Wrappable()
 
 void Wrappable::set_wrapper(Wrapper& wrapper)
 {
-    ASSERT(!m_wrapper);
+    VERIFY(!m_wrapper);
     m_wrapper = wrapper.make_weak_ptr();
 }
 

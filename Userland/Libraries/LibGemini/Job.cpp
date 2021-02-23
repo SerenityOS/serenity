@@ -53,7 +53,7 @@ void Job::flush_received_buffers()
             m_received_buffers.take_first();
             continue;
         }
-        ASSERT(written < payload.size());
+        VERIFY(written < payload.size());
         payload = payload.slice(written, payload.size() - written);
         return;
     }
@@ -124,7 +124,7 @@ void Job::on_socket_connected()
             return;
         }
 
-        ASSERT(m_state == State::InBody || m_state == State::Finished);
+        VERIFY(m_state == State::InBody || m_state == State::Finished);
 
         read_while_data_available([&] {
             auto read_size = 64 * KiB;

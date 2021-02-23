@@ -49,7 +49,7 @@ inline int safe_syscall(Syscall syscall, Args&&... args)
 
             if (errno == EINTR)
                 continue;
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return sysret;
     }

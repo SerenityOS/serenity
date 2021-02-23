@@ -85,7 +85,7 @@ Card::Card(Type type, uint8_t value)
     , m_type(type)
     , m_value(value)
 {
-    ASSERT(value < card_count);
+    VERIFY(value < card_count);
     Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
@@ -94,7 +94,7 @@ Card::Card(Type type, uint8_t value)
 
         s_background->fill(Color::White);
         auto image = Gfx::Bitmap::load_from_file("/res/icons/solitaire/buggie-deck.png");
-        ASSERT(!image.is_null());
+        VERIFY(!image.is_null());
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
         auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
@@ -132,7 +132,7 @@ Card::Card(Type type, uint8_t value)
         symbol = s_heart;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     painter.draw_bitmap(
@@ -152,7 +152,7 @@ Card::~Card()
 
 void Card::draw(GUI::Painter& painter) const
 {
-    ASSERT(!s_background.is_null());
+    VERIFY(!s_background.is_null());
     painter.blit(position(), m_upside_down ? *s_background : *m_front, m_front->rect());
 }
 

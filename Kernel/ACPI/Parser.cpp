@@ -47,7 +47,7 @@ Parser* Parser::the()
 
 void Parser::set_the(Parser& parser)
 {
-    ASSERT(!s_acpi_parser);
+    VERIFY(!s_acpi_parser);
     s_acpi_parser = &parser;
 }
 
@@ -89,7 +89,7 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     klog() << "ACPI: Searching for the Fixed ACPI Data Table";
 
     m_fadt = find_table("FACP");
-    ASSERT(!m_fadt.is_null());
+    VERIFY(!m_fadt.is_null());
 
     auto sdt = map_typed<Structures::FADT>(m_fadt);
 
@@ -148,13 +148,13 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
         switch (structure.access_size) {
         case (u8)GenericAddressStructure::AccessSize::QWord: {
             dbgln("Trying to send QWord to IO port");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
         case (u8)GenericAddressStructure::AccessSize::Undefined: {
             dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
-            ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
-            ASSERT(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
+            VERIFY(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
+            VERIFY(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
             dbgln("ACPI: Bit Width - {} bits", structure.bit_width);
             address.out(value, structure.bit_width);
             break;
@@ -182,7 +182,7 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
             break;
         }
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return;
     }
@@ -193,16 +193,16 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
         u32 offset_in_pci_address = structure.address & 0xFFFF;
         if (structure.access_size == (u8)GenericAddressStructure::AccessSize::QWord) {
             dbgln("Trying to send QWord to PCI configuration space");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
-        ASSERT(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
+        VERIFY(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
         PCI::raw_access(pci_address, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
         return;
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Parser::validate_reset_register()
@@ -222,7 +222,7 @@ void Parser::try_acpi_reboot()
     dbgln_if(ACPI_DEBUG, "ACPI: Rebooting, Probing FADT ({})", m_fadt);
 
     auto fadt = map_typed<Structures::FADT>(m_fadt);
-    ASSERT(validate_reset_register());
+    VERIFY(validate_reset_register());
     access_generic_address(fadt->reset_reg, fadt->reset_value);
     Processor::halt();
 }
@@ -255,7 +255,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 #if ACPI_DEBUG
     dbgln("ACPI: Checking Main SDT Length to choose the correct mapping size");
 #endif
-    ASSERT(!m_main_system_description_table.is_null());
+    VERIFY(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);
 
@@ -333,7 +333,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> StaticParsing::find_rsdp()
 UNMAP_AFTER_INIT PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    ASSERT(signature.length() == 4);
+    VERIFY(signature.length() == 4);
 
     auto rsdp = map_typed<Structures::RSDPDescriptor20>(rsdp_address);
 
@@ -345,13 +345,13 @@ UNMAP_AFTER_INIT PhysicalAddress StaticParsing::find_table(PhysicalAddress rsdp_
             return search_table_in_xsdt(PhysicalAddress(rsdp->xsdt_ptr), signature);
         return search_table_in_rsdt(PhysicalAddress(rsdp->base.rsdt_ptr), signature);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    ASSERT(signature.length() == 4);
+    VERIFY(signature.length() == 4);
 
     auto xsdt = map_typed<Structures::XSDT>(xsdt_address);
 
@@ -365,7 +365,7 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsd
 static bool match_table_signature(PhysicalAddress table_header, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    ASSERT(signature.length() == 4);
+    VERIFY(signature.length() == 4);
 
     auto table = map_typed<Structures::RSDT>(table_header);
     return !strncmp(table->h.sig, signature.characters_without_null_termination(), 4);
@@ -374,7 +374,7 @@ static bool match_table_signature(PhysicalAddress table_header, const StringView
 UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsdt_address, const StringView& signature)
 {
     // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
-    ASSERT(signature.length() == 4);
+    VERIFY(signature.length() == 4);
 
     auto rsdt = map_typed<Structures::RSDT>(rsdt_address);
 
@@ -387,22 +387,22 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsd
 
 void Parser::enable_aml_interpretation()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Parser::enable_aml_interpretation(File&)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Parser::enable_aml_interpretation(u8*, u32)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Parser::disable_aml_interpretation()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

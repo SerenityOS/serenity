@@ -43,7 +43,7 @@ public:
 
     virtual HandlerType type() const override { return HandlerType::UnhandledInterruptHandler; }
     virtual const char* purpose() const override { return "Unhandled Interrupt Handler"; }
-    virtual const char* controller() const override { ASSERT_NOT_REACHED(); }
+    virtual const char* controller() const override { VERIFY_NOT_REACHED(); }
 
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }

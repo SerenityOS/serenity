@@ -104,16 +104,16 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
         Option* found_option = nullptr;
         if (c == 0) {
             // It was a long option.
-            ASSERT(index_of_found_long_option >= 0);
+            VERIFY(index_of_found_long_option >= 0);
             found_option = &m_options[index_of_found_long_option];
             index_of_found_long_option = -1;
         } else {
             // It was a short option, look it up.
             auto it = m_options.find_if([c](auto& opt) { return c == opt.short_name; });
-            ASSERT(!it.is_end());
+            VERIFY(!it.is_end());
             found_option = &*it;
         }
-        ASSERT(found_option);
+        VERIFY(found_option);
 
         const char* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
@@ -264,7 +264,7 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
         short_name,
         nullptr,
         [&value](const char* s) {
-            ASSERT(s == nullptr);
+            VERIFY(s == nullptr);
             value = true;
             return true;
         }

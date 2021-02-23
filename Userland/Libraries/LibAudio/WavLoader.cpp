@@ -174,7 +174,7 @@ bool WavLoaderPlugin::parse_header()
     u32 sz = read_u32();
     ok = ok && sz < 1024 * 1024 * 1024; // arbitrary
     CHECK_OK("File size");
-    ASSERT(sz < 1024 * 1024 * 1024);
+    VERIFY(sz < 1024 * 1024 * 1024);
 
     u32 wave = read_u32();
     ok = ok && wave == 0x45564157; // "WAVE"
@@ -187,12 +187,12 @@ bool WavLoaderPlugin::parse_header()
     u32 fmt_size = read_u32();
     ok = ok && fmt_size == 16;
     CHECK_OK("FMT size");
-    ASSERT(fmt_size == 16);
+    VERIFY(fmt_size == 16);
 
     u16 audio_format = read_u16();
     CHECK_OK("Audio format");     // incomplete read check
     ok = ok && audio_format == 1; // WAVE_FORMAT_PCM
-    ASSERT(audio_format == 1);
+    VERIFY(audio_format == 1);
     CHECK_OK("Audio format"); // value check
 
     m_num_channels = read_u16();
@@ -211,7 +211,7 @@ bool WavLoaderPlugin::parse_header()
     m_bits_per_sample = read_u16();
     CHECK_OK("Bits per sample"); // incomplete read check
     ok = ok && (m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
-    ASSERT(m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
+    VERIFY(m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
     CHECK_OK("Bits per sample"); // value check
 
     // Read chunks until we find DATA
@@ -241,7 +241,7 @@ bool WavLoaderPlugin::parse_header()
 
     ok = ok && found_data;
     CHECK_OK("Found no data chunk");
-    ASSERT(found_data);
+    VERIFY(found_data);
 
     ok = ok && data_sz < INT32_MAX;
     CHECK_OK("Data was too large");

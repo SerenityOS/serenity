@@ -110,7 +110,7 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
@@ -317,7 +317,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
     auto decoder = TextCodec::decoder_for("windows-1252");
-    ASSERT(decoder);
+    VERIFY(decoder);
     return JS::js_string(vm, decoder->to_utf8(decoded));
 }
 

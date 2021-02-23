@@ -101,7 +101,7 @@ static bool unpack_file_for_central_directory_index(off_t central_directory_inde
         return false;
     auto compression_method = buffer[1] << 8 | buffer[0];
     // FIXME: Remove once any decompression is supported.
-    ASSERT(compression_method == None);
+    VERIFY(compression_method == None);
 
     if (!seek_and_read(buffer, file, local_file_header_index + LFHCompressedSizeOffset, 4))
         return false;

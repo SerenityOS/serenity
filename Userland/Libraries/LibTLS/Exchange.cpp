@@ -189,7 +189,7 @@ ByteBuffer TLSv12::build_certificate()
 
     if (m_context.is_server) {
         dbgln("Unsupported: Server mode");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
         local_certificates = &m_context.client_certificates;
     }

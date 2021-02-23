@@ -44,7 +44,7 @@ char Parser::peek()
     if (at_end())
         return 0;
 
-    ASSERT(m_offset < m_input.length());
+    VERIFY(m_offset < m_input.length());
 
     auto ch = m_input[m_offset];
     if (ch == '\\' && m_input.length() > m_offset + 1 && m_input[m_offset + 1] == '\n') {
@@ -326,7 +326,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     if (!rest)
         return create<AST::VariableDeclarations>(move(variables));
 
-    ASSERT(rest->is_variable_decls());
+    VERIFY(rest->is_variable_decls());
     auto* rest_decl = static_cast<AST::VariableDeclarations*>(rest.ptr());
 
     variables.append(rest_decl->variables());
@@ -1368,7 +1368,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
 {
     auto rule_start = push_start();
 
-    ASSERT(peek() == '!');
+    VERIFY(peek() == '!');
     consume();
 
     // Event selector
@@ -1585,7 +1585,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
         {
             restore_to(rule_start->offset, rule_start->line);
             auto ch = consume();
-            ASSERT(ch == '~');
+            VERIFY(ch == '~');
             tilde = create<AST::Tilde>(move(username));
         }
 

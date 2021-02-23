@@ -84,7 +84,7 @@ void Object::event(Core::Event& event)
     case Core::Event::ChildRemoved:
         return child_event(static_cast<ChildEvent&>(event));
     case Core::Event::Invalid:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     case Core::Event::Custom:
         return custom_event(static_cast<CustomEvent&>(event));
@@ -96,7 +96,7 @@ void Object::event(Core::Event& event)
 void Object::add_child(Object& object)
 {
     // FIXME: Should we support reparenting objects?
-    ASSERT(!object.parent() || object.parent() == this);
+    VERIFY(!object.parent() || object.parent() == this);
     object.m_parent = this;
     m_children.append(object);
     Core::ChildEvent child_event(Core::Event::ChildAdded, object);
@@ -106,7 +106,7 @@ void Object::add_child(Object& object)
 void Object::insert_child_before(Object& new_child, Object& before_child)
 {
     // FIXME: Should we support reparenting objects?
-    ASSERT(!new_child.parent() || new_child.parent() == this);
+    VERIFY(!new_child.parent() || new_child.parent() == this);
     new_child.m_parent = this;
     m_children.insert_before_matching(new_child, [&](auto& existing_child) { return existing_child.ptr() == &before_child; });
     Core::ChildEvent child_event(Core::Event::ChildAdded, new_child, &before_child);
@@ -126,7 +126,7 @@ void Object::remove_child(Object& object)
             return;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Object::remove_all_children()
@@ -151,7 +151,7 @@ void Object::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_vis
 {
     if (m_timer_id) {
         dbgln("{} {:p} already has a timer!", class_name(), this);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_timer_id = Core::EventLoop::register_timer(*this, ms, true, fire_when_not_visible);
@@ -162,7 +162,7 @@ void Object::stop_timer()
     if (!m_timer_id)
         return;
     bool success = Core::EventLoop::unregister_timer(m_timer_id);
-    ASSERT(success);
+    VERIFY(success);
     m_timer_id = 0;
 }
 
@@ -224,7 +224,7 @@ bool Object::is_ancestor_of(const Object& other) const
 
 void Object::dispatch_event(Core::Event& e, Object* stay_within)
 {
-    ASSERT(!stay_within || stay_within == this || stay_within->is_ancestor_of(*this));
+    VERIFY(!stay_within || stay_within == this || stay_within->is_ancestor_of(*this));
     auto* target = this;
     do {
         target->event(e);

@@ -76,7 +76,7 @@ RefPtr<Socket> Socket::accept()
         return nullptr;
     dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
     auto client = m_pending.take_first();
-    ASSERT(!client->is_connected());
+    VERIFY(!client->is_connected());
     auto& process = *Process::current();
     client->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
     client->m_connected = true;
@@ -101,7 +101,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
 {
     if (level != SOL_SOCKET)
         return ENOPROTOOPT;
-    ASSERT(level == SOL_SOCKET);
+    VERIFY(level == SOL_SOCKET);
     switch (option) {
     case SO_SNDTIMEO:
         if (user_value_size != sizeof(timeval))

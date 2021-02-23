@@ -95,7 +95,7 @@ private:
             break;
         }
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         set_tooltip(m_tooltip);
         update();
@@ -175,7 +175,7 @@ private:
 
         auto file_contents = m_proc_mem->read_all();
         auto json = JsonValue::from_string(file_contents);
-        ASSERT(json.has_value());
+        VERIFY(json.has_value());
         auto& obj = json.value().as_object();
         unsigned kmalloc_allocated = obj.get("kmalloc_allocated").to_u32();
         unsigned kmalloc_available = obj.get("kmalloc_available").to_u32();

@@ -79,7 +79,7 @@ public:
 
     void seek(size_t offset)
     {
-        ASSERT(offset < m_bytes.size());
+        VERIFY(offset < m_bytes.size());
         m_offset = offset;
     }
 
@@ -309,7 +309,7 @@ public:
         auto buffer = ByteBuffer::create_uninitialized(size());
 
         const auto nread = read_without_consuming(buffer);
-        ASSERT(nread == buffer.size());
+        VERIFY(nread == buffer.size());
 
         return buffer;
     }

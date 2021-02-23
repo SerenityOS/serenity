@@ -97,7 +97,7 @@ void IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
 
 KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
 {
-    ASSERT(setup_state() == SetupState::Unstarted);
+    VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
         return EINVAL;
 
@@ -260,7 +260,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
         }
     }
 
-    ASSERT(!m_receive_buffer.is_empty());
+    VERIFY(!m_receive_buffer.is_empty());
     int nreceived = m_receive_buffer.read(buffer, buffer_length);
     if (nreceived > 0)
         Thread::current()->did_ipv4_socket_read((size_t)nreceived);
@@ -311,8 +311,8 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             // Unblocked due to timeout.
             return EAGAIN;
         }
-        ASSERT(m_can_read);
-        ASSERT(!m_receive_queue.is_empty());
+        VERIFY(m_can_read);
+        VERIFY(!m_receive_queue.is_empty());
         packet = m_receive_queue.take_first();
         set_can_read(!m_receive_queue.is_empty());
 
@@ -321,7 +321,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             packet.data.value().size(),
             m_receive_queue.size());
     }
-    ASSERT(packet.data.has_value());
+    VERIFY(packet.data.has_value());
 
     packet_timestamp = packet.timestamp;
 
@@ -337,7 +337,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             return EFAULT;
 
         socklen_t out_length = sizeof(sockaddr_in);
-        ASSERT(addr_length);
+        VERIFY(addr_length);
         if (!copy_to_user(addr_length, &out_length))
             return EFAULT;
     }
@@ -390,7 +390,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         size_t space_in_receive_buffer = m_receive_buffer.space_for_writing();
         if (packet_size > space_in_receive_buffer) {
             dbgln("IPv4Socket({}): did_receive refusing packet since buffer is full.", this);
-            ASSERT(m_can_read);
+            VERIFY(m_can_read);
             return false;
         }
         auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(m_scratch_buffer.value().data());
@@ -451,7 +451,7 @@ String IPv4Socket::absolute_path(const FileDescription&) const
         builder.append(" (connecting)");
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     return builder.to_string();

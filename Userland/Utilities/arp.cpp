@@ -41,7 +41,7 @@ int main()
     printf("Address          HWaddress\n");
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
     json.value().as_array().for_each([](auto& value) {
         auto if_object = value.as_object();
 

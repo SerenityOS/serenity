@@ -54,7 +54,7 @@ Color IdentifierStyleValue::to_color(const DOM::Document& document) const
     if (id() == CSS::ValueID::LibwebLink)
         return document.link_color();
 
-    ASSERT(document.page());
+    VERIFY(document.page());
     auto palette = document.page()->palette();
     switch (id()) {
     case CSS::ValueID::LibwebPaletteDesktopBackground:

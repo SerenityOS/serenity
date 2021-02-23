@@ -180,7 +180,7 @@ struct BMPLoadingContext {
             return 124;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 };
 
@@ -215,7 +215,7 @@ public:
 
     u8 read_u8()
     {
-        ASSERT(m_size_remaining >= 1);
+        VERIFY(m_size_remaining >= 1);
         m_size_remaining--;
         return *(m_data_ptr++);
     }
@@ -242,7 +242,7 @@ public:
 
     void drop_bytes(u8 num_bytes)
     {
-        ASSERT(m_size_remaining >= num_bytes);
+        VERIFY(m_size_remaining >= num_bytes);
         m_size_remaining -= num_bytes;
         m_data_ptr += num_bytes;
     }
@@ -355,7 +355,7 @@ static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
     if (!mask_shifts.is_empty() && !mask_sizes.is_empty())
         return;
 
-    ASSERT(mask_shifts.is_empty() && mask_sizes.is_empty());
+    VERIFY(mask_shifts.is_empty() && mask_sizes.is_empty());
 
     mask_shifts.ensure_capacity(masks.size());
     mask_sizes.ensure_capacity(masks.size());
@@ -896,7 +896,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
 
     auto bytes_per_color = context.dib_type == DIBType::Core ? 3 : 4;
     u32 max_colors = 1 << context.dib.core.bpp;
-    ASSERT(context.data_offset >= bmp_header_size + context.dib_size());
+    VERIFY(context.data_offset >= bmp_header_size + context.dib_size());
     auto size_of_color_table = context.data_offset - bmp_header_size - context.dib_size();
 
     if (context.dib_type <= DIBType::OSV2) {
@@ -1161,7 +1161,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static bool decode_bmp_pixel_data(BMPLoadingContext& context)
@@ -1302,7 +1302,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
             case 3:
                 return 1;
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }();
         if (streamer.remaining() < bytes_to_drop)
             return false;
@@ -1377,7 +1377,7 @@ RefPtr<Gfx::Bitmap> BMPImageDecoderPlugin::bitmap()
     if (m_context->state < BMPLoadingContext::State::PixelDataDecoded && !decode_bmp_pixel_data(*m_context))
         return nullptr;
 
-    ASSERT(m_context->bitmap);
+    VERIFY(m_context->bitmap);
     return m_context->bitmap;
 }
 

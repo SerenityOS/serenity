@@ -239,9 +239,9 @@ public:
 
         hsv.value = max;
 
-        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
-        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
-        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+        VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        VERIFY(hsv.value >= 0.0 && hsv.value <= 1.0);
 
         return hsv;
     }
@@ -253,9 +253,9 @@ public:
 
     static Color from_hsv(const HSV& hsv)
     {
-        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
-        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
-        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+        VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        VERIFY(hsv.value >= 0.0 && hsv.value <= 1.0);
 
         double hue = hsv.hue;
         double saturation = hsv.saturation;
@@ -397,7 +397,7 @@ inline constexpr Color::Color(NamedColor named)
         rgb = { 212, 208, 200 };
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 

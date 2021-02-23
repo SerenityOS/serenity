@@ -132,7 +132,7 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
         first = false;
     });
 
-    ASSERT(cursor);
+    VERIFY(cursor);
 
     Position cursor_position { m_sheet->column(cursor->column()), (size_t)cursor->row() };
     auto new_data = String::formatted("{}\n{}",

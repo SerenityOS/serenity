@@ -41,10 +41,10 @@ public:
 
         if (!this->socket().connect(Core::SocketAddress::local(address))) {
             perror("connect");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
-        ASSERT(this->socket().is_connected());
+        VERIFY(this->socket().is_connected());
     }
 
     virtual void handshake() = 0;

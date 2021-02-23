@@ -286,7 +286,7 @@ void RSA::import_private_key(ReadonlyBytes bytes, bool pem)
     auto key = parse_rsa_key(bytes);
     if (!key.private_key.length()) {
         dbgln("We expected to see a private key, but we found none");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     m_private_key = key.private_key;
 }
@@ -302,7 +302,7 @@ void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
     auto key = parse_rsa_key(bytes);
     if (!key.public_key.length()) {
         dbgln("We expected to see a public key, but we found none");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     m_public_key = key.public_key;
 }
@@ -356,7 +356,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     u8 ps[ps_length];
 
     // FIXME: Without this assertion, GCC refuses to compile due to a memcpy overflow(!?)
-    ASSERT(ps_length < 16384);
+    VERIFY(ps_length < 16384);
 
     AK::fill_with_random(ps, ps_length);
     // since arc4random can create zeros (shocking!)

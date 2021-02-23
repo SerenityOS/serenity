@@ -47,7 +47,7 @@ KResult Process::do_killpg(ProcessGroupID pgrp, int signal)
 {
     InterruptDisabler disabler;
 
-    ASSERT(pgrp >= 0);
+    VERIFY(pgrp >= 0);
 
     // Send the signal to all processes in the given group.
     if (pgrp == 0) {
@@ -136,7 +136,7 @@ int Process::sys$kill(pid_t pid_or_pgid, int signal)
     if (pid_or_pgid == m_pid.value()) {
         return do_killself(signal);
     }
-    ASSERT(pid_or_pgid >= 0);
+    VERIFY(pid_or_pgid >= 0);
     ScopedSpinLock lock(g_processes_lock);
     auto peer = Process::from_pid(pid_or_pgid);
     if (!peer)

@@ -207,7 +207,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
     if (!type_die_offset.has_value())
         return {};
 
-    ASSERT(type_die_offset.value().type == Dwarf::DIE::AttributeValue::Type::DieReference);
+    VERIFY(type_die_offset.value().type == Dwarf::DIE::AttributeValue::Type::DieReference);
 
     auto type_die = variable_die.get_die_at_offset(type_die_offset.value().data.as_u32);
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
@@ -241,7 +241,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
         auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
 
         if (value.type != Dwarf::Expression::Type::None) {
-            ASSERT(value.type == Dwarf::Expression::Type::UnsignedIntetger);
+            VERIFY(value.type == Dwarf::Expression::Type::UnsignedIntetger);
             variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
             variable_info.location_data.address = value.data.as_u32;
         }
@@ -254,7 +254,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
 
 OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
 {
-    ASSERT(variable_die.tag() == Dwarf::EntryTag::Variable
+    VERIFY(variable_die.tag() == Dwarf::EntryTag::Variable
         || variable_die.tag() == Dwarf::EntryTag::Member
         || variable_die.tag() == Dwarf::EntryTag::FormalParameter
         || variable_die.tag() == Dwarf::EntryTag::EnumerationType
@@ -274,7 +274,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
 
     if (variable_die.tag() == Dwarf::EntryTag::Enumerator) {
         auto constant = variable_die.get_attribute(Dwarf::Attribute::ConstValue);
-        ASSERT(constant.has_value());
+        VERIFY(constant.has_value());
         switch (constant.value().type) {
         case Dwarf::DIE::AttributeValue::Type::UnsignedNumber:
             variable_info->constant_data.as_u32 = constant.value().data.as_u32;
@@ -286,7 +286,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
             variable_info->constant_data.as_string = constant.value().data.as_string;
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     } else {
         parse_variable_location(variable_die, *variable_info, regs);
@@ -302,7 +302,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
             if (member.is_null())
                 return;
             auto member_variable = create_variable_info(member, regs);
-            ASSERT(member_variable);
+            VERIFY(member_variable);
 
             if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType) {
                 member_variable->parent = type_info.ptr();
@@ -311,7 +311,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
                 if (variable_info->location_type == DebugInfo::VariableInfo::LocationType::None) {
                     return;
                 }
-                ASSERT(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
+                VERIFY(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
 
                 if (member_variable->location_type == DebugInfo::VariableInfo::LocationType::Address)
                     member_variable->location_data.address += variable_info->location_data.address;

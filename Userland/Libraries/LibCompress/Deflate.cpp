@@ -109,7 +109,7 @@ u32 CanonicalCode::read_symbol(InputBitStream& stream) const
 
     for (;;) {
         code_bits = code_bits << 1 | stream.read_bits(1);
-        ASSERT(code_bits < (1 << 16));
+        VERIFY(code_bits < (1 << 16));
 
         // FIXME: This is very inefficient and could greatly be improved by implementing this
         //        algorithm: https://www.hanshq.net/zip.html#huffdec
@@ -273,7 +273,7 @@ size_t DeflateDecompressor::read(Bytes bytes)
         return nread + read(bytes.slice(nread));
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool DeflateDecompressor::read_or_error(Bytes bytes)
@@ -338,7 +338,7 @@ u32 DeflateDecompressor::decode_length(u32 symbol)
     if (symbol == 285)
         return 258;
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 u32 DeflateDecompressor::decode_distance(u32 symbol)
@@ -353,7 +353,7 @@ u32 DeflateDecompressor::decode_distance(u32 symbol)
         return ((symbol % 2 + 2) << extra_bits) + 1 + m_input_stream.read_bits(extra_bits);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code)
@@ -401,7 +401,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
                 code_lengths.append(0);
             continue;
         } else {
-            ASSERT(symbol == 16);
+            VERIFY(symbol == 16);
 
             if (code_lengths.is_empty()) {
                 set_fatal_error();

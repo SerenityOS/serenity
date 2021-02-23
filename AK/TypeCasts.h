@@ -51,7 +51,7 @@ template<typename OutputType, typename InputType>
 ALWAYS_INLINE CopyConst<InputType, OutputType>* downcast(InputType* input)
 {
     static_assert(IsBaseOf<InputType, OutputType>::value);
-    ASSERT(!input || is<OutputType>(*input));
+    VERIFY(!input || is<OutputType>(*input));
     return static_cast<CopyConst<InputType, OutputType>*>(input);
 }
 
@@ -59,7 +59,7 @@ template<typename OutputType, typename InputType>
 ALWAYS_INLINE CopyConst<InputType, OutputType>& downcast(InputType& input)
 {
     static_assert(IsBaseOf<InputType, OutputType>::value);
-    ASSERT(is<OutputType>(input));
+    VERIFY(is<OutputType>(input));
     return static_cast<CopyConst<InputType, OutputType>&>(input);
 }
 

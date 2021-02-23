@@ -46,7 +46,7 @@ char Lexer::peek(size_t offset) const
 
 char Lexer::consume()
 {
-    ASSERT(m_index < m_input.length());
+    VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
     m_previous_position = m_position;
     if (ch == '\n') {
@@ -660,8 +660,8 @@ Vector<Token> Lexer::lex()
             StringView prefix_string = m_input.substring_view(prefix_start, m_index - prefix_start);
             while (peek()) {
                 if (consume() == '"') {
-                    ASSERT(m_index >= prefix_string.length() + 2);
-                    ASSERT(m_input[m_index - 1] == '"');
+                    VERIFY(m_index >= prefix_string.length() + 2);
+                    VERIFY(m_input[m_index - 1] == '"');
                     if (m_input[m_index - 1 - prefix_string.length() - 1] == ')') {
                         StringView suffix_string = m_input.substring_view(m_index - 1 - prefix_string.length(), prefix_string.length());
                         if (prefix_string == suffix_string)

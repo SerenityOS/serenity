@@ -76,7 +76,7 @@ static bool test_single(const Testcase& testcase)
     ByteBuffer actual = ByteBuffer::create_uninitialized(SANDBOX_CANARY_SIZE + testcase.dest_n + SANDBOX_CANARY_SIZE);
     AK::fill_with_random(actual.data(), actual.size());
     ByteBuffer expected = actual.isolated_copy();
-    ASSERT(actual.offset_pointer(0) != expected.offset_pointer(0));
+    VERIFY(actual.offset_pointer(0) != expected.offset_pointer(0));
     actual.overwrite(SANDBOX_CANARY_SIZE, testcase.dest, testcase.dest_n);
     expected.overwrite(SANDBOX_CANARY_SIZE, testcase.dest_expected, testcase.dest_expected_n);
     // "unsigned char" != "char", so we have to convince the compiler to allow this.

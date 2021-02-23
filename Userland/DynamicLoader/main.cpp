@@ -55,7 +55,7 @@ static void perform_self_relocations(auxv_t* auxvp)
             found_base_address = true;
         }
     }
-    ASSERT(found_base_address);
+    VERIFY(found_base_address);
     Elf32_Ehdr* header = (Elf32_Ehdr*)(base_address);
     Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address + header->e_phoff);
     u32 dynamic_section_addr = 0;
@@ -131,10 +131,10 @@ void _start(int argc, char** argv, char** envp)
         _exit(1);
     }
 
-    ASSERT(main_program_fd >= 0);
-    ASSERT(!main_program_name.is_empty());
+    VERIFY(main_program_fd >= 0);
+    VERIFY(!main_program_name.is_empty());
 
     ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, is_secure, argc, argv, envp);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 }

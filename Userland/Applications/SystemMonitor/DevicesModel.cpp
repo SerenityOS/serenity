@@ -69,13 +69,13 @@ String DevicesModel::column_name(int column) const
     case Column::Type:
         return "Type";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    ASSERT(is_valid(index));
+    VERIFY(is_valid(index));
 
     if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
@@ -107,7 +107,7 @@ GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::Type:
             return device.type;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -129,10 +129,10 @@ GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             case DeviceInfo::Type::Character:
                 return "Character";
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -143,10 +143,10 @@ void DevicesModel::update()
 {
     auto proc_devices = Core::File::construct("/proc/devices");
     if (!proc_devices->open(Core::IODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_devices->read_all());
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     m_devices.clear();
     json.value().as_array().for_each([this](auto& value) {
@@ -163,7 +163,7 @@ void DevicesModel::update()
         else if (type_str == "character")
             device_info.type = DeviceInfo::Type::Character;
         else
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         m_devices.append(move(device_info));
     });
@@ -175,7 +175,7 @@ void DevicesModel::update()
             auto path = String::formatted("{}/{}", dir, name);
             struct stat statbuf;
             if (lstat(path.characters(), &statbuf) != 0) {
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
             if (!S_ISBLK(statbuf.st_mode) && !S_ISCHR(statbuf.st_mode))
                 continue;

@@ -52,7 +52,7 @@ bool TmpFS::initialize()
 
 NonnullRefPtr<Inode> TmpFS::root_inode() const
 {
-    ASSERT(!m_root_inode.is_null());
+    VERIFY(!m_root_inode.is_null());
 
     return *m_root_inode;
 }
@@ -60,7 +60,7 @@ NonnullRefPtr<Inode> TmpFS::root_inode() const
 void TmpFS::register_inode(TmpFSInode& inode)
 {
     LOCKER(m_lock);
-    ASSERT(inode.identifier().fsid() == fsid());
+    VERIFY(inode.identifier().fsid() == fsid());
 
     auto index = inode.identifier().index();
     m_inodes.set(index, inode);
@@ -69,7 +69,7 @@ void TmpFS::register_inode(TmpFSInode& inode)
 void TmpFS::unregister_inode(InodeIdentifier identifier)
 {
     LOCKER(m_lock);
-    ASSERT(identifier.fsid() == fsid());
+    VERIFY(identifier.fsid() == fsid());
 
     m_inodes.remove(identifier.index());
 }
@@ -84,7 +84,7 @@ unsigned TmpFS::next_inode_index()
 RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
-    ASSERT(identifier.fsid() == fsid());
+    VERIFY(identifier.fsid() == fsid());
 
     auto it = m_inodes.find(identifier.index());
     if (it == m_inodes.end())
@@ -149,9 +149,9 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
 ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
-    ASSERT(!is_directory());
-    ASSERT(size >= 0);
-    ASSERT(offset >= 0);
+    VERIFY(!is_directory());
+    VERIFY(size >= 0);
+    VERIFY(offset >= 0);
 
     if (!m_content)
         return 0;
@@ -170,8 +170,8 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& b
 ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     LOCKER(m_lock);
-    ASSERT(!is_directory());
-    ASSERT(offset >= 0);
+    VERIFY(!is_directory());
+    VERIFY(offset >= 0);
 
     auto result = prepare_to_write_data();
     if (result.is_error())
@@ -217,7 +217,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
 RefPtr<Inode> TmpFSInode::lookup(StringView name)
 {
     LOCKER(m_lock, Lock::Mode::Shared);
-    ASSERT(is_directory());
+    VERIFY(is_directory());
 
     if (name == ".")
         return this;
@@ -233,7 +233,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
 KResultOr<size_t> TmpFSInode::directory_entry_count() const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
-    ASSERT(is_directory());
+    VERIFY(is_directory());
     return 2 + m_children.size();
 }
 
@@ -301,8 +301,8 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
 KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
 {
     LOCKER(m_lock);
-    ASSERT(is_directory());
-    ASSERT(child.fsid() == fsid());
+    VERIFY(is_directory());
+    VERIFY(child.fsid() == fsid());
 
     if (name.length() > NAME_MAX)
         return ENAMETOOLONG;
@@ -315,7 +315,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
 KResult TmpFSInode::remove_child(const StringView& name)
 {
     LOCKER(m_lock);
-    ASSERT(is_directory());
+    VERIFY(is_directory());
 
     if (name == "." || name == "..")
         return KSuccess;
@@ -332,7 +332,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
 KResult TmpFSInode::truncate(u64 size)
 {
     LOCKER(m_lock);
-    ASSERT(!is_directory());
+    VERIFY(!is_directory());
 
     if (size == 0)
         m_content.clear();

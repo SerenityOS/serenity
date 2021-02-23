@@ -65,7 +65,7 @@ void AbstractSlider::set_page_step(int page_step)
 
 void AbstractSlider::set_range(int min, int max)
 {
-    ASSERT(min <= max);
+    VERIFY(min <= max);
     if (m_min == min && m_max == max)
         return;
     m_min = min;

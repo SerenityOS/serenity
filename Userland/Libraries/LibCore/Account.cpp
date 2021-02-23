@@ -200,9 +200,9 @@ String Account::generate_passwd_file() const
 void Account::load_shadow_file()
 {
     auto file_or_error = Core::File::open("/etc/shadow", Core::File::ReadOnly);
-    ASSERT(!file_or_error.is_error());
+    VERIFY(!file_or_error.is_error());
     auto shadow_file = file_or_error.release_value();
-    ASSERT(shadow_file->is_open());
+    VERIFY(shadow_file->is_open());
 
     Vector<ShadowEntry> entries;
 
@@ -250,7 +250,7 @@ bool Account::sync()
     auto new_shadow_file_content = generate_shadow_file();
 
     if (new_passwd_file_content.is_null() || new_shadow_file_content.is_null()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
@@ -260,34 +260,34 @@ bool Account::sync()
         auto new_passwd_fd = mkstemp(new_passwd_name);
         if (new_passwd_fd < 0) {
             perror("mkstemp");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
         auto new_shadow_fd = mkstemp(new_shadow_name);
         if (new_shadow_fd < 0) {
             perror("mkstemp");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
 
         if (fchmod(new_passwd_fd, 0644) < 0) {
             perror("fchmod");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         auto nwritten = write(new_passwd_fd, new_passwd_file_content.characters(), new_passwd_file_content.length());
         if (nwritten < 0) {
             perror("write");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
-        ASSERT(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
+        VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
         nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
         if (nwritten < 0) {
             perror("write");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
-        ASSERT(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
+        VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
     }
 
     if (rename(new_passwd_name, "/etc/passwd") < 0) {

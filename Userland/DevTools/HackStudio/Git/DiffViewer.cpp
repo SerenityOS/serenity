@@ -86,7 +86,7 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
             right_y_offset += line_height();
         }
 
-        ASSERT(left_y_offset == right_y_offset);
+        VERIFY(left_y_offset == right_y_offset);
         y_offset = left_y_offset;
     }
     for (size_t i = current_original_line_index; i < m_original_lines.size(); ++i) {

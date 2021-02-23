@@ -95,7 +95,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     auto result = parser.parse();
 
     if (!result.has_value()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     Vector<OpenFile> files;
@@ -105,7 +105,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
         open_file.fd = object.as_object().get("fd").to_int();
 
         String name = object.as_object().get("absolute_path").to_string();
-        ASSERT(parse_name(name, open_file));
+        VERIFY(parse_name(name, open_file));
         open_file.full_name = name;
 
         files.append(open_file);

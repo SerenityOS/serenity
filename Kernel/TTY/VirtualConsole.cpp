@@ -68,7 +68,7 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     , m_index(index)
     , m_terminal(*this)
 {
-    ASSERT(index < s_max_virtual_consoles);
+    VERIFY(index < s_max_virtual_consoles);
 
     m_tty_name = String::formatted("/dev/tty{}", m_index);
     m_terminal.set_size(80, 25);
@@ -78,15 +78,15 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
 
 UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void VirtualConsole::switch_to(unsigned index)
 {
     if ((int)index == s_active_console)
         return;
-    ASSERT(index < s_max_virtual_consoles);
-    ASSERT(s_consoles[index]);
+    VERIFY(index < s_max_virtual_consoles);
+    VERIFY(s_consoles[index]);
 
     ScopedSpinLock lock(s_lock);
     if (s_active_console != -1) {
@@ -200,7 +200,7 @@ static inline VGAColor ansi_color_to_vga(ANSIColor color)
     case ANSIColor::White:
         return VGAColor::White;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -322,8 +322,8 @@ void VirtualConsole::set_window_progress(int, int)
 
 void VirtualConsole::terminal_did_resize(u16 columns, u16 rows)
 {
-    ASSERT(columns == 80);
-    ASSERT(rows == 25);
+    VERIFY(columns == 80);
+    VERIFY(rows == 25);
     set_size(columns, rows);
 }
 

@@ -39,15 +39,15 @@ class TreeNode : public Weakable<T> {
 public:
     void ref()
     {
-        ASSERT(!m_in_removed_last_ref);
-        ASSERT(m_ref_count);
+        VERIFY(!m_in_removed_last_ref);
+        VERIFY(m_ref_count);
         ++m_ref_count;
     }
 
     void unref()
     {
-        ASSERT(!m_in_removed_last_ref);
-        ASSERT(m_ref_count);
+        VERIFY(!m_in_removed_last_ref);
+        VERIFY(m_ref_count);
         if (!--m_ref_count) {
             if constexpr (IsBaseOf<DOM::Node, T>::value) {
                 m_in_removed_last_ref = true;
@@ -324,7 +324,7 @@ inline void TreeNode<T>::remove_all_children()
 template<typename T>
 inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 {
-    ASSERT(node->m_parent == this);
+    VERIFY(node->m_parent == this);
 
     if (m_first_child == node)
         m_first_child = node->m_next_sibling;
@@ -354,7 +354,7 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 template<typename T>
 inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
 {
-    ASSERT(!node->m_parent);
+    VERIFY(!node->m_parent);
 
     if (!static_cast<T*>(this)->is_child_allowed(*node))
         return;
@@ -380,8 +380,8 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
     if (!child)
         return append_child(move(node), notify);
 
-    ASSERT(!node->m_parent);
-    ASSERT(child->parent() == this);
+    VERIFY(!node->m_parent);
+    VERIFY(child->parent() == this);
 
     if (!static_cast<T*>(this)->is_child_allowed(*node))
         return;
@@ -412,7 +412,7 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
 template<typename T>
 inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
 {
-    ASSERT(!node->m_parent);
+    VERIFY(!node->m_parent);
 
     if (!static_cast<T*>(this)->is_child_allowed(*node))
         return;

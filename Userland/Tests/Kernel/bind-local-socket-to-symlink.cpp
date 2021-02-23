@@ -48,7 +48,7 @@ int main(int, char**)
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    ASSERT(strlcpy(addr.sun_path, path, sizeof(addr.sun_path)) < sizeof(addr.sun_path));
+    VERIFY(strlcpy(addr.sun_path, path, sizeof(addr.sun_path)) < sizeof(addr.sun_path));
 
     rc = bind(fd, (struct sockaddr*)(&addr), sizeof(addr));
     if (rc < 0 && errno == EADDRINUSE) {

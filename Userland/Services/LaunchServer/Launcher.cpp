@@ -85,13 +85,13 @@ String Handler::to_details_str() const
 
 Launcher::Launcher()
 {
-    ASSERT(s_the == nullptr);
+    VERIFY(s_the == nullptr);
     s_the = this;
 }
 
 Launcher& Launcher::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 

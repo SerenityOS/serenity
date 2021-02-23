@@ -161,7 +161,7 @@ void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
 
     auto delta = event.position() - m_moving_event_origin;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
-    ASSERT(gadget.is_moving);
+    VERIFY(gadget.is_moving);
     gadget.movement_delta = delta;
     relayout_gadgets();
 }
@@ -221,7 +221,7 @@ static constexpr int vertical_step = gadget_height + gadget_spacing;
 
 size_t LayerListWidget::hole_index_during_move() const
 {
-    ASSERT(is_moving_gadget());
+    VERIFY(is_moving_gadget());
     auto& moving_gadget = m_gadgets[m_moving_gadget_index.value()];
     int center_y_of_moving_gadget = moving_gadget.rect.translated(0, moving_gadget.movement_delta.y()).center().y();
     return center_y_of_moving_gadget / vertical_step;

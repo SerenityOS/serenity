@@ -227,7 +227,7 @@ int main(int argc, char** argv)
             return Debug::DebugSession::DebugDecision::Detach;
         }
 
-        ASSERT(optional_regs.has_value());
+        VERIFY(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
         auto symbol_at_ip = g_debug_session->symbolicate(regs.eip);

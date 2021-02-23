@@ -105,13 +105,13 @@ struct alignas(16) TransferDescriptor final {
     void set_in_use(bool in_use) { m_in_use = in_use; }
     void set_max_len(u16 max_len)
     {
-        ASSERT(max_len < 0x500 || max_len == 0x7ff);
+        VERIFY(max_len < 0x500 || max_len == 0x7ff);
         m_token |= (max_len << 21);
     }
 
     void set_device_address(u8 address)
     {
-        ASSERT(address <= 0x7f);
+        VERIFY(address <= 0x7f);
         m_token |= (address << 8);
     }
 

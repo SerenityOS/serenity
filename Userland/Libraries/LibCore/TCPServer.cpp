@@ -49,7 +49,7 @@ TCPServer::TCPServer(Object* parent)
     ioctl(m_fd, FIONBIO, &option);
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
 #endif
-    ASSERT(m_fd >= 0);
+    VERIFY(m_fd >= 0);
 }
 
 TCPServer::~TCPServer()
@@ -85,7 +85,7 @@ bool TCPServer::listen(const IPv4Address& address, u16 port)
 
 RefPtr<TCPSocket> TCPServer::accept()
 {
-    ASSERT(m_listening);
+    VERIFY(m_listening);
     sockaddr_in in;
     socklen_t in_size = sizeof(in);
     int accepted_fd = ::accept(m_fd, (sockaddr*)&in, &in_size);

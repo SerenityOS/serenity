@@ -41,7 +41,7 @@ const char* Token::name(const TokenType type)
         ENUMERATE_REGEX_TOKENS
 #undef __ENUMERATE_REGEX_TOKEN
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -68,7 +68,7 @@ void Lexer::back(size_t offset)
     if (offset == m_position + 1)
         offset = m_position; // 'position == 0' occurs twice.
 
-    ASSERT(offset <= m_position);
+    VERIFY(offset <= m_position);
     if (!offset)
         return;
     m_position -= offset;
@@ -122,7 +122,7 @@ Token Lexer::next()
     };
 
     auto commit_token = [&](auto type) -> Token& {
-        ASSERT(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
+        VERIFY(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
         auto substring = m_source.substring_view(token_start_position, m_previous_position - token_start_position + 1);
         m_current_token = Token(type, token_start_position, substring);
         return m_current_token;

@@ -229,7 +229,7 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
         if (static_cast<const T*>(this)->unref()) {
             // We just dropped the last reference, which should have called
             // revoke_weak_ptrs, which should have invalidated our weak_ptr
-            ASSERT(!weak_ptr.strong_ref());
+            VERIFY(!weak_ptr.strong_ref());
             return {};
         }
     }

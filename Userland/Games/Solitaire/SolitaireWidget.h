@@ -60,7 +60,7 @@ private:
 
         void tick()
         {
-            ASSERT(!m_animation_card.is_null());
+            VERIFY(!m_animation_card.is_null());
             m_y_velocity += m_gravity;
 
             if (m_animation_card->position().y() + Card::height + m_y_velocity > SolitaireWidget::height + 1 && m_y_velocity > 0) {

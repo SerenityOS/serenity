@@ -85,12 +85,12 @@ public:
     size_t size_in_bytes() const { return ceil_div(m_size, static_cast<size_t>(8)); }
     bool get(size_t index) const
     {
-        ASSERT(index < m_size);
+        VERIFY(index < m_size);
         return 0 != (m_data[index / 8] & (1u << (index % 8)));
     }
     void set(size_t index, bool value) const
     {
-        ASSERT(index < m_size);
+        VERIFY(index < m_size);
         if (value)
             m_data[index / 8] |= static_cast<u8>((1u << (index % 8)));
         else
@@ -104,8 +104,8 @@ public:
 
     size_t count_in_range(size_t start, size_t len, bool value) const
     {
-        ASSERT(start < m_size);
-        ASSERT(start + len <= m_size);
+        VERIFY(start < m_size);
+        VERIFY(start + len <= m_size);
         if (len == 0)
             return 0;
 
@@ -153,8 +153,8 @@ public:
 
     void grow(size_t size, bool default_value)
     {
-        ASSERT(m_owned);
-        ASSERT(size > m_size);
+        VERIFY(m_owned);
+        VERIFY(size > m_size);
 
         auto previous_size_bytes = size_in_bytes();
         auto previous_size = m_size;
@@ -176,8 +176,8 @@ public:
     template<bool VALUE>
     void set_range(size_t start, size_t len)
     {
-        ASSERT(start < m_size);
-        ASSERT(start + len <= m_size);
+        VERIFY(start < m_size);
+        VERIFY(start + len <= m_size);
         if (len == 0)
             return;
 
@@ -228,7 +228,7 @@ public:
     template<bool VALUE>
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
-        ASSERT(hint < m_size);
+        VERIFY(hint < m_size);
         const u8* end = &m_data[m_size / 8];
 
         for (;;) {
@@ -249,7 +249,7 @@ public:
                     byte = m_data[i];
                     if constexpr (!VALUE)
                         byte = ~byte;
-                    ASSERT(byte != 0);
+                    VERIFY(byte != 0);
                     return i * 8 + __builtin_ffs(byte) - 1;
                 }
             }
@@ -264,7 +264,7 @@ public:
                 u8 byte = VALUE ? 0x00 : 0xff;
                 size_t i = (const u8*)ptr32 - &m_data[0];
                 size_t byte_count = m_size / 8;
-                ASSERT(i <= byte_count);
+                VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
                     i++;
                 if (i == byte_count) {
@@ -279,7 +279,7 @@ public:
                 byte = m_data[i];
                 if constexpr (!VALUE)
                     byte = ~byte;
-                ASSERT(byte != 0);
+                VERIFY(byte != 0);
                 return i * 8 + __builtin_ffs(byte) - 1;
             }
 
@@ -288,7 +288,7 @@ public:
             val32 = *ptr32;
             if constexpr (!VALUE)
                 val32 = ~val32;
-            ASSERT(val32 != 0);
+            VERIFY(val32 != 0);
             return ((const u8*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
         }
     }
@@ -317,7 +317,7 @@ public:
         byte = m_data[i];
         if constexpr (!VALUE)
             byte = ~byte;
-        ASSERT(byte != 0);
+        VERIFY(byte != 0);
         return i * 8 + __builtin_ffs(byte) - 1;
     }
 
@@ -509,7 +509,7 @@ public:
         : m_size(size)
         , m_owned(true)
     {
-        ASSERT(m_size != 0);
+        VERIFY(m_size != 0);
         m_data = reinterpret_cast<u8*>(kmalloc(size_in_bytes()));
         fill(default_value);
     }

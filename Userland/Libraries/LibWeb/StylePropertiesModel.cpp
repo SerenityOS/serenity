@@ -58,7 +58,7 @@ String StylePropertiesModel::column_name(int column_index) const
     case Column::PropertyValue:
         return "Value";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 GUI::Variant StylePropertiesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

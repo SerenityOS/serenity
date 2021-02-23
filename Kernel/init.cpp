@@ -141,8 +141,8 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     MemoryManager::initialize(0);
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
-    ASSERT(&start_of_safemem_text != &end_of_safemem_text);
-    ASSERT(&start_of_safemem_atomic_text != &end_of_safemem_atomic_text);
+    VERIFY(&start_of_safemem_text != &end_of_safemem_text);
+    VERIFY(&start_of_safemem_atomic_text != &end_of_safemem_atomic_text);
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
@@ -190,7 +190,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     }
 
     Scheduler::start();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 //
@@ -208,7 +208,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init_ap(u32 cpu, Processor* proces
     Scheduler::set_idle_thread(APIC::the().get_idle_thread(cpu));
 
     Scheduler::start();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 //
@@ -322,7 +322,7 @@ void init_stage2(void*)
     NetworkTask::spawn();
 
     Process::current()->sys$exit(0);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT void setup_serial_debug()

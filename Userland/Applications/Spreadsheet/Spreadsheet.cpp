@@ -103,7 +103,7 @@ static String convert_to_string(size_t value, unsigned base = 26, StringView map
     if (map.is_null())
         map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    ASSERT(base >= 2 && base <= map.length());
+    VERIFY(base >= 2 && base <= map.length());
 
     // The '8 bits per byte' assumption may need to go?
     Array<char, round_up_to_power_of_two(sizeof(size_t) * 8 + 1, 2)> buffer;
@@ -130,7 +130,7 @@ static size_t convert_from_string(StringView str, unsigned base = 26, StringView
     if (map.is_null())
         map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    ASSERT(base >= 2 && base <= map.length());
+    VERIFY(base >= 2 && base <= map.length());
 
     size_t value = 0;
     for (size_t i = str.length(); i > 0; --i) {
@@ -295,7 +295,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     }
 
     // FIXME: Figure out a way to do this cross-process.
-    ASSERT(url.path() == String::formatted("/{}", getpid()));
+    VERIFY(url.path() == String::formatted("/{}", getpid()));
 
     return parse_cell_name(url.fragment());
 }

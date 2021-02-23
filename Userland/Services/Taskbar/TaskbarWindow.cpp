@@ -130,7 +130,7 @@ void TaskbarWindow::create_quick_launch_bar()
                 }
                 execl(app_executable.characters(), app_executable.characters(), nullptr);
                 perror("execl");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 if (disown(pid) < 0)
                     perror("disown");
@@ -291,7 +291,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         } else if (window_owner) {
             // check the window owner's button if the modal's window button
             // would have been checked
-            ASSERT(window.is_modal());
+            VERIFY(window.is_modal());
             update_window_button(*window_owner, window.is_active());
         }
         break;

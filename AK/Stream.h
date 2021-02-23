@@ -37,7 +37,7 @@ namespace AK::Detail {
 
 class Stream {
 public:
-    virtual ~Stream() { ASSERT(!has_any_error()); }
+    virtual ~Stream() { VERIFY(!has_any_error()); }
 
     virtual bool has_recoverable_error() const { return m_recoverable_error; }
     virtual bool has_fatal_error() const { return m_fatal_error; }
@@ -45,7 +45,7 @@ public:
 
     virtual bool handle_recoverable_error()
     {
-        ASSERT(!has_fatal_error());
+        VERIFY(!has_fatal_error());
         return exchange(m_recoverable_error, false);
     }
     virtual bool handle_fatal_error() { return exchange(m_fatal_error, false); }

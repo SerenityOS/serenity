@@ -44,7 +44,7 @@ static u8 parse_hex_digit(char nibble)
 {
     if (nibble >= '0' && nibble <= '9')
         return nibble - '0';
-    ASSERT(nibble >= 'a' && nibble <= 'f');
+    VERIFY(nibble >= 'a' && nibble <= 'f');
     return 10 + (nibble - 'a');
 }
 
@@ -152,7 +152,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         }
         return;
     }
-    ASSERT(recognized_symbol_count <= max_recognized_symbol_count);
+    VERIFY(recognized_symbol_count <= max_recognized_symbol_count);
     for (size_t i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
         if (!symbol.address)

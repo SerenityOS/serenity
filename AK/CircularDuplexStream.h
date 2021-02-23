@@ -55,7 +55,7 @@ public:
         }
 
         const auto nwritten = write(bytes);
-        ASSERT(nwritten == bytes.size());
+        VERIFY(nwritten == bytes.size());
         return true;
     }
 
@@ -123,7 +123,7 @@ public:
 
     Bytes reserve_contigous_space(size_t count)
     {
-        ASSERT(count <= remaining_contigous_space());
+        VERIFY(count <= remaining_contigous_space());
 
         Bytes bytes { m_queue.m_storage + (m_queue.head_index() + m_queue.size()) % Capacity, count };
 

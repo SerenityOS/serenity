@@ -107,7 +107,7 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
 
     if ((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::SocketFlags) {
         auto* sock = socket();
-        ASSERT(sock);
+        VERIFY(sock);
         if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Accept) && sock->can_accept())
             unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Accept;
         if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Connect) && sock->setup_state() == Socket::SetupState::Completed)
@@ -205,8 +205,8 @@ bool FileDescription::can_read() const
 KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
 {
     // HACK ALERT: (This entire function)
-    ASSERT(m_file->is_inode());
-    ASSERT(m_inode);
+    VERIFY(m_file->is_inode());
+    VERIFY(m_inode);
     return m_inode->read_entire(this);
 }
 

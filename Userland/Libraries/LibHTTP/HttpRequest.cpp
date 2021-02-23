@@ -48,7 +48,7 @@ String HttpRequest::method_name() const
     case Method::POST:
         return "POST";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -100,7 +100,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     };
 
     auto consume = [&]() -> u8 {
-        ASSERT(index < raw_request.size());
+        VERIFY(index < raw_request.size());
         return raw_request[index++];
     };
 

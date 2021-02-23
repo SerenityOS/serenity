@@ -100,7 +100,7 @@ public:
 
     bool as_bool() const
     {
-        ASSERT(type() == Type::Bool);
+        VERIFY(type() == Type::Bool);
         return m_value.as_bool;
     }
 
@@ -127,19 +127,19 @@ public:
 
     int as_i32() const
     {
-        ASSERT(type() == Type::Int32);
+        VERIFY(type() == Type::Int32);
         return m_value.as_i32;
     }
 
     int as_i64() const
     {
-        ASSERT(type() == Type::Int64);
+        VERIFY(type() == Type::Int64);
         return m_value.as_i64;
     }
 
     unsigned as_uint() const
     {
-        ASSERT(type() == Type::UnsignedInt);
+        VERIFY(type() == Type::UnsignedInt);
         return m_value.as_uint;
     }
 
@@ -155,7 +155,7 @@ public:
         if (is_float())
             return (int)as_float();
         if (is_uint()) {
-            ASSERT(as_uint() <= INT32_MAX);
+            VERIFY(as_uint() <= INT32_MAX);
             return (int)as_uint();
         }
         if (is_string())
@@ -175,7 +175,7 @@ public:
 
     float as_float() const
     {
-        ASSERT(type() == Type::Float);
+        VERIFY(type() == Type::Float);
         return m_value.as_float;
     }
 
@@ -196,31 +196,31 @@ public:
 
     String as_string() const
     {
-        ASSERT(type() == Type::String);
+        VERIFY(type() == Type::String);
         return m_value.as_string;
     }
 
     const Gfx::Bitmap& as_bitmap() const
     {
-        ASSERT(type() == Type::Bitmap);
+        VERIFY(type() == Type::Bitmap);
         return *m_value.as_bitmap;
     }
 
     GUI::Icon as_icon() const
     {
-        ASSERT(type() == Type::Icon);
+        VERIFY(type() == Type::Icon);
         return GUI::Icon(*m_value.as_icon);
     }
 
     Color as_color() const
     {
-        ASSERT(type() == Type::Color);
+        VERIFY(type() == Type::Color);
         return Color::from_rgba(m_value.as_color);
     }
 
     const Gfx::Font& as_font() const
     {
-        ASSERT(type() == Type::Font);
+        VERIFY(type() == Type::Font);
         return *m_value.as_font;
     }
 

@@ -42,7 +42,7 @@ void LazyWidget::show_event(ShowEvent&)
         return;
     m_has_been_shown = true;
 
-    ASSERT(on_first_show);
+    VERIFY(on_first_show);
     on_first_show(*this);
 }
 

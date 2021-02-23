@@ -46,7 +46,7 @@ public:
 
     Color color(ColorRole role) const
     {
-        ASSERT((int)role < (int)ColorRole::__Count);
+        VERIFY((int)role < (int)ColorRole::__Count);
         return Color::from_rgba(theme().color[(int)role]);
     }
 

@@ -113,7 +113,7 @@ private:
 
     static int device_to_deviceinfo_index(Device device)
     {
-        ASSERT(device != Device::None);
+        VERIFY(device != Device::None);
         return (device == Device::Keyboard) ? 0 : 1;
     }
 

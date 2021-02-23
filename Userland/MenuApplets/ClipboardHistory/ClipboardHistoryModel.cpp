@@ -47,7 +47,7 @@ String ClipboardHistoryModel::column_name(int column) const
     case Column::Size:
         return "Size";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -101,7 +101,7 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     case Column::Size:
         return AK::human_readable_size(data_and_type.data.size());
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

@@ -100,7 +100,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
     m_webview = splitter.add<Web::OutOfProcessWebView>();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
-        ASSERT(url.protocol() == "spreadsheet");
+        VERIFY(url.protocol() == "spreadsheet");
         if (url.host() == "example") {
             auto entry = LexicalPath(url.path()).basename();
             auto doc_option = m_docs.get(entry);
@@ -159,19 +159,19 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 String HelpWindow::render(const StringView& key)
 {
     auto doc_option = m_docs.get(key);
-    ASSERT(doc_option.is_object());
+    VERIFY(doc_option.is_object());
 
     auto& doc = doc_option.as_object();
 
     auto name = doc.get("name").to_string();
     auto argc = doc.get("argc").to_u32(0);
     auto argnames_value = doc.get("argnames");
-    ASSERT(argnames_value.is_array());
+    VERIFY(argnames_value.is_array());
     auto& argnames = argnames_value.as_array();
 
     auto docstring = doc.get("doc").to_string();
     auto examples_value = doc.get_or("examples", JsonObject {});
-    ASSERT(examples_value.is_object());
+    VERIFY(examples_value.is_object());
     auto& examples = examples_value.as_object();
 
     StringBuilder markdown_builder;

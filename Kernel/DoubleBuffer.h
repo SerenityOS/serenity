@@ -56,7 +56,7 @@ public:
 
     void set_unblock_callback(Function<void()> callback)
     {
-        ASSERT(!m_unblock_callback);
+        VERIFY(!m_unblock_callback);
         m_unblock_callback = move(callback);
     }
 

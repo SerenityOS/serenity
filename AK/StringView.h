@@ -42,13 +42,13 @@ public:
         : m_characters(characters)
         , m_length(length)
     {
-        ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
-        ASSERT(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     ALWAYS_INLINE constexpr StringView(const char* cstring)
         : m_characters(cstring)

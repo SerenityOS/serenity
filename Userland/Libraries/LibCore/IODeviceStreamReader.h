@@ -47,7 +47,7 @@ public:
     IODeviceStreamReader& operator>>(T& value)
     {
         int nread = m_device.read((u8*)&value, sizeof(T));
-        ASSERT(nread == sizeof(T));
+        VERIFY(nread == sizeof(T));
         if (nread != sizeof(T))
             m_had_failure = true;
         return *this;

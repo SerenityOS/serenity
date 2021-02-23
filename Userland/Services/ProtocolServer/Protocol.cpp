@@ -49,7 +49,7 @@ Protocol::Protocol(const String& name)
 
 Protocol::~Protocol()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Result<Protocol::Pipe, String> Protocol::get_pipe_for_download()

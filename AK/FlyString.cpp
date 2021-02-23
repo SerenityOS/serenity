@@ -38,8 +38,8 @@ struct FlyStringImplTraits : public AK::Traits<StringImpl*> {
     static unsigned hash(const StringImpl* s) { return s ? s->hash() : 0; }
     static bool equals(const StringImpl* a, const StringImpl* b)
     {
-        ASSERT(a);
-        ASSERT(b);
+        VERIFY(a);
+        VERIFY(b);
         return *a == *b;
     }
 };
@@ -70,7 +70,7 @@ FlyString::FlyString(const String& string)
         string.impl()->set_fly({}, true);
         m_impl = string.impl();
     } else {
-        ASSERT((*it)->is_fly());
+        VERIFY((*it)->is_fly());
         m_impl = *it;
     }
 }
