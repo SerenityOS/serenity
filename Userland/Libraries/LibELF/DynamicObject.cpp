@@ -251,7 +251,7 @@ DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
+auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
     u32* hash_table_begin = (u32*)address().as_ptr();
     size_t num_buckets = hash_table_begin[0];
