@@ -51,7 +51,7 @@ public:
 
     ~Sheet();
 
-    static Optional<Position> parse_cell_name(const StringView&);
+    Optional<Position> parse_cell_name(const StringView&) const;
     Optional<size_t> column_index(const StringView& column_name) const;
     Optional<String> column_arithmetic(const StringView& column_name, int offset);
 
@@ -179,9 +179,7 @@ struct Traits<Spreadsheet::Position> : public GenericTraits<Spreadsheet::Positio
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(const Spreadsheet::Position& p)
     {
-        return pair_int_hash(
-            string_hash(p.column.characters(), p.column.length()),
-            u64_hash(p.row));
+        return p.hash();
     }
 };
 

@@ -233,7 +233,7 @@ Cell* Sheet::at(const Position& position)
     return it->value;
 }
 
-Optional<Position> Sheet::parse_cell_name(const StringView& name)
+Optional<Position> Sheet::parse_cell_name(const StringView& name) const
 {
     GenericLexer lexer(name);
     auto col = lexer.consume_while(isalpha);
@@ -242,7 +242,11 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name)
     if (!lexer.is_eof() || row.is_empty() || col.is_empty())
         return {};
 
-    return Position { col, row.to_uint().value() };
+    auto it = m_columns.find(col);
+    if (it == m_columns.end())
+        return {};
+
+    return Position { it.index(), row.to_uint().value() };
 }
 
 Optional<size_t> Sheet::column_index(const StringView& column_name) const
@@ -302,27 +306,23 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
 
 Position Sheet::offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const
 {
-    auto offset_column_it = m_columns.find(offset.column);
-    auto offset_base_column_it = m_columns.find(offset_base.column);
-    auto base_column_it = m_columns.find(base.column);
-
-    if (offset_column_it.is_end()) {
+    if (offset.column >= m_columns.size()) {
         dbgln("Column '{}' does not exist!", offset.column);
         return base;
     }
-    if (offset_base_column_it.is_end()) {
-        dbgln("Column '{}' does not exist!", offset.column);
+    if (offset_base.column >= m_columns.size()) {
+        dbgln("Column '{}' does not exist!", offset_base.column);
         return base;
     }
-    if (base_column_it.is_end()) {
-        dbgln("Column '{}' does not exist!", offset.column);
+    if (base.column >= m_columns.size()) {
+        dbgln("Column '{}' does not exist!", base.column);
         return offset;
     }
 
-    auto new_column = column(offset_column_it.index() + base_column_it.index() - offset_base_column_it.index());
+    auto new_column = offset.column + base.column - offset_base.column;
     auto new_row = offset.row + base.row - offset_base.row;
 
-    return { move(new_column), new_row };
+    return { new_column, new_row };
 }
 
 void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to)
@@ -353,7 +353,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         auto& target = to.first();
 
         for (auto& position : from) {
-            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(), target.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(*this), target.to_url(*this));
             copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
         }
 
@@ -364,7 +364,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         // Fill the target selection with the single cell.
         auto& source = from.first();
         for (auto& position : to) {
-            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", source.to_url(), position.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", source.to_url(*this), position.to_url(*this));
             copy_to(source, resolve_relative_to.has_value() ? offset_relative_to(position, source, resolve_relative_to.value()) : position);
         }
         return;
@@ -411,7 +411,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     };
 
     cells.for_each_member([&](auto& name, JsonValue& value) {
-        auto position_option = parse_cell_name(name);
+        auto position_option = sheet->parse_cell_name(name);
         if (!position_option.has_value())
             return IterationDecision::Continue;
 
@@ -600,7 +600,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
     // First row = headers.
     size_t column_count = m_columns.size();
     if (columns_are_standard()) {
-        column_count = convert_from_string(bottom_right.column) + 1;
+        column_count = bottom_right.column + 1;
         Vector<String> cols;
         for (size_t i = 0; i < column_count; ++i)
             cols.append(m_columns[i]);
@@ -613,7 +613,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
         Vector<String> row;
         row.resize(column_count);
         for (size_t j = 0; j < column_count; ++j) {
-            auto cell = at({ m_columns[j], i });
+            auto cell = at({ j, i });
             if (cell)
                 row[j] = cell->typed_display();
         }
@@ -643,7 +643,7 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
             auto str = row[i];
             if (str.is_empty())
                 continue;
-            Position position { cols[i], row.index() };
+            Position position { i, row.index() };
             auto cell = make<Cell>(str, position, *sheet);
             sheet->m_cells.set(position, move(cell));
         }
@@ -724,6 +724,16 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
 
     builder.append(')');
     return builder.build();
+}
+
+URL Position::to_url(const Sheet& sheet) const
+{
+    URL url;
+    url.set_protocol("spreadsheet");
+    url.set_host("cell");
+    url.set_path(String::formatted("/{}", getpid()));
+    url.set_fragment(String::formatted("{}{}", sheet.column(column), row));
+    return url;
 }
 
 }

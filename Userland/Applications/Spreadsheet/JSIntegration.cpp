@@ -125,7 +125,7 @@ JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receive
 
             return JS::js_undefined();
         }
-        if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
+        if (auto pos = m_sheet.parse_cell_name(name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             cell.reference_from(m_sheet.current_evaluated_cell());
             return cell.typed_js_data();
@@ -138,7 +138,7 @@ JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receive
 bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
 {
     if (name.is_string()) {
-        if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
+        if (auto pos = m_sheet.parse_cell_name(name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             if (auto current = m_sheet.current_evaluated_cell())
                 current->reference_from(&cell);
@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
     if (!this_object)
         return JS::js_null();
 
-    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+    if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
         return {};
     }
@@ -195,7 +195,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         vm.throw_exception<JS::TypeError>(global_object, "Expected a String argument to get_real_cell_contents()");
         return {};
     }
-    auto position = Sheet::parse_cell_name(name_value.as_string().string());
+    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().string());
     if (!position.has_value()) {
         vm.throw_exception<JS::TypeError>(global_object, "Invalid cell name");
         return {};
@@ -217,7 +217,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
     if (!this_object)
         return JS::js_null();
 
-    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+    if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
         return {};
     }
@@ -234,7 +234,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
         vm.throw_exception<JS::TypeError>(global_object, "Expected the first argument of set_real_cell_contents() to be a String");
         return {};
     }
-    auto position = Sheet::parse_cell_name(name_value.as_string().string());
+    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().string());
     if (!position.has_value()) {
         vm.throw_exception<JS::TypeError>(global_object, "Invalid cell name");
         return {};
@@ -254,6 +254,17 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (!is<SheetGlobalObject>(this_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+
     if (vm.argument_count() != 1) {
         vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to parse_cell_name()");
         return {};
@@ -263,12 +274,12 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
         vm.throw_exception<JS::TypeError>(global_object, "Expected a String argument to parse_cell_name()");
         return {};
     }
-    auto position = Sheet::parse_cell_name(name_value.as_string().string());
+    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().string());
     if (!position.has_value())
         return JS::js_undefined();
 
     auto object = JS::Object::create_empty(global_object);
-    object->put("column", JS::js_string(vm, position.value().column));
+    object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)));
     object->put("row", JS::Value((unsigned)position.value().row));
 
     return object;
@@ -285,7 +296,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     if (!this_object)
         return JS::js_null();
 
-    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+    if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
         return {};
     }
@@ -298,7 +309,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     auto position = current_cell->position();
 
     auto object = JS::Object::create_empty(global_object);
-    object->put("column", JS::js_string(vm, position.column));
+    object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)));
     object->put("row", JS::Value((unsigned)position.row));
 
     return object;
@@ -323,7 +334,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
     if (!this_object)
         return JS::js_null();
 
-    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+    if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
         return {};
     }
@@ -364,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     if (!this_object)
         return JS::js_null();
 
-    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+    if (!is<SheetGlobalObject>(this_object)) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
         return {};
     }
