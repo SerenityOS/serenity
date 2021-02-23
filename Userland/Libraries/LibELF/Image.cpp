@@ -186,12 +186,6 @@ bool Image::parse()
         }
     }
 
-    // Then create a name-to-index map.
-    for (unsigned i = 0; i < section_count(); ++i) {
-        auto section = this->section(i);
-        m_sections.set(section.name(), move(i));
-    }
-
     return m_valid;
 }
 
@@ -298,8 +292,11 @@ Image::RelocationSection Image::Section::relocations() const
 Image::Section Image::lookup_section(const String& name) const
 {
     ASSERT(m_valid);
-    if (auto it = m_sections.find(name); it != m_sections.end())
-        return section((*it).value);
+    for (unsigned i = 0; i < section_count(); ++i) {
+        auto section = this->section(i);
+        if (section.name() == name)
+            return section;
+    }
     return section(0);
 }
 
