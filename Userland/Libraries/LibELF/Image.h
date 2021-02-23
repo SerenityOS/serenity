@@ -26,10 +26,8 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
@@ -230,7 +228,6 @@ private:
     const u8* m_buffer { nullptr };
     size_t m_size { 0 };
     bool m_verbose_logging { true };
-    HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
