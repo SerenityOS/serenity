@@ -17,4 +17,5 @@ endpoint WebContentClient = 90
     DidRequestAlert(String message) => ()
     DidRequestConfirm(String message) => (bool result)
     DidRequestPrompt(String message, String default_) => (String response)
+    DidGetSource(URL url, String source) =|
 }
