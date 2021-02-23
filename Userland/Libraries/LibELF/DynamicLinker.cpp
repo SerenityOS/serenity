@@ -38,6 +38,7 @@
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
+#include <LibELF/Hashes.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -64,8 +65,12 @@ bool g_do_breakpoint_trap_before_entry { false };
 Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& symbol)
 {
     Optional<DynamicObject::SymbolLookupResult> weak_result;
+
+    auto gnu_hash = compute_gnu_hash(symbol);
+    auto sysv_hash = compute_sysv_hash(symbol);
+
     for (auto& lib : g_global_objects) {
-        auto res = lib->lookup_symbol(symbol);
+        auto res = lib->lookup_symbol(symbol, gnu_hash, sysv_hash);
         if (!res.has_value())
             continue;
         if (res.value().bind == STB_GLOBAL)

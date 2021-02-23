@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
+#include <LibELF/Hashes.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
 #include <dlfcn.h>
@@ -142,7 +143,7 @@ bool DynamicLoader::validate()
 
 void* DynamicLoader::symbol_for_name(const StringView& name)
 {
-    auto result = m_dynamic_object->hash_section().lookup_symbol(name);
+    auto result = m_dynamic_object->hash_section().lookup_symbol(name, compute_gnu_hash(name), compute_sysv_hash(name));
     if (!result.has_value())
         return nullptr;
     auto symbol = result.value();

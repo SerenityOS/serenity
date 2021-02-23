@@ -249,14 +249,8 @@ DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
 }
 
-auto DynamicObject::HashSection::lookup_symbol(const StringView& name) const -> Optional<Symbol>
+auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
-    return (this->*(m_lookup_function))(name);
-}
-
-auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const -> Optional<Symbol>
-{
-    u32 hash_value = compute_sysv_hash(name);
     u32* hash_table_begin = (u32*)address().as_ptr();
     size_t num_buckets = hash_table_begin[0];
 
@@ -279,7 +273,7 @@ auto DynamicObject::HashSection::lookup_elf_symbol(const StringView& name) const
     return {};
 }
 
-auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const -> Optional<Symbol>
+auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     // TODO: Handle 64bit bloomwords for ELF_CLASS64
@@ -299,7 +293,7 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name) const
     const u32* const buckets = &bloom_words[num_maskwords];
     const u32* const chains = &buckets[num_buckets];
 
-    BloomWord hash1 = compute_gnu_hash(name);
+    BloomWord hash1 = hash_value;
     BloomWord hash2 = hash1 >> shift2;
     const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
 
@@ -431,7 +425,12 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
 
 auto DynamicObject::lookup_symbol(const StringView& name) const -> Optional<SymbolLookupResult>
 {
-    auto result = hash_section().lookup_symbol(name);
+    return lookup_symbol(name, compute_gnu_hash(name), compute_sysv_hash(name));
+}
+
+auto DynamicObject::lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const -> Optional<SymbolLookupResult>
+{
+    auto result = hash_section().lookup_symbol(name, gnu_hash, sysv_hash);
     if (!result.has_value())
         return {};
     auto symbol = result.value();
