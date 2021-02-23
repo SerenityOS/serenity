@@ -50,7 +50,6 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
         asm volatile("ud2"); \
     } while (0)
 #define VERIFY assert
-#define RELEASE_ASSERT assert
 #define TODO VERIFY_NOT_REACHED
 
 __END_DECLS
