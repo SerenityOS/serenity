@@ -71,7 +71,7 @@ void SolitaireWidget::tick(GUI::Window& window)
         return;
 
     if (m_game_over_animation) {
-        ASSERT(!m_animation.card().is_null());
+        VERIFY(!m_animation.card().is_null());
         if (m_animation.card()->position().x() > SolitaireWidget::width || m_animation.card()->rect().right() < 0)
             create_new_animation_card();
 

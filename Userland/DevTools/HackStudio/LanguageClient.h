@@ -105,14 +105,14 @@ public:
         : m_server_connection(move(connection))
     {
         m_previous_client = m_server_connection->language_client();
-        ASSERT(m_previous_client.ptr() != this);
+        VERIFY(m_previous_client.ptr() != this);
         m_server_connection->attach(*this);
     }
 
     virtual ~LanguageClient()
     {
         m_server_connection->detach();
-        ASSERT(m_previous_client.ptr() != this);
+        VERIFY(m_previous_client.ptr() != this);
         if (m_previous_client)
             m_server_connection->attach(*m_previous_client);
     }

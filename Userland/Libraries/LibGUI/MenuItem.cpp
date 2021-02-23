@@ -72,7 +72,7 @@ void MenuItem::set_enabled(bool enabled)
 
 void MenuItem::set_checked(bool checked)
 {
-    ASSERT(is_checkable());
+    VERIFY(is_checkable());
     if (m_checked == checked)
         return;
     m_checked = checked;
@@ -81,7 +81,7 @@ void MenuItem::set_checked(bool checked)
 
 void MenuItem::set_default(bool is_default)
 {
-    ASSERT(is_checkable());
+    VERIFY(is_checkable());
     if (m_default == is_default)
         return;
     m_default = is_default;

@@ -314,8 +314,8 @@ void handle_udp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
         return;
     }
 
-    ASSERT(socket->type() == SOCK_DGRAM);
-    ASSERT(socket->local_port() == udp_packet.destination_port());
+    VERIFY(socket->type() == SOCK_DGRAM);
+    VERIFY(socket->local_port() == udp_packet.destination_port());
     socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
 }
 
@@ -391,8 +391,8 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
 
     LOCKER(socket->lock());
 
-    ASSERT(socket->type() == SOCK_STREAM);
-    ASSERT(socket->local_port() == tcp_packet.destination_port());
+    VERIFY(socket->type() == SOCK_STREAM);
+    VERIFY(socket->local_port() == tcp_packet.destination_port());
 
 #if TCP_DEBUG
     klog() << "handle_tcp: got socket; state=" << socket->tuple().to_string().characters() << " " << TCPSocket::to_string(socket->state());

@@ -64,7 +64,7 @@ ALWAYS_INLINE Allocator& Heap::allocator_for_size(size_t cell_size)
         if (allocator->cell_size() >= cell_size)
             return *allocator;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Cell* Heap::allocate_cell(size_t size)
@@ -84,7 +84,7 @@ Cell* Heap::allocate_cell(size_t size)
 
 void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 {
-    ASSERT(!m_collecting_garbage);
+    VERIFY(!m_collecting_garbage);
     TemporaryChange change(m_collecting_garbage, true);
 
     Core::ElapsedTimer collection_measurement_timer;
@@ -288,25 +288,25 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
 
 void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
-    ASSERT(!m_handles.contains(&impl));
+    VERIFY(!m_handles.contains(&impl));
     m_handles.set(&impl);
 }
 
 void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
-    ASSERT(m_handles.contains(&impl));
+    VERIFY(m_handles.contains(&impl));
     m_handles.remove(&impl);
 }
 
 void Heap::did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList& list)
 {
-    ASSERT(!m_marked_value_lists.contains(&list));
+    VERIFY(!m_marked_value_lists.contains(&list));
     m_marked_value_lists.set(&list);
 }
 
 void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList& list)
 {
-    ASSERT(m_marked_value_lists.contains(&list));
+    VERIFY(m_marked_value_lists.contains(&list));
     m_marked_value_lists.remove(&list);
 }
 
@@ -317,7 +317,7 @@ void Heap::defer_gc(Badge<DeferGC>)
 
 void Heap::undefer_gc(Badge<DeferGC>)
 {
-    ASSERT(m_gc_deferrals > 0);
+    VERIFY(m_gc_deferrals > 0);
     --m_gc_deferrals;
 
     if (!m_gc_deferrals) {

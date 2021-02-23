@@ -58,7 +58,7 @@ static void run_test(void* region, ssize_t offset, size_t bits)
         write64(ptr);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
         run_test(region, offset, 64);
     } else {
         void* region = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-        ASSERT(region);
+        VERIFY(region);
         run_test(region, offset, bits);
     }
 

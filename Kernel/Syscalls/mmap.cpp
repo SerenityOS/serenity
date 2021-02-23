@@ -465,7 +465,7 @@ int Process::sys$munmap(void* addr, size_t size)
         if (!whole_region->is_mmap())
             return -EPERM;
         bool success = space().deallocate_region(*whole_region);
-        ASSERT(success);
+        VERIFY(success);
         return 0;
     }
 
@@ -557,7 +557,7 @@ void* Process::sys$allocate_tls(size_t size)
         main_thread = &thread;
         return IterationDecision::Break;
     });
-    ASSERT(main_thread);
+    VERIFY(main_thread);
 
     auto range = space().allocate_range({}, size);
     if (!range.has_value())

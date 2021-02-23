@@ -118,7 +118,7 @@ public:
         case X86::RegisterDH:
             return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u8> const_gpr8(X86::RegisterIndex8 reg) const
@@ -141,7 +141,7 @@ public:
         case X86::RegisterDH:
             return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u16> const_gpr16(X86::RegisterIndex16 reg) const
@@ -431,7 +431,7 @@ public:
         case 15:
             return !((sf() ^ of()) | zf()); // NLE, G
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return 0;
     }
@@ -1140,12 +1140,12 @@ private:
     }
     long double fpu_get(int i)
     {
-        ASSERT(i >= 0 && i <= m_fpu_top);
+        VERIFY(i >= 0 && i <= m_fpu_top);
         return m_fpu[m_fpu_top - i];
     }
     void fpu_set(int i, long double n)
     {
-        ASSERT(i >= 0 && i <= m_fpu_top);
+        VERIFY(i >= 0 && i <= m_fpu_top);
         m_fpu[m_fpu_top - i] = n;
     }
 

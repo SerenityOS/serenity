@@ -58,8 +58,8 @@ int main(int argc, char** argv)
         return 1;
 
     auto json = JsonValue::from_string(file->read_all());
-    ASSERT(json.has_value());
-    ASSERT(json.value().is_object());
+    VERIFY(json.has_value());
+    VERIFY(json.value().is_object());
 
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -76,7 +76,7 @@ enum class PropertyID {
 )~~~");
 
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
-        ASSERT(value.is_object());
+        VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));

@@ -88,7 +88,7 @@ void Job::flush_received_buffers()
             --i;
             continue;
         }
-        ASSERT(written < payload.size());
+        VERIFY(written < payload.size());
         payload = payload.slice(written, payload.size() - written);
         break;
     }
@@ -121,8 +121,8 @@ void Job::on_socket_connected()
             // and then get eof() == true.
             [[maybe_unused]] auto payload = receive(64);
             // These assertions are only correct if "Connection: close".
-            ASSERT(payload.is_empty());
-            ASSERT(eof());
+            VERIFY(payload.is_empty());
+            VERIFY(eof());
             return;
         }
 
@@ -204,8 +204,8 @@ void Job::on_socket_connected()
             dbgln_if(JOB_DEBUG, "Job: [{}] = '{}'", name, value);
             return;
         }
-        ASSERT(m_state == State::InBody);
-        ASSERT(can_read());
+        VERIFY(m_state == State::InBody);
+        VERIFY(can_read());
 
         read_while_data_available([&] {
             auto read_size = 64 * KiB;

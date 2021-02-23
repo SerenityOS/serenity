@@ -35,13 +35,13 @@ static ProcessModel* s_the;
 
 ProcessModel& ProcessModel::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 ProcessModel::ProcessModel()
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
     m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png");
 
@@ -138,7 +138,7 @@ String ProcessModel::column_name(int column) const
     case Column::Veil:
         return "Veil";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -149,7 +149,7 @@ static String pretty_byte_size(size_t size)
 
 GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    ASSERT(is_valid(index));
+    VERIFY(is_valid(index));
 
     if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
@@ -186,7 +186,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::IPv4SocketWriteBytes:
             return Gfx::TextAlignment::CenterRight;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -256,7 +256,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::Veil:
             return thread.current_state.veil;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (role == GUI::ModelRole::Display) {
@@ -391,7 +391,7 @@ void ProcessModel::update()
                         m_threads.set(thread.tid, make<Thread>());
                 }
                 auto pit = m_threads.find(thread.tid);
-                ASSERT(pit != m_threads.end());
+                VERIFY(pit != m_threads.end());
                 (*pit).value->previous_state = (*pit).value->current_state;
                 (*pit).value->current_state = state;
 

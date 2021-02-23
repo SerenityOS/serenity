@@ -79,7 +79,7 @@ Color opposing_color(Color color)
 
 Square::Square(const StringView& name)
 {
-    ASSERT(name.length() == 2);
+    VERIFY(name.length() == 2);
     char filec = name[0];
     char rankc = name[1];
 
@@ -88,13 +88,13 @@ Square::Square(const StringView& name)
     } else if (filec >= 'A' && filec <= 'H') {
         file = filec - 'A';
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (rankc >= '1' && rankc <= '8') {
         rank = rankc - '1';
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -312,7 +312,7 @@ String Board::to_fen() const
     }
 
     // 2. Active color
-    ASSERT(m_turn != Color::None);
+    VERIFY(m_turn != Color::None);
     builder.append(m_turn == Color::White ? " w " : " b ");
 
     // 3. Castling availability
@@ -349,15 +349,15 @@ String Board::to_fen() const
 
 Piece Board::get_piece(const Square& square) const
 {
-    ASSERT(square.rank < 8);
-    ASSERT(square.file < 8);
+    VERIFY(square.rank < 8);
+    VERIFY(square.file < 8);
     return m_board[square.rank][square.file];
 }
 
 Piece Board::set_piece(const Square& square, const Piece& piece)
 {
-    ASSERT(square.rank < 8);
-    ASSERT(square.file < 8);
+    VERIFY(square.rank < 8);
+    VERIFY(square.file < 8);
     return m_board[square.rank][square.file] = piece;
 }
 
@@ -913,7 +913,7 @@ String Board::result_to_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Color::None);
+        VERIFY(turn != Chess::Color::None);
         return turn == Chess::Color::White ? "Black wins by Checkmate" : "White wins by Checkmate";
     case Result::WhiteResign:
         return "Black wins by Resignation";
@@ -934,7 +934,7 @@ String Board::result_to_string(Result result, Color turn)
     case Chess::Board::Result::NotFinished:
         return "Game not finished";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -942,7 +942,7 @@ String Board::result_to_points(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Color::None);
+        VERIFY(turn != Chess::Color::None);
         return turn == Chess::Color::White ? "0-1" : "1-0";
     case Result::WhiteResign:
         return "0-1";
@@ -963,7 +963,7 @@ String Board::result_to_points(Result result, Color turn)
     case Chess::Board::Result::NotFinished:
         return "*";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

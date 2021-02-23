@@ -125,7 +125,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         lexical_path.parts().end(),
         { new_unveiled_path, (UnveilAccess)new_permissions, true },
         [](auto& parent, auto& it) -> Optional<UnveilMetadata> { return UnveilMetadata { String::formatted("{}/{}", parent.path(), *it), parent.permissions(), false, parent.permissions_inherited_from_root() }; });
-    ASSERT(m_veil_state != VeilState::Locked);
+    VERIFY(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;
     return 0;
 }

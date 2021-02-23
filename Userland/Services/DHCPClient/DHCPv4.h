@@ -269,9 +269,9 @@ public:
 
     void add_option(DHCPOption option, u8 length, const void* data)
     {
-        ASSERT(m_can_add);
+        VERIFY(m_can_add);
         // we need enough space to fit the option value, its length, and its data
-        ASSERT(next_option_offset + length + 2 < DHCPV4_OPTION_FIELD_MAX_LENGTH);
+        VERIFY(next_option_offset + length + 2 < DHCPV4_OPTION_FIELD_MAX_LENGTH);
 
         auto* options = peek().options();
         options[next_option_offset++] = (u8)option;

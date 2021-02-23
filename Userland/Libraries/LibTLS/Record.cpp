@@ -117,7 +117,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     aad_stream.write({ &seq_no, sizeof(seq_no) });
                     aad_stream.write(packet.bytes().slice(0, 3)); // content-type + version
                     aad_stream.write({ &len, sizeof(len) });      // length
-                    ASSERT(aad_stream.is_end());
+                    VERIFY(aad_stream.is_end());
 
                     // AEAD IV (12)
                     // IV (4)
@@ -141,7 +141,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         aad_bytes,
                         ct.bytes().slice(header_size + 8 + length, 16));
 
-                    ASSERT(header_size + 8 + length + 16 == ct.size());
+                    VERIFY(header_size + 8 + length + 16 == ct.size());
 
                 } else {
                     // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
@@ -161,7 +161,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     memset(buffer.offset_pointer(buffer_position), padding - 1, padding);
                     buffer_position += padding;
 
-                    ASSERT(buffer_position == buffer.size());
+                    VERIFY(buffer_position == buffer.size());
 
                     auto iv = ByteBuffer::create_uninitialized(iv_size);
                     AK::fill_with_random(iv.data(), iv.size());
@@ -169,8 +169,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     // write it into the ciphertext portion of the message
                     ct.overwrite(header_size, iv.data(), iv.size());
 
-                    ASSERT(header_size + iv_size + length == ct.size());
-                    ASSERT(length % block_size == 0);
+                    VERIFY(header_size + iv_size + length == ct.size());
+                    VERIFY(length % block_size == 0);
 
                     // get a block to encrypt into
                     auto view = ct.bytes().slice(header_size + iv_size, length);
@@ -269,7 +269,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
 
         if (is_aead()) {
-            ASSERT(m_aes_remote.gcm);
+            VERIFY(m_aes_remote.gcm);
 
             if (length < 24) {
                 dbgln("Invalid packet length");
@@ -297,7 +297,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             aad_stream.write({ &seq_no, sizeof(seq_no) });      // Sequence number
             aad_stream.write(buffer.slice(0, header_size - 2)); // content-type + version
             aad_stream.write({ &len, sizeof(u16) });
-            ASSERT(aad_stream.is_end());
+            VERIFY(aad_stream.is_end());
 
             auto nonce = payload.slice(0, iv_length());
             payload = payload.slice(iv_length());
@@ -333,7 +333,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
             plain = decrypted;
         } else {
-            ASSERT(m_aes_remote.cbc);
+            VERIFY(m_aes_remote.cbc);
             auto iv_size = iv_length();
 
             decrypted = m_aes_remote.cbc->create_aligned_buffer(length - iv_size);

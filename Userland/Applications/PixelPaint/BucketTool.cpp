@@ -55,7 +55,7 @@ static float color_distance_squared(const Gfx::Color& lhs, const Gfx::Color& rhs
 
 static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::IntPoint& start_position, Color target_color, Color fill_color, int threshold)
 {
-    ASSERT(bitmap.bpp() == 32);
+    VERIFY(bitmap.bpp() == 32);
 
     if (target_color == fill_color)
         return;

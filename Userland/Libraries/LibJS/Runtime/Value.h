@@ -169,73 +169,73 @@ public:
 
     double as_double() const
     {
-        ASSERT(type() == Type::Number);
+        VERIFY(type() == Type::Number);
         return m_value.as_double;
     }
 
     bool as_bool() const
     {
-        ASSERT(type() == Type::Boolean);
+        VERIFY(type() == Type::Boolean);
         return m_value.as_bool;
     }
 
     Object& as_object()
     {
-        ASSERT(type() == Type::Object);
+        VERIFY(type() == Type::Object);
         return *m_value.as_object;
     }
 
     const Object& as_object() const
     {
-        ASSERT(type() == Type::Object);
+        VERIFY(type() == Type::Object);
         return *m_value.as_object;
     }
 
     PrimitiveString& as_string()
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return *m_value.as_string;
     }
 
     const PrimitiveString& as_string() const
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return *m_value.as_string;
     }
 
     Symbol& as_symbol()
     {
-        ASSERT(is_symbol());
+        VERIFY(is_symbol());
         return *m_value.as_symbol;
     }
 
     const Symbol& as_symbol() const
     {
-        ASSERT(is_symbol());
+        VERIFY(is_symbol());
         return *m_value.as_symbol;
     }
 
     Cell* as_cell()
     {
-        ASSERT(is_cell());
+        VERIFY(is_cell());
         return m_value.as_cell;
     }
 
     Accessor& as_accessor()
     {
-        ASSERT(is_accessor());
+        VERIFY(is_accessor());
         return *m_value.as_accessor;
     }
 
     BigInt& as_bigint()
     {
-        ASSERT(is_bigint());
+        VERIFY(is_bigint());
         return *m_value.as_bigint;
     }
 
     NativeProperty& as_native_property()
     {
-        ASSERT(is_native_property());
+        VERIFY(is_native_property());
         return *m_value.as_native_property;
     }
 

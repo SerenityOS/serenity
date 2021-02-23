@@ -88,7 +88,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                 Gfx::IntPoint current_point { x, inner_rect.bottom() - (int)scaled_value };
                 m_calculated_points.append(current_point);
             }
-            ASSERT(m_calculated_points.size() <= m_values.size());
+            VERIFY(m_calculated_points.size() <= m_values.size());
             if (format.graph_color_role != ColorRole::Base) {
                 // Fill the background for the area we have values for
                 Gfx::Path path;
@@ -100,8 +100,8 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                     if (!started_path)
                         return;
                     if (points_in_path > 1) {
-                        ASSERT(current_point);
-                        ASSERT(first_point);
+                        VERIFY(current_point);
+                        VERIFY(first_point);
                         path.line_to({ current_point->x() - 1, inner_rect.bottom() + 1 });
                         path.line_to({ first_point->x() + 1, inner_rect.bottom() + 1 });
                         path.close();

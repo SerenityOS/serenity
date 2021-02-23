@@ -118,7 +118,7 @@ ComboBox::ComboBox()
     m_list_view->set_frame_thickness(1);
     m_list_view->set_frame_shadow(Gfx::FrameShadow::Plain);
     m_list_view->on_selection = [this](auto& index) {
-        ASSERT(model());
+        VERIFY(model());
         m_list_view->set_activates_on_selection(true);
         if (m_updating_model)
             selection_updated(index);

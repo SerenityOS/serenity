@@ -64,7 +64,7 @@ bool BlockDevice::read_block(unsigned index, UserOrKernelBuffer& buffer)
         dbgln("BlockDevice::read_block({}) cancelled", index);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return false;
 }
@@ -85,7 +85,7 @@ bool BlockDevice::write_block(unsigned index, const UserOrKernelBuffer& buffer)
         dbgln("BlockDevice::write_block({}) cancelled", index);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return false;
 }

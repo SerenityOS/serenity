@@ -47,7 +47,7 @@ constexpr size_t use_next_index = NumericLimits<size_t>::max();
 // 65 bytes. Choosing a larger power of two won't hurt and is a bit of mitigation against out-of-bounds accesses.
 inline size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& buffer, u8 base, bool upper_case)
 {
-    ASSERT(base >= 2 && base <= 16);
+    VERIFY(base >= 2 && base <= 16);
 
     static constexpr const char* lowercase_lookup = "0123456789abcdef";
     static constexpr const char* uppercase_lookup = "0123456789ABCDEF";
@@ -80,7 +80,7 @@ void vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, Format
 
     FormatParser::FormatSpecifier specifier;
     if (!parser.consume_specifier(specifier)) {
-        ASSERT(parser.is_eof());
+        VERIFY(parser.is_eof());
         return;
     }
 
@@ -118,9 +118,9 @@ size_t TypeErasedParameter::to_size() const
     else if (type == TypeErasedParameter::Type::Int64)
         svalue = *reinterpret_cast<const i64*>(value);
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
-    ASSERT(svalue >= 0);
+    VERIFY(svalue >= 0);
 
     return static_cast<size_t>(svalue);
 }
@@ -163,7 +163,7 @@ bool FormatParser::consume_number(size_t& value)
 }
 bool FormatParser::consume_specifier(FormatSpecifier& specifier)
 {
-    ASSERT(!next_is('}'));
+    VERIFY(!next_is('}'));
 
     if (!consume_specific('{'))
         return false;
@@ -176,7 +176,7 @@ bool FormatParser::consume_specifier(FormatSpecifier& specifier)
 
         size_t level = 1;
         while (level > 0) {
-            ASSERT(!is_eof());
+            VERIFY(!is_eof());
 
             if (consume_specific('{')) {
                 ++level;
@@ -194,7 +194,7 @@ bool FormatParser::consume_specifier(FormatSpecifier& specifier)
         specifier.flags = m_input.substring_view(begin, tell() - begin - 1);
     } else {
         if (!consume_specific('}'))
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         specifier.flags = "";
     }
@@ -210,7 +210,7 @@ bool FormatParser::consume_replacement_field(size_t& index)
         index = use_next_index;
 
     if (!consume_specific('}'))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     return true;
 }
@@ -426,7 +426,7 @@ void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams 
 void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& parser)
 {
     if (StringView { "<^>" }.contains(parser.peek(1))) {
-        ASSERT(!parser.next_is(is_any_of("{}")));
+        VERIFY(!parser.next_is(is_any_of("{}")));
         m_fill = parser.consume();
     }
 
@@ -498,21 +498,21 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
     if (!parser.is_eof())
         dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
 
-    ASSERT(parser.is_eof());
+    VERIFY(parser.is_eof());
 }
 
 void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_alternative_form)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_zero_pad)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_width.has_value() && m_precision.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());
@@ -530,7 +530,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
 {
     if (m_mode == Mode::Character) {
         // FIXME: We just support ASCII for now, in the future maybe unicode?
-        ASSERT(value >= 0 && value <= 127);
+        VERIFY(value >= 0 && value <= 127);
 
         m_mode = Mode::String;
 
@@ -539,17 +539,17 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
     }
 
     if (m_precision.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     if (m_mode == Mode::Pointer) {
         if (m_sign_mode != FormatBuilder::SignMode::Default)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_align != FormatBuilder::Align::Default)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_alternative_form)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_width.has_value())
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         m_mode = Mode::Hexadecimal;
         m_alternative_form = true;
@@ -574,7 +574,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
         base = 16;
         upper_case = true;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_width = m_width.value_or(0);
@@ -621,7 +621,7 @@ void Formatter<double>::format(FormatBuilder& builder, double value)
         base = 16;
         upper_case = true;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_width = m_width.value_or(0);
@@ -647,7 +647,7 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool new
 
     const auto string = builder.string_view();
     const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
-    ASSERT(static_cast<size_t>(retval) == string.length());
+    VERIFY(static_cast<size_t>(retval) == string.length());
 }
 #endif
 

@@ -75,7 +75,7 @@ NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(
 
 NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate_storage_devices() const
 {
-    ASSERT(!m_controllers.is_empty());
+    VERIFY(!m_controllers.is_empty());
     NonnullRefPtrVector<StorageDevice> devices;
     for (auto& controller : m_controllers) {
         for (size_t device_index = 0; device_index < controller.devices_count(); device_index++) {
@@ -110,7 +110,7 @@ OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(cons
 
 NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions() const
 {
-    ASSERT(!m_storage_devices.is_empty());
+    VERIFY(!m_storage_devices.is_empty());
     NonnullRefPtrVector<DiskPartition> partitions;
     size_t device_index = 0;
     for (auto& device : m_storage_devices) {
@@ -133,7 +133,7 @@ NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions(
 
 void StorageManagement::determine_boot_device()
 {
-    ASSERT(!m_controllers.is_empty());
+    VERIFY(!m_controllers.is_empty());
     if (m_boot_argument.starts_with("/dev/")) {
         StringView device_name = m_boot_argument.substring_view(5);
         Device::for_each([&](Device& device) {
@@ -153,8 +153,8 @@ void StorageManagement::determine_boot_device()
 
 void StorageManagement::determine_boot_device_with_partition_uuid()
 {
-    ASSERT(!m_disk_partitions.is_empty());
-    ASSERT(m_boot_argument.starts_with("PARTUUID="));
+    VERIFY(!m_disk_partitions.is_empty());
+    VERIFY(m_boot_argument.starts_with("PARTUUID="));
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(strlen("PARTUUID=")));
 
@@ -197,7 +197,7 @@ bool StorageManagement::initialized()
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(String root_device, bool force_pio)
 {
-    ASSERT(!StorageManagement::initialized());
+    VERIFY(!StorageManagement::initialized());
     s_the = new StorageManagement(root_device, force_pio);
 }
 

@@ -92,7 +92,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 
     push_on_stack(argument);
     push_on_stack((void*)entry);
-    ASSERT((uintptr_t)stack % 16 == 0);
+    VERIFY((uintptr_t)stack % 16 == 0);
 
     // Push a fake return address
     push_on_stack(nullptr);
@@ -107,7 +107,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 {
     KeyDestroyer::destroy_for_current_thread();
     syscall(SC_exit_thread, code);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int pthread_self()
@@ -485,7 +485,7 @@ static int cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct 
 int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
 {
     int rc = cond_wait(cond, mutex, nullptr);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
     return 0;
 }
 
@@ -516,7 +516,7 @@ int pthread_cond_signal(pthread_cond_t* cond)
     u32 value = cond->previous + 1;
     cond->value = value;
     int rc = futex(&cond->value, FUTEX_WAKE, 1, nullptr, nullptr, 0);
-    ASSERT(rc >= 0);
+    VERIFY(rc >= 0);
     return 0;
 }
 
@@ -525,7 +525,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     u32 value = cond->previous + 1;
     cond->value = value;
     int rc = futex(&cond->value, FUTEX_WAKE, INT32_MAX, nullptr, nullptr, 0);
-    ASSERT(rc >= 0);
+    VERIFY(rc >= 0);
     return 0;
 }
 
@@ -874,15 +874,15 @@ int pthread_rwlockattr_destroy(pthread_rwlockattr_t*)
 }
 int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* __restrict, int* __restrict)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 int pthread_rwlockattr_init(pthread_rwlockattr_t*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))

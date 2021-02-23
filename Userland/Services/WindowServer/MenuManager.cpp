@@ -44,7 +44,7 @@ static constexpr int s_search_timeout = 3000;
 
 MenuManager& MenuManager::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -162,7 +162,7 @@ void MenuManager::event(Core::Event& event)
 
             if (key_event.key() == Key_Left) {
                 auto it = m_open_menu_stack.find_if([&](const auto& other) { return m_current_menu == other.ptr(); });
-                ASSERT(!it.is_end());
+                VERIFY(!it.is_end());
 
                 // Going "back" a menu should be the previous menu in the stack
                 if (it.index() > 0)
@@ -229,13 +229,13 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 
     if (has_open_menu()) {
         auto* topmost_menu = m_open_menu_stack.last().ptr();
-        ASSERT(topmost_menu);
+        VERIFY(topmost_menu);
         auto* window = topmost_menu->menu_window();
         if (!window) {
             dbgln("MenuManager::handle_mouse_event: No menu window");
             return;
         }
-        ASSERT(window->is_visible());
+        VERIFY(window->is_visible());
 
         bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
         if (event_is_inside_current_menu) {
@@ -326,7 +326,7 @@ void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientCon
 void MenuManager::close_everyone()
 {
     for (auto& menu : m_open_menu_stack) {
-        ASSERT(menu);
+        VERIFY(menu);
         if (menu->menu_window())
             menu->menu_window()->set_visible(false);
         menu->clear_hovered_item();
@@ -440,7 +440,7 @@ void MenuManager::set_current_menu(Menu* menu)
         return;
     }
 
-    ASSERT(is_open(*menu));
+    VERIFY(is_open(*menu));
     if (menu == m_current_menu) {
         return;
     }

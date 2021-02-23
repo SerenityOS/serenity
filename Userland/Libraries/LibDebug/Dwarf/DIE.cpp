@@ -46,7 +46,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
         m_tag = EntryTag::None;
     } else {
         auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
-        ASSERT(abbreviation_info.has_value());
+        VERIFY(abbreviation_info.has_value());
 
         m_tag = abbreviation_info.value().tag;
         m_has_children = abbreviation_info.value().has_children;
@@ -76,7 +76,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::StringPointer: {
         u32 offset;
         debug_info_stream >> offset;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::String;
 
         auto strings_data = m_compilation_unit.dwarf_info().debug_strings_data();
@@ -86,7 +86,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data1: {
         u8 data;
         debug_info_stream >> data;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -94,7 +94,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data2: {
         u16 data;
         debug_info_stream >> data;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -102,7 +102,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Addr: {
         u32 address;
         debug_info_stream >> address;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = address;
         break;
@@ -110,7 +110,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::SData: {
         ssize_t data;
         debug_info_stream.read_LEB128_signed(data);
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SignedNumber;
         value.data.as_i32 = data;
         break;
@@ -118,7 +118,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::SecOffset: {
         u32 data;
         debug_info_stream >> data;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SecOffset;
         value.data.as_u32 = data;
         break;
@@ -126,7 +126,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Data4: {
         u32 data;
         debug_info_stream >> data;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
         value.data.as_u32 = data;
         break;
@@ -134,7 +134,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::Ref4: {
         u32 data;
         debug_info_stream >> data;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DieReference;
         value.data.as_u32 = data + m_compilation_unit.offset();
         break;
@@ -147,7 +147,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
     case AttributeDataForm::ExprLoc: {
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DwarfExpression;
         assign_raw_bytes_value(length);
         break;
@@ -156,7 +156,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         String str;
         u32 str_offset = debug_info_stream.offset();
         debug_info_stream >> str;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::String;
         value.data.as_string = reinterpret_cast<const char*>(str_offset + m_compilation_unit.dwarf_info().debug_info_data().data());
         break;
@@ -165,7 +165,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u8 length;
         debug_info_stream >> length;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -173,7 +173,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u16 length;
         debug_info_stream >> length;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -181,7 +181,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         u32 length;
         debug_info_stream >> length;
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
@@ -189,13 +189,13 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.type = AttributeValue::Type::RawBytes;
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
-        ASSERT(!debug_info_stream.has_any_error());
+        VERIFY(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
         break;
     }
     default:
         dbgln("Unimplemented AttributeDataForm: {}", (u32)form);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return value;
 }
@@ -206,7 +206,7 @@ Optional<DIE::AttributeValue> DIE::get_attribute(const Attribute& attribute) con
     stream.discard_or_error(m_data_offset);
 
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
-    ASSERT(abbreviation_info.has_value());
+    VERIFY(abbreviation_info.has_value());
 
     for (const auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
         auto value = get_attribute_value(attribute_spec.form, stream);
@@ -251,7 +251,7 @@ void DIE::for_each_child(Function<void(const DIE& child)> callback) const
 
 DIE DIE::get_die_at_offset(u32 offset) const
 {
-    ASSERT(offset >= m_compilation_unit.offset() && offset < m_compilation_unit.offset() + m_compilation_unit.size());
+    VERIFY(offset >= m_compilation_unit.offset() && offset < m_compilation_unit.offset() + m_compilation_unit.size());
     return DIE(m_compilation_unit, offset);
 }
 

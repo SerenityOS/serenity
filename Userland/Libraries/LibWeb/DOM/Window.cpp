@@ -95,7 +95,7 @@ i32 Window::set_timeout(JS::Function& callback, i32 interval)
 void Window::timer_did_fire(Badge<Timer>, Timer& timer)
 {
     // We should not be here if there's no JS wrapper for the Window object.
-    ASSERT(wrapper());
+    VERIFY(wrapper());
     auto& vm = wrapper()->vm();
 
     // NOTE: This protector pointer keeps the timer alive until the end of this function no matter what.

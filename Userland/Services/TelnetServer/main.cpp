@@ -99,7 +99,7 @@ static void run_command(int ptm_fd, String command)
             perror("execve");
             exit(1);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

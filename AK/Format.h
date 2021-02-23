@@ -87,7 +87,7 @@ struct TypeErasedParameter {
                 return Type::Int64;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     template<typename T>

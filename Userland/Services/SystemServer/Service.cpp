@@ -53,11 +53,11 @@ Service* Service::find_by_pid(pid_t pid)
 
 void Service::setup_socket()
 {
-    ASSERT(!m_socket_path.is_null());
-    ASSERT(m_socket_fd == -1);
+    VERIFY(!m_socket_path.is_null());
+    VERIFY(m_socket_fd == -1);
 
     auto ok = Core::File::ensure_parent_directories(m_socket_path);
-    ASSERT(ok);
+    VERIFY(ok);
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
@@ -65,47 +65,47 @@ void Service::setup_socket()
     m_socket_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (m_socket_fd < 0) {
         perror("socket");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (m_account.has_value()) {
         auto& account = m_account.value();
         if (fchown(m_socket_fd, account.uid(), account.gid()) < 0) {
             perror("fchown");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
     if (fchmod(m_socket_fd, m_socket_permissions) < 0) {
         perror("fchmod");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto socket_address = Core::SocketAddress::local(m_socket_path);
     auto un_optional = socket_address.to_sockaddr_un();
     if (!un_optional.has_value()) {
         dbgln("Socket name {} is too long. BUG! This should have failed earlier!", m_socket_path);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     auto un = un_optional.value();
     int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     rc = listen(m_socket_fd, 16);
     if (rc < 0) {
         perror("listen");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 void Service::setup_notifier()
 {
-    ASSERT(m_lazy);
-    ASSERT(m_socket_fd >= 0);
-    ASSERT(!m_socket_notifier);
+    VERIFY(m_lazy);
+    VERIFY(m_socket_fd >= 0);
+    VERIFY(!m_socket_notifier);
 
     m_socket_notifier = Core::Notifier::construct(m_socket_fd, Core::Notifier::Event::Read, this);
     m_socket_notifier->on_ready_to_read = [this] {
@@ -134,7 +134,7 @@ void Service::handle_socket_connection()
 
 void Service::activate()
 {
-    ASSERT(m_pid < 0);
+    VERIFY(m_pid < 0);
 
     if (m_lazy)
         setup_notifier();
@@ -158,7 +158,7 @@ void Service::spawn(int socket_fd)
         if (!m_working_directory.is_null()) {
             if (chdir(m_working_directory.characters()) < 0) {
                 perror("chdir");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -167,16 +167,16 @@ void Service::spawn(int socket_fd)
         int rc = sched_setparam(0, &p);
         if (rc < 0) {
             perror("sched_setparam");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         if (!m_stdio_file_path.is_null()) {
             close(STDIN_FILENO);
             int fd = open(m_stdio_file_path.characters(), O_RDWR, 0);
-            ASSERT(fd <= 0);
+            VERIFY(fd <= 0);
             if (fd < 0) {
                 perror("open");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
             dup2(STDIN_FILENO, STDOUT_FILENO);
             dup2(STDIN_FILENO, STDERR_FILENO);
@@ -193,14 +193,14 @@ void Service::spawn(int socket_fd)
             close(STDERR_FILENO);
 
             int fd = open("/dev/null", O_RDWR);
-            ASSERT(fd == STDIN_FILENO);
+            VERIFY(fd == STDIN_FILENO);
             dup2(STDIN_FILENO, STDOUT_FILENO);
             dup2(STDIN_FILENO, STDERR_FILENO);
         }
 
         if (socket_fd >= 0) {
-            ASSERT(!m_socket_path.is_null());
-            ASSERT(socket_fd > 3);
+            VERIFY(!m_socket_path.is_null());
+            VERIFY(socket_fd > 3);
             dup2(socket_fd, 3);
             // The new descriptor is !CLOEXEC here.
             setenv("SOCKET_TAKEOVER", "1", true);
@@ -226,7 +226,7 @@ void Service::spawn(int socket_fd)
 
         rc = execv(argv[0], argv);
         perror("exec");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else if (!m_multi_instance) {
         // We are the parent.
         m_pid = pid;
@@ -236,8 +236,8 @@ void Service::spawn(int socket_fd)
 
 void Service::did_exit(int exit_code)
 {
-    ASSERT(m_pid > 0);
-    ASSERT(!m_multi_instance);
+    VERIFY(m_pid > 0);
+    VERIFY(!m_multi_instance);
 
     dbgln("Service {} has exited with exit code {}", name(), exit_code);
 
@@ -271,7 +271,7 @@ void Service::did_exit(int exit_code)
 Service::Service(const Core::ConfigFile& config, const StringView& name)
     : Core::Object(nullptr)
 {
-    ASSERT(config.has_group(name));
+    VERIFY(config.has_group(name));
 
     set_name(name);
     m_executable_path = config.read_entry(name, "Executable", String::formatted("/bin/{}", this->name()));
@@ -286,7 +286,7 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     else if (prio == "high")
         m_priority = 50;
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     m_keep_alive = config.read_bool_entry(name, "KeepAlive");
     m_lazy = config.read_bool_entry(name, "Lazy");
@@ -309,13 +309,13 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     m_socket_path = config.read_entry(name, "Socket");
 
     // Lazy requires Socket.
-    ASSERT(!m_lazy || !m_socket_path.is_null());
+    VERIFY(!m_lazy || !m_socket_path.is_null());
     // AcceptSocketConnections always requires Socket, Lazy, and MultiInstance.
-    ASSERT(!m_accept_socket_connections || (!m_socket_path.is_null() && m_lazy && m_multi_instance));
+    VERIFY(!m_accept_socket_connections || (!m_socket_path.is_null() && m_lazy && m_multi_instance));
     // MultiInstance doesn't work with KeepAlive.
-    ASSERT(!m_multi_instance || !m_keep_alive);
+    VERIFY(!m_multi_instance || !m_keep_alive);
     // Socket path (plus NUL) must fit into the structs sent to the Kernel.
-    ASSERT(m_socket_path.length() < UNIX_PATH_MAX);
+    VERIFY(m_socket_path.length() < UNIX_PATH_MAX);
 
     if (!m_socket_path.is_null() && is_enabled()) {
         auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");

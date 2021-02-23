@@ -87,7 +87,7 @@ static String mime_type_from_content_type(const String& content_type)
 
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
 {
-    ASSERT(!m_loaded);
+    VERIFY(!m_loaded);
     m_encoded_data = ByteBuffer::copy(data);
     m_response_headers = headers;
     m_loaded = true;
@@ -128,13 +128,13 @@ void Resource::did_fail(Badge<ResourceLoader>, const String& error)
 
 void Resource::register_client(Badge<ResourceClient>, ResourceClient& client)
 {
-    ASSERT(!m_clients.contains(&client));
+    VERIFY(!m_clients.contains(&client));
     m_clients.set(&client);
 }
 
 void Resource::unregister_client(Badge<ResourceClient>, ResourceClient& client)
 {
-    ASSERT(m_clients.contains(&client));
+    VERIFY(m_clients.contains(&client));
     m_clients.remove(&client);
 }
 
@@ -144,7 +144,7 @@ void ResourceClient::set_resource(Resource* resource)
         m_resource->unregister_client({}, *this);
     m_resource = resource;
     if (m_resource) {
-        ASSERT(resource->type() == client_type());
+        VERIFY(resource->type() == client_type());
 
         m_resource->register_client({}, *this);
 

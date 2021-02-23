@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 
     auto& edit_menu = menubar->add_menu("Edit");
     auto paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
-        ASSERT(image_editor.image());
+        VERIFY(image_editor.image());
         auto bitmap = GUI::Clipboard::the().bitmap();
         if (!bitmap)
             return;
@@ -217,13 +217,13 @@ int main(int argc, char** argv)
     edit_menu.add_action(paste_action);
 
     auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
-        ASSERT(image_editor.image());
+        VERIFY(image_editor.image());
         image_editor.undo();
     });
     edit_menu.add_action(undo_action);
 
     auto redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
-        ASSERT(image_editor.image());
+        VERIFY(image_editor.image());
         image_editor.redo();
     });
     edit_menu.add_action(redo_action);

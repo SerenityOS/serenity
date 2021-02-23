@@ -143,7 +143,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE KResult error() const
     {
-        ASSERT(m_is_error);
+        VERIFY(m_is_error);
         return m_error;
     }
 
@@ -151,20 +151,20 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE T& value()
     {
-        ASSERT(!m_is_error);
+        VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
     [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
-        ASSERT(!m_is_error);
+        VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
     [[nodiscard]] ALWAYS_INLINE T release_value()
     {
-        ASSERT(!m_is_error);
-        ASSERT(m_have_storage);
+        VERIFY(!m_is_error);
+        VERIFY(m_have_storage);
         T released_value(move(*reinterpret_cast<T*>(&m_storage)));
         value().~T();
         m_have_storage = false;

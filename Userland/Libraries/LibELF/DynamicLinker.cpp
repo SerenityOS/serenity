@@ -87,7 +87,7 @@ static void map_library(const String& name, int fd)
     auto loader = ELF::DynamicLoader::try_create(fd, name);
     if (!loader) {
         dbgln("Failed to create ELF::DynamicLoader for fd={}, name={}", fd, name);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     loader->set_tls_offset(g_current_tls_offset);
 
@@ -101,7 +101,7 @@ static void map_library(const String& name)
     // TODO: Do we want to also look for libs in other paths too?
     String path = String::formatted("/usr/lib/{}", name);
     int fd = open(path.characters(), O_RDONLY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     map_library(name, fd);
 }
 
@@ -162,19 +162,19 @@ static void initialize_libc(DynamicObject& libc)
     // Also, we can't just mark `__libc_init` with "__attribute__((constructor))"
     // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
     auto res = libc.lookup_symbol("environ");
-    ASSERT(res.has_value());
+    VERIFY(res.has_value());
     *((char***)res.value().address.as_ptr()) = g_envp;
 
     res = libc.lookup_symbol("__environ_is_malloced");
-    ASSERT(res.has_value());
+    VERIFY(res.has_value());
     *((bool*)res.value().address.as_ptr()) = false;
 
     res = libc.lookup_symbol("exit");
-    ASSERT(res.has_value());
+    VERIFY(res.has_value());
     g_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
 
     res = libc.lookup_symbol("__libc_init");
-    ASSERT(res.has_value());
+    VERIFY(res.has_value());
     typedef void libc_init_func();
     ((libc_init_func*)res.value().address.as_ptr())();
 }
@@ -203,12 +203,12 @@ static void load_elf(const String& name)
 {
     for_each_dependency_of(name, [](auto& loader) {
         auto dynamic_object = loader.map();
-        ASSERT(dynamic_object);
+        VERIFY(dynamic_object);
         g_global_objects.append(*dynamic_object);
     });
     for_each_dependency_of(name, [](auto& loader) {
         bool success = loader.link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
-        ASSERT(success);
+        VERIFY(success);
     });
 }
 
@@ -223,11 +223,11 @@ static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
     }
 
     auto object = loader->load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
-    ASSERT(object);
+    VERIFY(object);
 
     if (name == "libsystem.so") {
         if (syscall(SC_msyscall, object->base_address().as_ptr())) {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -288,7 +288,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     int rc = syscall(SC_msyscall, nullptr);
     if (rc < 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     rc = main_function(argc, argv, envp);
@@ -299,7 +299,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         _exit(rc);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

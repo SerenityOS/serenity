@@ -213,7 +213,7 @@ static MouseButton to_gmousebutton(u32 button)
     case 16:
         return MouseButton::Forward;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 }

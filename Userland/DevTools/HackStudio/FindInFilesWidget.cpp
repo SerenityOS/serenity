@@ -69,7 +69,7 @@ public:
         case Column::MatchedText:
             return "Text";
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

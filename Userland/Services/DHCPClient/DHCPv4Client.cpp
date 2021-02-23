@@ -126,7 +126,7 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
 
     if (!m_server->bind({}, 68)) {
         dbgln("The server we just created somehow came already bound, refusing to continue");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     for (auto& iface : m_ifnames)
@@ -233,7 +233,7 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
     case DHCPMessageType::DHCPDecline:
     default:
         dbgln("I dunno what to do with this {}", (u8)value);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 }

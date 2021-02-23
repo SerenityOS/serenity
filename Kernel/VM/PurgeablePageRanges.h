@@ -65,7 +65,7 @@ struct VolatilePageRange {
 
     void combine_intersecting_or_adjacent(const VolatilePageRange& other)
     {
-        ASSERT(intersects_or_adjacent(other));
+        VERIFY(intersects_or_adjacent(other));
         if (base <= other.base) {
             count = (other.base - base) + other.count;
         } else {
@@ -165,7 +165,7 @@ public:
 
         if (existing_range->range_equals(r))
             return f(r);
-        ASSERT(existing_range == &m_ranges[nearby_index]); // sanity check
+        VERIFY(existing_range == &m_ranges[nearby_index]); // sanity check
         while (nearby_index < m_ranges.size()) {
             existing_range = &m_ranges[nearby_index];
             if (!existing_range->intersects(range))

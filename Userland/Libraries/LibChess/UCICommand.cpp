@@ -32,8 +32,8 @@ namespace Chess::UCI {
 UCICommand UCICommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "uci");
-    ASSERT(tokens.size() == 1);
+    VERIFY(tokens[0] == "uci");
+    VERIFY(tokens.size() == 1);
     return UCICommand();
 }
 
@@ -45,14 +45,14 @@ String UCICommand::to_string() const
 DebugCommand DebugCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "debug");
-    ASSERT(tokens.size() == 2);
+    VERIFY(tokens[0] == "debug");
+    VERIFY(tokens.size() == 2);
     if (tokens[1] == "on")
         return DebugCommand(Flag::On);
     if (tokens[1] == "off")
         return DebugCommand(Flag::On);
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 String DebugCommand::to_string() const
@@ -67,8 +67,8 @@ String DebugCommand::to_string() const
 IsReadyCommand IsReadyCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "isready");
-    ASSERT(tokens.size() == 1);
+    VERIFY(tokens[0] == "isready");
+    VERIFY(tokens.size() == 1);
     return IsReadyCommand();
 }
 
@@ -80,9 +80,9 @@ String IsReadyCommand::to_string() const
 SetOptionCommand SetOptionCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "setoption");
-    ASSERT(tokens[1] == "name");
-    ASSERT(tokens.size() > 2);
+    VERIFY(tokens[0] == "setoption");
+    VERIFY(tokens[1] == "name");
+    VERIFY(tokens.size() > 2);
 
     StringBuilder name;
     StringBuilder value;
@@ -110,7 +110,7 @@ SetOptionCommand SetOptionCommand::from_string(const StringView& command)
         }
     }
 
-    ASSERT(!name.is_empty());
+    VERIFY(!name.is_empty());
 
     return SetOptionCommand(name.to_string().trim_whitespace(), value.to_string().trim_whitespace());
 }
@@ -131,9 +131,9 @@ String SetOptionCommand::to_string() const
 PositionCommand PositionCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens.size() >= 3);
-    ASSERT(tokens[0] == "position");
-    ASSERT(tokens[2] == "moves");
+    VERIFY(tokens.size() >= 3);
+    VERIFY(tokens[0] == "position");
+    VERIFY(tokens[2] == "moves");
 
     Optional<String> fen;
     if (tokens[1] != "startpos")
@@ -167,40 +167,40 @@ String PositionCommand::to_string() const
 GoCommand GoCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "go");
+    VERIFY(tokens[0] == "go");
 
     GoCommand go_command;
     for (size_t i = 1; i < tokens.size(); ++i) {
         if (tokens[i] == "searchmoves") {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         } else if (tokens[i] == "ponder") {
             go_command.ponder = true;
         } else if (tokens[i] == "wtime") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.wtime = tokens[i].to_int().value();
         } else if (tokens[i] == "btime") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.btime = tokens[i].to_int().value();
         } else if (tokens[i] == "winc") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.winc = tokens[i].to_int().value();
         } else if (tokens[i] == "binc") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.binc = tokens[i].to_int().value();
         } else if (tokens[i] == "movestogo") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.movestogo = tokens[i].to_int().value();
         } else if (tokens[i] == "depth") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.depth = tokens[i].to_int().value();
         } else if (tokens[i] == "nodes") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.nodes = tokens[i].to_int().value();
         } else if (tokens[i] == "mate") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.mate = tokens[i].to_int().value();
         } else if (tokens[i] == "movetime") {
-            ASSERT(i++ < tokens.size());
+            VERIFY(i++ < tokens.size());
             go_command.movetime = tokens[i].to_int().value();
         } else if (tokens[i] == "infinite") {
             go_command.infinite = true;
@@ -253,8 +253,8 @@ String GoCommand::to_string() const
 StopCommand StopCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "stop");
-    ASSERT(tokens.size() == 1);
+    VERIFY(tokens[0] == "stop");
+    VERIFY(tokens.size() == 1);
     return StopCommand();
 }
 
@@ -266,7 +266,7 @@ String StopCommand::to_string() const
 IdCommand IdCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "id");
+    VERIFY(tokens[0] == "id");
     StringBuilder value;
     for (size_t i = 2; i < tokens.size(); ++i) {
         if (i != 2)
@@ -280,7 +280,7 @@ IdCommand IdCommand::from_string(const StringView& command)
     } else if (tokens[1] == "author") {
         return IdCommand(Type::Author, value.build());
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 String IdCommand::to_string() const
@@ -300,8 +300,8 @@ String IdCommand::to_string() const
 UCIOkCommand UCIOkCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "uciok");
-    ASSERT(tokens.size() == 1);
+    VERIFY(tokens[0] == "uciok");
+    VERIFY(tokens.size() == 1);
     return UCIOkCommand();
 }
 
@@ -313,8 +313,8 @@ String UCIOkCommand::to_string() const
 ReadyOkCommand ReadyOkCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "readyok");
-    ASSERT(tokens.size() == 1);
+    VERIFY(tokens[0] == "readyok");
+    VERIFY(tokens.size() == 1);
     return ReadyOkCommand();
 }
 
@@ -326,8 +326,8 @@ String ReadyOkCommand::to_string() const
 BestMoveCommand BestMoveCommand::from_string(const StringView& command)
 {
     auto tokens = command.split_view(' ');
-    ASSERT(tokens[0] == "bestmove");
-    ASSERT(tokens.size() == 2);
+    VERIFY(tokens[0] == "bestmove");
+    VERIFY(tokens.size() == 2);
     return BestMoveCommand(Move(tokens[1]));
 }
 
@@ -343,13 +343,13 @@ String BestMoveCommand::to_string() const
 InfoCommand InfoCommand::from_string([[maybe_unused]] const StringView& command)
 {
     // FIXME: Implement this.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 String InfoCommand::to_string() const
 {
     // FIXME: Implement this.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return "info";
 }
 

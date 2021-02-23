@@ -50,8 +50,8 @@ Optional<ValueAndAttributes> SimpleIndexedPropertyStorage::get(u32 index) const
 
 void SimpleIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)
 {
-    ASSERT(attributes == default_attributes);
-    ASSERT(index < SPARSE_ARRAY_THRESHOLD);
+    VERIFY(attributes == default_attributes);
+    VERIFY(index < SPARSE_ARRAY_THRESHOLD);
 
     if (index >= m_array_size) {
         m_array_size = index + 1;
@@ -69,10 +69,10 @@ void SimpleIndexedPropertyStorage::remove(u32 index)
 
 void SimpleIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttributes attributes)
 {
-    ASSERT(attributes == default_attributes);
-    ASSERT(index < SPARSE_ARRAY_THRESHOLD);
+    VERIFY(attributes == default_attributes);
+    VERIFY(index < SPARSE_ARRAY_THRESHOLD);
     m_array_size++;
-    ASSERT(m_array_size <= SPARSE_ARRAY_THRESHOLD);
+    VERIFY(m_array_size <= SPARSE_ARRAY_THRESHOLD);
     m_packed_elements.insert(index, value);
 }
 
@@ -92,7 +92,7 @@ ValueAndAttributes SimpleIndexedPropertyStorage::take_last()
 
 void SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
-    ASSERT(new_size <= SPARSE_ARRAY_THRESHOLD);
+    VERIFY(new_size <= SPARSE_ARRAY_THRESHOLD);
     m_array_size = new_size;
     m_packed_elements.resize(new_size);
 }
@@ -177,7 +177,7 @@ void GenericIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttri
 
 ValueAndAttributes GenericIndexedPropertyStorage::take_first()
 {
-    ASSERT(m_array_size > 0);
+    VERIFY(m_array_size > 0);
     m_array_size--;
 
     if (!m_sparse_elements.is_empty()) {
@@ -192,7 +192,7 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_first()
 
 ValueAndAttributes GenericIndexedPropertyStorage::take_last()
 {
-    ASSERT(m_array_size > 0);
+    VERIFY(m_array_size > 0);
     m_array_size--;
 
     if (m_array_size <= SPARSE_ARRAY_THRESHOLD) {
@@ -202,7 +202,7 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
     } else {
         auto result = m_sparse_elements.get(m_array_size);
         m_sparse_elements.remove(m_array_size);
-        ASSERT(result.has_value());
+        VERIFY(result.has_value());
         return result.value();
     }
 }
@@ -282,7 +282,7 @@ Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 ind
         return {};
     auto& value = result.value();
     if (value.value.is_accessor()) {
-        ASSERT(this_object);
+        VERIFY(this_object);
         auto& accessor = value.value.as_accessor();
         return ValueAndAttributes { accessor.call_getter(this_object), value.attributes };
     }
@@ -300,7 +300,7 @@ void IndexedProperties::put(Object* this_object, u32 index, Value value, Propert
 
     auto value_here = m_storage->get(index);
     if (value_here.has_value() && value_here.value().value.is_accessor()) {
-        ASSERT(this_object);
+        VERIFY(this_object);
         value_here.value().value.as_accessor().call_setter(this_object, value);
     } else {
         m_storage->put(index, value, attributes);

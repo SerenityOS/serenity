@@ -96,7 +96,7 @@ int main(int argc, char** argv)
         entry.set("login_at", time(nullptr));
         json.set(tty_name, move(entry));
     } else {
-        ASSERT(flag_delete);
+        VERIFY(flag_delete);
         dbgln("Removing {} from utmp", tty_name);
         json.remove(tty_name);
     }

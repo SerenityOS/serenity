@@ -112,7 +112,7 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
     ScopedSpinLock lock(g_timerqueue_lock);
 
     timer->m_id = ++m_timer_id_count;
-    ASSERT(timer->m_id != 0); // wrapped
+    VERIFY(timer->m_id != 0); // wrapped
     add_timer_locked(move(timer));
     return m_timer_id_count;
 }
@@ -121,7 +121,7 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
     u64 timer_expiration = timer->m_expires;
 
-    ASSERT(!timer->is_queued());
+    VERIFY(!timer->is_queued());
 
     auto& queue = queue_for_timer(*timer);
     if (queue.list.is_empty()) {
@@ -202,8 +202,8 @@ bool TimerQueue::cancel_timer(TimerId id)
         return false;
     }
 
-    ASSERT(found_timer);
-    ASSERT(timer_queue);
+    VERIFY(found_timer);
+    VERIFY(timer_queue);
     remove_timer_locked(*timer_queue, *found_timer);
     return true;
 }
@@ -231,7 +231,7 @@ bool TimerQueue::cancel_timer(Timer& timer)
         return false;
     }
 
-    ASSERT(timer.ref_count() > 1);
+    VERIFY(timer.ref_count() > 1);
     remove_timer_locked(timer_queue, timer);
     return true;
 }
@@ -259,8 +259,8 @@ void TimerQueue::fire()
 
     auto fire_timers = [&](Queue& queue) {
         auto* timer = queue.list.head();
-        ASSERT(timer);
-        ASSERT(queue.next_timer_due == timer->m_expires);
+        VERIFY(timer);
+        VERIFY(queue.next_timer_due == timer->m_expires);
 
         while (timer && timer->now(true) > timer->m_expires) {
             queue.list.remove(timer);
@@ -294,7 +294,7 @@ void TimerQueue::fire()
 
 void TimerQueue::update_next_timer_due(Queue& queue)
 {
-    ASSERT(g_timerqueue_lock.is_locked());
+    VERIFY(g_timerqueue_lock.is_locked());
 
     if (auto* next_timer = queue.list.head())
         queue.next_timer_due = next_timer->m_expires;

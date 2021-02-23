@@ -59,7 +59,7 @@ RangeAllocator::~RangeAllocator()
 
 void RangeAllocator::dump() const
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     dbgln("RangeAllocator({})", this);
     for (auto& range : m_available_ranges) {
         dbgln("    {:x} -> {:x}", range.base().get(), range.end().get() - 1);
@@ -68,7 +68,7 @@ void RangeAllocator::dump() const
 
 Vector<Range, 2> Range::carve(const Range& taken)
 {
-    ASSERT((taken.size() % PAGE_SIZE) == 0);
+    VERIFY((taken.size() % PAGE_SIZE) == 0);
 
     Vector<Range, 2> parts;
     if (taken == *this)
@@ -82,13 +82,13 @@ Vector<Range, 2> Range::carve(const Range& taken)
 
 void RangeAllocator::carve_at_index(int index, const Range& range)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     auto remaining_parts = m_available_ranges[index].carve(range);
-    ASSERT(remaining_parts.size() >= 1);
-    ASSERT(m_total_range.contains(remaining_parts[0]));
+    VERIFY(remaining_parts.size() >= 1);
+    VERIFY(m_total_range.contains(remaining_parts[0]));
     m_available_ranges[index] = remaining_parts[0];
     if (remaining_parts.size() == 2) {
-        ASSERT(m_total_range.contains(remaining_parts[1]));
+        VERIFY(m_total_range.contains(remaining_parts[1]));
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
     }
 }
@@ -98,8 +98,8 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
     if (!size)
         return {};
 
-    ASSERT((size % PAGE_SIZE) == 0);
-    ASSERT((alignment % PAGE_SIZE) == 0);
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
 
     // FIXME: I'm sure there's a smarter way to do this.
     static constexpr size_t maximum_randomization_attempts = 1000;
@@ -122,8 +122,8 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
     if (!size)
         return {};
 
-    ASSERT((size % PAGE_SIZE) == 0);
-    ASSERT((alignment % PAGE_SIZE) == 0);
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
 
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
@@ -151,7 +151,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
         Range allocated_range(VirtualAddress(aligned_base), size);
-        ASSERT(m_total_range.contains(allocated_range));
+        VERIFY(m_total_range.contains(allocated_range));
 
         if (available_range == allocated_range) {
             m_available_ranges.remove(i);
@@ -169,14 +169,14 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     if (!size)
         return {};
 
-    ASSERT(base.is_page_aligned());
-    ASSERT((size % PAGE_SIZE) == 0);
+    VERIFY(base.is_page_aligned());
+    VERIFY((size % PAGE_SIZE) == 0);
 
     Range allocated_range(base, size);
     ScopedSpinLock lock(m_lock);
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        ASSERT(m_total_range.contains(allocated_range));
+        VERIFY(m_total_range.contains(allocated_range));
         if (!available_range.contains(base, size))
             continue;
         if (available_range == allocated_range) {
@@ -192,11 +192,11 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
 void RangeAllocator::deallocate(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
-    ASSERT(m_total_range.contains(range));
-    ASSERT(range.size());
-    ASSERT((range.size() % PAGE_SIZE) == 0);
-    ASSERT(range.base() < range.end());
-    ASSERT(!m_available_ranges.is_empty());
+    VERIFY(m_total_range.contains(range));
+    VERIFY(range.size());
+    VERIFY((range.size() % PAGE_SIZE) == 0);
+    VERIFY(range.base() < range.end());
+    VERIFY(!m_available_ranges.is_empty());
 
     size_t nearby_index = 0;
     auto* existing_range = binary_search(

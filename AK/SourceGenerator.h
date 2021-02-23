@@ -78,11 +78,11 @@ public:
                 const auto placeholder = consume_until_without_consuming_stop_character(m_closing);
 
                 if (!lexer.consume_specific(m_closing))
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
 
                 m_builder.append(get(placeholder));
             } else {
-                ASSERT(lexer.is_eof());
+                VERIFY(lexer.is_eof());
             }
         }
     }

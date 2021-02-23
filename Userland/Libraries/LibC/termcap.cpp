@@ -137,7 +137,7 @@ int tgetnum(const char* id)
     auto it = caps->find(id);
     if (it != caps->end())
         return atoi((*it).value);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static Vector<char> s_tgoto_buffer;

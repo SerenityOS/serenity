@@ -92,7 +92,7 @@ public:
 
     void finish()
     {
-        ASSERT(!m_finished);
+        VERIFY(!m_finished);
         m_finished = true;
         m_builder.append(']');
     }

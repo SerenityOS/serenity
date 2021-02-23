@@ -104,28 +104,28 @@ public:
 
     T& first()
     {
-        ASSERT(head());
+        VERIFY(head());
         return head()->value;
     }
     const T& first() const
     {
-        ASSERT(head());
+        VERIFY(head());
         return head()->value;
     }
     T& last()
     {
-        ASSERT(head());
+        VERIFY(head());
         return tail()->value;
     }
     const T& last() const
     {
-        ASSERT(head());
+        VERIFY(head());
         return tail()->value;
     }
 
     T take_first()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         auto* prev_head = m_head;
         T value = move(first());
         if (m_tail == m_head)
@@ -187,7 +187,7 @@ public:
 
     void remove(Iterator iterator)
     {
-        ASSERT(!iterator.is_end());
+        VERIFY(!iterator.is_end());
         if (m_head == iterator.m_node)
             m_head = iterator.m_node->next;
         if (m_tail == iterator.m_node)

@@ -289,7 +289,7 @@ int unsetenv(const char* name)
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
-        ASSERT(old_eq);
+        VERIFY(old_eq);
         size_t old_var_len = old_eq - old_var;
 
         if (new_var_len != old_var_len)
@@ -343,7 +343,7 @@ int putenv(char* new_var)
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
-        ASSERT(old_eq);
+        VERIFY(old_eq);
         auto old_var_len = old_eq - old_var;
 
         if (new_var_len != old_var_len)
@@ -491,7 +491,7 @@ double strtod(const char* str, char** endptr)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -547,7 +547,7 @@ double strtod(const char* str, char** endptr)
                     is_a_digit = false;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             }
 
@@ -955,7 +955,7 @@ long long strtoll(const char* str, char** endptr, int base)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -1039,7 +1039,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 

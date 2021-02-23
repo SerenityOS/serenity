@@ -199,11 +199,11 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
         break;
     case Gfx::TextAlignment::CenterRight:
         // FIXME: Support right-aligned line wrapping, I guess.
-        ASSERT(!is_wrapping_enabled());
+        VERIFY(!is_wrapping_enabled());
         column_index = (position.x() - content_x_for_position({ line_index, 0 }) + fixed_glyph_width() / 2) / fixed_glyph_width();
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     column_index = max((size_t)0, min(column_index, line(line_index).length()));
@@ -688,7 +688,7 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
         }
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (m_editing_engine->on_key(event))
@@ -873,10 +873,10 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
         return m_horizontal_content_padding + ((is_single_line() && icon()) ? (icon_size() + icon_padding()) : 0) + x_offset;
     case Gfx::TextAlignment::CenterRight:
         // FIXME
-        ASSERT(!is_wrapping_enabled());
+        VERIFY(!is_wrapping_enabled());
         return content_width() - m_horizontal_content_padding - (line.length() * fixed_glyph_width()) + (position.column() * fixed_glyph_width());
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -884,8 +884,8 @@ Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position)
 {
     if (!position.is_valid())
         return {};
-    ASSERT(!lines().is_empty());
-    ASSERT(position.column() <= (current_line().length() + 1));
+    VERIFY(!lines().is_empty());
+    VERIFY(position.column() <= (current_line().length() + 1));
 
     int x = content_x_for_position(position);
 
@@ -993,7 +993,7 @@ void TextEditor::set_cursor(size_t line, size_t column)
 
 void TextEditor::set_cursor(const TextPosition& a_position)
 {
-    ASSERT(!lines().is_empty());
+    VERIFY(!lines().is_empty());
 
     TextPosition position = a_position;
 
@@ -1146,7 +1146,7 @@ void TextEditor::delete_text_range(TextRange range)
 void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 {
     ReflowDeferrer defer(*this);
-    ASSERT(is_editable());
+    VERIFY(is_editable());
     if (has_selection())
         delete_selection();
     execute<InsertTextCommand>(text, m_cursor);
@@ -1188,7 +1188,7 @@ void TextEditor::defer_reflow()
 
 void TextEditor::undefer_reflow()
 {
-    ASSERT(m_reflow_deferred);
+    VERIFY(m_reflow_deferred);
     if (!--m_reflow_deferred) {
         if (m_reflow_requested) {
             recompute_all_visual_lines();
@@ -1268,7 +1268,7 @@ void TextEditor::set_mode(const Mode mode)
         set_accepts_emoji_input(false);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (!is_displayonly())
@@ -1637,7 +1637,7 @@ void TextEditor::set_editing_engine(OwnPtr<EditingEngine> editing_engine)
         m_editing_engine->detach();
     m_editing_engine = move(editing_engine);
 
-    ASSERT(m_editing_engine);
+    VERIFY(m_editing_engine);
     m_editing_engine->attach(*this);
 
     m_cursor_state = true;
@@ -1653,7 +1653,7 @@ int TextEditor::line_height() const
 
 int TextEditor::fixed_glyph_width() const
 {
-    ASSERT(font().is_fixed_width());
+    VERIFY(font().is_fixed_width());
     return font().glyph_width(' ');
 }
 
@@ -1679,7 +1679,7 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
         return;
 
     if (value) {
-        ASSERT(m_autocomplete_provider);
+        VERIFY(m_autocomplete_provider);
         m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] { try_show_autocomplete(); });
         return;
     }

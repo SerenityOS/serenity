@@ -50,7 +50,7 @@ struct RefPtrTraits {
 
     ALWAYS_INLINE static FlatPtr as_bits(T* ptr)
     {
-        ASSERT(!((FlatPtr)ptr & 1));
+        VERIFY(!((FlatPtr)ptr & 1));
         return (FlatPtr)ptr;
     }
 
@@ -70,7 +70,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static FlatPtr exchange(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         FlatPtr expected = atomic_var.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
             expected &= ~(FlatPtr)1; // only if lock bit is not set
@@ -86,7 +86,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static bool exchange_if_null(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         for (;;) {
             FlatPtr expected = default_null_value; // only if lock bit is not set
             if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
@@ -116,13 +116,13 @@ struct RefPtrTraits {
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(bits & 1));
+        VERIFY(!(bits & 1));
         return bits;
     }
 
     ALWAYS_INLINE static void unlock(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         atomic_var.store(new_value, AK::MemoryOrder::memory_order_release);
     }
 
@@ -153,14 +153,14 @@ public:
         : m_bits(PtrTraits::as_bits(const_cast<T*>(&object)))
     {
         T* ptr = const_cast<T*>(&object);
-        ASSERT(ptr);
-        ASSERT(!is_null());
+        VERIFY(ptr);
+        VERIFY(!is_null());
         ptr->ref();
     }
     RefPtr(AdoptTag, T& object)
         : m_bits(PtrTraits::as_bits(&object))
     {
-        ASSERT(!is_null());
+        VERIFY(!is_null());
     }
     RefPtr(RefPtr&& other)
         : m_bits(other.leak_ref_raw())
@@ -179,7 +179,7 @@ public:
     ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
-        ASSERT(!is_null());
+        VERIFY(!is_null());
     }
     template<typename U, typename P = RefPtrTraits<U>>
     RefPtr(RefPtr<U, P>&& other)
@@ -330,7 +330,7 @@ public:
     NonnullRefPtr<T> release_nonnull()
     {
         FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
-        ASSERT(!PtrTraits::is_null(bits));
+        VERIFY(!PtrTraits::is_null(bits));
         return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *PtrTraits::as_ptr(bits));
     }
 
@@ -384,7 +384,7 @@ public:
     {
         // make sure we are holding a null value
         FlatPtr bits = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
-        ASSERT(PtrTraits::is_null(bits));
+        VERIFY(PtrTraits::is_null(bits));
         return PtrTraits::to_null_value(bits);
     }
     template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
@@ -392,7 +392,7 @@ public:
     {
         // make sure that new null value would be interpreted as a null value
         FlatPtr bits = PtrTraits::from_null_value(value);
-        ASSERT(PtrTraits::is_null(bits));
+        VERIFY(PtrTraits::is_null(bits));
         assign_raw(bits);
     }
 
@@ -454,7 +454,7 @@ private:
 
     ALWAYS_INLINE T* as_nonnull_ptr(FlatPtr bits) const
     {
-        ASSERT(!PtrTraits::is_null(bits));
+        VERIFY(!PtrTraits::is_null(bits));
         return PtrTraits::as_ptr(bits);
     }
 

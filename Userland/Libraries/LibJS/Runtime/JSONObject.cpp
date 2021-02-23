@@ -433,7 +433,7 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
         return js_string(global_object.heap(), value.to_string());
     if (value.is_bool())
         return Value(static_cast<bool>(value.as_bool()));
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)

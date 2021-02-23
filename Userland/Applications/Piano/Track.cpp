@@ -83,7 +83,7 @@ void Track::fill_sample(Sample& sample)
             }
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         Audio::Sample note_sample;
@@ -107,7 +107,7 @@ void Track::fill_sample(Sample& sample)
             note_sample = recorded_sample(note);
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         new_sample.left += note_sample.left * m_power[note] * volume;
         new_sample.right += note_sample.right * m_power[note] * volume;
@@ -242,7 +242,7 @@ static inline double calculate_step(double distance, int milliseconds)
 
 void Track::set_note(int note, Switch switch_note)
 {
-    ASSERT(note >= 0 && note < note_count);
+    VERIFY(note >= 0 && note < note_count);
 
     if (switch_note == On) {
         if (m_note_on[note] == 0) {
@@ -260,8 +260,8 @@ void Track::set_note(int note, Switch switch_note)
         }
     }
 
-    ASSERT(m_note_on[note] != NumericLimits<u8>::max());
-    ASSERT(m_power[note] >= 0);
+    VERIFY(m_note_on[note] != NumericLimits<u8>::max());
+    VERIFY(m_power[note] >= 0);
 }
 
 void Track::sync_roll(int note)
@@ -277,9 +277,9 @@ void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
 {
     RollNote new_roll_note = { on_sample, off_sample };
 
-    ASSERT(note >= 0 && note < note_count);
-    ASSERT(new_roll_note.off_sample < roll_length);
-    ASSERT(new_roll_note.length() >= 2);
+    VERIFY(note >= 0 && note < note_count);
+    VERIFY(new_roll_note.off_sample < roll_length);
+    VERIFY(new_roll_note.length() >= 2);
 
     for (auto it = m_roll_notes[note].begin(); !it.is_end();) {
         if (it->on_sample > new_roll_note.off_sample) {
@@ -310,7 +310,7 @@ void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
 
 void Track::set_wave(int wave)
 {
-    ASSERT(wave >= first_wave && wave <= last_wave);
+    VERIFY(wave >= first_wave && wave <= last_wave);
     m_wave = wave;
 }
 
@@ -327,21 +327,21 @@ void Track::set_wave(Direction direction)
 
 void Track::set_attack(int attack)
 {
-    ASSERT(attack >= 0);
+    VERIFY(attack >= 0);
     m_attack = attack;
     m_attack_step = calculate_step(1, m_attack);
 }
 
 void Track::set_decay(int decay)
 {
-    ASSERT(decay >= 0);
+    VERIFY(decay >= 0);
     m_decay = decay;
     m_decay_step = calculate_step(1 - m_sustain_level, m_decay);
 }
 
 void Track::set_sustain_impl(int sustain)
 {
-    ASSERT(sustain >= 0);
+    VERIFY(sustain >= 0);
     m_sustain = sustain;
     m_sustain_level = sustain / 1000.0;
 }
@@ -354,13 +354,13 @@ void Track::set_sustain(int sustain)
 
 void Track::set_release(int release)
 {
-    ASSERT(release >= 0);
+    VERIFY(release >= 0);
     m_release = release;
 }
 
 void Track::set_delay(int delay)
 {
-    ASSERT(delay >= 0);
+    VERIFY(delay >= 0);
     m_delay = delay;
     m_delay_samples = m_delay == 0 ? 0 : (sample_rate / (beats_per_minute / 60)) / m_delay;
     m_delay_buffer.resize(m_delay_samples);

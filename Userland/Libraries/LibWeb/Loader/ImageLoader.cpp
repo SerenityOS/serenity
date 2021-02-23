@@ -60,7 +60,7 @@ void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const
 
 void ImageLoader::resource_did_load()
 {
-    ASSERT(resource());
+    VERIFY(resource());
 
     if (!resource()->mime_type().starts_with("image/")) {
         m_loading_state = LoadingState::Failed;

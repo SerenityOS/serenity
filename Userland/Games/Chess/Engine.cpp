@@ -43,12 +43,12 @@ Engine::Engine(const StringView& command)
     int rpipefds[2];
     if (pipe2(wpipefds, O_CLOEXEC) < 0) {
         perror("pipe2");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (pipe2(rpipefds, O_CLOEXEC) < 0) {
         perror("pipe2");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     posix_spawn_file_actions_t file_actions;
@@ -60,7 +60,7 @@ Engine::Engine(const StringView& command)
     const char* argv[] = { cstr.characters(), nullptr };
     if (posix_spawnp(&m_pid, cstr.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     posix_spawn_file_actions_destroy(&file_actions);

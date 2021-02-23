@@ -105,7 +105,7 @@ static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect&
 
 void TaskbarButton::paint_event(GUI::PaintEvent& event)
 {
-    ASSERT(icon());
+    VERIFY(icon());
     auto& icon = *this->icon();
     auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
     auto& window = WindowList::the().ensure_window(m_identifier);

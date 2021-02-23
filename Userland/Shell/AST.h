@@ -285,8 +285,8 @@ private:
 
 class JobValue final : public Value {
 public:
-    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { ASSERT_NOT_REACHED(); }
-    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { ASSERT_NOT_REACHED(); }
+    virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
+    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
     virtual ~JobValue();
     virtual bool is_job() const override { return true; }
     JobValue(RefPtr<Job> job)
@@ -441,7 +441,7 @@ public:
     }
     virtual const SyntaxError& syntax_error_node() const
     {
-        ASSERT(is_syntax_error());
+        VERIFY(is_syntax_error());
         return *m_syntax_error_node;
     }
 
@@ -449,7 +449,7 @@ public:
 
     Vector<Command> to_lazy_evaluated_commands(RefPtr<Shell> shell);
 
-    virtual void visit(NodeVisitor&) { ASSERT_NOT_REACHED(); }
+    virtual void visit(NodeVisitor&) { VERIFY_NOT_REACHED(); }
     virtual void visit(NodeVisitor& visitor) const { const_cast<Node*>(this)->visit(visitor); }
 
     enum class Kind : u32 {
@@ -696,7 +696,7 @@ private:
     NODE(CommandLiteral);
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
-    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override { ASSERT_NOT_REACHED(); }
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override { VERIFY_NOT_REACHED(); }
     virtual bool is_command() const override { return true; }
     virtual bool is_list() const override { return true; }
 
@@ -916,7 +916,7 @@ struct HistorySelector {
                 return selector;
             if (kind == Last)
                 return size - 1;
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     };
     struct {

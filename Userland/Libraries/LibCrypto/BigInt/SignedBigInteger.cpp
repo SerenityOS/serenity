@@ -40,7 +40,7 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
 {
     // FIXME: Support this:
     //        m <0XX> -> m <XX> (if remove_leading_zeros)
-    ASSERT(!remove_leading_zeros);
+    VERIFY(!remove_leading_zeros);
 
     data[0] = m_sign;
     auto bytes_view = data.slice(1, data.size() - 1);

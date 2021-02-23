@@ -76,7 +76,7 @@ public:
 
     T dequeue()
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         auto& slot = elements()[m_head];
         T value = move(slot);
         slot.~T();

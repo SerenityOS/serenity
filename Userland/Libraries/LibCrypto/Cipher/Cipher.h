@@ -59,7 +59,7 @@ public:
     {
     }
 
-    static size_t block_size() { ASSERT_NOT_REACHED(); }
+    static size_t block_size() { VERIFY_NOT_REACHED(); }
 
     virtual ReadonlyBytes bytes() const = 0;
 
@@ -74,11 +74,11 @@ public:
     template<typename T>
     void put(size_t offset, T value)
     {
-        ASSERT(offset + sizeof(T) <= bytes().size());
+        VERIFY(offset + sizeof(T) <= bytes().size());
         auto* ptr = bytes().offset_pointer(offset);
         auto index { 0 };
 
-        ASSERT(sizeof(T) <= 4);
+        VERIFY(sizeof(T) <= 4);
 
         if constexpr (sizeof(T) > 3)
             ptr[index++] = (u8)(value >> 24);

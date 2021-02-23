@@ -39,18 +39,18 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
             if (__builtin_expect(!(expr), 0))                                      \
                 __assertion_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)); \
         } while (0)
-#    define ASSERT_NOT_REACHED() assert(false)
+#    define VERIFY_NOT_REACHED() assert(false)
 #else
 #    define assert(expr) ((void)(0))
-#    define ASSERT_NOT_REACHED() CRASH()
+#    define VERIFY_NOT_REACHED() CRASH()
 #endif
 
 #define CRASH()              \
     do {                     \
         asm volatile("ud2"); \
     } while (0)
-#define ASSERT assert
+#define VERIFY assert
 #define RELEASE_ASSERT assert
-#define TODO ASSERT_NOT_REACHED
+#define TODO VERIFY_NOT_REACHED
 
 __END_DECLS

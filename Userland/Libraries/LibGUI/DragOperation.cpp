@@ -46,9 +46,9 @@ DragOperation::~DragOperation()
 
 DragOperation::Outcome DragOperation::exec()
 {
-    ASSERT(!s_current_drag_operation);
-    ASSERT(!m_event_loop);
-    ASSERT(m_mime_data);
+    VERIFY(!s_current_drag_operation);
+    VERIFY(!m_event_loop);
+    VERIFY(m_mime_data);
 
     Gfx::ShareableBitmap drag_bitmap;
     if (m_mime_data->has_format("image/x-raw-bitmap")) {
@@ -79,14 +79,14 @@ DragOperation::Outcome DragOperation::exec()
 
 void DragOperation::done(Outcome outcome)
 {
-    ASSERT(m_outcome == Outcome::None);
+    VERIFY(m_outcome == Outcome::None);
     m_outcome = outcome;
     m_event_loop->quit(0);
 }
 
 void DragOperation::notify_accepted(Badge<WindowServerConnection>)
 {
-    ASSERT(s_current_drag_operation);
+    VERIFY(s_current_drag_operation);
     s_current_drag_operation->done(Outcome::Accepted);
 }
 

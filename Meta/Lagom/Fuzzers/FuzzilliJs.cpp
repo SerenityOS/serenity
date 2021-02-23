@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
             *((int*)0x41414141) = 0x1337;
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     } else if (operation == "FUZZILLI_PRINT") {
@@ -206,28 +206,28 @@ int main(int, char**)
 
     char helo[] = "HELO";
     if (write(REPRL_CWFD, helo, 4) != 4 || read(REPRL_CRFD, helo, 4) != 4) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
-    ASSERT(memcmp(helo, "HELO", 4) == 0);
+    VERIFY(memcmp(helo, "HELO", 4) == 0);
     reprl_input = (char*)mmap(0, REPRL_MAX_DATA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, REPRL_DRFD, 0);
-    ASSERT(reprl_input != MAP_FAILED);
+    VERIFY(reprl_input != MAP_FAILED);
 
     auto vm = JS::VM::create();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
 
     while (true) {
         unsigned action;
-        ASSERT(read(REPRL_CRFD, &action, 4) == 4);
-        ASSERT(action == 'cexe');
+        VERIFY(read(REPRL_CRFD, &action, 4) == 4);
+        VERIFY(action == 'cexe');
 
         size_t script_size;
-        ASSERT(read(REPRL_CRFD, &script_size, 8) == 8);
-        ASSERT(script_size < REPRL_MAX_DATA_SIZE);
+        VERIFY(read(REPRL_CRFD, &script_size, 8) == 8);
+        VERIFY(script_size < REPRL_MAX_DATA_SIZE);
         ByteBuffer data_buffer;
         if (data_buffer.size() < script_size)
             data_buffer.grow(script_size - data_buffer.size());
-        ASSERT(data_buffer.size() >= script_size);
+        VERIFY(data_buffer.size() >= script_size);
         memcpy(data_buffer.data(), reprl_input, script_size);
 
         int result = 0;
@@ -251,7 +251,7 @@ int main(int, char**)
         fflush(stderr);
 
         int status = (result & 0xff) << 8;
-        ASSERT(write(REPRL_CWFD, &status, 4) == 4);
+        VERIFY(write(REPRL_CWFD, &status, 4) == 4);
         __sanitizer_cov_reset_edgeguards();
     }
 

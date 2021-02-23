@@ -153,7 +153,7 @@ void SB16::set_irq_register(u8 irq_number)
         bitmask = 0b1000;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     IO::out8(0x224, 0x80);
     IO::out8(0x225, bitmask);
@@ -258,7 +258,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
 #if SB16_DEBUG
     klog() << "SB16: Writing buffer of " << length << " bytes";
 #endif
-    ASSERT(length <= PAGE_SIZE);
+    VERIFY(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
         return ENOSPC;

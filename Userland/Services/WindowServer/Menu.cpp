@@ -172,7 +172,7 @@ int Menu::visible_item_count() const
 {
     if (!is_scrollable())
         return m_items.size();
-    ASSERT(m_menu_window);
+    VERIFY(m_menu_window);
     // Make space for up/down arrow indicators
     return m_menu_window->height() / item_height() - 2;
 }
@@ -182,8 +182,8 @@ void Menu::draw()
     auto palette = WindowManager::the().palette();
     m_theme_index_at_last_paint = MenuManager::the().theme_index();
 
-    ASSERT(menu_window());
-    ASSERT(menu_window()->backing_store());
+    VERIFY(menu_window());
+    VERIFY(menu_window()->backing_store());
     Gfx::Painter painter(*menu_window()->backing_store());
 
     Gfx::IntRect rect { {}, menu_window()->size() };
@@ -297,7 +297,7 @@ MenuItem* Menu::hovered_item() const
 void Menu::update_for_new_hovered_item(bool make_input)
 {
     if (hovered_item() && hovered_item()->is_submenu()) {
-        ASSERT(menu_window());
+        VERIFY(menu_window());
         MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
         hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), make_input);
     } else {
@@ -309,8 +309,8 @@ void Menu::update_for_new_hovered_item(bool make_input)
 
 void Menu::open_hovered_item()
 {
-    ASSERT(menu_window());
-    ASSERT(menu_window()->is_visible());
+    VERIFY(menu_window());
+    VERIFY(menu_window()->is_visible());
     if (!hovered_item())
         return;
     if (hovered_item()->is_enabled())
@@ -320,17 +320,17 @@ void Menu::open_hovered_item()
 
 void Menu::descend_into_submenu_at_hovered_item()
 {
-    ASSERT(hovered_item());
+    VERIFY(hovered_item());
     auto submenu = hovered_item()->submenu();
-    ASSERT(submenu);
+    VERIFY(submenu);
     MenuManager::the().open_menu(*submenu, false, false);
     submenu->set_hovered_item(0);
-    ASSERT(submenu->hovered_item()->type() != MenuItem::Separator);
+    VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
 
 void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
 {
-    ASSERT(menu_window());
+    VERIFY(menu_window());
     MenuManager::the().set_current_menu(this);
     if (hovered_item() && hovered_item()->is_submenu()) {
 
@@ -368,7 +368,7 @@ void Menu::event(Core::Event& event)
     }
 
     if (event.type() == Event::MouseWheel && is_scrollable()) {
-        ASSERT(menu_window());
+        VERIFY(menu_window());
         auto& mouse_event = static_cast<const MouseEvent&>(event);
         m_scroll_offset += mouse_event.wheel_delta();
         m_scroll_offset = clamp(m_scroll_offset, 0, m_max_scroll_offset);
@@ -388,8 +388,8 @@ void Menu::event(Core::Event& event)
         if (!(key == Key_Up || key == Key_Down || key == Key_Left || key == Key_Right || key == Key_Return))
             return;
 
-        ASSERT(menu_window());
-        ASSERT(menu_window()->is_visible());
+        VERIFY(menu_window());
+        VERIFY(menu_window()->is_visible());
 
         // Default to the first enabled, non-separator item on key press if one has not been selected yet
         if (!hovered_item()) {
@@ -406,7 +406,7 @@ void Menu::event(Core::Event& event)
         }
 
         if (key == Key_Up) {
-            ASSERT(m_items.at(0).type() != MenuItem::Separator);
+            VERIFY(m_items.at(0).type() != MenuItem::Separator);
 
             if (is_scrollable() && m_hovered_item_index == 0)
                 return;
@@ -421,7 +421,7 @@ void Menu::event(Core::Event& event)
                     return;
             } while (hovered_item()->type() == MenuItem::Separator || !hovered_item()->is_enabled());
 
-            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
+            VERIFY(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
             if (is_scrollable() && m_hovered_item_index < m_scroll_offset)
                 --m_scroll_offset;
@@ -431,7 +431,7 @@ void Menu::event(Core::Event& event)
         }
 
         if (key == Key_Down) {
-            ASSERT(m_items.at(0).type() != MenuItem::Separator);
+            VERIFY(m_items.at(0).type() != MenuItem::Separator);
 
             if (is_scrollable() && m_hovered_item_index == static_cast<int>(m_items.size()) - 1)
                 return;
@@ -446,7 +446,7 @@ void Menu::event(Core::Event& event)
                     return;
             } while (hovered_item()->type() == MenuItem::Separator || !hovered_item()->is_enabled());
 
-            ASSERT(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
+            VERIFY(m_hovered_item_index >= 0 && m_hovered_item_index <= static_cast<int>(m_items.size()) - 1);
 
             if (is_scrollable() && m_hovered_item_index >= (m_scroll_offset + visible_item_count()))
                 ++m_scroll_offset;

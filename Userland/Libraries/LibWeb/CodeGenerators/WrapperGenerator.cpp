@@ -585,7 +585,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
     } else {
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 };
 

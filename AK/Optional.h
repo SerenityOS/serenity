@@ -128,19 +128,19 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE T& value()
     {
-        ASSERT(m_has_value);
+        VERIFY(m_has_value);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
     [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
-        ASSERT(m_has_value);
+        VERIFY(m_has_value);
         return *reinterpret_cast<const T*>(&m_storage);
     }
 
     [[nodiscard]] T release_value()
     {
-        ASSERT(m_has_value);
+        VERIFY(m_has_value);
         T released_value = move(value());
         value().~T();
         m_has_value = false;

@@ -49,7 +49,7 @@ SpinLock<u32>& Inode::all_inodes_lock()
 
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
-    ASSERT(s_all_inodes_lock.is_locked());
+    VERIFY(s_all_inodes_lock.is_locked());
 
     return *s_list;
 }
@@ -66,7 +66,7 @@ void Inode::sync()
     }
 
     for (auto& inode : inodes) {
-        ASSERT(inode.is_metadata_dirty());
+        VERIFY(inode.is_metadata_dirty());
         inode.flush_metadata();
     }
 }
@@ -83,7 +83,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
         nread = read_bytes(offset, sizeof(buffer), buf, description);
         if (nread < 0)
             return KResult((ErrnoCode)-nread);
-        ASSERT(nread <= (ssize_t)sizeof(buffer));
+        VERIFY(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
         builder.append((const char*)buffer, nread);
@@ -203,27 +203,27 @@ bool Inode::unbind_socket()
 void Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
     LOCKER(m_lock);
-    ASSERT(!m_watchers.contains(&watcher));
+    VERIFY(!m_watchers.contains(&watcher));
     m_watchers.set(&watcher);
 }
 
 void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
     LOCKER(m_lock);
-    ASSERT(m_watchers.contains(&watcher));
+    VERIFY(m_watchers.contains(&watcher));
     m_watchers.remove(&watcher);
 }
 
 NonnullRefPtr<FIFO> Inode::fifo()
 {
     LOCKER(m_lock);
-    ASSERT(metadata().is_fifo());
+    VERIFY(metadata().is_fifo());
 
     // FIXME: Release m_fifo when it is closed by all readers and writers
     if (!m_fifo)
         m_fifo = FIFO::create(metadata().uid);
 
-    ASSERT(m_fifo);
+    VERIFY(m_fifo);
     return *m_fifo;
 }
 
@@ -233,7 +233,7 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
 
     if (metadata_dirty) {
         // Sanity check.
-        ASSERT(!fs().is_readonly());
+        VERIFY(!fs().is_readonly());
     }
 
     if (m_metadata_dirty == metadata_dirty)

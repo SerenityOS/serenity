@@ -132,13 +132,13 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
 
 void TCPSocket::release_to_originator()
 {
-    ASSERT(!!m_originator);
+    VERIFY(!!m_originator);
     m_originator.strong_ref()->release_for_accept(this);
 }
 
 void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
 {
-    ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
+    VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
     // FIXME: Should we observe this error somehow?
     [[maybe_unused]] auto rc = queue_connection_from(*socket);
@@ -170,7 +170,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
 #if TCP_SOCKET_DEBUG
     klog() << "payload_size " << payload_size << ", will it fit in " << buffer_size << "?";
 #endif
-    ASSERT(buffer_size >= payload_size);
+    VERIFY(buffer_size >= payload_size);
     if (!buffer.write(tcp_packet.payload(), payload_size))
         return EFAULT;
     return payload_size;
@@ -189,7 +189,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     const size_t buffer_size = sizeof(TCPPacket) + payload_size;
     auto buffer = ByteBuffer::create_zeroed(buffer_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.data());
-    ASSERT(local_port());
+    VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
     tcp_packet.set_window_size(1024);
@@ -219,7 +219,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     }
 
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    ASSERT(!routing_decision.is_zero());
+    VERIFY(!routing_decision.is_zero());
 
     auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
     auto result = routing_decision.adapter->send_ipv4(
@@ -236,7 +236,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 void TCPSocket::send_outgoing_packets()
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    ASSERT(!routing_decision.is_zero());
+    VERIFY(!routing_decision.is_zero());
 
     auto now = kgettimeofday();
 
@@ -321,7 +321,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    ASSERT(packet.data_offset() * 4 == sizeof(TCPPacket));
+    VERIFY(packet.data_offset() * 4 == sizeof(TCPPacket));
     w = (const NetworkOrdered<u16>*)packet.payload();
     for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
         checksum += w[i];
@@ -391,7 +391,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())
             return EINTR;
         locker.lock();
-        ASSERT(setup_state() == SetupState::Completed);
+        VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
             return ECONNREFUSED;

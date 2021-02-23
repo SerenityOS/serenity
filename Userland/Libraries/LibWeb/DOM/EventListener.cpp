@@ -31,7 +31,7 @@ namespace Web::DOM {
 
 JS::Function& EventListener::function()
 {
-    ASSERT(m_function.cell());
+    VERIFY(m_function.cell());
     return *m_function.cell();
 }
 

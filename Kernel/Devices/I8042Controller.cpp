@@ -41,13 +41,13 @@ UNMAP_AFTER_INIT void I8042Controller::initialize()
 
 I8042Controller& I8042Controller::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
 
     u8 configuration;
@@ -148,7 +148,7 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 
 void I8042Controller::irq_process_input_buffer(Device)
 {
-    ASSERT(Processor::current().in_irq());
+    VERIFY(Processor::current().in_irq());
 
     u8 status = IO::in8(I8042_STATUS);
     if (!(status & I8042_BUFFER_FULL))
@@ -171,10 +171,10 @@ void I8042Controller::do_drain()
 
 bool I8042Controller::do_reset_device(Device device)
 {
-    ASSERT(device != Device::None);
-    ASSERT(m_lock.is_locked());
+    VERIFY(device != Device::None);
+    VERIFY(m_lock.is_locked());
 
-    ASSERT(!Processor::current().in_irq());
+    VERIFY(!Processor::current().in_irq());
     if (do_send_command(device, 0xff) != I8042_ACK)
         return false;
     // Wait until we get the self-test result
@@ -183,20 +183,20 @@ bool I8042Controller::do_reset_device(Device device)
 
 u8 I8042Controller::do_send_command(Device device, u8 command)
 {
-    ASSERT(device != Device::None);
-    ASSERT(m_lock.is_locked());
+    VERIFY(device != Device::None);
+    VERIFY(m_lock.is_locked());
 
-    ASSERT(!Processor::current().in_irq());
+    VERIFY(!Processor::current().in_irq());
 
     return do_write_to_device(device, command);
 }
 
 u8 I8042Controller::do_send_command(Device device, u8 command, u8 data)
 {
-    ASSERT(device != Device::None);
-    ASSERT(m_lock.is_locked());
+    VERIFY(device != Device::None);
+    VERIFY(m_lock.is_locked());
 
-    ASSERT(!Processor::current().in_irq());
+    VERIFY(!Processor::current().in_irq());
 
     u8 response = do_write_to_device(device, command);
     if (response == I8042_ACK)
@@ -206,10 +206,10 @@ u8 I8042Controller::do_send_command(Device device, u8 command, u8 data)
 
 u8 I8042Controller::do_write_to_device(Device device, u8 data)
 {
-    ASSERT(device != Device::None);
-    ASSERT(m_lock.is_locked());
+    VERIFY(device != Device::None);
+    VERIFY(m_lock.is_locked());
 
-    ASSERT(!Processor::current().in_irq());
+    VERIFY(!Processor::current().in_irq());
 
     int attempts = 0;
     u8 response;
@@ -230,7 +230,7 @@ u8 I8042Controller::do_write_to_device(Device device, u8 data)
 
 u8 I8042Controller::do_read_from_device(Device device)
 {
-    ASSERT(device != Device::None);
+    VERIFY(device != Device::None);
 
     prepare_for_input(device);
     return IO::in8(I8042_BUFFER);
@@ -238,7 +238,7 @@ u8 I8042Controller::do_read_from_device(Device device)
 
 void I8042Controller::prepare_for_input(Device device)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     const u8 buffer_type = device == Device::Keyboard ? I8042_KEYBOARD_BUFFER : I8042_MOUSE_BUFFER;
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
@@ -249,7 +249,7 @@ void I8042Controller::prepare_for_input(Device device)
 
 void I8042Controller::prepare_for_output()
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     for (;;) {
         if (!(IO::in8(I8042_STATUS) & 2))
             return;
@@ -258,14 +258,14 @@ void I8042Controller::prepare_for_output()
 
 void I8042Controller::do_wait_then_write(u8 port, u8 data)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     prepare_for_output();
     IO::out8(port, data);
 }
 
 u8 I8042Controller::do_wait_then_read(u8 port)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     prepare_for_input(Device::None);
     return IO::in8(port);
 }

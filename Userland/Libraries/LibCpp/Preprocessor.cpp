@@ -75,7 +75,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     }
 
     if (keyword == "else") {
-        ASSERT(m_current_depth > 0);
+        VERIFY(m_current_depth > 0);
         if (m_depths_of_not_taken_branches.contains_slow(m_current_depth - 1)) {
             m_depths_of_not_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth - 1; });
             m_state = State::Normal;
@@ -88,7 +88,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     }
 
     if (keyword == "endif") {
-        ASSERT(m_current_depth > 0);
+        VERIFY(m_current_depth > 0);
         --m_current_depth;
         if (m_depths_of_not_taken_branches.contains_slow(m_current_depth)) {
             m_depths_of_not_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth; });
@@ -164,7 +164,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
         return;
     }
     dbgln("Unsupported preprocessor keyword: {}", keyword);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 };

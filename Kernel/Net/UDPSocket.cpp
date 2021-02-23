@@ -58,7 +58,7 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
         if (it == sockets_by_port().resource().end())
             return {};
         socket = (*it).value;
-        ASSERT(socket);
+        VERIFY(socket);
     }
     return { *socket };
 }
@@ -83,8 +83,8 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
 {
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
-    ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
-    ASSERT(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
+    VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
+    VERIFY(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
     if (!buffer.write(udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket)))
         return EFAULT;
     return udp_packet.length() - sizeof(UDPPacket);

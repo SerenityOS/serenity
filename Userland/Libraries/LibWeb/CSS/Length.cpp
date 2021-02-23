@@ -55,7 +55,7 @@ float Length::relative_length_to_px(const Layout::Node& layout_node) const
         return max(viewport.width(), viewport.height()) * (m_value / 100);
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -97,7 +97,7 @@ const char* Length::unit_name() const
     case Type::Vmin:
         return "vmin";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

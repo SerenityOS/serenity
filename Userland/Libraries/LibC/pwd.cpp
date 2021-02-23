@@ -178,7 +178,7 @@ static void construct_pwd(struct passwd* pwd, char* buf, struct passwd** result)
     ok = ok || s_dir.copy_characters_to_buffer(buf_dir, s_dir.length() + 1);
     ok = ok || s_shell.copy_characters_to_buffer(buf_shell, s_shell.length() + 1);
 
-    ASSERT(ok);
+    VERIFY(ok);
 
     *result = pwd;
     pwd->pw_name = buf_name;

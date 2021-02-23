@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     Vector<JsonValue> sorted_regions = json.value().as_array().values();
     quick_sort(sorted_regions, [](auto& a, auto& b) {

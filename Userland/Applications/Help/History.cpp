@@ -42,13 +42,13 @@ String History::current()
 
 void History::go_back()
 {
-    ASSERT(can_go_back());
+    VERIFY(can_go_back());
     m_current_history_item--;
 }
 
 void History::go_forward()
 {
-    ASSERT(can_go_forward());
+    VERIFY(can_go_forward());
     m_current_history_item++;
 }
 

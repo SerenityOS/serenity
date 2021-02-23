@@ -95,7 +95,7 @@ static void sleep_steps(useconds_t steps)
     const int rc = usleep(steps * STEP_SIZE);
     if (rc < 0) {
         perror("usleep");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -146,7 +146,7 @@ int main(int, char**)
         }
         exit(1);
     }
-    ASSERT(rc == 1);
+    VERIFY(rc == 1);
     if (buf == 0) {
         printf("PASS\n");
         return 0;
@@ -171,7 +171,7 @@ static void run_pa1(void*)
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PA)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     dbgln("PA1 did setsid() -> PGA={}, SA={}, yay!", rc, getsid(0));
     sleep_steps(1);
@@ -210,7 +210,7 @@ static void run_pb1(void* pipe_fd_ptr)
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PB)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     dbgln("PB1 did setsid() -> PGB={}, SB={}, yay!", rc, getsid(0));
     sleep_steps(1);
@@ -258,7 +258,7 @@ static void run_pb2(void* pipe_fd_ptr)
         dbgln("PB2: setgpid SUCCESSFUL! CHANGED PGROUP!");
         to_write = 1;
     } else {
-        ASSERT(rc == -1);
+        VERIFY(rc == -1);
         switch (errno) {
         case EACCES:
             dbgln("PB2: Failed with EACCES. Huh?!");
@@ -286,7 +286,7 @@ static void run_pb2(void* pipe_fd_ptr)
 
     dbgln("PB2 ends with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
     int* pipe_fd = static_cast<int*>(pipe_fd_ptr);
-    ASSERT(*pipe_fd);
+    VERIFY(*pipe_fd);
     rc = write(*pipe_fd, &to_write, 1);
     if (rc != 1) {
         dbgln("Wrote only {} bytes instead of 1?!", rc);

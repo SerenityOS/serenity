@@ -95,7 +95,7 @@ static ByteBuffer compress_pixel_data(const ByteBuffer& pixel_data, BMPWriter::C
         return pixel_data;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap)

@@ -51,13 +51,13 @@ Palette::~Palette()
 
 int PaletteImpl::metric(MetricRole role) const
 {
-    ASSERT((int)role < (int)MetricRole::__Count);
+    VERIFY((int)role < (int)MetricRole::__Count);
     return theme().metric[(int)role];
 }
 
 String PaletteImpl::path(PathRole role) const
 {
-    ASSERT((int)role < (int)PathRole::__Count);
+    VERIFY((int)role < (int)PathRole::__Count);
     return theme().path[(int)role];
 }
 

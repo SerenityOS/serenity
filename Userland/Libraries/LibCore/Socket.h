@@ -78,7 +78,7 @@ protected:
     virtual bool common_connect(const struct sockaddr*, socklen_t);
 
 private:
-    virtual bool open(IODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
+    virtual bool open(IODevice::OpenMode) override { VERIFY_NOT_REACHED(); }
     void ensure_read_notifier();
 
     Type m_type { Type::Invalid };

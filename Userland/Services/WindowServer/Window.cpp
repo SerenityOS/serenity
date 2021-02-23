@@ -153,7 +153,7 @@ void Window::set_title(const String& title)
 
 void Window::set_rect(const Gfx::IntRect& rect)
 {
-    ASSERT(!rect.is_empty());
+    VERIFY(!rect.is_empty());
     if (m_rect == rect)
         return;
     auto old_rect = m_rect;
@@ -168,7 +168,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
 
 void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
 {
-    ASSERT(!rect.is_empty());
+    VERIFY(!rect.is_empty());
     if (m_rect == rect)
         return;
     auto old_rect = m_rect;
@@ -232,7 +232,7 @@ void Window::nudge_into_desktop(bool force_titlebar_visible)
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
 {
-    ASSERT(!size.is_empty());
+    VERIFY(!size.is_empty());
 
     if (m_minimum_size == size)
         return;
@@ -265,7 +265,7 @@ void Window::handle_mouse_event(const MouseEvent& event)
         m_client->post_message(Messages::WindowClient::MouseWheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -332,7 +332,7 @@ void Window::start_minimize_animation()
                 // next time we want to start the animation
                 m_taskbar_rect = w.taskbar_rect();
 
-                ASSERT(!m_have_taskbar_rect); // should remain unset!
+                VERIFY(!m_have_taskbar_rect); // should remain unset!
                 return IterationDecision::Break;
             };
             return IterationDecision::Continue;
@@ -421,7 +421,7 @@ void Window::set_resizable(bool resizable)
 void Window::event(Core::Event& event)
 {
     if (!m_client) {
-        ASSERT(parent());
+        VERIFY(parent());
         event.ignore();
         return;
     }
@@ -721,7 +721,7 @@ void Window::set_fullscreen(bool fullscreen)
 
 Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 {
-    ASSERT(tiled != WindowTileType::None);
+    VERIFY(tiled != WindowTileType::None);
 
     int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
     int title_bar_height = m_frame.title_bar_rect().height();
@@ -770,7 +770,7 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
             Screen::the().width() / 2 - frame_width,
             (max_height - title_bar_height) / 2);
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -778,7 +778,7 @@ bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
 {
     if (m_tiled == WindowTileType::None)
         return false;
-    ASSERT(!resize_aspect_ratio().has_value());
+    VERIFY(!resize_aspect_ratio().has_value());
 
     m_tiled = WindowTileType::None;
 
@@ -797,7 +797,7 @@ bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
 
 void Window::set_tiled(WindowTileType tiled)
 {
-    ASSERT(tiled != WindowTileType::None);
+    VERIFY(tiled != WindowTileType::None);
 
     if (m_tiled == tiled)
         return;
@@ -851,7 +851,7 @@ void Window::add_accessory_window(Window& accessory_window)
 
 void Window::set_parent_window(Window& parent_window)
 {
-    ASSERT(!m_parent_window);
+    VERIFY(!m_parent_window);
     m_parent_window = parent_window;
     if (m_accessory)
         parent_window.add_accessory_window(*this);

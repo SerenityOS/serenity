@@ -81,7 +81,7 @@ size_t DMIExpose::structure_table_length() const
 
 UNMAP_AFTER_INIT void DMIExpose::initialize_exposer()
 {
-    ASSERT(!(m_entry_point.is_null()));
+    VERIFY(!(m_entry_point.is_null()));
     if (m_using_64bit_entry_point) {
         set_64_bit_entry_initialization_values();
     } else {

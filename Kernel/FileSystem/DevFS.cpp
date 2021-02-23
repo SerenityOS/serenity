@@ -61,7 +61,7 @@ size_t DevFS::allocate_inode_index()
 {
     LOCKER(m_lock);
     m_next_inode_index = m_next_inode_index.value() + 1;
-    ASSERT(m_next_inode_index > 0);
+    VERIFY(m_next_inode_index > 0);
     return 1 + m_next_inode_index.value();
 }
 
@@ -102,17 +102,17 @@ DevFSInode::DevFSInode(DevFS& fs)
 }
 ssize_t DevFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 KResult DevFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<Inode> DevFSInode::lookup(StringView)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void DevFSInode::flush_metadata()
@@ -121,7 +121,7 @@ void DevFSInode::flush_metadata()
 
 ssize_t DevFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
@@ -141,7 +141,7 @@ KResult DevFSInode::remove_child(const StringView&)
 
 KResultOr<size_t> DevFSInode::directory_entry_count() const
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 KResult DevFSInode::chmod(mode_t)
@@ -174,8 +174,8 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
 ssize_t DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     LOCKER(m_lock);
-    ASSERT(offset == 0);
-    ASSERT(!m_link.is_null());
+    VERIFY(offset == 0);
+    VERIFY(!m_link.is_null());
     if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
         return -EFAULT;
     return m_link.length();
@@ -195,8 +195,8 @@ InodeMetadata DevFSLinkInode::metadata() const
 ssize_t DevFSLinkInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     LOCKER(m_lock);
-    ASSERT(offset == 0);
-    ASSERT(buffer.is_kernel_buffer());
+    VERIFY(offset == 0);
+    VERIFY(buffer.is_kernel_buffer());
     m_link = buffer.copy_into_string(count);
     return count;
 }
@@ -361,7 +361,7 @@ String DevFSDeviceInode::name() const
 ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     LOCKER(m_lock);
-    ASSERT(!!description);
+    VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return -EIO;
     auto nread = const_cast<Device&>(*m_attached_device).read(*description, offset, buffer, count);
@@ -387,7 +387,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
 ssize_t DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
     LOCKER(m_lock);
-    ASSERT(!!description);
+    VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return -EIO;
     auto nread = const_cast<Device&>(*m_attached_device).write(*description, offset, buffer, count);

@@ -62,7 +62,7 @@ public:
     template<typename F>
     IterationDecision for_each_volatile_range(F f) const
     {
-        ASSERT(m_lock.is_locked());
+        VERIFY(m_lock.is_locked());
         // This is a little ugly. Basically, we're trying to find the
         // volatile ranges that all share, because those are the only
         // pages we can actually purge

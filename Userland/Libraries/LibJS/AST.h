@@ -971,7 +971,7 @@ public:
     const Expression& key() const { return m_key; }
     const Expression& value() const
     {
-        ASSERT(m_value);
+        VERIFY(m_value);
         return *m_value;
     }
 

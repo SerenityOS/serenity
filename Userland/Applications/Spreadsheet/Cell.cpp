@@ -73,7 +73,7 @@ void Cell::set_type(const StringView& name)
         return set_type(cell_type);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Cell::set_type_metadata(CellTypeMetadata&& metadata)

@@ -106,7 +106,7 @@ String UnsignedBigInteger::to_base10() const
 
     while (temp != UnsignedBigInteger { 0 }) {
         divide_u16_without_allocation(temp, 10, quotient, remainder);
-        ASSERT(remainder.words()[0] < 10);
+        VERIFY(remainder.words()[0] < 10);
         builder.append(static_cast<char>(remainder.words()[0] + '0'));
         temp.set_to(quotient);
     }
@@ -389,7 +389,7 @@ void UnsignedBigInteger::subtract_without_allocation(
     }
 
     // This assertion should not fail, because we verified that *this>=other at the beginning of the function
-    ASSERT(borrow == 0);
+    VERIFY(borrow == 0);
 }
 
 /**
@@ -672,7 +672,7 @@ FLATTEN void UnsignedBigInteger::divide_u16_without_allocation(
     UnsignedBigInteger& quotient,
     UnsignedBigInteger& remainder)
 {
-    ASSERT(denominator < (1 << 16));
+    VERIFY(denominator < (1 << 16));
     u32 remainder_word = 0;
     auto numerator_length = numerator.trimmed_length();
     quotient.set_to_0();
@@ -717,8 +717,8 @@ ALWAYS_INLINE u32 UnsignedBigInteger::shift_left_get_one_word(
 {
     // "<= length()" (rather than length() - 1) is intentional,
     // The result inedx of length() is used when calculating the carry word
-    ASSERT(result_word_index <= number.length());
-    ASSERT(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
+    VERIFY(result_word_index <= number.length());
+    VERIFY(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
     u32 result = 0;
 
     // we need to check for "num_bits != 0" since shifting right by 32 is apparently undefined behaviour!

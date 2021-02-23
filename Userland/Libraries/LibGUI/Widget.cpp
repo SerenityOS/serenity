@@ -305,7 +305,7 @@ void Widget::handle_keydown_event(KeyEvent& event)
 
 void Widget::handle_paint_event(PaintEvent& event)
 {
-    ASSERT(is_visible());
+    VERIFY(is_visible());
     if (fill_with_background_color()) {
         Painter painter(*this);
         painter.fill_rect(event.rect(), palette().color(background_role()));

@@ -89,8 +89,8 @@ Document::~Document()
 
 void Document::removed_last_ref()
 {
-    ASSERT(!ref_count());
-    ASSERT(!m_deletion_has_begun);
+    VERIFY(!ref_count());
+    VERIFY(!m_deletion_has_begun);
 
     if (m_referencing_node_count) {
         // The document has reached ref_count==0 but still has nodes keeping it alive.
@@ -121,8 +121,8 @@ void Document::removed_last_ref()
             });
 
             for (auto& node : descendants) {
-                ASSERT(&node.document() == this);
-                ASSERT(!node.is_document());
+                VERIFY(&node.document() == this);
+                VERIFY(!node.is_document());
                 if (node.parent())
                     node.parent()->remove_child(node);
             }
@@ -299,7 +299,7 @@ void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 
 void Document::detach_from_frame(Badge<Frame>, Frame& frame)
 {
-    ASSERT(&frame == m_frame);
+    VERIFY(&frame == m_frame);
     tear_down_layout_tree();
     m_frame = nullptr;
 }

@@ -87,7 +87,7 @@ static Handler s_syscall_table[] = {
 
 int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-    ASSERT_INTERRUPTS_ENABLED();
+    VERIFY_INTERRUPTS_ENABLED();
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     current_thread->did_syscall();
@@ -106,7 +106,7 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
             process.sys$exit((int)arg1);
         else
             process.sys$exit_thread(arg1);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return 0;
     }
 
@@ -138,7 +138,7 @@ void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
-    ASSERT(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
+    VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
 
     if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
@@ -211,12 +211,12 @@ void syscall_handler(TrapFrame* trap)
     current_thread->check_dispatch_pending_signal();
 
     // If the previous mode somehow changed something is seriously messed up...
-    ASSERT(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
+    VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
 
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
 }
 
 }

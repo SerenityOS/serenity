@@ -85,7 +85,7 @@ String RunningProcessesModel::column_name(int column_index) const
     case Column::Name:
         return "Name";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 GUI::Variant RunningProcessesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
@@ -109,7 +109,7 @@ GUI::Variant RunningProcessesModel::data(const GUI::ModelIndex& index, GUI::Mode
         case Column::Name:
             return process.name;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return {};
 }

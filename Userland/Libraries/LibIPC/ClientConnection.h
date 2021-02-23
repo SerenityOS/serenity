@@ -43,7 +43,7 @@ public:
         : IPC::Connection<ServerEndpoint, ClientEndpoint>(endpoint, move(socket))
         , m_client_id(client_id)
     {
-        ASSERT(this->socket().is_connected());
+        VERIFY(this->socket().is_connected());
         this->socket().on_ready_to_read = [this] { this->drain_messages_from_peer(); };
     }
 

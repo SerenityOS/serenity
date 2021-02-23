@@ -1352,7 +1352,7 @@ void Editor::reposition_cursor(bool to_end)
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
-    ASSERT(column + m_origin_column <= m_num_columns);
+    VERIFY(column + m_origin_column <= m_num_columns);
     VT::move_absolute(line + m_origin_row, column + m_origin_column);
 
     if (line + m_origin_row > m_num_lines) {

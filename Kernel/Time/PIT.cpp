@@ -66,19 +66,19 @@ size_t PIT::ticks_per_second() const
 void PIT::set_periodic()
 {
     // FIXME: Implement it...
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void PIT::set_non_periodic()
 {
     // FIXME: Implement it...
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void PIT::reset_to_default_ticks_per_second()
 {
     InterruptDisabler disabler;
     bool success = try_to_set_frequency(OPTIMAL_TICKS_PER_SECOND_RATE);
-    ASSERT(success);
+    VERIFY(success);
 }
 
 bool PIT::try_to_set_frequency(size_t frequency)
@@ -96,12 +96,12 @@ bool PIT::try_to_set_frequency(size_t frequency)
 }
 bool PIT::is_capable_of_frequency(size_t frequency) const
 {
-    ASSERT(frequency != 0);
+    VERIFY(frequency != 0);
     return frequency <= BASE_FREQUENCY;
 }
 size_t PIT::calculate_nearest_possible_frequency(size_t frequency) const
 {
-    ASSERT(frequency != 0);
+    VERIFY(frequency != 0);
     return frequency;
 }
 

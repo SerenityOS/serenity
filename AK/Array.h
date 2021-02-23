@@ -43,12 +43,12 @@ struct Array {
 
     constexpr const T& at(size_t index) const
     {
-        ASSERT(index < size());
+        VERIFY(index < size());
         return (*this)[index];
     }
     constexpr T& at(size_t index)
     {
-        ASSERT(index < size());
+        VERIFY(index < size());
         return (*this)[index];
     }
 

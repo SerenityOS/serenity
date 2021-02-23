@@ -150,14 +150,14 @@ static inline ProcFileType to_proc_file_type(const InodeIdentifier& identifier)
 
 static inline int to_fd(const InodeIdentifier& identifier)
 {
-    ASSERT(to_proc_parent_directory(identifier) == PDI_PID_fd);
+    VERIFY(to_proc_parent_directory(identifier) == PDI_PID_fd);
     return (identifier.index().value() & 0xff) - FI_MaxStaticFileIndex;
 }
 
 static inline size_t to_sys_index(const InodeIdentifier& identifier)
 {
-    ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
-    ASSERT(to_proc_file_type(identifier) == FI_Root_sys_variable);
+    VERIFY(to_proc_parent_directory(identifier) == PDI_Root_sys);
+    VERIFY(to_proc_file_type(identifier) == FI_Root_sys_variable);
     return identifier.index().value() >> 16u;
 }
 
@@ -178,7 +178,7 @@ static inline InodeIdentifier to_identifier_with_stack(unsigned fsid, ThreadID t
 
 static inline InodeIdentifier sys_var_to_identifier(unsigned fsid, unsigned index)
 {
-    ASSERT(index < 256);
+    VERIFY(index < 256);
     return { fsid, (PDI_Root_sys << 12u) | (index << 16u) | FI_Root_sys_variable };
 }
 
@@ -199,7 +199,7 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
     case PDI_PID_stacks:
         return to_identifier(identifier.fsid(), PDI_PID, to_pid(identifier), FI_PID_stacks);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 #if 0
@@ -436,7 +436,7 @@ static bool procfs$devices(InodeIdentifier, KBufferBuilder& builder)
         else if (device.is_character_device())
             obj.add("type", "character");
         else
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
     });
     array.finish();
     return true;
@@ -633,7 +633,7 @@ static bool procfs$pid_exe(InodeIdentifier identifier, KBufferBuilder& builder)
     if (!process)
         return false;
     auto* custody = process->executable();
-    ASSERT(custody);
+    VERIFY(custody);
     builder.append(custody->absolute_path().bytes());
     return true;
 }
@@ -884,14 +884,14 @@ SysVariable& SysVariable::for_inode(InodeIdentifier id)
     if (index >= sys_variables().size())
         return sys_variables()[0];
     auto& variable = sys_variables()[index];
-    ASSERT(variable.address);
+    VERIFY(variable.address);
     return variable;
 }
 
 static bool read_sys_bool(InodeIdentifier inode_id, KBufferBuilder& builder)
 {
     auto& variable = SysVariable::for_inode(inode_id);
-    ASSERT(variable.type == SysVariable::Type::Boolean);
+    VERIFY(variable.type == SysVariable::Type::Boolean);
 
     u8 buffer[2];
     auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
@@ -907,7 +907,7 @@ static bool read_sys_bool(InodeIdentifier inode_id, KBufferBuilder& builder)
 static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
 {
     auto& variable = SysVariable::for_inode(inode_id);
-    ASSERT(variable.type == SysVariable::Type::Boolean);
+    VERIFY(variable.type == SysVariable::Type::Boolean);
 
     char value = 0;
     bool did_read = false;
@@ -920,7 +920,7 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
     });
     if (nread < 0)
         return nread;
-    ASSERT(nread == 0 || (nread == 1 && did_read));
+    VERIFY(nread == 0 || (nread == 1 && did_read));
     if (nread == 0 || !(value == '0' || value == '1'))
         return (ssize_t)size;
 
@@ -936,7 +936,7 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
 static bool read_sys_string(InodeIdentifier inode_id, KBufferBuilder& builder)
 {
     auto& variable = SysVariable::for_inode(inode_id);
-    ASSERT(variable.type == SysVariable::Type::String);
+    VERIFY(variable.type == SysVariable::Type::String);
 
     auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
     LOCKER(lockable_string->lock(), Lock::Mode::Shared);
@@ -947,7 +947,7 @@ static bool read_sys_string(InodeIdentifier inode_id, KBufferBuilder& builder)
 static ssize_t write_sys_string(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
 {
     auto& variable = SysVariable::for_inode(inode_id);
-    ASSERT(variable.type == SysVariable::Type::String);
+    VERIFY(variable.type == SysVariable::Type::String);
 
     auto string_copy = buffer.copy_into_string(size);
     if (string_copy.is_null())
@@ -1032,7 +1032,7 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
     }
     auto inode = adopt(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
     auto result = m_inodes.set(inode_id.index().value(), inode.ptr());
-    ASSERT(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
+    VERIFY(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
     return inode;
 }
 
@@ -1081,7 +1081,7 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
     bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr;
     if (directory_entry) {
         read_callback = directory_entry->read_callback;
-        ASSERT(read_callback);
+        VERIFY(read_callback);
     } else {
         switch (to_proc_parent_directory(identifier())) {
         case PDI_PID_fd:
@@ -1093,7 +1093,7 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
         case PDI_Root_sys:
             switch (SysVariable::for_inode(identifier()).type) {
             case SysVariable::Type::Invalid:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             case SysVariable::Type::Boolean:
                 read_callback = read_sys_bool;
                 break;
@@ -1103,10 +1103,10 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
             }
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
-        ASSERT(read_callback);
+        VERIFY(read_callback);
     }
 
     if (!cached_data)
@@ -1231,8 +1231,8 @@ InodeMetadata ProcFSInode::metadata() const
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFS: read_bytes offset: {} count: {}", offset, count);
-    ASSERT(offset >= 0);
-    ASSERT(buffer.user_or_kernel_ptr());
+    VERIFY(offset >= 0);
+    VERIFY(buffer.user_or_kernel_ptr());
 
     if (!description)
         return -EIO;
@@ -1350,7 +1350,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 
 RefPtr<Inode> ProcFSInode::lookup(StringView name)
 {
-    ASSERT(is_directory());
+    VERIFY(is_directory());
     if (name == ".")
         return this;
     if (name == "..")
@@ -1490,7 +1490,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
         if (to_proc_parent_directory(identifier()) == PDI_Root_sys) {
             switch (SysVariable::for_inode(identifier()).type) {
             case SysVariable::Type::Invalid:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             case SysVariable::Type::Boolean:
                 write_callback = write_sys_bool;
                 break;
@@ -1506,9 +1506,9 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
         write_callback = directory_entry->write_callback;
     }
 
-    ASSERT(is_persistent_inode(identifier()));
+    VERIFY(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
-    ASSERT(offset == 0);
+    VERIFY(offset == 0);
     ssize_t nwritten = write_callback(identifier(), buffer, (size_t)size);
     if (nwritten < 0)
         klog() << "ProcFS: Writing " << size << " bytes failed: " << nwritten;
@@ -1565,7 +1565,7 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
         res = &process->root_directory();
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (!res)
@@ -1666,7 +1666,7 @@ KResult ProcFSInode::remove_child([[maybe_unused]] const StringView& name)
 
 KResultOr<size_t> ProcFSInode::directory_entry_count() const
 {
-    ASSERT(is_directory());
+    VERIFY(is_directory());
     size_t count = 0;
     KResult result = traverse_as_directory([&count](auto&) {
         ++count;

@@ -66,7 +66,7 @@ public:
 
         // FIXME: We should have two of these encrypt/decrypt functions that
         //        we SFINAE out based on whether the Cipher mode needs an ivec
-        ASSERT(!ivec.is_empty());
+        VERIFY(!ivec.is_empty());
         const auto* iv = ivec.data();
 
         m_cipher_block.set_padding_mode(cipher.padding_mode());
@@ -77,7 +77,7 @@ public:
             m_cipher_block.overwrite(in.slice(offset, block_size));
             m_cipher_block.apply_initialization_vector(iv);
             cipher.encrypt_block(m_cipher_block, m_cipher_block);
-            ASSERT(offset + block_size <= out.size());
+            VERIFY(offset + block_size <= out.size());
             __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), block_size);
             iv = out.offset(offset);
             length -= block_size;
@@ -88,7 +88,7 @@ public:
             m_cipher_block.overwrite(in.slice(offset, length));
             m_cipher_block.apply_initialization_vector(iv);
             cipher.encrypt_block(m_cipher_block, m_cipher_block);
-            ASSERT(offset + block_size <= out.size());
+            VERIFY(offset + block_size <= out.size());
             __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), block_size);
             iv = out.offset(offset);
         }
@@ -105,14 +105,14 @@ public:
 
         auto& cipher = this->cipher();
 
-        ASSERT(!ivec.is_empty());
+        VERIFY(!ivec.is_empty());
         const auto* iv = ivec.data();
 
         auto block_size = cipher.block_size();
 
         // if the data is not aligned, it's not correct encrypted data
         // FIXME (ponder): Should we simply decrypt as much as we can?
-        ASSERT(length % block_size == 0);
+        VERIFY(length % block_size == 0);
 
         m_cipher_block.set_padding_mode(cipher.padding_mode());
         size_t offset { 0 };
@@ -123,7 +123,7 @@ public:
             cipher.decrypt_block(m_cipher_block, m_cipher_block);
             m_cipher_block.apply_initialization_vector(iv);
             auto decrypted = m_cipher_block.bytes();
-            ASSERT(offset + decrypted.size() <= out.size());
+            VERIFY(offset + decrypted.size() <= out.size());
             __builtin_memcpy(out.offset(offset), decrypted.data(), decrypted.size());
             iv = slice;
             length -= block_size;

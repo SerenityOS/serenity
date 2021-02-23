@@ -100,7 +100,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         } else if (m_desktop_wallpaper_mode == "stretch") {
             screen_painter.draw_scaled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

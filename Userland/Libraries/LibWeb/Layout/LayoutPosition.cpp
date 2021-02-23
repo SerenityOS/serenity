@@ -55,7 +55,7 @@ LayoutRange LayoutRange::normalized() const
 
 NonnullRefPtr<DOM::Range> LayoutRange::to_dom_range() const
 {
-    ASSERT(is_valid());
+    VERIFY(is_valid());
 
     auto start = m_start.to_dom_position();
     auto end = m_end.to_dom_position();

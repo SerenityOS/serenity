@@ -38,7 +38,7 @@ namespace Web::SVG {
 
 static void print_instruction(const PathInstruction& instruction)
 {
-    ASSERT(PATH_DEBUG);
+    VERIFY(PATH_DEBUG);
 
     auto& data = instruction.data;
 
@@ -115,7 +115,7 @@ Vector<PathInstruction> PathDataParser::parse()
     while (!done())
         parse_drawto();
     if (!m_instructions.is_empty() && m_instructions[0].type != PathInstructionType::Move)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     return m_instructions;
 }
 
@@ -348,7 +348,7 @@ void PathDataParser::parse_whitespace(bool must_match_once)
         matched = true;
     }
 
-    ASSERT(!must_match_once || matched);
+    VERIFY(!must_match_once || matched);
 }
 
 void PathDataParser::parse_comma_whitespace()
@@ -379,7 +379,7 @@ float PathDataParser::parse_fractional_constant()
         while (!done() && isdigit(ch()))
             builder.append(consume());
     } else {
-        ASSERT(builder.length() > 0);
+        VERIFY(builder.length() > 0);
     }
 
     if (floating_point)
@@ -398,7 +398,7 @@ float PathDataParser::parse_number()
 float PathDataParser::parse_flag()
 {
     if (!match('0') && !match('1'))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     return consume() - '0';
 }
 
@@ -475,7 +475,7 @@ Gfx::Path& SVGPathElement::get_path()
             if (absolute) {
                 path.move_to(point);
             } else {
-                ASSERT(!path.segments().is_empty());
+                VERIFY(!path.segments().is_empty());
                 path.move_to(point + path.segments().last().point());
             }
             break;
@@ -488,13 +488,13 @@ Gfx::Path& SVGPathElement::get_path()
             if (absolute) {
                 path.line_to(point);
             } else {
-                ASSERT(!path.segments().is_empty());
+                VERIFY(!path.segments().is_empty());
                 path.line_to(point + path.segments().last().point());
             }
             break;
         }
         case PathInstructionType::HorizontalLine: {
-            ASSERT(!path.segments().is_empty());
+            VERIFY(!path.segments().is_empty());
             auto last_point = path.segments().last().point();
             if (absolute) {
                 path.line_to(Gfx::FloatPoint { data[0], last_point.y() });
@@ -504,7 +504,7 @@ Gfx::Path& SVGPathElement::get_path()
             break;
         }
         case PathInstructionType::VerticalLine: {
-            ASSERT(!path.segments().is_empty());
+            VERIFY(!path.segments().is_empty());
             auto last_point = path.segments().last().point();
             if (absolute) {
                 path.line_to(Gfx::FloatPoint { last_point.x(), data[0] });
@@ -610,7 +610,7 @@ Gfx::Path& SVGPathElement::get_path()
                 path.quadratic_bezier_curve_to(through, point);
                 m_previous_control_point = through;
             } else {
-                ASSERT(!path.segments().is_empty());
+                VERIFY(!path.segments().is_empty());
                 auto last_point = path.segments().last().point();
                 auto control_point = through + last_point;
                 path.quadratic_bezier_curve_to(control_point, point + last_point);
@@ -621,7 +621,7 @@ Gfx::Path& SVGPathElement::get_path()
         case PathInstructionType::SmoothQuadraticBezierCurve: {
             clear_last_control_point = false;
 
-            ASSERT(!path.segments().is_empty());
+            VERIFY(!path.segments().is_empty());
             auto last_point = path.segments().last().point();
 
             if (m_previous_control_point.is_null()) {
@@ -650,7 +650,7 @@ Gfx::Path& SVGPathElement::get_path()
             // with these path instructions, let's just skip them
             continue;
         case PathInstructionType::Invalid:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         if (clear_last_control_point) {

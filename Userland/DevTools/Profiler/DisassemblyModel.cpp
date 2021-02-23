@@ -47,7 +47,7 @@ static const Gfx::Bitmap& heat_gradient()
 
 static Color color_for_percent(int percent)
 {
-    ASSERT(percent >= 0 && percent <= 100);
+    VERIFY(percent >= 0 && percent <= 100);
     return heat_gradient().get_pixel(percent, 0);
 }
 
@@ -77,14 +77,14 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         base_address = library_data->base;
     }
 
-    ASSERT(elf != nullptr);
+    VERIFY(elf != nullptr);
 
     auto symbol = elf->find_symbol(node.address() - base_address);
     if (!symbol.has_value()) {
         dbgln("DisassemblyModel: symbol not found");
         return;
     }
-    ASSERT(symbol.has_value());
+    VERIFY(symbol.has_value());
 
     auto view = symbol.value().raw_data();
 
@@ -132,7 +132,7 @@ String DisassemblyModel::column_name(int column) const
     case Column::Disassembly:
         return "Disassembly";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 }

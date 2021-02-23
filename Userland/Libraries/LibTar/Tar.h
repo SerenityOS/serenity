@@ -97,7 +97,7 @@ size_t Header::get_tar_field(const char (&field)[N])
         if (field[i] == 0)
             break;
 
-        ASSERT(field[i] >= '0' && field[i] <= '7');
+        VERIFY(field[i] >= '0' && field[i] <= '7');
         value *= 8;
         value += field[i] - '0';
     }

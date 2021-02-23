@@ -590,7 +590,7 @@ VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) c
 
 u32 TerminalWidget::code_point_at(const VT::Position& position) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
     if (position.column() == line.length())
         return '\n';
@@ -599,7 +599,7 @@ u32 TerminalWidget::code_point_at(const VT::Position& position) const
 
 VT::Position TerminalWidget::next_position_after(const VT::Position& position, bool should_wrap) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
     if (position.column() == line.length()) {
         if (static_cast<size_t>(position.row()) == m_terminal.line_count() - 1) {
@@ -614,7 +614,7 @@ VT::Position TerminalWidget::next_position_after(const VT::Position& position, b
 
 VT::Position TerminalWidget::previous_position_before(const VT::Position& position, bool should_wrap) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     if (position.column() == 0) {
         if (position.row() == 0) {
             if (should_wrap) {
@@ -747,7 +747,7 @@ void TerminalWidget::paste()
     int nwritten = write(m_ptm_fd, text.data(), text.size());
     if (nwritten < 0) {
         perror("write");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

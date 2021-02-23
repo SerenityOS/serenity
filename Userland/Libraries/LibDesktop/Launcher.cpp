@@ -38,7 +38,7 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
 {
     auto details = adopt(*new Details);
     auto json = JsonValue::from_string(details_str);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
     auto obj = json.value().as_object();
     details->executable = obj.get("executable").to_string();
     details->name = obj.get("name").to_string();
@@ -124,7 +124,7 @@ bool Launcher::open(const URL& url, const String& handler_name)
 
 bool Launcher::open(const URL& url, const Details& details)
 {
-    ASSERT(details.launcher_type != LauncherType::Application); // Launcher should not be used to execute arbitrary applications
+    VERIFY(details.launcher_type != LauncherType::Application); // Launcher should not be used to execute arbitrary applications
     return open(url, details.executable);
 }
 

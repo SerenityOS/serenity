@@ -122,8 +122,8 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
 
 String InodeFile::absolute_path(const FileDescription& description) const
 {
-    ASSERT_NOT_REACHED();
-    ASSERT(description.custody());
+    VERIFY_NOT_REACHED();
+    VERIFY(description.custody());
     return description.absolute_path();
 }
 
@@ -140,15 +140,15 @@ KResult InodeFile::truncate(u64 size)
 
 KResult InodeFile::chown(FileDescription& description, uid_t uid, gid_t gid)
 {
-    ASSERT(description.inode() == m_inode);
-    ASSERT(description.custody());
+    VERIFY(description.inode() == m_inode);
+    VERIFY(description.custody());
     return VFS::the().chown(*description.custody(), uid, gid);
 }
 
 KResult InodeFile::chmod(FileDescription& description, mode_t mode)
 {
-    ASSERT(description.inode() == m_inode);
-    ASSERT(description.custody());
+    VERIFY(description.inode() == m_inode);
+    VERIFY(description.custody());
     return VFS::the().chmod(*description.custody(), mode);
 }
 

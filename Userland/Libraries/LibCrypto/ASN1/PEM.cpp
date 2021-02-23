@@ -62,7 +62,7 @@ ByteBuffer decode_pem(ReadonlyBytes data)
             lexer.consume_all();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

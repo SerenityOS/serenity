@@ -82,12 +82,12 @@ int main(int argc, char** argv)
 
     auto proc_keymap = Core::File::construct("/proc/keymap");
     if (!proc_keymap->open(Core::IODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_keymap->read_all());
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
     JsonObject keymap_object = json.value().as_object();
-    ASSERT(keymap_object.has("keymap"));
+    VERIFY(keymap_object.has("keymap"));
     String current_keymap = keymap_object.get("keymap").to_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", current_keymap);
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
         if (character_map_files[i].equals_ignoring_case(current_keymap))
             initial_keymap_index = i;
     }
-    ASSERT(initial_keymap_index < character_map_files.size());
+    VERIFY(initial_keymap_index < character_map_files.size());
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Settings");

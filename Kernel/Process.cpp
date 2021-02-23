@@ -238,7 +238,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
         auto thread_or_error = Thread::try_create(*this);
-        ASSERT(!thread_or_error.is_error());
+        VERIFY(!thread_or_error.is_error());
         first_thread = thread_or_error.release_value();
         first_thread->detach();
     }
@@ -246,8 +246,8 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 
 Process::~Process()
 {
-    ASSERT(thread_count() == 0); // all threads should have been finalized
-    ASSERT(!m_alarm_timer);
+    VERIFY(thread_count() == 0); // all threads should have been finalized
+    VERIFY(!m_alarm_timer);
 
     {
         ScopedSpinLock processses_lock(g_processes_lock);
@@ -304,9 +304,9 @@ void create_signal_trampoline()
 
 void Process::crash(int signal, u32 eip, bool out_of_memory)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(!is_dead());
-    ASSERT(Process::current() == this);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(!is_dead());
+    VERIFY(Process::current() == this);
 
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
@@ -322,12 +322,12 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     m_termination_signal = signal;
     set_dump_core(!out_of_memory);
     space().dump_regions();
-    ASSERT(is_user_process());
+    VERIFY(is_user_process());
     die();
     // We can not return from here, as there is nowhere
     // to unwind to, so die right away.
     Thread::current()->die_if_needed();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
@@ -431,8 +431,8 @@ KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgume
 
 bool Process::dump_core()
 {
-    ASSERT(is_dumpable());
-    ASSERT(should_core_dump());
+    VERIFY(is_dumpable());
+    VERIFY(should_core_dump());
     dbgln("Generating coredump for pid: {}", m_pid.value());
     auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
     auto coredump = CoreDump::create(*this, coredump_path);
@@ -443,8 +443,8 @@ bool Process::dump_core()
 
 bool Process::dump_perfcore()
 {
-    ASSERT(is_dumpable());
-    ASSERT(m_perf_event_buffer);
+    VERIFY(is_dumpable());
+    VERIFY(m_perf_event_buffer);
     dbgln("Generating perfcore for pid: {}", m_pid.value());
     auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", m_pid.value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
     if (description_or_error.is_error())
@@ -460,7 +460,7 @@ bool Process::dump_perfcore()
 
 void Process::finalize()
 {
-    ASSERT(Thread::current() == g_finalizer);
+    VERIFY(Thread::current() == g_finalizer);
 
     dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
@@ -508,7 +508,7 @@ void Process::finalize()
 
     m_space->remove_all_regions({});
 
-    ASSERT(ref_count() > 0);
+    VERIFY(ref_count() > 0);
     // WaitBlockCondition::finalize will be in charge of dropping the last
     // reference if there are still waiters around, or whenever the last
     // waitable states are consumed. Unless there is no parent around
@@ -545,9 +545,9 @@ void Process::die()
 
 void Process::terminate_due_to_signal(u8 signal)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(signal < 32);
-    ASSERT(Process::current() == this);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(signal < 32);
+    VERIFY(Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
     m_termination_status = 0;
     m_termination_signal = signal;
@@ -576,7 +576,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
 
 RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable)
 {
-    ASSERT((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
+    VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
     // FIXME: Do something with guard pages?
 
@@ -648,7 +648,7 @@ void Process::stop_tracing()
 
 void Process::tracer_trap(Thread& thread, const RegisterState& regs)
 {
-    ASSERT(m_tracer.ptr());
+    VERIFY(m_tracer.ptr());
     m_tracer->set_regs(regs);
     thread.send_urgent_signal_to_self(SIGTRAP);
 }
@@ -663,7 +663,7 @@ PerformanceEventBuffer& Process::ensure_perf_events()
 bool Process::remove_thread(Thread& thread)
 {
     auto thread_cnt_before = m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-    ASSERT(thread_cnt_before != 0);
+    VERIFY(thread_cnt_before != 0);
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
     m_thread_list.remove(thread);
     return thread_cnt_before == 1;

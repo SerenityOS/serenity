@@ -240,7 +240,7 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
         for (auto size : target_icon.sizes()) {
             auto& emblem = size < 32 ? *s_symlink_emblem_small : *s_symlink_emblem;
             auto original_bitmap = target_icon.bitmap_for_size(size);
-            ASSERT(original_bitmap);
+            VERIFY(original_bitmap);
             auto generated_bitmap = original_bitmap->clone();
             if (!generated_bitmap) {
                 dbgln("Failed to clone {}x{} icon for symlink variant", size, size);

@@ -63,7 +63,7 @@ int main(int, char**)
     [[maybe_unused]] auto https = new ProtocolServer::HttpsProtocol;
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    ASSERT(socket);
+    VERIFY(socket);
     IPC::new_client_connection<ProtocolServer::ClientConnection>(socket.release_nonnull(), 1);
     return event_loop.exec();
 }

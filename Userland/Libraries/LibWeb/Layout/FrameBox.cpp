@@ -45,7 +45,7 @@ FrameBox::~FrameBox()
 
 void FrameBox::prepare_for_replaced_layout()
 {
-    ASSERT(dom_node().content_frame());
+    VERIFY(dom_node().content_frame());
 
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
@@ -90,7 +90,7 @@ void FrameBox::did_set_rect()
 {
     ReplacedBox::did_set_rect();
 
-    ASSERT(dom_node().content_frame());
+    VERIFY(dom_node().content_frame());
     dom_node().content_frame()->set_size(size().to_type<int>());
 }
 

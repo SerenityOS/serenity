@@ -158,7 +158,7 @@ private:
         case SymbolicLink:
             return S_ISLNK(statbuf.st_mode);
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -193,7 +193,7 @@ private:
         case Any:
             return access(m_path.characters(), F_OK) == 0;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -272,7 +272,7 @@ private:
         case NotEqual:
             return m_lhs != m_rhs;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -325,7 +325,7 @@ private:
         case ModificationTimestampGreater:
             return statbuf_l.st_mtime > statbuf_r.st_mtime;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

@@ -186,7 +186,7 @@ static double get_time_in_ms()
 {
     struct timeval tv1;
     auto return_code = gettimeofday(&tv1, nullptr);
-    ASSERT(return_code >= 0);
+    VERIFY(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
 
@@ -230,7 +230,7 @@ void TestRunner::run()
             cleanup_and_exit();
         }
 
-        ASSERT(m_page_view->document());
+        VERIFY(m_page_view->document());
 
         // We want to keep the same document since the interpreter is tied to the document,
         // and we don't want to lose the test state. So, we just clear the document and
@@ -303,7 +303,7 @@ static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     double start_time = get_time_in_ms();
-    ASSERT(m_page_view->document());
+    VERIFY(m_page_view->document());
     auto& old_interpreter = m_page_view->document()->interpreter();
 
     if (!m_js_test_common) {
@@ -396,16 +396,16 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
                 JSSuite suite { suite_name };
 
-                ASSERT(suite_value.is_object());
+                VERIFY(suite_value.is_object());
 
                 suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
                     JSTest test { test_name, TestResult::Fail, "" };
 
-                    ASSERT(test_value.is_object());
-                    ASSERT(test_value.as_object().has("result"));
+                    VERIFY(test_value.is_object());
+                    VERIFY(test_value.as_object().has("result"));
 
                     auto result = test_value.as_object().get("result");
-                    ASSERT(result.is_string());
+                    VERIFY(result.is_string());
                     auto result_string = result.as_string();
                     if (result_string == "pass") {
                         test.result = TestResult::Pass;
@@ -414,9 +414,9 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
                         test.result = TestResult::Fail;
                         m_counts.tests_failed++;
                         suite.most_severe_test_result = TestResult::Fail;
-                        ASSERT(test_value.as_object().has("details"));
+                        VERIFY(test_value.as_object().has("details"));
                         auto details = test_value.as_object().get("details");
-                        ASSERT(result.is_string());
+                        VERIFY(result.is_string());
                         test.details = details.as_string();
                     } else {
                         test.result = TestResult::Skip;
@@ -492,7 +492,7 @@ static void print_modifiers(Vector<Modifier> modifiers)
             case CLEAR:
                 return "\033[0m";
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         };
         printf("%s", code().characters());
     }

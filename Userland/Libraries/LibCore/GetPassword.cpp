@@ -58,7 +58,7 @@ Result<String, OSError> get_password(const StringView& prompt)
     if (line_length < 0)
         return OSError(saved_errno);
 
-    ASSERT(line_length != 0);
+    VERIFY(line_length != 0);
 
     // Remove trailing '\n' read by getline().
     password[line_length - 1] = '\0';

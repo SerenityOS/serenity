@@ -48,7 +48,7 @@ MemoryStatsWidget* MemoryStatsWidget::the()
 MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     : m_graph(graph)
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
 
     set_fixed_height(110);
@@ -98,11 +98,11 @@ void MemoryStatsWidget::refresh()
 {
     auto proc_memstat = Core::File::construct("/proc/memstat");
     if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto file_contents = proc_memstat->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    ASSERT(json_result.has_value());
+    VERIFY(json_result.has_value());
     auto json = json_result.value().as_object();
 
     [[maybe_unused]] unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();

@@ -134,13 +134,13 @@ void FIFO::detach(Direction direction)
 #if FIFO_DEBUG
         klog() << "close reader (" << m_readers << " - 1)";
 #endif
-        ASSERT(m_readers);
+        VERIFY(m_readers);
         --m_readers;
     } else if (direction == Direction::Writer) {
 #if FIFO_DEBUG
         klog() << "close writer (" << m_writers << " - 1)";
 #endif
-        ASSERT(m_writers);
+        VERIFY(m_writers);
         --m_writers;
     }
 

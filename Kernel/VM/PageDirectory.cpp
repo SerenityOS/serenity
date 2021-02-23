@@ -40,7 +40,7 @@ static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;
 }
 
@@ -125,10 +125,10 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
         //    when writing out the PDPT pointer to CR3.
         // The reason we're not checking the page directory's physical address directly is because
         // we're checking for sign extension when putting it into a PDPTE. See issue #4584.
-        ASSERT((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
 
         MM.unquickmap_page();
     }

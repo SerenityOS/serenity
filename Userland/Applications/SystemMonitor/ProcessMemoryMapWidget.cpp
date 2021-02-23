@@ -55,7 +55,7 @@ public:
             else if (c == 'P') // Physical (a resident page)
                 color = Color::Black;
             else
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
             painter.draw_line({ x, rect.top() }, { x, rect.bottom() }, color);
         }

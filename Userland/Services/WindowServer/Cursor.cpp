@@ -125,7 +125,7 @@ Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const CursorParams& cursor_p
     , m_rect(m_bitmap->rect())
 {
     if (m_params.frames() > 1) {
-        ASSERT(m_rect.width() % m_params.frames() == 0);
+        VERIFY(m_rect.width() % m_params.frames() == 0);
         m_rect.set_width(m_rect.width() / m_params.frames());
     }
 }
@@ -182,7 +182,7 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
     case Gfx::StandardCursor::Wait:
         return WindowManager::the().wait_cursor();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

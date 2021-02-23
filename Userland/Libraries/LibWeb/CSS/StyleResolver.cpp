@@ -188,7 +188,7 @@ static bool contains(Edge a, Edge b)
 
 static inline void set_property_border_width(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_length());
+    VERIFY(value.is_length());
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopWidth, value);
     if (contains(Edge::Right, edge))
@@ -201,7 +201,7 @@ static inline void set_property_border_width(StyleProperties& style, const Style
 
 static inline void set_property_border_color(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_color());
+    VERIFY(value.is_color());
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopColor, value);
     if (contains(Edge::Right, edge))
@@ -214,7 +214,7 @@ static inline void set_property_border_color(StyleProperties& style, const Style
 
 static inline void set_property_border_style(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_string());
+    VERIFY(value.is_string());
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopStyle, value);
     if (contains(Edge::Right, edge))

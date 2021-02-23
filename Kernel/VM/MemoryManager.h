@@ -48,7 +48,7 @@ constexpr FlatPtr page_round_up(FlatPtr x)
 {
     FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
     // Rounding up >0xffff0000 wraps back to 0. That's never what we want.
-    ASSERT(x == 0 || rounded != 0);
+    VERIFY(x == 0 || rounded != 0);
     return rounded;
 }
 

@@ -56,7 +56,7 @@ Vector<StringView> CellType::names()
 CellType::CellType(const StringView& name)
     : m_name(name)
 {
-    ASSERT(!s_cell_types.contains(name));
+    VERIFY(!s_cell_types.contains(name));
     s_cell_types.set(name, this);
 }
 

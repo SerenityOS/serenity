@@ -56,7 +56,7 @@ public:
     {
         // To keep the alignment of the memory passed in, place the bitmap
         // at the end of the memory block.
-        ASSERT(m_total_chunks * CHUNK_SIZE + (m_total_chunks + 7) / 8 <= memory_size);
+        VERIFY(m_total_chunks * CHUNK_SIZE + (m_total_chunks + 7) / 8 <= memory_size);
     }
     ~Heap()
     {
@@ -108,13 +108,13 @@ public:
         if (!ptr)
             return;
         auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
-        ASSERT((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
-        ASSERT((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
+        VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
+        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
         FlatPtr start = ((FlatPtr)a - (FlatPtr)m_chunks) / CHUNK_SIZE;
 
         m_bitmap.set_range(start, a->allocation_size_in_chunks, false);
 
-        ASSERT(m_allocated_chunks >= a->allocation_size_in_chunks);
+        VERIFY(m_allocated_chunks >= a->allocation_size_in_chunks);
         m_allocated_chunks -= a->allocation_size_in_chunks;
 
         if constexpr (HEAP_SCRUB_BYTE_FREE != 0) {
@@ -129,8 +129,8 @@ public:
             return h.allocate(new_size);
 
         auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
-        ASSERT((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
-        ASSERT((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
+        VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
+        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
 
         size_t old_size = a->allocation_size_in_chunks * CHUNK_SIZE;
 
@@ -319,7 +319,7 @@ public:
                 return;
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void* reallocate(void* ptr, size_t new_size)
@@ -330,12 +330,12 @@ public:
             if (subheap->heap.contains(ptr))
                 return subheap->heap.reallocate(ptr, new_size, *this);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     HeapType& add_subheap(void* memory, size_t memory_size)
     {
-        ASSERT(memory_size > sizeof(SubHeap));
+        VERIFY(memory_size > sizeof(SubHeap));
 
         // Place the SubHeap structure at the beginning of the new memory block
         memory_size -= sizeof(SubHeap);

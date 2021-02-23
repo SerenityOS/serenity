@@ -77,7 +77,7 @@ int main(int, char**)
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));
-    ASSERT(theme.is_valid());
+    VERIFY(theme.is_valid());
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 
@@ -114,5 +114,5 @@ int main(int, char**)
 
     dbgln("Entering WindowServer main loop");
     loop.exec();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }

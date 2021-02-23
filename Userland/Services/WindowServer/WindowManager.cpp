@@ -58,7 +58,7 @@ static WindowManager* s_the;
 
 WindowManager& WindowManager::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -460,7 +460,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     };
     Gfx::IntRect outer_rect = window.frame().rect();
     if (!outer_rect.contains(position)) {
-        // FIXME: This used to be an ASSERT but crashing WindowServer over this seems silly.
+        // FIXME: This used to be an VERIFY but crashing WindowServer over this seems silly.
         dbgln("FIXME: !outer_rect.contains(position): outer_rect={}, position={}", outer_rect, position);
     }
     int window_relative_x = position.x() - outer_rect.x();
@@ -469,7 +469,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
     m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
     if (m_resize_direction == ResizeDirection::None) {
-        ASSERT(!m_resize_window);
+        VERIFY(!m_resize_window);
         return;
     }
 
@@ -644,7 +644,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         change_h = diff_y;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto new_rect = m_resize_window_original_rect;
@@ -692,7 +692,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         new_rect.set_right_without_resize(m_resize_window_original_rect.right());
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (new_rect.contains(event.position()))
@@ -772,7 +772,7 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) con
     case MouseButton::Forward:
         return m_forward;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -790,7 +790,7 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
     case MouseButton::Forward:
         return m_forward;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -816,7 +816,7 @@ void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& eve
     // So, in order to be able to detect a double click when a menu is being
     // opened by the MouseDown event, we need to consider the MouseDown event
     // as a potential double-click trigger
-    ASSERT(event.type() == Event::MouseDown);
+    VERIFY(event.type() == Event::MouseDown);
 
     auto& metadata = m_double_click_info.metadata_for_button(event.button());
     if (&window != m_double_click_info.m_clicked_window) {
@@ -835,7 +835,7 @@ void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& eve
 
 bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event) const
 {
-    ASSERT(event.type() == Event::MouseUp);
+    VERIFY(event.type() == Event::MouseUp);
 
     if (&window != m_double_click_info.m_clicked_window)
         return false;
@@ -850,7 +850,7 @@ bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event)
 void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& event)
 {
     // We only care about button presses (because otherwise it's not a doubleclick, duh!)
-    ASSERT(event.type() == Event::MouseUp);
+    VERIFY(event.type() == Event::MouseUp);
 
     if (&window != m_double_click_info.m_clicked_window) {
         // we either haven't clicked anywhere, or we haven't clicked on this
@@ -983,7 +983,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 return;
             }
 
-            ASSERT(window.hit_test(event.position()));
+            VERIFY(window.hit_test(event.position()));
             if (event.type() == Event::MouseDown) {
                 // We're clicking on something that's blocked by a modal window.
                 // Flash the modal window to let the user know about it.
@@ -1131,7 +1131,7 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
     case WindowType::Notification:
         return Screen::the().rect();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1310,8 +1310,8 @@ void WindowManager::set_active_window(Window* window, bool make_input)
 {
     if (window) {
         if (auto* modal_window = window->blocking_modal_window()) {
-            ASSERT(modal_window->is_modal());
-            ASSERT(modal_window != window);
+            VERIFY(modal_window->is_modal());
+            VERIFY(modal_window != window);
             window = modal_window;
             make_input = true;
         }
@@ -1473,7 +1473,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
 
 void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, const Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
 {
-    ASSERT(!m_dnd_client);
+    VERIFY(!m_dnd_client);
     m_dnd_client = client;
     m_dnd_text = text;
     m_dnd_bitmap = bitmap;
@@ -1484,7 +1484,7 @@ void WindowManager::start_dnd_drag(ClientConnection& client, const String& text,
 
 void WindowManager::end_dnd_drag()
 {
-    ASSERT(m_dnd_client);
+    VERIFY(m_dnd_client);
     Compositor::the().invalidate_cursor();
     m_dnd_client = nullptr;
     m_dnd_text = {};

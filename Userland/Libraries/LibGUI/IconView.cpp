@@ -85,7 +85,7 @@ void IconView::reinit_item_cache() const
     for (size_t i = new_item_count; i < m_item_data_cache.size(); i++) {
         auto& item_data = m_item_data_cache[i];
         if (item_data.selected) {
-            ASSERT(m_selected_count_cache > 0);
+            VERIFY(m_selected_count_cache > 0);
             m_selected_count_cache--;
         }
     }
@@ -212,7 +212,7 @@ Gfx::IntRect IconView::item_rect(int item_index) const
 
 ModelIndex IconView::index_at_event_position(const Gfx::IntPoint& position) const
 {
-    ASSERT(model());
+    VERIFY(model());
     auto adjusted_position = to_content_position(position);
     if (auto item_data = item_data_from_content_position(adjusted_position)) {
         if (item_data->is_containing(adjusted_position))
@@ -603,7 +603,7 @@ void IconView::do_clear_selection()
         m_selected_count_cache--;
     }
     m_first_selected_hint = 0;
-    ASSERT(m_selected_count_cache == 0);
+    VERIFY(m_selected_count_cache == 0);
 }
 
 void IconView::clear_selection()
@@ -661,7 +661,7 @@ void IconView::remove_selection(ItemData& item_data)
 
     TemporaryChange change(m_changing_selection, true);
     item_data.selected = false;
-    ASSERT(m_selected_count_cache > 0);
+    VERIFY(m_selected_count_cache > 0);
     m_selected_count_cache--;
     int item_index = &item_data - &m_item_data_cache[0];
     if (m_first_selected_hint == item_index) {
@@ -770,7 +770,7 @@ void IconView::set_flow_direction(FlowDirection flow_direction)
 template<typename Function>
 inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::IntRect& rect, Function f) const
 {
-    ASSERT(model());
+    VERIFY(model());
     if (rect.is_empty())
         return IterationDecision::Continue;
     int begin_row, begin_column;

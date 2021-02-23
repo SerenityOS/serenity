@@ -53,7 +53,7 @@ Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
         ++index;
         return IterationDecision::Continue;
     });
-    ASSERT(m_notes_segment_index != -1);
+    VERIFY(m_notes_segment_index != -1);
 }
 
 Reader::~Reader()
@@ -68,7 +68,7 @@ Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
 
 ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
 {
-    ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
+    VERIFY(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Metadata
@@ -83,7 +83,7 @@ const ELF::Core::NotesEntry* Reader::NotesEntryIterator::current() const
 
 void Reader::NotesEntryIterator::next()
 {
-    ASSERT(!at_end());
+    VERIFY(!at_end());
     switch (type()) {
     case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
@@ -106,7 +106,7 @@ void Reader::NotesEntryIterator::next()
         break;
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

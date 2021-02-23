@@ -44,11 +44,11 @@ void EBRPartitionTable::search_extended_partition(const StorageDevice& device, M
     if (limit == 0)
         return;
     // EBRs should not carry more than 2 partitions (because they need to form a linked list)
-    ASSERT(checked_ebr.partitions_count() <= 2);
+    VERIFY(checked_ebr.partitions_count() <= 2);
     auto checked_logical_partition = checked_ebr.partition(0);
 
     // If we are pointed to an invalid logical partition, something is seriously wrong.
-    ASSERT(checked_logical_partition.has_value());
+    VERIFY(checked_logical_partition.has_value());
     m_partitions.append(checked_logical_partition.value().offset(current_block_offset));
     if (!checked_ebr.contains_ebr())
         return;
@@ -66,7 +66,7 @@ EBRPartitionTable::EBRPartitionTable(const StorageDevice& device)
         return;
     m_valid = true;
 
-    ASSERT(partitions_count() == 0);
+    VERIFY(partitions_count() == 0);
 
     auto& header = this->header();
     for (size_t index = 0; index < 4; index++) {

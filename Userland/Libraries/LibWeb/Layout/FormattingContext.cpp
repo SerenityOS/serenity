@@ -99,7 +99,7 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
         context.run(box, layout_mode);
     } else {
         // FIXME: This needs refactoring!
-        ASSERT(is_block_formatting_context());
+        VERIFY(is_block_formatting_context());
         run(box, layout_mode);
     }
 }

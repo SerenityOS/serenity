@@ -333,7 +333,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
         set_active_widget(m_icon_view);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void DirectoryView::add_path_to_history(const StringView& path)
@@ -479,7 +479,7 @@ Vector<String> DirectoryView::selected_file_paths() const
 void DirectoryView::do_delete(bool should_confirm)
 {
     auto paths = selected_file_paths();
-    ASSERT(!paths.is_empty());
+    VERIFY(!paths.is_empty());
     FileUtils::delete_paths(paths, should_confirm, window());
 }
 
@@ -531,7 +531,7 @@ void DirectoryView::setup_actions()
                 return;
             }
             rc = close(fd);
-            ASSERT(rc >= 0);
+            VERIFY(rc >= 0);
         }
     });
 

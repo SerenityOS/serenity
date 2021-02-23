@@ -99,7 +99,7 @@ static void fill_mounts(Vector<MountInfo>& output)
 
     auto content = df->read_all();
     auto json = JsonValue::from_string(content);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     json.value().as_array().for_each([&output](auto& value) {
         auto filesystem_object = value.as_object();
@@ -150,7 +150,7 @@ struct QueueEntry {
 
 static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, HashMap<int, int>& error_accumulator)
 {
-    ASSERT(!root.m_name.ends_with("/"));
+    VERIFY(!root.m_name.ends_with("/"));
 
     Queue<QueueEntry> queue;
     queue.enqueue(QueueEntry(root.m_name, &root));
@@ -247,7 +247,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
 
 static bool is_removable(const String& absolute_path)
 {
-    ASSERT(!absolute_path.is_empty());
+    VERIFY(!absolute_path.is_empty());
     int access_result = access(absolute_path.characters(), W_OK);
     if (access_result != 0 && errno != EACCES)
         perror("access");
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
 
     // Configure event handlers.
     breadcrumbbar.on_segment_click = [&](size_t index) {
-        ASSERT(index < treemapwidget.path_size());
+        VERIFY(index < treemapwidget.path_size());
         treemapwidget.set_viewpoint(index);
     };
     treemapwidget.on_path_change = [&]() {

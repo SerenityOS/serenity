@@ -48,7 +48,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
         region->m_name = name;
     }
     region->m_data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
-    ASSERT(region->m_data != MAP_FAILED);
+    VERIFY(region->m_data != MAP_FAILED);
     return region;
 }
 
@@ -82,7 +82,7 @@ ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
             tracer->audit_read(*this, base() + offset, 1);
     }
 
-    ASSERT(offset < size());
+    VERIFY(offset < size());
     return { *reinterpret_cast<const u8*>(m_data + offset), *reinterpret_cast<const u8*>(m_shadow_data + offset) };
 }
 
@@ -99,7 +99,7 @@ ValueWithShadow<u16> MmapRegion::read16(u32 offset)
             tracer->audit_read(*this, base() + offset, 2);
     }
 
-    ASSERT(offset + 1 < size());
+    VERIFY(offset + 1 < size());
     return { *reinterpret_cast<const u16*>(m_data + offset), *reinterpret_cast<const u16*>(m_shadow_data + offset) };
 }
 
@@ -116,7 +116,7 @@ ValueWithShadow<u32> MmapRegion::read32(u32 offset)
             tracer->audit_read(*this, base() + offset, 4);
     }
 
-    ASSERT(offset + 3 < size());
+    VERIFY(offset + 3 < size());
     return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
 }
 
@@ -133,7 +133,7 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
             tracer->audit_read(*this, base() + offset, 8);
     }
 
-    ASSERT(offset + 7 < size());
+    VERIFY(offset + 7 < size());
     return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
 }
 
@@ -150,7 +150,7 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
             tracer->audit_write(*this, base() + offset, 1);
     }
 
-    ASSERT(offset < size());
+    VERIFY(offset < size());
     *reinterpret_cast<u8*>(m_data + offset) = value.value();
     *reinterpret_cast<u8*>(m_shadow_data + offset) = value.shadow();
 }
@@ -168,7 +168,7 @@ void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
             tracer->audit_write(*this, base() + offset, 2);
     }
 
-    ASSERT(offset + 1 < size());
+    VERIFY(offset + 1 < size());
     *reinterpret_cast<u16*>(m_data + offset) = value.value();
     *reinterpret_cast<u16*>(m_shadow_data + offset) = value.shadow();
 }
@@ -186,8 +186,8 @@ void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
             tracer->audit_write(*this, base() + offset, 4);
     }
 
-    ASSERT(offset + 3 < size());
-    ASSERT(m_data != m_shadow_data);
+    VERIFY(offset + 3 < size());
+    VERIFY(m_data != m_shadow_data);
     *reinterpret_cast<u32*>(m_data + offset) = value.value();
     *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
 }
@@ -205,8 +205,8 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
             tracer->audit_write(*this, base() + offset, 8);
     }
 
-    ASSERT(offset + 7 < size());
-    ASSERT(m_data != m_shadow_data);
+    VERIFY(offset + 7 < size());
+    VERIFY(m_data != m_shadow_data);
     *reinterpret_cast<u64*>(m_data + offset) = value.value();
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }

@@ -125,7 +125,7 @@ NonnullOwnPtr<Command> Endpoint::read_command()
     }
 
     dbgln("command line: {}", line);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 };

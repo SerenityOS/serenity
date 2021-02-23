@@ -127,56 +127,56 @@ public:
 
     i32 as_i32() const
     {
-        ASSERT(is_i32());
+        VERIFY(is_i32());
         return m_value.as_i32;
     }
 
     u32 as_u32() const
     {
-        ASSERT(is_u32());
+        VERIFY(is_u32());
         return m_value.as_u32;
     }
 
     i64 as_i64() const
     {
-        ASSERT(is_i64());
+        VERIFY(is_i64());
         return m_value.as_i64;
     }
 
     u64 as_u64() const
     {
-        ASSERT(is_u64());
+        VERIFY(is_u64());
         return m_value.as_u64;
     }
 
     int as_bool() const
     {
-        ASSERT(is_bool());
+        VERIFY(is_bool());
         return m_value.as_bool;
     }
 
     String as_string() const
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return *m_value.as_string;
     }
 
     const JsonObject& as_object() const
     {
-        ASSERT(is_object());
+        VERIFY(is_object());
         return *m_value.as_object;
     }
 
     const JsonArray& as_array() const
     {
-        ASSERT(is_array());
+        VERIFY(is_array());
         return *m_value.as_array;
     }
 
 #if !defined(KERNEL)
     double as_double() const
     {
-        ASSERT(is_double());
+        VERIFY(is_double());
         return m_value.as_double;
     }
 #endif

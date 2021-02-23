@@ -97,7 +97,7 @@ void KernelRng::wait_for_entropy()
 
 void KernelRng::wake_if_ready()
 {
-    ASSERT(get_lock().is_locked());
+    VERIFY(get_lock().is_locked());
     if (resource().is_ready()) {
         m_seed_queue.wake_all();
     }
@@ -167,7 +167,7 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
     // NOTE: The only case where this function should ever return false and
     // not actually return random data is if fallback_to_fast == false and
     // allow_wait == false and interrupts are enabled!
-    ASSERT(result || !fallback_to_fast);
+    VERIFY(result || !fallback_to_fast);
     return result;
 }
 
@@ -176,7 +176,7 @@ void get_fast_random_bytes(u8* buffer, size_t buffer_size)
     // Try to get good randomness, but don't block if we can't right now
     // and allow falling back to fast randomness
     auto result = get_good_random_bytes(buffer, buffer_size, false, true);
-    ASSERT(result);
+    VERIFY(result);
 }
 
 }

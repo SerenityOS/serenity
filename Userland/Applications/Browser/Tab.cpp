@@ -318,7 +318,7 @@ Tab::Tab(Type type)
     auto view_source_action = GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
-                ASSERT(m_page_view->document());
+                VERIFY(m_page_view->document());
                 auto url = m_page_view->document()->url().to_string();
                 auto source = m_page_view->document()->source();
                 view_source(url, source);

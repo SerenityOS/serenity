@@ -208,7 +208,7 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, timeval& p
     packet_timestamp = packet_with_timestamp.timestamp;
     auto packet = move(packet_with_timestamp.packet);
     size_t packet_size = packet.size();
-    ASSERT(packet_size <= buffer_size);
+    VERIFY(packet_size <= buffer_size);
     memcpy(buffer, packet.data(), packet_size);
     if (m_unused_packet_buffers_count < 100) {
         m_unused_packet_buffers.append(packet);

@@ -64,13 +64,13 @@ public:
 
     const StringView& u8view() const
     {
-        ASSERT(m_u8view.has_value());
+        VERIFY(m_u8view.has_value());
         return m_u8view.value();
     };
 
     const Utf32View& u32view() const
     {
-        ASSERT(m_u32view.has_value());
+        VERIFY(m_u32view.has_value());
         return m_u32view.value();
     };
 

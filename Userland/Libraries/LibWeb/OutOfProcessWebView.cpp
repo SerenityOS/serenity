@@ -55,7 +55,7 @@ OutOfProcessWebView::~OutOfProcessWebView()
 void OutOfProcessWebView::handle_web_content_process_crash()
 {
     create_client();
-    ASSERT(m_client_state.client);
+    VERIFY(m_client_state.client);
 
     // Don't keep a stale backup bitmap around.
     m_backup_bitmap = nullptr;
@@ -337,7 +337,7 @@ void OutOfProcessWebView::request_repaint()
 
 WebContentClient& OutOfProcessWebView::client()
 {
-    ASSERT(m_client_state.client);
+    VERIFY(m_client_state.client);
     return *m_client_state.client;
 }
 

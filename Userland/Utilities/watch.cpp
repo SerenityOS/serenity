@@ -98,7 +98,7 @@ static int run_command(const Vector<const char*>& command)
     do {
         exited_pid = waitpid(child_pid, &status, 0);
     } while (exited_pid < 0 && errno == EINTR);
-    ASSERT(exited_pid == child_pid);
+    VERIFY(exited_pid == child_pid);
     child_pid = -1;
     if (exited_pid < 0) {
         perror("waitpid");

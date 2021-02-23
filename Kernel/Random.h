@@ -64,10 +64,10 @@ public:
             this->reseed();
         }
 
-        ASSERT(is_seeded());
+        VERIFY(is_seeded());
 
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
-        ASSERT(n < (1 << 20));
+        VERIFY(n < (1 << 20));
 
         typename CipherType::CTRMode cipher(m_key, KeySize, Crypto::Cipher::Intent::Encryption);
 
@@ -98,7 +98,7 @@ public:
 
     [[nodiscard]] bool is_ready() const
     {
-        ASSERT(m_lock.is_locked());
+        VERIFY(m_lock.is_locked());
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
 

@@ -61,7 +61,7 @@ String TLSv12::read_line(size_t max_size)
 
     auto* start = m_context.application_buffer.data();
     auto* newline = (u8*)memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size());
-    ASSERT(newline);
+    VERIFY(newline);
 
     size_t offset = newline - start;
 
@@ -106,7 +106,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
     if (Core::Socket::is_connected()) {
         if (is_established()) {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         } else {
             Core::Socket::close(); // reuse?
         }

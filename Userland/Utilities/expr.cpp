@@ -112,7 +112,7 @@ private:
                 return converted.value();
             fail("Not an integer: '{}'", as_string);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     virtual String string() const override
     {
@@ -122,7 +122,7 @@ private:
         case Type::String:
             return as_string;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     virtual Type type() const override { return m_type; }
 
@@ -176,7 +176,7 @@ private:
                 return m_left->integer();
             return m_right->integer();
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     virtual String string() const override
@@ -191,7 +191,7 @@ private:
                 return m_left->string();
             return m_right->string();
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     virtual Type type() const override
     {
@@ -205,7 +205,7 @@ private:
                 return m_left->type();
             return m_right->type();
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     BooleanOperator m_op { BooleanOperator::And };
@@ -264,7 +264,7 @@ private:
         case ComparisonOperation::Greater:
             return left != right && !(left < right);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     virtual bool truth() const override
@@ -275,7 +275,7 @@ private:
         case Type::String:
             return compare(m_left->string(), m_right->string());
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     virtual int integer() const override { return truth(); }
     virtual String string() const override { return truth() ? "1" : "0"; }
@@ -346,7 +346,7 @@ private:
         case ArithmeticOperation::Remainder:
             return left % right;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     virtual String string() const override
     {
@@ -399,7 +399,7 @@ private:
         if (m_op == StringOperation::Length)
             return m_str->string().length();
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     static auto safe_substring(const String& str, int start, int length)
     {

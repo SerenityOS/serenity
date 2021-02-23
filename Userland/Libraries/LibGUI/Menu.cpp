@@ -113,7 +113,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
 #if MENU_DEBUG
     dbgln("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
 #endif
-    ASSERT(m_menu_id > 0);
+    VERIFY(m_menu_id > 0);
     for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = m_items[i];
         item.set_menu_id({}, m_menu_id);

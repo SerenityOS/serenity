@@ -277,7 +277,7 @@ String Frame::selected_text() const
     }
 
     // End node
-    ASSERT(layout_node == selection.end().layout_node);
+    VERIFY(layout_node == selection.end().layout_node);
     if (is<Layout::TextNode>(*layout_node)) {
         auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node));
@@ -289,13 +289,13 @@ String Frame::selected_text() const
 void Frame::register_viewport_client(ViewportClient& client)
 {
     auto result = m_viewport_clients.set(&client);
-    ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
 void Frame::unregister_viewport_client(ViewportClient& client)
 {
     bool was_removed = m_viewport_clients.remove(&client);
-    ASSERT(was_removed);
+    VERIFY(was_removed);
 }
 
 }

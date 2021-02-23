@@ -186,7 +186,7 @@ private:
             if (m_audio_volume >= pair.volume_threshold)
                 return *pair.bitmap;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void reposition_slider_window() { m_slider_window->set_rect(window()->rect_in_menubar().x() - 20, 19, 50, 100); }

@@ -58,8 +58,8 @@ int main(int argc, char** argv)
         return 1;
 
     auto json = JsonValue::from_string(file->read_all());
-    ASSERT(json.has_value());
-    ASSERT(json.value().is_array());
+    VERIFY(json.has_value());
+    VERIFY(json.value().is_array());
 
     StringBuilder builder;
     SourceGenerator generator { builder };

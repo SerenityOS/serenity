@@ -78,7 +78,7 @@ public:
     {
         if (auto it = m_hash.find(block_index); it != m_hash.end()) {
             auto& entry = const_cast<CacheEntry&>(*it->value);
-            ASSERT(entry.block_index == block_index);
+            VERIFY(entry.block_index == block_index);
             return entry;
         }
 
@@ -90,7 +90,7 @@ public:
             return get(block_index);
         }
 
-        ASSERT(m_clean_list.last());
+        VERIFY(m_clean_list.last());
         auto& new_entry = *m_clean_list.last();
         m_clean_list.prepend(new_entry);
 
@@ -127,7 +127,7 @@ private:
 BlockBasedFS::BlockBasedFS(FileDescription& file_description)
     : FileBackedFS(file_description)
 {
-    ASSERT(file_description.file().is_seekable());
+    VERIFY(file_description.file().is_seekable());
 }
 
 BlockBasedFS::~BlockBasedFS()
@@ -136,8 +136,8 @@ BlockBasedFS::~BlockBasedFS()
 
 KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
-    ASSERT(m_logical_block_size);
-    ASSERT(offset + count <= block_size());
+    VERIFY(m_logical_block_size);
+    VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
 
     if (!allow_cache) {
@@ -147,7 +147,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
         auto nwritten = file_description().write(data, count);
         if (nwritten.is_error())
             return nwritten.error();
-        ASSERT(nwritten.value() == count);
+        VERIFY(nwritten.value() == count);
         return KSuccess;
     }
 
@@ -171,8 +171,8 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
     u32 base_offset = index.value() * m_logical_block_size;
     file_description().seek(base_offset, SEEK_SET);
     auto nread = file_description().read(buffer, m_logical_block_size);
-    ASSERT(!nread.is_error());
-    ASSERT(nread.value() == m_logical_block_size);
+    VERIFY(!nread.is_error());
+    VERIFY(nread.value() == m_logical_block_size);
     return true;
 }
 bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
@@ -180,8 +180,8 @@ bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
     size_t base_offset = index.value() * m_logical_block_size;
     file_description().seek(base_offset, SEEK_SET);
     auto nwritten = file_description().write(buffer, m_logical_block_size);
-    ASSERT(!nwritten.is_error());
-    ASSERT(nwritten.value() == m_logical_block_size);
+    VERIFY(!nwritten.is_error());
+    VERIFY(nwritten.value() == m_logical_block_size);
     return true;
 }
 
@@ -208,7 +208,7 @@ bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOr
 
 KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
-    ASSERT(m_logical_block_size);
+    VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
         auto result = write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache);
@@ -220,8 +220,8 @@ KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserO
 
 KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
-    ASSERT(m_logical_block_size);
-    ASSERT(offset + count <= block_size());
+    VERIFY(m_logical_block_size);
+    VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
 
     if (!allow_cache) {
@@ -231,7 +231,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
         auto nread = file_description().read(*buffer, count);
         if (nread.is_error())
             return nread.error();
-        ASSERT(nread.value() == count);
+        VERIFY(nread.value() == count);
         return KSuccess;
     }
 
@@ -243,7 +243,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
         auto nread = file_description().read(entry_data_buffer, block_size());
         if (nread.is_error())
             return nread.error();
-        ASSERT(nread.value() == block_size());
+        VERIFY(nread.value() == block_size());
         entry.has_data = true;
     }
     if (buffer && !buffer->write(entry.data + offset, count))
@@ -253,7 +253,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 
 KResult BlockBasedFS::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
-    ASSERT(m_logical_block_size);
+    VERIFY(m_logical_block_size);
     if (!count)
         return EINVAL;
     if (count == 1)

@@ -136,7 +136,7 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
         return entry.index <= struct_.index && !entry.shadow_adjusted_target.is_null();
     });
 
-    ASSERT(last_valid_shadow_adjusted_target.has_value());
+    VERIFY(last_valid_shadow_adjusted_target.has_value());
 
     event.set_target(last_valid_shadow_adjusted_target.value().shadow_adjusted_target);
     event.set_related_target(struct_.related_target);
@@ -249,7 +249,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
             return !entry.shadow_adjusted_target.is_null();
         });
 
-        ASSERT(clear_targets_struct.has_value());
+        VERIFY(clear_targets_struct.has_value());
 
         if (is<Node>(clear_targets_struct.value().shadow_adjusted_target.ptr())) {
             auto& shadow_adjusted_target_node = downcast<Node>(*clear_targets_struct.value().shadow_adjusted_target);

@@ -82,7 +82,7 @@ Application* Application::the()
 
 Application::Application(int argc, char** argv)
 {
-    ASSERT(!*s_the);
+    VERIFY(!*s_the);
     *s_the = *this;
     m_event_loop = make<Core::EventLoop>();
     WindowServerConnection::the();
@@ -212,7 +212,7 @@ Gfx::Palette Application::palette() const
 
 void Application::tooltip_show_timer_did_fire()
 {
-    ASSERT(m_tooltip_window);
+    VERIFY(m_tooltip_window);
     Gfx::IntRect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;

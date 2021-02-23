@@ -105,7 +105,7 @@ ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, 
     auto& mallocation = malloc_data->mallocation_for_address(address);
     if (!mallocation.used)
         return nullptr;
-    ASSERT(mallocation.contains(address));
+    VERIFY(mallocation.contains(address));
     return &mallocation;
 }
 

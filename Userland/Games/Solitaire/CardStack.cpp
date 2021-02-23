@@ -39,7 +39,7 @@ CardStack::CardStack(const Gfx::IntPoint& position, Type type)
     , m_rules(rules_for_type(type))
     , m_base(m_position, { Card::width, Card::height })
 {
-    ASSERT(type != Invalid);
+    VERIFY(type != Invalid);
     calculate_bounding_box();
 }
 
@@ -77,7 +77,7 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
         painter.draw_rect(m_base, background_color.darkened(0.5));
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (is_empty())
@@ -99,7 +99,7 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 
 void CardStack::rebound_cards()
 {
-    ASSERT(m_stack_positions.size() == m_stack.size());
+    VERIFY(m_stack_positions.size() == m_stack.size());
 
     size_t card_index = 0;
     for (auto& card : m_stack)
@@ -108,7 +108,7 @@ void CardStack::rebound_cards()
 
 void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed)
 {
-    ASSERT(grabbed.is_empty());
+    VERIFY(grabbed.is_empty());
 
     if (m_type != Normal) {
         auto& top_card = peek();
@@ -171,7 +171,7 @@ bool CardStack::is_allowed_to_push(const Card& card) const
             return top_card.color() != card.color() && top_card.value() == card.value() + 1;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     return true;

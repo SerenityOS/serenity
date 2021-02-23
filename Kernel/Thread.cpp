@@ -80,7 +80,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     {
         ScopedSpinLock lock(g_tid_map_lock);
         auto result = g_tid_map->set(m_tid, this);
-        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
     }
     if constexpr (THREAD_DEBUG)
         dbgln("Created new thread {}({}:{})", m_process->name(), m_process->pid().value(), m_tid.value());
@@ -141,15 +141,15 @@ Thread::~Thread()
         // block conditions would access m_process, which would be in
         // the middle of being destroyed.
         ScopedSpinLock lock(g_scheduler_lock);
-        ASSERT(!m_process_thread_list_node.is_in_list());
+        VERIFY(!m_process_thread_list_node.is_in_list());
 
         // We shouldn't be queued
-        ASSERT(m_runnable_priority < 0);
+        VERIFY(m_runnable_priority < 0);
     }
     {
         ScopedSpinLock lock(g_tid_map_lock);
         auto result = g_tid_map->remove(m_tid);
-        ASSERT(result);
+        VERIFY(result);
     }
 }
 
@@ -175,12 +175,12 @@ void Thread::unblock_from_blocker(Blocker& blocker)
 
 void Thread::unblock(u8 signal)
 {
-    ASSERT(!Processor::current().in_irq());
-    ASSERT(g_scheduler_lock.own_lock());
-    ASSERT(m_block_lock.own_lock());
+    VERIFY(!Processor::current().in_irq());
+    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
         return;
-    ASSERT(m_blocker);
+    VERIFY(m_blocker);
     if (signal != 0) {
         if (is_handling_page_fault()) {
             // Don't let signals unblock threads that are blocked inside a page fault handler.
@@ -197,7 +197,7 @@ void Thread::unblock(u8 signal)
         set_state(Thread::Running);
         return;
     }
-    ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
+    VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
     set_state(Thread::Runnable);
 }
 
@@ -222,7 +222,7 @@ void Thread::set_should_die()
         // If we were stopped, we need to briefly resume so that
         // the kernel stacks can clean up. We won't ever return back
         // to user mode, though
-        ASSERT(!process().is_stopped());
+        VERIFY(!process().is_stopped());
         resume_from_stopped();
     }
     if (is_blocked()) {
@@ -237,7 +237,7 @@ void Thread::set_should_die()
 
 void Thread::die_if_needed()
 {
-    ASSERT(Thread::current() == this);
+    VERIFY(Thread::current() == this);
 
     if (!m_should_die)
         return;
@@ -260,12 +260,12 @@ void Thread::die_if_needed()
     dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current().in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Thread::exit(void* exit_value)
 {
-    ASSERT(Thread::current() == this);
+    VERIFY(Thread::current() == this);
     m_join_condition.thread_did_exit(exit_value);
     set_should_die();
     u32 unlock_count;
@@ -275,7 +275,7 @@ void Thread::exit(void* exit_value)
 
 void Thread::yield_while_not_holding_big_lock()
 {
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
     u32 prev_flags;
     u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
     Scheduler::yield();
@@ -285,7 +285,7 @@ void Thread::yield_while_not_holding_big_lock()
 
 void Thread::yield_without_holding_big_lock()
 {
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
     // NOTE: Even though we call Scheduler::yield here, unless we happen
@@ -297,7 +297,7 @@ void Thread::yield_without_holding_big_lock()
 
 void Thread::donate_without_holding_big_lock(RefPtr<Thread>& thread, const char* reason)
 {
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
     // NOTE: Even though we call Scheduler::yield here, unless we happen
@@ -334,13 +334,13 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 
 auto Thread::sleep(clockid_t clock_id, const timespec& duration, timespec* remaining_time) -> BlockResult
 {
-    ASSERT(state() == Thread::Running);
+    VERIFY(state() == Thread::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
 auto Thread::sleep_until(clockid_t clock_id, const timespec& deadline) -> BlockResult
 {
-    ASSERT(state() == Thread::Running);
+    VERIFY(state() == Thread::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
@@ -361,28 +361,28 @@ const char* Thread::state_string() const
         return "Stopped";
     case Thread::Blocked: {
         ScopedSpinLock block_lock(m_block_lock);
-        ASSERT(m_blocker != nullptr);
+        VERIFY(m_blocker != nullptr);
         return m_blocker->state_string();
     }
     }
     klog() << "Thread::state_string(): Invalid state: " << state();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return nullptr;
 }
 
 void Thread::finalize()
 {
-    ASSERT(Thread::current() == g_finalizer);
-    ASSERT(Thread::current() != this);
+    VERIFY(Thread::current() == g_finalizer);
+    VERIFY(Thread::current() != this);
 
 #if LOCK_DEBUG
-    ASSERT(!m_lock.own_lock());
+    VERIFY(!m_lock.own_lock());
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list)
             dbgln(" - {} @ {} locked at {}:{} count: {}", info.lock->name(), info.lock, info.file, info.line, info.count);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #endif
 
@@ -410,7 +410,7 @@ void Thread::drop_thread_count(bool initializing_first_thread)
 
 void Thread::finalize_dying_threads()
 {
-    ASSERT(Thread::current() == g_finalizer);
+    VERIFY(Thread::current() == g_finalizer);
     Vector<Thread*, 32> dying_threads;
     {
         ScopedSpinLock lock(g_scheduler_lock);
@@ -473,7 +473,7 @@ u32 Thread::pending_signals() const
 
 u32 Thread::pending_signals_for_state() const
 {
-    ASSERT(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.own_lock());
     constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
     if (is_handling_page_fault())
         return 0;
@@ -482,7 +482,7 @@ u32 Thread::pending_signals_for_state() const
 
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
-    ASSERT(signal < 32);
+    VERIFY(signal < 32);
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
@@ -558,7 +558,7 @@ void Thread::clear_signals()
 // the appropriate signal handler.
 void Thread::send_urgent_signal_to_self(u8 signal)
 {
-    ASSERT(Thread::current() == this);
+    VERIFY(Thread::current() == this);
     DispatchSignalResult result;
     {
         ScopedSpinLock lock(g_scheduler_lock);
@@ -570,7 +570,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
 
 DispatchSignalResult Thread::dispatch_one_pending_signal()
 {
-    ASSERT(m_lock.own_lock());
+    VERIFY(m_lock.own_lock());
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     if (signal_candidates == 0)
         return DispatchSignalResult::Continue;
@@ -586,7 +586,7 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
 
 DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
 {
-    ASSERT(signal != 0);
+    VERIFY(signal != 0);
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
     ScopedSpinLock lock(m_lock);
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
@@ -605,7 +605,7 @@ enum class DefaultSignalAction {
 
 static DefaultSignalAction default_signal_action(u8 signal)
 {
-    ASSERT(signal && signal < NSIG);
+    VERIFY(signal && signal < NSIG);
 
     switch (signal) {
     case SIGHUP:
@@ -645,12 +645,12 @@ static DefaultSignalAction default_signal_action(u8 signal)
     case SIGTTOU:
         return DefaultSignalAction::Stop;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Thread::should_ignore_signal(u8 signal) const
 {
-    ASSERT(signal < 32);
+    VERIFY(signal < 32);
     auto& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
@@ -661,7 +661,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 
 bool Thread::has_signal_handler(u8 signal) const
 {
-    ASSERT(signal < 32);
+    VERIFY(signal < 32);
     auto& action = m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
@@ -674,9 +674,9 @@ static bool push_value_on_user_stack(u32* stack, u32 data)
 
 void Thread::resume_from_stopped()
 {
-    ASSERT(is_stopped());
-    ASSERT(m_stop_state != State::Invalid);
-    ASSERT(g_scheduler_lock.own_lock());
+    VERIFY(is_stopped());
+    VERIFY(m_stop_state != State::Invalid);
+    VERIFY(g_scheduler_lock.own_lock());
     if (m_stop_state == Blocked) {
         ScopedSpinLock block_lock(m_block_lock);
         if (m_blocker) {
@@ -693,11 +693,11 @@ void Thread::resume_from_stopped()
 
 DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.own_lock());
-    ASSERT(signal > 0 && signal <= 32);
-    ASSERT(process().is_user_process());
-    ASSERT(this == Thread::current());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(g_scheduler_lock.own_lock());
+    VERIFY(signal > 0 && signal <= 32);
+    VERIFY(process().is_user_process());
+    VERIFY(this == Thread::current());
 
 #if SIGNAL_DEBUG
     klog() << "signal: dispatch signal " << signal << " to " << *this << " state: " << state_string();
@@ -711,11 +711,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    ASSERT(previous_mode() == PreviousMode::UserMode);
+    VERIFY(previous_mode() == PreviousMode::UserMode);
 
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
-    ASSERT(!(action.flags & SA_SIGINFO));
+    VERIFY(!(action.flags & SA_SIGINFO));
 
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
@@ -762,11 +762,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             m_process->terminate_due_to_signal(signal);
             return DispatchSignalResult::Terminate;
         case DefaultSignalAction::Ignore:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case DefaultSignalAction::Continue:
             return DispatchSignalResult::Continue;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (handler_vaddr.as_ptr() == SIG_IGN) {
@@ -776,8 +776,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Continue;
     }
 
-    ASSERT(previous_mode() == PreviousMode::UserMode);
-    ASSERT(current_trap());
+    VERIFY(previous_mode() == PreviousMode::UserMode);
+    VERIFY(current_trap());
 
     ProcessPagingScope paging_scope(m_process);
 
@@ -826,7 +826,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, handler_vaddr.get());
         push_value_on_user_stack(stack, 0); //push fake return address
 
-        ASSERT((*stack % 16) == 0);
+        VERIFY((*stack % 16) == 0);
     };
 
     // We now place the thread state on the userspace stack.
@@ -850,7 +850,7 @@ RegisterState& Thread::get_register_dump_from_stack()
     // We should *always* have a trap. If we don't we're probably a kernel
     // thread that hasn't been pre-empted. If we want to support this, we
     // need to capture the registers probably into m_tss and return it
-    ASSERT(trap);
+    VERIFY(trap);
 
     while (trap) {
         if (!trap->next_trap)
@@ -877,7 +877,7 @@ RefPtr<Thread> Thread::clone(Process& process)
 void Thread::set_state(State new_state, u8 stop_signal)
 {
     State previous_state;
-    ASSERT(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.own_lock());
     if (new_state == m_state)
         return;
 
@@ -931,7 +931,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
         }
     } else if (m_state == Dying) {
-        ASSERT(previous_state != Blocked);
+        VERIFY(previous_state != Blocked);
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
             // finalizer right away as it can be cleaned up now
@@ -974,7 +974,7 @@ String Thread::backtrace()
 
     auto& process = const_cast<Process&>(this->process());
     auto stack_trace = Processor::capture_stack_trace(*this);
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
     ProcessPagingScope paging_scope(process);
     for (auto& frame : stack_trace) {
         if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {

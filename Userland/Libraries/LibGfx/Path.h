@@ -177,7 +177,7 @@ public:
     {
         if (!m_split_lines.has_value()) {
             segmentize_path();
-            ASSERT(m_split_lines.has_value());
+            VERIFY(m_split_lines.has_value());
         }
         return m_split_lines.value();
     }
@@ -186,7 +186,7 @@ public:
     {
         if (!m_bounding_box.has_value()) {
             segmentize_path();
-            ASSERT(m_bounding_box.has_value());
+            VERIFY(m_bounding_box.has_value());
         }
         return m_bounding_box.value();
     }

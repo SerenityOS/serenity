@@ -55,7 +55,7 @@ void JsonValue::copy_from(const JsonValue& other)
     m_type = other.m_type;
     switch (m_type) {
     case Type::String:
-        ASSERT(!m_value.as_string);
+        VERIFY(!m_value.as_string);
         m_value.as_string = other.m_value.as_string;
         m_value.as_string->ref();
         break;

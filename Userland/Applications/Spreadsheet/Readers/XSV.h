@@ -98,7 +98,7 @@ public:
             ENUMERATE_READ_ERRORS();
 #undef E
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     size_t size() const { return m_rows.size(); }

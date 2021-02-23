@@ -140,12 +140,12 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE constexpr Span slice(size_t start, size_t length) const
     {
-        ASSERT(start + length <= size());
+        VERIFY(start + length <= size());
         return { this->m_values + start, length };
     }
     [[nodiscard]] ALWAYS_INLINE constexpr Span slice(size_t start) const
     {
-        ASSERT(start <= size());
+        VERIFY(start <= size());
         return { this->m_values + start, size() - start };
     }
 
@@ -156,20 +156,20 @@ public:
 
     ALWAYS_INLINE constexpr T* offset(size_t start) const
     {
-        ASSERT(start < this->m_size);
+        VERIFY(start < this->m_size);
         return this->m_values + start;
     }
 
     ALWAYS_INLINE constexpr void overwrite(size_t offset, const void* data, size_t data_size)
     {
         // make sure we're not told to write past the end
-        ASSERT(offset + data_size <= size());
+        VERIFY(offset + data_size <= size());
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
 
     ALWAYS_INLINE constexpr size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
     {
-        ASSERT(other.size() >= size());
+        VERIFY(other.size() >= size());
         return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), size());
     }
 
@@ -198,12 +198,12 @@ public:
 
     ALWAYS_INLINE constexpr const T& at(size_t index) const
     {
-        ASSERT(index < this->m_size);
+        VERIFY(index < this->m_size);
         return this->m_values[index];
     }
     ALWAYS_INLINE constexpr T& at(size_t index)
     {
-        ASSERT(index < this->m_size);
+        VERIFY(index < this->m_size);
         return this->m_values[index];
     }
 

@@ -108,7 +108,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     }
 
     // We parsed a valid date simplified ISO 8601 string. Values not present in the string are -1.
-    ASSERT(year != -1); // A valid date string always has at least a year.
+    VERIFY(year != -1); // A valid date string always has at least a year.
     struct tm tm = {};
     tm.tm_year = year - 1900;
     tm.tm_mon = month == -1 ? 0 : month - 1;

@@ -70,7 +70,7 @@ static Emulator* s_the;
 
 Emulator& Emulator::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -95,7 +95,7 @@ Emulator::Emulator(const String& executable_path, const Vector<String>& argument
 
     m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
 
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
     // setup_stack(arguments, environment);
     register_signal_handlers();
@@ -190,7 +190,7 @@ bool Emulator::load_elf()
 
     if (!executable_elf.is_dynamic()) {
         // FIXME: Support static objects
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     String interpreter_path;
@@ -199,18 +199,18 @@ bool Emulator::load_elf()
         return false;
     }
 
-    ASSERT(!interpreter_path.is_null());
+    VERIFY(!interpreter_path.is_null());
     dbgln("interpreter: {}", interpreter_path);
 
     auto interpreter_file_or_error = MappedFile::map(interpreter_path);
-    ASSERT(!interpreter_file_or_error.is_error());
+    VERIFY(!interpreter_file_or_error.is_error());
     auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
     ELF::Image interpreter_image(interpreter_image_data);
 
     constexpr FlatPtr interpreter_load_offset = 0x08000000;
     interpreter_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
         // Loader is not allowed to have its own TLS regions
-        ASSERT(program_header.type() != PT_TLS);
+        VERIFY(program_header.type() != PT_TLS);
 
         if (program_header.type() == PT_LOAD) {
             auto region = make<SimpleRegion>(program_header.vaddr().offset(interpreter_load_offset).get(), program_header.size_in_memory());
@@ -983,7 +983,7 @@ int Emulator::virt$pipe(FlatPtr vm_pipefd, int flags)
 u32 Emulator::virt$munmap(FlatPtr address, u32 size)
 {
     auto* region = mmu().find_region({ 0x23, address });
-    ASSERT(region);
+    VERIFY(region);
     if (region->size() != round_up_to_power_of_two(size, PAGE_SIZE))
         TODO();
     m_range_allocator.deallocate(region->range());
@@ -1024,7 +1024,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
         auto region = MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, name_str);
         if (region->name() == "libc.so: .text (Emulated)") {
             bool rc = find_malloc_symbols(*region);
-            ASSERT(rc);
+            VERIFY(rc);
         }
         mmu().add_region(move(region));
     }
@@ -1040,7 +1040,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     if (auto* region = mmu().find_region({ m_cpu.ds(), params.old_address })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
-        ASSERT(region->size() == params.old_size);
+        VERIFY(region->size() == params.old_size);
         auto& mmap_region = *(MmapRegion*)region;
         auto* ptr = mremap(mmap_region.data(), mmap_region.size(), mmap_region.size(), params.flags);
         if (ptr == MAP_FAILED)
@@ -1089,7 +1089,7 @@ u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
     if (auto* region = mmu().find_region({ m_cpu.ds(), base })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
-        ASSERT(region->size() == size);
+        VERIFY(region->size() == size);
         auto& mmap_region = *(MmapRegion*)region;
         mmap_region.set_prot(prot);
         return 0;
@@ -1420,7 +1420,7 @@ enum class DefaultSignalAction {
 
 static DefaultSignalAction default_signal_action(int signal)
 {
-    ASSERT(signal && signal < NSIG);
+    VERIFY(signal && signal < NSIG);
 
     switch (signal) {
     case SIGHUP:
@@ -1460,7 +1460,7 @@ static DefaultSignalAction default_signal_action(int signal)
     case SIGTTOU:
         return DefaultSignalAction::Stop;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Emulator::dispatch_one_pending_signal()
@@ -1471,7 +1471,7 @@ void Emulator::dispatch_one_pending_signal()
         if (m_pending_signals & mask)
             break;
     }
-    ASSERT(signum != -1);
+    VERIFY(signum != -1);
     m_pending_signals &= ~(1 << signum);
 
     auto& handler = m_signal_handler[signum];
@@ -1516,7 +1516,7 @@ void Emulator::dispatch_one_pending_signal()
     m_cpu.push32(shadow_wrap_as_initialized(handler.handler));
     m_cpu.push32(shadow_wrap_as_initialized(0u));
 
-    ASSERT((m_cpu.esp().value() % 16) == 0);
+    VERIFY((m_cpu.esp().value() % 16) == 0);
 
     m_cpu.set_eip(m_signal_trampoline);
 }

@@ -78,7 +78,7 @@ GUI::ModelIndex LayoutTreeModel::parent_index(const GUI::ModelIndex& index) cons
         ++grandparent_child_index;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 

@@ -50,7 +50,7 @@ public:
     bool has_regs() const { return m_regs.has_value(); }
     const PtraceRegisters& regs() const
     {
-        ASSERT(m_regs.has_value());
+        VERIFY(m_regs.has_value());
         return m_regs.value();
     }
 

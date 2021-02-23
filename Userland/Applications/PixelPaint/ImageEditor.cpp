@@ -341,7 +341,7 @@ Color ImageEditor::color_for(GUI::MouseButton button) const
         return m_primary_color;
     if (button == GUI::MouseButton::Right)
         return m_secondary_color;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Color ImageEditor::color_for(const GUI::MouseEvent& event) const
@@ -350,7 +350,7 @@ Color ImageEditor::color_for(const GUI::MouseEvent& event) const
         return m_primary_color;
     if (event.buttons() & GUI::MouseButton::Right)
         return m_secondary_color;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void ImageEditor::set_primary_color(Color color)

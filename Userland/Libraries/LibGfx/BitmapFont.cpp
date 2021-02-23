@@ -147,7 +147,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
     else if (header.type == 1)
         type = FontTypes::LatinExtendedA;
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     size_t count = glyph_count_by_type(type);
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
@@ -168,7 +168,7 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
         return 384;
 
     dbgln("Unknown font type: {}", (int)type);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)

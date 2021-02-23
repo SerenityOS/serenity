@@ -55,7 +55,7 @@ void NetworkJob::did_finish(NonnullRefPtr<NetworkResponse>&& response)
 
     m_response = move(response);
     dbgln_if(CNETWORKJOB_DEBUG, "{} job did_finish", *this);
-    ASSERT(on_finish);
+    VERIFY(on_finish);
     on_finish(true);
     shutdown();
 }
@@ -68,7 +68,7 @@ void NetworkJob::did_fail(Error error)
 
     m_error = error;
     dbgln_if(CNETWORKJOB_DEBUG, "{}{{{:p}}} job did_fail! error: {} ({})", class_name(), this, (unsigned)error, to_string(error));
-    ASSERT(on_finish);
+    VERIFY(on_finish);
     on_finish(false);
     shutdown();
 }

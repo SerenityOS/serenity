@@ -80,7 +80,7 @@ Region& Space::allocate_split_region(const Region& source_region, const Range& r
 
 KResultOr<Region*> Space::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
 {
-    ASSERT(range.is_valid());
+    VERIFY(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
     if (!vmobject)
         return ENOMEM;
@@ -92,7 +92,7 @@ KResultOr<Region*> Space::allocate_region(const Range& range, const String& name
 
 KResultOr<Region*> Space::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool shared)
 {
-    ASSERT(range.is_valid());
+    VERIFY(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
     if (end_in_vmobject <= offset_in_vmobject) {
         dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
@@ -172,9 +172,9 @@ Vector<Region*, 2> Space::split_region_around_range(const Region& source_region,
     Range old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
 
-    ASSERT(!remaining_ranges_after_unmap.is_empty());
+    VERIFY(!remaining_ranges_after_unmap.is_empty());
     auto make_replacement_region = [&](const Range& new_range) -> Region& {
-        ASSERT(old_region_range.contains(new_range));
+        VERIFY(old_region_range.contains(new_range));
         size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
         return allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
     };

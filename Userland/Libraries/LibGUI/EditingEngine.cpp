@@ -36,13 +36,13 @@ EditingEngine::~EditingEngine()
 
 void EditingEngine::attach(TextEditor& editor)
 {
-    ASSERT(!m_editor);
+    VERIFY(!m_editor);
     m_editor = editor;
 }
 
 void EditingEngine::detach()
 {
-    ASSERT(m_editor);
+    VERIFY(m_editor);
     m_editor = nullptr;
 }
 
@@ -450,7 +450,7 @@ TextPosition EditingEngine::find_beginning_of_next_word()
                 has_seen_whitespace = true;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_beginning_of_next_word()
@@ -516,7 +516,7 @@ TextPosition EditingEngine::find_end_of_next_word()
             is_first_iteration = false;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_end_of_next_word()
@@ -584,7 +584,7 @@ TextPosition EditingEngine::find_end_of_previous_word()
                 has_seen_whitespace = true;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_end_of_previous_word()
@@ -648,7 +648,7 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
             is_first_iteration = false;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_beginning_of_previous_word()
@@ -689,7 +689,7 @@ void EditingEngine::move_selected_lines_down()
     get_selection_line_boundaries(first_line, last_line);
 
     auto& lines = m_editor->document().lines();
-    ASSERT(lines.size() != 0);
+    VERIFY(lines.size() != 0);
     if (last_line >= lines.size() - 1)
         return;
 

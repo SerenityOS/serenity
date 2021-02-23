@@ -82,14 +82,14 @@ bool AppFile::validate() const
 String AppFile::name() const
 {
     auto name = m_config->read_entry("App", "Name").trim_whitespace();
-    ASSERT(!name.is_empty());
+    VERIFY(!name.is_empty());
     return name;
 }
 
 String AppFile::executable() const
 {
     auto executable = m_config->read_entry("App", "Executable").trim_whitespace();
-    ASSERT(!executable.is_empty());
+    VERIFY(!executable.is_empty());
     return executable;
 }
 

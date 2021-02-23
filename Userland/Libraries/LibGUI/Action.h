@@ -105,7 +105,7 @@ public:
 
     bool is_checked() const
     {
-        ASSERT(is_checkable());
+        VERIFY(is_checkable());
         return m_checked;
     }
     void set_checked(bool);

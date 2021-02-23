@@ -153,7 +153,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
         int new_size = m_section_resize_original_width + delta.primary_offset_for_orientation(m_orientation);
         if (new_size <= minimum_column_size)
             new_size = minimum_column_size;
-        ASSERT(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
+        VERIFY(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
         set_section_size(m_resizing_section, new_size);
         return;
     }
@@ -317,7 +317,7 @@ Menu& HeaderView::ensure_context_menu()
     // FIXME: This menu needs to be rebuilt if the model is swapped out,
     //        or if the column count/names change.
     if (!m_context_menu) {
-        ASSERT(model());
+        VERIFY(model());
         m_context_menu = Menu::construct();
 
         if (m_orientation == Gfx::Orientation::Vertical) {

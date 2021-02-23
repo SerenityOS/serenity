@@ -100,7 +100,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
             return EIO;
         case AsyncDeviceRequest::MemoryFault:
             // This should never happen, we're writing to a kernel buffer!
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         default:
             break;
         }
@@ -172,7 +172,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
                 return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             default:
                 break;
             }
@@ -193,7 +193,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
                 return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             default:
                 break;
             }

@@ -39,7 +39,7 @@ static WindowSwitcher* s_the;
 
 WindowSwitcher& WindowSwitcher::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -124,7 +124,7 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
         hide();
         return;
     }
-    ASSERT(!m_windows.is_empty());
+    VERIFY(!m_windows.is_empty());
 
     int new_selected_index;
 
@@ -135,7 +135,7 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
         if (new_selected_index < 0)
             new_selected_index = static_cast<int>(m_windows.size()) - 1;
     }
-    ASSERT(new_selected_index < static_cast<int>(m_windows.size()));
+    VERIFY(new_selected_index < static_cast<int>(m_windows.size()));
 
     select_window_at_index(new_selected_index);
 }
@@ -154,7 +154,7 @@ void WindowSwitcher::select_window_at_index(int index)
 {
     m_selected_index = index;
     auto* highlight_window = m_windows.at(index).ptr();
-    ASSERT(highlight_window);
+    VERIFY(highlight_window);
     WindowManager::the().set_highlight_window(highlight_window);
     redraw();
 }

@@ -42,7 +42,7 @@ public:
 
     static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer)
     {
-        ASSERT(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
+        VERIFY(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
         return UserOrKernelBuffer(kernel_buffer);
     }
 
@@ -70,7 +70,7 @@ public:
             return *this;
         UserOrKernelBuffer offset_buffer = *this;
         offset_buffer.m_buffer += offset;
-        ASSERT(offset_buffer.is_kernel_buffer() == is_kernel_buffer());
+        VERIFY(offset_buffer.is_kernel_buffer() == is_kernel_buffer());
         return offset_buffer;
     }
 
@@ -120,7 +120,7 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            ASSERT((size_t)copied <= to_copy);
+            VERIFY((size_t)copied <= to_copy);
             if (!write(buffer, nwritten, (size_t)copied))
                 return -EFAULT;
             nwritten += (size_t)copied;
@@ -156,7 +156,7 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            ASSERT((size_t)copied <= to_copy);
+            VERIFY((size_t)copied <= to_copy);
             nread += (size_t)copied;
             if ((size_t)copied < to_copy)
                 break;

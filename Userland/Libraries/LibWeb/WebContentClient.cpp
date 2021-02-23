@@ -39,7 +39,7 @@ WebContentClient::WebContentClient(OutOfProcessWebView& view)
 
 void WebContentClient::die()
 {
-    ASSERT(on_web_content_process_crash);
+    VERIFY(on_web_content_process_crash);
     on_web_content_process_crash();
 }
 

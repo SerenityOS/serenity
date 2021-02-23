@@ -67,7 +67,7 @@ String Table::render_for_terminal(size_t view_width) const
     for (size_t i = 0; i < m_row_count; ++i) {
         bool first = true;
         for (auto& col : m_columns) {
-            ASSERT(i < col.rows.size());
+            VERIFY(i < col.rows.size());
             auto& cell = col.rows[i];
 
             if (!first)
@@ -101,7 +101,7 @@ String Table::render_to_html() const
     for (size_t i = 0; i < m_row_count; ++i) {
         builder.append("<tr>");
         for (auto& column : m_columns) {
-            ASSERT(i < column.rows.size());
+            VERIFY(i < column.rows.size());
             builder.append("<td>");
             builder.append(column.rows[i].render_to_html());
             builder.append("</td>");

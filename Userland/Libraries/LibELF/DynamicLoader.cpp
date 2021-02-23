@@ -60,7 +60,7 @@ RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
         return {};
     }
 
-    ASSERT(stat.st_size >= 0);
+    VERIFY(stat.st_size >= 0);
     auto size = static_cast<size_t>(stat.st_size);
     if (size < sizeof(Elf32_Ehdr))
         return {};
@@ -90,11 +90,11 @@ DynamicLoader::~DynamicLoader()
 {
     if (munmap(m_file_data, m_file_size) < 0) {
         perror("munmap");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (close(m_image_fd) < 0) {
         perror("close");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -109,7 +109,7 @@ const DynamicObject& DynamicLoader::dynamic_object() const
             }
             return IterationDecision::Continue;
         });
-        ASSERT(!dynamic_section_address.is_null());
+        VERIFY(!dynamic_section_address.is_null());
 
         m_cached_dynamic_object = ELF::DynamicObject::create(VirtualAddress(m_elf_image.base_address()), dynamic_section_address);
     }
@@ -154,7 +154,7 @@ void* DynamicLoader::symbol_for_name(const StringView& name)
 
 RefPtr<DynamicObject> DynamicLoader::map()
 {
-    ASSERT(!m_dynamic_object);
+    VERIFY(!m_dynamic_object);
 
     if (!m_valid) {
         dbgln("DynamicLoader::map failed: image is invalid");
@@ -177,10 +177,10 @@ bool DynamicLoader::link(unsigned flags, size_t total_tls_size)
 
 bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 {
-    ASSERT(flags & RTLD_GLOBAL);
+    VERIFY(flags & RTLD_GLOBAL);
 
     if (m_dynamic_object->has_text_relocations()) {
-        ASSERT(m_text_segment_load_address.get() != 0);
+        VERIFY(m_text_segment_load_address.get() != 0);
 
 #ifndef AK_OS_MACOS
         // Remap this text region as private.
@@ -205,7 +205,7 @@ void DynamicLoader::do_main_relocations(size_t total_tls_size)
         switch (do_relocation(total_tls_size, relocation)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case RelocationResult::ResolveLater:
             m_unresolved_relocations.append(relocation);
             break;
@@ -254,7 +254,7 @@ void DynamicLoader::do_lazy_relocations(size_t total_tls_size)
     for (const auto& relocation : m_unresolved_relocations) {
         if (auto res = do_relocation(total_tls_size, relocation); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 }
@@ -272,27 +272,27 @@ void DynamicLoader::load_program_headers()
         ProgramHeaderRegion region {};
         region.set_program_header(program_header.raw_header());
         if (region.is_tls_template()) {
-            ASSERT(!tls_region.has_value());
+            VERIFY(!tls_region.has_value());
             tls_region = region;
         } else if (region.is_load()) {
             if (region.is_executable()) {
-                ASSERT(!text_region.has_value());
+                VERIFY(!text_region.has_value());
                 text_region = region;
             } else {
-                ASSERT(!data_region.has_value());
+                VERIFY(!data_region.has_value());
                 data_region = region;
             }
         } else if (region.is_dynamic()) {
             dynamic_region_desired_vaddr = region.desired_load_address();
         } else if (region.is_relro()) {
-            ASSERT(!relro_region.has_value());
+            VERIFY(!relro_region.has_value());
             relro_region = region;
         }
         return IterationDecision::Continue;
     });
 
-    ASSERT(text_region.has_value());
-    ASSERT(data_region.has_value());
+    VERIFY(text_region.has_value());
+    VERIFY(data_region.has_value());
 
     // Process regions in order: .text, .data, .tls
     void* requested_load_address = m_elf_image.is_dynamic() ? nullptr : text_region.value().desired_load_address().as_ptr();
@@ -303,7 +303,7 @@ void DynamicLoader::load_program_headers()
     else
         reservation_mmap_flags |= MAP_FIXED;
 
-    ASSERT(!text_region.value().is_writable());
+    VERIFY(!text_region.value().is_writable());
 
     // First, we make a dummy reservation mapping, in order to allocate enough VM
     // to hold both text+data contiguously in the address space.
@@ -321,13 +321,13 @@ void DynamicLoader::load_program_headers()
     auto* reservation = mmap(requested_load_address, total_mapping_size, PROT_NONE, reservation_mmap_flags, 0, 0);
     if (reservation == MAP_FAILED) {
         perror("mmap reservation");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // Then we unmap the reservation.
     if (munmap(reservation, total_mapping_size) < 0) {
         perror("munmap reservation");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // Now we can map the text segment at the reserved address.
@@ -342,10 +342,10 @@ void DynamicLoader::load_program_headers()
 
     if (text_segment_begin == MAP_FAILED) {
         perror("mmap text");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
-    ASSERT(requested_load_address == nullptr || requested_load_address == text_segment_begin);
+    VERIFY(requested_load_address == nullptr || requested_load_address == text_segment_begin);
     m_text_segment_size = text_segment_size;
     m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
@@ -375,7 +375,7 @@ void DynamicLoader::load_program_headers()
 
     if (MAP_FAILED == data_segment) {
         perror("mmap data");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     VirtualAddress data_segment_start;
@@ -409,7 +409,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
             dbgln("ERROR: symbol not found: {}.", symbol.name());
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         auto symbol_address = res.value().address;
         *patch_ptr += symbol_address.get();
@@ -418,7 +418,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     case R_386_PC32: {
         auto symbol = relocation.symbol();
         auto result = lookup_symbol(symbol);
-        ASSERT(result.has_value());
+        VERIFY(result.has_value());
         auto relative_offset = result.value().address - m_dynamic_object->base_address().offset(relocation.offset());
         *patch_ptr += relative_offset.get();
         break;
@@ -440,7 +440,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             return RelocationResult::Failed;
         }
         auto symbol_location = res.value().address;
-        ASSERT(symbol_location != m_dynamic_object->base_address());
+        VERIFY(symbol_location != m_dynamic_object->base_address());
         *patch_ptr = symbol_location.get();
         break;
     }
@@ -462,7 +462,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             break;
         u32 symbol_value = res.value().value;
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
-        ASSERT(dynamic_object_of_symbol);
+        VERIFY(dynamic_object_of_symbol);
         size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
         *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
         break;
@@ -484,7 +484,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     default:
         // Raise the alarm! Someone needs to implement this relocation type
         dbgln("Found a new exciting relocation type {}", relocation.type());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return RelocationResult::Success;
 }
@@ -494,8 +494,8 @@ extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 
 void DynamicLoader::setup_plt_trampoline()
 {
-    ASSERT(m_dynamic_object);
-    ASSERT(m_dynamic_object->has_plt());
+    VERIFY(m_dynamic_object);
+    VERIFY(m_dynamic_object->has_plt());
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
     auto* got_ptr = (FlatPtr*)got_address.as_ptr();

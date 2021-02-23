@@ -87,7 +87,7 @@ static void sleep_steps(useconds_t steps)
     const int rc = usleep(steps * STEP_SIZE);
     if (rc < 0) {
         perror("usleep");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -143,7 +143,7 @@ static void run_pz()
     // Time 3: T1 calls thread_exit()
     dbgln("PZ(T1) calls thread_exit");
     pthread_exit(nullptr);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static void* run_pz_t2_wrap(void*)

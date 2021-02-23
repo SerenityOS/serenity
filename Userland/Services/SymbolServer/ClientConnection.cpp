@@ -82,7 +82,7 @@ OwnPtr<Messages::SymbolServer::SymbolicateResponse> ClientConnection::handle(con
     }
 
     auto it = s_cache.find(path);
-    ASSERT(it != s_cache.end());
+    VERIFY(it != s_cache.end());
     auto& cached_elf = it->value;
 
     if (!cached_elf)

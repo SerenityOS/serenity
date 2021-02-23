@@ -125,7 +125,7 @@ public:
     void save() { m_state_stack.append(m_state_stack.last()); }
     void restore()
     {
-        ASSERT(m_state_stack.size() > 1);
+        VERIFY(m_state_stack.size() > 1);
         m_state_stack.take_last();
     }
 

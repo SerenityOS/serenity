@@ -110,7 +110,7 @@ ByteBuffer TLSv12::build_hello()
 
     if (alpn_length) {
         // TODO
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // set the "length" field of the packet

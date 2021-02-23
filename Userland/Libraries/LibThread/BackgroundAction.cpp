@@ -48,7 +48,7 @@ static int background_thread_func()
             sleep(1);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static void init()

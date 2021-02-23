@@ -50,7 +50,7 @@ static void test_once()
     for (auto& thread : threads)
         [[maybe_unused]] auto res = thread.join();
 
-    ASSERT(v.size() == 1);
+    VERIFY(v.size() == 1);
 }
 
 int main()

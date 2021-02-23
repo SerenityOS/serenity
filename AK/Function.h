@@ -53,7 +53,7 @@ public:
 
     Out operator()(In... in) const
     {
-        ASSERT(m_callable_wrapper);
+        VERIFY(m_callable_wrapper);
         return m_callable_wrapper->call(forward<In>(in)...);
     }
 

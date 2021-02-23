@@ -125,14 +125,14 @@ bool HPET::initialized()
 
 HPET& HPET::the()
 {
-    ASSERT(HPET::initialized());
-    ASSERT(s_hpet != nullptr);
+    VERIFY(HPET::initialized());
+    VERIFY(s_hpet != nullptr);
     return *s_hpet;
 }
 
 UNMAP_AFTER_INIT bool HPET::test_and_initialize()
 {
-    ASSERT(!HPET::initialized());
+    VERIFY(!HPET::initialized());
     hpet_initialized = true;
     auto hpet = ACPI::Parser::the()->find_table("HPET");
     if (hpet.is_null())
@@ -142,7 +142,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
     auto sdt = map_typed<ACPI::Structures::HPET>(hpet);
 
     // Note: HPET is only usable from System Memory
-    ASSERT(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
 
     if (TimeManagement::is_hpet_periodic_mode_allowed()) {
         if (!check_for_exisiting_periodic_timers()) {
@@ -161,7 +161,7 @@ UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
         return false;
 
     auto sdt = map_typed<ACPI::Structures::HPET>(hpet);
-    ASSERT(sdt->event_timer_block.address_space == 0);
+    VERIFY(sdt->event_timer_block.address_space == 0);
     auto registers = map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
 
     size_t timers_count = ((registers->capabilities.attributes >> 8) & 0x1f) + 1;
@@ -232,9 +232,9 @@ void HPET::update_periodic_comparator_value()
 
 void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(!comparator.is_periodic());
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(!comparator.is_periodic());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& regs = registers();
     auto& timer = regs.timers[comparator.comparator_number()];
     u64 value = frequency() / comparator.ticks_per_second();
@@ -283,10 +283,10 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
     klog() << "HPET: Set comparator " << comparator.comparator_number() << " to be periodic.";
 #endif
     disable(comparator);
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     auto capabilities = timer.capabilities;
-    ASSERT(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
+    VERIFY(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities | (u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
     if (comparator.is_enabled())
         enable(comparator);
@@ -297,10 +297,10 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
     klog() << "HPET: Disable periodic interrupt in comparator " << comparator.comparator_number() << ".";
 #endif
     disable(comparator);
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     auto capabilities = timer.capabilities;
-    ASSERT(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
+    VERIFY(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities & ~(u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
     if (comparator.is_enabled())
         enable(comparator);
@@ -311,7 +311,7 @@ void HPET::disable(const HPETComparator& comparator)
 #if HPET_DEBUG
     klog() << "HPET: Disable comparator " << comparator.comparator_number() << ".";
 #endif
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities & ~(u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
@@ -320,14 +320,14 @@ void HPET::enable(const HPETComparator& comparator)
 #if HPET_DEBUG
     klog() << "HPET: Enable comparator " << comparator.comparator_number() << ".";
 #endif
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 
 Vector<unsigned> HPET::capable_interrupt_numbers(const HPETComparator& comparator)
 {
-    ASSERT(comparator.comparator_number() <= m_comparators.size());
+    VERIFY(comparator.comparator_number() <= m_comparators.size());
     Vector<unsigned> capable_interrupts;
     auto& comparator_registers = registers().timers[comparator.comparator_number()];
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
@@ -341,7 +341,7 @@ Vector<unsigned> HPET::capable_interrupt_numbers(const HPETComparator& comparato
 
 Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
 {
-    ASSERT(comparator_number <= m_comparators.size());
+    VERIFY(comparator_number <= m_comparators.size());
     Vector<unsigned> capable_interrupts;
     auto& comparator_registers = registers().timers[comparator_number];
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
@@ -355,14 +355,14 @@ Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
 
 void HPET::set_comparator_irq_vector(u8 comparator_number, u8 irq_vector)
 {
-    ASSERT(comparator_number <= m_comparators.size());
+    VERIFY(comparator_number <= m_comparators.size());
     auto& comparator_registers = registers().timers[comparator_number];
     comparator_registers.capabilities = comparator_registers.capabilities | (irq_vector << 9);
 }
 
 bool HPET::is_periodic_capable(u8 comparator_number) const
 {
-    ASSERT(comparator_number <= m_comparators.size());
+    VERIFY(comparator_number <= m_comparators.size());
     auto& comparator_registers = registers().timers[comparator_number];
     return comparator_registers.capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable;
 }
@@ -370,13 +370,13 @@ bool HPET::is_periodic_capable(u8 comparator_number) const
 void HPET::set_comparators_to_optimal_interrupt_state(size_t)
 {
     // FIXME: Implement this method for allowing to use HPET timers 2-31...
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 PhysicalAddress HPET::find_acpi_hpet_registers_block()
 {
     auto sdt = map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
-    ASSERT(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
+    VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     return PhysicalAddress(sdt->event_timer_block.address);
 }
 
@@ -418,13 +418,13 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
         bool capable_64_bit = regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Timer64BitsCapable;
         klog() << "HPET: Timer[" << i << "] comparator size: " << (capable_64_bit ? "64 bit" : "32 bit") << " mode: " << ((!capable_64_bit || (regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Force32BitMode)) ? "32 bit" : "64 bit");
     }
-    ASSERT(timers_count >= 2);
+    VERIFY(timers_count >= 2);
 
     global_disable();
 
     m_frequency = NANOSECOND_PERIOD_TO_HERTZ(calculate_ticks_in_nanoseconds());
     klog() << "HPET: frequency " << m_frequency << " Hz (" << MEGAHERTZ_TO_HERTZ(m_frequency) << " MHz) resolution: " << calculate_ticks_in_nanoseconds() << "ns";
-    ASSERT(regs.capabilities.main_counter_tick_period <= ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD);
+    VERIFY(regs.capabilities.main_counter_tick_period <= ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD);
 
     // Reset the counter, just in case... (needs to match m_main_counter_last_read)
     regs.main_counter_value.high = 0;

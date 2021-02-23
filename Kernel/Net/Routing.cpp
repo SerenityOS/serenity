@@ -77,7 +77,7 @@ public:
     void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
     {
         BlockCondition::unblock([&](auto& b, void*, bool&) {
-            ASSERT(b.blocker_type() == Thread::Blocker::Type::Routing);
+            VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
             auto& blocker = static_cast<ARPTableBlocker&>(b);
             return blocker.unblock(false, ip_addr, addr);
         });
@@ -86,7 +86,7 @@ public:
 protected:
     virtual bool should_add_blocker(Thread::Blocker& b, void*) override
     {
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Routing);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
         auto val = s_arp_table->resource().get(blocker.ip_addr());
         if (!val.has_value())
@@ -107,7 +107,7 @@ ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr
 
 void ARPTableBlocker::not_blocking(bool timeout_in_past)
 {
-    ASSERT(timeout_in_past || !m_should_block);
+    VERIFY(timeout_in_past || !m_should_block);
     auto addr = s_arp_table->resource().get(ip_addr());
 
     ScopedSpinLock lock(m_lock);

@@ -36,7 +36,7 @@
 TEST_CASE(load_form)
 {
     FILE* fp = fopen("test.frm", "r");
-    ASSERT(fp);
+    VERIFY(fp);
 
     StringBuilder builder;
     for (;;) {
@@ -69,7 +69,7 @@ TEST_CASE(load_form)
 BENCHMARK_CASE(load_4chan_catalog)
 {
     FILE* fp = fopen("4chan_catalog.json", "r");
-    ASSERT(fp);
+    VERIFY(fp);
 
     StringBuilder builder;
     for (;;) {

@@ -47,10 +47,10 @@ Zlib::Zlib(ReadonlyBytes data)
     m_compression_level = (flags >> 6) & 0x3;
     m_checksum = 0;
 
-    ASSERT(m_compression_method == 8);
-    ASSERT(m_compression_info == 7);
-    ASSERT(!m_has_dictionary);
-    ASSERT((compression_info * 256 + flags) % 31 == 0);
+    VERIFY(m_compression_method == 8);
+    VERIFY(m_compression_info == 7);
+    VERIFY(!m_has_dictionary);
+    VERIFY((compression_info * 256 + flags) % 31 == 0);
 
     m_data_bytes = data.slice(2, data.size() - 2 - 4);
 }

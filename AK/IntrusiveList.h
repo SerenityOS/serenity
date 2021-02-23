@@ -284,7 +284,7 @@ inline IntrusiveListNode::~IntrusiveListNode()
 
 inline void IntrusiveListNode::remove()
 {
-    ASSERT(m_storage);
+    VERIFY(m_storage);
     if (m_storage->m_first == this)
         m_storage->m_first = m_next;
     if (m_storage->m_last == this)

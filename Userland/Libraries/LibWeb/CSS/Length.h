@@ -143,7 +143,7 @@ public:
         case Type::Undefined:
         case Type::Percentage:
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

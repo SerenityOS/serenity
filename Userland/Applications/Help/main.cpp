@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
         String html;
         {
             auto md_document = Markdown::Document::parse(source);
-            ASSERT(md_document);
+            VERIFY(md_document);
             html = md_document->render_to_html();
         }
 

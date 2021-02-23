@@ -57,7 +57,7 @@ constexpr T max(const T& a, const T& b)
 template<typename T>
 constexpr T clamp(const T& value, const T& min, const T& max)
 {
-    ASSERT(max >= min);
+    VERIFY(max >= min);
     if (value > max)
         return max;
     if (value < min)
