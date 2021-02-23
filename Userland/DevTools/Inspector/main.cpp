@@ -28,7 +28,9 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
+#include <AK/URL.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
@@ -101,6 +103,14 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
 
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/Inspector.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     for (auto& it : all_processes.value()) {
         if (it.value.pid != pid)
@@ -123,6 +133,9 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Inspector.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Inspector", app_icon, window));
 
     auto& widget = window->set_main_widget<GUI::Widget>();
