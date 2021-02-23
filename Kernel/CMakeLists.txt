@@ -297,9 +297,11 @@ set(KERNEL_FSANITIZE_FLAGS
     # "pointer-overflow"
     )
 
-foreach(flag IN LISTS KERNEL_FSANITIZE_FLAGS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${flag}")
-endforeach()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    foreach(flag IN LISTS KERNEL_FSANITIZE_FLAGS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${flag}")
+    endforeach()
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE -fno-rtti -ffreestanding -fbuiltin")
