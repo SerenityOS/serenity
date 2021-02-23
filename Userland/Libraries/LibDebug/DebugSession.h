@@ -298,7 +298,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             break;
         }
         if (decision == DebugDecision::Kill) {
-            ASSERT_NOT_REACHED(); // TODO: implement
+            VERIFY_NOT_REACHED(); // TODO: implement
         }
 
         if (state == State::SingleStep && !did_single_step) {

@@ -226,15 +226,15 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
                 pfd.revents |= POLLNVAL;
         } else {
             if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Read) {
-                ASSERT(pfd.events & POLLIN);
+                VERIFY(pfd.events & POLLIN);
                 pfd.revents |= POLLIN;
             }
             if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::ReadPriority) {
-                ASSERT(pfd.events & POLLPRI);
+                VERIFY(pfd.events & POLLPRI);
                 pfd.revents |= POLLPRI;
             }
             if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Write) {
-                ASSERT(pfd.events & POLLOUT);
+                VERIFY(pfd.events & POLLOUT);
                 pfd.revents |= POLLOUT;
             }
         }

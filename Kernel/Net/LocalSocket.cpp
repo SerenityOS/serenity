@@ -97,7 +97,7 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
 
 KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
 {
-    ASSERT(setup_state() == SetupState::Unstarted);
+    VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
         return EINVAL;
 
@@ -123,7 +123,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     auto file = move(result.value());
 
-    ASSERT(file->inode());
+    VERIFY(file->inode());
     if (!file->inode()->bind_socket(*this))
         return EADDRINUSE;
 
@@ -136,7 +136,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
 KResult LocalSocket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock)
 {
-    ASSERT(!m_bound);
+    VERIFY(!m_bound);
     if (address_size != sizeof(sockaddr_un))
         return EINVAL;
     u16 sa_family_copy;
@@ -162,14 +162,14 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
     m_file = move(description_or_error.value());
 
-    ASSERT(m_file->inode());
+    VERIFY(m_file->inode());
     if (!m_file->inode()->socket())
         return ECONNREFUSED;
 
     m_address.sun_family = sa_family_copy;
     memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
 
-    ASSERT(m_connect_side_fd == &description);
+    VERIFY(m_connect_side_fd == &description);
     set_connect_side_role(Role::Connecting);
 
     auto peer = m_file->inode()->socket();
@@ -217,12 +217,12 @@ KResult LocalSocket::listen(size_t backlog)
 
 KResult LocalSocket::attach(FileDescription& description)
 {
-    ASSERT(!m_accept_side_fd_open);
+    VERIFY(!m_accept_side_fd_open);
     if (m_connect_side_role == Role::None) {
-        ASSERT(m_connect_side_fd == nullptr);
+        VERIFY(m_connect_side_fd == nullptr);
         m_connect_side_fd = &description;
     } else {
-        ASSERT(m_connect_side_fd != &description);
+        VERIFY(m_connect_side_fd != &description);
         m_accept_side_fd_open = true;
     }
 
@@ -235,7 +235,7 @@ void LocalSocket::detach(FileDescription& description)
     if (m_connect_side_fd == &description) {
         m_connect_side_fd = nullptr;
     } else {
-        ASSERT(m_accept_side_fd_open);
+        VERIFY(m_accept_side_fd_open);
         m_accept_side_fd_open = false;
     }
 
@@ -261,7 +261,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
         return m_connect_side_fd != nullptr;
     if (role == Role::Connected)
         return m_accept_side_fd_open;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool LocalSocket::can_write(const FileDescription& description, size_t) const
@@ -325,7 +325,7 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
     }
     if (!has_attached_peer(description) && socket_buffer->is_empty())
         return 0;
-    ASSERT(!socket_buffer->is_empty());
+    VERIFY(!socket_buffer->is_empty());
     auto nread = socket_buffer->read(buffer, buffer_size);
     if (nread > 0)
         Thread::current()->did_unix_socket_read(nread);
@@ -438,7 +438,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::recvfd_queue_for(const FileDe
         return m_fds_for_client;
     if (role == Role::Accepted)
         return m_fds_for_server;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDescription& description)
@@ -448,7 +448,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDe
         return m_fds_for_server;
     if (role == Role::Accepted)
         return m_fds_for_client;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)

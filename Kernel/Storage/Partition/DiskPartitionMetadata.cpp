@@ -40,12 +40,12 @@ DiskPartitionMetadata::PartitionType::PartitionType(Array<u8, 16> partition_type
 }
 UUID DiskPartitionMetadata::PartitionType::to_uuid() const
 {
-    ASSERT(is_uuid());
+    VERIFY(is_uuid());
     return m_partition_type;
 }
 u8 DiskPartitionMetadata::PartitionType::to_byte_indicator() const
 {
-    ASSERT(!is_uuid());
+    VERIFY(!is_uuid());
     return m_partition_type[0];
 }
 bool DiskPartitionMetadata::PartitionType::is_uuid() const
@@ -63,7 +63,7 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, u8 
     , m_type(partition_type)
 {
 
-    ASSERT(m_type.is_valid());
+    VERIFY(m_type.is_valid());
 }
 
 DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Array<u8, 16> partition_type)
@@ -72,7 +72,7 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Arr
     , m_type(partition_type)
 {
 
-    ASSERT(m_type.is_valid());
+    VERIFY(m_type.is_valid());
 }
 
 DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Array<u8, 16> partition_type, UUID unique_guid, u64 special_attributes, String name)
@@ -83,8 +83,8 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Arr
     , m_attributes(special_attributes)
     , m_name(name)
 {
-    ASSERT(m_type.is_valid());
-    ASSERT(!m_unique_guid.is_zero());
+    VERIFY(m_type.is_valid());
+    VERIFY(!m_unique_guid.is_zero());
 }
 
 DiskPartitionMetadata DiskPartitionMetadata::offset(u64 blocks_count) const

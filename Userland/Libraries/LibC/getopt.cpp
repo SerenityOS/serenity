@@ -142,7 +142,7 @@ int OptionParser::getopt()
     if (should_reorder_argv)
         shift_argv();
     else
-        ASSERT(optind == static_cast<int>(m_arg_index));
+        VERIFY(optind == static_cast<int>(m_arg_index));
     optind += m_consumed_args;
 
     return res;
@@ -152,7 +152,7 @@ bool OptionParser::lookup_short_option(char option, int& needs_value) const
 {
     Vector<StringView> parts = m_short_options.split_view(option, true);
 
-    ASSERT(parts.size() <= 2);
+    VERIFY(parts.size() <= 2);
     if (parts.size() < 2) {
         // Haven't found the option in the spec.
         return false;
@@ -175,7 +175,7 @@ bool OptionParser::lookup_short_option(char option, int& needs_value) const
 int OptionParser::handle_short_option()
 {
     StringView arg = m_argv[m_arg_index];
-    ASSERT(arg.starts_with('-'));
+    VERIFY(arg.starts_with('-'));
 
     if (s_index_into_multioption_argument == 0) {
         // Just starting to parse this argument, skip the "-".
@@ -245,7 +245,7 @@ const option* OptionParser::lookup_long_option(char* raw) const
             optarg = nullptr;
             return &option;
         }
-        ASSERT(arg.length() > name.length());
+        VERIFY(arg.length() > name.length());
         if (arg[name.length()] == '=') {
             optarg = raw + name.length() + 1;
             return &option;
@@ -257,7 +257,7 @@ const option* OptionParser::lookup_long_option(char* raw) const
 
 int OptionParser::handle_long_option()
 {
-    ASSERT(StringView(m_argv[m_arg_index]).starts_with("--"));
+    VERIFY(StringView(m_argv[m_arg_index]).starts_with("--"));
 
     // We cannot set optopt to anything sensible for long options, so set it to 0.
     optopt = 0;
@@ -298,7 +298,7 @@ int OptionParser::handle_long_option()
         }
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // Now that we've figured the value out, see about reporting this option to
@@ -314,7 +314,7 @@ void OptionParser::shift_argv()
 {
     // We've just parsed an option (which perhaps has a value).
     // Put the option (along with it value, if any) in front of other arguments.
-    ASSERT(optind <= static_cast<int>(m_arg_index));
+    VERIFY(optind <= static_cast<int>(m_arg_index));
 
     if (optind == static_cast<int>(m_arg_index) || m_consumed_args == 0) {
         // Nothing to do!

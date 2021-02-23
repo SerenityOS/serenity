@@ -213,7 +213,7 @@ bool Value::is_array() const
 
 Array& Value::as_array()
 {
-    ASSERT(is_array());
+    VERIFY(is_array());
     return static_cast<Array&>(*m_value.as_object);
 }
 
@@ -224,7 +224,7 @@ bool Value::is_function() const
 
 Function& Value::as_function()
 {
-    ASSERT(is_function());
+    VERIFY(is_function());
     return static_cast<Function&>(as_object());
 }
 
@@ -268,7 +268,7 @@ String Value::to_string_without_side_effects() const
     case Type::NativeProperty:
         return "<native-property>";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -307,7 +307,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
         return primitive_value.to_string(global_object);
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -332,7 +332,7 @@ bool Value::to_boolean() const
     case Type::Object:
         return true;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -368,7 +368,7 @@ Object* Value::to_object(GlobalObject& global_object) const
         return &const_cast<Object&>(as_object());
     default:
         dbgln("Dying because I can't to_object() on {}", *this);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -420,7 +420,7 @@ Value Value::to_number(GlobalObject& global_object) const
         return primitive.to_number(global_object);
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -458,7 +458,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
         return {};
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -470,13 +470,13 @@ i32 Value::as_i32() const
 
 u32 Value::as_u32() const
 {
-    ASSERT(as_double() >= 0);
+    VERIFY(as_double() >= 0);
     return min((double)as_i32(), MAX_U32);
 }
 
 size_t Value::as_size_t() const
 {
-    ASSERT(as_double() >= 0);
+    VERIFY(as_double() >= 0);
     return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
 }
 
@@ -552,7 +552,7 @@ size_t Value::to_index(GlobalObject& global_object) const
         return INVALID;
     }
     auto index = Value(integer_index).to_length(global_object);
-    ASSERT(!vm.exception());
+    VERIFY(!vm.exception());
     if (integer_index != index) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
         return INVALID;
@@ -1028,8 +1028,8 @@ bool same_value_zero(Value lhs, Value rhs)
 
 bool same_value_non_numeric(Value lhs, Value rhs)
 {
-    ASSERT(!lhs.is_number() && !lhs.is_bigint());
-    ASSERT(lhs.type() == rhs.type());
+    VERIFY(!lhs.is_number() && !lhs.is_bigint());
+    VERIFY(lhs.type() == rhs.type());
 
     switch (lhs.type()) {
     case Value::Type::Undefined:
@@ -1044,7 +1044,7 @@ bool same_value_non_numeric(Value lhs, Value rhs)
     case Value::Type::Object:
         return &lhs.as_object() == &rhs.as_object();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1160,7 +1160,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
                 }
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
@@ -1213,7 +1213,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
             return TriState::False;
     }
 
-    ASSERT((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
+    VERIFY((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
 
     bool x_lower_than_y;
     if (x_numeric.is_number()) {

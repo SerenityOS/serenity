@@ -102,7 +102,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
     }
 
     Thread::current()->exit(reinterpret_cast<void*>(exit_value.ptr()));
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int Process::sys$detach_thread(pid_t tid)

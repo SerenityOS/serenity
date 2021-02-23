@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     auto target_array = iterator.array();
     if (target_array.is_undefined())
         return create_iterator_result_object(global_object, js_undefined(), true);
-    ASSERT(target_array.is_object());
+    VERIFY(target_array.is_object());
     auto& array = target_array.as_object();
 
     auto index = iterator.index();

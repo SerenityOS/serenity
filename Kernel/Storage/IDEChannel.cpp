@@ -184,8 +184,8 @@ void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, b
 void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult result)
 {
     // NOTE: this may be called from the interrupt handler!
-    ASSERT(m_current_request);
-    ASSERT(m_request_lock.is_locked());
+    VERIFY(m_current_request);
+    VERIFY(m_request_lock.is_locked());
 
     // Now schedule reading back the buffer as soon as we leave the irq handler.
     // This is important so that we can safely write the buffer back,
@@ -193,7 +193,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // before Processor::deferred_call_queue returns!
     Processor::deferred_call_queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
-        ASSERT(m_current_request);
+        VERIFY(m_current_request);
         auto& request = *m_current_request;
         m_current_request = nullptr;
 
@@ -334,7 +334,7 @@ void IDEChannel::handle_irq(const RegisterState&)
                 dbgln_if(PATA_DEBUG, "IDEChannel: Wrote block {}/{}", m_current_request_block_index, m_current_request->block_count());
                 if (++m_current_request_block_index >= m_current_request->block_count()) {
                     // We read the last block, flush cache
-                    ASSERT(!m_current_request_flushing_cache);
+                    VERIFY(!m_current_request_flushing_cache);
                     m_current_request_flushing_cache = true;
                     m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
                 } else {
@@ -465,7 +465,7 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8
     u16 cylinder = 0;
 
     if (lba >= 0x10000000) {
-        ASSERT(capabilities & ATA_CAP_LBA);
+        VERIFY(capabilities & ATA_CAP_LBA);
         lba_mode = LBAMode::FortyEightBit;
         head = 0;
     } else if (capabilities & ATA_CAP_LBA) {
@@ -532,7 +532,7 @@ void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * request.block_count();
 
-    ASSERT(prdt().size <= PAGE_SIZE);
+    VERIFY(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     m_io_group.bus_master_base().out<u8>(0);
@@ -574,7 +574,7 @@ bool IDEChannel::ata_do_read_sector()
 void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
-    ASSERT(request.block_count() <= 256);
+    VERIFY(request.block_count() <= 256);
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors");
 
     auto lba = request.block_index();
@@ -597,7 +597,7 @@ void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities
         return;
     }
 
-    ASSERT(prdt().size <= PAGE_SIZE);
+    VERIFY(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     m_io_group.bus_master_base().out<u8>(0);
@@ -623,7 +623,7 @@ void IDEChannel::ata_do_write_sector()
         ;
 
     u8 status = m_io_group.control_base().in<u8>();
-    ASSERT(status & ATA_SR_DRQ);
+    VERIFY(status & ATA_SR_DRQ);
 
     auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing 512 bytes (part {}) (status={:#02x})...", m_current_request_block_index, status);
@@ -641,7 +641,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
 
-    ASSERT(request.block_count() <= 256);
+    VERIFY(request.block_count() <= 256);
     u32 start_sector = request.block_index();
     u32 count = request.block_count();
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);

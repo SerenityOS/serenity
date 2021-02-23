@@ -48,7 +48,7 @@ int main(int, char**)
 
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
 
     if (pledge("stdio recvfd sendfd accept", nullptr) < 0) {
         perror("pledge");

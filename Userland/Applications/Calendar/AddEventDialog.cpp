@@ -135,7 +135,7 @@ String AddEventDialog::MonthListModel::column_name(int column) const
     case Column::Month:
         return "Month";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -147,7 +147,7 @@ GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, 
         case Column::Month:
             return month;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
     return {};

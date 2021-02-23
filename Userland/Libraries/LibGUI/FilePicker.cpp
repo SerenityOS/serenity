@@ -99,7 +99,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
 
     auto& widget = set_main_widget<GUI::Widget>();
     if (!widget.load_from_gml(file_picker_dialog_gml))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto& toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("toolbar");
     toolbar.set_has_frame(false);

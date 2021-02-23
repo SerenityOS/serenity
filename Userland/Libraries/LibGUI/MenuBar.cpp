@@ -63,12 +63,12 @@ void MenuBar::unrealize_menubar()
 
 void MenuBar::notify_added_to_application(Badge<Application>)
 {
-    ASSERT(m_menubar_id == -1);
+    VERIFY(m_menubar_id == -1);
     m_menubar_id = realize_menubar();
-    ASSERT(m_menubar_id != -1);
+    VERIFY(m_menubar_id != -1);
     for (auto& menu : m_menus) {
         int menu_id = menu.realize_menu();
-        ASSERT(menu_id != -1);
+        VERIFY(menu_id != -1);
         WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
     }
     WindowServerConnection::the().send_sync<Messages::WindowServer::SetApplicationMenubar>(m_menubar_id);

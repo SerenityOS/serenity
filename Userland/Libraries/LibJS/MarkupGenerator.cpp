@@ -185,7 +185,7 @@ String MarkupGenerator::style_from_style_type(StyleType type)
     case StyleType::Identifier:
         return "color: -libweb-palette-syntax-identifier;";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -216,7 +216,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
         return StyleType::Identifier;
     default:
         dbgln("Unknown style type for token {}", token.name());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

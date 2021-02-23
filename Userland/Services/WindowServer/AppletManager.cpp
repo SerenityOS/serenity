@@ -49,7 +49,7 @@ AppletManager::~AppletManager()
 
 AppletManager& AppletManager::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 

@@ -96,8 +96,8 @@ void InProcessWebView::select_all()
             last_layout_node = layout_node;
     }
 
-    ASSERT(first_layout_node);
-    ASSERT(last_layout_node);
+    VERIFY(first_layout_node);
+    VERIFY(last_layout_node);
 
     int last_layout_node_index_in_node = 0;
     if (is<Layout::TextNode>(*last_layout_node))
@@ -114,7 +114,7 @@ String InProcessWebView::selected_text() const
 
 void InProcessWebView::page_did_layout()
 {
-    ASSERT(layout_root());
+    VERIFY(layout_root());
     set_content_size(layout_root()->size().to_type<int>());
 }
 

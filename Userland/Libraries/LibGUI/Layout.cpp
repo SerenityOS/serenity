@@ -66,7 +66,7 @@ Layout::Layout()
                 } else if (entry.type == Entry::Type::Spacer) {
                     entry_object.set("type", "Spacer");
                 } else {
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 entries_array.append(move(entry_object));
             }
@@ -87,7 +87,7 @@ void Layout::notify_adopted(Badge<Widget>, Widget& widget)
 
 void Layout::notify_disowned(Badge<Widget>, Widget& widget)
 {
-    ASSERT(m_owner == &widget);
+    VERIFY(m_owner == &widget);
     m_owner.clear();
 }
 

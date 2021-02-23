@@ -100,13 +100,13 @@ private:
 
         bool is_intersecting(const Gfx::IntRect& rect) const
         {
-            ASSERT(valid);
+            VERIFY(valid);
             return icon_rect.intersects(rect) || text_rect.intersects(rect);
         }
 
         bool is_containing(const Gfx::IntPoint& point) const
         {
-            ASSERT(valid);
+            VERIFY(valid);
             return icon_rect.contains(point) || text_rect.contains(point);
         }
     };
@@ -135,7 +135,7 @@ private:
     void reinit_item_cache() const;
     int model_index_to_item_index(const ModelIndex& model_index) const
     {
-        ASSERT(model_index.row() < item_count());
+        VERIFY(model_index.row() < item_count());
         return model_index.row();
     }
 

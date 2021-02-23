@@ -219,7 +219,7 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
 
     if (file_size < buffer_size) {
         dbgln("We somehow read more from a file than was in the file in the first place!");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     size_t num_program_headers = elf_header.e_phnum;

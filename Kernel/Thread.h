@@ -317,7 +317,7 @@ public:
         }
         void do_set_interrupted_by_signal(u8 signal)
         {
-            ASSERT(signal != 0);
+            VERIFY(signal != 0);
             m_was_interrupted_by_signal = signal;
         }
         void do_clear_interrupted_by_signal()
@@ -340,7 +340,7 @@ public:
                 ScopedSpinLock lock(m_lock);
                 if (m_is_blocking) {
                     m_is_blocking = false;
-                    ASSERT(m_blocked_thread);
+                    VERIFY(m_blocked_thread);
                     thread = m_blocked_thread;
                 }
             }
@@ -377,7 +377,7 @@ public:
         virtual ~BlockCondition()
         {
             ScopedSpinLock lock(m_lock);
-            ASSERT(m_blockers.is_empty());
+            VERIFY(m_blockers.is_empty());
         }
 
         bool add_blocker(Blocker& blocker, void* data)
@@ -415,7 +415,7 @@ public:
         template<typename UnblockOne>
         bool do_unblock(UnblockOne unblock_one)
         {
-            ASSERT(m_lock.is_locked());
+            VERIFY(m_lock.is_locked());
             bool stop_iterating = false;
             bool did_unblock = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
@@ -433,7 +433,7 @@ public:
 
         bool is_empty_locked() const
         {
-            ASSERT(m_lock.is_locked());
+            VERIFY(m_lock.is_locked());
             return m_blockers.is_empty();
         }
 
@@ -450,7 +450,7 @@ public:
                 return move(m_blockers);
 
             size_t move_count = (count <= m_blockers.size()) ? count : m_blockers.size();
-            ASSERT(move_count > 0);
+            VERIFY(move_count > 0);
 
             Vector<BlockerInfo, 4> taken_blockers;
             taken_blockers.ensure_capacity(move_count);
@@ -817,10 +817,10 @@ public:
     template<typename T, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
-        ASSERT(!Processor::current().in_irq());
-        ASSERT(this == Thread::current());
+        VERIFY(!Processor::current().in_irq());
+        VERIFY(this == Thread::current());
         ScopedCritical critical;
-        ASSERT(!s_mm_lock.own_lock());
+        VERIFY(!s_mm_lock.own_lock());
 
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
@@ -839,10 +839,10 @@ public:
                 // It's possible that we were requested to be stopped!
                 break;
             case Thread::Running:
-                ASSERT(m_blocker == nullptr);
+                VERIFY(m_blocker == nullptr);
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
 
             m_blocker = &t;
@@ -859,9 +859,9 @@ public:
                 // Process::kill_all_threads may be called at any time, which will mark all
                 // threads to die. In that case
                 timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
-                    ASSERT(!Processor::current().in_irq());
-                    ASSERT(!g_scheduler_lock.own_lock());
-                    ASSERT(!m_block_lock.own_lock());
+                    VERIFY(!Processor::current().in_irq());
+                    VERIFY(!g_scheduler_lock.own_lock());
+                    VERIFY(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
                     ScopedSpinLock scheduler_lock(g_scheduler_lock);
                     ScopedSpinLock block_lock(m_block_lock);
@@ -891,10 +891,10 @@ public:
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
-            ASSERT(!g_scheduler_lock.own_lock());
-            ASSERT(Processor::current().in_critical());
+            VERIFY(!g_scheduler_lock.own_lock());
+            VERIFY(Processor::current().in_critical());
             yield_while_not_holding_big_lock();
-            ASSERT(Processor::current().in_critical());
+            VERIFY(Processor::current().in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
@@ -913,7 +913,7 @@ public:
             did_timeout |= timeout_unblocked.exchange(true);
             if (m_blocker) {
                 // Remove ourselves...
-                ASSERT(m_blocker == &t);
+                VERIFY(m_blocker == &t);
                 m_blocker = nullptr;
             }
             dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
@@ -951,7 +951,7 @@ public:
     template<class... Args>
     Thread::BlockResult wait_on(WaitQueue& wait_queue, const Thread::BlockTimeout& timeout, Args&&... args)
     {
-        ASSERT(this == Thread::current());
+        VERIFY(this == Thread::current());
         return block<Thread::QueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
@@ -1107,7 +1107,7 @@ public:
 #if LOCK_DEBUG
     void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
     {
-        ASSERT(refs_delta != 0);
+        VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
         ScopedSpinLock list_lock(m_holding_locks_lock);
         if (refs_delta > 0) {
@@ -1123,12 +1123,12 @@ public:
             if (!have_existing)
                 m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
         } else {
-            ASSERT(refs_delta < 0);
+            VERIFY(refs_delta < 0);
             bool found = false;
             for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
                 auto& info = m_holding_locks_list[i];
                 if (info.lock == &lock) {
-                    ASSERT(info.count >= (unsigned)-refs_delta);
+                    VERIFY(info.count >= (unsigned)-refs_delta);
                     info.count -= (unsigned)-refs_delta;
                     if (info.count == 0)
                         m_holding_locks_list.remove(i);
@@ -1136,7 +1136,7 @@ public:
                     break;
                 }
             }
-            ASSERT(found);
+            VERIFY(found);
         }
     }
     u32 lock_count() const
@@ -1164,7 +1164,7 @@ private:
         void thread_did_exit(void* exit_value)
         {
             ScopedSpinLock lock(m_lock);
-            ASSERT(!m_thread_did_exit);
+            VERIFY(!m_thread_did_exit);
             m_thread_did_exit = true;
             m_exit_value.store(exit_value, AK::MemoryOrder::memory_order_release);
             do_unblock_joiner();
@@ -1176,7 +1176,7 @@ private:
         }
         void* exit_value() const
         {
-            ASSERT(m_thread_did_exit);
+            VERIFY(m_thread_did_exit);
             return m_exit_value.load(AK::MemoryOrder::memory_order_acquire);
         }
 
@@ -1190,7 +1190,7 @@ private:
     protected:
         virtual bool should_add_blocker(Blocker& b, void*) override
         {
-            ASSERT(b.blocker_type() == Blocker::Type::Join);
+            VERIFY(b.blocker_type() == Blocker::Type::Join);
             auto& blocker = static_cast<JoinBlocker&>(b);
 
             // NOTE: m_lock is held already!
@@ -1205,7 +1205,7 @@ private:
         void do_unblock_joiner()
         {
             do_unblock([&](Blocker& b, void*, bool&) {
-                ASSERT(b.blocker_type() == Blocker::Type::Join);
+                VERIFY(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);
             });

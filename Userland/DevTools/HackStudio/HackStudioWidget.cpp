@@ -191,7 +191,7 @@ void HackStudioWidget::open_project(const String& root_path)
         exit(1);
     }
     m_project = Project::open_with_root_path(root_path);
-    ASSERT(m_project);
+    VERIFY(m_project);
     if (m_project_tree_view) {
         m_project_tree_view->set_model(m_project->model());
         m_project_tree_view->update();
@@ -222,7 +222,7 @@ void HackStudioWidget::open_file(const String& full_filename)
 
     if (!currently_open_file().is_empty()) {
         // Since the file is previously open, it should always be in m_open_files.
-        ASSERT(m_open_files.find(currently_open_file()) != m_open_files.end());
+        VERIFY(m_open_files.find(currently_open_file()) != m_open_files.end());
         auto previous_open_project_file = m_open_files.get(currently_open_file()).value();
 
         // Update the scrollbar values of the previous_open_project_file and save them to m_open_files.
@@ -272,7 +272,7 @@ void HackStudioWidget::open_file(const String& full_filename)
 
 EditorWrapper& HackStudioWidget::current_editor_wrapper()
 {
-    ASSERT(m_current_editor_wrapper);
+    VERIFY(m_current_editor_wrapper);
     return *m_current_editor_wrapper;
 }
 
@@ -290,7 +290,7 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
     } else if (mode == EditMode::Diff) {
         m_right_hand_stack->set_active_widget(m_diff_viewer);
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     m_right_hand_stack->active_widget()->update();
 }
@@ -563,7 +563,7 @@ void HackStudioWidget::initialize_debugger()
     Debugger::initialize(
         m_project->root_path(),
         [this](const PtraceRegisters& regs) {
-            ASSERT(Debugger::the().session());
+            VERIFY(Debugger::the().session());
             const auto& debug_session = *Debugger::the().session();
             auto source_position = debug_session.get_source_position(regs.eip);
             if (!source_position.has_value()) {
@@ -610,7 +610,7 @@ void HackStudioWidget::initialize_debugger()
 String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
 {
     auto path_parts = LexicalPath(file).parts();
-    ASSERT(path_parts[0] == "..");
+    VERIFY(path_parts[0] == "..");
     path_parts.remove(0);
     StringBuilder relative_path_builder;
     relative_path_builder.join("/", path_parts);

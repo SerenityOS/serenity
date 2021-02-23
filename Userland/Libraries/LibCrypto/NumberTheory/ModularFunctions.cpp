@@ -240,7 +240,7 @@ static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInte
 {
     // Written using Wikipedia:
     // https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
-    ASSERT(!(n < 4));
+    VERIFY(!(n < 4));
     auto predecessor = n.minus({ 1 });
     auto d = predecessor;
     size_t r = 0;
@@ -259,8 +259,8 @@ static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInte
     }
 
     for (auto& a : tests) {
-        // Technically: ASSERT(2 <= a && a <= n - 2)
-        ASSERT(a < n);
+        // Technically: VERIFY(2 <= a && a <= n - 2)
+        VERIFY(a < n);
         auto x = ModularPower(a, d, n);
         if (x == 1 || x == predecessor)
             continue;
@@ -283,13 +283,13 @@ static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInte
 
 UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBigInteger& max_excluded)
 {
-    ASSERT(min < max_excluded);
+    VERIFY(min < max_excluded);
     auto range = max_excluded.minus(min);
     UnsignedBigInteger base;
     auto size = range.trimmed_length() * sizeof(u32) + 2;
     // "+2" is intentional (see below).
     // Also, if we're about to crash anyway, at least produce a nice error:
-    ASSERT(size < 8 * MiB);
+    VERIFY(size < 8 * MiB);
     u8 buf[size];
     AK::fill_with_random(buf, size);
     UnsignedBigInteger random { buf, size };
@@ -340,7 +340,7 @@ bool is_probably_prime(const UnsignedBigInteger& p)
 
 UnsignedBigInteger random_big_prime(size_t bits)
 {
-    ASSERT(bits >= 33);
+    VERIFY(bits >= 33);
     UnsignedBigInteger min = UnsignedBigInteger::from_base10("6074001000").shift_left(bits - 33);
     UnsignedBigInteger max = UnsignedBigInteger { 1 }.shift_left(bits).minus(1);
     for (;;) {

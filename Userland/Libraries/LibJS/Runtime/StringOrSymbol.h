@@ -57,14 +57,14 @@ public:
     StringOrSymbol(const String& string)
         : m_ptr(string.impl())
     {
-        ASSERT(!string.is_null());
+        VERIFY(!string.is_null());
         as_string_impl().ref();
     }
 
     StringOrSymbol(const FlyString& string)
         : m_ptr(string.impl())
     {
-        ASSERT(!string.is_null());
+        VERIFY(!string.is_null());
         as_string_impl().ref();
     }
 
@@ -98,13 +98,13 @@ public:
 
     ALWAYS_INLINE String as_string() const
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return as_string_impl();
     }
 
     ALWAYS_INLINE const Symbol* as_symbol() const
     {
-        ASSERT(is_symbol());
+        VERIFY(is_symbol());
         return reinterpret_cast<const Symbol*>(bits() & ~1ul);
     }
 
@@ -114,7 +114,7 @@ public:
             return as_string();
         if (is_symbol())
             return as_symbol()->to_string();
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     Value to_value(VM& vm) const
@@ -178,7 +178,7 @@ private:
 
     ALWAYS_INLINE const StringImpl& as_string_impl() const
     {
-        ASSERT(is_string());
+        VERIFY(is_string());
         return *reinterpret_cast<const StringImpl*>(m_ptr);
     }
 

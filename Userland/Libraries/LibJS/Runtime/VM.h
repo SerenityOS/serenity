@@ -109,13 +109,13 @@ public:
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
     {
-        ASSERT(character < 0x80);
+        VERIFY(character < 0x80);
         return *m_single_ascii_character_strings[character];
     }
 
     void push_call_frame(CallFrame& call_frame, GlobalObject& global_object)
     {
-        ASSERT(!exception());
+        VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         // This value is merely a guess and might need tweaking at a later point.
         if (m_stack_info.size_free() < 16 * KiB)

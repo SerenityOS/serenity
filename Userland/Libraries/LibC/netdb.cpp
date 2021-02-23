@@ -142,13 +142,13 @@ hostent* gethostbyname(const char* name)
         perror("write");
         return nullptr;
     }
-    ASSERT((size_t)nsent == sizeof(request_header));
+    VERIFY((size_t)nsent == sizeof(request_header));
     nsent = write(fd, name, name_length);
     if (nsent < 0) {
         perror("write");
         return nullptr;
     }
-    ASSERT((size_t)nsent == name_length);
+    VERIFY((size_t)nsent == name_length);
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -163,7 +163,7 @@ hostent* gethostbyname(const char* name)
         perror("recv");
         return nullptr;
     }
-    ASSERT((size_t)nrecv == sizeof(response_header));
+    VERIFY((size_t)nrecv == sizeof(response_header));
     if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 2) {
         dbgln("Received an unexpected message");
         return nullptr;
@@ -172,7 +172,7 @@ hostent* gethostbyname(const char* name)
         // TODO: return a specific error.
         return nullptr;
     }
-    ASSERT(response_header.addresses_count > 0);
+    VERIFY(response_header.addresses_count > 0);
 
     i32 response_length;
     nrecv = read(fd, &response_length, sizeof(response_length));
@@ -180,15 +180,15 @@ hostent* gethostbyname(const char* name)
         perror("recv");
         return nullptr;
     }
-    ASSERT((size_t)nrecv == sizeof(response_length));
-    ASSERT(response_length == sizeof(__gethostbyname_address));
+    VERIFY((size_t)nrecv == sizeof(response_length));
+    VERIFY(response_length == sizeof(__gethostbyname_address));
 
     nrecv = read(fd, &__gethostbyname_address, response_length);
     if (nrecv < 0) {
         perror("recv");
         return nullptr;
     }
-    ASSERT(nrecv == response_length);
+    VERIFY(nrecv == response_length);
 
     gethostbyname_name_buffer = name;
     __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
@@ -243,13 +243,13 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         perror("write");
         return nullptr;
     }
-    ASSERT((size_t)nsent == sizeof(request_header));
+    VERIFY((size_t)nsent == sizeof(request_header));
     nsent = write(fd, &in_addr, sizeof(in_addr));
     if (nsent < 0) {
         perror("write");
         return nullptr;
     }
-    ASSERT((size_t)nsent == sizeof(in_addr));
+    VERIFY((size_t)nsent == sizeof(in_addr));
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -264,7 +264,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         perror("recv");
         return nullptr;
     }
-    ASSERT((size_t)nrecv == sizeof(response_header));
+    VERIFY((size_t)nrecv == sizeof(response_header));
     if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 4) {
         dbgln("Received an unexpected message");
         return nullptr;
@@ -281,7 +281,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         perror("recv");
         return nullptr;
     }
-    ASSERT(nrecv == response_header.name_length);
+    VERIFY(nrecv == response_header.name_length);
 
     gethostbyaddr_name_buffer = move(string_impl);
     __gethostbyaddr_buffer.h_name = buffer;
@@ -661,12 +661,12 @@ int getaddrinfo(const char* __restrict node, const char* __restrict service, con
     (void)service;
     (void)hints;
     (void)res;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void freeaddrinfo(struct addrinfo* res)
 {
     (void)res;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 const char* gai_strerror(int errcode)
 {

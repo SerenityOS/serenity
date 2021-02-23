@@ -55,10 +55,10 @@ Value evaluate(ReadonlyBytes bytes, const PtraceRegisters& regs)
         default:
             dbgln("DWARF expr addr: {}", (const void*)bytes.data());
             dbgln("unsupported opcode: {}", (u8)opcode);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

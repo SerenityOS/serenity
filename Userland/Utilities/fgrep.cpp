@@ -42,7 +42,7 @@ int main(int argc, char** argv)
             write(1, buf, strlen(buf));
         if (feof(stdin))
             return 0;
-        ASSERT(str);
+        VERIFY(str);
     }
     return 0;
 }

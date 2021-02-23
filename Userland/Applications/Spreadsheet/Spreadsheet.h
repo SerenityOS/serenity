@@ -106,12 +106,12 @@ public:
         for (size_t i = column_count(); i < index; ++i)
             add_column();
 
-        ASSERT(column_count() > index);
+        VERIFY(column_count() > index);
         return m_columns[index];
     }
     const String& column(size_t index) const
     {
-        ASSERT(column_count() > index);
+        VERIFY(column_count() > index);
         return m_columns[index];
     }
 

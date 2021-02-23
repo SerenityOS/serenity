@@ -96,7 +96,7 @@ Gfx::IntRect ListView::content_rect(const ModelIndex& index) const
 
 ModelIndex ListView::index_at_event_position(const Gfx::IntPoint& point) const
 {
-    ASSERT(model());
+    VERIFY(model());
 
     auto adjusted_position = this->adjusted_position(point);
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {

@@ -348,7 +348,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         case ClientHello:
             // FIXME: We only support client mode right now
             if (m_context.is_server) {
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
             payload_res = (i8)Error::UnexpectedMessage;
             break;
@@ -364,7 +364,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 #endif
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 payload_res = handle_hello(buffer.slice(1, payload_size), write_packets);
             }
@@ -386,7 +386,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             if (m_context.connection_status == ConnectionStatus::Negotiating) {
                 if (m_context.is_server) {
                     dbgln("unsupported: server mode");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 payload_res = handle_certificate(buffer.slice(1, payload_size));
                 if (m_context.certificates.size()) {
@@ -420,7 +420,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 #endif
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 payload_res = handle_server_key_exchange(buffer.slice(1, payload_size));
             }
@@ -435,7 +435,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             if (m_context.is_server) {
                 dbgln("invalid request");
                 dbgln("unsupported: server mode");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 // we do not support "certificate request"
                 dbgln("certificate request");
@@ -456,7 +456,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 #endif
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 payload_res = handle_server_hello_done(buffer.slice(1, payload_size));
                 if (payload_res > 0)
@@ -491,7 +491,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 #endif
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else {
                 payload_res = (i8)Error::UnexpectedMessage;
             }
@@ -581,7 +581,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             default:
                 dbgln("Unknown TLS::Error with value {}", payload_res);
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
                 break;
             }
             if (payload_res < 0)
@@ -628,7 +628,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         case WritePacketStage::ServerHandshake:
             // server handshake
             dbgln("UNSUPPORTED: Server mode");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         case WritePacketStage::Finished:
             // finished

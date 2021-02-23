@@ -37,9 +37,9 @@ EyesWidget::~EyesWidget()
 
 void EyesWidget::track_cursor_globally()
 {
-    ASSERT(window());
+    VERIFY(window());
     auto window_id = window()->window_id();
-    ASSERT(window_id >= 0);
+    VERIFY(window_id >= 0);
 
     set_global_cursor_tracking(true);
     GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetGlobalCursorTracking>(window_id, true);
@@ -124,7 +124,7 @@ Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
             (slope_squared / width_squared + 1 / height_squared)
         );
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     // clang-format on
 

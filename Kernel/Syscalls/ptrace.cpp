@@ -205,7 +205,7 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
     if (region->is_shared()) {
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject
         // to prevent the write operation from changing any shared inode data
-        ASSERT(region->vmobject().is_shared_inode());
+        VERIFY(region->vmobject().is_shared_inode());
         region->set_vmobject(PrivateInodeVMObject::create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode()));
         region->set_shared(false);
     }

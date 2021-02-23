@@ -110,7 +110,7 @@ private:
             return S_ISSOCK(type);
         default:
             // We've verified this is a correct character before.
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -420,7 +420,7 @@ static NonnullOwnPtr<Command> parse_all_commands(char* argv[])
     auto command = parse_complex_command(argv);
 
     if (g_have_seen_action_command) {
-        ASSERT(command);
+        VERIFY(command);
         return command.release_nonnull();
     }
 
@@ -461,7 +461,7 @@ static const char* parse_options(int argc, char* argv[])
             g_follow_symlinks = true;
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 }

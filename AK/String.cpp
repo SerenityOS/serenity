@@ -104,7 +104,7 @@ String String::empty()
 bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
 {
     // We must fit at least the NUL-terminator.
-    ASSERT(buffer_size > 0);
+    VERIFY(buffer_size > 0);
 
     size_t characters_to_copy = min(length(), buffer_size - 1);
     __builtin_memcpy(buffer, characters(), characters_to_copy);
@@ -127,8 +127,8 @@ String String::isolated_copy() const
 
 String String::substring(size_t start) const
 {
-    ASSERT(m_impl);
-    ASSERT(start <= length());
+    VERIFY(m_impl);
+    VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 
@@ -136,24 +136,24 @@ String String::substring(size_t start, size_t length) const
 {
     if (!length)
         return "";
-    ASSERT(m_impl);
-    ASSERT(start + length <= m_impl->length());
+    VERIFY(m_impl);
+    VERIFY(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
     return { characters() + start, length };
 }
 
 StringView String::substring_view(size_t start, size_t length) const
 {
-    ASSERT(m_impl);
-    ASSERT(start + length <= m_impl->length());
+    VERIFY(m_impl);
+    VERIFY(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
     return { characters() + start, length };
 }
 
 StringView String::substring_view(size_t start) const
 {
-    ASSERT(m_impl);
-    ASSERT(start <= length());
+    VERIFY(m_impl);
+    VERIFY(start <= length());
     return { characters() + start, length() - start };
 }
 

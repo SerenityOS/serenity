@@ -657,7 +657,7 @@ void Parser::load_state()
 
 Optional<Parser::DeclarationType> Parser::match_declaration_in_function_definition()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Parser::done()
@@ -667,8 +667,8 @@ bool Parser::done()
 
 StringView Parser::text_of_token(const Cpp::Token& token) const
 {
-    ASSERT(token.m_start.line == token.m_end.line);
-    ASSERT(token.m_start.column <= token.m_end.column);
+    VERIFY(token.m_start.line == token.m_end.line);
+    VERIFY(token.m_start.column <= token.m_end.column);
     return m_lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 
@@ -680,7 +680,7 @@ StringView Parser::text_of_node(const ASTNode& node) const
 StringView Parser::text_of_range(Position start, Position end) const
 {
     if (start.line == end.line) {
-        ASSERT(start.column <= end.column);
+        VERIFY(start.column <= end.column);
         return m_lines[start.line].substring_view(start.column, end.column - start.column + 1);
     }
 
@@ -694,7 +694,7 @@ StringView Parser::text_of_range(Position start, Position end) const
     });
     auto start_index = index_of_position(start);
     auto end_index = index_of_position(end);
-    ASSERT(end_index >= start_index);
+    VERIFY(end_index >= start_index);
     return m_program.substring_view(start_index, end_index - start_index);
 }
 
@@ -741,13 +741,13 @@ Position Parser::position() const
 
 RefPtr<ASTNode> Parser::eof_node() const
 {
-    ASSERT(m_tokens.size());
+    VERIFY(m_tokens.size());
     return node_at(m_tokens.last().m_end);
 }
 
 RefPtr<ASTNode> Parser::node_at(Position pos) const
 {
-    ASSERT(!m_tokens.is_empty());
+    VERIFY(!m_tokens.is_empty());
     RefPtr<ASTNode> match_node;
     for (auto& node : m_nodes) {
         if (node.start() > pos || node.end() < pos)
@@ -827,7 +827,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
     while (!eof()) {
         auto token = peek();
         if (token.type() != Token::Type::DoubleQuotedString && token.type() != Token::Type::EscapeSequence) {
-            ASSERT(start_token_index.has_value());
+            VERIFY(start_token_index.has_value());
             end_token_index = m_state.token_index - 1;
             break;
         }
@@ -841,8 +841,8 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
         end_token_index = m_tokens.size() - 1;
     }
 
-    ASSERT(start_token_index.has_value());
-    ASSERT(end_token_index.has_value());
+    VERIFY(start_token_index.has_value());
+    VERIFY(end_token_index.has_value());
 
     Token start_token = m_tokens[start_token_index.value()];
     Token end_token = m_tokens[end_token_index.value()];

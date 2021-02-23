@@ -79,7 +79,7 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
 
 Vector<StringView> StringView::split_view(const StringView& separator, bool keep_empty) const
 {
-    ASSERT(!separator.is_empty());
+    VERIFY(!separator.is_empty());
 
     if (is_empty())
         return {};
@@ -197,20 +197,20 @@ bool StringView::equals_ignoring_case(const StringView& other) const
 
 StringView StringView::substring_view(size_t start, size_t length) const
 {
-    ASSERT(start + length <= m_length);
+    VERIFY(start + length <= m_length);
     return { m_characters + start, length };
 }
 StringView StringView::substring_view(size_t start) const
 {
-    ASSERT(start <= m_length);
+    VERIFY(start <= m_length);
     return { m_characters + start, length() - start };
 }
 
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination();
-    ASSERT(remaining_characters >= m_characters);
-    ASSERT(remaining_characters <= m_characters + m_length);
+    VERIFY(remaining_characters >= m_characters);
+    VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }
@@ -218,8 +218,8 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
 StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
-    ASSERT(remaining_characters >= m_characters);
-    ASSERT(remaining_characters <= m_characters + m_length);
+    VERIFY(remaining_characters >= m_characters);
+    VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }

@@ -546,13 +546,13 @@ Value ProxyObject::construct(Function& new_target)
 
 const FlyString& ProxyObject::name() const
 {
-    ASSERT(is_function());
+    VERIFY(is_function());
     return static_cast<Function&>(m_target).name();
 }
 
 LexicalEnvironment* ProxyObject::create_environment()
 {
-    ASSERT(is_function());
+    VERIFY(is_function());
     return static_cast<Function&>(m_target).create_environment();
 }
 

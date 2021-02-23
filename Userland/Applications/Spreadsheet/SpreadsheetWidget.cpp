@@ -96,7 +96,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     m_tab_context_menu = GUI::Menu::construct();
     auto rename_action = GUI::Action::create("Rename...", [this](auto&) {
-        ASSERT(m_tab_context_menu_sheet_view);
+        VERIFY(m_tab_context_menu_sheet_view);
 
         auto& sheet = m_tab_context_menu_sheet_view->sheet();
         String new_name;
@@ -321,7 +321,7 @@ void SpreadsheetWidget::add_sheet()
 
 void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
 {
-    ASSERT(m_workbook == &sheet->workbook());
+    VERIFY(m_workbook == &sheet->workbook());
 
     NonnullRefPtrVector<Sheet> new_sheets;
     new_sheets.append(move(sheet));

@@ -33,7 +33,7 @@ namespace JS {
 Object* get_iterator(GlobalObject& global_object, Value value, String hint, Value method)
 {
     auto& vm = global_object.vm();
-    ASSERT(hint == "sync" || hint == "async");
+    VERIFY(hint == "sync" || hint == "async");
     if (method.is_empty()) {
         if (hint == "async")
             TODO();
@@ -128,7 +128,7 @@ void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<
         auto result = callback(next_value);
         if (result == IterationDecision::Break)
             return;
-        ASSERT(result == IterationDecision::Continue);
+        VERIFY(result == IterationDecision::Continue);
     }
 }
 

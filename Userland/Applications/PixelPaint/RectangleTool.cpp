@@ -56,7 +56,7 @@ void RectangleTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& rect)
         painter.fill_rect_with_gradient(rect, m_editor->primary_color(), m_editor->secondary_color());
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

@@ -249,7 +249,7 @@ void Formatter::visit(const AST::CloseFdRedirection* node)
 
 void Formatter::visit(const AST::CommandLiteral*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Formatter::visit(const AST::Comment* node)
@@ -270,7 +270,7 @@ void Formatter::visit(const AST::ContinuationControl* node)
     else if (node->continuation_kind() == AST::ContinuationControl::Continue)
         current_builder().append("continue");
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     visited(node);
 }
 

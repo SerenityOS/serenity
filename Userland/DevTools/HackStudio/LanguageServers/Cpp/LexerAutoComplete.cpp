@@ -65,8 +65,8 @@ Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(cons
 
 StringView LexerAutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
 {
-    ASSERT(token.m_start.line == token.m_end.line);
-    ASSERT(token.m_start.column <= token.m_end.column);
+    VERIFY(token.m_start.line == token.m_end.line);
+    VERIFY(token.m_start.column <= token.m_end.column);
     return lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 

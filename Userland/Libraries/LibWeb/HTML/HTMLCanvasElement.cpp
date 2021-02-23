@@ -65,7 +65,7 @@ RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node()
 
 CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)
 {
-    ASSERT(type == "2d");
+    VERIFY(type == "2d");
     if (!m_context)
         m_context = CanvasRenderingContext2D::create(*this);
     return m_context;

@@ -56,13 +56,13 @@ public:
     Kind kind() const { return m_kind; }
     const String& key() const
     {
-        ASSERT(m_kind == Kind::Key);
+        VERIFY(m_kind == Kind::Key);
         return m_key;
     }
 
     size_t index() const
     {
-        ASSERT(m_kind == Kind::Index);
+        VERIFY(m_kind == Kind::Index);
         return m_index;
     }
 

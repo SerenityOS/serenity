@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOperation file_operation)
 {
     if (selected_file_paths.is_empty())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     StringBuilder copy_text;
     if (file_operation == FileUtils::FileOperation::Cut) {
@@ -227,7 +227,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             auto paths = directory_view.selected_file_paths();
 
             if (paths.is_empty())
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
             do_copy(paths, FileUtils::FileOperation::Copy);
         },
@@ -239,7 +239,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             auto paths = directory_view.selected_file_paths();
 
             if (paths.is_empty())
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
             do_copy(paths, FileUtils::FileOperation::Cut);
         },
@@ -539,7 +539,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 paths = tree_view_selected_file_paths();
 
             if (paths.is_empty())
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
             do_copy(paths, FileUtils::FileOperation::Copy);
             refresh_tree_view();
@@ -555,7 +555,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 paths = tree_view_selected_file_paths();
 
             if (paths.is_empty())
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
 
             do_copy(paths, FileUtils::FileOperation::Cut);
             refresh_tree_view();

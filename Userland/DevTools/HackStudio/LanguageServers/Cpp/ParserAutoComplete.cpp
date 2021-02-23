@@ -53,14 +53,14 @@ const ParserAutoComplete::DocumentData& ParserAutoComplete::get_document_data(co
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
-    ASSERT(document_data.has_value());
+    VERIFY(document_data.has_value());
     return *document_data.value();
 }
 
 OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data_for(const String& file)
 {
     auto document = filedb().get(file);
-    ASSERT(document);
+    VERIFY(document);
     auto content = document->text();
     auto document_data = make<DocumentData>(document->text(), file);
     auto root = document_data->parser.parse();
@@ -107,7 +107,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     }
 
     if (is_empty_property(document, *node, position)) {
-        ASSERT(node->is_member_expression());
+        VERIFY(node->is_member_expression());
         return autocomplete_property(document, (MemberExpression&)(*node), "");
     }
 
@@ -235,7 +235,7 @@ String ParserAutoComplete::type_of(const DocumentData& document, const Expressio
         return type_of_property(document, *member_expression.m_property);
     }
     if (!expression.is_identifier()) {
-        ASSERT_NOT_REACHED(); // TODO
+        VERIFY_NOT_REACHED(); // TODO
     }
 
     auto& identifier = (const Identifier&)expression;
@@ -350,7 +350,7 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
         }
         if (is_property(node) && decl.is_struct_or_class()) {
             for (auto& member : ((Cpp::StructOrClassDeclaration&)decl).m_members) {
-                ASSERT(node.is_identifier());
+                VERIFY(node.is_identifier());
                 if (member.m_name == ((const Identifier&)node).m_name)
                     return member;
             }

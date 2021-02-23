@@ -44,7 +44,7 @@ inline u32 read32(Address address, u32 field) { return Access::the().read32_fiel
 Access& Access::the()
 {
     if (s_access == nullptr) {
-        ASSERT_NOT_REACHED(); // We failed to initialize the PCI subsystem, so stop here!
+        VERIFY_NOT_REACHED(); // We failed to initialize the PCI subsystem, so stop here!
     }
     return *s_access;
 }
@@ -69,7 +69,7 @@ PhysicalID Access::get_physical_id(Address address) const
             return physical_id;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 u8 Access::early_read8_field(Address address, u32 field)
@@ -110,7 +110,7 @@ void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Funct
 #if PCI_DEBUG
         klog() << "PCI: Found secondary bus: " << secondary_bus;
 #endif
-        ASSERT(secondary_bus != bus);
+        VERIFY(secondary_bus != bus);
         enumerate_bus(type, secondary_bus, callback, recursive);
     }
 }
@@ -188,7 +188,7 @@ Vector<Capability> get_capabilities(Address address)
 
 void raw_access(Address address, u32 field, size_t access_size, u32 value)
 {
-    ASSERT(access_size != 0);
+    VERIFY(access_size != 0);
     if (access_size == 1) {
         write8(address, field, value);
         return;
@@ -201,7 +201,7 @@ void raw_access(Address address, u32 field, size_t access_size, u32 value)
         write32(address, field, value);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 ID get_id(Address address)
@@ -303,7 +303,7 @@ void disable_bus_mastering(Address address)
 size_t get_BAR_space_size(Address address, u8 bar_number)
 {
     // See PCI Spec 2.3, Page 222
-    ASSERT(bar_number < 6);
+    VERIFY(bar_number < 6);
     u8 field = (PCI_BAR0 + (bar_number << 2));
     u32 bar_reserved = read32(address, field);
     write32(address, field, 0xFFFFFFFF);

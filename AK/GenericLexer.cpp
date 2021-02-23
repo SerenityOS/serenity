@@ -79,14 +79,14 @@ bool GenericLexer::next_is(const char* expected) const
 // Go back to the previous character
 void GenericLexer::retreat()
 {
-    ASSERT(m_index > 0);
+    VERIFY(m_index > 0);
     m_index--;
 }
 
 // Consume a character and advance the parser index
 char GenericLexer::consume()
 {
-    ASSERT(!is_eof());
+    VERIFY(!is_eof());
     return m_input[m_index++];
 }
 

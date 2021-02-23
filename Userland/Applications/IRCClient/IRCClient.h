@@ -102,7 +102,7 @@ public:
             if (m_windows[i] == &window)
                 return i;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void did_part_from_channel(Badge<IRCChannel>, IRCChannel&);

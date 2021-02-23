@@ -56,11 +56,11 @@ String command(const String& program, const Vector<String>& arguments, Optional<
     int stderr_pipe[2] = {};
     if (pipe2(stdout_pipe, O_CLOEXEC)) {
         perror("pipe2");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (pipe2(stderr_pipe, O_CLOEXEC)) {
         perror("pipe2");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto close_pipes = ScopeGuard([stderr_pipe, stdout_pipe] {
@@ -88,7 +88,7 @@ String command(const String& program, const Vector<String>& arguments, Optional<
     pid_t pid;
     if ((errno = posix_spawnp(&pid, program.characters(), &action, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     int wstatus;
     waitpid(pid, &wstatus, 0);
@@ -102,7 +102,7 @@ String command(const String& program, const Vector<String>& arguments, Optional<
         auto result_file = Core::File::construct();
         if (!result_file->open(pipe[0], Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
             perror("open");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return String::copy(result_file->read_all());
     };

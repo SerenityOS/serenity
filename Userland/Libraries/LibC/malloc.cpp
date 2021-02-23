@@ -156,7 +156,7 @@ extern "C" {
 static void* os_alloc(size_t size, const char* name)
 {
     auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, ChunkedBlock::block_size, name);
-    ASSERT(ptr != MAP_FAILED);
+    VERIFY(ptr != MAP_FAILED);
     return ptr;
 }
 
@@ -192,11 +192,11 @@ static void* malloc_impl(size_t size)
                 bool this_block_was_purged = rc == 1;
                 if (rc < 0) {
                     perror("madvise");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (mprotect(block, real_size, PROT_READ | PROT_WRITE) < 0) {
                     perror("mprotect");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (this_block_was_purged) {
                     g_malloc_stats.number_of_big_allocator_purge_hits++;
@@ -229,12 +229,12 @@ static void* malloc_impl(size_t size)
         bool this_block_was_purged = rc == 1;
         if (rc < 0) {
             perror("madvise");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         rc = mprotect(block, ChunkedBlock::block_size, PROT_READ | PROT_WRITE);
         if (rc < 0) {
             perror("mprotect");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         if (this_block_was_purged) {
             g_malloc_stats.number_of_empty_block_purge_hits++;
@@ -255,7 +255,7 @@ static void* malloc_impl(size_t size)
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
-    ASSERT(ptr);
+    VERIFY(ptr);
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
@@ -296,11 +296,11 @@ static void free_impl(void* ptr)
                 size_t this_block_size = block->m_size;
                 if (mprotect(block, this_block_size, PROT_NONE) < 0) {
                     perror("mprotect");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (madvise(block, this_block_size, MADV_SET_VOLATILE) != 0) {
                     perror("madvise");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 return;
             }
@@ -390,7 +390,7 @@ size_t malloc_size(void* ptr)
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
         size -= sizeof(CommonHeader);
     else
-        ASSERT(header->m_magic == MAGIC_PAGE_HEADER);
+        VERIFY(header->m_magic == MAGIC_PAGE_HEADER);
     return size;
 }
 

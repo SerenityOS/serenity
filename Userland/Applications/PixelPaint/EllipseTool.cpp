@@ -50,7 +50,7 @@ void EllipseTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& ellipse_
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), m_thickness);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

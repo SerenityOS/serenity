@@ -72,7 +72,7 @@ public:
                 printf("Unexpected error!\n");
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         };
 
@@ -84,7 +84,7 @@ public:
             pid_t pid = fork();
             if (pid < 0) {
                 perror("fork");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else if (pid == 0) {
                 run_crash_and_print_if_error();
                 exit(0);
@@ -342,7 +342,7 @@ int main(int argc, char** argv)
 
     if (do_failing_assertion || do_all_crash_types) {
         Crash("Perform a failing assertion", [] {
-            ASSERT(1 == 2);
+            VERIFY(1 == 2);
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

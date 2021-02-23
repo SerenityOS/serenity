@@ -75,9 +75,9 @@ public:
 
     u32 code_point() const
     {
-        ASSERT(is_character());
+        VERIFY(is_character());
         Utf8View view(m_comment_or_character.data.string_view());
-        ASSERT(view.length() == 1);
+        VERIFY(view.length() == 1);
         return *view.begin();
     }
 
@@ -100,19 +100,19 @@ public:
 
     String tag_name() const
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         return m_tag.tag_name.to_string();
     }
 
     bool is_self_closing() const
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         return m_tag.self_closing;
     }
 
     bool has_acknowledged_self_closing_flag() const
     {
-        ASSERT(is_self_closing());
+        VERIFY(is_self_closing());
         return m_tag.self_closing_acknowledged;
     }
 
@@ -124,7 +124,7 @@ public:
 
     StringView attribute(const FlyString& attribute_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (attribute_name == attribute.local_name_builder.string_view())
                 return attribute.value_builder.string_view();
@@ -139,7 +139,7 @@ public:
 
     void adjust_tag_name(const FlyString& old_name, const FlyString& new_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         if (old_name == m_tag.tag_name.string_view()) {
             m_tag.tag_name.clear();
             m_tag.tag_name.append(new_name);
@@ -148,7 +148,7 @@ public:
 
     void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (old_name == attribute.local_name_builder.string_view()) {
                 attribute.local_name_builder.clear();
@@ -159,7 +159,7 @@ public:
 
     void adjust_foreign_attribute(const FlyString& old_name, const FlyString& prefix, const FlyString& local_name, const FlyString& namespace_)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (old_name == attribute.local_name_builder.string_view()) {
                 attribute.prefix_builder.clear();
@@ -176,7 +176,7 @@ public:
 
     void drop_attributes()
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         m_tag.attributes.clear();
     }
 

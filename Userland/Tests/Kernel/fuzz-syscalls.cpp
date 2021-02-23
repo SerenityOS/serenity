@@ -63,16 +63,16 @@ static void do_systematic_tests()
         }
         // This is pure torture
         rc = syscall(Syscall::Function(i), 0xc0000001, 0xc0000002, 0xc0000003);
-        ASSERT(rc != -ENOSYS);
+        VERIFY(rc != -ENOSYS);
     }
 
     // Finally, test invalid syscalls:
     dbgln("Testing syscall #{} (n+1)", (int)Syscall::Function::__Count);
     rc = syscall(Syscall::Function::__Count, 0xc0000001, 0xc0000002, 0xc0000003);
-    ASSERT(rc == -ENOSYS);
+    VERIFY(rc == -ENOSYS);
     dbgln("Testing syscall #-1");
     rc = syscall(Syscall::Function(-1), 0xc0000001, 0xc0000002, 0xc0000003);
-    ASSERT(rc == -ENOSYS);
+    VERIFY(rc == -ENOSYS);
 }
 
 static void randomize_from(size_t* buffer, size_t len, const Vector<size_t>& values)
@@ -102,7 +102,7 @@ static void do_weird_call(size_t attempt, int syscall_fn, size_t arg1, size_t ar
 
     // Actually do the syscall ('fake_params' is passed indirectly, if any of arg1, arg2, or arg3 point to it.
     int rc = syscall(Syscall::Function(syscall_fn), arg1, arg2, arg3);
-    ASSERT(rc != -ENOSYS || is_nosys_syscall(syscall_fn));
+    VERIFY(rc != -ENOSYS || is_nosys_syscall(syscall_fn));
 }
 
 static void do_random_tests()
@@ -111,7 +111,7 @@ static void do_random_tests()
     {
         struct sigaction act_ignore = { { SIG_IGN }, 0, 0 };
         int rc = sigaction(SIGALRM, &act_ignore, nullptr);
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
     }
 
     // Note that we will also make lots of syscalls for randomness and debugging.

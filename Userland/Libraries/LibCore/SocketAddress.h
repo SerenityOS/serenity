@@ -84,7 +84,7 @@ public:
 
     Optional<sockaddr_un> to_sockaddr_un() const
     {
-        ASSERT(type() == Type::Local);
+        VERIFY(type() == Type::Local);
         sockaddr_un address;
         address.sun_family = AF_LOCAL;
         bool fits = m_local_address.copy_characters_to_buffer(address.sun_path, sizeof(address.sun_path));
@@ -95,7 +95,7 @@ public:
 
     sockaddr_in to_sockaddr_in() const
     {
-        ASSERT(type() == Type::IPv4);
+        VERIFY(type() == Type::IPv4);
         sockaddr_in address {};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = m_ipv4_address.to_in_addr_t();

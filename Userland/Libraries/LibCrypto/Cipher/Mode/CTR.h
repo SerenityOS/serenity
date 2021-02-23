@@ -160,7 +160,7 @@ protected:
     {
         size_t length;
         if (in) {
-            ASSERT(in->size() <= out.size());
+            VERIFY(in->size() <= out.size());
             length = in->size();
             if (length == 0)
                 return;
@@ -172,8 +172,8 @@ protected:
 
         // FIXME: We should have two of these encrypt/decrypt functions that
         //        we SFINAE out based on whether the Cipher mode needs an ivec
-        ASSERT(!ivec.is_empty());
-        ASSERT(ivec.size() >= IV_length());
+        VERIFY(!ivec.is_empty());
+        VERIFY(ivec.size() >= IV_length());
 
         m_cipher_block.set_padding_mode(cipher.padding_mode());
 
@@ -192,7 +192,7 @@ protected:
             }
             auto write_size = min(block_size, length);
 
-            ASSERT(offset + write_size <= out.size());
+            VERIFY(offset + write_size <= out.size());
             __builtin_memcpy(out.offset(offset), m_cipher_block.bytes().data(), write_size);
 
             increment(iv);

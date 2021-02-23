@@ -79,7 +79,7 @@ GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
         ++grandparent_child_index;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 

@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
         /// - currently selected cell
         /// - selected cell+
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
-        ASSERT(!cells.is_empty());
+        VERIFY(!cells.is_empty());
         StringBuilder text_builder, url_builder;
         bool first = true;
         auto cursor = spreadsheet_widget.current_selection_cursor();
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
         ScopeGuard update_after_paste { [&] { spreadsheet_widget.update(); } };
 
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
-        ASSERT(!cells.is_empty());
+        VERIFY(!cells.is_empty());
         const auto& data = GUI::Clipboard::the().data_and_type();
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
             Vector<Spreadsheet::Position> source_positions, target_positions;

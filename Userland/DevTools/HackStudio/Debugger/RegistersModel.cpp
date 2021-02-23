@@ -87,7 +87,7 @@ String RegistersModel::column_name(int column) const
     case Column::Value:
         return "Value";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 }

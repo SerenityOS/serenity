@@ -87,10 +87,10 @@ AnonymousBufferImpl::~AnonymousBufferImpl()
 {
     if (m_fd != -1) {
         auto rc = close(m_fd);
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
     }
     auto rc = munmap(m_data, round_up_to_power_of_two(m_size, PAGE_SIZE));
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 AnonymousBuffer AnonymousBuffer::create_from_anon_fd(int fd, size_t size)

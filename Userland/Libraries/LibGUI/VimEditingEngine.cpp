@@ -48,7 +48,7 @@ bool VimEditingEngine::on_key(const KeyEvent& event)
     case (VimMode::Normal):
         return on_key_in_normal_mode(event);
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     return false;

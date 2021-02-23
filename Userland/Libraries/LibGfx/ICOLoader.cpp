@@ -388,7 +388,7 @@ RefPtr<Gfx::Bitmap> ICOImageDecoderPlugin::bitmap()
         m_context->state = ICOLoadingContext::State::BitmapDecoded;
     }
 
-    ASSERT(m_context->images[m_context->largest_index].bitmap);
+    VERIFY(m_context->images[m_context->largest_index].bitmap);
     return m_context->images[m_context->largest_index].bitmap;
 }
 

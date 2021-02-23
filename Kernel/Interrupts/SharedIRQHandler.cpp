@@ -84,7 +84,7 @@ SharedIRQHandler::~SharedIRQHandler()
 
 void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
 
     if constexpr (INTERRUPT_DEBUG) {
         dbgln("Interrupt @ {}", interrupt_number());
@@ -94,7 +94,7 @@ void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
     int i = 0;
     for (auto* handler : m_handlers) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
-        ASSERT(handler != nullptr);
+        VERIFY(handler != nullptr);
         handler->increment_invoking_counter();
         handler->handle_interrupt(regs);
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());

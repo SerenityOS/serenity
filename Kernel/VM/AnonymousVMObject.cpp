@@ -114,7 +114,7 @@ AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
     : VMObject(size)
     , m_volatile_ranges_cache({ 0, page_count() })
 {
-    ASSERT(paddr.page_base() == paddr);
+    VERIFY(paddr.page_base() == paddr);
     for (size_t i = 0; i < page_count(); ++i)
         physical_pages()[i] = PhysicalPage::create(paddr.offset(i * PAGE_SIZE), false, false);
 }
@@ -136,7 +136,7 @@ AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
     , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages) // share the pool
 {
     // We can't really "copy" a spinlock. But we're holding it. Clear in the clone
-    ASSERT(other.m_lock.is_locked());
+    VERIFY(other.m_lock.is_locked());
     m_lock.initialize();
 
     // The clone also becomes COW
@@ -154,7 +154,7 @@ AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
                     break;
             }
         }
-        ASSERT(m_unused_committed_pages == 0);
+        VERIFY(m_unused_committed_pages == 0);
     }
 }
 
@@ -173,7 +173,7 @@ int AnonymousVMObject::purge()
 
 int AnonymousVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     if (m_paging_lock.is_locked())
         return 0;
     return purge_impl();
@@ -181,7 +181,7 @@ int AnonymousVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
 
 void AnonymousVMObject::set_was_purged(const VolatilePageRange& range)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     for (auto* purgeable_ranges : m_purgeable_ranges)
         purgeable_ranges->set_was_purged(range);
 }
@@ -196,7 +196,7 @@ int AnonymousVMObject::purge_impl()
         for (size_t i = range.base; i < range_end; i++) {
             auto& phys_page = m_physical_pages[i];
             if (phys_page && !phys_page->is_shared_zero_page()) {
-                ASSERT(!phys_page->is_lazy_committed_page());
+                VERIFY(!phys_page->is_lazy_committed_page());
                 ++purged_in_range;
             }
             phys_page = MM.shared_zero_page();
@@ -226,7 +226,7 @@ void AnonymousVMObject::register_purgeable_page_ranges(PurgeablePageRanges& purg
 {
     ScopedSpinLock lock(m_lock);
     purgeable_page_ranges.set_vmobject(this);
-    ASSERT(!m_purgeable_ranges.contains_slow(&purgeable_page_ranges));
+    VERIFY(!m_purgeable_ranges.contains_slow(&purgeable_page_ranges));
     m_purgeable_ranges.append(&purgeable_page_ranges);
 }
 
@@ -240,7 +240,7 @@ void AnonymousVMObject::unregister_purgeable_page_ranges(PurgeablePageRanges& pu
         m_purgeable_ranges.remove(i);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool AnonymousVMObject::is_any_volatile() const
@@ -256,7 +256,7 @@ bool AnonymousVMObject::is_any_volatile() const
 
 size_t AnonymousVMObject::remove_lazy_commit_pages(const VolatilePageRange& range)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
 
     size_t removed_count = 0;
     auto range_end = range.base + range.count;
@@ -265,7 +265,7 @@ size_t AnonymousVMObject::remove_lazy_commit_pages(const VolatilePageRange& rang
         if (phys_page && phys_page->is_lazy_committed_page()) {
             phys_page = MM.shared_zero_page();
             removed_count++;
-            ASSERT(m_unused_committed_pages > 0);
+            VERIFY(m_unused_committed_pages > 0);
             if (--m_unused_committed_pages == 0)
                 break;
         }
@@ -275,8 +275,8 @@ size_t AnonymousVMObject::remove_lazy_commit_pages(const VolatilePageRange& rang
 
 void AnonymousVMObject::update_volatile_cache()
 {
-    ASSERT(m_lock.is_locked());
-    ASSERT(m_volatile_ranges_cache_dirty);
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_volatile_ranges_cache_dirty);
 
     m_volatile_ranges_cache.clear();
     for_each_nonvolatile_range([&](const VolatilePageRange& range) {
@@ -289,7 +289,7 @@ void AnonymousVMObject::update_volatile_cache()
 
 void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
 
     if (m_unused_committed_pages == 0)
         return;
@@ -322,14 +322,14 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
 
 void AnonymousVMObject::range_made_nonvolatile(const VolatilePageRange&)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     m_volatile_ranges_cache_dirty = true;
 }
 
 size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(const VolatilePageRange& range)
 {
-    ASSERT(m_lock.is_locked());
-    ASSERT(!range.is_empty());
+    VERIFY(m_lock.is_locked());
+    VERIFY(!range.is_empty());
 
     size_t need_commit_pages = 0;
     auto range_end = range.base + range.count;
@@ -346,9 +346,9 @@ size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(const 
 
 size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const VolatilePageRange& range, size_t mark_total)
 {
-    ASSERT(m_lock.is_locked());
-    ASSERT(!range.is_empty());
-    ASSERT(mark_total > 0);
+    VERIFY(m_lock.is_locked());
+    VERIFY(!range.is_empty());
+    VERIFY(mark_total > 0);
 
     size_t pages_updated = 0;
     auto range_end = range.base + range.count;
@@ -376,10 +376,10 @@ RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t page_inde
     {
         ScopedSpinLock lock(m_lock);
 
-        ASSERT(m_unused_committed_pages > 0);
+        VERIFY(m_unused_committed_pages > 0);
 
         // We shouldn't have any committed page tags in volatile regions
-        ASSERT([&]() {
+        VERIFY([&]() {
             for (auto* purgeable_ranges : m_purgeable_ranges) {
                 if (purgeable_ranges->is_volatile(page_index))
                     return false;
@@ -438,7 +438,7 @@ bool AnonymousVMObject::is_nonvolatile(size_t page_index)
 
 PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, VirtualAddress vaddr)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(m_lock);
     auto& page_slot = physical_pages()[page_index];
     bool have_committed = m_shared_committed_cow_pages && is_nonvolatile(page_index);
@@ -484,7 +484,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
                 dbgln("      >> COW: error copying page {}/{} to {}/{}: failed to read from page at {}",
                     page_slot->paddr(), vaddr, page->paddr(), VirtualAddress(dest_ptr), VirtualAddress(fault_at));
             else
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
         }
     }
     page_slot = move(page);

@@ -50,7 +50,7 @@ public:
 
     T dequeue_end()
     {
-        ASSERT(!this->is_empty());
+        VERIFY(!this->is_empty());
         auto& slot = this->elements()[(this->m_head + this->m_size - 1) % Capacity];
         T value = move(slot);
         slot.~T();

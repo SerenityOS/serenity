@@ -70,7 +70,7 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
         }
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -127,13 +127,13 @@ RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper
         read_samples_from_stream(stream, read_norm_sample_24, fdata, resampler, num_channels);
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // We should handle this in a better way above, but for now --
     // just make sure we're good. Worst case we just write some 0s where they
     // don't belong.
-    ASSERT(!stream.handle_any_error());
+    VERIFY(!stream.handle_any_error());
 
     return Buffer::create_with_samples(move(fdata));
 }

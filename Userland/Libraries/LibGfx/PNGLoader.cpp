@@ -387,7 +387,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
                 }
             }
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         break;
     case 4:
@@ -396,7 +396,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
         } else if (context.bit_depth == 16) {
             unpack_grayscale_with_alpha<u16>(context);
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         break;
     case 2:
@@ -405,7 +405,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
         } else if (context.bit_depth == 16) {
             unpack_triplets_without_alpha<u16>(context);
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         break;
     case 6:
@@ -425,7 +425,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
                 }
             }
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         break;
     case 3:
@@ -468,11 +468,11 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
                 }
             }
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 
@@ -658,7 +658,7 @@ static int adam7_height(PNGLoadingContext& context, int pass)
     case 7:
         return context.height / 2;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -680,7 +680,7 @@ static int adam7_width(PNGLoadingContext& context, int pass)
     case 7:
         return context.width;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -809,7 +809,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
             return false;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     munmap(context.decompression_buffer, context.decompression_buffer_size);
@@ -1026,7 +1026,7 @@ RefPtr<Gfx::Bitmap> PNGImageDecoderPlugin::bitmap()
             return nullptr;
     }
 
-    ASSERT(m_context->bitmap);
+    VERIFY(m_context->bitmap);
     return m_context->bitmap;
 }
 

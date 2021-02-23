@@ -37,7 +37,7 @@ namespace AK {
 namespace {
 const static void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
-    ASSERT(needle_length < 32);
+    VERIFY(needle_length < 32);
 
     u64 lookup = 0xfffffffe;
 

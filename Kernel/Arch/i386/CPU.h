@@ -912,14 +912,14 @@ public:
 
     ALWAYS_INLINE void restore_irq(u32 prev_irq)
     {
-        ASSERT(prev_irq <= m_in_irq);
+        VERIFY(prev_irq <= m_in_irq);
         if (!prev_irq) {
             u32 prev_critical = 0;
             if (m_in_critical.compare_exchange_strong(prev_critical, 1)) {
                 m_in_irq = prev_irq;
                 deferred_call_execute_pending();
                 auto prev_raised = m_in_critical.exchange(prev_critical);
-                ASSERT(prev_raised == prev_critical + 1);
+                VERIFY(prev_raised == prev_critical + 1);
                 check_invoke_scheduler();
             } else if (prev_critical == 0) {
                 check_invoke_scheduler();
@@ -949,11 +949,11 @@ public:
     ALWAYS_INLINE void leave_critical(u32 prev_flags)
     {
         cli(); // Need to prevent IRQs from interrupting us here!
-        ASSERT(m_in_critical > 0);
+        VERIFY(m_in_critical > 0);
         if (m_in_critical == 1) {
             if (!m_in_irq) {
                 deferred_call_execute_pending();
-                ASSERT(m_in_critical == 1);
+                VERIFY(m_in_critical == 1);
             }
             m_in_critical--;
             if (!m_in_irq)
@@ -981,7 +981,7 @@ public:
     ALWAYS_INLINE void restore_critical(u32 prev_crit, u32 prev_flags)
     {
         m_in_critical.store(prev_crit, AK::MemoryOrder::memory_order_release);
-        ASSERT(!prev_crit || !(prev_flags & 0x200));
+        VERIFY(!prev_crit || !(prev_flags & 0x200));
         if (prev_flags & 0x200)
             sti();
         else
@@ -1105,14 +1105,14 @@ public:
 
     void leave()
     {
-        ASSERT(m_valid);
+        VERIFY(m_valid);
         m_valid = false;
         Processor::current().leave_critical(m_prev_flags);
     }
 
     void enter()
     {
-        ASSERT(!m_valid);
+        VERIFY(!m_valid);
         m_valid = true;
         Processor::current().enter_critical(m_prev_flags);
     }

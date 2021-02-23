@@ -90,10 +90,10 @@ float InlineFormattingContext::available_width_at_line(size_t line_index) const
 
 void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 {
-    ASSERT(containing_block().children_are_inline());
+    VERIFY(containing_block().children_are_inline());
     containing_block().line_boxes().clear();
     containing_block().for_each_child([&](auto& child) {
-        ASSERT(child.is_inline());
+        VERIFY(child.is_inline());
         if (is<Box>(child) && child.is_absolutely_positioned()) {
             layout_absolutely_positioned_element(downcast<Box>(child));
             return;

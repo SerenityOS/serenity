@@ -191,12 +191,12 @@ public:
 
     ALWAYS_INLINE const T& at(size_t i) const
     {
-        ASSERT(i < m_size);
+        VERIFY(i < m_size);
         return data()[i];
     }
     ALWAYS_INLINE T& at(size_t i)
     {
-        ASSERT(i < m_size);
+        VERIFY(i < m_size);
         return data()[i];
     }
 
@@ -211,7 +211,7 @@ public:
 
     T take_last()
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         T value = move(last());
         last().~T();
         --m_size;
@@ -220,7 +220,7 @@ public:
 
     T take_first()
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         T value = move(first());
         remove(0);
         return value;
@@ -235,14 +235,14 @@ public:
 
     T unstable_take(size_t index)
     {
-        ASSERT(index < m_size);
+        VERIFY(index < m_size);
         swap(at(index), at(m_size - 1));
         return take_last();
     }
 
     void remove(size_t index)
     {
-        ASSERT(index < m_size);
+        VERIFY(index < m_size);
 
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::copy(slot(index), slot(index + 1), m_size - index - 1);
@@ -261,8 +261,8 @@ public:
     {
         if (count == 0)
             return;
-        ASSERT(index + count > index);
-        ASSERT(index + count <= m_size);
+        VERIFY(index + count > index);
+        VERIFY(index + count <= m_size);
 
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::copy(slot(index), slot(index + count), m_size - index - count);
@@ -281,7 +281,7 @@ public:
     template<typename U = T>
     void insert(size_t index, U&& value)
     {
-        ASSERT(index <= size());
+        VERIFY(index <= size());
         if (index == size())
             return append(forward<U>(value));
         grow_capacity(size() + 1);
@@ -403,7 +403,7 @@ public:
     template<typename U = T>
     ALWAYS_INLINE void unchecked_append(U&& value)
     {
-        ASSERT((size() + 1) <= capacity());
+        VERIFY((size() + 1) <= capacity());
         new (slot(m_size)) T(forward<U>(value));
         ++m_size;
     }
@@ -506,7 +506,7 @@ public:
 
     void shrink(size_t new_size, bool keep_capacity = false)
     {
-        ASSERT(new_size <= size());
+        VERIFY(new_size <= size());
         if (new_size == size())
             return;
 

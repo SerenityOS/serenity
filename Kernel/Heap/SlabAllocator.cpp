@@ -86,7 +86,7 @@ public:
 
     void dealloc(void* ptr)
     {
-        ASSERT(ptr);
+        VERIFY(ptr);
         if (ptr < m_base || ptr >= m_end) {
             kfree(ptr);
             return;
@@ -159,7 +159,7 @@ void* slab_alloc(size_t slab_size)
         return s_slab_allocator_64.alloc();
     if (slab_size <= 128)
         return s_slab_allocator_128.alloc();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void slab_dealloc(void* ptr, size_t slab_size)
@@ -172,7 +172,7 @@ void slab_dealloc(void* ptr, size_t slab_size)
         return s_slab_allocator_64.dealloc(ptr);
     if (slab_size <= 128)
         return s_slab_allocator_128.dealloc(ptr);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)> callback)

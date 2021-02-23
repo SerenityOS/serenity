@@ -152,7 +152,7 @@ bool Decoder::decode(Dictionary& dictionary)
     if (m_stream.handle_any_error())
         return false;
     if (size >= (size_t)NumericLimits<i32>::max()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     for (size_t i = 0; i < size; ++i) {

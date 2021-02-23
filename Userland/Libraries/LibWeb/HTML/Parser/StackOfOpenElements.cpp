@@ -45,7 +45,7 @@ bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vec
         if (list.contains_slow(node.local_name()))
             return false;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool StackOfOpenElements::has_in_scope(const FlyString& tag_name) const
@@ -62,7 +62,7 @@ bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, con
         if (list.contains_slow(node.local_name()))
             return false;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool StackOfOpenElements::has_in_scope(const DOM::Element& target_node) const

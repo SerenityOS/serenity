@@ -73,7 +73,7 @@ public:
         case ViewMode::Icon:
             return *m_icon_view;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

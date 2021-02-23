@@ -43,7 +43,7 @@ void ElapsedTimer::start()
 
 int ElapsedTimer::elapsed() const
 {
-    ASSERT(is_valid());
+    VERIFY(is_valid());
     struct timeval now;
     timespec now_spec;
     clock_gettime(m_precise ? CLOCK_MONOTONIC : CLOCK_MONOTONIC_COARSE, &now_spec);

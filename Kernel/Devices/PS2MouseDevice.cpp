@@ -114,7 +114,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
         evaluate_block_conditions();
     };
 
-    ASSERT(m_data_state < sizeof(m_data.bytes) / sizeof(m_data.bytes[0]));
+    VERIFY(m_data_state < sizeof(m_data.bytes) / sizeof(m_data.bytes[0]));
     m_data.bytes[m_data_state] = byte;
 
     switch (m_data_state) {
@@ -136,7 +136,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
         commit_packet();
         break;
     case 3:
-        ASSERT(m_has_wheel);
+        VERIFY(m_has_wheel);
         commit_packet();
         break;
     }
@@ -275,7 +275,7 @@ bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
 
 KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
-    ASSERT(size > 0);
+    VERIFY(size > 0);
     size_t nread = 0;
     size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
     ScopedSpinLock lock(m_queue_lock);

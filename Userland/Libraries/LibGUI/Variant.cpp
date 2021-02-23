@@ -65,7 +65,7 @@ const char* to_string(Variant::Type type)
     case Variant::Type::TextAlignment:
         return "TextAlignment";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Variant::Variant()
@@ -195,7 +195,7 @@ Variant::Variant(const JsonValue& value)
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Variant::Variant(const Gfx::Bitmap& value)
@@ -276,7 +276,7 @@ void Variant::move_from(Variant&& other)
 
 void Variant::copy_from(const Variant& other)
 {
-    ASSERT(!is_valid());
+    VERIFY(!is_valid());
     m_type = other.m_type;
     switch (m_type) {
     case Type::Bool:
@@ -366,7 +366,7 @@ bool Variant::operator==(const Variant& other) const
     case Type::Invalid:
         return true;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Variant::operator<(const Variant& other) const
@@ -400,11 +400,11 @@ bool Variant::operator<(const Variant& other) const
     case Type::Font:
     case Type::TextAlignment:
         // FIXME: Figure out how to compare these.
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     case Type::Invalid:
         break;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 String Variant::to_string() const
@@ -449,14 +449,14 @@ String Variant::to_string() const
         case Gfx::TextAlignment::TopRight:
             return "Gfx::TextAlignment::TopRight";
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return "";
     }
     case Type::Invalid:
         return "[null]";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

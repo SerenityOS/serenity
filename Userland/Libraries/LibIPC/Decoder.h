@@ -39,7 +39,7 @@ template<typename T>
 inline bool decode(Decoder&, T&)
 {
     static_assert(DependentFalse<T>, "Base IPC::decoder() instantiated");
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 class Decoder {

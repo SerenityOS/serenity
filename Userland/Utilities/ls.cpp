@@ -372,7 +372,7 @@ static int do_file_system_object_long(const char* path)
     while (di.has_next()) {
         FileMetadata metadata;
         metadata.name = di.next_path();
-        ASSERT(!metadata.name.is_empty());
+        VERIFY(!metadata.name.is_empty());
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;
@@ -382,7 +382,7 @@ static int do_file_system_object_long(const char* path)
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_string();
-        ASSERT(!metadata.path.is_null());
+        VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0) {
             perror("lstat");

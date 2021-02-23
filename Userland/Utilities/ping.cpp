@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 
         bool fits = String("Hello there!\n").copy_characters_to_buffer(ping_packet.msg, sizeof(ping_packet.msg));
         // It's a constant string, we can be sure that it fits.
-        ASSERT(fits);
+        VERIFY(fits);
 
         ping_packet.header.checksum = internet_checksum(&ping_packet, sizeof(PingPacket));
 

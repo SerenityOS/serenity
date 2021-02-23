@@ -227,7 +227,7 @@ static_assert(sizeof(signal_names) == sizeof(const char*) * NSIG);
 
 int getsignalbyname(const char* name)
 {
-    ASSERT(name);
+    VERIFY(name);
     for (size_t i = 0; i < NSIG; ++i) {
         auto* signal_name = signal_names[i];
         if (!strcmp(signal_name, name))

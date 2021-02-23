@@ -152,7 +152,7 @@ private:
             ENUMERATE_TOKENIZER_STATES
 #undef __ENUMERATE_TOKENIZER_STATE
         };
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void will_emit(HTMLToken&);

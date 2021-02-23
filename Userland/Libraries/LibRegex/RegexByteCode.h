@@ -161,10 +161,10 @@ public:
 
         ByteCode arguments;
         for (auto& value : pairs) {
-            ASSERT(value.type != CharacterCompareType::RangeExpressionDummy);
-            ASSERT(value.type != CharacterCompareType::Undefined);
-            ASSERT(value.type != CharacterCompareType::String);
-            ASSERT(value.type != CharacterCompareType::NamedReference);
+            VERIFY(value.type != CharacterCompareType::RangeExpressionDummy);
+            VERIFY(value.type != CharacterCompareType::Undefined);
+            VERIFY(value.type != CharacterCompareType::String);
+            VERIFY(value.type != CharacterCompareType::NamedReference);
 
             arguments.append((ByteCodeValueType)value.type);
             if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnyChar && value.type != CharacterCompareType::TemporaryInverse)
@@ -327,7 +327,7 @@ public:
         }
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void insert_bytecode_alternation(ByteCode&& left, ByteCode&& right)
@@ -503,7 +503,7 @@ public:
 
     ALWAYS_INLINE ByteCodeValueType argument(size_t offset) const
     {
-        ASSERT(state().instruction_position + offset <= m_bytecode->size());
+        VERIFY(state().instruction_position + offset <= m_bytecode->size());
         return m_bytecode->at(state().instruction_position + 1 + offset);
     }
 
@@ -526,7 +526,7 @@ public:
 
     ALWAYS_INLINE const MatchState& state() const
     {
-        ASSERT(m_state.has_value());
+        VERIFY(m_state.has_value());
         return *m_state.value();
     }
 
@@ -809,28 +809,28 @@ ALWAYS_INLINE bool is<OpCode_Compare>(const OpCode& opcode)
 template<typename T>
 ALWAYS_INLINE const T& to(const OpCode& opcode)
 {
-    ASSERT(is<T>(opcode));
+    VERIFY(is<T>(opcode));
     return static_cast<const T&>(opcode);
 }
 
 template<typename T>
 ALWAYS_INLINE T* to(OpCode* opcode)
 {
-    ASSERT(is<T>(opcode));
+    VERIFY(is<T>(opcode));
     return static_cast<T*>(opcode);
 }
 
 template<typename T>
 ALWAYS_INLINE const T* to(const OpCode* opcode)
 {
-    ASSERT(is<T>(opcode));
+    VERIFY(is<T>(opcode));
     return static_cast<const T*>(opcode);
 }
 
 template<typename T>
 ALWAYS_INLINE T& to(OpCode& opcode)
 {
-    ASSERT(is<T>(opcode));
+    VERIFY(is<T>(opcode));
     return static_cast<T&>(opcode);
 }
 

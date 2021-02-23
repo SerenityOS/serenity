@@ -59,13 +59,13 @@ public:
     NonnullOwnPtr(NonnullOwnPtr&& other)
         : m_ptr(other.leak_ptr())
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
     }
     template<typename U>
     NonnullOwnPtr(NonnullOwnPtr<U>&& other)
         : m_ptr(other.leak_ptr())
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
     }
     ~NonnullOwnPtr()
     {
@@ -147,7 +147,7 @@ public:
     template<typename U>
     NonnullOwnPtr<U> release_nonnull()
     {
-        ASSERT(m_ptr);
+        VERIFY(m_ptr);
         return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 

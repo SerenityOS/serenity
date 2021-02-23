@@ -71,7 +71,7 @@ struct KmallocGlobalHeap {
                 klog() << "kmalloc(): Cannot expand heap before MM is initialized!";
                 return false;
             }
-            ASSERT(!m_adding);
+            VERIFY(!m_adding);
             TemporaryChange change(m_adding, true);
             // At this point we have very little memory left. Any attempt to
             // kmalloc() could fail, so use our backup memory first, so we
@@ -231,7 +231,7 @@ void* kmalloc_eternal(size_t size)
     ScopedSpinLock lock(s_lock);
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
-    ASSERT(s_next_eternal_ptr < s_end_of_eternal_range);
+    VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
     g_kmalloc_bytes_eternal += size;
     return ptr;
 }

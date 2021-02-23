@@ -46,7 +46,7 @@ bool IRQHandler::eoi()
 {
     dbgln_if(IRQ_DEBUG, "EOI IRQ {}", interrupt_number());
     if (!m_shared_with_others) {
-        ASSERT(!m_responsible_irq_controller.is_null());
+        VERIFY(!m_responsible_irq_controller.is_null());
         m_responsible_irq_controller->eoi(*this);
         return true;
     }

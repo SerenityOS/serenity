@@ -195,7 +195,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
 static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const char* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
     InstructionDescriptor& d = table[op];
-    ASSERT(d.handler == nullptr);
+    VERIFY(d.handler == nullptr);
     d.format = MultibyteWithSlash;
     d.has_rm = true;
     if (!d.slashes)
@@ -206,11 +206,11 @@ static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, const cha
 
 static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, const char* mnemonic, InstructionFormat format, InstructionHandler handler)
 {
-    ASSERT((rm & 0xc0) == 0xc0);
-    ASSERT(((rm >> 3) & 7) == slash);
+    VERIFY((rm & 0xc0) == 0xc0);
+    VERIFY(((rm >> 3) & 7) == slash);
 
     InstructionDescriptor& d0 = table[op];
-    ASSERT(d0.format == MultibyteWithSlash);
+    VERIFY(d0.format == MultibyteWithSlash);
     InstructionDescriptor& d = d0.slashes[slash];
 
     if (!d.slashes) {
@@ -937,19 +937,19 @@ String MemoryOrRegisterReference::to_string_o32(const Instruction& insn) const
 
 String MemoryOrRegisterReference::to_string_fpu_reg() const
 {
-    ASSERT(is_register());
+    VERIFY(is_register());
     return register_name(reg_fpu());
 }
 
 String MemoryOrRegisterReference::to_string_fpu_mem(const Instruction& insn) const
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     return String::format("[%s]", to_string(insn).characters());
 }
 
 String MemoryOrRegisterReference::to_string_fpu_ax16() const
 {
-    ASSERT(is_register());
+    VERIFY(is_register());
     return register_name(reg16());
 }
 
@@ -976,7 +976,7 @@ String MemoryOrRegisterReference::to_string_fpu64(const Instruction& insn) const
 
 String MemoryOrRegisterReference::to_string_fpu80(const Instruction& insn) const
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     return String::format("tbyte ptr [%s]", to_string(insn).characters());
 }
 String MemoryOrRegisterReference::to_string_mm(const Instruction& insn) const
@@ -1824,7 +1824,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
 String Instruction::mnemonic() const
 {
     if (!m_descriptor) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return m_descriptor->mnemonic;
 }

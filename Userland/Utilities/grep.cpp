@@ -195,7 +195,7 @@ int main(int argc, char** argv)
         ssize_t nread = 0;
         ScopeGuard free_line = [line] { free(line); };
         while ((nread = getline(&line, &line_len, stdin)) != -1) {
-            ASSERT(nread > 0);
+            VERIFY(nread > 0);
             StringView line_view(line, nread - 1);
             bool is_binary = line_view.contains(0);
 

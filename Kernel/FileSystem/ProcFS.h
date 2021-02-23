@@ -131,19 +131,19 @@ private:
     // ^Inode
     virtual KResult attach(FileDescription&) override;
     virtual void did_seek(FileDescription&, off_t) override;
-    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override { ASSERT_NOT_REACHED(); }
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override { VERIFY_NOT_REACHED(); }
     virtual InodeMetadata metadata() const override;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override { ASSERT_NOT_REACHED(); }
+    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override { VERIFY_NOT_REACHED(); }
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override {};
-    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*) override { ASSERT_NOT_REACHED(); }
+    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*) override { VERIFY_NOT_REACHED(); }
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;
     virtual KResult chmod(mode_t) override { return EINVAL; }
     virtual KResult chown(uid_t, gid_t) override { return EINVAL; }
-    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody&, RefPtr<Custody>*, int, int) const override { ASSERT_NOT_REACHED(); }
+    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody&, RefPtr<Custody>*, int, int) const override { VERIFY_NOT_REACHED(); }
     virtual FileDescription* preopen_fd() override { return m_fd; }
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }

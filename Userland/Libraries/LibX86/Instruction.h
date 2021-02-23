@@ -641,7 +641,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
             base += cpu.ebp().value();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
         break;
@@ -689,7 +689,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instructio
 template<typename CPU, typename T>
 ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instruction& insn, T value)
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     cpu.write_memory64(address, value);
 }
@@ -727,7 +727,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::rea
 template<typename CPU>
 ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     return cpu.read_memory64(address);
 }
@@ -864,7 +864,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm2 = stream.read32();
         break;
     default:
-        ASSERT(imm2_bytes == 0);
+        VERIFY(imm2_bytes == 0);
         break;
     }
 
@@ -879,7 +879,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_imm1 = stream.read32();
         break;
     default:
-        ASSERT(imm1_bytes == 0);
+        VERIFY(imm1_bytes == 0);
         break;
     }
 
@@ -910,7 +910,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             m_displacement32 = stream.read32();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     } else {
@@ -925,7 +925,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             m_displacement16 = stream.read16();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -939,7 +939,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
         if ((m_rm & 0x07) == 6)
             m_displacement_bytes = 2;
         else
-            ASSERT(m_displacement_bytes == 0);
+            VERIFY(m_displacement_bytes == 0);
         break;
     case 0x40:
         m_displacement_bytes = 1;
@@ -987,7 +987,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
                 m_displacement_bytes = 4;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
                 break;
             }
         }

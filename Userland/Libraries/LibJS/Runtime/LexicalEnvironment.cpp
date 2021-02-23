@@ -89,7 +89,7 @@ bool LexicalEnvironment::has_super_binding() const
 
 Value LexicalEnvironment::get_super_base()
 {
-    ASSERT(has_super_binding());
+    VERIFY(has_super_binding());
     if (m_home_object.is_object())
         return m_home_object.as_object().prototype();
     return {};
@@ -107,12 +107,12 @@ bool LexicalEnvironment::has_this_binding() const
     case EnvironmentRecordType::Module:
         return true;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value LexicalEnvironment::get_this_binding(GlobalObject& global_object) const
 {
-    ASSERT(has_this_binding());
+    VERIFY(has_this_binding());
     if (this_binding_status() == ThisBindingStatus::Uninitialized) {
         vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisHasNotBeenInitialized);
         return {};
@@ -122,7 +122,7 @@ Value LexicalEnvironment::get_this_binding(GlobalObject& global_object) const
 
 void LexicalEnvironment::bind_this_value(GlobalObject& global_object, Value this_value)
 {
-    ASSERT(has_this_binding());
+    VERIFY(has_this_binding());
     if (m_this_binding_status == ThisBindingStatus::Initialized) {
         vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisIsAlreadyInitialized);
         return;

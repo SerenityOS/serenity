@@ -165,7 +165,7 @@ Gfx::Color BoardView::background_color_for_cell(u32 value)
     case 2048:
         return Color::from_rgb(0xedc22e);
     default:
-        ASSERT(value > 2048);
+        VERIFY(value > 2048);
         return Color::from_rgb(0x3c3a32);
     }
 }

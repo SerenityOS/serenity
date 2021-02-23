@@ -31,7 +31,7 @@ namespace UserspaceEmulator {
 
 Vector<Range, 2> Range::carve(const Range& taken)
 {
-    ASSERT((taken.size() % PAGE_SIZE) == 0);
+    VERIFY((taken.size() % PAGE_SIZE) == 0);
     Vector<Range, 2> parts;
     if (taken == *this)
         return {};

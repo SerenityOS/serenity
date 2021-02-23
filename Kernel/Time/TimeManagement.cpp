@@ -118,10 +118,10 @@ timespec TimeManagement::monotonic_time(TimePrecision precision) const
         }
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
 
-    ASSERT(m_time_ticks_per_second > 0);
-    ASSERT(ticks < m_time_ticks_per_second);
+    VERIFY(m_time_ticks_per_second > 0);
+    VERIFY(ticks < m_time_ticks_per_second);
     u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
-    ASSERT(ns < 1000000000ull);
+    VERIFY(ns < 1000000000ull);
     return { (long)seconds, (long)ns };
 }
 
@@ -148,7 +148,7 @@ u64 TimeManagement::uptime_ms() const
 UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
 {
     if (cpu == 0) {
-        ASSERT(!s_the.is_initialized());
+        VERIFY(!s_the.is_initialized());
         s_the.ensure_instance();
 
         // Initialize the APIC timers after the other timers as the
@@ -160,7 +160,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
             s_the->set_system_timer(*apic_timer);
         }
     } else {
-        ASSERT(s_the.is_initialized());
+        VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
             klog() << "Time: Enable APIC timer on CPU #" << cpu;
             apic_timer->enable_local_timer();
@@ -170,7 +170,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
 {
-    ASSERT(Processor::id() == 0); // This should only be called on the BSP!
+    VERIFY(Processor::id() == 0); // This should only be called on the BSP!
     auto original_callback = m_system_timer->set_callback(nullptr);
     m_system_timer->disable();
     timer.set_callback(move(original_callback));
@@ -205,9 +205,9 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     if (probe_non_legacy_hardware_timers) {
         if (!probe_and_set_non_legacy_hardware_timers())
             if (!probe_and_set_legacy_hardware_timers())
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
     } else if (!probe_and_set_legacy_hardware_timers()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -252,7 +252,7 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
         return true;
     if (hpet_mode == "nonperiodic")
         return false;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
@@ -274,9 +274,9 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     auto non_periodic_timers = scan_for_non_periodic_timers();
 
     if (is_hpet_periodic_mode_allowed())
-        ASSERT(!periodic_timers.is_empty());
+        VERIFY(!periodic_timers.is_empty());
 
-    ASSERT(periodic_timers.size() + non_periodic_timers.size() > 0);
+    VERIFY(periodic_timers.size() + non_periodic_timers.size() > 0);
 
     if (periodic_timers.size() > 0)
         m_system_timer = periodic_timers[0];
@@ -337,8 +337,8 @@ void TimeManagement::update_time(const RegisterState&)
 
 void TimeManagement::increment_time_since_boot_hpet()
 {
-    ASSERT(!m_time_keeper_timer.is_null());
-    ASSERT(m_time_keeper_timer->timer_type() == HardwareTimerType::HighPrecisionEventTimer);
+    VERIFY(!m_time_keeper_timer.is_null());
+    VERIFY(m_time_keeper_timer->timer_type() == HardwareTimerType::HighPrecisionEventTimer);
 
     // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever
     // updated here! So we can safely read that information, query the clock,
@@ -359,7 +359,7 @@ void TimeManagement::increment_time_since_boot_hpet()
 
 void TimeManagement::increment_time_since_boot()
 {
-    ASSERT(!m_time_keeper_timer.is_null());
+    VERIFY(!m_time_keeper_timer.is_null());
 
     // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
     // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.

@@ -53,7 +53,7 @@ ModelIndex FileSystemModel::Node::index(int column) const
         if (&parent->children[row] == this)
             return m_model.create_index(row, column, const_cast<Node*>(this));
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
@@ -340,7 +340,7 @@ const FileSystemModel::Node& FileSystemModel::node(const ModelIndex& index) cons
 {
     if (!index.is_valid())
         return *m_root;
-    ASSERT(index.internal_data());
+    VERIFY(index.internal_data());
     return *(Node*)index.internal_data();
 }
 
@@ -361,7 +361,7 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
         return {};
     auto& node = this->node(index);
     if (!node.parent) {
-        ASSERT(&node == m_root);
+        VERIFY(&node == m_root);
         return {};
     }
     return node.parent->index(index.column());
@@ -369,7 +369,7 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
 
 Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
 
     if (role == ModelRole::TextAlignment) {
         switch (index.column()) {
@@ -386,7 +386,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::SymlinkTarget:
             return Gfx::TextAlignment::CenterLeft;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -394,7 +394,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 
     if (role == ModelRole::Custom) {
         // For GUI::FileSystemModel, custom role means the full path.
-        ASSERT(index.column() == Column::Name);
+        VERIFY(index.column() == Column::Name);
         return node.full_path();
     }
 
@@ -429,7 +429,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::SymlinkTarget:
             return node.symlink_target;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (role == ModelRole::Display) {
@@ -581,7 +581,7 @@ String FileSystemModel::column_name(int column) const
     case Column::SymlinkTarget:
         return "Symlink target";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool FileSystemModel::accepts_drag(const ModelIndex& index, const Vector<String>& mime_types) const
@@ -611,7 +611,7 @@ bool FileSystemModel::is_editable(const ModelIndex& index) const
 
 void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
 {
-    ASSERT(is_editable(index));
+    VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
     auto dirname = LexicalPath(node.full_path()).dirname();
     auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());

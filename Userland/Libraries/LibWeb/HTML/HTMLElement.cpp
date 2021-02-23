@@ -73,7 +73,7 @@ bool HTMLElement::is_editable() const
     case ContentEditableState::Inherit:
         return parent() && parent()->is_editable();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -87,7 +87,7 @@ String HTMLElement::content_editable() const
     case ContentEditableState::Inherit:
         return "inherit";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

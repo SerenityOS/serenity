@@ -67,8 +67,8 @@ Utf8CodepointIterator Utf8View::end() const
 
 size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
 {
-    ASSERT(it.m_ptr >= begin_ptr());
-    ASSERT(it.m_ptr <= end_ptr());
+    VERIFY(it.m_ptr >= begin_ptr());
+    VERIFY(it.m_ptr <= end_ptr());
 
     return it.m_ptr - begin_ptr();
 }
@@ -162,15 +162,15 @@ bool Utf8CodepointIterator::operator!=(const Utf8CodepointIterator& other) const
 
 Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
 
     size_t code_point_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
 
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
 
-    ASSERT(code_point_length_in_bytes <= m_length);
+    VERIFY(code_point_length_in_bytes <= m_length);
     m_ptr += code_point_length_in_bytes;
     m_length -= code_point_length_in_bytes;
 
@@ -179,17 +179,17 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 
 size_t Utf8CodepointIterator::code_point_length_in_bytes() const
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
     size_t code_point_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
     return code_point_length_in_bytes;
 }
 
 u32 Utf8CodepointIterator::operator*() const
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
 
     u32 code_point_value_so_far = 0;
     size_t code_point_length_in_bytes = 0;
@@ -197,13 +197,13 @@ u32 Utf8CodepointIterator::operator*() const
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], code_point_length_in_bytes, code_point_value_so_far);
     if (!first_byte_makes_sense)
         dbgln("First byte doesn't make sense, bytes: {}", StringView { (const char*)m_ptr, m_length });
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
     if (code_point_length_in_bytes > m_length)
         dbgln("Not enough bytes (need {}, have {}), first byte is: {:#02x}, '{}'", code_point_length_in_bytes, m_length, m_ptr[0], (const char*)m_ptr);
-    ASSERT(code_point_length_in_bytes <= m_length);
+    VERIFY(code_point_length_in_bytes <= m_length);
 
     for (size_t offset = 1; offset < code_point_length_in_bytes; offset++) {
-        ASSERT(m_ptr[offset] >> 6 == 2);
+        VERIFY(m_ptr[offset] >> 6 == 2);
         code_point_value_so_far <<= 6;
         code_point_value_so_far |= m_ptr[offset] & 63;
     }

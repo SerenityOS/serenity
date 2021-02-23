@@ -45,52 +45,52 @@ SimpleRegion::~SimpleRegion()
 
 ValueWithShadow<u8> SimpleRegion::read8(FlatPtr offset)
 {
-    ASSERT(offset < size());
+    VERIFY(offset < size());
     return { *reinterpret_cast<const u8*>(m_data + offset), *reinterpret_cast<const u8*>(m_shadow_data + offset) };
 }
 
 ValueWithShadow<u16> SimpleRegion::read16(u32 offset)
 {
-    ASSERT(offset + 1 < size());
+    VERIFY(offset + 1 < size());
     return { *reinterpret_cast<const u16*>(m_data + offset), *reinterpret_cast<const u16*>(m_shadow_data + offset) };
 }
 
 ValueWithShadow<u32> SimpleRegion::read32(u32 offset)
 {
-    ASSERT(offset + 3 < size());
+    VERIFY(offset + 3 < size());
     return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
 }
 
 ValueWithShadow<u64> SimpleRegion::read64(u32 offset)
 {
-    ASSERT(offset + 7 < size());
+    VERIFY(offset + 7 < size());
     return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
 }
 
 void SimpleRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
-    ASSERT(offset < size());
+    VERIFY(offset < size());
     *reinterpret_cast<u8*>(m_data + offset) = value.value();
     *reinterpret_cast<u8*>(m_shadow_data + offset) = value.shadow();
 }
 
 void SimpleRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
-    ASSERT(offset + 1 < size());
+    VERIFY(offset + 1 < size());
     *reinterpret_cast<u16*>(m_data + offset) = value.value();
     *reinterpret_cast<u16*>(m_shadow_data + offset) = value.shadow();
 }
 
 void SimpleRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
-    ASSERT(offset + 3 < size());
+    VERIFY(offset + 3 < size());
     *reinterpret_cast<u32*>(m_data + offset) = value.value();
     *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
 }
 
 void SimpleRegion::write64(u32 offset, ValueWithShadow<u64> value)
 {
-    ASSERT(offset + 7 < size());
+    VERIFY(offset + 7 < size());
     *reinterpret_cast<u64*>(m_data + offset) = value.value();
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }

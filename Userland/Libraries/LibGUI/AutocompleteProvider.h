@@ -59,7 +59,7 @@ public:
 
     void attach(TextEditor& editor)
     {
-        ASSERT(!m_editor);
+        VERIFY(!m_editor);
         m_editor = editor;
     }
     void detach() { m_editor.clear(); }

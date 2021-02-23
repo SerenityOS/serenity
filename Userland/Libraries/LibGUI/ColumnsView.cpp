@@ -69,7 +69,7 @@ void ColumnsView::select_all()
                 return;
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     });
 
     for (Column& column : columns_for_selection) {
@@ -102,12 +102,12 @@ void ColumnsView::paint_event(PaintEvent& event)
         auto& column = m_columns[i];
         auto* next_column = i + 1 == m_columns.size() ? nullptr : &m_columns[i + 1];
 
-        ASSERT(column.width > 0);
+        VERIFY(column.width > 0);
 
         int row_count = model()->row_count(column.parent_index);
         for (int row = 0; row < row_count; row++) {
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
-            ASSERT(index.is_valid());
+            VERIFY(index.is_valid());
 
             bool is_selected_row = selection().contains(index);
 
@@ -180,7 +180,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
 void ColumnsView::push_column(const ModelIndex& parent_index)
 {
-    ASSERT(model());
+    VERIFY(model());
 
     // Drop columns at the end.
     ModelIndex grandparent = model()->parent_index(parent_index);
@@ -216,7 +216,7 @@ void ColumnsView::update_column_sizes()
         column.width = 10;
         for (int row = 0; row < row_count; row++) {
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
-            ASSERT(index.is_valid());
+            VERIFY(index.is_valid());
             auto text = index.data().to_string();
             int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap_width + icon_spacing();
             if (row_width > column.width)

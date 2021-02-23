@@ -47,13 +47,13 @@ static LookupServer* s_the;
 
 LookupServer& LookupServer::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 LookupServer::LookupServer()
 {
-    ASSERT(s_the == nullptr);
+    VERIFY(s_the == nullptr);
     s_the = this;
 
     auto config = Core::ConfigFile::get_for_system("LookupServer");
@@ -79,7 +79,7 @@ LookupServer::LookupServer()
         IPC::new_client_connection<ClientConnection>(socket.release_nonnull(), client_id);
     };
     bool ok = m_local_server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
 }
 
 void LookupServer::load_etc_hosts()

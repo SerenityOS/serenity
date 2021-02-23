@@ -52,7 +52,7 @@ public:
 
     T dequeue()
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         auto value = move((*m_segments.first())[m_index_into_first++]);
         if (m_index_into_first == segment_size) {
             m_segments.take_first();
@@ -64,7 +64,7 @@ public:
 
     const T& head() const
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         return (*m_segments.first())[m_index_into_first];
     }
 

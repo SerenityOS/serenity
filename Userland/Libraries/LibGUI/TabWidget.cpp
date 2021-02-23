@@ -176,7 +176,7 @@ Gfx::IntRect TabWidget::bar_rect() const
     case TabPosition::Bottom:
         return { 0, height() - bar_height(), width(), bar_height() };
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Gfx::IntRect TabWidget::container_rect() const
@@ -187,7 +187,7 @@ Gfx::IntRect TabWidget::container_rect() const
     case TabPosition::Bottom:
         return { 0, 0, width(), height() - bar_height() };
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void TabWidget::paint_event(PaintEvent& event)

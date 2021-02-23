@@ -68,7 +68,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::
 
         frames.append({ name, current_instruction, current_ebp });
         auto frame_info = Debug::StackFrameUtils::get_info(*Debugger::the().session(), current_ebp);
-        ASSERT(frame_info.has_value());
+        VERIFY(frame_info.has_value());
         current_instruction = frame_info.value().return_address;
         current_ebp = frame_info.value().next_ebp;
     } while (current_ebp && current_instruction);

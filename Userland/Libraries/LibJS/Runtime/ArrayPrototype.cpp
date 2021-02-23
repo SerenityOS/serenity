@@ -670,9 +670,9 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, Function* comp
             // Because they are called with primitive strings, these abstract_relation calls
             // should never result in a VM exception.
             auto x_lt_y_relation = abstract_relation(global_object, true, x_string_value, y_string_value);
-            ASSERT(x_lt_y_relation != TriState::Unknown);
+            VERIFY(x_lt_y_relation != TriState::Unknown);
             auto y_lt_x_relation = abstract_relation(global_object, true, y_string_value, x_string_value);
-            ASSERT(y_lt_x_relation != TriState::Unknown);
+            VERIFY(y_lt_x_relation != TriState::Unknown);
 
             if (x_lt_y_relation == TriState::True) {
                 comparison_result = -1;

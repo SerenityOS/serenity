@@ -104,7 +104,7 @@ struct read_element_concrete<int, ApT, kind> {
             return false;
 
         auto diff = endptr - nptr;
-        ASSERT(diff > 0);
+        VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
         *ptr = value;
@@ -155,7 +155,7 @@ struct read_element_concrete<unsigned, ApT, kind> {
             return false;
 
         auto diff = endptr - nptr;
-        ASSERT(diff > 0);
+        VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
         *ptr = value;
@@ -189,7 +189,7 @@ struct read_element_concrete<unsigned long long, ApT, kind> {
             return false;
 
         auto diff = endptr - nptr;
-        ASSERT(diff > 0);
+        VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
         *ptr = value;
@@ -220,7 +220,7 @@ struct read_element_concrete<float, ApT, kind> {
             return false;
 
         auto diff = endptr - nptr;
-        ASSERT(diff > 0);
+        VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
         *ptr = value;
@@ -235,7 +235,7 @@ struct read_element {
         switch (length_modifier) {
         default:
         case None:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case Default:
             return read_element_concrete<T, T, kind> {}(input_lexer, ap);
         case Char:
@@ -510,7 +510,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         default:
             // "undefined behaviour", let's be nice and crash.
             dbgln("Invalid conversion specifier {} in scanf!", (int)conversion_specifier);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case Decimal:
             if (!read_element<int, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
                 format_lexer.consume_all();

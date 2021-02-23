@@ -109,7 +109,7 @@ public:
             ENUMERATE_WRITE_ERRORS();
 #undef E
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
 private:

@@ -88,7 +88,7 @@ static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
 {
     int rc = chown(path, uid, gid);
     if (rc < 0 && errno != ENOENT) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -98,22 +98,22 @@ static void prepare_devfs()
 
     int rc = mount(-1, "/dev", "dev", 0);
     if (rc != 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     rc = mkdir("/dev/pts", 0755);
     if (rc != 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     rc = mount(-1, "/dev/pts", "devpts", 0);
     if (rc != 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     rc = symlink("/dev/random", "/dev/urandom");
     if (rc < 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // FIXME: Find a better way to chown without hardcoding the gid!
@@ -140,15 +140,15 @@ static void prepare_devfs()
 
     rc = symlink("/proc/self/fd/0", "/dev/stdin");
     if (rc < 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     rc = symlink("/proc/self/fd/1", "/dev/stdout");
     if (rc < 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     rc = symlink("/proc/self/fd/2", "/dev/stderr");
     if (rc < 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -159,11 +159,11 @@ static void mount_all_filesystems()
 
     if (pid < 0) {
         perror("fork");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else if (pid == 0) {
         execl("/bin/mount", "mount", "-a", nullptr);
         perror("exec");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
         wait(nullptr);
     }
@@ -176,7 +176,7 @@ static void create_tmp_rpc_directory()
     auto rc = mkdir("/tmp/rpc", 01777);
     if (rc < 0) {
         perror("mkdir(/tmp/rpc)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     umask(old_umask);
 }
@@ -188,7 +188,7 @@ static void create_tmp_coredump_directory()
     auto rc = mkdir("/tmp/coredump", 0755);
     if (rc < 0) {
         perror("mkdir(/tmp/coredump)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     umask(old_umask);
 }

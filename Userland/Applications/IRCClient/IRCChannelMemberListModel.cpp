@@ -54,7 +54,7 @@ String IRCChannelMemberListModel::column_name(int column) const
     case Column::Name:
         return "Name";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 GUI::Variant IRCChannelMemberListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

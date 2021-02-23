@@ -72,7 +72,7 @@ BlockingFileWatcher::BlockingFileWatcher(const String& path)
     : m_path(path)
 {
     m_watcher_fd = watch_file(path.characters(), path.length());
-    ASSERT(m_watcher_fd != -1);
+    VERIFY(m_watcher_fd != -1);
 }
 
 BlockingFileWatcher::~BlockingFileWatcher()

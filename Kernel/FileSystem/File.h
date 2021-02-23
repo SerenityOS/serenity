@@ -50,7 +50,7 @@ public:
 
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
     {
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::File);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
         auto& blocker = static_cast<Thread::FileBlocker&>(b);
         return !blocker.unblock(true, data);
     }
@@ -59,7 +59,7 @@ public:
     {
         ScopedSpinLock lock(m_lock);
         do_unblock([&](auto& b, void* data, bool&) {
-            ASSERT(b.blocker_type() == Thread::Blocker::Type::File);
+            VERIFY(b.blocker_type() == Thread::Blocker::Type::File);
             auto& blocker = static_cast<Thread::FileBlocker&>(b);
             return blocker.unblock(false, data);
         });
@@ -159,7 +159,7 @@ protected:
 private:
     ALWAYS_INLINE void do_evaluate_block_conditions()
     {
-        ASSERT(!Processor::current().in_irq());
+        VERIFY(!Processor::current().in_irq());
         block_condition().unblock();
     }
 

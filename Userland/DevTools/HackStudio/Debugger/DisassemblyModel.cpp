@@ -63,7 +63,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     auto symbol = elf->find_symbol(containing_function.value().address_low);
     if (!symbol.has_value())
         return;
-    ASSERT(symbol.has_value());
+    VERIFY(symbol.has_value());
 
     auto view = symbol.value().raw_data();
 
@@ -104,7 +104,7 @@ String DisassemblyModel::column_name(int column) const
     case Column::Disassembly:
         return "Disassembly";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 }

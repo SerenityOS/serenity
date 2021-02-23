@@ -319,7 +319,7 @@ void page_fault_handler(TrapFrame* trap)
         dbgln("Continuing after resolved page fault");
 #endif
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -390,7 +390,7 @@ static void unimp_trap()
 
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
 {
-    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
+    VERIFY(s_interrupt_handler[interrupt_number] != nullptr);
     return *s_interrupt_handler[interrupt_number];
 }
 
@@ -401,14 +401,14 @@ static void revert_to_unused_handler(u8 interrupt_number)
 
 void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
-    ASSERT(interrupt_number < GENERIC_INTERRUPT_HANDLERS_COUNT);
+    VERIFY(interrupt_number < GENERIC_INTERRUPT_HANDLERS_COUNT);
     if (s_interrupt_handler[interrupt_number] != nullptr) {
         if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
             s_interrupt_handler[interrupt_number] = &handler;
             return;
         }
         if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
+            VERIFY(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
             static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
             return;
         }
@@ -417,7 +417,7 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
                 static_cast<SpuriousInterruptHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
                 return;
             }
-            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
+            VERIFY(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
             auto& previous_handler = *s_interrupt_handler[interrupt_number];
             s_interrupt_handler[interrupt_number] = nullptr;
             SharedIRQHandler::initialize(interrupt_number);
@@ -425,7 +425,7 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
             static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
         s_interrupt_handler[interrupt_number] = &handler;
     }
@@ -433,13 +433,13 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
 
 void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
-    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
+    VERIFY(s_interrupt_handler[interrupt_number] != nullptr);
     if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
         dbgln("Trying to unregister unused handler (?)");
         return;
     }
     if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
+        VERIFY(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
         static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->unregister_handler(handler);
         if (!static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->sharing_devices_count()) {
             revert_to_unused_handler(interrupt_number);
@@ -447,11 +447,11 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
         return;
     }
     if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
+        VERIFY(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
         revert_to_unused_handler(interrupt_number);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*f)())
@@ -692,11 +692,11 @@ void handle_interrupt(TrapFrame* trap)
 {
     clac();
     auto& regs = *trap->regs;
-    ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
+    VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
     s_entropy_source_interrupts.add_random_event(irq);
     auto* handler = s_interrupt_handler[irq];
-    ASSERT(handler);
+    VERIFY(handler);
     handler->increment_invoking_counter();
     handler->handle_interrupt(regs);
     handler->eoi();
@@ -792,7 +792,7 @@ static volatile bool s_smp_enabled;
 
 Vector<Processor*>& Processor::processors()
 {
-    ASSERT(s_processors);
+    VERIFY(s_processors);
     return *s_processors;
 }
 
@@ -803,8 +803,8 @@ Processor& Processor::by_id(u32 cpu)
     // for all APs to finish, after which this array never gets modified
     // again, so it's safe to not protect access to it here
     auto& procs = processors();
-    ASSERT(procs[cpu] != nullptr);
-    ASSERT(procs.size() > cpu);
+    VERIFY(procs[cpu] != nullptr);
+    VERIFY(procs.size() > cpu);
     return *procs[cpu];
 }
 
@@ -861,7 +861,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
-    ASSERT(max_extended_leaf >= 0x80000001);
+    VERIFY(max_extended_leaf >= 0x80000001);
     CPUID extended_processor_info(0x80000001);
     if (extended_processor_info.edx() & (1 << 20))
         set_feature(CPUFeature::NX);
@@ -1049,14 +1049,14 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     cpu_setup();
     gdt_init();
 
-    ASSERT(is_initialized());   // sanity check
-    ASSERT(&current() == this); // sanity check
+    VERIFY(is_initialized());   // sanity check
+    VERIFY(&current() == this); // sanity check
 }
 
 UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
 {
-    ASSERT(m_self == this);
-    ASSERT(&current() == this); // sanity check
+    VERIFY(m_self == this);
+    VERIFY(&current() == this); // sanity check
 
     dmesgln("CPU[{}]: Supported features: {}", id(), features_string());
     if (!has_feature(CPUFeature::RDRAND))
@@ -1069,7 +1069,7 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         flush_idt();
 
     if (cpu == 0) {
-        ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
+        VERIFY((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
         asm volatile("fxsave %0"
                      : "=m"(s_clean_fpu_state));
@@ -1095,7 +1095,7 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
 
     if (i > m_gdt_length) {
         m_gdt_length = i + 1;
-        ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
+        VERIFY(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
         m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
     }
     m_gdt[i].low = low;
@@ -1178,14 +1178,14 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     // reflect the status at the last context switch.
     ScopedSpinLock lock(g_scheduler_lock);
     if (&thread == Processor::current_thread()) {
-        ASSERT(thread.state() == Thread::Running);
+        VERIFY(thread.state() == Thread::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
         lock.unlock();
         capture_current_thread();
     } else if (thread.is_active()) {
-        ASSERT(thread.cpu() != Processor::id());
+        VERIFY(thread.cpu() != Processor::id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
@@ -1197,8 +1197,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::id(), proc.get_id());
                 ProcessPagingScope paging_scope(thread.process());
-                ASSERT(&Processor::current() != &proc);
-                ASSERT(&thread == Processor::current_thread());
+                VERIFY(&Processor::current() != &proc);
+                VERIFY(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
                 // scheduler lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
@@ -1212,7 +1212,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     } else {
         switch (thread.state()) {
         case Thread::Running:
-            ASSERT_NOT_REACHED(); // should have been handled above
+            VERIFY_NOT_REACHED(); // should have been handled above
         case Thread::Runnable:
         case Thread::Stopped:
         case Thread::Blocked:
@@ -1251,8 +1251,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
-    ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
-    ASSERT(to_thread->state() == Thread::Running);
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
+    VERIFY(to_thread->state() == Thread::Running);
 
     Processor::set_current_thread(*to_thread);
 
@@ -1287,9 +1287,9 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    ASSERT(!in_irq());
-    ASSERT(m_in_critical == 1);
-    ASSERT(is_kernel_mode());
+    VERIFY(!in_irq());
+    VERIFY(m_in_critical == 1);
+    VERIFY(is_kernel_mode());
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
@@ -1344,12 +1344,12 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
 {
-    ASSERT(!are_interrupts_enabled());
-    ASSERT(is_kernel_mode());
+    VERIFY(!are_interrupts_enabled());
+    VERIFY(is_kernel_mode());
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
-    ASSERT(to_thread == Thread::current());
+    VERIFY(to_thread == Thread::current());
 
     Scheduler::enter_current(*from_thread, true);
 
@@ -1388,13 +1388,13 @@ void exit_kernel_thread(void)
 
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
-    ASSERT(is_kernel_mode());
-    ASSERT(g_scheduler_lock.is_locked());
+    VERIFY(is_kernel_mode());
+    VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
         m_in_critical--; // leave it without triggering anything or restoring flags
-        ASSERT(in_critical() == 1);
+        VERIFY(in_critical() == 1);
     }
 
     u32 kernel_stack_top = thread.kernel_stack_top();
@@ -1405,7 +1405,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     u32 stack_top = kernel_stack_top;
 
     // TODO: handle NT?
-    ASSERT((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
+    VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
 
     auto& tss = thread.tss();
     bool return_to_user = (tss.cs & 3) != 0;
@@ -1503,7 +1503,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
 
 extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     thread->tss().eflags = flags;
     return Processor::current().init_context(*thread, true);
 }
@@ -1536,18 +1536,18 @@ void Processor::assume_context(Thread& thread, u32 flags)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
-    ASSERT(Processor::current().in_critical() == 2);
+    VERIFY(Processor::current().in_critical() == 2);
     do_assume_context(&thread, flags);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
-    ASSERT(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.own_lock());
 
     // Because init_finished() will wait on the other APs, we need
     // to release the scheduler lock so that the other APs can also get
@@ -1567,7 +1567,7 @@ extern "C" UNMAP_AFTER_INIT void post_init_finished(void)
 
 UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
 {
-    ASSERT(initial_thread.process().is_kernel_process());
+    VERIFY(initial_thread.process().is_kernel_process());
 
     auto& tss = initial_thread.tss();
     m_tss = tss;
@@ -1605,13 +1605,13 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
     );
     // clang-format on
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(&Processor::current() == this);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
     trap.prev_irq_level = m_in_irq;
     if (raise_irq)
         m_in_irq++;
@@ -1629,9 +1629,9 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 
 void Processor::exit_trap(TrapFrame& trap)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(&Processor::current() == this);
-    ASSERT(m_in_irq >= trap.prev_irq_level);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
+    VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
     smp_process_pending_messages();
@@ -1644,7 +1644,7 @@ void Processor::exit_trap(TrapFrame& trap)
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
         if (current_trap) {
-            ASSERT(current_trap->regs);
+            VERIFY(current_trap->regs);
             // If we have another higher level trap then we probably returned
             // from an interrupt or irq handler. The cs register of the
             // new/higher level trap tells us what the mode prior to it was
@@ -1659,8 +1659,8 @@ void Processor::exit_trap(TrapFrame& trap)
 
 void Processor::check_invoke_scheduler()
 {
-    ASSERT(!m_in_irq);
-    ASSERT(!m_in_critical);
+    VERIFY(!m_in_irq);
+    VERIFY(!m_in_critical);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
@@ -1724,7 +1724,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
         }
     }
 
-    ASSERT(msg != nullptr);
+    VERIFY(msg != nullptr);
     return *msg;
 }
 
@@ -1732,15 +1732,15 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    ASSERT(Processor::current().in_critical());
-    ASSERT(wake_count > 0);
+    VERIFY(Processor::current().in_critical());
+    VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;
 
     // Wake at most N - 1 processors
     if (wake_count >= Processor::count()) {
         wake_count = Processor::count() - 1;
-        ASSERT(wake_count > 0);
+        VERIFY(wake_count > 0);
     }
 
     u32 current_id = Processor::current().id();
@@ -1853,7 +1853,7 @@ bool Processor::smp_process_pending_messages()
             case ProcessorMessage::FlushTlb:
                 if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
                     // We assume that we don't cross into kernel land!
-                    ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+                    VERIFY(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
                     if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
                         // This processor isn't using this page directory right now, we can ignore this request
                         dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
@@ -1866,7 +1866,7 @@ bool Processor::smp_process_pending_messages()
 
             bool is_async = msg->async; // Need to cache this value *before* dropping the ref count!
             auto prev_refs = atomic_fetch_sub(&msg->refs, 1u, AK::MemoryOrder::memory_order_acq_rel);
-            ASSERT(prev_refs != 0);
+            VERIFY(prev_refs != 0);
             if (prev_refs == 1) {
                 // All processors handled this. If this is an async message,
                 // we need to clean it up and return it to the pool
@@ -1894,7 +1894,7 @@ bool Processor::smp_queue_message(ProcessorMessage& msg)
     // the queue at any given time. We rely on the fact that the messages
     // are pooled and never get freed!
     auto& msg_entry = msg.per_proc_entries[id()];
-    ASSERT(msg_entry.msg == &msg);
+    VERIFY(msg_entry.msg == &msg);
     ProcessorMessageEntry* next = nullptr;
     do {
         msg_entry.next = next;
@@ -1909,7 +1909,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
     dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
 
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
-    ASSERT(msg.refs > 0);
+    VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
         [&](Processor& proc) -> IterationDecision {
@@ -1928,7 +1928,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
-    ASSERT(!msg.async);
+    VERIFY(!msg.async);
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
     while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
@@ -1971,7 +1971,7 @@ void Processor::smp_broadcast(void (*callback)(), bool async)
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 {
     auto& cur_proc = Processor::current();
-    ASSERT(cpu != cur_proc.get_id());
+    VERIFY(cpu != cur_proc.get_id());
     auto& target_proc = processors()[cpu];
     msg.async = async;
 
@@ -2068,8 +2068,8 @@ UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
 
 void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 {
-    ASSERT(m_in_critical);
-    ASSERT(!entry->was_allocated);
+    VERIFY(m_in_critical);
+    VERIFY(!entry->was_allocated);
 
     entry->next = m_free_deferred_call_pool_entry;
     m_free_deferred_call_pool_entry = entry;
@@ -2077,13 +2077,13 @@ void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 
 DeferredCallEntry* Processor::deferred_call_get_free()
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
 
     if (m_free_deferred_call_pool_entry) {
         // Fast path, we have an entry in our pool
         auto* entry = m_free_deferred_call_pool_entry;
         m_free_deferred_call_pool_entry = entry->next;
-        ASSERT(!entry->was_allocated);
+        VERIFY(!entry->was_allocated);
         return entry;
     }
 
@@ -2094,7 +2094,7 @@ DeferredCallEntry* Processor::deferred_call_get_free()
 
 void Processor::deferred_call_execute_pending()
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
 
     if (!m_pending_deferred_calls)
         return;
@@ -2137,7 +2137,7 @@ void Processor::deferred_call_execute_pending()
 
 void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
     entry->next = m_pending_deferred_calls;
     m_pending_deferred_calls = entry;
 }

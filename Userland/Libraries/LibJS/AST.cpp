@@ -145,7 +145,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     if (is<SuperExpression>(*m_callee)) {
         // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
         auto new_target = vm.get_new_target();
-        ASSERT(new_target.is_function());
+        VERIFY(new_target.is_function());
         return { js_undefined(), new_target };
     }
 
@@ -182,7 +182,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (vm.exception())
         return {};
 
-    ASSERT(!callee.is_empty());
+    VERIFY(!callee.is_empty());
 
     if (!callee.is_function()
         || (is<NewExpression>(*this) && (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
@@ -301,7 +301,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
     if (interpreter.exception())
         return {};
 
-    ASSERT(object);
+    VERIFY(object);
 
     auto* with_scope = interpreter.heap().allocate<WithScope>(global_object, *object, interpreter.vm().call_frame().scope);
     TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, with_scope);
@@ -456,7 +456,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
     FlyString variable_name;
     if (is<VariableDeclaration>(node)) {
         auto& variable_declaration = static_cast<const VariableDeclaration&>(node);
-        ASSERT(!variable_declaration.declarations().is_empty());
+        VERIFY(!variable_declaration.declarations().is_empty());
         if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>(node.source_range());
             interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
@@ -466,7 +466,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
     } else if (is<Identifier>(node)) {
         variable_name = static_cast<const Identifier&>(node).string();
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return variable_name;
 }
@@ -478,7 +478,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar in baz)", "for (foo[0] in bar)"
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
@@ -525,7 +525,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar of baz)", "for (foo[0] of bar)"
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
@@ -621,7 +621,7 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         return instance_of(global_object, lhs_result, rhs_result);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -660,7 +660,7 @@ Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_
         return lhs_result;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Reference Expression::to_reference(Interpreter&, GlobalObject&) const
@@ -697,7 +697,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (reference.is_unresolvable())
             return Value(true);
         // FIXME: Support deleting locals
-        ASSERT(!reference.is_local_variable());
+        VERIFY(!reference.is_local_variable());
         if (reference.is_global_variable())
             return global_object.delete_property(reference.name());
         auto* base_object = reference.base().to_object(global_object);
@@ -737,7 +737,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
         case Value::Type::Empty:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             return {};
         case Value::Type::Undefined:
             return js_string(vm, "undefined");
@@ -760,15 +760,15 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         case Value::Type::BigInt:
             return js_string(vm, "bigint");
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     case UnaryOp::Void:
         return js_undefined();
     case UnaryOp::Delete:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
@@ -777,7 +777,7 @@ Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // The semantics for SuperExpressions are handled in CallExpression::compute_this_and_callee()
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -800,7 +800,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     update_function_name(class_constructor_value, m_name);
 
-    ASSERT(class_constructor_value.is_function() && is<ScriptFunction>(class_constructor_value.as_function()));
+    VERIFY(class_constructor_value.is_function() && is<ScriptFunction>(class_constructor_value.as_function()));
     ScriptFunction* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
     class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();
@@ -870,7 +870,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 case ClassMethod::Kind::Setter:
                     return String::formatted("set {}", get_function_name(global_object, key));
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             }();
             update_function_name(method_value, accessor_name);
@@ -1492,7 +1492,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     reference.put(global_object, new_value);
@@ -1610,7 +1610,7 @@ Value VariableDeclarator::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // NOTE: VariableDeclarator execution is handled by VariableDeclaration.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void VariableDeclaration::dump(int indent) const
@@ -1671,7 +1671,7 @@ Value ObjectProperty::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // NOTE: ObjectProperty execution is handled by ObjectExpression.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1733,7 +1733,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         update_function_name(value, name);
 
         if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
-            ASSERT(value.is_function());
+            VERIFY(value.is_function());
             object->define_accessor(PropertyName::from_value(global_object, key), value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
             if (interpreter.exception())
                 return {};
@@ -1757,13 +1757,13 @@ void MemberExpression::dump(int indent) const
 PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
 {
     if (!is_computed()) {
-        ASSERT(is<Identifier>(*m_property));
+        VERIFY(is<Identifier>(*m_property));
         return static_cast<const Identifier&>(*m_property).string();
     }
     auto value = m_property->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    ASSERT(!value.is_empty());
+    VERIFY(!value.is_empty());
     return PropertyName::from_value(global_object, value);
 }
 
@@ -1774,7 +1774,7 @@ String MemberExpression::to_string_approximation() const
         object_string = static_cast<const Identifier&>(*m_object).string();
     if (is_computed())
         return String::formatted("{}[<computed>]", object_string);
-    ASSERT(is<Identifier>(*m_property));
+    VERIFY(is<Identifier>(*m_property));
     return String::formatted("{}.{}", object_string, static_cast<const Identifier&>(*m_property).string());
 }
 
@@ -1803,7 +1803,7 @@ void MetaProperty::dump(int indent) const
     else if (m_type == MetaProperty::Type::ImportMeta)
         name = "import.meta";
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     print_indent(indent);
     outln("{} {}", class_name(), name);
 }
@@ -1817,7 +1817,7 @@ Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
         return interpreter.vm().get_new_target().value_or(js_undefined());
     if (m_type == MetaProperty::Type::ImportMeta)
         TODO();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
@@ -2073,7 +2073,7 @@ Value CatchClause::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // NOTE: CatchClause execution is handled by TryStatement.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 
@@ -2137,7 +2137,7 @@ Value SwitchCase::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // NOTE: SwitchCase execution is handled by SwitchStatement.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 

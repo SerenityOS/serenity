@@ -35,11 +35,11 @@ static void assert_env(const char* name, const char* value)
     if (!result) {
         perror("getenv");
         printf("(When reading value for '%s'; we expected '%s'.)\n", name, value);
-        ASSERT(false);
+        VERIFY(false);
     }
     if (strcmp(result, value) != 0) {
         printf("Expected '%s', got '%s' instead.\n", value, result);
-        ASSERT(false);
+        VERIFY(false);
     }
 }
 
@@ -54,7 +54,7 @@ static void test_puttenv()
     int rc = putenv(to_put);
     if (rc) {
         perror("putenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("PUTENVTEST", "HELLOPUTENV");
     // Do not free `to_put`!
@@ -65,7 +65,7 @@ static void test_settenv()
     int rc = setenv("SETENVTEST", "HELLO SETENV!", 0);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     // This used to trigger a very silly bug! :)
     assert_env("SETENVTEST", "HELLO SETENV!");
@@ -73,14 +73,14 @@ static void test_settenv()
     rc = setenv("SETENVTEST", "How are you today?", 0);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("SETENVTEST", "HELLO SETENV!");
 
     rc = setenv("SETENVTEST", "Goodbye, friend!", 1);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("SETENVTEST", "Goodbye, friend!");
 }
@@ -90,7 +90,7 @@ static void test_settenv_overwrite_empty()
     int rc = setenv("EMPTYTEST", "Forcefully overwrite non-existing envvar", 1);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("EMPTYTEST", "Forcefully overwrite non-existing envvar");
 }

@@ -62,14 +62,14 @@ int main(int, char**)
 
     // Test a one-page mapping (4KB)
     u8* one_page = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-    ASSERT(one_page);
+    VERIFY(one_page);
     EXPECT_OK(read, one_page, 4096);
     EXPECT_EFAULT(read, one_page, 4097);
     EXPECT_EFAULT(read, one_page - 1, 4096);
 
     // Test a two-page mapping (8KB)
     u8* two_page = (u8*)mmap(nullptr, 8192, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-    ASSERT(two_page);
+    VERIFY(two_page);
 
     EXPECT_OK(read, two_page, 4096);
     EXPECT_OK(read, two_page + 4096, 4096);
@@ -93,7 +93,7 @@ int main(int, char**)
 
     // Test the page just below where the kernel VM begins.
     u8* jerk_page = (u8*)mmap((void*)(0xc0000000 - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
-    ASSERT(jerk_page == (void*)(0xc0000000 - PAGE_SIZE));
+    VERIFY(jerk_page == (void*)(0xc0000000 - PAGE_SIZE));
 
     EXPECT_OK(read, jerk_page, 4096);
     EXPECT_EFAULT(read, jerk_page, 4097);

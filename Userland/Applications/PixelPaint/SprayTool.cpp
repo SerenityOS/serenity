@@ -66,7 +66,7 @@ void SprayTool::paint_it()
 
     auto& bitmap = layer->bitmap();
     GUI::Painter painter(bitmap);
-    ASSERT(bitmap.bpp() == 32);
+    VERIFY(bitmap.bpp() == 32);
     m_editor->update();
     const double minimal_radius = 2;
     const double base_radius = minimal_radius * m_thickness;

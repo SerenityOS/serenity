@@ -68,7 +68,7 @@ MappedFile::MappedFile(void* ptr, size_t size)
 MappedFile::~MappedFile()
 {
     auto rc = munmap(m_data, m_size);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 }

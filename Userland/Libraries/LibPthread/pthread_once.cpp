@@ -59,7 +59,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
         switch (state2) {
         case State::INITIAL:
         case State::DONE:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case State::PERFORMING_NO_WAITERS:
             // The fast path: there's no contention, so we don't have to wake
             // anyone.
@@ -77,7 +77,7 @@ int pthread_once(pthread_once_t* self, void (*callback)(void))
     while (true) {
         switch (state2) {
         case State::INITIAL:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case State::DONE:
             // Awesome, nothing to do then.
             return 0;

@@ -450,7 +450,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
         });
         if (n < 0)
             return KResult((ErrnoCode)-n);
-        ASSERT((size_t)n == sizeof(Event));
+        VERIFY((size_t)n == sizeof(Event));
         nread += sizeof(Event);
 
         lock.lock();

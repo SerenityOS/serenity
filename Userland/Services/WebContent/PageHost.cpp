@@ -116,7 +116,7 @@ void PageHost::page_did_change_selection()
 void PageHost::page_did_layout()
 {
     auto* layout_root = this->layout_root();
-    ASSERT(layout_root);
+    VERIFY(layout_root);
     auto content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
     m_client.post_message(Messages::WebContentClient::DidLayout(content_size));
 }

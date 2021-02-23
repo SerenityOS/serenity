@@ -54,7 +54,7 @@ Node::Node(Document& document, NodeType type)
 
 Node::~Node()
 {
-    ASSERT(m_deletion_has_begun);
+    VERIFY(m_deletion_has_begun);
     if (layout_node() && layout_node()->parent())
         layout_node()->parent()->remove_child(*layout_node());
 

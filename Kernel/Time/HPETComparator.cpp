@@ -55,14 +55,14 @@ void HPETComparator::disable()
 
 void HPETComparator::set_periodic()
 {
-    ASSERT(m_periodic_capable);
+    VERIFY(m_periodic_capable);
     m_periodic = true;
     m_enabled = true;
     HPET::the().enable_periodic_interrupt(*this);
 }
 void HPETComparator::set_non_periodic()
 {
-    ASSERT(m_periodic_capable);
+    VERIFY(m_periodic_capable);
     m_periodic = false;
     m_enabled = true;
     HPET::the().disable_periodic_interrupt(*this);
@@ -77,8 +77,8 @@ void HPETComparator::handle_irq(const RegisterState& regs)
 
 void HPETComparator::set_new_countdown()
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(m_frequency <= HPET::the().frequency());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(m_frequency <= HPET::the().frequency());
     HPET::the().update_non_periodic_comparator_value(*this);
 }
 
@@ -105,7 +105,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     }
 
     auto hpet_frequency = HPET::the().frequency();
-    ASSERT(frequency <= hpet_frequency);
+    VERIFY(frequency <= hpet_frequency);
     m_frequency = frequency;
     m_enabled = true;
 

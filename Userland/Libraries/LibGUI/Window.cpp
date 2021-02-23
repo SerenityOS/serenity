@@ -228,7 +228,7 @@ String Window::title() const
 
 Gfx::IntRect Window::rect_in_menubar() const
 {
-    ASSERT(m_window_type == WindowType::MenuApplet);
+    VERIFY(m_window_type == WindowType::MenuApplet);
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRectInMenubar>(m_window_id)->rect();
 }
 
@@ -330,7 +330,7 @@ void Window::handle_drop_event(DropEvent& event)
         return;
     auto result = m_main_widget->hit_test(event.position());
     auto local_event = make<DropEvent>(result.local_position, event.text(), event.mime_data());
-    ASSERT(result.widget);
+    VERIFY(result.widget);
     result.widget->dispatch_event(*local_event, this);
 
     Application::the()->set_drag_hovered_widget({}, nullptr);
@@ -358,7 +358,7 @@ void Window::handle_mouse_event(MouseEvent& event)
         return;
     auto result = m_main_widget->hit_test(event.position());
     auto local_event = make<MouseEvent>((Event::Type)event.type(), result.local_position, event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
-    ASSERT(result.widget);
+    VERIFY(result.widget);
     set_hovered_widget(result.widget);
     if (event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
         m_automatic_cursor_tracking_widget = *result.widget;
@@ -374,7 +374,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     if (!m_main_widget)
         return;
     auto rects = event.rects();
-    ASSERT(!rects.is_empty());
+    VERIFY(!rects.is_empty());
     if (m_back_store && m_back_store->size() != event.window_size()) {
         // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
         // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
@@ -384,12 +384,12 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     bool created_new_backing_store = !m_back_store;
     if (!m_back_store) {
         m_back_store = create_backing_store(event.window_size());
-        ASSERT(m_back_store);
+        VERIFY(m_back_store);
     } else if (m_double_buffering_enabled) {
         bool still_has_pixels = m_back_store->bitmap().set_nonvolatile();
         if (!still_has_pixels) {
             m_back_store = create_backing_store(event.window_size());
-            ASSERT(m_back_store);
+            VERIFY(m_back_store);
             created_new_backing_store = true;
         }
     }
@@ -497,7 +497,7 @@ void Window::handle_drag_move_event(DragEvent& event)
     if (!m_main_widget)
         return;
     auto result = m_main_widget->hit_test(event.position());
-    ASSERT(result.widget);
+    VERIFY(result.widget);
 
     Application::the()->set_drag_hovered_widget({}, result.widget, result.local_position, event.mime_types());
 
@@ -688,7 +688,7 @@ void Window::set_has_alpha_channel(bool value)
 
 void Window::set_double_buffering_enabled(bool value)
 {
-    ASSERT(!is_visible());
+    VERIFY(!is_visible());
     m_double_buffering_enabled = value;
 }
 
@@ -742,7 +742,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
 
     if (!m_back_store || m_back_store->size() != m_front_store->size()) {
         m_back_store = create_backing_store(m_front_store->size());
-        ASSERT(m_back_store);
+        VERIFY(m_back_store);
         memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
         m_back_store->bitmap().set_volatile();
         return;
@@ -760,7 +760,7 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
 
-    ASSERT(!size.is_empty());
+    VERIFY(!size.is_empty());
     size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
     size_t size_in_bytes = size.height() * pitch;
 
@@ -779,7 +779,7 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
 
 void Window::set_modal(bool modal)
 {
-    ASSERT(!is_visible());
+    VERIFY(!is_visible());
     m_modal = modal;
 }
 
@@ -795,7 +795,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
     m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, icon_size);
-    ASSERT(m_icon);
+    VERIFY(m_icon);
     if (icon) {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
@@ -910,7 +910,7 @@ void Window::refresh_system_theme()
 void Window::for_each_window(Badge<WindowServerConnection>, Function<void(Window&)> callback)
 {
     for (auto& e : *reified_windows) {
-        ASSERT(e.value);
+        VERIFY(e.value);
         callback(*e.value);
     }
 }
@@ -1003,7 +1003,7 @@ void Window::did_remove_widget(Badge<Widget>, Widget& widget)
 
 void Window::set_progress(int progress)
 {
-    ASSERT(m_window_id);
+    VERIFY(m_window_id);
     WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowProgress(m_window_id, progress));
 }
 
@@ -1040,7 +1040,7 @@ void Window::did_disable_focused_widget(Badge<Widget>)
 
 bool Window::is_active() const
 {
-    ASSERT(Application::the());
+    VERIFY(Application::the());
     return this == Application::the()->active_window();
 }
 

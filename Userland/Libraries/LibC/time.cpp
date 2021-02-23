@@ -84,7 +84,7 @@ static void time_to_tm(struct tm* tm, time_t t)
         t += days_in_year(year - 1) * __seconds_per_day;
     tm->tm_year = year - 1900;
 
-    ASSERT(t >= 0);
+    VERIFY(t >= 0);
     int days = t / __seconds_per_day;
     tm->tm_yday = days;
     int remaining = t % __seconds_per_day;

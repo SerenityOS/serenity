@@ -52,7 +52,7 @@ RemoteProcess::RemoteProcess(pid_t pid)
 void RemoteProcess::handle_identify_response(const JsonObject& response)
 {
     int pid = response.get("pid").to_int();
-    ASSERT(pid == m_pid);
+    VERIFY(pid == m_pid);
 
     m_process_name = response.get("process_name").as_string_or({});
 
@@ -70,7 +70,7 @@ void RemoteProcess::handle_get_all_objects_response(const JsonObject& response)
     HashMap<FlatPtr, RemoteObject*> objects_by_address;
 
     for (auto& value : object_array.values()) {
-        ASSERT(value.is_object());
+        VERIFY(value.is_object());
         auto& object = value.as_object();
         auto remote_object = make<RemoteObject>();
         remote_object->address = object.get("address").to_number<FlatPtr>();
@@ -169,12 +169,12 @@ void RemoteProcess::update()
             remaining_bytes -= packet.size();
         }
 
-        ASSERT(data.size() == length);
+        VERIFY(data.size() == length);
         dbgln("Got data size {} and read that many bytes", length);
 
         auto json_value = JsonValue::from_string(data);
-        ASSERT(json_value.has_value());
-        ASSERT(json_value.value().is_object());
+        VERIFY(json_value.has_value());
+        VERIFY(json_value.value().is_object());
 
         dbgln("Got JSON response {}", json_value.value());
 

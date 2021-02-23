@@ -120,7 +120,7 @@ int main(int argc, char** argv)
                 }
                 default:
                     // FIXME: Implement other file types
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             }
         }
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     }
 
     // FIXME: Implement other operations.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 
     return 0;
 }

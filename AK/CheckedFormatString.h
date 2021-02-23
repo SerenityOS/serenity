@@ -42,7 +42,7 @@
 #ifndef DBGLN_NO_COMPILETIME_FORMAT_CHECK
 namespace AK::Format::Detail {
 
-// We have to define a local "purely constexpr" Array that doesn't lead back to us (via e.g. ASSERT)
+// We have to define a local "purely constexpr" Array that doesn't lead back to us (via e.g. VERIFY)
 template<typename T, size_t Size>
 struct Array {
     constexpr static size_t size() { return Size; }

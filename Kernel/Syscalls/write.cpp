@@ -91,7 +91,7 @@ ssize_t Process::do_write(FileDescription& description, const UserOrKernelBuffer
         if (!description.can_write()) {
             if (!description.is_blocking()) {
                 // Short write: We can no longer write to this non-blocking description.
-                ASSERT(total_nwritten > 0);
+                VERIFY(total_nwritten > 0);
                 return total_nwritten;
             }
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;

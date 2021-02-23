@@ -142,13 +142,13 @@ bool APIC::initialized()
 
 APIC& APIC::the()
 {
-    ASSERT(APIC::initialized());
+    VERIFY(APIC::initialized());
     return *s_apic;
 }
 
 UNMAP_AFTER_INIT void APIC::initialize()
 {
-    ASSERT(!APIC::initialized());
+    VERIFY(!APIC::initialized());
     s_apic.ensure_instance();
 }
 
@@ -302,7 +302,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
 
 UNMAP_AFTER_INIT void APIC::do_boot_aps()
 {
-    ASSERT(m_processor_enabled_cnt > 1);
+    VERIFY(m_processor_enabled_cnt > 1);
     u32 aps_to_enable = m_processor_enabled_cnt - 1;
 
     // Copy the APIC startup code and variables to P0x00008000
@@ -326,7 +326,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
 
     // Store pointers to all stacks for the APs to use
     auto ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
-    ASSERT(aps_to_enable == apic_ap_stacks.size());
+    VERIFY(aps_to_enable == apic_ap_stacks.size());
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_stack_array[i] = apic_ap_stacks[i]->vaddr().get() + Thread::default_kernel_stack_size;
 #if APIC_DEBUG
@@ -429,7 +429,7 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
     }
 
     // Use the CPU# as logical apic id
-    ASSERT(cpu <= 0xff);
+    VERIFY(cpu <= 0xff);
     write_register(APIC_REG_LD, (read_register(APIC_REG_LD) & 0x00ffffff) | (cpu << 24)); // TODO: only if not in x2apic mode
 
     // read it back to make sure it's actually set
@@ -468,18 +468,18 @@ UNMAP_AFTER_INIT void APIC::enable(u32 cpu)
 
 Thread* APIC::get_idle_thread(u32 cpu) const
 {
-    ASSERT(cpu > 0);
+    VERIFY(cpu > 0);
     return m_ap_idle_threads[cpu - 1];
 }
 
 UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
 {
     // This method is called once the boot stack is no longer needed
-    ASSERT(cpu > 0);
-    ASSERT(cpu < m_processor_enabled_cnt);
+    VERIFY(cpu > 0);
+    VERIFY(cpu < m_processor_enabled_cnt);
     // Since we're waiting on other APs here, we shouldn't have the
     // scheduler lock
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
 
     // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
     m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
@@ -519,8 +519,8 @@ void APIC::send_ipi(u32 cpu)
 #if APIC_SMP_DEBUG
     klog() << "SMP: Send IPI from cpu #" << Processor::id() << " to cpu #" << cpu;
 #endif
-    ASSERT(cpu != Processor::id());
-    ASSERT(cpu < 8);
+    VERIFY(cpu != Processor::id());
+    VERIFY(cpu < 8);
     wait_for_pending_icr();
     write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, cpu));
 }
@@ -531,8 +531,8 @@ UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibrati
         return nullptr;
 
     // We should only initialize and calibrate the APIC timer once on the BSP!
-    ASSERT(Processor::id() == 0);
-    ASSERT(!m_apic_timer);
+    VERIFY(Processor::id() == 0);
+    VERIFY(!m_apic_timer);
 
     m_apic_timer = APICTimer::initialize(IRQ_APIC_TIMER, calibration_timer);
     return m_apic_timer;
@@ -583,7 +583,7 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         config |= (1 << 3) | 2;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     write_register(APIC_REG_TIMER_CONFIGURATION, config);
 

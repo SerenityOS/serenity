@@ -47,7 +47,7 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 
 void ModelSelection::set(const ModelIndex& index)
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     if (m_indexes.size() == 1 && m_indexes.contains(index))
         return;
     m_indexes.clear();
@@ -57,7 +57,7 @@ void ModelSelection::set(const ModelIndex& index)
 
 void ModelSelection::add(const ModelIndex& index)
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     if (m_indexes.contains(index))
         return;
     m_indexes.set(index);
@@ -78,7 +78,7 @@ void ModelSelection::add_all(const Vector<ModelIndex>& indices)
 
 void ModelSelection::toggle(const ModelIndex& index)
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     if (m_indexes.contains(index))
         m_indexes.remove(index);
     else
@@ -88,7 +88,7 @@ void ModelSelection::toggle(const ModelIndex& index)
 
 bool ModelSelection::remove(const ModelIndex& index)
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     if (!m_indexes.contains(index))
         return false;
     m_indexes.remove(index);

@@ -94,7 +94,7 @@ void MultiView::set_view_mode(ViewMode mode)
         m_view_as_icons_action->set_checked(true);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void MultiView::set_model(RefPtr<Model> model)

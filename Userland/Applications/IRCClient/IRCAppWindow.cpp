@@ -50,7 +50,7 @@ IRCAppWindow& IRCAppWindow::the()
 IRCAppWindow::IRCAppWindow(String server, int port)
     : m_client(IRCClient::construct(server, port))
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-irc-client.png"));
@@ -100,7 +100,7 @@ void IRCAppWindow::setup_client()
     }
     update_title();
     bool success = m_client->connect();
-    ASSERT(success);
+    VERIFY(success);
 }
 
 void IRCAppWindow::setup_actions()

@@ -44,7 +44,7 @@ namespace Web::HTML {
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    ASSERT(document.frame());
+    VERIFY(document.frame());
     m_content_frame = Frame::create_subframe(*this, document.frame()->main_frame());
 }
 

@@ -196,7 +196,7 @@ void AutocompleteBox::apply_suggestion()
     auto suggestion = suggestion_index.data().to_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
-    ASSERT(suggestion.length() >= partial_length);
+    VERIFY(suggestion.length() >= partial_length);
     auto completion = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }

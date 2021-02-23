@@ -52,7 +52,7 @@ EventLoop::EventLoop()
     m_mouse_fd = open("/dev/mouse", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
     bool ok = m_server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
 
     m_server->on_ready_to_accept = [this] {
         auto client_socket = m_server->accept();
@@ -145,7 +145,7 @@ void EventLoop::drain_keyboard()
         ssize_t nread = read(m_keyboard_fd, (u8*)&event, sizeof(::KeyEvent));
         if (nread == 0)
             break;
-        ASSERT(nread == sizeof(::KeyEvent));
+        VERIFY(nread == sizeof(::KeyEvent));
         screen.on_receive_keyboard_data(event);
     }
 }

@@ -67,7 +67,7 @@ UNMAP_AFTER_INIT VFS::~VFS()
 
 InodeIdentifier VFS::root_inode_id() const
 {
-    ASSERT(m_root_inode);
+    VERIFY(m_root_inode);
     return m_root_inode->identifier();
 }
 
@@ -211,8 +211,8 @@ KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::
         bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
         if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
             auto mount = find_mount_for_guest(dir_inode);
-            ASSERT(mount);
-            ASSERT(mount->host());
+            VERIFY(mount);
+            VERIFY(mount->host());
             resolved_inode = mount->host()->identifier();
         }
         callback({ entry.name, resolved_inode, entry.file_type });
@@ -697,7 +697,7 @@ KResult VFS::unlink(StringView path, Custody& base)
     // We have just checked that the inode is not a directory, and thus it's not
     // the root. So it should have a parent. Note that this would be invalidated
     // if we were to support bind-mounting regular files on top of the root.
-    ASSERT(parent_custody);
+    VERIFY(parent_custody);
 
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();

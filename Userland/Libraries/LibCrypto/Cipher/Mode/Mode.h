@@ -98,7 +98,7 @@ protected:
         }
         default:
             // FIXME: support other padding modes
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }

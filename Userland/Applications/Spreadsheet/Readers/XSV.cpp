@@ -243,9 +243,9 @@ XSV::Field XSV::read_one_unquoted_field()
 
 StringView XSV::Row::operator[](StringView name) const
 {
-    ASSERT(!m_xsv.m_names.is_empty());
+    VERIFY(!m_xsv.m_names.is_empty());
     auto it = m_xsv.m_names.find_if([&](const auto& entry) { return name == entry; });
-    ASSERT(!it.is_end());
+    VERIFY(!it.is_end());
 
     return (*this)[it.index()];
 }
@@ -265,7 +265,7 @@ const XSV::Row XSV::operator[](size_t index) const
 
 XSV::Row XSV::operator[](size_t index)
 {
-    ASSERT(m_rows.size() > index);
+    VERIFY(m_rows.size() > index);
     return Row { *this, index };
 }
 

@@ -43,7 +43,7 @@ Dialog::~Dialog()
 
 int Dialog::exec()
 {
-    ASSERT(!m_event_loop);
+    VERIFY(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
     if (parent() && is<Window>(parent())) {
         auto& parent_window = *static_cast<Window*>(parent());

@@ -537,14 +537,14 @@ void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_win
     for (auto& child_window : window.child_windows()) {
         if (!child_window)
             continue;
-        ASSERT(child_window->window_id() != window.window_id());
+        VERIFY(child_window->window_id() != window.window_id());
         destroy_window(*child_window, destroyed_window_ids);
     }
 
     for (auto& accessory_window : window.accessory_windows()) {
         if (!accessory_window)
             continue;
-        ASSERT(accessory_window->window_id() != window.window_id());
+        VERIFY(accessory_window->window_id() != window.window_id());
         destroy_window(*accessory_window, destroyed_window_ids);
     }
 

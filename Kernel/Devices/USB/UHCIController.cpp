@@ -296,7 +296,7 @@ QueueHead* UHCIController::allocate_queue_head() const
         }
     }
 
-    ASSERT_NOT_REACHED(); // Let's just assert for now, this should never happen
+    VERIFY_NOT_REACHED(); // Let's just assert for now, this should never happen
     return nullptr;       // Huh!? We're outta queue heads!
 }
 
@@ -312,7 +312,7 @@ TransferDescriptor* UHCIController::allocate_transfer_descriptor() const
         }
     }
 
-    ASSERT_NOT_REACHED(); // Let's just assert for now, this should never happen
+    VERIFY_NOT_REACHED(); // Let's just assert for now, this should never happen
     return nullptr;       // Huh?! We're outta TDs!!
 }
 

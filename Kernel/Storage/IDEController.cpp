@@ -59,12 +59,12 @@ size_t IDEController::devices_count() const
 
 void IDEController::start_request(const StorageDevice&, AsyncBlockDeviceRequest&)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void IDEController::complete_current_request(AsyncDeviceRequest::RequestResult)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_pio)
@@ -108,7 +108,7 @@ RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) c
     case 3:
         return m_channels[1].slave_device();
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<StorageDevice> IDEController::device(u32 index) const

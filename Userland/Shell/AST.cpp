@@ -39,17 +39,17 @@
 void AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Shell::AST::Command& value)
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_alternative_form)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_zero_pad)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_width.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_precision.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     if (value.argv.is_empty()) {
         builder.put_literal("(ShellInternal)");
@@ -93,7 +93,7 @@ void AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Sh
             builder.put_i64(close_redir->fd);
             builder.put_literal(">&-");
         } else {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -831,7 +831,7 @@ RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
     else if (m_kind == Continue)
         shell->raise_error(Shell::ShellError::InternalControlFlowContinue, {}, position());
     else
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     return create<ListValue>({});
 }
 
@@ -900,7 +900,7 @@ RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
         auto name_part = result->resolve_as_list(shell);
-        ASSERT(name_part.size() == 1);
+        VERIFY(name_part.size() == 1);
         return create<SimpleVariableValue>(name_part[0]);
     }
 
@@ -1418,7 +1418,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 auto line_end = offset.value();
                 if (line_end == 0) {
                     auto rc = stream.discard_or_error(ifs.length());
-                    ASSERT(rc);
+                    VERIFY(rc);
 
                     if (shell->options.inline_exec_keep_empty_segments)
                         if (callback(create<StringValue>("")) == IterationDecision::Break) {
@@ -1429,7 +1429,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 } else {
                     auto entry = ByteBuffer::create_uninitialized(line_end + ifs.length());
                     auto rc = stream.read_or_error(entry);
-                    ASSERT(rc);
+                    VERIFY(rc);
 
                     auto str = StringView(entry.data(), entry.size() - ifs.length());
                     if (callback(create<StringValue>(str)) == IterationDecision::Break) {
@@ -1515,7 +1515,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             if (!stream.eof()) {
                 auto entry = ByteBuffer::create_uninitialized(stream.size());
                 auto rc = stream.read_or_error(entry);
-                ASSERT(rc);
+                VERIFY(rc);
                 callback(create<StringValue>(String::copy(entry)));
             }
         }
@@ -2082,7 +2082,7 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
     m_path->highlight_in_editor(editor, shell, metadata);
     if (m_path->is_bareword()) {
         auto path_text = m_path->run(nullptr)->resolve_as_list(nullptr);
-        ASSERT(path_text.size() == 1);
+        VERIFY(path_text.size() == 1);
         // Apply a URL to the path.
         auto& position = m_path->position();
         auto& path = path_text[0];
@@ -2521,8 +2521,8 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 
     if (left_value->is_string() && right_value->is_string()) {
 
-        ASSERT(left.size() == 1);
-        ASSERT(right.size() == 1);
+        VERIFY(left.size() == 1);
+        VERIFY(right.size() == 1);
 
         StringBuilder builder;
         builder.append(left[0]);
@@ -2880,7 +2880,7 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
 {
     for (auto& var : m_variables) {
         auto name_value = var.name->run(shell)->resolve_as_list(shell);
-        ASSERT(name_value.size() == 1);
+        VERIFY(name_value.size() == 1);
         auto name = name_value[0];
         auto value = var.value->run(shell);
         shell->set_local_variable(name, value.release_nonnull());
@@ -3063,7 +3063,7 @@ Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 
 NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
-    ASSERT(shell);
+    VERIFY(shell);
 
     if (auto value = shell->lookup_local_variable(m_name))
         return value.release_nonnull();
@@ -3150,7 +3150,7 @@ Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
         return check_fd_and_return(open(path.characters(), O_RDWR | O_CREAT, 0666), path);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 PathRedirection::~PathRedirection()

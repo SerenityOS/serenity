@@ -37,7 +37,7 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
     : m_box(box)
     , m_parent(parent)
 {
-    ASSERT(m_parent != this);
+    VERIFY(m_parent != this);
     if (m_parent) {
         m_parent->m_children.append(this);
 

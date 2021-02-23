@@ -50,7 +50,7 @@ UDPServer::UDPServer(Object* parent)
     ioctl(m_fd, FIONBIO, &option);
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
 #endif
-    ASSERT(m_fd >= 0);
+    VERIFY(m_fd >= 0);
 }
 
 UDPServer::~UDPServer()

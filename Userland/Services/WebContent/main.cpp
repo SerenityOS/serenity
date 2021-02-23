@@ -54,7 +54,7 @@ int main(int, char**)
     }
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
-    ASSERT(socket);
+    VERIFY(socket);
     IPC::new_client_connection<WebContent::ClientConnection>(socket.release_nonnull(), 1);
     return event_loop.exec();
 }

@@ -221,15 +221,15 @@ void Compositor::compose()
 
     auto prepare_rect = [&](const Gfx::IntRect& rect) {
         dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
-        ASSERT(!flush_rects.intersects(rect));
-        ASSERT(!flush_transparent_rects.intersects(rect));
+        VERIFY(!flush_rects.intersects(rect));
+        VERIFY(!flush_transparent_rects.intersects(rect));
         flush_rects.add(rect);
         check_restore_cursor_back(rect);
     };
 
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
         dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
-        ASSERT(!flush_rects.intersects(rect));
+        VERIFY(!flush_rects.intersects(rect));
         for (auto& r : flush_transparent_rects.rects()) {
             if (r == rect)
                 return;
@@ -261,7 +261,7 @@ void Compositor::compose()
                 auto src_rect = Gfx::FloatRect { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale };
                 painter.draw_scaled_bitmap(rect, *m_wallpaper, src_rect);
             } else {
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
     };
@@ -434,7 +434,7 @@ void Compositor::compose()
         }
 
         // Check that there are no overlapping transparent and opaque flush rectangles
-        ASSERT(![&]() {
+        VERIFY(![&]() {
             for (auto& rect_transparent : flush_transparent_rects.rects()) {
                 for (auto& rect_opaque : flush_rects.rects()) {
                     if (rect_opaque.intersects(rect_transparent)) {
@@ -649,7 +649,7 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
 
 void Compositor::flip_buffers()
 {
-    ASSERT(m_screen_can_set_buffer);
+    VERIFY(m_screen_can_set_buffer);
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
     Screen::the().set_buffer(m_buffers_are_flipped ? 0 : 1);
@@ -838,7 +838,7 @@ void Compositor::increment_display_link_count(Badge<ClientConnection>)
 
 void Compositor::decrement_display_link_count(Badge<ClientConnection>)
 {
-    ASSERT(m_display_link_count);
+    VERIFY(m_display_link_count);
     --m_display_link_count;
     if (!m_display_link_count)
         m_display_link_notify_timer->stop();
@@ -1024,7 +1024,7 @@ void Compositor::recompute_occlusions()
             if (!transparency_rects.is_empty())
                 have_transparent = true;
 
-            ASSERT(!visible_opaque.intersects(transparency_rects));
+            VERIFY(!visible_opaque.intersects(transparency_rects));
 
             // Determine visible area for the window below
             if (w.is_opaque()) {
@@ -1089,9 +1089,9 @@ void Compositor::recompute_occlusions()
                 dbgln("    transparent: {}", r);
         }
 
-        ASSERT(!w.opaque_rects().intersects(m_opaque_wallpaper_rects));
-        ASSERT(!w.transparency_rects().intersects(m_opaque_wallpaper_rects));
-        ASSERT(!w.transparency_wallpaper_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.opaque_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.transparency_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.transparency_wallpaper_rects().intersects(m_opaque_wallpaper_rects));
         return IterationDecision::Continue;
     });
 }

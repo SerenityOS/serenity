@@ -135,10 +135,10 @@ private:
         ~ScopedOffset()
         {
             auto last = offsets.take_last();
-            ASSERT(last == offset);
+            VERIFY(last == offset);
 
             auto last_line = lines.take_last();
-            ASSERT(last_line == line);
+            VERIFY(last_line == line);
         }
 
         Vector<size_t>& offsets;

@@ -81,7 +81,7 @@ bool File::open(IODevice::OpenMode mode)
 
 bool File::open_impl(IODevice::OpenMode mode, mode_t permissions)
 {
-    ASSERT(!m_filename.is_null());
+    VERIFY(!m_filename.is_null());
     int flags = 0;
     if ((mode & IODevice::ReadWrite) == IODevice::ReadWrite) {
         flags |= O_RDWR | O_CREAT;
@@ -144,7 +144,7 @@ String File::real_path_for(const String& filename)
 
 bool File::ensure_parent_directories(const String& path)
 {
-    ASSERT(path.starts_with("/"));
+    VERIFY(path.starts_with("/"));
 
     int saved_errno = 0;
     ScopeGuard restore_errno = [&saved_errno] { errno = saved_errno; };
@@ -365,7 +365,7 @@ Result<void, File::CopyError> File::copy_file(const String& dst_path, const stru
             if (nwritten < 0)
                 return CopyError { OSError(errno), false };
 
-            ASSERT(nwritten > 0);
+            VERIFY(nwritten > 0);
             remaining_to_write -= nwritten;
             bufptr += nwritten;
         }

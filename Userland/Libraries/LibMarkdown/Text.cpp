@@ -196,7 +196,7 @@ Optional<Text> Text::parse(const StringView& str)
     Vector<Span> spans;
 
     auto append_span_if_needed = [&](size_t offset) {
-        ASSERT(current_span_start <= offset);
+        VERIFY(current_span_start <= offset);
         if (current_span_start != offset) {
             Span span {
                 unescape(str.substring_view(current_span_start, offset - current_span_start)),
@@ -280,7 +280,7 @@ Optional<Text> Text::parse(const StringView& str)
             break;
         }
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         // We've processed the character as a special, so the next offset will

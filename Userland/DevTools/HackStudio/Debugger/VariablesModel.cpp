@@ -52,14 +52,14 @@ GUI::ModelIndex VariablesModel::parent_index(const GUI::ModelIndex& index) const
         for (size_t row = 0; row < m_variables.size(); row++)
             if (m_variables.ptr_at(row).ptr() == parent)
                 return create_index(row, 0, parent);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent->members.size(); row++) {
         Debug::DebugInfo::VariableInfo* child_at_row = parent->parent->members.ptr_at(row).ptr();
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int VariablesModel::row_count(const GUI::ModelIndex& index) const
@@ -79,29 +79,29 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
 
     if (variable.is_enum_type()) {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         auto it = variable.type->members.find_if([&enumerator_value = value.value()](const auto& enumerator) {
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
-        ASSERT(!it.is_end());
+        VERIFY(!it.is_end());
         return String::formatted("{}::{}", variable.type_name, (*it)->name);
     }
 
     if (variable.type_name == "int") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         return String::formatted("{}", static_cast<int>(value.value()));
     }
 
     if (variable.type_name == "char") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         return String::formatted("'{0:c}' ({0:d})", value.value());
     }
 
     if (variable.type_name == "bool") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         return (value.value() & 1) ? "true" : "false";
     }
 
@@ -151,7 +151,7 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
 
     if (value.has_value()) {
         auto success = Debugger::the().session()->poke((u32*)variable->location_data.address, value.value());
-        ASSERT(success);
+        VERIFY(success);
         return;
     }
 

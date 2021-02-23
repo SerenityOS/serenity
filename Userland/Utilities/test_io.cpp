@@ -56,11 +56,11 @@ static void test_read_from_directory()
 {
     char buffer[BUFSIZ];
     int fd = open("/", O_DIRECTORY | O_RDONLY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_3(EISDIR, read, fd, buffer, sizeof(buffer));
     rc = close(fd);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_write_to_directory()
@@ -69,33 +69,33 @@ static void test_write_to_directory()
     int fd = open("/", O_DIRECTORY | O_RDONLY);
     if (fd < 0)
         perror("open");
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_3(EBADF, write, fd, str, sizeof(str));
     rc = close(fd);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_read_from_writeonly()
 {
     char buffer[BUFSIZ];
     int fd = open("/tmp/xxxx123", O_CREAT | O_WRONLY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_3(EBADF, read, fd, buffer, sizeof(buffer));
     rc = close(fd);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_write_to_readonly()
 {
     char str[] = "hello";
     int fd = open("/tmp/abcd123", O_CREAT | O_RDONLY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_3(EBADF, write, fd, str, sizeof(str));
     rc = close(fd);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_read_past_eof()
@@ -104,7 +104,7 @@ static void test_read_past_eof()
     int fd = open("/home/anon/myfile.txt", O_RDONLY);
     if (fd < 0)
         perror("open");
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     rc = lseek(fd, 9999, SEEK_SET);
     if (rc < 0)
@@ -115,13 +115,13 @@ static void test_read_past_eof()
     if (rc > 0)
         fprintf(stderr, "read %d bytes past EOF\n", rc);
     rc = close(fd);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_ftruncate_readonly()
 {
     int fd = open("/tmp/trunctest", O_RDONLY | O_CREAT, 0666);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_2(EBADF, ftruncate, fd, 0);
     close(fd);
@@ -130,7 +130,7 @@ static void test_ftruncate_readonly()
 static void test_ftruncate_negative()
 {
     int fd = open("/tmp/trunctest", O_RDWR | O_CREAT, 0666);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_2(EINVAL, ftruncate, fd, -1);
     close(fd);
@@ -139,7 +139,7 @@ static void test_ftruncate_negative()
 static void test_mmap_directory()
 {
     int fd = open("/tmp", O_RDONLY | O_DIRECTORY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
     auto* ptr = mmap(nullptr, 4096, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
     if (ptr != MAP_FAILED) {
         fprintf(stderr, "Boo! mmap() of a directory succeeded!\n");
@@ -155,13 +155,13 @@ static void test_mmap_directory()
 static void test_tmpfs_read_past_end()
 {
     int fd = open("/tmp/x", O_RDWR | O_CREAT | O_TRUNC, 0600);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
 
     int rc = ftruncate(fd, 1);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 
     rc = lseek(fd, 4096, SEEK_SET);
-    ASSERT(rc == 4096);
+    VERIFY(rc == 4096);
 
     char buffer[16];
     int nread = read(fd, buffer, sizeof(buffer));
@@ -174,10 +174,10 @@ static void test_tmpfs_read_past_end()
 static void test_procfs_read_past_end()
 {
     int fd = open("/proc/uptime", O_RDONLY);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
 
     int rc = lseek(fd, 4096, SEEK_SET);
-    ASSERT(rc == 4096);
+    VERIFY(rc == 4096);
 
     char buffer[16];
     int nread = read(fd, buffer, sizeof(buffer));
@@ -190,12 +190,12 @@ static void test_procfs_read_past_end()
 static void test_open_create_device()
 {
     int fd = open("/tmp/fakedevice", (O_RDWR | O_CREAT), (S_IFCHR | 0600));
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
 
     struct stat st;
     if (fstat(fd, &st) < 0) {
         perror("stat");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (st.st_mode != 0100600) {
@@ -210,11 +210,11 @@ static void test_unlink_symlink()
     int rc = symlink("/proc/2/foo", "/tmp/linky");
     if (rc < 0) {
         perror("symlink");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto target = Core::File::read_link("/tmp/linky");
-    ASSERT(target == "/proc/2/foo");
+    VERIFY(target == "/proc/2/foo");
 
     rc = unlink("/tmp/linky");
     if (rc < 0) {
@@ -226,10 +226,10 @@ static void test_unlink_symlink()
 static void test_eoverflow()
 {
     int fd = open("/tmp/x", O_RDWR);
-    ASSERT(fd >= 0);
+    VERIFY(fd >= 0);
 
     int rc = lseek(fd, INT32_MAX, SEEK_SET);
-    ASSERT(rc == INT32_MAX);
+    VERIFY(rc == INT32_MAX);
 
     char buffer[16];
     rc = read(fd, buffer, sizeof(buffer));
@@ -246,13 +246,13 @@ static void test_eoverflow()
 static void test_rmdir_while_inside_dir()
 {
     int rc = mkdir("/home/anon/testdir", 0700);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 
     rc = chdir("/home/anon/testdir");
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 
     rc = rmdir("/home/anon/testdir");
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 
     int fd = open("x", O_CREAT | O_RDWR, 0600);
     if (fd >= 0 || errno != ENOENT) {
@@ -260,7 +260,7 @@ static void test_rmdir_while_inside_dir()
     }
 
     rc = chdir("/home/anon");
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 static void test_writev()
@@ -276,18 +276,18 @@ static void test_writev()
     int nwritten = writev(pipefds[1], iov, 2);
     if (nwritten < 0) {
         perror("writev");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (nwritten != 12) {
         fprintf(stderr, "Didn't write 12 bytes to pipe with writev\n");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     char buffer[32];
     int nread = read(pipefds[0], buffer, sizeof(buffer));
     if (nread != 12 || memcmp(buffer, "HelloFriends", 12)) {
         fprintf(stderr, "Didn't read the expected data from pipe after writev\n");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     close(pipefds[0]);
@@ -299,7 +299,7 @@ static void test_rmdir_root()
     int rc = rmdir("/");
     if (rc != -1 || errno != EBUSY) {
         warnln("rmdir(/) didn't fail with EBUSY");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

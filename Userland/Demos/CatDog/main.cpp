@@ -150,9 +150,9 @@ public:
 
     void track_cursor_globally()
     {
-        ASSERT(window());
+        VERIFY(window());
         auto window_id = window()->window_id();
-        ASSERT(window_id >= 0);
+        VERIFY(window_id >= 0);
 
         set_global_cursor_tracking(true);
         GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetGlobalCursorTracking>(window_id, true);

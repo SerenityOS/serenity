@@ -323,7 +323,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     }
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static void print_primitive_wrapper_object(const FlyString& name, const JS::Object& object, HashTable<JS::Object*>& seen_objects)
@@ -884,7 +884,7 @@ int main(int argc, char** argv)
                 break;
             }
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
 
             return results;

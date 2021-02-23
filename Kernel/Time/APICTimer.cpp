@@ -54,7 +54,7 @@ UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void(const R
 
 UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
 
     klog() << "APICTimer: Using " << calibration_source.model() << " as calibration source";
 
@@ -96,7 +96,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     // tick count from the APIC timer
     auto original_callback = set_callback([&](const RegisterState&) {
         klog() << "APICTimer: Timer fired during calibration!";
-        ASSERT_NOT_REACHED(); // TODO: How should we handle this?
+        VERIFY_NOT_REACHED(); // TODO: How should we handle this?
     });
     apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
 
@@ -153,12 +153,12 @@ size_t APICTimer::ticks_per_second() const
 void APICTimer::set_periodic()
 {
     // FIXME: Implement it...
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 void APICTimer::set_non_periodic()
 {
     // FIXME: Implement it...
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void APICTimer::reset_to_default_ticks_per_second()

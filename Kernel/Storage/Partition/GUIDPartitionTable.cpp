@@ -79,7 +79,7 @@ GUIDPartitionTable::GUIDPartitionTable(const StorageDevice& device)
     : MBRPartitionTable(device)
 {
     m_cached_header = ByteBuffer::create_zeroed(m_device->block_size());
-    ASSERT(partitions_count() == 0);
+    VERIFY(partitions_count() == 0);
     if (!initialize())
         m_valid = false;
 }
@@ -91,7 +91,7 @@ const GUIDPartitionHeader& GUIDPartitionTable::header() const
 
 bool GUIDPartitionTable::initialize()
 {
-    ASSERT(m_cached_header.data() != nullptr);
+    VERIFY(m_cached_header.data() != nullptr);
 
     auto first_gpt_block = (m_device->block_size() == 512) ? 1 : 0;
 

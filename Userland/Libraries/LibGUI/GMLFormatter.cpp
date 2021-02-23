@@ -113,7 +113,7 @@ String format_gml(const StringView& string)
     auto ast = parse_gml(string);
     if (ast.is_null())
         return {};
-    ASSERT(ast.is_object());
+    VERIFY(ast.is_object());
     return format_gml_object(ast.as_object());
 }
 

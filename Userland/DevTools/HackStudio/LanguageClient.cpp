@@ -117,7 +117,7 @@ void LanguageClient::set_active_client()
 
 void LanguageClient::on_server_crash()
 {
-    ASSERT(m_server_connection);
+    VERIFY(m_server_connection);
     auto project_path = m_server_connection->projcet_path();
     ServerConnection::remove_instance_for_project(project_path);
     m_server_connection = nullptr;

@@ -40,7 +40,7 @@ SoftMMU::SoftMMU(Emulator& emulator)
 
 void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
-    ASSERT(!find_region({ 0x23, region->base() }));
+    VERIFY(!find_region({ 0x23, region->base() }));
 
     size_t first_page_in_region = region->base() / PAGE_SIZE;
     size_t last_page_in_region = (region->base() + region->size() - 1) / PAGE_SIZE;
@@ -63,7 +63,7 @@ void SoftMMU::remove_region(Region& region)
 
 void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
 {
-    ASSERT(!m_tls_region);
+    VERIFY(!m_tls_region);
     m_tls_region = move(region);
 }
 

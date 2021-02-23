@@ -126,7 +126,7 @@ static Array<u8, 32> arg_to_value_t(const Argument& arg)
         return value;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 #define DECL_WITH_TYPE(ty)                          \

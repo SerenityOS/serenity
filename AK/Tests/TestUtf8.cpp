@@ -38,7 +38,7 @@ TEST_CASE(decode_ascii)
 
     size_t i = 0;
     for (u32 code_point : utf8) {
-        ASSERT(i < expected_size);
+        VERIFY(i < expected_size);
         EXPECT_EQ(code_point, expected[i]);
         i++;
     }
@@ -57,7 +57,7 @@ TEST_CASE(decode_utf8)
 
     size_t i = 0;
     for (u32 code_point : utf8) {
-        ASSERT(i < expected_size);
+        VERIFY(i < expected_size);
         EXPECT_EQ(code_point, expected[i]);
         i++;
     }

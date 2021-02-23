@@ -48,7 +48,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
 
     bool ok = server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {

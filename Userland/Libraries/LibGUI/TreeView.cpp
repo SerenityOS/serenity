@@ -43,7 +43,7 @@ struct TreeView::MetadataForIndex {
 
 TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex& index) const
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     auto it = m_view_metadata.find(index.internal_data());
     if (it != m_view_metadata.end())
         return *it->value;
@@ -165,7 +165,7 @@ void TreeView::collapse_tree(const ModelIndex& root)
 
 void TreeView::toggle_index(const ModelIndex& index)
 {
-    ASSERT(model()->row_count(index));
+    VERIFY(model()->row_count(index));
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
     if (on_toggle)
@@ -178,7 +178,7 @@ void TreeView::toggle_index(const ModelIndex& index)
 template<typename Callback>
 void TreeView::traverse_in_paint_order(Callback callback) const
 {
-    ASSERT(model());
+    VERIFY(model());
     auto& model = *this->model();
     int indent_level = 1;
     int y_offset = 0;

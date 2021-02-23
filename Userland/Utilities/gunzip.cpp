@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
         if (!keep_input_files) {
             const auto retval = unlink(String { input_filename }.characters());
-            ASSERT(retval == 0);
+            VERIFY(retval == 0);
         }
     }
 }

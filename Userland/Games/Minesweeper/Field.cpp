@@ -416,7 +416,7 @@ void Field::on_square_right_clicked(Square& square)
 
 void Field::set_flag(Square& square, bool flag)
 {
-    ASSERT(!square.is_swept);
+    VERIFY(!square.is_swept);
     if (square.has_flag == flag)
         return;
     square.is_considering = false;
@@ -425,7 +425,7 @@ void Field::set_flag(Square& square, bool flag)
         ++m_flags_left;
     } else {
 
-        ASSERT(m_flags_left);
+        VERIFY(m_flags_left);
         --m_flags_left;
     }
     square.has_flag = flag;

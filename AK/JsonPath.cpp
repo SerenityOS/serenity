@@ -45,7 +45,7 @@ JsonValue JsonPath::resolve(const JsonValue& top_root) const
             root = JsonValue { root.as_array().at(element.index()) };
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
     return root;

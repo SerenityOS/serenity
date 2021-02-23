@@ -105,7 +105,7 @@ public:
 
     NetworkOrdered<u16> compute_checksum() const
     {
-        ASSERT(!m_checksum);
+        VERIFY(!m_checksum);
         return internet_checksum(this, sizeof(IPv4Packet));
     }
 

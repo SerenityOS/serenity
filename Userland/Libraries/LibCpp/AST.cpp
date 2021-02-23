@@ -192,7 +192,7 @@ void BinaryExpression::dump(size_t indent) const
 
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    ASSERT(op_string);
+    VERIFY(op_string);
     outln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
@@ -216,7 +216,7 @@ void AssignmentExpression::dump(size_t indent) const
 
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    ASSERT(op_string);
+    VERIFY(op_string);
     outln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
@@ -301,7 +301,7 @@ void UnaryExpression::dump(size_t indent) const
         op_string = "<invalid>";
     }
 
-    ASSERT(op_string);
+    VERIFY(op_string);
     print_indent(indent + 1);
     outln("{}", op_string);
     m_lhs->dump(indent + 1);

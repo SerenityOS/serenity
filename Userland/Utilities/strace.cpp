@@ -105,7 +105,7 @@ int main(int argc, char** argv)
                 perror("execvp");
                 exit(1);
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         g_pid = pid;

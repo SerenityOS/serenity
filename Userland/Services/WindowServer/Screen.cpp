@@ -43,18 +43,18 @@ static Screen* s_the;
 
 Screen& Screen::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 Screen::Screen(unsigned desired_width, unsigned desired_height, int scale_factor)
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
     m_framebuffer_fd = open("/dev/fb0", O_RDWR | O_CLOEXEC);
     if (m_framebuffer_fd < 0) {
         perror("failed to open /dev/fb0");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (fb_set_buffer(m_framebuffer_fd, 0) == 0) {
@@ -93,7 +93,7 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
         on_change_resolution(physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor);
         return false;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Screen::on_change_resolution(int pitch, int new_physical_width, int new_physical_height, int new_scale_factor)
@@ -102,14 +102,14 @@ void Screen::on_change_resolution(int pitch, int new_physical_width, int new_phy
         if (m_framebuffer) {
             size_t previous_size_in_bytes = m_size_in_bytes;
             int rc = munmap(m_framebuffer, previous_size_in_bytes);
-            ASSERT(rc == 0);
+            VERIFY(rc == 0);
         }
 
         int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
 
         m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
-        ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
+        VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
     }
 
     m_pitch = pitch;
@@ -122,20 +122,20 @@ void Screen::on_change_resolution(int pitch, int new_physical_width, int new_phy
 
 void Screen::set_buffer(int index)
 {
-    ASSERT(m_can_set_buffer);
+    VERIFY(m_can_set_buffer);
     int rc = fb_set_buffer(m_framebuffer_fd, index);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 void Screen::set_acceleration_factor(double factor)
 {
-    ASSERT(factor >= mouse_accel_min && factor <= mouse_accel_max);
+    VERIFY(factor >= mouse_accel_min && factor <= mouse_accel_max);
     m_acceleration_factor = factor;
 }
 
 void Screen::set_scroll_step_size(unsigned step_size)
 {
-    ASSERT(step_size >= scroll_step_size_min);
+    VERIFY(step_size >= scroll_step_size_min);
     m_scroll_step_size = step_size;
 }
 

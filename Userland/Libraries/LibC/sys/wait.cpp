@@ -86,7 +86,7 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
             *wstatus = 0;
             return 0; // return 0 if running
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

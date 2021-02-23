@@ -124,7 +124,7 @@ struct Token {
             FOR_EACH_TOKEN_TYPE
 #undef __TOKEN
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     const char* to_string() const

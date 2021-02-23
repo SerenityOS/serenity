@@ -156,11 +156,11 @@ StackingContext* Box::enclosing_stacking_context()
         auto& ancestor_box = downcast<Box>(*ancestor);
         if (!ancestor_box.establishes_stacking_context())
             continue;
-        ASSERT(ancestor_box.stacking_context());
+        VERIFY(ancestor_box.stacking_context());
         return ancestor_box.stacking_context();
     }
     // We should always reach the Layout::InitialContainingBlockBox stacking context.
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Box::establishes_stacking_context() const
@@ -196,7 +196,7 @@ LineBox& Box::add_line_box()
 float Box::width_of_logical_containing_block() const
 {
     auto* containing_block = this->containing_block();
-    ASSERT(containing_block);
+    VERIFY(containing_block);
     return containing_block->width();
 }
 

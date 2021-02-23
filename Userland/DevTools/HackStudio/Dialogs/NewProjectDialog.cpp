@@ -135,7 +135,7 @@ RefPtr<ProjectTemplate> NewProjectDialog::selected_template()
     }
 
     auto project_template = m_model->template_for_index(m_icon_view->selection().first());
-    ASSERT(!project_template.is_null());
+    VERIFY(!project_template.is_null());
 
     return project_template;
 }

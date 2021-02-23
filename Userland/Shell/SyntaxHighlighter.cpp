@@ -64,7 +64,7 @@ private:
             offset -= new_line.line_column;
             --offset;
 
-            ASSERT(new_line.line_number > 0);
+            VERIFY(new_line.line_number > 0);
             --new_line.line_number;
 
             auto line = m_document.line(new_line.line_number);

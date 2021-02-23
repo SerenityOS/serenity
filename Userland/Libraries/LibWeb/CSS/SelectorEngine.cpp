@@ -119,7 +119,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     case CSS::Selector::SimpleSelector::Type::TagName:
         return component.value == element.local_name();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -134,7 +134,7 @@ static bool matches(const CSS::Selector& selector, int component_list_index, con
     case CSS::Selector::ComplexSelector::Relation::None:
         return true;
     case CSS::Selector::ComplexSelector::Relation::Descendant:
-        ASSERT(component_list_index != 0);
+        VERIFY(component_list_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<DOM::Element>(*ancestor))
                 continue;
@@ -143,29 +143,29 @@ static bool matches(const CSS::Selector& selector, int component_list_index, con
         }
         return false;
     case CSS::Selector::ComplexSelector::Relation::ImmediateChild:
-        ASSERT(component_list_index != 0);
+        VERIFY(component_list_index != 0);
         if (!element.parent() || !is<DOM::Element>(*element.parent()))
             return false;
         return matches(selector, component_list_index - 1, downcast<DOM::Element>(*element.parent()));
     case CSS::Selector::ComplexSelector::Relation::AdjacentSibling:
-        ASSERT(component_list_index != 0);
+        VERIFY(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
             return matches(selector, component_list_index - 1, *sibling);
         return false;
     case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
-        ASSERT(component_list_index != 0);
+        VERIFY(component_list_index != 0);
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
             if (matches(selector, component_list_index - 1, *sibling))
                 return true;
         }
         return false;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool matches(const CSS::Selector& selector, const DOM::Element& element)
 {
-    ASSERT(!selector.complex_selectors().is_empty());
+    VERIFY(!selector.complex_selectors().is_empty());
     return matches(selector, selector.complex_selectors().size() - 1, element);
 }
 

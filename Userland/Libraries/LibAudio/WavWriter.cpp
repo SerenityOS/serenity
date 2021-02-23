@@ -68,7 +68,7 @@ void WavWriter::write_samples(const u8* samples, size_t size)
 
 void WavWriter::finalize()
 {
-    ASSERT(!m_finalized);
+    VERIFY(!m_finalized);
     m_finalized = true;
     if (m_file) {
         m_file->seek(0);

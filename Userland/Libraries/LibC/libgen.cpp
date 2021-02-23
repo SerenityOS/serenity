@@ -75,8 +75,8 @@ char* basename(char* path)
         return path;
 
     if (len == 1) {
-        ASSERT(last_slash == path);
-        ASSERT(path[0] == '/');
+        VERIFY(last_slash == path);
+        VERIFY(path[0] == '/');
         return slash;
     }
 

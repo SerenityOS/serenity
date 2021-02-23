@@ -36,7 +36,7 @@ int Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_s
     auto* stack_region = space().find_region_containing(Range { VirtualAddress(stack_pointer), 1 });
 
     // The syscall handler should have killed us if we had an invalid stack pointer.
-    ASSERT(stack_region);
+    VERIFY(stack_region);
 
     FlatPtr stack_base = stack_region->range().base().get();
     size_t stack_size = stack_region->size();

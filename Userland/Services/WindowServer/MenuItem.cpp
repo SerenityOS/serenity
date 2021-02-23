@@ -81,15 +81,15 @@ void MenuItem::set_default(bool is_default)
 
 Menu* MenuItem::submenu()
 {
-    ASSERT(is_submenu());
-    ASSERT(m_menu.client());
+    VERIFY(is_submenu());
+    VERIFY(m_menu.client());
     return m_menu.client()->find_menu_by_id(m_submenu_id);
 }
 
 const Menu* MenuItem::submenu() const
 {
-    ASSERT(is_submenu());
-    ASSERT(m_menu.client());
+    VERIFY(is_submenu());
+    VERIFY(m_menu.client());
     return m_menu.client()->find_menu_by_id(m_submenu_id);
 }
 

@@ -117,13 +117,13 @@ public:
     }
     ALWAYS_INLINE void unlock()
     {
-        ASSERT(m_locked);
+        VERIFY(m_locked);
         m_locked = false;
         m_lock.unlock();
     }
     ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive)
     {
-        ASSERT(!m_locked);
+        VERIFY(!m_locked);
         m_locked = true;
         m_lock.lock(mode);
     }

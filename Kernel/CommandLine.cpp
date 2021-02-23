@@ -45,13 +45,13 @@ UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
 
 const CommandLine& kernel_command_line()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 UNMAP_AFTER_INIT void CommandLine::initialize()
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = new CommandLine(s_cmd_line);
 }
 

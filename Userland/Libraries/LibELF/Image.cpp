@@ -74,7 +74,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
 
 StringView Image::section_index_to_string(unsigned index) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     if (index == SHN_UNDEF)
         return "Undefined";
     if (index >= SHN_LORESERVE)
@@ -84,7 +84,7 @@ StringView Image::section_index_to_string(unsigned index) const
 
 unsigned Image::symbol_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     if (!section_count())
         return 0;
     return section(m_symbol_table_section_index).entry_count();
@@ -146,13 +146,13 @@ void Image::dump() const
 
 unsigned Image::section_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return header().e_shnum;
 }
 
 unsigned Image::program_header_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return header().e_phnum;
 }
 
@@ -191,7 +191,7 @@ bool Image::parse()
 
 StringView Image::table_string(unsigned table_index, unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     auto& sh = section_header(table_index);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
@@ -208,67 +208,67 @@ StringView Image::table_string(unsigned table_index, unsigned offset) const
 
 StringView Image::section_header_table_string(unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return table_string(header().e_shstrndx, offset);
 }
 
 StringView Image::table_string(unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return table_string(m_string_table_section_index, offset);
 }
 
 const char* Image::raw_data(unsigned offset) const
 {
-    ASSERT(offset < m_size); // Callers must check indices into raw_data()'s result are also in bounds.
+    VERIFY(offset < m_size); // Callers must check indices into raw_data()'s result are also in bounds.
     return reinterpret_cast<const char*>(m_buffer) + offset;
 }
 
 const Elf32_Ehdr& Image::header() const
 {
-    ASSERT(m_size >= sizeof(Elf32_Ehdr));
+    VERIFY(m_size >= sizeof(Elf32_Ehdr));
     return *reinterpret_cast<const Elf32_Ehdr*>(raw_data(0));
 }
 
 const Elf32_Phdr& Image::program_header_internal(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < header().e_phnum);
+    VERIFY(m_valid);
+    VERIFY(index < header().e_phnum);
     return *reinterpret_cast<const Elf32_Phdr*>(raw_data(header().e_phoff + (index * sizeof(Elf32_Phdr))));
 }
 
 const Elf32_Shdr& Image::section_header(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < header().e_shnum);
+    VERIFY(m_valid);
+    VERIFY(index < header().e_shnum);
     return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
 Image::Symbol Image::symbol(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < symbol_count());
+    VERIFY(m_valid);
+    VERIFY(index < symbol_count());
     auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, raw_syms[index]);
 }
 
 Image::Section Image::section(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < section_count());
+    VERIFY(m_valid);
+    VERIFY(index < section_count());
     return Section(*this, index);
 }
 
 Image::ProgramHeader Image::program_header(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < program_header_count());
+    VERIFY(m_valid);
+    VERIFY(index < program_header_count());
     return ProgramHeader(*this, index);
 }
 
 Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
-    ASSERT(index < relocation_count());
+    VERIFY(index < relocation_count());
     auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
@@ -291,7 +291,7 @@ Image::RelocationSection Image::Section::relocations() const
 
 Image::Section Image::lookup_section(const String& name) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     for (unsigned i = 0; i < section_count(); ++i) {
         auto section = this->section(i);
         if (section.name() == name)

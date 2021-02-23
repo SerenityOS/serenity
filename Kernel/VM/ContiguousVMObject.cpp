@@ -56,7 +56,7 @@ ContiguousVMObject::~ContiguousVMObject()
 
 RefPtr<VMObject> ContiguousVMObject::clone()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

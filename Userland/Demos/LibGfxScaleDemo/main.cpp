@@ -110,7 +110,7 @@ void Canvas::draw(Gfx::Painter& painter)
 
     // grid does not have an alpha channel.
     auto grid = Gfx::Bitmap::load_from_file("/res/wallpapers/grid.png");
-    ASSERT(!grid->has_alpha_channel());
+    VERIFY(!grid->has_alpha_channel());
     painter.fill_rect({ 25, 122, 62, 20 }, Color::Green);
     painter.blit({ 25, 122 }, *grid, { (grid->width() - 62) / 2, (grid->height() - 20) / 2 + 40, 62, 20 }, 0.9);
 

@@ -744,8 +744,8 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     unsigned column = min(a_column, m_columns - 1u);
     if (row == m_cursor_row && column == m_cursor_column)
         return;
-    ASSERT(row < rows());
-    ASSERT(column < columns());
+    VERIFY(row < rows());
+    VERIFY(column < columns());
     invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
@@ -755,8 +755,8 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
 
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 {
-    ASSERT(row < rows());
-    ASSERT(column < columns());
+    VERIFY(row < rows());
+    VERIFY(column < columns());
     auto& line = m_lines[row];
     line.set_code_point(column, code_point);
     line.attributes()[column] = m_current_attribute;

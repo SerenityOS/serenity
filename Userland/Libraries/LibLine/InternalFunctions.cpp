@@ -227,7 +227,7 @@ void Editor::enter_search()
 {
     if (m_is_searching) {
         // How did we get here?
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
         m_is_searching = true;
         m_search_offset = 0;
@@ -494,7 +494,7 @@ void Editor::case_change_word(Editor::CaseChangeOp change_op)
         if (change_op == CaseChangeOp::Uppercase || (change_op == CaseChangeOp::Capital && m_cursor == start)) {
             m_buffer[m_cursor] = toupper(m_buffer[m_cursor]);
         } else {
-            ASSERT(change_op == CaseChangeOp::Lowercase || (change_op == CaseChangeOp::Capital && m_cursor > start));
+            VERIFY(change_op == CaseChangeOp::Lowercase || (change_op == CaseChangeOp::Capital && m_cursor > start));
             m_buffer[m_cursor] = tolower(m_buffer[m_cursor]);
         }
         ++m_cursor;

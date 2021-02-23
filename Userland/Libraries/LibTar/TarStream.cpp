@@ -37,7 +37,7 @@ TarFileStream::TarFileStream(TarStream& tar_stream)
 size_t TarFileStream::read(Bytes bytes)
 {
     // verify that the stream has not advanced
-    ASSERT(m_tar_stream.m_generation == m_generation);
+    VERIFY(m_tar_stream.m_generation == m_generation);
 
     if (has_any_error())
         return 0;
@@ -52,7 +52,7 @@ size_t TarFileStream::read(Bytes bytes)
 bool TarFileStream::unreliable_eof() const
 {
     // verify that the stream has not advanced
-    ASSERT(m_tar_stream.m_generation == m_generation);
+    VERIFY(m_tar_stream.m_generation == m_generation);
 
     return m_tar_stream.m_stream.unreliable_eof()
         || m_tar_stream.m_file_offset >= m_tar_stream.header().size();
@@ -61,7 +61,7 @@ bool TarFileStream::unreliable_eof() const
 bool TarFileStream::read_or_error(Bytes bytes)
 {
     // verify that the stream has not advanced
-    ASSERT(m_tar_stream.m_generation == m_generation);
+    VERIFY(m_tar_stream.m_generation == m_generation);
 
     if (read(bytes) < bytes.size()) {
         set_fatal_error();
@@ -74,7 +74,7 @@ bool TarFileStream::read_or_error(Bytes bytes)
 bool TarFileStream::discard_or_error(size_t count)
 {
     // verify that the stream has not advanced
-    ASSERT(m_tar_stream.m_generation == m_generation);
+    VERIFY(m_tar_stream.m_generation == m_generation);
 
     if (count > m_tar_stream.header().size() - m_tar_stream.m_file_offset) {
         return false;
@@ -90,7 +90,7 @@ TarStream::TarStream(InputStream& stream)
         m_finished = true;
         return;
     }
-    ASSERT(m_stream.discard_or_error(block_size - sizeof(Header)));
+    VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
 }
 
 static constexpr unsigned long block_ceiling(unsigned long offset)
@@ -104,7 +104,7 @@ void TarStream::advance()
         return;
 
     m_generation++;
-    ASSERT(m_stream.discard_or_error(block_ceiling(m_header.size()) - m_file_offset));
+    VERIFY(m_stream.discard_or_error(block_ceiling(m_header.size()) - m_file_offset));
     m_file_offset = 0;
 
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
@@ -116,7 +116,7 @@ void TarStream::advance()
         return;
     }
 
-    ASSERT(m_stream.discard_or_error(block_size - sizeof(Header)));
+    VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
 }
 
 bool TarStream::valid() const
@@ -126,7 +126,7 @@ bool TarStream::valid() const
 
 TarFileStream TarStream::file_contents()
 {
-    ASSERT(!m_finished);
+    VERIFY(!m_finished);
     return TarFileStream(*this);
 }
 

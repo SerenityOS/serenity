@@ -114,7 +114,7 @@ bool Line::has_only_one_background_color() const
 
 void Line::convert_to_utf32()
 {
-    ASSERT(!m_utf32);
+    VERIFY(!m_utf32);
     auto* new_code_points = new u32[m_length];
     for (size_t i = 0; i < m_length; ++i) {
         new_code_points[i] = m_code_points.as_u8[i];

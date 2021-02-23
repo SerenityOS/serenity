@@ -110,7 +110,7 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    ASSERT(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
@@ -169,11 +169,11 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
         return false;
-    ASSERT(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
-        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
+        VERIFY(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
         klog() << "copy_to_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
         return false;
     }
@@ -185,11 +185,11 @@ bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
     bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
     if (!is_user)
         return false;
-    ASSERT(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
-        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
+        VERIFY(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
         klog() << "copy_from_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
         return false;
     }
@@ -361,22 +361,22 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
 
 [[noreturn]] void __stack_chk_fail()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 [[noreturn]] void __stack_chk_fail_local()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return 0;
 }
 
 [[noreturn]] void __cxa_pure_virtual()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 }

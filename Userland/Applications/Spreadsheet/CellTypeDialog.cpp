@@ -52,7 +52,7 @@ namespace Spreadsheet {
 CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, GUI::Window* parent)
     : GUI::Dialog(parent)
 {
-    ASSERT(!positions.is_empty());
+    VERIFY(!positions.is_empty());
 
     StringBuilder builder;
 
@@ -239,7 +239,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                     m_horizontal_alignment = HorizontalAlignment::Right;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             };
         }
@@ -271,7 +271,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                     m_vertical_alignment = VerticalAlignment::Bottom;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             };
         }
@@ -444,7 +444,7 @@ ConditionsView::ConditionsView()
 
 void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
 {
-    ASSERT(!m_formats);
+    VERIFY(!m_formats);
 
     m_formats = formats;
 
@@ -454,7 +454,7 @@ void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
 
 void ConditionsView::add_format()
 {
-    ASSERT(m_formats);
+    VERIFY(m_formats);
 
     m_formats->empend();
     auto& last = m_formats->last();
@@ -466,7 +466,7 @@ void ConditionsView::add_format()
 
 void ConditionsView::remove_top()
 {
-    ASSERT(m_formats);
+    VERIFY(m_formats);
 
     if (m_formats->is_empty())
         return;

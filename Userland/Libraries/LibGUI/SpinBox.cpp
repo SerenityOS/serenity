@@ -83,7 +83,7 @@ void SpinBox::set_value(int value)
 
 void SpinBox::set_range(int min, int max)
 {
-    ASSERT(min <= max);
+    VERIFY(min <= max);
     if (m_min == min && m_max == max)
         return;
 

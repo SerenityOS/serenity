@@ -42,17 +42,17 @@ StackInfo::StackInfo()
 #ifdef __serenity__
     if (get_stack_bounds(&m_base, &m_size) < 0) {
         perror("get_stack_bounds");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #elif __linux__
     pthread_attr_t attr = {};
     if (int rc = pthread_getattr_np(pthread_self(), &attr) != 0) {
         fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (int rc = pthread_attr_getstack(&attr, (void**)&m_base, &m_size) != 0) {
         fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     pthread_attr_destroy(&attr);
 #elif __APPLE__
@@ -73,7 +73,7 @@ StackInfo::StackInfo()
     }
     m_base = top_of_stack - m_size;
 #else
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 #endif
 
     m_top = m_base + m_size;

@@ -385,7 +385,7 @@ const Gfx::Bitmap& Editor::current_position_icon_bitmap()
 const CodeDocument& Editor::code_document() const
 {
     const auto& doc = document();
-    ASSERT(doc.is_code_document());
+    VERIFY(doc.is_code_document());
     return static_cast<const CodeDocument&>(doc);
 }
 
@@ -396,7 +396,7 @@ CodeDocument& Editor::code_document()
 
 void Editor::set_document(GUI::TextDocument& doc)
 {
-    ASSERT(doc.is_code_document());
+    VERIFY(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);
@@ -487,7 +487,7 @@ void Editor::on_edit_action(const GUI::Command& command)
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Editor::undo()

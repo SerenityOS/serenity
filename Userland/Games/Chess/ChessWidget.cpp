@@ -270,7 +270,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 msg = "Draw by insufficient material.";
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
             if (over) {
                 set_drag_enabled(false);
@@ -420,7 +420,7 @@ void ChessWidget::input_engine_move()
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
-        ASSERT(board().apply_move(move));
+        VERIFY(board().apply_move(move));
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
         m_board_markings.clear();
@@ -464,7 +464,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
         }
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     update();
 }

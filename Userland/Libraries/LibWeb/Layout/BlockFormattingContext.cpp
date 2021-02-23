@@ -359,7 +359,7 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
 
 void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
 {
-    ASSERT(!containing_block.is_absolutely_positioned());
+    VERIFY(!containing_block.is_absolutely_positioned());
     auto& replaced_element_box_model = child_box.box_model();
 
     replaced_element_box_model.margin.top = child_box.computed_values().margin().top.resolved_or_zero(containing_block, containing_block.width()).to_px(child_box);
@@ -472,7 +472,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     layout_block_level_children(context_box(), layout_mode);
 
-    ASSERT(!icb.children_are_inline());
+    VERIFY(!icb.children_are_inline());
 
     // FIXME: The ICB should have the height of the viewport.
     //        Instead of auto-sizing the ICB, we should spill into overflow.
@@ -501,7 +501,7 @@ static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& contex
 
 void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_block)
 {
-    ASSERT(box.is_floating());
+    VERIFY(box.is_floating());
 
     compute_width(box);
     layout_inside(box, LayoutMode::Default);

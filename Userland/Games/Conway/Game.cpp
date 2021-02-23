@@ -177,6 +177,6 @@ void Game::interact_at(const Gfx::IntPoint& point)
         m_universe[cell_y][cell_x] = false;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }

@@ -33,7 +33,7 @@ namespace JS {
 BigInt::BigInt(Crypto::SignedBigInteger big_integer)
     : m_big_integer(move(big_integer))
 {
-    ASSERT(!m_big_integer.is_invalid());
+    VERIFY(!m_big_integer.is_invalid());
 }
 
 BigInt::~BigInt()

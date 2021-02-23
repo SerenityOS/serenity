@@ -101,7 +101,7 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
     }
 
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

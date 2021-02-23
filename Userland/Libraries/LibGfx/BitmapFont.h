@@ -98,7 +98,7 @@ public:
 
     void set_glyph_width(size_t ch, u8 width)
     {
-        ASSERT(m_glyph_widths);
+        VERIFY(m_glyph_widths);
         m_glyph_widths[ch] = width;
     }
 

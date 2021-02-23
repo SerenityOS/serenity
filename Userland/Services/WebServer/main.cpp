@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
-        ASSERT(client_socket);
+        VERIFY(client_socket);
         auto client = WebServer::Client::construct(client_socket.release_nonnull(), real_root_path, server);
         client->start();
     };

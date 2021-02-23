@@ -59,10 +59,10 @@ void LibThread::Thread::start()
         },
         static_cast<void*>(this));
 
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
     if (!m_thread_name.is_empty()) {
         rc = pthread_setname_np(m_tid, m_thread_name.characters());
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
     }
     dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
 }

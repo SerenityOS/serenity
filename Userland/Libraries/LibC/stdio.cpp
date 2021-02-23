@@ -141,7 +141,7 @@ private:
 FILE::~FILE()
 {
     bool already_closed = m_fd == -1;
-    ASSERT(already_closed);
+    VERIFY(already_closed);
 }
 
 FILE* FILE::create(int fd, int mode)
@@ -222,7 +222,7 @@ bool FILE::read_into_buffer()
     size_t available_size;
     u8* data = m_buffer.begin_enqueue(available_size);
     // If we want to read, the buffer must have some space!
-    ASSERT(available_size);
+    VERIFY(available_size);
 
     ssize_t nread = do_read(data, available_size);
 
@@ -238,7 +238,7 @@ bool FILE::write_from_buffer()
     size_t size;
     const u8* data = m_buffer.begin_dequeue(size);
     // If we want to write, the buffer must have something in it!
-    ASSERT(size);
+    VERIFY(size);
 
     ssize_t nwritten = do_write(data, size);
 
@@ -378,7 +378,7 @@ bool FILE::gets(u8* data, size_t size)
                 *data = 0;
                 return total_read > 0;
             }
-            ASSERT(nread == 1);
+            VERIFY(nread == 1);
             *data = byte;
             total_read++;
             data++;
@@ -508,17 +508,17 @@ const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
 
 void FILE::Buffer::did_dequeue(size_t actual_size)
 {
-    ASSERT(actual_size > 0);
+    VERIFY(actual_size > 0);
 
     if (m_ungotten) {
-        ASSERT(actual_size == 1);
+        VERIFY(actual_size == 1);
         m_ungotten = false;
         return;
     }
 
     m_begin += actual_size;
 
-    ASSERT(m_begin <= m_capacity);
+    VERIFY(m_begin <= m_capacity);
     if (m_begin == m_capacity) {
         // Wrap around.
         m_begin = 0;
@@ -534,7 +534,7 @@ void FILE::Buffer::did_dequeue(size_t actual_size)
 
 u8* FILE::Buffer::begin_enqueue(size_t& available_size) const
 {
-    ASSERT(m_data != nullptr);
+    VERIFY(m_data != nullptr);
 
     if (m_begin < m_end || m_empty)
         available_size = m_capacity - m_end;
@@ -546,12 +546,12 @@ u8* FILE::Buffer::begin_enqueue(size_t& available_size) const
 
 void FILE::Buffer::did_enqueue(size_t actual_size)
 {
-    ASSERT(m_data != nullptr);
-    ASSERT(actual_size > 0);
+    VERIFY(m_data != nullptr);
+    VERIFY(actual_size > 0);
 
     m_end += actual_size;
 
-    ASSERT(m_end <= m_capacity);
+    VERIFY(m_end <= m_capacity);
     if (m_end == m_capacity) {
         // Wrap around.
         m_end = 0;
@@ -590,7 +590,7 @@ void __stdio_init()
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
@@ -611,13 +611,13 @@ void setlinebuf(FILE* stream)
 
 int fileno(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->fileno();
 }
 
 int feof(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->eof();
 }
 
@@ -632,14 +632,14 @@ int fflush(FILE* stream)
 
 char* fgets(char* buffer, int size, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     bool ok = stream->gets(reinterpret_cast<u8*>(buffer), size);
     return ok ? buffer : nullptr;
 }
 
 int fgetc(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     char ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
     if (nread == 1)
@@ -715,19 +715,19 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 
 int ungetc(int c, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     bool ok = stream->ungetc(c);
     return ok ? c : EOF;
 }
 
 int fputc(int ch, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     u8 byte = ch;
     size_t nwritten = stream->write(&byte, 1);
     if (nwritten == 0)
         return EOF;
-    ASSERT(nwritten == 1);
+    VERIFY(nwritten == 1);
     return byte;
 }
 
@@ -743,7 +743,7 @@ int putchar(int ch)
 
 int fputs(const char* s, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     size_t len = strlen(s);
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
     if (nwritten < len)
@@ -761,20 +761,20 @@ int puts(const char* s)
 
 void clearerr(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     stream->clear_err();
 }
 
 int ferror(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->error();
 }
 
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+    VERIFY(stream);
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
     return nread / size;
@@ -782,8 +782,8 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+    VERIFY(stream);
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
     return nwritten / size;
@@ -791,32 +791,32 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 
 int fseek(FILE* stream, long offset, int whence)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->seek(offset, whence);
 }
 
 int fseeko(FILE* stream, off_t offset, int whence)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->seek(offset, whence);
 }
 
 long ftell(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->tell();
 }
 
 off_t ftello(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     return stream->tell();
 }
 
 int fgetpos(FILE* stream, fpos_t* pos)
 {
-    ASSERT(stream);
-    ASSERT(pos);
+    VERIFY(stream);
+    VERIFY(pos);
 
     off_t val = stream->tell();
     if (val == -1L)
@@ -828,17 +828,17 @@ int fgetpos(FILE* stream, fpos_t* pos)
 
 int fsetpos(FILE* stream, const fpos_t* pos)
 {
-    ASSERT(stream);
-    ASSERT(pos);
+    VERIFY(stream);
+    VERIFY(pos);
 
     return stream->seek(*pos, SEEK_SET);
 }
 
 void rewind(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     int rc = stream->seek(0, SEEK_SET);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 }
 
 ALWAYS_INLINE void stdout_putch(char*&, char ch)
@@ -991,7 +991,7 @@ FILE* fopen(const char* pathname, const char* mode)
 
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     if (!pathname) {
         // FIXME: Someone should probably implement this path.
         TODO();
@@ -1022,7 +1022,7 @@ static inline bool is_default_stream(FILE* stream)
 
 int fclose(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     bool ok = stream->close();
     ScopedValueRollback errno_restorer(errno);
 
@@ -1124,8 +1124,8 @@ FILE* popen(const char* command, const char* type)
 
 int pclose(FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(stream->popen_child() != 0);
+    VERIFY(stream);
+    VERIFY(stream->popen_child() != 0);
 
     int wstatus = 0;
     int rc = waitpid(stream->popen_child(), &wstatus, 0);

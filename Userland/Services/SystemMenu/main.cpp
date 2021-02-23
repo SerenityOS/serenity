@@ -190,7 +190,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
                 auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
-                ASSERT(response->success());
+                VERIFY(response->success());
             });
             if (theme.name == current_theme_name)
                 action->set_checked(true);

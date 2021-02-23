@@ -72,7 +72,7 @@ public:
     {
         if (child.m_parent == this)
             return;
-        ASSERT(!child.m_parent);
+        VERIFY(!child.m_parent);
         child.m_parent = this;
         m_children.append(child);
     }

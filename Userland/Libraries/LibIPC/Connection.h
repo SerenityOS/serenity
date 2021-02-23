@@ -122,7 +122,7 @@ public:
     {
         post_message(RequestType(forward<Args>(args)...));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
-        ASSERT(response);
+        VERIFY(response);
         return response;
     }
 
@@ -171,8 +171,8 @@ protected:
             if (rc < 0) {
                 perror("select");
             }
-            ASSERT(rc > 0);
-            ASSERT(FD_ISSET(m_socket->fd(), &rfds));
+            VERIFY(rc > 0);
+            VERIFY(FD_ISSET(m_socket->fd(), &rfds));
             if (!drain_messages_from_peer())
                 break;
         }

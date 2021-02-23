@@ -183,7 +183,7 @@ bool XtermSuggestionDisplay::cleanup()
 
 size_t XtermSuggestionDisplay::fit_to_page_boundary(size_t selection_index)
 {
-    ASSERT(m_pages.size() > 0);
+    VERIFY(m_pages.size() > 0);
     size_t index = 0;
 
     auto* match = binary_search(

@@ -67,7 +67,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
                 return create_index(row, index.column(), node.parent());
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 
@@ -76,7 +76,7 @@ GUI::ModelIndex ProfileModel::parent_index(const GUI::ModelIndex& index) const
             return create_index(row, index.column(), node.parent());
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 
@@ -103,7 +103,7 @@ String ProfileModel::column_name(int column) const
     case Column::StackFrame:
         return "Stack Frame";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 }

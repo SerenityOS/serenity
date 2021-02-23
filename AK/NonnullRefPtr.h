@@ -72,42 +72,42 @@ public:
     ALWAYS_INLINE NonnullRefPtr(const T& object)
         : m_bits((FlatPtr)&object)
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const U& object)
         : m_bits((FlatPtr) static_cast<const T*>(&object))
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
         const_cast<T&>(static_cast<const T&>(object)).ref();
     }
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
         : m_bits((FlatPtr)&object)
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
         : m_bits((FlatPtr)other.add_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other)
         : m_bits((FlatPtr)other.add_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE ~NonnullRefPtr()
     {
@@ -170,7 +170,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE T& leak_ref()
     {
         T* ptr = exchange(nullptr);
-        ASSERT(ptr);
+        VERIFY(ptr);
         return *ptr;
     }
 
@@ -253,7 +253,7 @@ private:
     ALWAYS_INLINE T* as_nonnull_ptr() const
     {
         T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
-        ASSERT(ptr);
+        VERIFY(ptr);
         return ptr;
     }
 
@@ -273,7 +273,7 @@ private:
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(bits & 1));
+        VERIFY(!(bits & 1));
         f((T*)bits);
         m_bits.store(bits, AK::MemoryOrder::memory_order_release);
     }
@@ -286,7 +286,7 @@ private:
 
     ALWAYS_INLINE T* exchange(T* new_ptr)
     {
-        ASSERT(!((FlatPtr)new_ptr & 1));
+        VERIFY(!((FlatPtr)new_ptr & 1));
 #ifdef KERNEL
         // We don't want to be pre-empted while we have the lock bit set
         Kernel::ScopedCritical critical;
@@ -301,7 +301,7 @@ private:
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(expected & 1));
+        VERIFY(!(expected & 1));
         return (T*)expected;
     }
 

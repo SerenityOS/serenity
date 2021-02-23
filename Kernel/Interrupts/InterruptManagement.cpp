@@ -52,13 +52,13 @@ bool InterruptManagement::initialized()
 
 InterruptManagement& InterruptManagement::the()
 {
-    ASSERT(InterruptManagement::initialized());
+    VERIFY(InterruptManagement::initialized());
     return *s_interrupt_management;
 }
 
 UNMAP_AFTER_INIT void InterruptManagement::initialize()
 {
-    ASSERT(!InterruptManagement::initialized());
+    VERIFY(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
 
     if (kernel_command_line().lookup("smp").value_or("off") == "on")
@@ -78,8 +78,8 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
 
 IRQController& InterruptManagement::get_interrupt_controller(int index)
 {
-    ASSERT(index >= 0);
-    ASSERT(!m_interrupt_controllers[index].is_null());
+    VERIFY(index >= 0);
+    VERIFY(!m_interrupt_controllers[index].is_null());
     return *m_interrupt_controllers[index];
 }
 
@@ -94,7 +94,7 @@ u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
 
 u8 InterruptManagement::acquire_irq_number(u8 mapped_interrupt_vector)
 {
-    ASSERT(InterruptManagement::initialized());
+    VERIFY(InterruptManagement::initialized());
     return InterruptManagement::the().get_irq_vector(mapped_interrupt_vector);
 }
 
@@ -102,7 +102,7 @@ u8 InterruptManagement::get_mapped_interrupt_vector(u8 original_irq)
 {
     // FIXME: For SMP configuration (with IOAPICs) use a better routing scheme to make redirections more efficient.
     // FIXME: Find a better way to handle conflict with Syscall interrupt gate.
-    ASSERT((original_irq + IRQ_VECTOR_BASE) != syscall_vector);
+    VERIFY((original_irq + IRQ_VECTOR_BASE) != syscall_vector);
     return original_irq;
 }
 
@@ -122,7 +122,7 @@ RefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 int
             if (!irq_controller->is_hard_disabled())
                 return irq_controller;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT PhysicalAddress InterruptManagement::search_for_madt()
@@ -149,7 +149,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
-        ASSERT(irq_controller);
+        VERIFY(irq_controller);
         if (irq_controller->type() == IRQControllerType::i82093AA) {
             irq_controller->hard_disable();
             dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
@@ -180,7 +180,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
         }
     }
     for (auto& irq_controller : m_interrupt_controllers) {
-        ASSERT(irq_controller);
+        VERIFY(irq_controller);
         if (irq_controller->type() == IRQControllerType::i8259) {
             irq_controller->hard_disable();
             dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
@@ -198,7 +198,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
 
 UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 {
-    ASSERT(!m_madt.is_null());
+    VERIFY(!m_madt.is_null());
     auto madt = map_typed<ACPI::Structures::MADT>(m_madt);
 
     int irq_controller_count = 0;

@@ -47,8 +47,8 @@ void Keypad::type_digit(int digit)
         m_frac_length = 0;
         break;
     case State::TypingInteger:
-        ASSERT(m_frac_value == 0);
-        ASSERT(m_frac_length == 0);
+        VERIFY(m_frac_value == 0);
+        VERIFY(m_frac_length == 0);
         m_int_value *= 10;
         m_int_value += digit;
         break;
@@ -72,8 +72,8 @@ void Keypad::type_decimal_point()
         m_frac_length = 0;
         break;
     case State::TypingInteger:
-        ASSERT(m_frac_value == 0);
-        ASSERT(m_frac_length == 0);
+        VERIFY(m_frac_value == 0);
+        VERIFY(m_frac_length == 0);
         m_state = State::TypingDecimal;
         break;
     case State::TypingDecimal:
@@ -97,12 +97,12 @@ void Keypad::type_backspace()
             m_frac_length--;
             break;
         }
-        ASSERT(m_frac_value == 0);
+        VERIFY(m_frac_value == 0);
         m_state = State::TypingInteger;
         [[fallthrough]];
     case State::TypingInteger:
-        ASSERT(m_frac_value == 0);
-        ASSERT(m_frac_length == 0);
+        VERIFY(m_frac_value == 0);
+        VERIFY(m_frac_length == 0);
         m_int_value /= 10;
         if (m_int_value == 0)
             m_negative = false;

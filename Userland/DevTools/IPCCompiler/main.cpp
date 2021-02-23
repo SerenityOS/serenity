@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         if (lexer.peek() != ch)
             warnln("assert_specific: wanted '{}', but got '{}' at index {}", ch, lexer.peek(), lexer.tell());
         bool saw_expected = lexer.consume_specific(ch);
-        ASSERT(saw_expected);
+        VERIFY(saw_expected);
     };
 
     auto consume_whitespace = [&] {
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
         else if (type == '|')
             message.is_synchronous = false;
         else
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         consume_whitespace();
 

@@ -44,7 +44,7 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
 
 void PhysicalPage::return_to_freelist() const
 {
-    ASSERT((paddr().get() & ~PAGE_MASK) == 0);
+    VERIFY((paddr().get() & ~PAGE_MASK) == 0);
 
     if (m_supervisor)
         MM.deallocate_supervisor_physical_page(*this);

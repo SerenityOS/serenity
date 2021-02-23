@@ -42,7 +42,7 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cel
 #else
     auto* block = (HeapBlock*)aligned_alloc(block_size, block_size);
 #endif
-    ASSERT(block != MAP_FAILED);
+    VERIFY(block != MAP_FAILED);
     new (block) HeapBlock(heap, cell_size);
     return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
 }
@@ -51,7 +51,7 @@ void HeapBlock::operator delete(void* ptr)
 {
 #ifdef __serenity__
     int rc = munmap(ptr, block_size);
-    ASSERT(rc == 0);
+    VERIFY(rc == 0);
 #else
     free(ptr);
 #endif
@@ -61,7 +61,7 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     : m_heap(heap)
     , m_cell_size(cell_size)
 {
-    ASSERT(cell_size >= sizeof(FreelistEntry));
+    VERIFY(cell_size >= sizeof(FreelistEntry));
 
     FreelistEntry* next = nullptr;
     for (ssize_t i = cell_count() - 1; i >= 0; i--) {
@@ -75,10 +75,10 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
 
 void HeapBlock::deallocate(Cell* cell)
 {
-    ASSERT(is_valid_cell_pointer(cell));
-    ASSERT(!m_freelist || is_valid_cell_pointer(m_freelist));
-    ASSERT(cell->is_live());
-    ASSERT(!cell->is_marked());
+    VERIFY(is_valid_cell_pointer(cell));
+    VERIFY(!m_freelist || is_valid_cell_pointer(m_freelist));
+    VERIFY(cell->is_live());
+    VERIFY(!cell->is_marked());
     cell->~Cell();
     auto* freelist_entry = new (cell) FreelistEntry();
     freelist_entry->set_live(false);

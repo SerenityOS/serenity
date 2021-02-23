@@ -39,8 +39,8 @@ AsyncDeviceRequest::~AsyncDeviceRequest()
 {
     {
         ScopedSpinLock lock(m_lock);
-        ASSERT(is_completed_result(m_result));
-        ASSERT(m_sub_requests_pending.is_empty());
+        VERIFY(is_completed_result(m_result));
+        VERIFY(m_sub_requests_pending.is_empty());
     }
 
     // We should not need any locking here anymore. The destructor should
@@ -50,8 +50,8 @@ AsyncDeviceRequest::~AsyncDeviceRequest()
     // Which means there should be no more pending sub-requests and the
     // entire AsyncDeviceRequest hierarchy should be immutable.
     for (auto& sub_request : m_sub_requests_complete) {
-        ASSERT(is_completed_result(sub_request.m_result)); // Shouldn't need any locking anymore
-        ASSERT(sub_request.m_parent_request == this);
+        VERIFY(is_completed_result(sub_request.m_result)); // Shouldn't need any locking anymore
+        VERIFY(sub_request.m_parent_request == this);
         sub_request.m_parent_request = nullptr;
     }
 }
@@ -70,7 +70,7 @@ void AsyncDeviceRequest::request_finished()
 
 auto AsyncDeviceRequest::wait(timeval* timeout) -> RequestWaitResult
 {
-    ASSERT(!m_parent_request);
+    VERIFY(!m_parent_request);
     auto request_result = get_request_result();
     if (is_completed_result(request_result))
         return { request_result, Thread::BlockResult::NotBlocked };
@@ -87,14 +87,14 @@ auto AsyncDeviceRequest::get_request_result() const -> RequestResult
 void AsyncDeviceRequest::add_sub_request(NonnullRefPtr<AsyncDeviceRequest> sub_request)
 {
     // Sub-requests cannot be for the same device
-    ASSERT(&m_device != &sub_request->m_device);
-    ASSERT(sub_request->m_parent_request == nullptr);
+    VERIFY(&m_device != &sub_request->m_device);
+    VERIFY(sub_request->m_parent_request == nullptr);
     sub_request->m_parent_request = this;
 
     bool should_start;
     {
         ScopedSpinLock lock(m_lock);
-        ASSERT(!is_completed_result(m_result));
+        VERIFY(!is_completed_result(m_result));
         m_sub_requests_pending.append(sub_request);
         should_start = (m_result == Started);
     }
@@ -107,7 +107,7 @@ void AsyncDeviceRequest::sub_request_finished(AsyncDeviceRequest& sub_request)
     bool all_completed;
     {
         ScopedSpinLock lock(m_lock);
-        ASSERT(m_result == Started);
+        VERIFY(m_result == Started);
         size_t index;
         for (index = 0; index < m_sub_requests_pending.size(); index++) {
             if (&m_sub_requests_pending[index] == &sub_request) {
@@ -117,7 +117,7 @@ void AsyncDeviceRequest::sub_request_finished(AsyncDeviceRequest& sub_request)
                 break;
             }
         }
-        ASSERT(index < m_sub_requests_pending.size());
+        VERIFY(index < m_sub_requests_pending.size());
         all_completed = m_sub_requests_pending.is_empty();
         if (all_completed) {
             // Aggregate any errors
@@ -126,7 +126,7 @@ void AsyncDeviceRequest::sub_request_finished(AsyncDeviceRequest& sub_request)
             for (index = 0; index < m_sub_requests_complete.size(); index++) {
                 auto& sub_request = m_sub_requests_complete[index];
                 auto sub_result = sub_request.get_request_result();
-                ASSERT(is_completed_result(sub_result));
+                VERIFY(is_completed_result(sub_result));
                 switch (sub_result) {
                 case Failure:
                     any_failures = true;
@@ -154,11 +154,11 @@ void AsyncDeviceRequest::sub_request_finished(AsyncDeviceRequest& sub_request)
 
 void AsyncDeviceRequest::complete(RequestResult result)
 {
-    ASSERT(result == Success || result == Failure || result == MemoryFault);
+    VERIFY(result == Success || result == Failure || result == MemoryFault);
     ScopedCritical critical;
     {
         ScopedSpinLock lock(m_lock);
-        ASSERT(m_result == Started);
+        VERIFY(m_result == Started);
         m_result = result;
     }
     if (Processor::current().in_irq()) {

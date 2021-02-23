@@ -113,14 +113,14 @@ static u8 parse_hex_digit(char digit)
 {
     if (digit >= '0' && digit <= '9')
         return digit - '0';
-    ASSERT(digit >= 'a' && digit <= 'f');
+    VERIFY(digit >= 'a' && digit <= 'f');
     return 10 + (digit - 'a');
 }
 
 template<typename T>
 static T parse_hex(StringView str, size_t count)
 {
-    ASSERT(str.length() >= count);
+    VERIFY(str.length() >= count);
 
     T res = 0;
     for (size_t i = 0; i < count; i++)

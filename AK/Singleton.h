@@ -83,9 +83,9 @@ public:
             }
             if constexpr (allow_create) {
                 // We should always return an instance if we allow creating one
-                ASSERT(obj != nullptr);
+                VERIFY(obj != nullptr);
             }
-            ASSERT(obj != (T*)0x1);
+            VERIFY(obj != (T*)0x1);
         }
         return obj;
     }

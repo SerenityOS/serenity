@@ -53,7 +53,7 @@ String IRCWindowListModel::column_name(int column) const
     case Column::Name:
         return "Name";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

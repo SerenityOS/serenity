@@ -171,7 +171,7 @@ RefPtr<Gfx::Bitmap> PPMImageDecoderPlugin::bitmap()
             return nullptr;
     }
 
-    ASSERT(m_context->bitmap);
+    VERIFY(m_context->bitmap);
     return m_context->bitmap;
 }
 

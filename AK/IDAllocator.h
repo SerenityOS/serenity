@@ -49,7 +49,7 @@ public:
                 return allocated_id;
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     void deallocate(int id)

@@ -97,7 +97,7 @@ public:
 
     void set_size(size_t size)
     {
-        ASSERT(size <= capacity());
+        VERIFY(size <= capacity());
         m_size = size;
     }
 

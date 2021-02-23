@@ -104,7 +104,7 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
 
 PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 {
-    ASSERT(index < capacity());
+    VERIFY(index < capacity());
     auto* events = reinterpret_cast<PerformanceEvent*>(m_buffer->data());
     return events[index];
 }
@@ -120,7 +120,7 @@ OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& exe
 bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, const String& executable_path) const
 {
     auto process = Process::from_pid(pid);
-    ASSERT(process);
+    VERIFY(process);
     ScopedSpinLock locker(process->space().get_lock());
 
     JsonObjectSerializer object(builder);

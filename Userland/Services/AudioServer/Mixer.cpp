@@ -125,8 +125,8 @@ void Mixer::mix()
                 stream << out_sample;
             }
 
-            ASSERT(stream.is_end());
-            ASSERT(!stream.has_any_error());
+            VERIFY(stream.is_end());
+            VERIFY(!stream.has_any_error());
             m_device->write(stream.data(), stream.size());
         }
     }

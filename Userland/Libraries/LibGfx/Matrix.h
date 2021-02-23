@@ -39,7 +39,7 @@ public:
     Matrix() = default;
     Matrix(std::initializer_list<T> elements)
     {
-        ASSERT(elements.size() == N * N);
+        VERIFY(elements.size() == N * N);
         size_t i = 0;
         for (auto& element : elements) {
             m_elements[i / N][i % N] = element;

@@ -109,7 +109,7 @@ bool GitWidget::initialize()
         return true;
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -128,7 +128,7 @@ void GitWidget::refresh()
         return;
     }
 
-    ASSERT(!m_git_repo.is_null());
+    VERIFY(!m_git_repo.is_null());
 
     m_unstaged_files->set_model(GitFilesModel::create(m_git_repo->unstaged_files()));
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
@@ -138,7 +138,7 @@ void GitWidget::stage_file(const LexicalPath& file)
 {
     dbgln("staging: {}", file);
     bool rc = m_git_repo->stage(file);
-    ASSERT(rc);
+    VERIFY(rc);
     refresh();
 }
 
@@ -146,7 +146,7 @@ void GitWidget::unstage_file(const LexicalPath& file)
 {
     dbgln("unstaging: {}", file);
     bool rc = m_git_repo->unstage(file);
-    ASSERT(rc);
+    VERIFY(rc);
     refresh();
 }
 
@@ -172,7 +172,7 @@ void GitWidget::show_diff(const LexicalPath& file_path)
         auto file = Core::File::construct(file_path.string());
         if (!file->open(Core::IODevice::ReadOnly)) {
             perror("open");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         auto content = file->read_all();
@@ -182,7 +182,7 @@ void GitWidget::show_diff(const LexicalPath& file_path)
     }
     const auto& original_content = m_git_repo->original_file_content(file_path);
     const auto& diff = m_git_repo->unstaged_diff(file_path);
-    ASSERT(original_content.has_value() && diff.has_value());
+    VERIFY(original_content.has_value() && diff.has_value());
     m_view_diff_callback(original_content.value(), diff.value());
 }
 }

@@ -36,7 +36,7 @@ UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(u8 interrupt_number)
 
 void SpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
 {
-    ASSERT(!m_real_handler);
+    VERIFY(!m_real_handler);
     m_real_handler = &handler;
 }
 void SpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
@@ -88,7 +88,7 @@ void SpuriousInterruptHandler::enable_interrupt_vector()
 
 void SpuriousInterruptHandler::disable_interrupt_vector()
 {
-    ASSERT(!m_real_irq); // this flag should not be set when we call this method
+    VERIFY(!m_real_irq); // this flag should not be set when we call this method
     if (!m_enabled)
         return;
     m_enabled = false;

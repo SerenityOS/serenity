@@ -69,8 +69,8 @@ bool PIC::is_enabled() const
 void PIC::disable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     u8 irq = handler.interrupt_number();
     if (m_cached_irq_mask & (1 << irq))
         return;
@@ -94,7 +94,7 @@ UNMAP_AFTER_INIT PIC::PIC()
 
 void PIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
-    ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
+    VERIFY(handler.type() == HandlerType::SpuriousInterruptHandler);
     if (handler.interrupt_number() == 7)
         return;
     if (handler.interrupt_number() == 15) {
@@ -111,15 +111,15 @@ bool PIC::is_vector_enabled(u8 irq) const
 void PIC::enable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     enable_vector(handler.interrupt_number());
 }
 
 void PIC::enable_vector(u8 irq)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     if (!(m_cached_irq_mask & (1 << irq)))
         return;
     u8 imr;
@@ -138,9 +138,9 @@ void PIC::enable_vector(u8 irq)
 void PIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 irq = handler.interrupt_number();
-    ASSERT(irq >= gsi_base() && irq < interrupt_vectors_count());
+    VERIFY(irq >= gsi_base() && irq < interrupt_vectors_count());
     if ((1 << irq) & m_cached_irq_mask) {
         spurious_eoi(handler);
         return;

@@ -41,14 +41,14 @@ void DNSPacket::add_question(const DNSQuestion& question)
 {
     m_questions.empend(question);
 
-    ASSERT(m_questions.size() <= UINT16_MAX);
+    VERIFY(m_questions.size() <= UINT16_MAX);
 }
 
 void DNSPacket::add_answer(const DNSAnswer& answer)
 {
     m_answers.empend(answer);
 
-    ASSERT(m_answers.size() <= UINT16_MAX);
+    VERIFY(m_answers.size() <= UINT16_MAX);
 }
 
 ByteBuffer DNSPacket::to_byte_buffer() const

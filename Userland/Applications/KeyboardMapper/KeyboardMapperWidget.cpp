@@ -69,10 +69,10 @@ void KeyboardMapperWidget::create_frame()
             String value;
             if (GUI::InputBox::show(window(), value, "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
-                ASSERT(i > 0);
+                VERIFY(i > 0);
 
                 auto index = keys[i].map_index;
-                ASSERT(index > 0);
+                VERIFY(index > 0);
 
                 tmp_button.set_text(value);
                 u32* map;
@@ -88,7 +88,7 @@ void KeyboardMapperWidget::create_frame()
                 } else if (m_current_map_name == "shift_altgr_map") {
                     map = m_character_map.shift_altgr_map;
                 } else {
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
 
                 if (value.length() == 0)
@@ -146,7 +146,7 @@ void KeyboardMapperWidget::create_frame()
 void KeyboardMapperWidget::load_from_file(String file_name)
 {
     auto result = Keyboard::CharacterMapFile::load_from_file(file_name);
-    ASSERT(result.has_value());
+    VERIFY(result.has_value());
 
     m_file_name = file_name;
     m_character_map = result.value();
@@ -163,7 +163,7 @@ void KeyboardMapperWidget::load_from_file(String file_name)
 void KeyboardMapperWidget::load_from_system()
 {
     auto result = Keyboard::CharacterMap::fetch_system_map();
-    ASSERT(!result.is_error());
+    VERIFY(!result.is_error());
 
     m_file_name = String::formatted("/res/keymaps/{}.json", result.value().character_map_name());
     m_character_map = result.value().character_map_data();
@@ -274,7 +274,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
     } else if (m_current_map_name == "shift_altgr_map") {
         map = m_character_map.shift_altgr_map;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     for (unsigned k = 0; k < KEY_COUNT; k++) {

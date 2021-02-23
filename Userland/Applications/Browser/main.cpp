@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
-    ASSERT(default_favicon);
+    VERIFY(default_favicon);
 
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);

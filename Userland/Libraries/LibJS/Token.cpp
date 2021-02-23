@@ -42,7 +42,7 @@ const char* Token::name(TokenType type)
         ENUMERATE_JS_TOKENS
 #undef __ENUMERATE_JS_TOKEN
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -61,7 +61,7 @@ TokenCategory Token::category(TokenType type)
         ENUMERATE_JS_TOKENS
 #undef __ENUMERATE_JS_TOKEN
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -72,7 +72,7 @@ TokenCategory Token::category() const
 
 double Token::double_value() const
 {
-    ASSERT(type() == TokenType::NumericLiteral);
+    VERIFY(type() == TokenType::NumericLiteral);
     String value_string(m_value);
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
@@ -95,7 +95,7 @@ double Token::double_value() const
 
 static u32 hex2int(char x)
 {
-    ASSERT(isxdigit(x));
+    VERIFY(isxdigit(x));
     if (x >= '0' && x <= '9')
         return x - '0';
     return 10u + (tolower(x) - 'a');
@@ -103,7 +103,7 @@ static u32 hex2int(char x)
 
 String Token::string_value(StringValueStatus& status) const
 {
-    ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
+    VERIFY(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
 
     auto is_template = type() == TokenType::TemplateLiteralString;
     GenericLexer lexer(is_template ? m_value : m_value.substring_view(1, m_value.length() - 2));
@@ -122,7 +122,7 @@ String Token::string_value(StringValueStatus& status) const
         }
 
         lexer.ignore();
-        ASSERT(!lexer.is_eof());
+        VERIFY(!lexer.is_eof());
 
         // Line continuation
         if (lexer.next_is('\n') || lexer.next_is('\r')) {
@@ -146,7 +146,7 @@ String Token::string_value(StringValueStatus& status) const
             if (!isxdigit(lexer.peek()) || !isxdigit(lexer.peek(1)))
                 return encoding_failure(StringValueStatus::MalformedHexEscape);
             auto code_point = hex2int(lexer.consume()) * 16 + hex2int(lexer.consume());
-            ASSERT(code_point <= 255);
+            VERIFY(code_point <= 255);
             builder.append_code_point(code_point);
             continue;
         }
@@ -202,7 +202,7 @@ String Token::string_value(StringValueStatus& status) const
         if (!octal_str.is_null()) {
             status = StringValueStatus::LegacyOctalEscapeSequence;
             auto code_point = strtoul(octal_str.characters(), nullptr, 8);
-            ASSERT(code_point <= 255);
+            VERIFY(code_point <= 255);
             builder.append_code_point(code_point);
             continue;
         }
@@ -215,7 +215,7 @@ String Token::string_value(StringValueStatus& status) const
 
 bool Token::bool_value() const
 {
-    ASSERT(type() == TokenType::BoolLiteral);
+    VERIFY(type() == TokenType::BoolLiteral);
     return m_value == "true";
 }
 

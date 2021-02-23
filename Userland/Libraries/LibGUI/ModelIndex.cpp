@@ -35,7 +35,7 @@ Variant ModelIndex::data(ModelRole role) const
     if (!is_valid())
         return {};
 
-    ASSERT(model());
+    VERIFY(model());
     return model()->data(*this, role);
 }
 

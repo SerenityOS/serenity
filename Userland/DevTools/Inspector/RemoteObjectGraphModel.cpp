@@ -72,7 +72,7 @@ GUI::ModelIndex RemoteObjectGraphModel::parent_index(const GUI::ModelIndex& inde
             if (&m_process.roots()[row] == remote_object.parent)
                 return create_index(row, 0, remote_object.parent);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 
@@ -81,7 +81,7 @@ GUI::ModelIndex RemoteObjectGraphModel::parent_index(const GUI::ModelIndex& inde
             return create_index(row, 0, remote_object.parent);
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return {};
 }
 

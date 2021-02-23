@@ -93,7 +93,7 @@ void HTMLScriptElement::execute_script()
 
         document().set_current_script({}, old_current_script);
     } else {
-        ASSERT(!document().current_script());
+        VERIFY(!document().current_script());
         TODO();
     }
 

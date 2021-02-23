@@ -42,7 +42,7 @@ bool Download::stop()
 
 void Download::stream_into(OutputStream& stream)
 {
-    ASSERT(!m_internal_stream_data);
+    VERIFY(!m_internal_stream_data);
 
     auto notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
 
@@ -85,9 +85,9 @@ void Download::set_should_buffer_all_input(bool value)
         return;
     }
 
-    ASSERT(!m_internal_stream_data);
-    ASSERT(!m_internal_buffered_data);
-    ASSERT(on_buffered_download_finish); // Not having this set makes no sense.
+    VERIFY(!m_internal_stream_data);
+    VERIFY(!m_internal_buffered_data);
+    VERIFY(on_buffered_download_finish); // Not having this set makes no sense.
     m_internal_buffered_data = make<InternalBufferedData>(fd());
     m_should_buffer_all_input = true;
 

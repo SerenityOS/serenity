@@ -273,8 +273,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         return;
     }
 
-    ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
-    ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
+    VERIFY(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
+    VERIFY(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
 
     // If we're on the same Y, there's no need to draw
     if (p0.y() == p1.y()) {
@@ -356,14 +356,14 @@ Optional<Loca> Loca::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, Inde
 
 u32 Loca::get_glyph_offset(u32 glyph_id) const
 {
-    ASSERT(glyph_id < m_num_glyphs);
+    VERIFY(glyph_id < m_num_glyphs);
     switch (m_index_to_loc_format) {
     case IndexToLocFormat::Offset16:
         return ((u32)be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
     case IndexToLocFormat::Offset32:
         return be_u32(m_slice.offset_pointer(glyph_id * 4));
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -428,7 +428,7 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
             contour_size = current_contour_end - last_contour_end;
             last_contour_end = current_contour_end;
             auto opt_item = point_iterator.next();
-            ASSERT(opt_item.has_value());
+            VERIFY(opt_item.has_value());
             contour_start = opt_item.value().point;
             path.move_to(contour_start.value());
             contour_size--;
@@ -506,7 +506,7 @@ RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) con
 
 Glyf::Glyph Glyf::glyph(u32 offset) const
 {
-    ASSERT(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
+    VERIFY(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
     i16 num_contours = be_i16(m_slice.offset_pointer(offset));
     i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMin));
     i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));

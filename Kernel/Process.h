@@ -614,7 +614,7 @@ extern RecursiveSpinLock g_processes_lock;
 template<typename Callback>
 inline void Process::for_each(Callback callback)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
@@ -627,7 +627,7 @@ inline void Process::for_each(Callback callback)
 template<typename Callback>
 inline void Process::for_each_child(Callback callback)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ProcessID my_pid = pid();
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
@@ -655,7 +655,7 @@ inline IterationDecision Process::for_each_thread(Callback callback) const
 template<typename Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
@@ -698,7 +698,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
             dbgln("Has made a promise");           \
             cli();                                 \
             Process::current()->crash(SIGABRT, 0); \
-            ASSERT_NOT_REACHED();                  \
+            VERIFY_NOT_REACHED();                  \
         }                                          \
     } while (0)
 
@@ -711,7 +711,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
             Process::current()->coredump_metadata().set(             \
                 "pledge_violation", #promise);                       \
             Process::current()->crash(SIGABRT, 0);                   \
-            ASSERT_NOT_REACHED();                                    \
+            VERIFY_NOT_REACHED();                                    \
         }                                                            \
     } while (0)
 

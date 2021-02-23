@@ -44,7 +44,7 @@ void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
     dbgln("Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
 #endif
     if (m_sequence_length == 0) {
-        ASSERT(m_current_matching_keys.is_empty());
+        VERIFY(m_current_matching_keys.is_empty());
 
         for (auto& it : m_key_callbacks) {
             if (it.key.first() == key)
