@@ -21,4 +21,5 @@ endpoint WebContentServer = 89
     KeyDown(i32 key, unsigned modifiers, u32 code_point) =|
 
     DebugRequest(String request, String argument) =|
+    GetSource() =|
 }
