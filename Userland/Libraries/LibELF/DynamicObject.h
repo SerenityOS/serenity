@@ -200,9 +200,6 @@ public:
         Optional<Symbol> lookup_symbol(const StringView& name) const;
 
     private:
-        static u32 calculate_elf_hash(const StringView& name);
-        static u32 calculate_gnu_hash(const StringView& name);
-
         Optional<Symbol> lookup_elf_symbol(const StringView& name) const;
         Optional<Symbol> lookup_gnu_symbol(const StringView& name) const;
 
