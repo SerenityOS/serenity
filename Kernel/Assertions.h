@@ -41,11 +41,6 @@
     do {                     \
         asm volatile("ud2"); \
     } while (0)
-#define RELEASE_ASSERT(x) \
-    do {                  \
-        if (!(x))         \
-            CRASH();      \
-    } while (0)
 
 #define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
 #define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
