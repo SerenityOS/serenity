@@ -857,9 +857,10 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     int x_offset = 0;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(position.line(), [&](const Gfx::IntRect&, auto& visual_line_view, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
+        for_each_visual_line(position.line(), [&](const Gfx::IntRect&, auto& visual_line_view, size_t start_of_visual_line, bool is_last_visual_line) {
             size_t offset_in_visual_line = position.column() - start_of_visual_line;
-            if (position.column() >= start_of_visual_line && (offset_in_visual_line <= visual_line_view.length())) {
+            auto before_line_end = is_last_visual_line ? (offset_in_visual_line <= visual_line_view.length()) : (offset_in_visual_line < visual_line_view.length());
+            if (position.column() >= start_of_visual_line && before_line_end) {
                 if (offset_in_visual_line == 0) {
                     x_offset = 0;
                 } else {
@@ -896,8 +897,9 @@ Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position)
     }
 
     Gfx::IntRect rect;
-    for_each_visual_line(position.line(), [&](const Gfx::IntRect& visual_line_rect, auto& view, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
-        if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
+    for_each_visual_line(position.line(), [&](const Gfx::IntRect& visual_line_rect, auto& view, size_t start_of_visual_line, bool is_last_visual_line) {
+        auto before_line_end = is_last_visual_line ? ((position.column() - start_of_visual_line) <= view.length()) : ((position.column() - start_of_visual_line) < view.length());
+        if (position.column() >= start_of_visual_line && before_line_end) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
             rect = {
