@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,28 +36,28 @@ namespace AK {
 template<typename T>
 class alignas(T) [[nodiscard]] Optional {
 public:
-    Optional() = default;
+    ALWAYS_INLINE Optional() = default;
 
-    Optional(const T& value)
+    ALWAYS_INLINE Optional(const T& value)
         : m_has_value(true)
     {
         new (&m_storage) T(value);
     }
 
     template<typename U>
-    Optional(const U& value)
+    ALWAYS_INLINE Optional(const U& value)
         : m_has_value(true)
     {
         new (&m_storage) T(value);
     }
 
-    Optional(T&& value)
+    ALWAYS_INLINE Optional(T&& value)
         : m_has_value(true)
     {
         new (&m_storage) T(move(value));
     }
 
-    Optional(Optional&& other)
+    ALWAYS_INLINE Optional(Optional&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value()) {
@@ -66,15 +66,15 @@ public:
         }
     }
 
-    Optional(const Optional& other)
+    ALWAYS_INLINE Optional(const Optional& other)
         : m_has_value(other.m_has_value)
     {
         if (m_has_value) {
-            new (&m_storage) T(other.value_without_consume_state());
+            new (&m_storage) T(other.value());
         }
     }
 
-    Optional& operator=(const Optional& other)
+    ALWAYS_INLINE Optional& operator=(const Optional& other)
     {
         if (this != &other) {
             clear();
@@ -86,7 +86,7 @@ public:
         return *this;
     }
 
-    Optional& operator=(Optional&& other)
+    ALWAYS_INLINE Optional& operator=(Optional&& other)
     {
         if (this != &other) {
             clear();
@@ -98,7 +98,7 @@ public:
     }
 
     template<typename O>
-    bool operator==(const Optional<O>& other) const
+    ALWAYS_INLINE bool operator==(const Optional<O>& other) const
     {
         return has_value() == other.has_value() && (!has_value() || value() == other.value());
     }
@@ -134,7 +134,8 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
-        return value_without_consume_state();
+        ASSERT(m_has_value);
+        return *reinterpret_cast<const T*>(&m_storage);
     }
 
     [[nodiscard]] T release_value()
@@ -153,19 +154,13 @@ public:
         return fallback;
     }
 
-    const T& operator*() const { return value(); }
-    T& operator*() { return value(); }
+    ALWAYS_INLINE const T& operator*() const { return value(); }
+    ALWAYS_INLINE T& operator*() { return value(); }
 
-    const T* operator->() const { return &value(); }
-    T* operator->() { return &value(); }
+    ALWAYS_INLINE const T* operator->() const { return &value(); }
+    ALWAYS_INLINE T* operator->() { return &value(); }
 
 private:
-    // Call when we don't want to alter the consume state
-    ALWAYS_INLINE const T& value_without_consume_state() const
-    {
-        ASSERT(m_has_value);
-        return *reinterpret_cast<const T*>(&m_storage);
-    }
     u8 m_storage[sizeof(T)] { 0 };
     bool m_has_value { false };
 };
