@@ -166,7 +166,12 @@ static void os_free(void* ptr, size_t size)
     assert(rc == 0);
 }
 
-static void* malloc_impl(size_t size)
+enum class CallerWillInitializeMemory {
+    No,
+    Yes,
+};
+
+static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
 {
     LOCKER(malloc_lock());
 
@@ -265,7 +270,7 @@ static void* malloc_impl(size_t size)
     }
     dbgln_if(MALLOC_DEBUG, "LibC: allocated {:p} (chunk in block {:p}, size {})", ptr, block, block->bytes_per_chunk());
 
-    if (s_scrub_malloc)
+    if (s_scrub_malloc && caller_will_initialize_memory == CallerWillInitializeMemory::No)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
 
     ue_notify_malloc(ptr, size);
@@ -356,7 +361,7 @@ static void free_impl(void* ptr)
 
 [[gnu::flatten]] void* malloc(size_t size)
 {
-    void* ptr = malloc_impl(size);
+    void* ptr = malloc_impl(size, CallerWillInitializeMemory::No);
     if (s_profiling)
         perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr));
     return ptr;
@@ -373,7 +378,7 @@ static void free_impl(void* ptr)
 void* calloc(size_t count, size_t size)
 {
     size_t new_size = count * size;
-    auto* ptr = malloc(new_size);
+    auto* ptr = malloc_impl(new_size, CallerWillInitializeMemory::Yes);
     if (ptr)
         memset(ptr, 0, new_size);
     return ptr;
