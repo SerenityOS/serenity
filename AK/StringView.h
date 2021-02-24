@@ -147,6 +147,8 @@ public:
         // NOTE: `m_characters` is not guaranteed to be null-terminated, but `cstring` is.
         const char* cp = cstring;
         for (size_t i = 0; i < m_length; ++i) {
+            if (!*cp)
+                return false;
             if (m_characters[i] != *(cp++))
                 return false;
         }
