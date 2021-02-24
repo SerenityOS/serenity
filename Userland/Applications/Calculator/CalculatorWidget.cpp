@@ -147,6 +147,17 @@ void CalculatorWidget::add_digit_button(GUI::Button& button, int digit)
     };
 }
 
+String CalculatorWidget::get_entry()
+{
+    return m_entry->text();
+}
+
+void CalculatorWidget::set_entry(double value)
+{
+    m_keypad.set_value(value);
+    update_display();
+}
+
 void CalculatorWidget::update_display()
 {
     m_entry->set_text(m_keypad.to_string());
