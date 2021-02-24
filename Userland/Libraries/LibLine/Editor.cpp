@@ -1271,6 +1271,7 @@ void Editor::refresh_display()
         m_refresh_needed = false;
         m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
         m_chars_touched_in_the_middle = 0;
+        m_drawn_cursor = m_cursor;
         m_drawn_end_of_line_offset = m_buffer.size();
 
         // No need to reposition the cursor, the cursor is already where it needs to be.
