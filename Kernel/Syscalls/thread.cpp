@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -44,6 +45,9 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     unsigned detach_state = params.m_detach_state;
     int schedule_priority = params.m_schedule_priority;
     unsigned stack_size = params.m_stack_size;
+
+    if (Checked<FlatPtr>::addition_would_overflow((FlatPtr)params.m_stack_location, stack_size))
+        return -EOVERFLOW;
 
     auto user_stack_address = (u8*)params.m_stack_location + stack_size;
 
