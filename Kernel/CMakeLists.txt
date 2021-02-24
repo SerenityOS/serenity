@@ -326,7 +326,14 @@ add_compile_definitions(__serenity__)
 
 add_link_options(LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
 
+# HACK: This is to work around a bug in CMake dependency resolution, the
+#       kernel won't re-link when boot.S changes without this.
+set_source_files_properties(init.cpp
+    PROPERTIES
+    OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/i386/Boot/boot.S
+)
 add_library(boot OBJECT Arch/i386/Boot/boot.S)
+
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 file(GENERATE OUTPUT linker.ld INPUT linker.ld)
 
