@@ -88,6 +88,8 @@ extern "C" u8* end_of_safemem_text;
 extern "C" u8* start_of_safemem_atomic_text;
 extern "C" u8* end_of_safemem_atomic_text;
 
+extern "C" FlatPtr end_of_kernel_image;
+
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
@@ -120,6 +122,11 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 
 extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 {
+    if ((FlatPtr)&end_of_kernel_image >= 0xc1000000u) {
+        // The kernel has grown too large again!
+        asm volatile("cli;hlt");
+    }
+
     setup_serial_debug();
 
     // We need to copy the command line before kmalloc is initialized,
