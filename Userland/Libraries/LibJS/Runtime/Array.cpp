@@ -39,7 +39,12 @@ Array* Array::create(GlobalObject& global_object)
 Array::Array(Object& prototype)
     : Object(prototype)
 {
+}
+
+void Array::initialize(GlobalObject& global_object)
+{
     auto& vm = this->vm();
+    Object::initialize(global_object);
     define_native_property(vm.names.length, length_getter, length_setter, Attribute::Writable);
 }
 

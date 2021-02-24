@@ -21,6 +21,5 @@ test("arguments that evaluate to true", () => {
     expect(Array.isArray(new Array())).toBeTrue();
     expect(Array.isArray(new Array(10))).toBeTrue();
     expect(Array.isArray(new Array("a", "b", "c"))).toBeTrue();
-    // FIXME: Array.prototype is supposed to be an array!
-    // expect(Array.isArray(Array.prototype)).toBeTrue();
+    expect(Array.isArray(Array.prototype)).toBeTrue();
 });

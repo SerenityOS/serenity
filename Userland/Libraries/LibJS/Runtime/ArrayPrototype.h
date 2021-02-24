@@ -27,12 +27,12 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Array.h>
 
 namespace JS {
 
-class ArrayPrototype final : public Object {
-    JS_OBJECT(ArrayPrototype, Object);
+class ArrayPrototype final : public Array {
+    JS_OBJECT(ArrayPrototype, Array);
 
 public:
     ArrayPrototype(GlobalObject&);

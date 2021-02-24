@@ -44,14 +44,14 @@ namespace JS {
 static HashTable<Object*> s_array_join_seen_objects;
 
 ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : Array(*global_object.object_prototype())
 {
 }
 
 void ArrayPrototype::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Array::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.filter, filter, 1, attr);
@@ -81,7 +81,6 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.flat, flat, 0, attr);
-    define_property(vm.names.length, Value(0), Attribute::Configurable);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
