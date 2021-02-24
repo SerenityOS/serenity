@@ -1,3 +1,5 @@
+add_compile_options(-O2)
+
 add_subdirectory(Applications)
 add_subdirectory(Demos)
 add_subdirectory(DevTools)
