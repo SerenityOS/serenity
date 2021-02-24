@@ -429,8 +429,8 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         if (!res.has_value()) {
             // We do not support these
             // TODO: Can we tell gcc not to generate the piece of code that uses these?
-            // (--disable-tm-clone-registry flag in gcc conifugraion?)
-            if (symbol.name().is_one_of("__deregister_frame_info", "_ITM_registerTMCloneTable", "_ITM_deregisterTMCloneTable", "__register_frame_info"))
+            // (--disable-tm-clone-registry flag in gcc configuration?)
+            if (symbol.name().is_one_of("__deregister_frame_info"sv, "_ITM_registerTMCloneTable"sv, "_ITM_deregisterTMCloneTable"sv, "__register_frame_info"sv))
                 break;
 
             if (symbol.bind() == STB_WEAK)
@@ -446,7 +446,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     }
     case R_386_RELATIVE: {
         // FIXME: According to the spec, R_386_relative ones must be done first.
-        //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
+        //     We could explicitly do them first using m_number_of_relocations from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
         *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
         break;

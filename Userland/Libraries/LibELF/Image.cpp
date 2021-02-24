@@ -76,9 +76,9 @@ StringView Image::section_index_to_string(unsigned index) const
 {
     VERIFY(m_valid);
     if (index == SHN_UNDEF)
-        return "Undefined";
+        return "Undefined"sv;
     if (index >= SHN_LORESERVE)
-        return "Reserved";
+        return "Reserved"sv;
     return section(index).name();
 }
 
@@ -276,7 +276,7 @@ Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 Image::RelocationSection Image::Section::relocations() const
 {
     StringBuilder builder;
-    builder.append(".rel");
+    builder.append(".rel"sv);
     builder.append(name());
 
     auto relocation_section = m_image.lookup_section(builder.to_string());
