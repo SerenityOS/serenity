@@ -1095,6 +1095,8 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
     }
 
     if (found) {
+        // We plan to clear the buffer, so mark the entire thing touched.
+        m_chars_touched_in_the_middle = m_buffer.size();
         m_buffer.clear();
         m_cursor = 0;
         insert(m_history[last_matching_offset].entry);
