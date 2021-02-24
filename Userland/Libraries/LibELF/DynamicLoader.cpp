@@ -427,12 +427,6 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
-            // We do not support these
-            // TODO: Can we tell gcc not to generate the piece of code that uses these?
-            // (--disable-tm-clone-registry flag in gcc configuration?)
-            if (symbol.name().is_one_of("__deregister_frame_info"sv, "_ITM_registerTMCloneTable"sv, "_ITM_deregisterTMCloneTable"sv, "__register_frame_info"sv))
-                break;
-
             if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
 
