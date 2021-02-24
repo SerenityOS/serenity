@@ -27,6 +27,7 @@
 #include "CalculatorWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->resize(254, 213);
 
-    window->set_main_widget<CalculatorWidget>();
+    auto& widget = window->set_main_widget<CalculatorWidget>();
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -73,6 +74,20 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
         return;
+    }));
+
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::Action::create("Copy", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GUI::Action&) {
+        GUI::Clipboard::the().set_plain_text(widget.get_entry());
+    }));
+    edit_menu.add_action(GUI::Action::create("Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [&](const GUI::Action&) {
+        auto clipboard = GUI::Clipboard::the().data_and_type();
+        if (clipboard.mime_type == "text/plain") {
+            if (!clipboard.data.is_empty()) {
+                auto data = atof(StringView(clipboard.data).to_string().characters());
+                widget.set_entry(data);
+            }
+        }
     }));
 
     auto& help_menu = menubar->add_menu("Help");
