@@ -83,13 +83,13 @@ public:
     NonnullRefPtr<WithStatement> parse_with_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
-    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> forbidden = {});
+    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
-    NonnullRefPtr<StringLiteral> parse_string_literal(Token token, bool in_template_literal = false);
+    NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
@@ -153,7 +153,7 @@ private:
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;
-    bool match_secondary_expression(Vector<TokenType> forbidden = {}) const;
+    bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
     bool match_declaration() const;
     bool match_variable_declaration() const;

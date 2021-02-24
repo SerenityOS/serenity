@@ -886,7 +886,7 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>({ rule_start.position(), position() }, move(elements));
 }
 
-NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_template_literal)
+NonnullRefPtr<StringLiteral> Parser::parse_string_literal(const Token& token, bool in_template_literal)
 {
     auto rule_start = push_start();
     auto status = Token::StringValueStatus::Ok;
@@ -974,7 +974,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     return create_ast_node<TemplateLiteral>({ rule_start.position(), position() }, expressions);
 }
 
-NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, Vector<TokenType> forbidden)
+NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, const Vector<TokenType>& forbidden)
 {
     auto rule_start = push_start();
     auto expression = parse_primary_expression();
@@ -1844,7 +1844,7 @@ bool Parser::match_unary_prefixed_expression() const
         || type == TokenType::Delete;
 }
 
-bool Parser::match_secondary_expression(Vector<TokenType> forbidden) const
+bool Parser::match_secondary_expression(const Vector<TokenType>& forbidden) const
 {
     auto type = m_parser_state.m_current_token.type();
     if (forbidden.contains_slow(type))
