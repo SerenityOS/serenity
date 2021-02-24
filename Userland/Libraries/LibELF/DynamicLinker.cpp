@@ -161,19 +161,19 @@ static void initialize_libc(DynamicObject& libc)
     // we have to initialize libc just after it is loaded.
     // Also, we can't just mark `__libc_init` with "__attribute__((constructor))"
     // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
-    auto res = libc.lookup_symbol("environ");
+    auto res = libc.lookup_symbol("environ"sv);
     VERIFY(res.has_value());
     *((char***)res.value().address.as_ptr()) = g_envp;
 
-    res = libc.lookup_symbol("__environ_is_malloced");
+    res = libc.lookup_symbol("__environ_is_malloced"sv);
     VERIFY(res.has_value());
     *((bool*)res.value().address.as_ptr()) = false;
 
-    res = libc.lookup_symbol("exit");
+    res = libc.lookup_symbol("exit"sv);
     VERIFY(res.has_value());
     g_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
 
-    res = libc.lookup_symbol("__libc_init");
+    res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
     typedef void libc_init_func();
     ((libc_init_func*)res.value().address.as_ptr())();
