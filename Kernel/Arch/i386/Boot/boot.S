@@ -87,10 +87,10 @@ boot_pd3 : 512 pde's
     1: boot_pd3_pts[1] (3074-3076MB) (pseudo 512 4KB pages)
     2: boot_pd3_pts[2] (3076-3078MB) (pseudo 512 4KB pages)
     3: boot_pd3_pts[3] (3078-3080MB) (pseudo 512 4KB pages)
-    4: boot_pd3_pts[4] (3082-3084MB) (pseudo 512 4KB pages)
-    5: boot_pd3_pts[5] (3084-3086MB) (pseudo 512 4KB pages)
-    6: boot_pd3_pts[6] (3086-3088MB) (pseudo 512 4KB pages)
-    7: boot_pd3_pts[7] (3088-3090MB) (pseudo 512 4KB pages)
+    4: boot_pd3_pts[4] (3080-3082MB) (pseudo 512 4KB pages)
+    5: boot_pd3_pts[5] (3082-3084MB) (pseudo 512 4KB pages)
+    6: boot_pd3_pts[6] (3084-3086MB) (pseudo 512 4KB pages)
+    7: boot_pd3_pts[7] (3086-3088MB) (pseudo 512 4KB pages)
     8: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
 
 the 9 page tables each contain 512 pte's that map individual 4KB pages
