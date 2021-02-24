@@ -48,11 +48,18 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    const u64 start_of_trace = m_profile.first_timestamp();
+    const u64 end_of_trace = start_of_trace + m_profile.length_in_ms();
+
+    const auto clamp_timestamp = [start_of_trace, end_of_trace](u64 timestamp) -> u64 {
+        return min(end_of_trace, max(timestamp, start_of_trace));
+    };
+
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
     float frame_height = (float)frame_inner_rect().height() / (float)m_profile.deepest_stack_depth();
 
     for (auto& event : m_profile.events()) {
-        u64 t = event.timestamp - m_profile.first_timestamp();
+        u64 t = clamp_timestamp(event.timestamp) - start_of_trace;
         int x = (int)((float)t * column_width);
         int cw = max(1, (int)column_width);
 
@@ -64,22 +71,23 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_line({ x + i, frame_thickness() + column_height }, { x + i, height() - frame_thickness() * 2 }, color);
     }
 
-    u64 normalized_start_time = min(m_select_start_time, m_select_end_time);
-    u64 normalized_end_time = max(m_select_start_time, m_select_end_time);
+    u64 normalized_start_time = clamp_timestamp(min(m_select_start_time, m_select_end_time));
+    u64 normalized_end_time = clamp_timestamp(max(m_select_start_time, m_select_end_time));
+    u64 normalized_hover_time = clamp_timestamp(m_hover_time);
 
-    int select_start_x = (int)((float)(normalized_start_time - m_profile.first_timestamp()) * column_width);
-    int select_end_x = (int)((float)(normalized_end_time - m_profile.first_timestamp()) * column_width);
-    int select_hover_x = (int)((float)(m_hover_time - m_profile.first_timestamp()) * column_width);
+    int select_start_x = (int)((float)(normalized_start_time - start_of_trace) * column_width);
+    int select_end_x = (int)((float)(normalized_end_time - start_of_trace) * column_width);
+    int select_hover_x = (int)((float)(normalized_hover_time - start_of_trace) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
 
     {
         StringBuilder timeline_desc_builder;
 
-        timeline_desc_builder.appendff("Time: {} ms", m_hover_time - m_profile.first_timestamp());
+        timeline_desc_builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
         if (normalized_start_time != normalized_end_time) {
-            auto start = normalized_start_time - m_profile.first_timestamp();
-            auto end = normalized_end_time - m_profile.first_timestamp();
+            auto start = normalized_start_time - start_of_trace;
+            auto end = normalized_end_time - start_of_trace;
             timeline_desc_builder.appendff(", Selection: {} - {} ms", start, end);
         }
         const auto text = timeline_desc_builder.build();
