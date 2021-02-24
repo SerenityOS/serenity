@@ -1,3 +1,5 @@
+add_compile_options(-Os)
+
 set(KERNEL_HEAP_SOURCES
     Heap/SlabAllocator.cpp
     Heap/kmalloc.cpp
