@@ -273,36 +273,6 @@ set(SOURCES
     ${CRYPTO_SOURCES}
     ${C_SOURCES}
 )
-set(KERNEL_FSANITIZE_FLAGS
-    "shift"
-    "shift-exponent"
-    "shift-base"
-    "integer-divide-by-zero"
-    "unreachable"
-    "vla-bound"
-    "return"
-    "signed-integer-overflow"
-    "bounds"
-    "bounds-strict"
-    "object-size"
-    "float-divide-by-zero"
-    "float-cast-overflow"
-    "nonnull-attribute"
-    "returns-nonnull-attribute"
-    "bool"
-    "enum"
-    "vptr"
-    "builtin"
-    "alignment"
-    "null"
-    "pointer-overflow"
-    )
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    foreach(flag IN LISTS KERNEL_FSANITIZE_FLAGS)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${flag}")
-    endforeach()
-endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE -fno-rtti -ffreestanding -fbuiltin")
@@ -313,6 +283,9 @@ if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
 endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
 # Kernel Address Sanitize (KASAN) implementation is still a work in progress, this option
 # is not currently meant to be used, besides when developing Kernel ASAN support.
 #
