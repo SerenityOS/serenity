@@ -31,6 +31,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Timer.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -80,6 +81,15 @@ int main(int argc, char** argv)
     auto& profile = profile_or_error.value();
 
     auto window = GUI::Window::construct();
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     window->set_title("Profiler");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
@@ -144,6 +154,9 @@ int main(int argc, char** argv)
     view_menu.add_action(percent_action);
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
 
     app->set_menubar(move(menubar));
