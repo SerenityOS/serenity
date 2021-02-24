@@ -36,6 +36,8 @@ class CalculatorWidget final : public GUI::Widget {
     C_OBJECT(CalculatorWidget)
 public:
     virtual ~CalculatorWidget() override;
+    String get_entry();
+    void set_entry(double);
 
 private:
     CalculatorWidget();
