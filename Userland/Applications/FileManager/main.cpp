@@ -731,7 +731,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     go_menu.add_action(go_to_location_action);
 
     auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("filetype-folder"), window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("app-file-manager"), window));
 
     GUI::Application::the()->set_menubar(move(menubar));
 

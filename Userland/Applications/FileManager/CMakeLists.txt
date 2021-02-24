@@ -9,5 +9,5 @@ set(SOURCES
     PropertiesWindow.cpp
 )
 
-serenity_app(FileManager ICON filetype-folder)
+serenity_app(FileManager ICON app-file-manager)
 target_link_libraries(FileManager LibGUI LibDesktop)
