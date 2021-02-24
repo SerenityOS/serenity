@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/AllocationStrategy.h>
@@ -62,6 +64,8 @@ public:
 
     Region* find_region_from_range(const Range&);
     Region* find_region_containing(const Range&);
+
+    Vector<Region*> find_regions_intersecting(const Range&);
 
     bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
     void set_enforces_syscall_regions(bool b) { m_enforces_syscall_regions = b; }

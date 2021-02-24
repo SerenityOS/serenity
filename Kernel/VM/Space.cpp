@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,6 +157,27 @@ Region* Space::find_region_containing(const Range& range)
             return &region;
     }
     return nullptr;
+}
+
+Vector<Region*> Space::find_regions_intersecting(const Range& range)
+{
+    Vector<Region*> regions = {};
+    size_t total_size_collected = 0;
+
+    ScopedSpinLock lock(m_lock);
+
+    // FIXME: Maybe take the cache from the single lookup?
+    for (auto& region : m_regions) {
+        if (region.range().base() < range.end() && region.range().end() > range.base()) {
+            regions.append(&region);
+
+            total_size_collected += region.size() - region.range().intersect(range).size();
+            if (total_size_collected == range.size())
+                break;
+        }
+    }
+
+    return regions;
 }
 
 Region& Space::add_region(NonnullOwnPtr<Region> region)
