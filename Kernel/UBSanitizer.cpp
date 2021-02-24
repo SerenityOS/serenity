@@ -140,9 +140,34 @@ void __ubsan_handle_out_of_bounds(const OutOfBoundsData& data, ValueHandle)
 }
 
 void __ubsan_handle_type_mismatch_v1(const TypeMismatchData&, ValueHandle);
-void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle)
+void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle ptr)
 {
-    dbgln("KUBSAN: type mismatch, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    static const char* kinds[] = {
+        "load of",
+        "store to",
+        "reference binding to",
+        "member access within",
+        "member call on",
+        "constructor call on",
+        "downcast of",
+        "downcast of",
+        "upcast of",
+        "cast to virtual base of",
+        "_Nonnull binding to",
+        "dynamic operation on"
+    };
+
+    FlatPtr alignment = (FlatPtr)1 << data.log_alignment;
+    auto* kind = kinds[data.type_check_kind];
+
+    if (!ptr) {
+        dbgln("KUBSAN: {} null pointer of type {}", kind, data.type.name());
+    } else if ((FlatPtr)ptr & (alignment - 1)) {
+        dbgln("KUBSAN: {} misaligned address {:p} of type {}", kind, ptr, data.type.name());
+    } else {
+        dbgln("KUBSAN: {} address {:p} with insufficient space for type {}", kind, ptr, data.type.name());
+    }
+
     print_location(data.location);
 }
 
