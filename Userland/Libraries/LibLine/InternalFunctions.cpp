@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <LibLine/Editor.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -260,7 +261,7 @@ void Editor::enter_search()
 
             // Move the search prompt below ours and tell it to redraw itself.
             auto prompt_end_line = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
-            search_editor.set_origin(prompt_end_line + 1, 1);
+            search_editor.set_origin(prompt_end_line + m_origin_row, 1);
             search_editor.m_refresh_needed = true;
         };
 
@@ -300,9 +301,12 @@ void Editor::enter_search()
             fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
 
             // refresh our own prompt
-            set_origin(1, 1);
-            m_refresh_needed = true;
-            refresh_display();
+            {
+                TemporaryChange refresh_change { m_always_refresh, true };
+                set_origin(1, 1);
+                m_refresh_needed = true;
+                refresh_display();
+            }
 
             // move the search prompt below ours
             // and tell it to redraw itself
