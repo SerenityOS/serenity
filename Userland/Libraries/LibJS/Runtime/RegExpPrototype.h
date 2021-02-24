@@ -30,8 +30,8 @@
 
 namespace JS {
 
-class RegExpPrototype final : public RegExpObject {
-    JS_OBJECT(RegExpPrototype, RegExpObject);
+class RegExpPrototype final : public Object {
+    JS_OBJECT(RegExpPrototype, Object);
 
 public:
     explicit RegExpPrototype(GlobalObject&);
