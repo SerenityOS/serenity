@@ -32,6 +32,7 @@ set(LIBC_SOURCES
     stdlib.cpp
     string.cpp
     strings.cpp
+    stubs.cpp
     syslog.cpp
     sys/prctl.cpp
     sys/ptrace.cpp
