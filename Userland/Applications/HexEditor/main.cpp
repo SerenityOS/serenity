@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto app_icon = GUI::Icon::default_icon("app-hexeditor");
+    auto app_icon = GUI::Icon::default_icon("app-hex-editor");
 
     auto window = GUI::Window::construct();
     window->set_title("Hex Editor");
