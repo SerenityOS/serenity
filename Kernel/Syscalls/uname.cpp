@@ -28,7 +28,7 @@
 
 namespace Kernel {
 
-int Process::sys$uname(Userspace<utsname*> buf)
+int Process::sys$uname(Userspace<utsname*> user_buf)
 {
     extern String* g_hostname;
     extern Lock* g_hostname_lock;
