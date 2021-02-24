@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -490,9 +491,45 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         return 0;
     }
 
-    // FIXME: We should also support munmap() across multiple regions. (#175)
+    // Try again while checkin multiple regions at a time
+    // slow: without caching
+    const auto& regions = space().find_regions_intersecting(range_to_unmap);
+    // if there still no regions found error out
+    if (!regions.size())
+        return EINVAL;
 
-    return EINVAL;
+    // check if any of the regions is not mmaped, to not accientally
+    // error-out with just half a region map left
+    for (auto* region : regions) {
+        if (!region->is_mmap())
+            return EPERM;
+    }
+
+    Vector<Region*, 2> new_regions;
+
+    for (auto* old_region : regions) {
+        // if it's a full match we can delete the complete old region
+        if (old_region->range().intersect(range_to_unmap).size() == old_region->size()) {
+            bool res = space().deallocate_region(*old_region);
+            VERIFY(res);
+            continue;
+        }
+
+        // otherwise just split the regions and collect them for future mapping
+        new_regions.append(space().split_region_around_range(*old_region, range_to_unmap));
+
+        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
+        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        bool res = space().deallocate_region(*old_region);
+        VERIFY(res);
+    }
+    // Instead we give back the unwanted VM manually at the end.
+    space().page_directory().range_allocator().deallocate(range_to_unmap);
+    // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
+    for (auto* new_region : new_regions) {
+        new_region->map(space().page_directory());
+    }
+    return 0;
 }
 
 KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
