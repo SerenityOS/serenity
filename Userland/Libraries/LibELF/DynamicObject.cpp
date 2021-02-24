@@ -71,7 +71,7 @@ void DynamicObject::dump() const
     });
 
     if (m_has_soname)
-        builder.appendff("DT_SONAME: {}\n", soname()); // FIXME: Valdidate that this string is null terminated?
+        builder.appendff("DT_SONAME: {}\n", soname()); // FIXME: Validate that this string is null terminated?
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
@@ -215,32 +215,32 @@ DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 
 DynamicObject::Section DynamicObject::init_section() const
 {
-    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
+    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT"sv);
 }
 
 DynamicObject::Section DynamicObject::fini_section() const
 {
-    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
+    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI"sv);
 }
 
 DynamicObject::Section DynamicObject::init_array_section() const
 {
-    return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
+    return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY"sv);
 }
 
 DynamicObject::Section DynamicObject::fini_array_section() const
 {
-    return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
+    return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY"sv);
 }
 
 DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
-    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
+    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv));
 }
 
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv));
 }
 
 auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
