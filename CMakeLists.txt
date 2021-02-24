@@ -80,9 +80,9 @@ else()
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    add_compile_options(-fconcepts)
+    add_compile_options(-fconcepts -Wno-literal-suffix)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options(-Wno-overloaded-virtual)
+    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)

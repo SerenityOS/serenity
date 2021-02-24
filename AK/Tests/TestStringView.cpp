@@ -59,6 +59,15 @@ TEST_CASE(compare_views)
     EXPECT_EQ(view1, "foo");
 }
 
+TEST_CASE(string_view_literal_operator)
+{
+    StringView literal_view = "foo"sv;
+    String test_string = "foo";
+
+    EXPECT_EQ(literal_view.length(), test_string.length());
+    EXPECT_EQ(literal_view, test_string);
+}
+
 TEST_CASE(starts_with)
 {
     String test_string = "ABCDEF";

@@ -213,4 +213,9 @@ struct Traits<StringView> : public GenericTraits<String> {
 
 }
 
+[[nodiscard]] ALWAYS_INLINE constexpr AK::StringView operator"" sv(const char* cstring, size_t length)
+{
+    return AK::StringView(cstring, length);
+}
+
 using AK::StringView;
