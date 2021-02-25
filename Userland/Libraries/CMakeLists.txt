@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused -Wold-style-cast")
+
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)
 add_subdirectory(LibChess)
