@@ -61,6 +61,7 @@ public:
     virtual mode_t required_mode() const override { return 0600; }
 
 protected:
+    StorageDevice(const StorageController&, size_t, size_t);
     StorageDevice(const StorageController&, int, int, size_t, size_t);
     // ^DiskDevice
     virtual const char* class_name() const override;

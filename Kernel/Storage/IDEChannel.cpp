@@ -381,9 +381,9 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         dbgln("IDEChannel: {} {} device found: Type={}, Name={}, C/H/Spt={}/{}/{}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), cyls, heads, spt, capabilities);
 
         if (i == 0) {
-            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, cyls, heads, spt, capabilities, 3, (m_channel_type == ChannelType::Primary) ? 0 : 2);
+            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, cyls, heads, spt, capabilities);
         } else {
-            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, cyls, heads, spt, capabilities, 3, (m_channel_type == ChannelType::Primary) ? 1 : 3);
+            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, cyls, heads, spt, capabilities);
         }
     }
 }
