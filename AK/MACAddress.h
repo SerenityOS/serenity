@@ -79,11 +79,11 @@ public:
 
     constexpr bool is_zero() const
     {
-        return AK::all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
+        return all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
     }
 
 private:
-    AK::Array<u8, s_mac_address_length> m_data {};
+    Array<u8, s_mac_address_length> m_data {};
 };
 
 static_assert(sizeof(MACAddress) == 6u);

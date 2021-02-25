@@ -184,7 +184,7 @@ Optional<T> convert_to_uint_from_hex(const StringView& str)
 
     T value = 0;
     const auto count = str_trimmed.length();
-    const T upper_bound = AK::NumericLimits<T>::max();
+    const T upper_bound = NumericLimits<T>::max();
 
     for (size_t i = 0; i < count; i++) {
         char digit = str_trimmed[i];

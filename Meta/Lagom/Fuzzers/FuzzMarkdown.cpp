@@ -32,7 +32,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto markdown = AK::StringView(static_cast<const unsigned char*>(data), size);
+    auto markdown = StringView(static_cast<const unsigned char*>(data), size);
     Markdown::Document::parse(markdown);
     return 0;
 }

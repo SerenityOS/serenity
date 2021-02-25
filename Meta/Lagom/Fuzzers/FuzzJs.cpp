@@ -34,7 +34,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto js = AK::StringView(static_cast<const unsigned char*>(data), size);
+    auto js = StringView(static_cast<const unsigned char*>(data), size);
     auto lexer = JS::Lexer(js);
     auto parser = JS::Parser(lexer);
     auto program = parser.parse_program();

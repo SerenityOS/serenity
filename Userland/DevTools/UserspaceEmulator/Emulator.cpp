@@ -87,7 +87,7 @@ Emulator::Emulator(const String& executable_path, const Vector<String>& argument
     static constexpr FlatPtr userspace_range_ceiling = 0xbe000000;
 #ifdef UE_ASLR
     static constexpr FlatPtr page_mask = 0xfffff000u;
-    size_t random_offset = (AK::get_random<u8>() % 32 * MiB) & page_mask;
+    size_t random_offset = (get_random<u8>() % 32 * MiB) & page_mask;
     FlatPtr base = userspace_range_base + random_offset;
 #else
     FlatPtr base = userspace_range_base;

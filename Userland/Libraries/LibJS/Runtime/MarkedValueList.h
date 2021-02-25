@@ -33,7 +33,7 @@
 
 namespace JS {
 
-class MarkedValueList : public AK::Vector<Value, 32> {
+class MarkedValueList : public Vector<Value, 32> {
     AK_MAKE_NONCOPYABLE(MarkedValueList);
 
 public:
@@ -55,4 +55,5 @@ public:
 private:
     Heap& m_heap;
 };
+
 }

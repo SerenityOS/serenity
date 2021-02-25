@@ -358,12 +358,12 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     // FIXME: Without this assertion, GCC refuses to compile due to a memcpy overflow(!?)
     VERIFY(ps_length < 16384);
 
-    AK::fill_with_random(ps, ps_length);
+    fill_with_random(ps, ps_length);
     // since arc4random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
         while (!ps[i])
-            AK::fill_with_random(ps + i, 1);
+            fill_with_random(ps + i, 1);
 
     u8 paddings[] { 0x00, 0x02 };
 

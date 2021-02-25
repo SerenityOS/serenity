@@ -44,7 +44,7 @@ public:
     static Service* find_by_pid(pid_t);
 
     // FIXME: Port to Core::Property
-    void save_to(AK::JsonObject&);
+    void save_to(JsonObject&);
 
 private:
     Service(const Core::ConfigFile&, const StringView& name);

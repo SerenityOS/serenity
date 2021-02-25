@@ -207,7 +207,7 @@ static bool create_bitmap(TContext& context)
 }
 
 template<typename TContext>
-static void set_pixels(TContext& context, const AK::Vector<Gfx::Color>& color_data)
+static void set_pixels(TContext& context, const Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
     for (size_t y = 0; y < context.height; ++y) {

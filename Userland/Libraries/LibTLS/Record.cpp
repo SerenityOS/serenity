@@ -127,7 +127,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     u8 iv[16];
                     Bytes iv_bytes { iv, 16 };
                     Bytes { m_context.crypto.local_aead_iv, 4 }.copy_to(iv_bytes);
-                    AK::fill_with_random(iv_bytes.offset(4), 8);
+                    fill_with_random(iv_bytes.offset(4), 8);
                     memset(iv_bytes.offset(12), 0, 4);
 
                     // write the random part of the iv out
@@ -164,7 +164,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                     VERIFY(buffer_position == buffer.size());
 
                     auto iv = ByteBuffer::create_uninitialized(iv_size);
-                    AK::fill_with_random(iv.data(), iv.size());
+                    fill_with_random(iv.data(), iv.size());
 
                     // write it into the ciphertext portion of the message
                     ct.overwrite(header_size, iv.data(), iv.size());

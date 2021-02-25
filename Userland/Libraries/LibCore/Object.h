@@ -117,7 +117,7 @@ public:
 
     void deferred_invoke(Function<void(Object&)>);
 
-    void save_to(AK::JsonObject&);
+    void save_to(JsonObject&);
 
     bool set_property(const StringView& name, const JsonValue& value);
     JsonValue property(const StringView& name) const;

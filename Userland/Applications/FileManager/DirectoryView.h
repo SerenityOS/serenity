@@ -79,7 +79,7 @@ public:
 
     void refresh();
 
-    void launch(const AK::URL&, const LauncherHandler&);
+    void launch(const URL&, const LauncherHandler&);
 
     Function<void(const StringView& path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;

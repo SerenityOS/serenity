@@ -32,7 +32,7 @@
 
 TEST_CASE(should_return_end_if_not_in_container)
 {
-    constexpr AK::Array<int, 10> a {};
+    constexpr Array<int, 10> a {};
 
     static_assert(a.end() == AK::find(a.begin(), a.end(), 1));
 
@@ -41,7 +41,7 @@ TEST_CASE(should_return_end_if_not_in_container)
 
 TEST_CASE(should_return_iterator_to_first_matching_value_in_container)
 {
-    static constexpr AK::Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+    static constexpr Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
     constexpr auto expected = a.begin() + 4;
 
@@ -52,7 +52,7 @@ TEST_CASE(should_return_iterator_to_first_matching_value_in_container)
 
 TEST_CASE(should_return_iterator_to_first_predicate_matching_value_in_container)
 {
-    static constexpr AK::Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+    static constexpr Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
     constexpr auto expected = a.begin() + 4;
 
@@ -66,7 +66,7 @@ TEST_CASE(should_return_iterator_to_first_predicate_matching_value_in_container)
 
 TEST_CASE(should_return_index_to_first_predicate_matching_value_in_container)
 {
-    static constexpr AK::Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+    static constexpr Array<int, 10> a { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
     static_assert(4 == AK::find_index(a.begin(), a.end(), 0));
 

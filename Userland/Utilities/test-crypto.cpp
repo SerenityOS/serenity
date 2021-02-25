@@ -2217,7 +2217,7 @@ static void bigint_test_fibo500()
 {
     {
         I_TEST((BigInteger | Fibonacci500));
-        bool pass = (bigint_fibonacci(500).words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+        bool pass = (bigint_fibonacci(500).words() == Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
         if (pass) {
             PASS;
@@ -2428,7 +2428,7 @@ static void bigint_import_export()
         I_TEST((BigInteger | BigEndian Decode / Encode roundtrip));
         u8 random_bytes[128];
         u8 target_buffer[128];
-        AK::fill_with_random(random_bytes, 128);
+        fill_with_random(random_bytes, 128);
         auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
         encoded.export_data({ target_buffer, 128 });
         if (memcmp(target_buffer, random_bytes, 128) != 0)
@@ -2540,7 +2540,7 @@ static void bigint_test_signed_fibo500()
 {
     {
         I_TEST((Signed BigInteger | Fibonacci500));
-        bool pass = (bigint_signed_fibonacci(500).unsigned_value().words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+        bool pass = (bigint_signed_fibonacci(500).unsigned_value().words() == Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
         if (pass) {
             PASS;
@@ -2745,7 +2745,7 @@ static void bigint_signed_import_export()
         u8 random_bytes[129];
         u8 target_buffer[129];
         random_bytes[0] = 1;
-        AK::fill_with_random(random_bytes + 1, 128);
+        fill_with_random(random_bytes + 1, 128);
         auto encoded = Crypto::SignedBigInteger::import_data(random_bytes, 129);
         encoded.export_data({ target_buffer, 129 });
         if (memcmp(target_buffer, random_bytes, 129) != 0)

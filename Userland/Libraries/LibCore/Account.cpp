@@ -41,7 +41,7 @@ namespace Core {
 static String get_salt()
 {
     char random_data[12];
-    AK::fill_with_random(random_data, sizeof(random_data));
+    fill_with_random(random_data, sizeof(random_data));
 
     StringBuilder builder;
     builder.append("$5$");

@@ -257,7 +257,7 @@ Variant& Variant::operator=(Variant&& other)
     if (&other == this)
         return *this;
     clear();
-    move_from(AK::move(other));
+    move_from(move(other));
     return *this;
 }
 

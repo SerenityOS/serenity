@@ -54,10 +54,10 @@ public:
     Function<void()> on_update;
 
 private:
-    void handle_get_all_objects_response(const AK::JsonObject&);
-    void handle_identify_response(const AK::JsonObject&);
+    void handle_get_all_objects_response(const JsonObject&);
+    void handle_identify_response(const JsonObject&);
 
-    void send_request(const AK::JsonObject&);
+    void send_request(const JsonObject&);
 
     pid_t m_pid { -1 };
     String m_process_name;

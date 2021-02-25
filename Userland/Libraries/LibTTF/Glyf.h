@@ -45,7 +45,7 @@ private:
     void draw_line(Gfx::FloatPoint, Gfx::FloatPoint);
 
     Gfx::IntSize m_size;
-    AK::Vector<float> m_data;
+    Vector<float> m_data;
 };
 
 class Loca {

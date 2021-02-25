@@ -31,13 +31,13 @@
 
 TEST_CASE(should_determine_if_predicate_applies_to_all_elements_in_container)
 {
-    constexpr AK::Array<int, 10> a {};
+    constexpr Array<int, 10> a {};
 
-    static_assert(AK::all_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
-    static_assert(!AK::all_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
+    static_assert(all_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
+    static_assert(!all_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
 
-    EXPECT(AK::all_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
-    EXPECT(!AK::all_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
+    EXPECT(all_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
+    EXPECT(!all_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
 }
 
 TEST_MAIN(AllOf)

@@ -33,7 +33,7 @@ namespace TLS {
 
 ByteBuffer TLSv12::build_hello()
 {
-    AK::fill_with_random(&m_context.local_random, 32);
+    fill_with_random(&m_context.local_random, 32);
 
     auto packet_version = (u16)m_context.version;
     auto version = (u16)m_context.version;
