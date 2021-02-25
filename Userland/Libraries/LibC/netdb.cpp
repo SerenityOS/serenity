@@ -132,7 +132,7 @@ hostent* gethostbyname(const char* name)
         i32 message_id;
         i32 name_length;
     } request_header = {
-        sizeof(request_header) - sizeof(request_header.message_size) + name_length,
+        (u32)(sizeof(request_header) - sizeof(request_header.message_size) + name_length),
         lookup_server_endpoint_magic,
         1,
         (i32)name_length,
