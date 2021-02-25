@@ -97,7 +97,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
     if (is<ScopeNode>(body())) {
         for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
             for (auto& declarator : declaration.declarations()) {
-                variables.set(declarator.id().string(), { js_undefined(), DeclarationKind::Var });
+                variables.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
             }
         }
     }
