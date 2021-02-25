@@ -296,9 +296,9 @@ void load_task_register(u16 selector);
 #define sti() asm volatile("sti" :: \
                                : "memory")
 
-inline u32 cpu_flags()
+inline FlatPtr cpu_flags()
 {
-    u32 flags;
+    FlatPtr flags;
     asm volatile(
         "pushf\n"
         "pop %0\n"
@@ -441,29 +441,36 @@ private:
 };
 
 struct [[gnu::packed]] RegisterState {
-    u32 ss;
-    u32 gs;
-    u32 fs;
-    u32 es;
-    u32 ds;
-    u32 edi;
-    u32 esi;
-    u32 ebp;
-    u32 esp;
-    u32 ebx;
-    u32 edx;
-    u32 ecx;
-    u32 eax;
+    FlatPtr ss;
+    FlatPtr gs;
+    FlatPtr fs;
+    FlatPtr es;
+    FlatPtr ds;
+    FlatPtr edi;
+    FlatPtr esi;
+    FlatPtr ebp;
+    FlatPtr esp;
+    FlatPtr ebx;
+    FlatPtr edx;
+    FlatPtr ecx;
+    FlatPtr eax;
     u16 exception_code;
     u16 isr_number;
-    u32 eip;
-    u32 cs;
-    u32 eflags;
-    u32 userspace_esp;
-    u32 userspace_ss;
+#if ARCH(X86_64)
+    u32 padding;
+#endif
+    FlatPtr eip;
+    FlatPtr cs;
+    FlatPtr eflags;
+    FlatPtr userspace_esp;
+    FlatPtr userspace_ss;
 };
 
-#define REGISTER_STATE_SIZE (19 * 4)
+#if ARCH(I386)
+#    define REGISTER_STATE_SIZE (19 * 4)
+#else
+#    define REGISTER_STATE_SIZE (19 * 8)
+#endif
 static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
 
 void copy_kernel_registers_into_ptrace_registers(PtraceRegisters&, const RegisterState&);
@@ -494,16 +501,16 @@ inline FlatPtr offset_in_page(const void* address)
     return offset_in_page((FlatPtr)address);
 }
 
-u32 read_cr0();
-u32 read_cr2();
-u32 read_cr3();
-u32 read_cr4();
+FlatPtr read_cr0();
+FlatPtr read_cr2();
+FlatPtr read_cr3();
+FlatPtr read_cr4();
 
-void write_cr0(u32);
-void write_cr3(u32);
-void write_cr4(u32);
+void write_cr0(FlatPtr);
+void write_cr3(FlatPtr);
+void write_cr4(FlatPtr);
 
-u32 read_dr6();
+FlatPtr read_dr6();
 
 static inline bool is_kernel_mode()
 {
@@ -1071,7 +1078,12 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
-#define TRAP_FRAME_SIZE (3 * sizeof(FlatPtr))
+#if ARCH(I386)
+#    define TRAP_FRAME_SIZE (3 * 4)
+#else
+#    define TRAP_FRAME_SIZE (3 * 8)
+#endif
+
 static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
 
 extern "C" void enter_trap_no_irq(TrapFrame*);

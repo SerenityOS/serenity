@@ -210,9 +210,7 @@ void page_fault_handler(TrapFrame* trap)
     clac();
 
     auto& regs = *trap->regs;
-    u32 fault_address;
-    asm("movl %%cr2, %%eax"
-        : "=a"(fault_address));
+    auto fault_address = read_cr2();
 
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();
@@ -717,14 +715,22 @@ void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
-UNMAP_AFTER_INIT void write_cr0(u32 value)
+UNMAP_AFTER_INIT void write_cr0(FlatPtr value)
 {
-    asm volatile("movl %%eax, %%cr0" ::"a"(value));
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr0" ::"a"(value));
+#else
+    asm volatile("mov %%rax, %%cr0" ::"a"(value));
+#endif
 }
 
-UNMAP_AFTER_INIT void write_cr4(u32 value)
+UNMAP_AFTER_INIT void write_cr4(FlatPtr value)
 {
-    asm volatile("movl %%eax, %%cr4" ::"a"(value));
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr4" ::"a"(value));
+#else
+    asm volatile("mov %%rax, %%cr4" ::"a"(value));
+#endif
 }
 
 UNMAP_AFTER_INIT static void sse_init()
@@ -733,50 +739,80 @@ UNMAP_AFTER_INIT static void sse_init()
     write_cr4(read_cr4() | 0x600);
 }
 
-u32 read_cr0()
+FlatPtr read_cr0()
 {
-    u32 cr0;
-    asm("movl %%cr0, %%eax"
+    FlatPtr cr0;
+#if ARCH(I386)
+    asm("mov %%cr0, %%eax"
         : "=a"(cr0));
+#else
+    asm("mov %%cr0, %%rax"
+        : "=a"(cr0));
+#endif
     return cr0;
 }
 
-u32 read_cr2()
+FlatPtr read_cr2()
 {
-    u32 cr2;
-    asm("movl %%cr2, %%eax"
+    FlatPtr cr2;
+#if ARCH(I386)
+    asm("mov %%cr2, %%eax"
         : "=a"(cr2));
+#else
+    asm("mov %%cr2, %%rax"
+        : "=a"(cr2));
+#endif
     return cr2;
 }
 
-u32 read_cr3()
+FlatPtr read_cr3()
 {
-    u32 cr3;
-    asm("movl %%cr3, %%eax"
+    FlatPtr cr3;
+#if ARCH(I386)
+    asm("mov %%cr3, %%eax"
         : "=a"(cr3));
+#else
+    asm("mov %%cr3, %%rax"
+        : "=a"(cr3));
+#endif
     return cr3;
 }
 
-void write_cr3(u32 cr3)
+void write_cr3(FlatPtr cr3)
 {
     // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
-    asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
+#else
+    asm volatile("mov %%rax, %%cr3" ::"a"(cr3)
+                 : "memory");
+#endif
 }
 
-u32 read_cr4()
+FlatPtr read_cr4()
 {
-    u32 cr4;
-    asm("movl %%cr4, %%eax"
+    FlatPtr cr4;
+#if ARCH(I386)
+    asm("mov %%cr4, %%eax"
         : "=a"(cr4));
+#else
+    asm("mov %%cr4, %%rax"
+        : "=a"(cr4));
+#endif
     return cr4;
 }
 
-u32 read_dr6()
+FlatPtr read_dr6()
 {
-    u32 dr6;
-    asm("movl %%dr6, %%eax"
+    FlatPtr dr6;
+#if ARCH(I386)
+    asm("mov %%dr6, %%eax"
         : "=a"(dr6));
+#else
+    asm("mov %%dr6, %%rax"
+        : "=a"(dr6));
+#endif
     return dr6;
 }
 
@@ -1291,6 +1327,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
+#if ARCH(I386)
     // clang-format off
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
@@ -1333,6 +1370,9 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         : "memory"
     );
     // clang-format on
+#else
+    PANIC("Context switching not implemented.");
+#endif
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
@@ -1576,6 +1616,7 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
 
     m_scheduler_initialized = true;
 
+#if ARCH(I386)
     // clang-format off
     asm volatile(
         "movl %[new_esp], %%esp \n" // switch to new stack
@@ -1601,6 +1642,7 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
            [cpu] "c" (id())
     );
     // clang-format on
+#endif
 
     VERIFY_NOT_REACHED();
 }

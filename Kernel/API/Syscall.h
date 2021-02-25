@@ -318,7 +318,7 @@ struct SC_futex_params {
     u32 val;
     union {
         const timespec* timeout;
-        u32 val2;
+        uintptr_t val2;
     };
     u32* userspace_address2;
     u32 val3;
