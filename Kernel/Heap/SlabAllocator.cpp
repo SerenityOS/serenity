@@ -130,7 +130,9 @@ static SlabAllocator<32> s_slab_allocator_32;
 static SlabAllocator<64> s_slab_allocator_64;
 static SlabAllocator<128> s_slab_allocator_128;
 
+#if ARCH(I386)
 static_assert(sizeof(Region) <= s_slab_allocator_128.slab_size());
+#endif
 
 template<typename Callback>
 void for_each_allocator(Callback callback)

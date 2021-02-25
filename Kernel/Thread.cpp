@@ -666,10 +666,10 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
-static bool push_value_on_user_stack(u32* stack, u32 data)
+static bool push_value_on_user_stack(FlatPtr* stack, FlatPtr data)
 {
-    *stack -= 4;
-    return copy_to_user((u32*)*stack, &data);
+    *stack -= sizeof(FlatPtr);
+    return copy_to_user((FlatPtr*)*stack, &data);
 }
 
 void Thread::resume_from_stopped()
@@ -792,19 +792,24 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
     auto setup_stack = [&](RegisterState& state) {
-        u32* stack = &state.userspace_esp;
-        u32 old_esp = *stack;
-        u32 ret_eip = state.eip;
-        u32 ret_eflags = state.eflags;
+#if ARCH(I386)
+        FlatPtr* stack = &state.userspace_esp;
+#elif ARCH(X86_64)
+        FlatPtr* stack = &state.userspace_esp;
+#endif
+        FlatPtr old_esp = *stack;
+        FlatPtr ret_eip = state.eip;
+        FlatPtr ret_eflags = state.eflags;
 
 #if SIGNAL_DEBUG
         klog() << "signal: setting up user stack to return to eip: " << String::format("%p", (void*)ret_eip) << " esp: " << String::format("%p", (void*)old_esp);
 #endif
 
+#if ARCH(I386)
         // Align the stack to 16 bytes.
         // Note that we push 56 bytes (4 * 14) on to the stack,
         // so we need to account for this here.
-        u32 stack_alignment = (*stack - 56) % 16;
+        FlatPtr stack_alignment = (*stack - 56) % 16;
         *stack -= stack_alignment;
 
         push_value_on_user_stack(stack, ret_eflags);
@@ -818,6 +823,10 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, state.ebp);
         push_value_on_user_stack(stack, state.esi);
         push_value_on_user_stack(stack, state.edi);
+
+#elif ARCH(X86_64)
+        // FIXME
+#endif
 
         // PUSH old_signal_mask
         push_value_on_user_stack(stack, old_signal_mask);
@@ -941,7 +950,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
 }
 
 struct RecognizedSymbol {
-    u32 address;
+    FlatPtr address;
     const KernelSymbol* symbol { nullptr };
 };
 

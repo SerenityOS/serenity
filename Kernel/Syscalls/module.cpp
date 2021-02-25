@@ -87,11 +87,11 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
             case R_386_PC32: {
                 // PC-relative relocation
                 dbgln("PC-relative relocation: {}", relocation.symbol().name());
-                u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
+                auto symbol_address = address_for_kernel_symbol(relocation.symbol().name());
                 if (symbol_address == 0)
                     missing_symbols = true;
                 dbgln("   Symbol address: {:p}", symbol_address);
-                ptrdiff_t relative_offset = (char*)symbol_address - ((char*)&patch_ptr + 4);
+                ptrdiff_t relative_offset = (FlatPtr)symbol_address - ((FlatPtr)&patch_ptr + 4);
                 patch_ptr = relative_offset;
                 break;
             }

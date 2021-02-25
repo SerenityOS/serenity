@@ -251,8 +251,8 @@ public:
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
     pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
-    void* sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
-    void* sys$mremap(Userspace<const Syscall::SC_mremap_params*>);
+    FlatPtr sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
+    FlatPtr sys$mremap(Userspace<const Syscall::SC_mremap_params*>);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
     int sys$mprotect(void*, size_t, int prot);
@@ -352,7 +352,7 @@ public:
     int sys$recvfd(int sockfd, int options);
     long sys$sysconf(int name);
     int sys$disown(ProcessID);
-    void* sys$allocate_tls(size_t);
+    FlatPtr sys$allocate_tls(size_t);
     int sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     int sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
     void sys$abort();
