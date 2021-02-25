@@ -476,7 +476,8 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
+    bool has_declaration = is<VariableDeclaration>(*m_lhs);
+    if (!has_declaration && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar in baz)", "for (foo[0] in bar)"
         VERIFY_NOT_REACHED();
     }
@@ -494,7 +495,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     while (object) {
         auto property_names = object->get_own_properties(*object, Object::PropertyKind::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
-            interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object);
+            interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object, has_declaration);
             if (interpreter.exception())
                 return {};
             last_value = interpreter.execute_statement(global_object, *m_body);
@@ -523,7 +524,8 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    if (!is<VariableDeclaration>(*m_lhs) && !is<Identifier>(*m_lhs)) {
+    bool has_declaration = is<VariableDeclaration>(*m_lhs);
+    if (!has_declaration && !is<Identifier>(*m_lhs)) {
         // FIXME: Implement "for (foo.bar of baz)", "for (foo[0] of bar)"
         VERIFY_NOT_REACHED();
     }
@@ -539,7 +541,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
-        interpreter.vm().set_variable(variable_name, value, global_object);
+        interpreter.vm().set_variable(variable_name, value, global_object, has_declaration);
         last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return IterationDecision::Break;
