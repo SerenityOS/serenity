@@ -37,8 +37,6 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -46,7 +44,6 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -454,16 +451,16 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((u32)(f)&0xffff0000) | 0x8e00;
+    s_idt[index].low = 0x00080000 | LSW((FlatPtr)(handler));
+    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0x8e00;
 }
 
-UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((u32)(f)&0xffff0000) | 0xef00;
+    s_idt[index].low = 0x00080000 | LSW(((FlatPtr)handler));
+    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0xef00;
 }
 
 UNMAP_AFTER_INIT void flush_idt()
@@ -1268,7 +1265,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto& processor = Processor::current();
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
-    tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
+    tls_descriptor.set_base(to_thread->thread_specific_data());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
 
     if (from_tss.cr3 != to_tss.cr3)
@@ -2184,7 +2181,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00cffa00); // code3
     write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x00cff200); // data3
 
-    Descriptor tls_descriptor;
+    Descriptor tls_descriptor {};
     tls_descriptor.low = tls_descriptor.high = 0;
     tls_descriptor.dpl = 3;
     tls_descriptor.segment_present = 1;
@@ -2195,8 +2192,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tls_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
 
-    Descriptor fs_descriptor;
-    fs_descriptor.set_base(this);
+    Descriptor fs_descriptor {};
+    fs_descriptor.set_base(VirtualAddress { this });
     fs_descriptor.set_limit(sizeof(Processor));
     fs_descriptor.dpl = 0;
     fs_descriptor.segment_present = 1;
@@ -2207,8 +2204,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     fs_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
 
-    Descriptor tss_descriptor;
-    tss_descriptor.set_base(&m_tss);
+    Descriptor tss_descriptor {};
+    tss_descriptor.set_base(VirtualAddress { &m_tss });
     tss_descriptor.set_limit(sizeof(TSS32));
     tss_descriptor.dpl = 0;
     tss_descriptor.segment_present = 1;

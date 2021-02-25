@@ -117,25 +117,25 @@ union [[gnu::packed]] Descriptor {
         TrapGate_32bit = 0xf,
     };
 
-    void* get_base() const
+    VirtualAddress base() const
     {
-        u32 b = base_lo;
-        b |= base_hi << 16;
-        b |= base_hi2 << 24;
-        return reinterpret_cast<void*>(b);
+        FlatPtr base = base_lo;
+        base |= base_hi << 16u;
+        base |= base_hi2 << 24u;
+        return VirtualAddress { base };
     }
 
-    void set_base(void* b)
+    void set_base(VirtualAddress base)
     {
-        base_lo = (u32)(b)&0xffff;
-        base_hi = ((u32)(b) >> 16) & 0xff;
-        base_hi2 = ((u32)(b) >> 24) & 0xff;
+        base_lo = base.get() & 0xffffu;
+        base_hi = (base.get() >> 16u) & 0xffu;
+        base_hi2 = (base.get() >> 24u) & 0xffu;
     }
 
-    void set_limit(u32 l)
+    void set_limit(u32 length)
     {
-        limit_lo = (u32)l & 0xffff;
-        limit_hi = ((u32)l >> 16) & 0xf;
+        limit_lo = length & 0xffff;
+        limit_hi = (length >> 16) & 0xf;
     }
 };
 
@@ -277,8 +277,8 @@ struct RegisterState;
 
 const DescriptorTablePointer& get_gdtr();
 const DescriptorTablePointer& get_idtr();
-void register_interrupt_handler(u8 number, void (*f)());
-void register_user_callable_interrupt_handler(u8 number, void (*f)());
+void register_interrupt_handler(u8 number, void (*handler)());
+void register_user_callable_interrupt_handler(u8 number, void (*handler)());
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
 void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
@@ -306,31 +306,31 @@ inline u32 cpu_flags()
     return flags;
 }
 
-inline void set_fs(u32 segment)
+inline void set_fs(u16 segment)
 {
     asm volatile(
-        "movl %%eax, %%fs" ::"a"(segment)
+        "mov %%ax, %%fs" ::"a"(segment)
         : "memory");
 }
 
-inline void set_gs(u32 segment)
+inline void set_gs(u16 segment)
 {
     asm volatile(
-        "movl %%eax, %%gs" ::"a"(segment)
+        "mov %%ax, %%gs" ::"a"(segment)
         : "memory");
 }
 
-inline u32 get_fs()
+inline u16 get_fs()
 {
-    u32 fs;
+    u16 fs;
     asm("mov %%fs, %%eax"
         : "=a"(fs));
     return fs;
 }
 
-inline u32 get_gs()
+inline u16 get_gs()
 {
-    u32 gs;
+    u16 gs;
     asm("mov %%gs, %%eax"
         : "=a"(gs));
     return gs;
@@ -344,6 +344,11 @@ inline u32 read_fs_u32(u32 offset)
         : [val] "=r"(val)
         : [off] "ir"(offset));
     return val;
+}
+
+inline FlatPtr read_fs_ptr(u32 offset)
+{
+    return read_fs_u32(offset);
 }
 
 inline void write_fs_u32(u32 offset, u32 val)
@@ -502,18 +507,18 @@ u32 read_dr6();
 
 static inline bool is_kernel_mode()
 {
-    u32 cs;
+    u16 cs;
     asm volatile(
-        "movl %%cs, %[cs] \n"
+        "mov %%cs, %[cs] \n"
         : [cs] "=g"(cs));
     return (cs & 3) == 0;
 }
 
 class CPUID {
 public:
-    CPUID(u32 function) { asm volatile("cpuid"
-                                       : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
-                                       : "a"(function), "c"(0)); }
+    explicit CPUID(u32 function) { asm volatile("cpuid"
+                                                : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
+                                                : "a"(function), "c"(0)); }
     u32 eax() const { return m_eax; }
     u32 ebx() const { return m_ebx; }
     u32 ecx() const { return m_ecx; }
@@ -768,7 +773,7 @@ public:
 
     ALWAYS_INLINE static Processor& current()
     {
-        return *(Processor*)read_fs_u32(__builtin_offsetof(Processor, m_self));
+        return *(Processor*)read_fs_ptr(__builtin_offsetof(Processor, m_self));
     }
 
     ALWAYS_INLINE static bool is_initialized()
@@ -814,7 +819,7 @@ public:
         // to another processor, which would lead us to get the wrong thread.
         // To avoid having to disable interrupts, we can just read the field
         // directly in an atomic fashion, similar to Processor::current.
-        return (Thread*)read_fs_u32(__builtin_offsetof(Processor, m_current_thread));
+        return (Thread*)read_fs_ptr(__builtin_offsetof(Processor, m_current_thread));
     }
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
@@ -836,7 +841,7 @@ public:
     ALWAYS_INLINE static u32 id()
     {
         // See comment in Processor::current_thread
-        return read_fs_u32(__builtin_offsetof(Processor, m_cpu));
+        return read_fs_ptr(__builtin_offsetof(Processor, m_cpu));
     }
 
     ALWAYS_INLINE u32 raise_irq()
@@ -1066,7 +1071,7 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
-#define TRAP_FRAME_SIZE (3 * 4)
+#define TRAP_FRAME_SIZE (3 * sizeof(FlatPtr))
 static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
 
 extern "C" void enter_trap_no_irq(TrapFrame*);
