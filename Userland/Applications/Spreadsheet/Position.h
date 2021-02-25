@@ -62,6 +62,7 @@ struct Position {
         return !(other == *this);
     }
 
+    String to_cell_identifier(const Sheet& sheet) const;
     URL to_url(const Sheet& sheet) const;
 
     size_t column { 0 };

@@ -155,11 +155,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                StringBuilder builder;
-                builder.append(position.column);
-                builder.appendff("{}", position.row);
                 m_current_cell_label->set_enabled(true);
-                m_current_cell_label->set_text(builder.string_view());
+                m_current_cell_label->set_text(position.to_cell_identifier(m_selected_view->sheet()));
 
                 auto& cell = m_selected_view->sheet().ensure(position);
                 m_cell_value_editor->on_change = nullptr;
