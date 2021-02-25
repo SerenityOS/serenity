@@ -576,7 +576,7 @@ void* Process::sys$allocate_tls(size_t size)
         return (void*)-EFAULT;
 
     auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
-    tls_descriptor.set_base(main_thread->thread_specific_data().as_ptr());
+    tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 
     return m_master_tls_region.unsafe_ptr()->vaddr().as_ptr();
