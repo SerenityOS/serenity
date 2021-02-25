@@ -450,13 +450,13 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 
 UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((FlatPtr)(handler));
+    s_idt[index].low = 0x00080000 | LSW(reinterpret_cast<FlatPtr>(handler));
     s_idt[index].high = (reinterpret_cast<FlatPtr>(handler) & 0xffff0000) | 0x8e00;
 }
 
 UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW(((FlatPtr)handler));
+    s_idt[index].low = 0x00080000 | LSW(reinterpret_cast<FlatPtr>(handler));
     s_idt[index].high = (reinterpret_cast<FlatPtr>(handler) & 0xffff0000) | 0xef00;
 }
 

@@ -532,11 +532,7 @@ public:
                                                 : "a"(function), "c"(0)); }
     u32 eax() const { return m_eax; }
     u32 ebx() const { return m_ebx; }
-    u32 ecx() const { return m_ecx; }
     u32 edx() const { return m_edx; }
-
-private:
-    u32 m_eax { 0xffffffff };
     u32 m_ebx { 0xffffffff };
     u32 m_ecx { 0xffffffff };
     u32 m_edx { 0xffffffff };
