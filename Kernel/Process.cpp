@@ -543,6 +543,22 @@ void Process::die()
         return IterationDecision::Continue;
     });
 
+    {
+        ScopedSpinLock lock(g_processes_lock);
+        for (auto* process = g_processes->head(); process;) {
+            auto* next_process = process->next();
+            if (process->has_tracee_thread(m_pid)) {
+                dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process->name(), process->pid(), name(), pid());
+                process->stop_tracing();
+                auto err = process->send_signal(SIGSTOP, this);
+                if (err.is_error())
+                    dbgln("Failed to send the SIGSTOP signal to {} ({})", process->name(), process->pid());
+            }
+
+            process = next_process;
+        }
+    }
+
     kill_all_threads();
 }
 
