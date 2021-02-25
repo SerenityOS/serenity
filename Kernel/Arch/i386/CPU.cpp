@@ -2238,13 +2238,6 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     // clang-format on
 }
 
-void Processor::set_thread_specific(u8* data, size_t len)
-{
-    auto& descriptor = get_gdt_entry(GDT_SELECTOR_TLS);
-    descriptor.set_base(data);
-    descriptor.set_limit(len);
-}
-
 void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
 {
     ptrace_regs.eax = kernel_regs.eax,
