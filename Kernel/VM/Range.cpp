@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,49 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/VM/Range.h>
 
 namespace Kernel {
 
-class RangeAllocator {
-public:
-    RangeAllocator();
-    ~RangeAllocator();
+Vector<Range, 2> Range::carve(const Range& taken) const
+{
+    VERIFY((taken.size() % PAGE_SIZE) == 0);
 
-    void initialize_with_range(VirtualAddress, size_t);
-    void initialize_from_parent(const RangeAllocator&);
-
-    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
-    Optional<Range> allocate_specific(VirtualAddress, size_t);
-    Optional<Range> allocate_randomized(size_t, size_t alignment);
-    void deallocate(const Range&);
-
-    void dump() const;
-
-    bool contains(const Range& range) const
-    {
-        ScopedSpinLock lock(m_lock);
-        return m_total_range.contains(range);
-    }
-
-private:
-    void carve_at_index(int, const Range&);
-
-    Vector<Range> m_available_ranges;
-    Range m_total_range;
-    mutable SpinLock<u8> m_lock;
-};
-
+    Vector<Range, 2> parts;
+    if (taken == *this)
+        return {};
+    if (taken.base() > base())
+        parts.append({ base(), taken.base().get() - base().get() });
+    if (taken.end() < end())
+        parts.append({ taken.end(), end().get() - taken.end().get() });
+    return parts;
 }
 
-namespace AK {
-template<>
-struct Traits<Kernel::Range> : public GenericTraits<Kernel::Range> {
-    static constexpr bool is_trivial() { return true; }
-};
 }

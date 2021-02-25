@@ -212,6 +212,7 @@ set(KERNEL_SOURCES
     VM/PrivateInodeVMObject.cpp
     VM/ProcessPagingScope.cpp
     VM/PurgeablePageRanges.cpp
+    VM/Range.cpp
     VM/RangeAllocator.cpp
     VM/Region.cpp
     VM/SharedInodeVMObject.cpp
