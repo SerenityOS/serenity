@@ -113,7 +113,7 @@ static String convert_to_string(size_t value, unsigned base = 26, StringView map
         value /= base;
     } while (value > 0);
 
-    // NOTE: Weird as this may seem, the thing that comes after 'A' is 'AA', which as a number would be '00'
+    // NOTE: Weird as this may seem, the thing that comes after 'Z' is 'AA', which as a number would be '00'
     //       to make this work, only the most significant digit has to be in a range of (1..25) as opposed to (0..25),
     //       but only if it's not the only digit in the string.
     if (i > 1)
@@ -726,13 +726,18 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     return builder.build();
 }
 
+String Position::to_cell_identifier(const Sheet& sheet) const
+{
+    return String::formatted("{}{}", sheet.column(column), row);
+}
+
 URL Position::to_url(const Sheet& sheet) const
 {
     URL url;
     url.set_protocol("spreadsheet");
     url.set_host("cell");
     url.set_path(String::formatted("/{}", getpid()));
-    url.set_fragment(String::formatted("{}{}", sheet.column(column), row));
+    url.set_fragment(to_cell_identifier(sheet));
     return url;
 }
 
