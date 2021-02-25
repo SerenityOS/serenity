@@ -98,7 +98,6 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
 void Process::sys$exit_thread(Userspace<void*> exit_value)
 {
     REQUIRE_PROMISE(thread);
-    cli();
 
     if (this->thread_count() == 1) {
         // If this is the last thread, instead kill the process.

@@ -101,7 +101,6 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
             process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
         }
 
-        cli();
         if (function == SC_exit)
             process.sys$exit((int)arg1);
         else
