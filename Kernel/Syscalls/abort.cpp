@@ -32,7 +32,6 @@ namespace Kernel {
 
 void Process::sys$abort()
 {
-    cli();
     crash(SIGABRT, 0);
 }
 
