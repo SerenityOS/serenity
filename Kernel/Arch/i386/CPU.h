@@ -281,8 +281,6 @@ void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
 void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
-void replace_single_handler_with_shared(GenericInterruptHandler&);
-void replace_shared_handler_with_single(GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void flush_idt();
 void load_task_register(u16 selector);
@@ -297,8 +295,7 @@ void load_task_register(u16 selector);
                                : "memory")
 #define sti() asm volatile("sti" :: \
                                : "memory")
-#define memory_barrier() asm volatile("" :: \
-                                          : "memory")
+
 inline u32 cpu_flags()
 {
     u32 flags;
@@ -359,40 +356,6 @@ inline void write_fs_u32(u32 offset, u32 val)
 inline bool are_interrupts_enabled()
 {
     return cpu_flags() & 0x200;
-}
-
-class InterruptFlagSaver {
-public:
-    InterruptFlagSaver()
-    {
-        m_flags = cpu_flags();
-    }
-
-    ~InterruptFlagSaver()
-    {
-        if (m_flags & 0x200)
-            sti();
-        else
-            cli();
-    }
-
-private:
-    u32 m_flags;
-};
-
-inline bool cli_and_save_interrupt_flag()
-{
-    u32 flags = cpu_flags();
-    cli();
-    return flags & 0x200;
-}
-
-inline void restore_interrupt_flag(bool flag)
-{
-    if (flag)
-        sti();
-    else
-        cli();
 }
 
 class InterruptDisabler {
@@ -576,35 +539,6 @@ inline u64 read_tsc()
     read_tsc(lsw, msw);
     return ((u64)msw << 32) | lsw;
 }
-
-struct Stopwatch {
-    union SplitQword {
-        struct {
-            uint32_t lsw;
-            uint32_t msw;
-        };
-        uint64_t qw { 0 };
-    };
-
-public:
-    Stopwatch(const char* name)
-        : m_name(name)
-    {
-        read_tsc(m_start.lsw, m_start.msw);
-    }
-
-    ~Stopwatch()
-    {
-        SplitQword end;
-        read_tsc(end.lsw, end.msw);
-        uint64_t diff = end.qw - m_start.qw;
-        dbgln("Stopwatch({}): {} ticks", m_name, diff);
-    }
-
-private:
-    const char* m_name { nullptr };
-    SplitQword m_start;
-};
 
 // FIXME: This can't hold every CPU feature as-is.
 enum class CPUFeature : u32 {
