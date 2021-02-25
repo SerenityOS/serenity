@@ -55,9 +55,9 @@ void ToolBarContainer::paint_event(GUI::PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    for_each_child_of_type<ToolBar>([&](auto& toolbar) {
-        if (toolbar.is_visible()) {
-            auto rect = toolbar.relative_rect();
+    for_each_child_widget([&](auto& widget) {
+        if (widget.is_visible()) {
+            auto rect = widget.relative_rect();
             painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
             painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
         }
