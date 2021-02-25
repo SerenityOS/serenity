@@ -143,9 +143,9 @@ static void dump(const RegisterState& regs)
     }
 
     dbgln("Exception code: {:04x} (isr: {:04x})", regs.exception_code, regs.isr_number);
-    dbgln("    pc={:04x}:{:08x} eflags={:08x}", (u16)regs.cs, regs.eip, regs.eflags);
+    dbgln("    pc={:04x}:{:08x} eflags={:08x}", static_cast<u16>(regs.cs), regs.eip, regs.eflags);
     dbgln(" stack={:04x}:{:08x}", ss, esp);
-    dbgln("    ds={:04x} es={:04x} fs={:04x} gs={:04x}", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
+    dbgln("    ds={:04x} es={:04x} fs={:04x} gs={:04x}", static_cast<u16>(regs.ds), static_cast<u16>(regs.es), static_cast<u16>(regs.fs), static_cast<u16>(regs.gs));
     dbgln("   eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
     dbgln("   ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
     dbgln("   cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", read_cr0(), read_cr2(), read_cr3(), read_cr4());
@@ -253,12 +253,12 @@ void page_fault_handler(TrapFrame* trap)
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
     }
 
-    if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
+    if (fault_address >= reinterpret_cast<FlatPtr>(&start_of_ro_after_init) && fault_address < reinterpret_cast<FlatPtr>(&end_of_ro_after_init)) {
         dump(regs);
         PANIC("Attempt to write into READONLY_AFTER_INIT section");
     }
 
-    if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
+    if (fault_address >= reinterpret_cast<FlatPtr>(&start_of_unmap_after_init) && fault_address < reinterpret_cast<FlatPtr>(&end_of_unmap_after_init)) {
         dump(regs);
         PANIC("Attempt to access UNMAP_AFTER_INIT section");
     }
@@ -451,13 +451,13 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
     s_idt[index].low = 0x00080000 | LSW((FlatPtr)(handler));
-    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0x8e00;
+    s_idt[index].high = (reinterpret_cast<FlatPtr>(handler) & 0xffff0000) | 0x8e00;
 }
 
 UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
     s_idt[index].low = 0x00080000 | LSW(((FlatPtr)handler));
-    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0xef00;
+    s_idt[index].high = (reinterpret_cast<FlatPtr>(handler) & 0xffff0000) | 0xef00;
 }
 
 UNMAP_AFTER_INIT void flush_idt()
@@ -687,7 +687,7 @@ void handle_interrupt(TrapFrame* trap)
     clac();
     auto& regs = *trap->regs;
     VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
-    u8 irq = (u8)(regs.isr_number - 0x50);
+    u8 irq = static_cast<u8>(regs.isr_number - 0x50);
     s_entropy_source_interrupts.add_random_event(irq);
     auto* handler = s_interrupt_handler[irq];
     VERIFY(handler);
@@ -1149,7 +1149,7 @@ void Processor::write_gdt_entry(u16 selector, Descriptor& descriptor)
 Descriptor& Processor::get_gdt_entry(u16 selector)
 {
     u16 i = (selector & 0xfffc) >> 3;
-    return *(Descriptor*)(&m_gdt[i]);
+    return *reinterpret_cast<Descriptor*>(&m_gdt[i]);
 }
 
 void Processor::flush_gdt()
@@ -1182,24 +1182,24 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 break;
 
             if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]) || !retaddr)
+                if (!copy_from_user(&retaddr, &(reinterpret_cast<FlatPtr*>(stack_ptr))[1]) || !retaddr)
                     break;
                 stack_trace.append(retaddr);
-                if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
+                if (!copy_from_user(&stack_ptr, reinterpret_cast<FlatPtr*>(stack_ptr)))
                     break;
             } else {
                 void* fault_at;
-                if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at) || !retaddr)
+                if (!safe_memcpy(&retaddr, &(reinterpret_cast<FlatPtr*>(stack_ptr))[1], sizeof(FlatPtr), fault_at) || !retaddr)
                     break;
                 stack_trace.append(retaddr);
-                if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
+                if (!safe_memcpy(&stack_ptr, reinterpret_cast<FlatPtr*>(stack_ptr), sizeof(FlatPtr), fault_at))
                     break;
             }
         }
     };
     auto capture_current_thread = [&]() {
-        frame_ptr = (FlatPtr)__builtin_frame_address(0);
-        eip = (FlatPtr)__builtin_return_address(0);
+        frame_ptr = reinterpret_cast<FlatPtr>(__builtin_frame_address(0));
+        eip = reinterpret_cast<FlatPtr>(__builtin_return_address(0));
 
         walk_stack(frame_ptr);
     };
@@ -1258,11 +1258,11 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             auto& tss = thread.tss();
             u32* stack_top = reinterpret_cast<u32*>(tss.esp);
             if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
-                if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
+                if (!copy_from_user(&frame_ptr, &(reinterpret_cast<FlatPtr*>(stack_top))[0]))
                     frame_ptr = 0;
             } else {
                 void* fault_at;
-                if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
+                if (!safe_memcpy(&frame_ptr, &(reinterpret_cast<FlatPtr*>(stack_top))[0], sizeof(FlatPtr), fault_at))
                     frame_ptr = 0;
             }
             eip = tss.eip;

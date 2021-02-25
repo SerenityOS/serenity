@@ -78,21 +78,21 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
-        auto* out = (size_t*)arg;
+        auto* out = reinterpret_cast<size_t*>(arg);
         size_t value = framebuffer_size_in_bytes();
         if (!copy_to_user(out, &value))
             return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
-        auto* index = (int*)arg;
+        auto* index = reinterpret_cast<int*>(arg);
         int value = 0;
         if (!copy_to_user(index, &value))
             return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto* user_resolution = reinterpret_cast<FBResolution*>(arg);
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
@@ -102,7 +102,7 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto* user_resolution = reinterpret_cast<FBResolution*>(arg);
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;

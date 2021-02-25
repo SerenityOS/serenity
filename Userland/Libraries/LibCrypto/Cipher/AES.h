@@ -79,7 +79,7 @@ struct AESCipherKey : public CipherKey {
     String to_string() const;
     const u32* round_keys() const
     {
-        return (const u32*)m_rd_keys;
+        return m_rd_keys;
     }
 
     AESCipherKey(ReadonlyBytes user_key, size_t key_bits, Intent intent)
@@ -99,7 +99,7 @@ struct AESCipherKey : public CipherKey {
 protected:
     u32* round_keys()
     {
-        return (u32*)m_rd_keys;
+        return m_rd_keys;
     }
 
 private:

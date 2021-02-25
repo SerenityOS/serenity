@@ -101,7 +101,7 @@ private:
 
         ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destinationShort, u8 destination = 0)
             : m_low(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destinationShort << 18))
-            , m_high((u32)destination << 24)
+            , m_high(static_cast<u32>(destination) << 24)
         {
         }
 

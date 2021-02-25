@@ -45,7 +45,7 @@ struct StringMetrics {
         {
             size_t length = this->length;
             for (auto& mask : masked_chars) {
-                if (offset < 0 || mask.position <= (size_t)offset) {
+                if (offset < 0 || mask.position <= static_cast<size_t>(offset)) {
                     length -= mask.original_length;
                     length += mask.masked_length;
                 }

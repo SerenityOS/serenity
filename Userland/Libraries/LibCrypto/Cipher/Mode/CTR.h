@@ -93,7 +93,7 @@ struct IncrementInplace {
     {
         for (size_t i = in.size(); i > 0;) {
             --i;
-            if (in[i] == (u8)-1) {
+            if (in[i] == 0xFF) {
                 in[i] = 0;
             } else {
                 in[i]++;

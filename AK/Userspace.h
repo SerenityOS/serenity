@@ -47,7 +47,7 @@ public:
     Userspace() = default;
 
     operator bool() const { return m_ptr; }
-    operator FlatPtr() const { return (FlatPtr)m_ptr; }
+    operator FlatPtr() const { return reinterpret_cast<FlatPtr>(m_ptr); }
 
     // Disable default implementations that would use surprising integer promotion.
     bool operator==(const Userspace&) const = delete;
@@ -63,7 +63,7 @@ public:
     }
 
     FlatPtr ptr() const { return m_ptr; }
-    T unsafe_userspace_ptr() const { return (T)m_ptr; }
+    T unsafe_userspace_ptr() const { return reinterpret_cast<T>(m_ptr); }
 #else
     Userspace(T ptr)
         : m_ptr(ptr)
@@ -89,7 +89,7 @@ inline Userspace<T> static_ptr_cast(const Userspace<U>& ptr)
 #else
     auto casted_ptr = static_cast<T>(ptr.ptr());
 #endif
-    return Userspace<T>((FlatPtr)casted_ptr);
+    return Userspace<T>(reinterpret_cast<FlatPtr>(casted_ptr));
 }
 
 }

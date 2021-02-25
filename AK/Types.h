@@ -73,6 +73,8 @@ using __ptrdiff_t = __PTRDIFF_TYPE__;
 #endif
 
 using FlatPtr = Conditional<sizeof(void*) == 8, u64, u32>::Type;
+constexpr FlatPtr FlatPtrMax = ~0;
+constexpr FlatPtr _RefPtrMask = ~1;
 
 constexpr unsigned KiB = 1024;
 constexpr unsigned MiB = KiB * KiB;
@@ -102,6 +104,12 @@ enum class [[nodiscard]] TriState : u8 {
     True,
     Unknown
 };
+
+template<typename T, typename U>
+constexpr T ptr_to_type(U* ptr)
+{
+    return static_cast<T>(reinterpret_cast<FlatPtr>(ptr));
+}
 
 namespace AK {
 

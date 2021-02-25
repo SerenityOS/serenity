@@ -107,7 +107,7 @@ struct AuxiliaryValue {
     AuxiliaryValue(Type type, void* ptr)
     {
         auxv.a_type = type;
-        auxv.a_un.a_ptr = (void*)ptr;
+        auxv.a_un.a_ptr = reinterpret_cast<void*>(ptr);
     }
     AuxiliaryValue(Type type, String string)
     {

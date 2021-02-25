@@ -124,7 +124,7 @@ struct alignas(16) TransferDescriptor final {
 
     void print()
     {
-        dbgln("UHCI: TD({}) @ {}: link_ptr={}, status={}, token={}, buffer_ptr={}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
+        dbgln("UHCI: TD({}) @ {}: link_ptr={}, status={}, token={}, buffer_ptr={}", this, m_paddr, m_link_ptr, static_cast<u32>(m_control_status), m_token, m_buffer_ptr);
 
         // Now let's print the flags!
         dbgln("UHCI: TD({}) @ {}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
@@ -264,7 +264,7 @@ struct alignas(16) QueueHead {
 
     void print()
     {
-        dbgln("UHCI: QH({}) @ {}: link_ptr={}, element_link_ptr={}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
+        dbgln("UHCI: QH({}) @ {}: link_ptr={}, element_link_ptr={}", this, m_paddr, m_link_ptr, reinterpret_cast<FlatPtr>(m_element_link_ptr));
     }
 
 private:

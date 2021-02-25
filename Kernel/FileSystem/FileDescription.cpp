@@ -98,22 +98,22 @@ KResult FileDescription::attach()
 
 Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
 {
-    u32 unblock_flags = (u32)Thread::FileBlocker::BlockFlags::None;
-    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Read) && can_read())
-        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
-    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Write) && can_write())
-        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+    u32 unblock_flags = static_cast<u32>(Thread::FileBlocker::BlockFlags::None);
+    if ((static_cast<u32>(block_flags) & static_cast<u32>(Thread::FileBlocker::BlockFlags::Read)) && can_read())
+        unblock_flags |= static_cast<u32>(Thread::FileBlocker::BlockFlags::Read);
+    if ((static_cast<u32>(block_flags) & static_cast<u32>(Thread::FileBlocker::BlockFlags::Write)) && can_write())
+        unblock_flags |= static_cast<u32>(Thread::FileBlocker::BlockFlags::Write);
     // TODO: Implement Thread::FileBlocker::BlockFlags::Exception
 
-    if ((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::SocketFlags) {
+    if (static_cast<u32>(block_flags) & static_cast<u32>(Thread::FileBlocker::BlockFlags::SocketFlags)) {
         auto* sock = socket();
         VERIFY(sock);
-        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Accept) && sock->can_accept())
-            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Accept;
-        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Connect) && sock->setup_state() == Socket::SetupState::Completed)
-            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Connect;
+        if ((static_cast<u32>(block_flags) & static_cast<u32>(Thread::FileBlocker::BlockFlags::Accept)) && sock->can_accept())
+            unblock_flags |= static_cast<u32>(Thread::FileBlocker::BlockFlags::Accept);
+        if ((static_cast<u32>(block_flags) & static_cast<u32>(Thread::FileBlocker::BlockFlags::Connect)) && sock->setup_state() == Socket::SetupState::Completed)
+            unblock_flags |= static_cast<u32>(Thread::FileBlocker::BlockFlags::Connect);
     }
-    return (Thread::FileBlocker::BlockFlags)unblock_flags;
+    return static_cast<Thread::FileBlocker::BlockFlags>(unblock_flags);
 }
 
 KResult FileDescription::stat(::stat& buffer)
@@ -229,9 +229,9 @@ ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t siz
     OutputMemoryStream stream { temp_buffer };
 
     KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream, this](auto& entry) {
-        stream << (u32)entry.inode.index().value();
+        stream << static_cast<u32>(entry.inode.index().value());
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
-        stream << (u32)entry.name.length();
+        stream << static_cast<u32>(entry.name.length());
         stream << entry.name.bytes();
         return true;
     });

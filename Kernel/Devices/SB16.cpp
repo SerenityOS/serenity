@@ -69,11 +69,11 @@ u8 SB16::dsp_read()
 void SB16::set_sample_rate(uint16_t hz)
 {
     dsp_write(0x41); // output
-    dsp_write((u8)(hz >> 8));
-    dsp_write((u8)hz);
+    dsp_write(static_cast<u8>(hz >> 8));
+    dsp_write(static_cast<u8>(hz));
     dsp_write(0x42); // input
-    dsp_write((u8)(hz >> 8));
-    dsp_write((u8)hz);
+    dsp_write(static_cast<u8>(hz >> 8));
+    dsp_write(static_cast<u8>(hz));
 }
 
 static AK::Singleton<SB16> s_the;
@@ -211,12 +211,12 @@ void SB16::dma_start(uint32_t length)
 
     // Write the offset of the buffer
     u16 offset = (addr / 2) % 65536;
-    IO::out8(0xc4, (u8)offset);
-    IO::out8(0xc4, (u8)(offset >> 8));
+    IO::out8(0xc4, static_cast<u8>(offset));
+    IO::out8(0xc4, static_cast<u8>(offset >> 8));
 
     // Write the transfer length
-    IO::out8(0xc6, (u8)(length - 1));
-    IO::out8(0xc6, (u8)((length - 1) >> 8));
+    IO::out8(0xc6, static_cast<u8>(length - 1));
+    IO::out8(0xc6, static_cast<u8>((length - 1) >> 8));
 
     // Write the buffer
     IO::out8(0x8b, addr >> 16);
@@ -264,7 +264,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
         return ENOSPC;
     }
 
-    u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
+    u8 mode = static_cast<u8>(SampleFormat::Signed) | static_cast<u8>(SampleFormat::Stereo);
 
     const int sample_rate = 44100;
     set_sample_rate(sample_rate);
@@ -277,7 +277,7 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
     u8 command = 0xb0;
 
     u16 sample_count = length / sizeof(i16);
-    if (mode & (u8)SampleFormat::Stereo)
+    if (mode & static_cast<u8>(SampleFormat::Stereo))
         sample_count /= 2;
 
     sample_count -= 1;
@@ -287,8 +287,8 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
 
     dsp_write(command);
     dsp_write(mode);
-    dsp_write((u8)sample_count);
-    dsp_write((u8)(sample_count >> 8));
+    dsp_write(static_cast<u8>(sample_count));
+    dsp_write(static_cast<u8>(sample_count >> 8));
 
     wait_for_irq();
     return length;

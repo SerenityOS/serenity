@@ -79,12 +79,12 @@ Kernel::KResultOr<size_t> Console::write(Kernel::FileDescription&, size_t, const
 
     ssize_t nread = data.read_buffered<256>(size, [&](const u8* bytes, size_t bytes_count) {
         for (size_t i = 0; i < bytes_count; i++)
-            put_char((char)bytes[i]);
-        return (ssize_t)bytes_count;
+            put_char(static_cast<char>(bytes[i]));
+        return static_cast<ssize_t>(bytes_count);
     });
     if (nread < 0)
-        return Kernel::KResult((ErrnoCode)-nread);
-    return (size_t)nread;
+        return Kernel::KResult(static_cast<ErrnoCode>(-nread));
+    return static_cast<size_t>(nread);
 }
 
 void Console::put_char(char ch)

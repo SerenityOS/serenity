@@ -46,17 +46,17 @@ inline uintptr_t syscall(auto function)
 
 inline uintptr_t syscall(auto function, auto arg0)
 {
-    return syscall1((uintptr_t)function, (uintptr_t)arg0);
+    return syscall1(static_cast<uintptr_t>(function), reinterpret_cast<uintptr_t>(arg0));
 }
 
 inline uintptr_t syscall(auto function, auto arg0, auto arg1)
 {
-    return syscall2((uintptr_t)function, (uintptr_t)arg0, (uintptr_t)arg1);
+    return syscall2(static_cast<uintptr_t>(function), reinterpret_cast<uintptr_t>(arg0), reinterpret_cast<uintptr_t>(arg1));
 }
 
 inline uintptr_t syscall(auto function, auto arg0, auto arg1, auto arg2)
 {
-    return syscall3((uintptr_t)function, (uintptr_t)arg0, (uintptr_t)arg1, (uintptr_t)arg2);
+    return syscall3(static_cast<uintptr_t>(function), static_cast<uintptr_t>(arg0), static_cast<uintptr_t>(arg1), static_cast<uintptr_t>(arg2));
 }
 
 #endif

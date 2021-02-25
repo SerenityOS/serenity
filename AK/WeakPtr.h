@@ -61,7 +61,7 @@ public:
     template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
     WeakPtr& operator=(const WeakPtr<U>& other)
     {
-        if ((const void*)this != (const void*)&other)
+        if (reinterpret_cast<const void*>(this) != reinterpret_cast<const void*>(&other))
             m_link = other.m_link;
         return *this;
     }

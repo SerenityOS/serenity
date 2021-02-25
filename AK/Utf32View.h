@@ -72,7 +72,7 @@ public:
 private:
     Utf32CodepointIterator(const u32* ptr, size_t length)
         : m_ptr(ptr)
-        , m_length((ssize_t)length)
+        , m_length(static_cast<ssize_t>(length))
     {
     }
     const u32* m_ptr { nullptr };
@@ -109,7 +109,7 @@ public:
     {
         VERIFY(it.m_ptr >= m_code_points);
         VERIFY(it.m_ptr < m_code_points + m_length);
-        return ((ptrdiff_t)it.m_ptr - (ptrdiff_t)m_code_points) / sizeof(u32);
+        return (reinterpret_cast<ptrdiff_t>(it.m_ptr) - reinterpret_cast<ptrdiff_t>(m_code_points)) / sizeof(u32);
     }
 
     Utf32View substring_view(size_t offset, size_t length) const

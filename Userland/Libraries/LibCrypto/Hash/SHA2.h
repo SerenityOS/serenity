@@ -116,7 +116,7 @@ public:
     }
 
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline static DigestType hash(const StringView& buffer) { return hash(reinterpret_cast<const u8*>(buffer.characters_without_null_termination()), buffer.length()); }
 
     virtual String class_name() const override
     {
@@ -168,7 +168,7 @@ public:
     }
 
     inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline static DigestType hash(const StringView& buffer) { return hash(reinterpret_cast<const u8*>(buffer.characters_without_null_termination()), buffer.length()); }
 
     virtual String class_name() const override
     {

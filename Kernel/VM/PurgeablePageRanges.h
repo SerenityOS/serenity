@@ -158,7 +158,7 @@ public:
             m_ranges.span(), r, &nearby_index, [](auto& a, auto& b) {
                 if (a.intersects(b))
                     return 0;
-                return (signed)(a.base - (b.base + b.count - 1));
+                return static_cast<signed>(a.base - (b.base + b.count - 1));
             });
         if (!existing_range)
             return IterationDecision::Continue;

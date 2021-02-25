@@ -236,7 +236,7 @@ public:
     const struct termios& default_termios() const { return m_default_termios; }
     struct winsize terminal_size() const
     {
-        winsize ws { (u16)m_num_lines, (u16)m_num_columns, 0, 0 };
+        winsize ws { static_cast<u16>(m_num_lines), static_cast<u16>(m_num_columns), 0, 0 };
         return ws;
     }
 

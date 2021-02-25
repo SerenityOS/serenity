@@ -366,7 +366,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return IterationDecision::Continue;
         Elf32_Word offset = entry.val();
-        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
+        StringView name { reinterpret_cast<const char*>((m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr()) };
         if (func(StringView(name)) == IterationDecision::Break)
             return IterationDecision::Break;
         return IterationDecision::Continue;
@@ -378,9 +378,9 @@ void DynamicObject::for_each_initialization_array_function(F f) const
 {
     if (!has_init_array_section())
         return;
-    FlatPtr init_array = (FlatPtr)init_array_section().address().as_ptr();
+    FlatPtr init_array = reinterpret_cast<FlatPtr>(init_array_section().address().as_ptr());
     for (size_t i = 0; i < (m_init_array_size / sizeof(void*)); ++i) {
-        InitializationFunction current = ((InitializationFunction*)(init_array))[i];
+        InitializationFunction current = reinterpret_cast<InitializationFunction*>(init_array)[i];
         f(current);
     }
 }

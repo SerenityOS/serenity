@@ -220,7 +220,7 @@ ByteBuffer CoreDump::create_notes_process_data() const
 
     ELF::Core::ProcessInfo info {};
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
-    process_data.append((void*)&info, sizeof(info));
+    process_data.append(reinterpret_cast<void*>(&info), sizeof(info));
 
     JsonObject process_obj;
     process_obj.set("pid", m_process->pid().value());
@@ -247,7 +247,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
         info.tid = thread.tid().value();
         copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
-        entry_buff.append((void*)&info, sizeof(info));
+        entry_buff.append(reinterpret_cast<void*>(&info), sizeof(info));
 
         threads_data += entry_buff;
     }
@@ -268,7 +268,7 @@ ByteBuffer CoreDump::create_notes_regions_data() const
         info.region_end = region.vaddr().offset(region.size()).get();
         info.program_header_index = region_index;
 
-        memory_region_info_buffer.append((void*)&info, sizeof(info));
+        memory_region_info_buffer.append(reinterpret_cast<void*>(&info), sizeof(info));
 
         auto name = region.name();
         if (name.is_null())
@@ -286,7 +286,7 @@ ByteBuffer CoreDump::create_notes_metadata_data() const
 
     ELF::Core::Metadata metadata {};
     metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
-    metadata_data.append((void*)&metadata, sizeof(metadata));
+    metadata_data.append(reinterpret_cast<void*>(&metadata), sizeof(metadata));
 
     JsonObject metadata_obj;
     for (auto& it : m_process->coredump_metadata())

@@ -69,15 +69,15 @@ template<size_t ALIGNMENT>
     static_assert(ALIGNMENT > 1);
     static_assert(ALIGNMENT < 255);
     void* ptr = kmalloc(size + ALIGNMENT + sizeof(u8));
-    size_t max_addr = (size_t)ptr + ALIGNMENT;
-    void* aligned_ptr = (void*)(max_addr - (max_addr % ALIGNMENT));
-    ((u8*)aligned_ptr)[-1] = (u8)((u8*)aligned_ptr - (u8*)ptr);
+    FlatPtr max_addr = reinterpret_cast<FlatPtr>(ptr) + ALIGNMENT;
+    void* aligned_ptr = reinterpret_cast<void*>(max_addr - (max_addr % ALIGNMENT));
+    (reinterpret_cast<u8*>(aligned_ptr))[-1] = reinterpret_cast<u8>(reinterpret_cast<u8*>(aligned_ptr) - reinterpret_cast<u8*>(ptr));
     return aligned_ptr;
 }
 
 inline void kfree_aligned(void* ptr)
 {
-    kfree((u8*)ptr - ((u8*)ptr)[-1]);
+    kfree(reinterpret_cast<u8*>(ptr) - (reinterpret_cast<u8*>(ptr))[-1]);
 }
 
 void kmalloc_enable_expand();

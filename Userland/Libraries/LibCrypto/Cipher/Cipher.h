@@ -81,15 +81,15 @@ public:
         VERIFY(sizeof(T) <= 4);
 
         if constexpr (sizeof(T) > 3)
-            ptr[index++] = (u8)(value >> 24);
+            ptr[index++] = static_cast<u8>(value >> 24);
 
         if constexpr (sizeof(T) > 2)
-            ptr[index++] = (u8)(value >> 16);
+            ptr[index++] = static_cast<u8>(value >> 16);
 
         if constexpr (sizeof(T) > 1)
-            ptr[index++] = (u8)(value >> 8);
+            ptr[index++] = static_cast<u8>(value >> 8);
 
-        ptr[index] = (u8)value;
+        ptr[index] = static_cast<u8>(value);
     }
 
 private:

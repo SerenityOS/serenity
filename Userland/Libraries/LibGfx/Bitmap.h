@@ -59,13 +59,13 @@ enum class BitmapFormat {
 inline bool is_valid_bitmap_format(unsigned format)
 {
     switch (format) {
-    case (unsigned)BitmapFormat::Invalid:
-    case (unsigned)BitmapFormat::Indexed1:
-    case (unsigned)BitmapFormat::Indexed2:
-    case (unsigned)BitmapFormat::Indexed4:
-    case (unsigned)BitmapFormat::Indexed8:
-    case (unsigned)BitmapFormat::RGB32:
-    case (unsigned)BitmapFormat::RGBA32:
+    case static_cast<unsigned>(BitmapFormat::Invalid):
+    case static_cast<unsigned>(BitmapFormat::Indexed1):
+    case static_cast<unsigned>(BitmapFormat::Indexed2):
+    case static_cast<unsigned>(BitmapFormat::Indexed4):
+    case static_cast<unsigned>(BitmapFormat::Indexed8):
+    case static_cast<unsigned>(BitmapFormat::RGB32):
+    case static_cast<unsigned>(BitmapFormat::RGBA32):
         return true;
     }
     return false;

@@ -226,11 +226,11 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         Optional<BreakPoint> current_breakpoint;
 
         if (state == State::FreeRun || state == State::Syscall) {
-            current_breakpoint = m_breakpoints.get((void*)((u32)regs.eip - 1));
+            current_breakpoint = m_breakpoints.get(reinterpret_cast<void*>(static_cast<u32>(regs.eip) - 1));
             if (current_breakpoint.has_value())
                 state = State::FreeRun;
         } else {
-            current_breakpoint = m_breakpoints.get((void*)regs.eip);
+            current_breakpoint = m_breakpoints.get(reinterpret_cast<void*>(regs.eip));
         }
 
         if (current_breakpoint.has_value()) {

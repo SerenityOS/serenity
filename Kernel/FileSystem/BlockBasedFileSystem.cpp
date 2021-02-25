@@ -103,8 +103,8 @@ public:
         return new_entry;
     }
 
-    const CacheEntry* entries() const { return (const CacheEntry*)m_entries.data(); }
-    CacheEntry* entries() { return (CacheEntry*)m_entries.data(); }
+    const CacheEntry* entries() const { return reinterpret_cast<const CacheEntry*>(m_entries.data()); }
+    CacheEntry* entries() { return reinterpret_cast<CacheEntry*>(m_entries.data()); }
 
     template<typename Callback>
     void for_each_dirty_entry(Callback callback)

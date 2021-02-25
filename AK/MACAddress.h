@@ -32,7 +32,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
-class [[gnu::packed]] MACAddress {
+class [[gnu::packed]] MACAddress
+{
     static constexpr size_t s_mac_address_length = 6u;
 
 public:
@@ -92,7 +93,7 @@ namespace AK {
 
 template<>
 struct Traits<MACAddress> : public GenericTraits<MACAddress> {
-    static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
+    static unsigned hash(const MACAddress& address) { return string_hash(reinterpret_cast<const char*>(&address), sizeof(address)); }
 };
 
 }

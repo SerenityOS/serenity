@@ -102,7 +102,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
 
 static bool insert_breakpoint_at_address(FlatPtr address)
 {
-    return g_debug_session->insert_breakpoint((void*)address);
+    return g_debug_session->insert_breakpoint(reinterpret_cast<void*>(address));
 }
 
 static bool insert_breakpoint_at_source_position(const String& file, size_t line)
@@ -168,7 +168,7 @@ static bool handle_examine_command(const String& command)
         return false;
     }
     u32 address = strtoul(argument.characters() + 2, nullptr, 16);
-    auto res = g_debug_session->peek((u32*)address);
+    auto res = g_debug_session->peek(reinterpret_cast<u32*>(address));
     if (!res.has_value()) {
         printf("could not examine memory at address 0x%x\n", address);
         return true;

@@ -119,8 +119,8 @@ private:
 
     const ext2_super_block& super_block() const { return m_super_block; }
     const ext2_group_desc& group_descriptor(GroupIndex) const;
-    ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table->data(); }
-    const ext2_group_desc* block_group_descriptors() const { return (const ext2_group_desc*)m_cached_group_descriptor_table->data(); }
+    ext2_group_desc* block_group_descriptors() { return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table->data()); }
+    const ext2_group_desc* block_group_descriptors() const { return reinterpret_cast<const ext2_group_desc*>(m_cached_group_descriptor_table->data()); }
     void flush_block_group_descriptor_table();
     unsigned inodes_per_block() const;
     unsigned inodes_per_group() const;

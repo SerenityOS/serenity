@@ -420,7 +420,7 @@ public:
     }
     bool has_promised(Pledge pledge) const
     {
-        return m_promises & (1u << (u32)pledge);
+        return m_promises & (1u << static_cast<u32>(pledge));
     }
 
     VeilState veil_state() const

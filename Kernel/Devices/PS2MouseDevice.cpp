@@ -150,7 +150,7 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     if (m_has_wheel) {
         // FIXME: For non-Intellimouse, this is a full byte.
         //        However, for now, m_has_wheel is only set for Intellimouse.
-        z = (char)(raw_packet.bytes[3] & 0x0f);
+        z = static_cast<char>(raw_packet.bytes[3] & 0x0f);
 
         // -1 in 4 bits
         if (z == 15)

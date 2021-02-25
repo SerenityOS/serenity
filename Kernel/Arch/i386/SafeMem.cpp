@@ -63,8 +63,8 @@ CODE_SECTION(".text.safemem")
 bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
-    size_t dest = (size_t)dest_ptr;
-    size_t src = (size_t)src_ptr;
+    FlatPtr dest = reinterpret_cast<FlatPtr>(dest_ptr);
+    FlatPtr src = reinterpret_cast<FlatPtr>(src_ptr);
     size_t remainder;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
@@ -76,7 +76,7 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
             : "=S"(src),
             "=D"(dest),
             "=c"(remainder),
-            [fault_at] "=d"(fault_at)
+            [ fault_at ] "=d"(fault_at)
             : "S"(src),
             "D"(dest),
             "c"(size_ts)
@@ -94,7 +94,7 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
         "rep movsb \n"
         "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
         : "=c"(remainder),
-        [fault_at] "=d"(fault_at)
+        [ fault_at ] "=d"(fault_at)
         : "S"(src),
         "D"(dest),
         "c"(n)
@@ -124,11 +124,11 @@ ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
         "xor %[count_on_error], %[count_on_error] \n"
         "dec %[count_on_error] \n" // return -1 on fault
         "2:"
-        : [count_on_error] "=c"(count),
-        [fault_at] "=d"(fault_at)
-        : [str] "b"(str),
-        [count] "c"(count),
-        [max_n] "d"(max_n));
+        : [ count_on_error ] "=c"(count),
+        [ fault_at ] "=d"(fault_at)
+        : [ str ] "b"(str),
+        [ count ] "c"(count),
+        [ max_n ] "d"(max_n));
     if (count >= 0)
         fault_at = nullptr;
     return count;
@@ -138,12 +138,12 @@ CODE_SECTION(".text.safemem")
 bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
-    size_t dest = (size_t)dest_ptr;
+    FlatPtr dest = reinterpret_cast<FlatPtr>(dest_ptr);
     size_t remainder;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
-        size_t expanded_c = (u8)c;
+        size_t expanded_c = static_cast<u8>(c);
         expanded_c |= expanded_c << 8;
         expanded_c |= expanded_c << 16;
         asm volatile(
@@ -152,7 +152,7 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
             "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
             : "=D"(dest),
             "=c"(remainder),
-            [fault_at] "=d"(fault_at)
+            [ fault_at ] "=d"(fault_at)
             : "D"(dest),
             "a"(expanded_c),
             "c"(size_ts)
@@ -171,7 +171,7 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         "safe_memset_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
         : "=D"(dest),
         "=c"(remainder),
-        [fault_at] "=d"(fault_at)
+        [ fault_at ] "=d"(fault_at)
         : "D"(dest),
         "c"(n),
         "a"(c)
@@ -192,8 +192,8 @@ Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
         "safe_atomic_fetch_add_relaxed_ins: \n"
         "lock xadd %[result], %[var] \n"
         "safe_atomic_fetch_add_relaxed_faulted: \n"
-        : [error] "=d"(error), [result] "=a"(result), [var] "=m"(*var)
-        : [val] "a"(val)
+        : [ error ] "=d"(error), [ result ] "=a"(result), [ var ] "=m"(*var)
+        : [ val ] "a"(val)
         : "memory");
     if (error)
         return {};
@@ -210,8 +210,8 @@ Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
         "safe_atomic_exchange_relaxed_ins: \n"
         "xchg %[val], %[var] \n"
         "safe_atomic_exchange_relaxed_faulted: \n"
-        : [error] "=d"(error), "=a"(result), [var] "=m"(*var)
-        : [val] "a"(val)
+        : [ error ] "=d"(error), "=a"(result), [ var ] "=m"(*var)
+        : [ val ] "a"(val)
         : "memory");
     if (error)
         return {};
@@ -228,8 +228,8 @@ Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
         "safe_atomic_load_relaxed_ins: \n"
         "mov (%[var]), %[result] \n"
         "safe_atomic_load_relaxed_faulted: \n"
-        : [error] "=d"(error), [result] "=c"(result)
-        : [var] "b"(var)
+        : [ error ] "=d"(error), [ result ] "=c"(result)
+        : [ var ] "b"(var)
         : "memory");
     if (error)
         return {};
@@ -245,8 +245,8 @@ bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
         "safe_atomic_store_relaxed_ins: \n"
         "xchg %[val], %[var] \n"
         "safe_atomic_store_relaxed_faulted: \n"
-        : [error] "=d"(error), [var] "=m"(*var)
-        : [val] "r"(val)
+        : [ error ] "=d"(error), [ var ] "=m"(*var)
+        : [ val ] "r"(val)
         : "memory");
     return !error;
 }
@@ -263,8 +263,8 @@ Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
         "safe_atomic_compare_exchange_relaxed_ins: \n"
         "lock cmpxchg %[val], %[var] \n"
         "safe_atomic_compare_exchange_relaxed_faulted: \n"
-        : [error] "=d"(error), "=a"(expected), [var] "=m"(*var), "=@ccz"(did_exchange)
-        : "a"(expected), [val] "b"(val)
+        : [ error ] "=d"(error), "=a"(expected), [ var ] "=m"(*var), "=@ccz"(did_exchange)
+        : "a"(expected), [ val ] "b"(val)
         : "memory");
     if (error)
         return {};
@@ -273,39 +273,39 @@ Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
 
 bool handle_safe_access_fault(RegisterState& regs, u32 fault_address)
 {
-    if (regs.eip >= (FlatPtr)&start_of_safemem_text && regs.eip < (FlatPtr)&end_of_safemem_text) {
+    if (regs.eip >= reinterpret_cast<FlatPtr>(&start_of_safemem_text) && regs.eip < reinterpret_cast<FlatPtr>(&end_of_safemem_text)) {
         // If we detect that the fault happened in safe_memcpy() safe_strnlen(),
         // or safe_memset() then resume at the appropriate _faulted label
-        if (regs.eip == (FlatPtr)&safe_memcpy_ins_1)
-            regs.eip = (FlatPtr)&safe_memcpy_1_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memcpy_ins_2)
-            regs.eip = (FlatPtr)&safe_memcpy_2_faulted;
-        else if (regs.eip == (FlatPtr)&safe_strnlen_ins)
-            regs.eip = (FlatPtr)&safe_strnlen_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memset_ins_1)
-            regs.eip = (FlatPtr)&safe_memset_1_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memset_ins_2)
-            regs.eip = (FlatPtr)&safe_memset_2_faulted;
+        if (regs.eip == reinterpret_cast<FlatPtr>(&safe_memcpy_ins_1))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_memcpy_1_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_memcpy_ins_2))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_memcpy_2_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_strnlen_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_strnlen_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_memset_ins_1))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_memset_1_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_memset_ins_2))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_memset_2_faulted);
         else
             return false;
 
         regs.edx = fault_address;
         return true;
     }
-    if (regs.eip >= (FlatPtr)&start_of_safemem_atomic_text && regs.eip < (FlatPtr)&end_of_safemem_atomic_text) {
+    if (regs.eip >= reinterpret_cast<FlatPtr>(&start_of_safemem_atomic_text) && regs.eip < reinterpret_cast<FlatPtr>(&end_of_safemem_atomic_text)) {
         // If we detect that a fault happened in one of the atomic safe_
         // functions, resume at the appropriate _faulted label and set
         // the edx register to 1 to indicate an error
-        if (regs.eip == (FlatPtr)&safe_atomic_fetch_add_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_fetch_add_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_exchange_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_exchange_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_load_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_load_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_store_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_store_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_compare_exchange_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_compare_exchange_relaxed_faulted;
+        if (regs.eip == reinterpret_cast<FlatPtr>(&safe_atomic_fetch_add_relaxed_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_atomic_fetch_add_relaxed_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_atomic_exchange_relaxed_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_atomic_exchange_relaxed_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_atomic_load_relaxed_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_atomic_load_relaxed_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_atomic_store_relaxed_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_atomic_store_relaxed_faulted);
+        else if (regs.eip == reinterpret_cast<FlatPtr>(&safe_atomic_compare_exchange_relaxed_ins))
+            regs.eip = reinterpret_cast<FlatPtr>(&safe_atomic_compare_exchange_relaxed_faulted);
         else
             return false;
 
