@@ -150,8 +150,8 @@ private:
     KResult write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
     bool get_inode_allocation_state(InodeIndex) const;
-    bool set_inode_allocation_state(InodeIndex, bool);
-    bool set_block_allocation_state(BlockIndex, bool);
+    KResult set_inode_allocation_state(InodeIndex, bool);
+    KResult set_block_allocation_state(BlockIndex, bool);
 
     void uncache_inode(InodeIndex);
     void free_inode(Ext2FSInode&);
@@ -189,6 +189,7 @@ private:
     };
 
     CachedBitmap& get_bitmap_block(BlockIndex);
+    KResult update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
 };
