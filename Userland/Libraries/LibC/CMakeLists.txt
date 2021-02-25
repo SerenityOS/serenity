@@ -24,7 +24,6 @@ set(LIBC_SOURCES
     sched.cpp
     semaphore.cpp
     serenity.cpp
-    setjmp.S
     signal.cpp
     spawn.cpp
     stat.cpp
@@ -53,7 +52,13 @@ set(LIBC_SOURCES
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
-set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
+
+if ("${SERENITY_ARCH}" STREQUAL "i686")
+    set(ASM_SOURCES "arch/i386/setjmp.S")
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
+elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(ASM_SOURCES "arch/x86_64/setjmp.S")
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
 
@@ -76,7 +81,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
 )
 
-set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
+set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 
 serenity_libc_static(LibCStatic c)
 target_link_libraries(LibCStatic crt0 ssp system)
