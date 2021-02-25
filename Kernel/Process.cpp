@@ -308,7 +308,6 @@ void create_signal_trampoline()
 
 void Process::crash(int signal, u32 eip, bool out_of_memory)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!is_dead());
     VERIFY(Process::current() == this);
 

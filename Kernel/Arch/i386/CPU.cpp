@@ -169,7 +169,6 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
         PANIC("Crash in ring 0");
     }
 
-    cli();
     process->crash(signal, regs.eip, out_of_memory);
 }
 

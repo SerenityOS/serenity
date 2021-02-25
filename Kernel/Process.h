@@ -696,7 +696,6 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
     do {                                           \
         if (Process::current()->has_promises()) {  \
             dbgln("Has made a promise");           \
-            cli();                                 \
             Process::current()->crash(SIGABRT, 0); \
             VERIFY_NOT_REACHED();                  \
         }                                          \
@@ -707,7 +706,6 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
         if (Process::current()->has_promises()                       \
             && !Process::current()->has_promised(Pledge::promise)) { \
             dbgln("Has not pledged {}", #promise);                   \
-            cli();                                                   \
             Process::current()->coredump_metadata().set(             \
                 "pledge_violation", #promise);                       \
             Process::current()->crash(SIGABRT, 0);                   \
