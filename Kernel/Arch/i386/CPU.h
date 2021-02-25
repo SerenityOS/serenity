@@ -1137,22 +1137,4 @@ ALWAYS_INLINE void clac()
                      : "cc");
 }
 
-class SmapDisabler {
-public:
-    ALWAYS_INLINE SmapDisabler()
-    {
-        m_flags = cpu_flags();
-        stac();
-    }
-
-    ALWAYS_INLINE ~SmapDisabler()
-    {
-        if (!(m_flags & 0x40000))
-            clac();
-    }
-
-private:
-    u32 m_flags;
-};
-
 }

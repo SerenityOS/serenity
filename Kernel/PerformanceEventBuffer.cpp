@@ -27,6 +27,7 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
