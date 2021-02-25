@@ -69,7 +69,7 @@ CoreDump::~CoreDump()
 RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
     LexicalPath lexical_path(output_path);
-    auto output_directory = lexical_path.dirname();
+    const auto& output_directory = lexical_path.dirname();
     auto dump_directory = VFS::the().open_directory(output_directory, VFS::the().root_custody());
     if (dump_directory.is_error()) {
         dbgln("Can't find directory '{}' for core dump", output_directory);
@@ -141,7 +141,7 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
-        phdr.p_vaddr = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
+        phdr.p_vaddr = region.vaddr().get();
         phdr.p_paddr = 0;
 
         phdr.p_filesz = region.page_count() * PAGE_SIZE;
@@ -264,8 +264,8 @@ ByteBuffer CoreDump::create_notes_regions_data() const
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
         auto& region = m_process->space().regions()[region_index];
-        info.region_start = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
-        info.region_end = reinterpret_cast<uint32_t>(region.vaddr().as_ptr() + region.size());
+        info.region_start = region.vaddr().get();
+        info.region_end = region.vaddr().offset(region.size()).get();
         info.program_header_index = region_index;
 
         memory_region_info_buffer.append((void*)&info, sizeof(info));
