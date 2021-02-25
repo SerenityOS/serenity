@@ -29,8 +29,16 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Storage/StorageDevice.h>
+#include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
+
+StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, size_t max_addressable_block)
+    : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
+    , m_storage_controller(controller)
+    , m_max_addressable_block(max_addressable_block)
+{
+}
 
 StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, size_t max_addressable_block)
     : BlockDevice(major, minor, sector_size)
