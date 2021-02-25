@@ -40,7 +40,7 @@ public:
     {
     }
 
-    bool is_valid() const { return m_start.is_valid() && m_end.is_valid(); }
+    bool is_valid() const { return m_start.is_valid() && m_end.is_valid() && m_start != m_end; }
     void clear()
     {
         m_start = {};
