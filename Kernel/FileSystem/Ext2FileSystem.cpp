@@ -543,8 +543,12 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
     for (auto block_index : block_list) {
         VERIFY(block_index <= super_block().s_blocks_count);
-        if (block_index.value())
-            set_block_allocation_state(block_index, false);
+        if (block_index.value()) {
+            auto result = set_block_allocation_state(block_index, false);
+            if (result.is_error()) {
+                dbgln("Ext2FS: Failed to deallocate block {} in free_inode()", block_index);
+            }
+        }
     }
 
     // If the inode being freed is a directory, update block group directory counter.
@@ -561,7 +565,10 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     write_ext2_inode(inode.index(), inode.m_raw_inode);
 
     // Mark the inode as free.
-    set_inode_allocation_state(inode.index(), false);
+    auto result = set_inode_allocation_state(inode.index(), false);
+    if (result.is_error()) {
+        dbgln("Ext2FS: Failed to free inode {}", inode.index());
+    }
 }
 
 void Ext2FS::flush_block_group_descriptor_table()
@@ -803,8 +810,13 @@ KResult Ext2FSInode::resize(u64 new_size)
         }
         while (block_list.size() != blocks_needed_after) {
             auto block_index = block_list.take_last();
-            if (block_index.value())
-                fs().set_block_allocation_state(block_index, false);
+            if (block_index.value()) {
+                auto result = fs().set_block_allocation_state(block_index, false);
+                if (result.is_error()) {
+                    dbgln("Ext2FS: Failed to free block {} in Ext2Inode::resize()", block_index);
+                    return result;
+                }
+            }
         }
     }
 
@@ -1176,7 +1188,11 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         dbgln_if(EXT2_DEBUG, "Ext2FS: allocating free region of size: {} [{}]", free_region_size, group_index);
         for (size_t i = 0; i < free_region_size; ++i) {
             BlockIndex block_index = (first_unset_bit_index.value() + i) + first_block_in_group.value();
-            set_block_allocation_state(block_index, true);
+            auto result = set_block_allocation_state(block_index, true);
+            if (result.is_error()) {
+                // FIXME: We need to bail out of here somehow.
+                dbgln("Ext2FS: Failed to allocate block {} in allocate_blocks()", block_index);
+            }
             blocks.unchecked_append(block_index);
             dbgln_if(EXT2_DEBUG, "  allocated > {}", block_index);
         }
@@ -1271,43 +1287,37 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     return cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
 }
 
-bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
+KResult Ext2FS::update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter)
+{
+    auto& cached_bitmap = get_bitmap_block(bitmap_block);
+    bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
+    VERIFY(current_state != new_state);
+    cached_bitmap.bitmap(blocks_per_group()).set(bit_index, new_state);
+    cached_bitmap.dirty = true;
+
+    if (new_state) {
+        --super_block_counter;
+        --group_descriptor_counter;
+    } else {
+        ++super_block_counter;
+        ++group_descriptor_counter;
+    }
+
+    m_super_block_dirty = true;
+    m_block_group_descriptors_dirty = true;
+    return KSuccess;
+}
+
+KResult Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
 {
     LOCKER(m_lock);
     auto group_index = group_index_from_inode(inode_index);
-    auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = inode_index.value() - ((group_index.value() - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
 
-    auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
-
-    bool current_state = cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
-    dbgln_if(EXT2_DEBUG, "Ext2FS: set_inode_allocation_state({}) {} -> {}", inode_index, current_state, new_state);
-
-    if (current_state == new_state) {
-        VERIFY_NOT_REACHED();
-        return true;
-    }
-
-    cached_bitmap.bitmap(inodes_per_group()).set(bit_index, new_state);
-    cached_bitmap.dirty = true;
-
-    // Update superblock
-    if (new_state)
-        --m_super_block.s_free_inodes_count;
-    else
-        ++m_super_block.s_free_inodes_count;
-    m_super_block_dirty = true;
-
-    // Update BGD
-    auto& mutable_bgd = const_cast<ext2_group_desc&>(bgd);
-    if (new_state)
-        --mutable_bgd.bg_free_inodes_count;
-    else
-        ++mutable_bgd.bg_free_inodes_count;
-
-    m_block_group_descriptors_dirty = true;
-    return true;
+    dbgln_if(EXT2_DEBUG, "Ext2FS: set_inode_allocation_state: Inode {} -> {}", inode_index, new_state);
+    auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index));
+    return update_bitmap_block(bgd.bg_inode_bitmap, bit_index, new_state, m_super_block.s_free_inodes_count, bgd.bg_free_inodes_count);
 }
 
 Ext2FS::BlockIndex Ext2FS::first_block_index() const
@@ -1330,45 +1340,18 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
     return *m_cached_bitmaps.last();
 }
 
-bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
+KResult Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
     VERIFY(block_index != 0);
     LOCKER(m_lock);
 
     auto group_index = group_index_from_block_index(block_index);
-    auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = (block_index.value() - first_block_index().value()) - ((group_index.value() - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
+    auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index));
 
-    auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
-
-    bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
-    dbgln_if(EXT2_DEBUG, "Ext2FS: block {} state: {} -> {} (in bitmap block {})", block_index, current_state, new_state, bgd.bg_block_bitmap);
-
-    if (current_state == new_state) {
-        VERIFY_NOT_REACHED();
-        return true;
-    }
-
-    cached_bitmap.bitmap(blocks_per_group()).set(bit_index, new_state);
-    cached_bitmap.dirty = true;
-
-    // Update superblock
-    if (new_state)
-        --m_super_block.s_free_blocks_count;
-    else
-        ++m_super_block.s_free_blocks_count;
-    m_super_block_dirty = true;
-
-    // Update BGD
-    auto& mutable_bgd = const_cast<ext2_group_desc&>(bgd);
-    if (new_state)
-        --mutable_bgd.bg_free_blocks_count;
-    else
-        ++mutable_bgd.bg_free_blocks_count;
-
-    m_block_group_descriptors_dirty = true;
-    return true;
+    dbgln_if(EXT2_DEBUG, "Ext2FS: Block {} state -> {} (in bitmap block {})", block_index, new_state, bgd.bg_block_bitmap);
+    return update_bitmap_block(bgd.bg_block_bitmap, bit_index, new_state, m_super_block.s_free_blocks_count, bgd.bg_free_blocks_count);
 }
 
 KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, mode_t mode, uid_t uid, gid_t gid)
@@ -1423,11 +1406,11 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     }
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
-    bool success = set_inode_allocation_state(inode_id, true);
-    VERIFY(success);
+    auto result = set_inode_allocation_state(inode_id, true);
+    if (result.is_error())
+        return result;
 
-    struct timeval now;
-    kgettimeofday(now);
+    auto now = kgettimeofday();
     ext2_inode e2inode {};
     e2inode.i_mode = mode;
     e2inode.i_uid = uid;
@@ -1449,7 +1432,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     dbgln_if(EXT2_DEBUG, "Ext2FS: writing initial metadata for inode {}", inode_id);
 
     e2inode.i_flags = 0;
-    success = write_ext2_inode(inode_id, e2inode);
+    auto success = write_ext2_inode(inode_id, e2inode);
     VERIFY(success);
 
     // We might have cached the fact that this inode didn't exist. Wipe the slate.
@@ -1457,7 +1440,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
 
     auto inode = get_inode({ fsid(), inode_id });
 
-    auto result = parent_inode.add_child(*inode, name, mode);
+    result = parent_inode.add_child(*inode, name, mode);
     if (result.is_error())
         return result;
 
