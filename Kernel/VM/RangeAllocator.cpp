@@ -66,20 +66,6 @@ void RangeAllocator::dump() const
     }
 }
 
-Vector<Range, 2> Range::carve(const Range& taken)
-{
-    VERIFY((taken.size() % PAGE_SIZE) == 0);
-
-    Vector<Range, 2> parts;
-    if (taken == *this)
-        return {};
-    if (taken.base() > base())
-        parts.append({ base(), taken.base().get() - base().get() });
-    if (taken.end() < end())
-        parts.append({ taken.end(), end().get() - taken.end().get() });
-    return parts;
-}
-
 void RangeAllocator::carve_at_index(int index, const Range& range)
 {
     VERIFY(m_lock.is_locked());
