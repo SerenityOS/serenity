@@ -1,5 +1,4 @@
-// I'm not sure how this test passed before the refactor, but it definitely doesn't work at all
-test.skip("reassignment to const", () => {
+test("reassignment to const", () => {
     const constantValue = 1;
     expect(() => {
         constantValue = 2;
