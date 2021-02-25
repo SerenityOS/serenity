@@ -61,7 +61,7 @@ public:
             Kernel::ScopedCritical critical;
 #endif
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
-                T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
+                T* ptr = reinterpret_cast<T*>(m_ptr.load(AK::MemoryOrder::memory_order_acquire));
                 if (ptr && ptr->try_ref())
                     ref = adopt(*ptr);
             }
@@ -80,7 +80,7 @@ public:
         // has been triggered as there is a possible race! But it's "unsafe"
         // anyway because we return a raw pointer without ensuring a
         // reference...
-        return (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
+        return reinterpret_cast<T*>(m_ptr.load(AK::MemoryOrder::memory_order_acquire));
     }
 
     bool is_null() const

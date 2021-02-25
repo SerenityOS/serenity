@@ -39,7 +39,7 @@
 
 #define PAGE_SIZE 4096
 #define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
-#define PAGE_MASK ((FlatPtr)0xfffff000u)
+#define PAGE_MASK (static_cast<FlatPtr>(0xfffff000u))
 
 namespace Kernel {
 
@@ -55,12 +55,14 @@ inline u32 get_iopl_from_eflags(u32 eflags)
     return (eflags & iopl_mask) >> 12;
 }
 
-struct [[gnu::packed]] DescriptorTablePointer {
+struct [[gnu::packed]] DescriptorTablePointer
+{
     u16 limit;
     void* address;
 };
 
-struct [[gnu::packed]] TSS32 {
+struct [[gnu::packed]] TSS32
+{
     u16 backlink, __blh;
     u32 esp0;
     u16 ss0, __ss0h;
@@ -80,7 +82,8 @@ struct [[gnu::packed]] TSS32 {
     u16 trace, iomapbase;
 };
 
-union [[gnu::packed]] Descriptor {
+union [[gnu::packed]] Descriptor
+{
     struct {
         u16 limit_lo;
         u16 base_lo;
@@ -127,15 +130,15 @@ union [[gnu::packed]] Descriptor {
 
     void set_base(void* b)
     {
-        base_lo = (u32)(b)&0xffff;
-        base_hi = ((u32)(b) >> 16) & 0xff;
-        base_hi2 = ((u32)(b) >> 24) & 0xff;
+        base_lo = reinterpret_cast<u32>(b) & 0xffff;
+        base_hi = (reinterpret_cast<u32>(b) >> 16) & 0xff;
+        base_hi2 = (reinterpret_cast<u32>(b) >> 24) & 0xff;
     }
 
     void set_limit(u32 l)
     {
-        limit_lo = (u32)l & 0xffff;
-        limit_hi = ((u32)l >> 16) & 0xf;
+        limit_lo = l & 0xffff;
+        limit_hi = (l >> 16) & 0xf;
     }
 };
 
@@ -211,7 +214,7 @@ public:
         m_raw |= value & 0xfffff000;
     }
 
-    u64 raw() const { return (u32)m_raw; }
+    u64 raw() const { return m_raw; }
 
     enum Flags {
         Present = 1 << 0,
@@ -266,7 +269,7 @@ class PageDirectoryPointerTable {
 public:
     PageDirectoryEntry* directory(size_t index)
     {
-        return (PageDirectoryEntry*)(raw[index] & ~0xfffu);
+        return reinterpret_cast<PageDirectoryEntry*>(raw[index] & ~0xfffu);
     }
 
     u64 raw[4];
@@ -288,8 +291,8 @@ void flush_idt();
 void load_task_register(u16 selector);
 [[noreturn]] void handle_crash(RegisterState&, const char* description, int signal, bool out_of_memory = false);
 
-#define LSW(x) ((u32)(x)&0xFFFF)
-#define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
+#define LSW(x) (reinterpret_cast<u32>(x) & 0xFFFF)
+#define MSW(x) (reinterpret_cast<u32>(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x)&0xFF)
 #define MSB(x) (((x) >> 8) & 0xFF)
 
@@ -344,15 +347,15 @@ inline u32 read_fs_u32(u32 offset)
     u32 val;
     asm volatile(
         "movl %%fs:%a[off], %k[val]"
-        : [val] "=r"(val)
-        : [off] "ir"(offset));
+        : [ val ] "=r"(val)
+        : [ off ] "ir"(offset));
     return val;
 }
 
 inline void write_fs_u32(u32 offset, u32 val)
 {
     asm volatile(
-        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
+        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [ val ] "ir"(val)
         : "memory");
 }
 
@@ -456,8 +459,8 @@ public:
     VirtualAddress vaddr() const { return m_vaddr; }
     u16 code() const { return m_code; }
 
-    Type type() const { return (Type)(m_code & 1); }
-    Access access() const { return (Access)(m_code & 2); }
+    Type type() const { return static_cast<Type>(m_code & 1); }
+    Access access() const { return static_cast<Access>(m_code & 2); }
 
     bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
     bool is_protection_violation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
@@ -472,7 +475,8 @@ private:
     VirtualAddress m_vaddr;
 };
 
-struct [[gnu::packed]] RegisterState {
+struct [[gnu::packed]] RegisterState
+{
     u32 ss;
     u32 gs;
     u32 fs;
@@ -513,7 +517,7 @@ constexpr FlatPtr page_base_of(FlatPtr address)
 
 inline FlatPtr page_base_of(const void* address)
 {
-    return page_base_of((FlatPtr)address);
+    return page_base_of(reinterpret_cast<FlatPtr>(address));
 }
 
 constexpr FlatPtr offset_in_page(FlatPtr address)
@@ -523,7 +527,7 @@ constexpr FlatPtr offset_in_page(FlatPtr address)
 
 inline FlatPtr offset_in_page(const void* address)
 {
-    return offset_in_page((FlatPtr)address);
+    return offset_in_page(reinterpret_cast<FlatPtr>(address));
 }
 
 u32 read_cr0();
@@ -542,7 +546,7 @@ static inline bool is_kernel_mode()
     u32 cs;
     asm volatile(
         "movl %%cs, %[cs] \n"
-        : [cs] "=g"(cs));
+        : [ cs ] "=g"(cs));
     return (cs & 3) == 0;
 }
 
@@ -574,7 +578,7 @@ inline u64 read_tsc()
     u32 lsw;
     u32 msw;
     read_tsc(lsw, msw);
-    return ((u64)msw << 32) | lsw;
+    return (static_cast<u64>(msw) << 32) | lsw;
 }
 
 struct Stopwatch {
@@ -834,7 +838,7 @@ public:
 
     ALWAYS_INLINE static Processor& current()
     {
-        return *(Processor*)read_fs_u32(__builtin_offsetof(Processor, m_self));
+        return *reinterpret_cast<Processor*>(read_fs_u32(__builtin_offsetof(Processor, m_self)));
     }
 
     ALWAYS_INLINE static bool is_initialized()
@@ -880,7 +884,7 @@ public:
         // to another processor, which would lead us to get the wrong thread.
         // To avoid having to disable interrupts, we can just read the field
         // directly in an atomic fashion, similar to Processor::current.
-        return (Thread*)read_fs_u32(__builtin_offsetof(Processor, m_current_thread));
+        return reinterpret_cast<Thread*>(read_fs_u32(__builtin_offsetof(Processor, m_current_thread)));
     }
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)

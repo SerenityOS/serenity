@@ -471,7 +471,7 @@ inline uintptr_t invoke(Function function, T1 arg1)
     uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1)
+                 : "a"(function), "d"(reinterpret_cast<uintptr_t>(arg1))
                  : "memory");
     return result;
 }
@@ -482,7 +482,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
     uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2)
+                 : "a"(function), "d"(reinterpret_cast<uintptr_t>(arg1)), "c"(reinterpret_cast<uintptr_t>(arg2))
                  : "memory");
     return result;
 }
@@ -493,7 +493,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
     uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2), "b"((uintptr_t)arg3)
+                 : "a"(function), "d"(reinterpret_cast<uintptr_t>(arg1)), "c"(reinterpret_cast<uintptr_t>(arg2)), "b"(reinterpret_cast<uintptr_t>(arg3))
                  : "memory");
     return result;
 }

@@ -41,21 +41,21 @@ const static void* bitap_bitwise(const void* haystack, size_t haystack_length, c
 
     u64 lookup = 0xfffffffe;
 
-    constexpr size_t mask_length = (size_t)((u8)-1) + 1;
+    constexpr size_t mask_length = 256;
     u64 needle_mask[mask_length];
 
     for (size_t i = 0; i < mask_length; ++i)
         needle_mask[i] = 0xffffffff;
 
     for (size_t i = 0; i < needle_length; ++i)
-        needle_mask[((const u8*)needle)[i]] &= ~(0x00000001 << i);
+        needle_mask[(reinterpret_cast<const u8*>(needle))[i]] &= ~(0x00000001 << i);
 
     for (size_t i = 0; i < haystack_length; ++i) {
-        lookup |= needle_mask[((const u8*)haystack)[i]];
+        lookup |= needle_mask[(reinterpret_cast<const u8*>(haystack))[i]];
         lookup <<= 1;
 
         if (!(lookup & (0x00000001 << needle_length)))
-            return ((const u8*)haystack) + i - needle_length + 1;
+            return (reinterpret_cast<const u8*>(haystack)) + i - needle_length + 1;
     }
 
     return nullptr;
@@ -105,7 +105,7 @@ static inline Optional<size_t> memmem(const HaystackIterT& haystack_begin, const
             ++needle_index;
             ++current_haystack_index;
             ++total_haystack_index;
-            if ((size_t)needle_index == needle.size())
+            if (static_cast<size_t>(needle_index) == needle.size())
                 return total_haystack_index - needle_index;
             continue;
         }
@@ -137,20 +137,20 @@ static inline Optional<size_t> memmem_optional(const void* haystack, size_t hays
     if (needle_length < 32) {
         auto ptr = bitap_bitwise(haystack, haystack_length, needle, needle_length);
         if (ptr)
-            return static_cast<size_t>((FlatPtr)ptr - (FlatPtr)haystack);
+            return static_cast<size_t>(reinterpret_cast<FlatPtr>(ptr) - reinterpret_cast<FlatPtr>(haystack));
         return {};
     }
 
     // Fallback to KMP.
-    Array<Span<const u8>, 1> spans { Span<const u8> { (const u8*)haystack, haystack_length } };
-    return memmem(spans.begin(), spans.end(), { (const u8*)needle, needle_length });
+    Array<Span<const u8>, 1> spans { Span<const u8> { reinterpret_cast<const u8*>(haystack), haystack_length } };
+    return memmem(spans.begin(), spans.end(), { reinterpret_cast<const u8*>(needle), needle_length });
 }
 
 static inline const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
     auto offset = memmem_optional(haystack, haystack_length, needle, needle_length);
     if (offset.has_value())
-        return ((const u8*)haystack) + offset.value();
+        return reinterpret_cast<const u8*>(haystack) + offset.value();
 
     return nullptr;
 }

@@ -283,7 +283,7 @@ private:
         auto* old_buckets = m_buckets;
         auto old_capacity = m_capacity;
 
-        m_buckets = (Bucket*)kmalloc(sizeof(Bucket) * (new_capacity + 1));
+        m_buckets = reinterpret_cast<Bucket*>(kmalloc(sizeof(Bucket) * (new_capacity + 1)));
         __builtin_memset(m_buckets, 0, sizeof(Bucket) * (new_capacity + 1));
         m_capacity = new_capacity;
         m_deleted_count = 0;

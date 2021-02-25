@@ -72,9 +72,9 @@ public:
         clear();
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
-            m_ptr = (T*)(0xe3e3e3e3e3e3e3e3);
+            m_ptr = reinterpret_cast<T*>(0xe3e3e3e3e3e3e3e3);
         else
-            m_ptr = (T*)(0xe3e3e3e3);
+            m_ptr = reinterpret_cast<T*>(0xe3e3e3e3);
 #endif
     }
 
@@ -179,7 +179,7 @@ make(Args&&... args)
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = const T*;
-    static unsigned hash(const NonnullOwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
+    static unsigned hash(const NonnullOwnPtr<T>& p) { return int_hash(ptr_to_type<u32>(p.ptr())); }
     static bool equals(const NonnullOwnPtr<T>& a, const NonnullOwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 

@@ -327,7 +327,7 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, size
 
 inline const LogStream& operator<<(const LogStream& stream, const ByteBuffer& value)
 {
-    stream.write((const char*)value.data(), value.size());
+    stream.write(reinterpret_cast<const char*>(value.data()), value.size());
     return stream;
 }
 

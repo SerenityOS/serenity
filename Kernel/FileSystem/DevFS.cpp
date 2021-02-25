@@ -176,7 +176,7 @@ ssize_t DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& bu
     LOCKER(m_lock);
     VERIFY(offset == 0);
     VERIFY(!m_link.is_null());
-    if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
+    if (!buffer.write((reinterpret_cast<const u8*>(m_link.substring_view(0).characters_without_null_termination())) + offset, m_link.length()))
         return -EFAULT;
     return m_link.length();
 }

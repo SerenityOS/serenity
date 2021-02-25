@@ -70,42 +70,42 @@ public:
     enum AdoptTag { Adopt };
 
     ALWAYS_INLINE NonnullRefPtr(const T& object)
-        : m_bits((FlatPtr)&object)
+        : m_bits(reinterpret_cast<FlatPtr>(&object))
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const U& object)
-        : m_bits((FlatPtr) static_cast<const T*>(&object))
+        : m_bits(reinterpret_cast<FlatPtr>(&object))
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(static_cast<const T&>(object)).ref();
     }
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
-        : m_bits((FlatPtr)&object)
+        : m_bits(reinterpret_cast<FlatPtr>(&object))
     {
         VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
-        : m_bits((FlatPtr)&other.leak_ref())
+        : m_bits(reinterpret_cast<FlatPtr>(&other.leak_ref()))
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other)
-        : m_bits((FlatPtr)&other.leak_ref())
+        : m_bits(reinterpret_cast<FlatPtr>(&other.leak_ref()))
     {
         VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
-        : m_bits((FlatPtr)other.add_ref())
+        : m_bits(reinterpret_cast<FlatPtr>(other.add_ref()))
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other)
-        : m_bits((FlatPtr)other.add_ref())
+        : m_bits(reinterpret_cast<FlatPtr>(other.add_ref()))
     {
         VERIFY(!(m_bits & 1));
     }
@@ -247,12 +247,12 @@ private:
 
     ALWAYS_INLINE T* as_ptr() const
     {
-        return (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
+        return reinterpret_cast<T*>(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & (_RefPtrMask));
     }
 
     ALWAYS_INLINE T* as_nonnull_ptr() const
     {
-        T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
+        T* ptr = reinterpret_cast<T*>(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & (_RefPtrMask));
         VERIFY(ptr);
         return ptr;
     }
@@ -274,7 +274,7 @@ private:
 #endif
         }
         VERIFY(!(bits & 1));
-        f((T*)bits);
+        f(reinterpret_cast<T*>(bits));
         m_bits.store(bits, AK::MemoryOrder::memory_order_release);
     }
 
@@ -286,7 +286,7 @@ private:
 
     ALWAYS_INLINE T* exchange(T* new_ptr)
     {
-        VERIFY(!((FlatPtr)new_ptr & 1));
+        VERIFY(!(reinterpret_cast<FlatPtr>(new_ptr) & 1));
 #ifdef KERNEL
         // We don't want to be pre-empted while we have the lock bit set
         Kernel::ScopedCritical critical;
@@ -294,15 +294,15 @@ private:
         // Only exchange while not locked
         FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
-            expected &= ~(FlatPtr)1; // only if lock bit is not set
-            if (m_bits.compare_exchange_strong(expected, (FlatPtr)new_ptr, AK::MemoryOrder::memory_order_acq_rel))
+            expected &= _RefPtrMask; // only if lock bit is not set
+            if (m_bits.compare_exchange_strong(expected, reinterpret_cast<FlatPtr>(new_ptr), AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL
             Kernel::Processor::wait_check();
 #endif
         }
         VERIFY(!(expected & 1));
-        return (T*)expected;
+        return reinterpret_cast<T*>(expected);
     }
 
     T* add_ref() const
@@ -314,7 +314,7 @@ private:
         // Lock the pointer
         FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
-            expected &= ~(FlatPtr)1; // only if lock bit is not set
+            expected &= _RefPtrMask; // only if lock bit is not set
             if (m_bits.compare_exchange_strong(expected, expected | 1, AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL
@@ -323,11 +323,11 @@ private:
         }
 
         // Add a reference now that we locked the pointer
-        ref_if_not_null((T*)expected);
+        ref_if_not_null(reinterpret_cast<T*>(expected));
 
         // Unlock the pointer again
         m_bits.store(expected, AK::MemoryOrder::memory_order_release);
-        return (T*)expected;
+        return reinterpret_cast<T*>(expected);
     }
 
     mutable Atomic<FlatPtr> m_bits { 0 };

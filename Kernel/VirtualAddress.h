@@ -38,7 +38,7 @@ public:
     }
 
     explicit VirtualAddress(const void* address)
-        : m_address((FlatPtr)address)
+        : m_address(reinterpret_cast<FlatPtr>(address))
     {
     }
 

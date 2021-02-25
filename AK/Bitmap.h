@@ -126,19 +126,19 @@ public:
             byte &= bitmask_last_byte[(start + len) % 8];
             count += __builtin_popcount(byte);
             if (++first < last) {
-                const u32* ptr32 = (const u32*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
-                if ((const u8*)ptr32 > last)
-                    ptr32 = (const u32*)last;
-                while (first < (const u8*)ptr32) {
+                const u32* ptr32 = reinterpret_cast<u32*>((reinterpret_cast<FlatPtr>(first) + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
+                if (reinterpret_cast<const u8*>(ptr32) > last)
+                    ptr32 = reinterpret_cast<const u32*>(last);
+                while (first < reinterpret_cast<const u8*>(ptr32)) {
                     count += __builtin_popcount(*first);
                     first++;
                 }
-                const u32* last32 = (const u32*)((FlatPtr)last & ~(sizeof(u32) - 1));
+                const u32* last32 = reinterpret_cast<const u32*>(reinterpret_cast<FlatPtr>(last) & ~(sizeof(u32) - 1));
                 while (ptr32 < last32) {
                     count += __builtin_popcountl(*ptr32);
                     ptr32++;
                 }
-                for (first = (const u8*)ptr32; first < last; first++)
+                for (first = reinterpret_cast<const u8*>(ptr32); first < last; first++)
                     count += __builtin_popcount(*first);
             }
         }
@@ -235,12 +235,12 @@ public:
             // We will use hint as what it is: a hint. Because we try to
             // scan over entire 32 bit words, we may start searching before
             // the hint!
-            const u32* ptr32 = (const u32*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
-            if ((const u8*)ptr32 < &m_data[0]) {
+            const u32* ptr32 = reinterpret_cast<u32*>(reinterpret_cast<FlatPtr>(&m_data[hint / 8]) & ~(sizeof(u32) - 1));
+            if (reinterpret_cast<const u8*>(ptr32) < &m_data[0]) {
                 ptr32++;
 
                 // m_data isn't aligned, check first bytes
-                size_t start_ptr32 = (const u8*)ptr32 - &m_data[0];
+                size_t start_ptr32 = reinterpret_cast<const u8*>(ptr32) - &m_data[0];
                 size_t i = 0;
                 u8 byte = VALUE ? 0x00 : 0xff;
                 while (i < start_ptr32 && m_data[i] == byte)
@@ -255,14 +255,14 @@ public:
             }
 
             u32 val32 = VALUE ? 0x0 : 0xffffffff;
-            const u32* end32 = (const u32*)((FlatPtr)end & ~(sizeof(u32) - 1));
+            const u32* end32 = reinterpret_cast<u32*>(reinterpret_cast<FlatPtr>(end) & ~(sizeof(u32) - 1));
             while (ptr32 < end32 && *ptr32 == val32)
                 ptr32++;
 
             if (ptr32 == end32) {
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
-                size_t i = (const u8*)ptr32 - &m_data[0];
+                size_t i = reinterpret_cast<const u8*>(ptr32) - &m_data[0];
                 size_t byte_count = m_size / 8;
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
@@ -272,7 +272,7 @@ public:
                         return {}; // We already checked from the beginning
 
                     // Try scanning before the hint
-                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+                    end = reinterpret_cast<const u8*>(reinterpret_cast<FlatPtr>(&m_data[hint / 8]) & ~(sizeof(u32) - 1));
                     hint = 0;
                     continue;
                 }
@@ -289,7 +289,7 @@ public:
             if constexpr (!VALUE)
                 val32 = ~val32;
             VERIFY(val32 != 0);
-            return ((const u8*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
+            return (reinterpret_cast<const u8*>(ptr32) - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
         }
     }
 
@@ -345,7 +345,7 @@ public:
             return {};
         }
 
-        u32* bitmap32 = (u32*)m_data;
+        u32* bitmap32 = reinterpret_cast<u32*>(m_data);
 
         // Calculating the start offset.
         size_t start_bucket_index = from / 32;

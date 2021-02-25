@@ -69,31 +69,31 @@ UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
     while (entry_count > 0) {
         dbgln_if(MULTIPROCESSOR_DEBUG, "MultiProcessor: Entry Type {} detected.", entry->entry_type);
         switch (entry->entry_type) {
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::Processor):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::ProcessorEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::Processor)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::ProcessorEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::Bus):
-            m_bus_entries.append(*(const MultiProcessor::BusEntry*)entry);
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::BusEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::Bus)):
+            m_bus_entries.append(*reinterpret_cast<const MultiProcessor::BusEntry*>(entry));
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::BusEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::IOAPIC):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOAPICEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::IOAPIC)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::IOAPICEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::IO_Interrupt_Assignment):
-            m_io_interrupt_assignment_entries.append(*(const MultiProcessor::IOInterruptAssignmentEntry*)entry);
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::IOInterruptAssignmentEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::IO_Interrupt_Assignment)):
+            m_io_interrupt_assignment_entries.append(*reinterpret_cast<const MultiProcessor::IOInterruptAssignmentEntry*>(entry));
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::IOInterruptAssignmentEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::Local_Interrupt_Assignment):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::LocalInterruptAssignmentEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::Local_Interrupt_Assignment)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::LocalInterruptAssignmentEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::SystemAddressSpaceMapping):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::SystemAddressSpaceMappingEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::SystemAddressSpaceMapping)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::SystemAddressSpaceMappingEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::BusHierarchyDescriptor):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::BusHierarchyDescriptorEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::BusHierarchyDescriptor)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::BusHierarchyDescriptorEntry));
             break;
-        case ((u8)MultiProcessor::ConfigurationTableEntryType::CompatibilityBusAddressSpaceModifier):
-            entry = (MultiProcessor::EntryHeader*)(FlatPtr)entry + sizeof(MultiProcessor::CompatibilityBusAddressSpaceModifierEntry);
+        case (static_cast<u8>(MultiProcessor::ConfigurationTableEntryType::CompatibilityBusAddressSpaceModifier)):
+            entry = reinterpret_cast<MultiProcessor::EntryHeader*>(reinterpret_cast<FlatPtr>(entry) + sizeof(MultiProcessor::CompatibilityBusAddressSpaceModifierEntry));
             break;
         default:
             VERIFY_NOT_REACHED();

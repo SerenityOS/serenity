@@ -139,6 +139,6 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define INT64_C(x) x##LL
 #define UINT64_C(x) x##ULL
 
-#define SIZE_MAX ((size_t)-1)
+#define SIZE_MAX (static_cast<size_t>(-1))
 
 __END_DECLS

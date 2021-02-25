@@ -108,10 +108,10 @@ void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 {
     dbgln_if(BXVGA_DEBUG, "BXVGADevice resolution registers set to - {}x{}", width, height);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-    set_register(VBE_DISPI_INDEX_XRES, (u16)width);
-    set_register(VBE_DISPI_INDEX_YRES, (u16)height);
-    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, (u16)width);
-    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, (u16)height * 2);
+    set_register(VBE_DISPI_INDEX_XRES, static_cast<u16>(width));
+    set_register(VBE_DISPI_INDEX_YRES, static_cast<u16>(height));
+    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, static_cast<u16>(width));
+    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, static_cast<u16>(height * 2));
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
@@ -144,7 +144,7 @@ bool BXVGADevice::set_resolution(size_t width, size_t height)
 
 bool BXVGADevice::validate_setup_resolution(size_t width, size_t height)
 {
-    if ((u16)width != get_register(VBE_DISPI_INDEX_XRES) || (u16)height != get_register(VBE_DISPI_INDEX_YRES)) {
+    if (static_cast<u16>(width) != get_register(VBE_DISPI_INDEX_XRES) || static_cast<u16>(height) != get_register(VBE_DISPI_INDEX_YRES)) {
         return false;
     }
     return true;
@@ -154,7 +154,7 @@ void BXVGADevice::set_y_offset(size_t y_offset)
 {
     VERIFY(y_offset == 0 || y_offset == m_framebuffer_height);
     m_y_offset = y_offset;
-    set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)y_offset);
+    set_register(VBE_DISPI_INDEX_Y_OFFSET, static_cast<u16>(y_offset));
 }
 
 UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
@@ -204,14 +204,14 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
-        auto* out = (size_t*)arg;
+        auto* out = reinterpret_cast<size_t*>(arg);
         size_t value = framebuffer_size_in_bytes();
         if (!copy_to_user(out, &value))
             return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
-        auto* index = (int*)arg;
+        auto* index = reinterpret_cast<int*>(arg);
         int value = m_y_offset == 0 ? 0 : 1;
         if (!copy_to_user(index, &value))
             return -EFAULT;
@@ -224,7 +224,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto* user_resolution = reinterpret_cast<FBResolution*>(arg);
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
@@ -234,7 +234,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto* user_resolution = reinterpret_cast<FBResolution*>(arg);
         FBResolution resolution;
         if (!copy_from_user(&resolution, user_resolution))
             return -EFAULT;

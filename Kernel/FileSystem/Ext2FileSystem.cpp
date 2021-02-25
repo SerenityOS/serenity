@@ -92,7 +92,7 @@ bool Ext2FS::flush_super_block()
 {
     LOCKER(m_lock);
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
-    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
+    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&m_super_block));
     bool success = raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
     VERIFY(success);
     return true;
@@ -110,7 +110,7 @@ bool Ext2FS::initialize()
 {
     LOCKER(m_lock);
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
-    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
+    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&m_super_block));
     bool success = raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
     VERIFY(success);
 
@@ -134,7 +134,7 @@ bool Ext2FS::initialize()
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
 
-    VERIFY(block_size() <= (int)max_block_size);
+    VERIFY(block_size() <= static_cast<int>(max_block_size));
 
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
@@ -204,7 +204,7 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
     const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
     unsigned blocks_remaining = blocks;
 
-    shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
+    shape.direct_blocks = min(static_cast<unsigned>(EXT2_NDIR_BLOCKS), blocks_remaining);
     blocks_remaining -= shape.direct_blocks;
     if (!blocks_remaining)
         return shape;
@@ -268,8 +268,8 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
     }
     if (inode_dirty) {
         if constexpr (EXT2_DEBUG) {
-            dbgln("Ext2FS: Writing {} direct block(s) to i_block array of inode {}", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
-            for (size_t i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i)
+            dbgln("Ext2FS: Writing {} direct block(s) to i_block array of inode {}", min(static_cast<size_t>(EXT2_NDIR_BLOCKS), blocks.size()), inode_index);
+            for (size_t i = 0; i < min(static_cast<size_t>(EXT2_NDIR_BLOCKS), blocks.size()); ++i)
                 dbgln("   + {}", blocks[i]);
         }
         write_ext2_inode(inode_index, e2inode);
@@ -353,7 +353,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
                 return result;
             }
         }
-        auto* dind_block_as_pointers = (unsigned*)dind_block_contents.data();
+        auto* dind_block_as_pointers = reinterpret_cast<unsigned*>(dind_block_contents.data());
 
         VERIFY(indirect_block_count <= entries_per_block);
         for (unsigned i = 0; i < indirect_block_count; ++i) {
@@ -380,7 +380,7 @@ KResult Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e
                     return result;
                 }
             }
-            auto* ind_block_as_pointers = (unsigned*)ind_block_contents.data();
+            auto* ind_block_as_pointers = reinterpret_cast<unsigned*>(ind_block_contents.data());
 
             unsigned entries_to_write = new_shape.doubly_indirect_blocks - (i * entries_per_block);
             if (entries_to_write > entries_per_block)
@@ -478,7 +478,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
         list.ensure_capacity(blocks_remaining);
     }
 
-    unsigned direct_count = min(block_count, (unsigned)EXT2_NDIR_BLOCKS);
+    unsigned direct_count = min(block_count, static_cast<unsigned>(EXT2_NDIR_BLOCKS));
     for (unsigned i = 0; i < direct_count; ++i) {
         auto block_index = e2inode.i_block[i];
         add_block(block_index);
@@ -496,7 +496,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
         if (!count)
             return;
         u32 array[count];
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(array));
         auto result = read_block(array_block_index, &buffer, sizeof(array), 0);
         if (result.is_error()) {
             // FIXME: Stop here and propagate this error.
@@ -569,7 +569,7 @@ void Ext2FS::flush_block_group_descriptor_table()
     LOCKER(m_lock);
     unsigned blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(block_group_descriptors()));
     auto result = write_blocks(first_block_of_bgdt, blocks_to_write, buffer);
     if (result.is_error())
         dbgln("Ext2FS: flush_block_group_descriptor_table had error: {}", result.error());
@@ -714,8 +714,8 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
     // This avoids wasting an entire block on short links. (Most links are short.)
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
-        ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, (size_t)nread))
+        ssize_t nread = min(static_cast<off_t>(size()) - offset, static_cast<off_t>(count));
+        if (!buffer.write((reinterpret_cast<const u8*>(m_raw_inode.i_block)) + offset, static_cast<size_t>(nread)))
             return -EFAULT;
         return nread;
     }
@@ -742,7 +742,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
     int offset_into_first_block = offset % block_size;
 
     ssize_t nread = 0;
-    size_t remaining_count = min((off_t)count, (off_t)size() - offset);
+    size_t remaining_count = min(static_cast<off_t>(count), static_cast<off_t>(size() - offset));
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: Reading up to {} bytes, {} bytes into inode {} to {}", count, offset, index(), buffer.user_or_kernel_ptr());
 
@@ -826,7 +826,7 @@ KResult Ext2FSInode::resize(u64 new_size)
         while (bytes_to_clear) {
             auto nwritten = write_bytes(clear_from, min(sizeof(zero_buffer), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr);
             if (nwritten < 0)
-                return KResult((ErrnoCode)-nwritten);
+                return KResult(static_cast<ErrnoCode>(-nwritten));
             VERIFY(nwritten != 0);
             bytes_to_clear -= nwritten;
             clear_from += nwritten;
@@ -850,11 +850,11 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
 
     if (is_symlink()) {
         VERIFY(offset == 0);
-        if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
+        if (max(static_cast<size_t>(offset + count), static_cast<size_t>(m_raw_inode.i_size)) < max_inline_symlink_length) {
             dbgln_if(EXT2_DEBUG, "Ext2FS: write_bytes poking into i_block array for inline symlink '{}' ({} bytes)", data.copy_into_string(count), count);
-            if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count))
+            if (!data.read((reinterpret_cast<u8*>(m_raw_inode.i_block)) + offset, static_cast<size_t>(count)))
                 return -EFAULT;
-            if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
+            if (static_cast<size_t>(offset + count) > static_cast<size_t>(m_raw_inode.i_size))
                 m_raw_inode.i_size = offset + count;
             set_metadata_dirty(true);
             return count;
@@ -865,7 +865,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
 
     const size_t block_size = fs().block_size();
     u64 old_size = size();
-    u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
+    u64 new_size = max(static_cast<u64>(offset) + count, static_cast<u64>(size()));
 
     auto resize_result = resize(new_size);
     if (resize_result.is_error())
@@ -887,7 +887,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     size_t offset_into_first_block = offset % block_size;
 
     ssize_t nwritten = 0;
-    size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
+    size_t remaining_count = min(static_cast<off_t>(count), static_cast<off_t>(new_size) - offset);
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: Writing {} bytes, {} bytes into inode {} from {}", count, offset, index(), data.user_or_kernel_ptr());
 
@@ -954,7 +954,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
                 break;
         }
-        entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
+        entry = reinterpret_cast<ext2_dir_entry_2*>(reinterpret_cast<char*>(entry) + entry->rec_len);
     }
 
     return KSuccess;
@@ -1003,7 +1003,7 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
     ssize_t nwritten = write_bytes(0, stream.size(), buffer, nullptr);
     if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
+        return KResult(static_cast<ErrnoCode>(-nwritten));
     set_metadata_dirty(true);
     if (static_cast<size_t>(nwritten) != directory_data.size())
         return EIO;
@@ -1125,7 +1125,7 @@ bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
         return false;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)&e2inode));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(reinterpret_cast<const u8*>(&e2inode)));
     return write_block(block_index, buffer, inode_size(), offset) >= 0;
 }
 
@@ -1611,7 +1611,7 @@ KResultOr<int> Ext2FSInode::get_block_address(int index)
     if (m_block_list.is_empty())
         m_block_list = fs().block_list_for_inode(m_raw_inode);
 
-    if (index < 0 || (size_t)index >= m_block_list.size())
+    if (index < 0 || static_cast<size_t>(index) >= m_block_list.size())
         return 0;
 
     return m_block_list[index].value();

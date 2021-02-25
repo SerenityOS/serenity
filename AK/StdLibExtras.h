@@ -84,8 +84,8 @@ constexpr T&& move(T& arg)
 template<typename T, typename U>
 inline void swap(T& a, U& b)
 {
-    U tmp = move((U&)a);
-    a = (T &&) move(b);
+    U tmp = move(reinterpret_cast<U&>(a));
+    a = reinterpret_cast<T&&>(move(b));
     b = move(tmp);
 }
 

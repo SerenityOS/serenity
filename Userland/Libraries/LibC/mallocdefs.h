@@ -67,11 +67,11 @@ struct ChunkedBlock
         m_magic = MAGIC_PAGE_HEADER;
         m_size = bytes_per_chunk;
         m_free_chunks = chunk_capacity();
-        m_freelist = (FreelistEntry*)chunk(0);
+        m_freelist = reinterpret_cast<FreelistEntry*>(chunk(0));
         for (size_t i = 0; i < chunk_capacity(); ++i) {
-            auto* entry = (FreelistEntry*)chunk(i);
+            auto* entry = reinterpret_cast<FreelistEntry*>(chunk(i));
             if (i != chunk_capacity() - 1)
-                entry->next = (FreelistEntry*)chunk(i + 1);
+                entry->next = reinterpret_cast<FreelistEntry*>(chunk(i + 1));
             else
                 entry->next = nullptr;
         }

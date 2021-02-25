@@ -262,7 +262,7 @@ public:
             return {};
         if (buffer.is_empty())
             return empty();
-        return String((const char*)buffer.data(), buffer.size(), should_chomp);
+        return String(reinterpret_cast<const char*>(buffer.data()), buffer.size(), should_chomp);
     }
 
     static String format(const char*, ...) __attribute__((format(printf, 1, 2)));

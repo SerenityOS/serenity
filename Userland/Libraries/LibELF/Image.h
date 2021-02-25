@@ -47,7 +47,7 @@ public:
     {
         if (address < m_buffer)
             return false;
-        if (((const u8*)address + size) > m_buffer + m_size)
+        if ((reinterpret_cast<const u8*>(address) + size) > m_buffer + m_size)
             return false;
         return true;
     }
@@ -206,7 +206,7 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
-    FlatPtr base_address() const { return (FlatPtr)m_buffer; }
+    FlatPtr base_address() const { return reinterpret_cast<FlatPtr>(m_buffer); }
     size_t size() const { return m_size; }
 
     Optional<Symbol> find_demangled_function(const String& name) const;

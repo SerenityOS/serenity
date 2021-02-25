@@ -97,38 +97,38 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
 
     klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
     klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
-    m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
+    m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & static_cast<u8>(FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present));
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
     // Later on, we need to make sure that we enumerate the ACPI namespace (AML encoded), instead of just using this value.
-    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 3) || (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::PS2_8042);
+    m_x86_specific_flags.keyboard_8042 = (sdt->h.revision <= 3) || (sdt->ia_pc_boot_arch_flags & static_cast<u8>(FADTFlags::IA_PC_Flags::PS2_8042));
 
-    m_x86_specific_flags.legacy_devices = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::Legacy_Devices);
-    m_x86_specific_flags.msi_not_supported = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::MSI_Not_Supported);
-    m_x86_specific_flags.vga_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::VGA_Not_Present);
+    m_x86_specific_flags.legacy_devices = (sdt->ia_pc_boot_arch_flags & static_cast<u8>(FADTFlags::IA_PC_Flags::Legacy_Devices));
+    m_x86_specific_flags.msi_not_supported = (sdt->ia_pc_boot_arch_flags & static_cast<u8>(FADTFlags::IA_PC_Flags::MSI_Not_Supported));
+    m_x86_specific_flags.vga_not_present = (sdt->ia_pc_boot_arch_flags & static_cast<u8>(FADTFlags::IA_PC_Flags::VGA_Not_Present));
 
-    m_hardware_flags.cpu_software_sleep = (sdt->flags & (u32)FADTFlags::FeatureFlags::CPU_SW_SLP);
-    m_hardware_flags.docking_capability = (sdt->flags & (u32)FADTFlags::FeatureFlags::DCK_CAP);
-    m_hardware_flags.fix_rtc = (sdt->flags & (u32)FADTFlags::FeatureFlags::FIX_RTC);
-    m_hardware_flags.force_apic_cluster_model = (sdt->flags & (u32)FADTFlags::FeatureFlags::FORCE_APIC_CLUSTER_MODEL);
-    m_hardware_flags.force_apic_physical_destination_mode = (sdt->flags & (u32)FADTFlags::FeatureFlags::FORCE_APIC_PHYSICAL_DESTINATION_MODE);
-    m_hardware_flags.hardware_reduced_acpi = (sdt->flags & (u32)FADTFlags::FeatureFlags::HW_REDUCED_ACPI);
-    m_hardware_flags.headless = (sdt->flags & (u32)FADTFlags::FeatureFlags::HEADLESS);
-    m_hardware_flags.low_power_s0_idle_capable = (sdt->flags & (u32)FADTFlags::FeatureFlags::LOW_POWER_S0_IDLE_CAPABLE);
-    m_hardware_flags.multiprocessor_c2 = (sdt->flags & (u32)FADTFlags::FeatureFlags::P_LVL2_UP);
-    m_hardware_flags.pci_express_wake = (sdt->flags & (u32)FADTFlags::FeatureFlags::PCI_EXP_WAK);
-    m_hardware_flags.power_button = (sdt->flags & (u32)FADTFlags::FeatureFlags::PWR_BUTTON);
-    m_hardware_flags.processor_c1 = (sdt->flags & (u32)FADTFlags::FeatureFlags::PROC_C1);
-    m_hardware_flags.remote_power_on_capable = (sdt->flags & (u32)FADTFlags::FeatureFlags::REMOTE_POWER_ON_CAPABLE);
-    m_hardware_flags.reset_register_supported = (sdt->flags & (u32)FADTFlags::FeatureFlags::RESET_REG_SUPPORTED);
-    m_hardware_flags.rtc_s4 = (sdt->flags & (u32)FADTFlags::FeatureFlags::RTC_s4);
-    m_hardware_flags.s4_rtc_status_valid = (sdt->flags & (u32)FADTFlags::FeatureFlags::S4_RTC_STS_VALID);
-    m_hardware_flags.sealed_case = (sdt->flags & (u32)FADTFlags::FeatureFlags::SEALED_CASE);
-    m_hardware_flags.sleep_button = (sdt->flags & (u32)FADTFlags::FeatureFlags::SLP_BUTTON);
-    m_hardware_flags.timer_value_extension = (sdt->flags & (u32)FADTFlags::FeatureFlags::TMR_VAL_EXT);
-    m_hardware_flags.use_platform_clock = (sdt->flags & (u32)FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
-    m_hardware_flags.wbinvd = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD);
-    m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD_FLUSH);
+    m_hardware_flags.cpu_software_sleep = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::CPU_SW_SLP));
+    m_hardware_flags.docking_capability = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::DCK_CAP));
+    m_hardware_flags.fix_rtc = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::FIX_RTC));
+    m_hardware_flags.force_apic_cluster_model = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::FORCE_APIC_CLUSTER_MODEL));
+    m_hardware_flags.force_apic_physical_destination_mode = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::FORCE_APIC_PHYSICAL_DESTINATION_MODE));
+    m_hardware_flags.hardware_reduced_acpi = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::HW_REDUCED_ACPI));
+    m_hardware_flags.headless = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::HEADLESS));
+    m_hardware_flags.low_power_s0_idle_capable = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::LOW_POWER_S0_IDLE_CAPABLE));
+    m_hardware_flags.multiprocessor_c2 = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::P_LVL2_UP));
+    m_hardware_flags.pci_express_wake = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::PCI_EXP_WAK));
+    m_hardware_flags.power_button = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::PWR_BUTTON));
+    m_hardware_flags.processor_c1 = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::PROC_C1));
+    m_hardware_flags.remote_power_on_capable = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::REMOTE_POWER_ON_CAPABLE));
+    m_hardware_flags.reset_register_supported = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::RESET_REG_SUPPORTED));
+    m_hardware_flags.rtc_s4 = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::RTC_s4));
+    m_hardware_flags.s4_rtc_status_valid = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::S4_RTC_STS_VALID));
+    m_hardware_flags.sealed_case = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::SEALED_CASE));
+    m_hardware_flags.sleep_button = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::SLP_BUTTON));
+    m_hardware_flags.timer_value_extension = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::TMR_VAL_EXT));
+    m_hardware_flags.use_platform_clock = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK));
+    m_hardware_flags.wbinvd = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::WBINVD));
+    m_hardware_flags.wbinvd_flush = (sdt->flags & static_cast<u32>(FADTFlags::FeatureFlags::WBINVD_FLUSH));
 }
 
 bool Parser::can_reboot()
@@ -141,20 +141,20 @@ bool Parser::can_reboot()
 
 void Parser::access_generic_address(const Structures::GenericAddressStructure& structure, u32 value)
 {
-    switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
+    switch (static_cast<GenericAddressStructure::AddressSpace>(structure.address_space)) {
     case GenericAddressStructure::AddressSpace::SystemIO: {
         IOAddress address(structure.address);
         dbgln("ACPI: Sending value {:x} to {}", value, address);
         switch (structure.access_size) {
-        case (u8)GenericAddressStructure::AccessSize::QWord: {
+        case static_cast<u8>(GenericAddressStructure::AccessSize::QWord): {
             dbgln("Trying to send QWord to IO port");
             VERIFY_NOT_REACHED();
             break;
         }
-        case (u8)GenericAddressStructure::AccessSize::Undefined: {
+        case static_cast<u8>(GenericAddressStructure::AccessSize::Undefined): {
             dbgln("ACPI Warning: Unknown access size {}", structure.access_size);
-            VERIFY(structure.bit_width != (u8)GenericAddressStructure::BitWidth::QWord);
-            VERIFY(structure.bit_width != (u8)GenericAddressStructure::BitWidth::Undefined);
+            VERIFY(structure.bit_width != static_cast<u8>(GenericAddressStructure::BitWidth::QWord));
+            VERIFY(structure.bit_width != static_cast<u8>(GenericAddressStructure::BitWidth::Undefined));
             dbgln("ACPI: Bit Width - {} bits", structure.bit_width);
             address.out(value, structure.bit_width);
             break;
@@ -167,7 +167,7 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
     }
     case GenericAddressStructure::AddressSpace::SystemMemory: {
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
-        switch ((GenericAddressStructure::AccessSize)structure.access_size) {
+        switch (static_cast<GenericAddressStructure::AccessSize>(structure.access_size)) {
         case GenericAddressStructure::AccessSize::Byte:
             *map_typed<u8>(PhysicalAddress(structure.address)) = value;
             break;
@@ -191,11 +191,11 @@ void Parser::access_generic_address(const Structures::GenericAddressStructure& s
         auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
         dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
         u32 offset_in_pci_address = structure.address & 0xFFFF;
-        if (structure.access_size == (u8)GenericAddressStructure::AccessSize::QWord) {
+        if (structure.access_size == static_cast<u8>(GenericAddressStructure::AccessSize::QWord)) {
             dbgln("Trying to send QWord to PCI configuration space");
             VERIFY_NOT_REACHED();
         }
-        VERIFY(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
+        VERIFY(structure.access_size != static_cast<u8>(GenericAddressStructure::AccessSize::Undefined));
         PCI::raw_access(pci_address, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
         return;
     }
@@ -209,7 +209,7 @@ bool Parser::validate_reset_register()
 {
     // According to the ACPI spec 6.2, page 152, The reset register can only be located in I/O bus, PCI bus or memory-mapped.
     auto fadt = map_typed<Structures::FADT>(m_fadt);
-    return (fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemIO);
+    return (fadt->reset_reg.address_space == static_cast<u8>(GenericAddressStructure::AddressSpace::PCIConfigurationSpace) || fadt->reset_reg.address_space == static_cast<u8>(GenericAddressStructure::AddressSpace::SystemMemory) || fadt->reset_reg.address_space == static_cast<u8>(GenericAddressStructure::AddressSpace::SystemIO));
 }
 
 void Parser::try_acpi_reboot()
@@ -264,7 +264,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
     klog() << "ACPI: Main Description Table valid? " << validate_table(*sdt, length);
 
     if (m_xsdt_supported) {
-        auto& xsdt = (const Structures::XSDT&)*sdt;
+        const auto& xsdt = reinterpret_cast<Structures::XSDT&>(*sdt);
         klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ V{}", &xsdt);
@@ -273,7 +273,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
-        auto& rsdt = (const Structures::RSDT&)*sdt;
+        const auto& rsdt = reinterpret_cast<Structures::RSDT&>(*sdt);
         klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
@@ -290,7 +290,7 @@ UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
     if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
     } else if (rsdp->base.revision >= 2) {
-        if (rsdp->xsdt_ptr != (u64) nullptr) {
+        if (rsdp->xsdt_ptr != reinterpret_cast<u64>(nullptr)) {
             m_xsdt_supported = true;
         } else {
             m_xsdt_supported = false;
@@ -313,7 +313,7 @@ UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
 static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
 {
     u8 checksum = 0;
-    auto* sdt = (const u8*)&v_header;
+    auto* sdt = reinterpret_cast<const u8*>(&v_header);
     for (size_t i = 0; i < length; i++)
         checksum += sdt[i];
     if (checksum == 0)
@@ -356,8 +356,8 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsd
     auto xsdt = map_typed<Structures::XSDT>(xsdt_address);
 
     for (size_t i = 0; i < ((xsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); ++i) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]);
+        if (match_table_signature(PhysicalAddress(static_cast<FlatPtr>(xsdt->table_ptrs[i])), signature))
+            return PhysicalAddress(static_cast<FlatPtr>(xsdt->table_ptrs[i]));
     }
     return {};
 }
@@ -379,8 +379,8 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsd
     auto rsdt = map_typed<Structures::RSDT>(rsdt_address);
 
     for (u32 i = 0; i < ((rsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]);
+        if (match_table_signature(PhysicalAddress(static_cast<FlatPtr>(rsdt->table_ptrs[i])), signature))
+            return PhysicalAddress(static_cast<FlatPtr>(rsdt->table_ptrs[i]));
     }
     return {};
 }

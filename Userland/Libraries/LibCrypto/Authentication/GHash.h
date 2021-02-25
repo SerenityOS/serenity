@@ -56,7 +56,7 @@ public:
     explicit GHash(const ReadonlyBytes& key)
     {
         for (size_t i = 0; i < 16; i += 4)
-            m_key[i / 4] = AK::convert_between_host_and_big_endian(*(const u32*)(key.offset(i)));
+            m_key[i / 4] = AK::convert_between_host_and_big_endian(*reinterpret_cast<const u32*>(key.offset(i)));
     }
 
     constexpr static size_t digest_size() { return TagType::Size; }

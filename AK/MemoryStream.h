@@ -29,7 +29,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
-#include <AK/Vector.h>
+#include <AK/Types.h>
+#include <stdint.h>
 
 namespace AK {
 
@@ -140,7 +141,7 @@ public:
 
         if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
             // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
+            result |= (SIZE_MAX << (num_bytes * 7));
         }
 
         return true;

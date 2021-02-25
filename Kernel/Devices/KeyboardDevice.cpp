@@ -438,7 +438,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
         if (m_queue.is_empty())
             break;
         // Don't return partial data frames.
-        if ((size - nread) < (ssize_t)sizeof(Event))
+        if ((size - nread) < static_cast<ssize_t>(sizeof(Event)))
             break;
         auto event = m_queue.dequeue();
 
@@ -446,11 +446,11 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
 
         ssize_t n = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
             memcpy(data, &event, sizeof(Event));
-            return (ssize_t)data_bytes;
+            return static_cast<ssize_t>(data_bytes);
         });
         if (n < 0)
-            return KResult((ErrnoCode)-n);
-        VERIFY((size_t)n == sizeof(Event));
+            return KResult(static_cast<ErrnoCode>(-n));
+        VERIFY(static_cast<size_t>(n) == sizeof(Event));
         nread += sizeof(Event);
 
         lock.lock();

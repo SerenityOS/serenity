@@ -45,13 +45,13 @@ template<typename T>
 struct RefPtrTraits {
     ALWAYS_INLINE static T* as_ptr(FlatPtr bits)
     {
-        return (T*)(bits & ~(FlatPtr)1);
+        return reinterpret_cast<T*>(bits & _RefPtrMask);
     }
 
     ALWAYS_INLINE static FlatPtr as_bits(T* ptr)
     {
-        VERIFY(!((FlatPtr)ptr & 1));
-        return (FlatPtr)ptr;
+        VERIFY(!(reinterpret_cast<FlatPtr>(ptr) & 1));
+        return reinterpret_cast<FlatPtr>(ptr);
     }
 
     template<typename U, typename PtrTraits>
@@ -64,7 +64,7 @@ struct RefPtrTraits {
 
     ALWAYS_INLINE static bool is_null(FlatPtr bits)
     {
-        return !(bits & ~(FlatPtr)1);
+        return !(bits & _RefPtrMask);
     }
 
     ALWAYS_INLINE static FlatPtr exchange(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
@@ -73,7 +73,7 @@ struct RefPtrTraits {
         VERIFY(!(new_value & 1));
         FlatPtr expected = atomic_var.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
-            expected &= ~(FlatPtr)1; // only if lock bit is not set
+            expected &= _RefPtrMask; // only if lock bit is not set
             if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
                 break;
 #ifdef KERNEL

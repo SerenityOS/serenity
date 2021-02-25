@@ -225,16 +225,16 @@ public:
     {
 #if !defined(KERNEL)
         if (is_double())
-            return (T)as_double();
+            return static_cast<T>(as_double());
 #endif
         if (type() == Type::Int32)
-            return (T)as_i32();
+            return static_cast<T>(as_i32());
         if (type() == Type::UnsignedInt32)
-            return (T)as_u32();
+            return static_cast<T>(as_u32());
         if (type() == Type::Int64)
-            return (T)as_i64();
+            return static_cast<T>(as_i64());
         if (type() == Type::UnsignedInt64)
-            return (T)as_u64();
+            return static_cast<T>(as_u64());
         return default_value;
     }
 

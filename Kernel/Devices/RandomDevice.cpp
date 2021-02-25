@@ -47,7 +47,7 @@ KResultOr<size_t> RandomDevice::read(FileDescription&, size_t, UserOrKernelBuffe
 {
     bool success = buffer.write_buffered<256>(size, [&](u8* data, size_t data_size) {
         get_good_random_bytes(data, data_size);
-        return (ssize_t)data_size;
+        return static_cast<ssize_t>(data_size);
     });
     if (!success)
         return EFAULT;

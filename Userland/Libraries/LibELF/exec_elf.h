@@ -348,11 +348,11 @@ typedef struct {
 
 /* Extract symbol info - st_info */
 #define ELF32_ST_BIND(x) ((x) >> 4)
-#define ELF32_ST_TYPE(x) (((unsigned int)x) & 0xf)
+#define ELF32_ST_TYPE(x) ((static_cast<unsigned int>(x)) & 0xf)
 #define ELF32_ST_INFO(b, t) (((b) << 4) + ((t)&0xf))
 
 #define ELF64_ST_BIND(x) ((x) >> 4)
-#define ELF64_ST_TYPE(x) (((unsigned int)x) & 0xf)
+#define ELF64_ST_TYPE(x) ((static_cast<unsigned int>(x)) & 0xf)
 #define ELF64_ST_INFO(b, t) (((b) << 4) + ((t)&0xf))
 
 /* Symbol Binding - ELF32_ST_BIND - st_info */
@@ -398,8 +398,8 @@ typedef struct {
 
 /* Extract relocation info - r_info */
 #define ELF32_R_SYM(i) ((i) >> 8)
-#define ELF32_R_TYPE(i) ((unsigned char)(i))
-#define ELF32_R_INFO(s, t) (((s) << 8) + (unsigned char)(t))
+#define ELF32_R_TYPE(i) (static_cast<unsigned char>(i))
+#define ELF32_R_INFO(s, t) (((s) << 8) + static_cast<unsigned char>(t))
 
 typedef struct {
     Elf64_Xword r_offset; /* where to do it */

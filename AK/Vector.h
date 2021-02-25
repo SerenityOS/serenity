@@ -488,7 +488,7 @@ public:
         if (m_capacity >= needed_capacity)
             return;
         size_t new_capacity = needed_capacity;
-        auto* new_buffer = (T*)kmalloc(new_capacity * sizeof(T));
+        auto* new_buffer = reinterpret_cast<T*>(kmalloc(new_capacity * sizeof(T)));
 
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::copy(new_buffer, data(), m_size);

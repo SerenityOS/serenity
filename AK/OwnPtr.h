@@ -62,9 +62,9 @@ public:
         clear();
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
-            m_ptr = (T*)(0xe1e1e1e1e1e1e1e1);
+            m_ptr = reinterpret_cast<T*>(0xe1e1e1e1e1e1e1e1);
         else
-            m_ptr = (T*)(0xe1e1e1e1);
+            m_ptr = reinterpret_cast<T*>(0xe1e1e1e1);
 #endif
     }
 

@@ -338,21 +338,21 @@ public:
     {
         u8 lsb = read8();
         u8 msb = read8();
-        return ((u16)msb << 8) | (u16)lsb;
+        return (static_cast<u16>(msb) << 8) | static_cast<u16>(lsb);
     }
 
     virtual u32 read32() override
     {
         u16 lsw = read16();
         u16 msw = read16();
-        return ((u32)msw << 16) | (u32)lsw;
+        return (static_cast<u32>(msw) << 16) | static_cast<u32>(lsw);
     }
 
     virtual u64 read64() override
     {
         u32 lsw = read32();
         u32 msw = read32();
-        return ((u64)msw << 32) | (u64)lsw;
+        return (static_cast<u64>(msw) << 32) | static_cast<u64>(lsw);
     }
     size_t offset() const { return m_offset; }
 
@@ -586,7 +586,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
     switch (m_rm & 0x07) {
     case 0 ... 3:
     case 6 ... 7:
-        offset = cpu.const_gpr32((RegisterIndex32)(m_rm & 0x07)).value() + m_displacement32;
+        offset = cpu.const_gpr32(static_cast<RegisterIndex32>(m_rm & 0x07)).value() + m_displacement32;
         break;
     case 4:
         offset = evaluate_sib(cpu, default_segment);
@@ -614,7 +614,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
     switch ((m_sib >> 3) & 0x07) {
     case 0 ... 3:
     case 5 ... 7:
-        index = cpu.const_gpr32((RegisterIndex32)((m_sib >> 3) & 0x07)).value();
+        index = cpu.const_gpr32(static_cast<RegisterIndex32>((m_sib >> 3) & 0x07)).value();
         break;
     case 4:
         index = 0;
@@ -625,7 +625,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
     switch (m_sib & 0x07) {
     case 0 ... 3:
     case 6 ... 7:
-        base += cpu.const_gpr32((RegisterIndex32)(m_sib & 0x07)).value();
+        base += cpu.const_gpr32(static_cast<RegisterIndex32>(m_sib & 0x07)).value();
         break;
     case 4:
         default_segment = SegmentRegister::SS;
@@ -801,7 +801,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         }
         auto segment_prefix = to_segment_prefix(opbyte);
         if (segment_prefix.has_value()) {
-            m_segment_prefix = (u8)segment_prefix.value();
+            m_segment_prefix = static_cast<u8>(segment_prefix.value());
             continue;
         }
         m_op = opbyte;

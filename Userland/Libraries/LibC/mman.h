@@ -44,7 +44,7 @@
 #define PROT_EXEC 0x4
 #define PROT_NONE 0x0
 
-#define MAP_FAILED ((void*)-1)
+#define MAP_FAILED (reinterpret_cast<void*>(-1))
 
 #define MADV_SET_VOLATILE 0x100
 #define MADV_SET_NONVOLATILE 0x200

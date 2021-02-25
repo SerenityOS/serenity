@@ -273,7 +273,11 @@ inline typename IntrusiveList<T, member>::Iterator IntrusiveList<T, member>::end
 template<class T, IntrusiveListNode T::*member>
 inline T* IntrusiveList<T, member>::node_to_value(IntrusiveListNode& node)
 {
-    return (T*)((char*)&node - ((char*)&(((T*)nullptr)->*member) - (char*)nullptr));
+// FIXME: WTF is even going on here, why are we casting nullptrs?
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+    return reinterpret_cast<T*>((char*)&node - ((char*)&(((T*)nullptr)->*member) - (char*)nullptr));
+#pragma GCC diagnostic pop
 }
 
 inline IntrusiveListNode::~IntrusiveListNode()

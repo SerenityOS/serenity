@@ -89,7 +89,7 @@ public:
         return previous_callback;
     }
 
-    virtual u32 frequency() const override { return (u32)m_frequency; }
+    virtual u32 frequency() const override { return static_cast<u32>(m_frequency); }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> callback = nullptr)
@@ -134,7 +134,7 @@ public:
     virtual const char* controller() const override { return nullptr; }
     virtual bool eoi() override;
 
-    virtual u32 frequency() const override { return (u32)m_frequency; }
+    virtual u32 frequency() const override { return static_cast<u32>(m_frequency); }
 
 protected:
     HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> callback = nullptr)

@@ -36,17 +36,18 @@
 
 namespace Kernel {
 
-class [[nodiscard]] UserOrKernelBuffer {
+class [[nodiscard]] UserOrKernelBuffer
+{
 public:
     UserOrKernelBuffer() = delete;
 
-    static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer)
+    static UserOrKernelBuffer for_kernel_buffer(u8 * kernel_buffer)
     {
         VERIFY(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
         return UserOrKernelBuffer(kernel_buffer);
     }
 
-    static Optional<UserOrKernelBuffer> for_user_buffer(u8* user_buffer, size_t size)
+    static Optional<UserOrKernelBuffer> for_user_buffer(u8 * user_buffer, size_t size)
     {
         if (user_buffer && !is_user_range(VirtualAddress(user_buffer), size))
             return {};
@@ -58,7 +59,7 @@ public:
     {
         if (!is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
             return {};
-        return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
+        return UserOrKernelBuffer(const_cast<u8*>(reinterpret_cast<const u8*>(userspace.unsafe_userspace_ptr())));
     }
 
     [[nodiscard]] bool is_kernel_buffer() const;
@@ -120,14 +121,14 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            VERIFY((size_t)copied <= to_copy);
-            if (!write(buffer, nwritten, (size_t)copied))
+            VERIFY(static_cast<size_t>(copied) <= to_copy);
+            if (!write(buffer, nwritten, static_cast<size_t>(copied)))
                 return -EFAULT;
-            nwritten += (size_t)copied;
-            if ((size_t)copied < to_copy)
+            nwritten += static_cast<size_t>(copied);
+            if (static_cast<size_t>(copied) < to_copy)
                 break;
         }
-        return (ssize_t)nwritten;
+        return static_cast<ssize_t>(nwritten);
     }
     template<size_t BUFFER_BYTES, typename F>
     [[nodiscard]] ssize_t write_buffered(size_t len, F f)
@@ -156,9 +157,9 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            VERIFY((size_t)copied <= to_copy);
-            nread += (size_t)copied;
-            if ((size_t)copied < to_copy)
+            VERIFY(static_cast<size_t>(copied) <= to_copy);
+            nread += static_cast<size_t>(copied);
+            if (static_cast<size_t>(copied) < to_copy)
                 break;
         }
         return nread;
@@ -170,7 +171,7 @@ public:
     }
 
 private:
-    explicit UserOrKernelBuffer(u8* buffer)
+    explicit UserOrKernelBuffer(u8 * buffer)
         : m_buffer(buffer)
     {
     }

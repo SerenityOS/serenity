@@ -56,10 +56,10 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, size_t, UserOrKernelBuffe
     ssize_t nwritten = buffer.write_buffered<128>(size, [&](u8* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
             data[i] = IO::in8(m_base_addr);
-        return (ssize_t)data_size;
+        return static_cast<ssize_t>(data_size);
     });
     if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
+        return KResult(static_cast<ErrnoCode>(-nwritten));
 
     return size;
 }
@@ -80,11 +80,11 @@ KResultOr<size_t> SerialDevice::write(FileDescription&, size_t, const UserOrKern
     ssize_t nread = buffer.read_buffered<128>(size, [&](const u8* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
             IO::out8(m_base_addr, data[i]);
-        return (ssize_t)data_size;
+        return static_cast<ssize_t>(data_size);
     });
     if (nread < 0)
-        return KResult((ErrnoCode)-nread);
-    return (size_t)nread;
+        return KResult(static_cast<ErrnoCode>(-nread));
+    return static_cast<size_t>(nread);
 }
 
 String SerialDevice::device_name() const
@@ -112,10 +112,10 @@ void SerialDevice::set_baud(Baud baud)
 {
     m_baud = baud;
 
-    IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) | 0x80); // turn on DLAB
-    IO::out8(m_base_addr + 0, ((char)(baud)) >> 2);             // lower half of divisor
-    IO::out8(m_base_addr + 1, ((char)(baud)) & 0xff);           // upper half of divisor
-    IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & 0x7f); // turn off DLAB
+    IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) | 0x80);  // turn on DLAB
+    IO::out8(m_base_addr + 0, (static_cast<char>(baud)) >> 2);   // lower half of divisor
+    IO::out8(m_base_addr + 1, (static_cast<char>(baud)) & 0xff); // upper half of divisor
+    IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & 0x7f);  // turn off DLAB
 }
 
 void SerialDevice::set_fifo_control(char fifo_control)

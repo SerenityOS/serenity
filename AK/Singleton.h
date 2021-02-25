@@ -65,7 +65,7 @@ public:
             Kernel::ScopedCritical critical;
 #endif
             if constexpr (allow_create) {
-                if (obj == nullptr && AK::atomic_compare_exchange_strong(&obj_var, obj, (T*)0x1, AK::memory_order_acq_rel)) {
+                if (obj == nullptr && AK::atomic_compare_exchange_strong(&obj_var, obj, reinterpret_cast<T*>(0x1), AK::memory_order_acq_rel)) {
                     // We're the first one
                     obj = InitFunction();
                     AK::atomic_store(&obj_var, obj, AK::memory_order_release);
@@ -73,7 +73,7 @@ public:
                 }
             }
             // Someone else was faster, wait until they're done
-            while (obj == (T*)0x1) {
+            while (obj == reinterpret_cast<T*>(0x1)) {
 #ifdef KERNEL
                 Kernel::Processor::wait_check();
 #else
@@ -85,7 +85,7 @@ public:
                 // We should always return an instance if we allow creating one
                 VERIFY(obj != nullptr);
             }
-            VERIFY(obj != (T*)0x1);
+            VERIFY(obj != reinterpret_cast<T*>(0x1));
         }
         return obj;
     }
