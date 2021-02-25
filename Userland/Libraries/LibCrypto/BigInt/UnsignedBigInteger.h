@@ -42,7 +42,7 @@ class UnsignedBigInteger {
 public:
     UnsignedBigInteger(u32 x) { m_words.append(x); }
 
-    explicit UnsignedBigInteger(AK::Vector<u32, STARTING_WORD_SIZE>&& words)
+    explicit UnsignedBigInteger(Vector<u32, STARTING_WORD_SIZE>&& words)
         : m_words(move(words))
     {
     }
@@ -53,7 +53,7 @@ public:
 
     static UnsignedBigInteger create_invalid();
 
-    static UnsignedBigInteger import_data(const AK::StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
+    static UnsignedBigInteger import_data(const StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static UnsignedBigInteger import_data(const u8* ptr, size_t length)
     {
         return UnsignedBigInteger(ptr, length);
@@ -64,7 +64,7 @@ public:
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;
 
-    const AK::Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
+    const Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
 
     void set_to_0();
     void set_to(u32 other);
@@ -116,7 +116,7 @@ private:
     static constexpr size_t BITS_IN_WORD = 32;
     // Little endian
     // m_word[0] + m_word[1] * 256 + m_word[2] * 65536 + ...
-    AK::Vector<u32, STARTING_WORD_SIZE> m_words;
+    Vector<u32, STARTING_WORD_SIZE> m_words;
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };

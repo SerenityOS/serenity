@@ -251,12 +251,12 @@ void TLSv12::build_random(PacketBuilder& builder)
     u8 random_bytes[48];
     size_t bytes = 48;
 
-    AK::fill_with_random(random_bytes, bytes);
+    fill_with_random(random_bytes, bytes);
 
     // remove zeros from the random bytes
     for (size_t i = 0; i < bytes; ++i) {
         if (!random_bytes[i])
-            random_bytes[i--] = AK::get_random<u8>();
+            random_bytes[i--] = get_random<u8>();
     }
 
     if (m_context.is_server) {

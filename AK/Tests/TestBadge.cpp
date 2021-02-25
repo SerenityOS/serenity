@@ -30,7 +30,7 @@
 
 TEST_CASE(should_provide_underlying_type)
 {
-    static_assert(AK::IsSame<int, Badge<int>::Type>::value);
+    static_assert(IsSame<int, Badge<int>::Type>::value);
 }
 
 TEST_MAIN(Badge)

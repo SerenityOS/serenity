@@ -232,7 +232,7 @@ int main(int, char**)
 
         int result = 0;
 
-        auto js = AK::StringView(static_cast<const unsigned char*>(data_buffer.data()), script_size);
+        auto js = StringView(static_cast<const unsigned char*>(data_buffer.data()), script_size);
 
         auto lexer = JS::Lexer(js);
         auto parser = JS::Parser(lexer);

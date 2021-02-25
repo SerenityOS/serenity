@@ -189,7 +189,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     auto add_array = [&](String name, u32* values) {
         JsonArray items;
         for (int i = 0; i < 90; i++) {
-            AK::StringBuilder sb;
+            StringBuilder sb;
             if (values[i])
                 sb.append_code_point(values[i]);
 
@@ -282,7 +282,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
         if (index == 0)
             continue;
 
-        AK::StringBuilder sb;
+        StringBuilder sb;
         sb.append_code_point(map[index]);
 
         m_keys.at(k)->set_text(sb.to_string());

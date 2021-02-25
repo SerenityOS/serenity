@@ -38,7 +38,7 @@ static void test_no_route(int);
 static void test_valid(int);
 static void test_send(int);
 
-static void test(AK::Function<void(int)> test_fn)
+static void test(Function<void(int)> test_fn)
 {
 
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
