@@ -10,9 +10,21 @@ die() {
 
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
-[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
+[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
+
+# To support virtualization acceleration on mac
+# we need to use 64-bit qemu
+if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then 
+
+    [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-x86_64"
+
+    if $SERENITY_QEMU_BIN --accel help | grep -q hvf; then
+        SERENITY_VIRT_TECH_ARG="--accel hvf"
+    fi
+fi
+
 
 [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-i386"
 
@@ -88,7 +100,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_KVM_ARG \
+        $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
@@ -98,7 +110,7 @@ elif [ "$SERENITY_RUN" = "qgrub" ]; then
     # Meta/run.sh qgrub: qemu with grub
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_KVM_ARG \
+        $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
@@ -109,7 +121,7 @@ elif [ "$SERENITY_RUN" = "q35_cmd" ]; then
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
-        $SERENITY_KVM_ARG \
+        $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -kernel Kernel/Kernel \
@@ -121,7 +133,7 @@ elif [ "$SERENITY_RUN" = "qcmd" ]; then
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_KVM_ARG \
+        $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -kernel Kernel/Kernel \
@@ -130,7 +142,7 @@ else
     # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
-        $SERENITY_KVM_ARG \
+        $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
         -device e1000,netdev=breh \
