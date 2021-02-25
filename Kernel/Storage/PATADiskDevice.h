@@ -57,7 +57,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16, int major, int minor);
+    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16);
     virtual ~PATADiskDevice() override;
 
     // ^StorageDevice
@@ -69,7 +69,7 @@ public:
     virtual String device_name() const override;
 
 private:
-    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16, int major, int minor);
+    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16);
 
     // ^DiskDevice
     virtual const char* class_name() const override;

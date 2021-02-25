@@ -40,6 +40,7 @@
 namespace Kernel {
 
 static StorageManagement* s_the;
+static size_t s_device_minor_number;
 
 UNMAP_AFTER_INIT StorageManagement::StorageManagement(String boot_argument, bool force_pio)
     : m_boot_argument(boot_argument)
@@ -47,6 +48,7 @@ UNMAP_AFTER_INIT StorageManagement::StorageManagement(String boot_argument, bool
     , m_storage_devices(enumerate_storage_devices())
     , m_disk_partitions(enumerate_disk_partitions())
 {
+    s_device_minor_number = 0;
     if (!boot_argument_contains_partition_uuid()) {
         determine_boot_device();
         return;
@@ -175,6 +177,15 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
 RefPtr<BlockDevice> StorageManagement::boot_block_device() const
 {
     return m_boot_block_device;
+}
+
+int StorageManagement::major_number()
+{
+    return 3;
+}
+int StorageManagement::minor_number()
+{
+    return s_device_minor_number++;
 }
 
 NonnullRefPtr<FS> StorageManagement::root_filesystem() const

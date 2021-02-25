@@ -48,6 +48,9 @@ public:
 
     NonnullRefPtr<FS> root_filesystem() const;
 
+    static int major_number();
+    static int minor_number();
+
     NonnullRefPtrVector<StorageController> ide_controllers() const;
 
 private:
