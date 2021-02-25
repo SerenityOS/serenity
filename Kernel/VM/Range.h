@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +26,51 @@
 
 #pragma once
 
-#include <AK/Traits.h>
-#include <AK/Vector.h>
-#include <Kernel/SpinLock.h>
-#include <Kernel/VM/Range.h>
+#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 
-class RangeAllocator {
+class Range {
+    friend class RangeAllocator;
+
 public:
-    RangeAllocator();
-    ~RangeAllocator();
-
-    void initialize_with_range(VirtualAddress, size_t);
-    void initialize_from_parent(const RangeAllocator&);
-
-    Optional<Range> allocate_anywhere(size_t, size_t alignment = PAGE_SIZE);
-    Optional<Range> allocate_specific(VirtualAddress, size_t);
-    Optional<Range> allocate_randomized(size_t, size_t alignment);
-    void deallocate(const Range&);
-
-    void dump() const;
-
-    bool contains(const Range& range) const
+    Range() = delete;
+    Range(VirtualAddress base, size_t size)
+        : m_base(base)
+        , m_size(size)
     {
-        ScopedSpinLock lock(m_lock);
-        return m_total_range.contains(range);
     }
 
+    VirtualAddress base() const { return m_base; }
+    size_t size() const { return m_size; }
+    bool is_valid() const { return !m_base.is_null(); }
+
+    bool contains(VirtualAddress vaddr) const { return vaddr >= base() && vaddr < end(); }
+
+    VirtualAddress end() const { return m_base.offset(m_size); }
+
+    bool operator==(const Range& other) const
+    {
+        return m_base == other.m_base && m_size == other.m_size;
+    }
+
+    bool contains(VirtualAddress base, size_t size) const
+    {
+        if (base.offset(size) < base)
+            return false;
+        return base >= m_base && base.offset(size) <= end();
+    }
+
+    bool contains(const Range& other) const
+    {
+        return contains(other.base(), other.size());
+    }
+
+    Vector<Range, 2> carve(const Range&) const;
+
 private:
-    void carve_at_index(int, const Range&);
-
-    Vector<Range> m_available_ranges;
-    Range m_total_range;
-    mutable SpinLock<u8> m_lock;
+    VirtualAddress m_base;
+    size_t m_size { 0 };
 };
 
-}
-
-namespace AK {
-template<>
-struct Traits<Kernel::Range> : public GenericTraits<Kernel::Range> {
-    static constexpr bool is_trivial() { return true; }
-};
 }
