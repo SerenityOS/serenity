@@ -90,7 +90,7 @@ private:
     struct timeval m_started;
 };
 
-using TestFunction = AK::Function<void()>;
+using TestFunction = Function<void()>;
 
 class TestCase : public RefCounted<TestCase> {
 public:

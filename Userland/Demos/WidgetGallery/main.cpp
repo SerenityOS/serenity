@@ -257,7 +257,7 @@ int main(int argc, char** argv)
 
     auto& combobox1 = combo_container.add<GUI::ComboBox>();
     combobox1.set_only_allow_values_from_model(true);
-    combobox1.set_model(*ListViewModel<AK::String>::create(model_items));
+    combobox1.set_model(*ListViewModel<String>::create(model_items));
 
     auto& combobox2 = combo_container.add<GUI::ComboBox>();
     combobox2.set_enabled(false);

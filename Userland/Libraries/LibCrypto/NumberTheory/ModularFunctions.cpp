@@ -291,7 +291,7 @@ UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBi
     // Also, if we're about to crash anyway, at least produce a nice error:
     VERIFY(size < 8 * MiB);
     u8 buf[size];
-    AK::fill_with_random(buf, size);
+    fill_with_random(buf, size);
     UnsignedBigInteger random { buf, size };
     // At this point, `random` is a large number, in the range [0, 256^size).
     // To get down to the actual range, we could just compute random % range.

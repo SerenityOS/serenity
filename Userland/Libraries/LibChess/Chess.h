@@ -194,7 +194,7 @@ private:
 
     HashMap<Board, int> m_previous_states;
     Vector<Move> m_moves;
-    friend struct AK::Traits<Board>;
+    friend struct Traits<Board>;
 };
 
 template<typename Callback>

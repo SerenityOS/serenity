@@ -49,7 +49,7 @@ TEST_CASE(span_works_with_constant_types)
     static constexpr u8 buffer[4] { 1, 2, 3, 4 };
     constexpr ReadonlyBytes bytes { buffer, 4 };
 
-    static_assert(AK::IsConst<AK::RemoveReference<decltype(bytes[1])>::Type>::value);
+    static_assert(IsConst<AK::RemoveReference<decltype(bytes[1])>::Type>::value);
     static_assert(bytes[2] == 3);
 }
 

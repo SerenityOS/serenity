@@ -282,7 +282,7 @@ Optional<size_t> StringView::find_first_of(const StringView& view) const
 {
     if (const auto location = AK::find_if(begin(), end(),
             [&](const auto c) {
-                return AK::any_of(view.begin(), view.end(),
+                return any_of(view.begin(), view.end(),
                     [&](const auto view_char) {
                         return c == view_char;
                     });

@@ -64,7 +64,7 @@ void InputBox::build()
 
     int text_width = widget.font().width(m_prompt);
     int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
-    int max_width = AK::max(text_width, title_width);
+    int max_width = max(text_width, title_width);
 
     set_rect(x(), y(), max_width + 140, 62);
 

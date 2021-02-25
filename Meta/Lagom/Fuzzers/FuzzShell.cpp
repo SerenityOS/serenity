@@ -31,7 +31,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    auto source = AK::StringView(static_cast<const unsigned char*>(data), size);
+    auto source = StringView(static_cast<const unsigned char*>(data), size);
     Shell::Parser parser(source);
     parser.parse();
     return 0;

@@ -350,7 +350,7 @@ void AbstractTableView::layout_headers()
 
         int x = frame_thickness() + row_header_width - horizontal_scrollbar().value();
         int y = frame_thickness();
-        int width = AK::max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
+        int width = max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
 
         column_header().set_relative_rect(x, y, width, column_header().min_size().height());
     }
@@ -361,7 +361,7 @@ void AbstractTableView::layout_headers()
 
         int x = frame_thickness();
         int y = frame_thickness() + column_header_height - vertical_scrollbar().value();
-        int height = AK::max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
+        int height = max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
 
         row_header().set_relative_rect(x, y, row_header().min_size().width(), height);
     }

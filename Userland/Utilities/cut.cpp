@@ -63,8 +63,8 @@ static void add_if_not_exists(Vector<Index>& indexes, Index data)
     for (auto& index : indexes) {
         if (index.intersects(data)) {
             if (index.m_type == Index::Type::RangedIndex) {
-                index.m_from = AK::min(index.m_from, data.m_from);
-                index.m_to = AK::max(index.m_to, data.m_to);
+                index.m_from = min(index.m_from, data.m_from);
+                index.m_to = max(index.m_to, data.m_to);
             }
             append_to_vector = false;
         }

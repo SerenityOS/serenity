@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
     const char* format = flag_show_numerical ? format_numerical : format_textual;
 
-    AK::RefPtr<PCIDB::Database> db;
+    RefPtr<PCIDB::Database> db;
     if (!flag_show_numerical) {
         db = PCIDB::Database::open();
         if (!db) {

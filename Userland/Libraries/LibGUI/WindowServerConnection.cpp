@@ -178,7 +178,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
         key_event->m_key = Key_Invalid;
         key_event->m_modifiers = 0;
 
-        AK::Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text().characters());
+        Utf8View m_utf8_view(emoji_input_dialog->selected_emoji_text().characters());
         u32 code_point = *m_utf8_view.begin();
 
         key_event->m_code_point = code_point;

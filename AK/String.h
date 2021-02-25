@@ -305,7 +305,7 @@ struct Traits<String> : public GenericTraits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.impl()->hash() : 0; }
 };
 
-struct CaseInsensitiveStringTraits : public AK::Traits<String> {
+struct CaseInsensitiveStringTraits : public Traits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.to_lowercase().impl()->hash() : 0; }
     static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
 };

@@ -231,7 +231,7 @@ Optional<JsonValue> JsonParser::parse_number()
             auto number = number_string.to_int<i64>();
             if (!number.has_value())
                 return {};
-            if (number.value() <= AK::NumericLimits<i32>::max()) {
+            if (number.value() <= NumericLimits<i32>::max()) {
                 value = JsonValue((i32)number.value());
             } else {
                 value = JsonValue(number.value());

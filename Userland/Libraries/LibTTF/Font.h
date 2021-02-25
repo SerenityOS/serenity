@@ -168,7 +168,7 @@ private:
     float m_y_scale { 0.0f };
     float m_point_width { 0.0f };
     float m_point_height { 0.0f };
-    mutable AK::HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
+    mutable HashMap<u32, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
 };
 
 }

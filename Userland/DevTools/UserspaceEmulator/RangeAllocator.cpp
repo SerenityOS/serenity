@@ -81,7 +81,7 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
     // FIXME: I'm sure there's a smarter way to do this.
     static constexpr size_t maximum_randomization_attempts = 1000;
     for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
-        VirtualAddress random_address { AK::get_random<FlatPtr>() };
+        VirtualAddress random_address { get_random<FlatPtr>() };
         random_address.mask(PAGE_MASK);
 
         if (!m_total_range.contains(random_address, size))

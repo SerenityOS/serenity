@@ -51,7 +51,7 @@ public:
     Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
-    Variant(const AK::JsonValue&);
+    Variant(const JsonValue&);
     Variant(Color);
 
     Variant(const Variant&);

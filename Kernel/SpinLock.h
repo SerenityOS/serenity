@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    AK::Atomic<BaseType> m_lock { 0 };
+    Atomic<BaseType> m_lock { 0 };
 };
 
 class RecursiveSpinLock {
@@ -121,7 +121,7 @@ public:
     }
 
 private:
-    AK::Atomic<FlatPtr> m_lock { 0 };
+    Atomic<FlatPtr> m_lock { 0 };
     u32 m_recursions { 0 };
 };
 

@@ -44,7 +44,7 @@ public:
     template<typename T>
     constexpr bool read(T& value)
     {
-        AK::Array<u8, sizeof(T)> network_buffer {};
+        Array<u8, sizeof(T)> network_buffer {};
         auto network_value = new (network_buffer.data()) AK::NetworkOrdered<T> {};
         auto res = read_bytes(network_buffer.data(), sizeof(T));
         value = T(*network_value);

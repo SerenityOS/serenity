@@ -31,15 +31,15 @@
 
 TEST_CASE(should_determine_if_predicate_applies_to_any_element_in_container)
 {
-    constexpr AK::Array<int, 10> a { 1 };
+    constexpr Array<int, 10> a { 1 };
 
-    static_assert(AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
-    static_assert(AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
-    static_assert(!AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 2; }));
+    static_assert(any_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
+    static_assert(any_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
+    static_assert(!any_of(a.begin(), a.end(), [](auto elem) { return elem == 2; }));
 
-    EXPECT(AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
-    EXPECT(AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
-    EXPECT(!AK::any_of(a.begin(), a.end(), [](auto elem) { return elem == 2; }));
+    EXPECT(any_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
+    EXPECT(any_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
+    EXPECT(!any_of(a.begin(), a.end(), [](auto elem) { return elem == 2; }));
 }
 
 TEST_MAIN(AllOf)

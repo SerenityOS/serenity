@@ -36,7 +36,7 @@ struct KeyPosition {
     int height;
     bool enabled;
     int map_index;
-    AK::String name;
+    String name;
 };
 
 #define KEY_COUNT 63
