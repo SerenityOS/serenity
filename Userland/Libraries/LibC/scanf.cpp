@@ -512,61 +512,61 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             dbgln("Invalid conversion specifier {} in scanf!", (int)conversion_specifier);
             VERIFY_NOT_REACHED();
         case Decimal:
-            if (!read_element<int, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<int, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Integer:
-            if (!read_element<int, ReadKind::Infer> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<int, ReadKind::Infer> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Octal:
-            if (!read_element<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Unsigned:
-            if (!read_element<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Hex:
-            if (!read_element<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Floating:
-            if (!read_element<float, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<float, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case String:
-            if (!read_element<char*, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<char*, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case UseScanList:
-            if (!read_element<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, &ap))
+            if (!read_element<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Character:
-            if (!read_element<char, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<char, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Pointer:
-            if (!read_element<void*, ReadKind::Normal> {}(length_modifier, input_lexer, &ap))
+            if (!read_element<void*, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
                 format_lexer.consume_all();
             else
                 ++elements_matched;

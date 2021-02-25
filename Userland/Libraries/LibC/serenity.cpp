@@ -73,7 +73,7 @@ int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struc
             .userspace_address = userspace_address,
             .futex_op = futex_op,
             .val = value,
-            .val2 = (uint32_t)timeout,
+            .val2 = (FlatPtr)timeout,
             .userspace_address2 = userspace_address2,
             .val3 = value3
         };
