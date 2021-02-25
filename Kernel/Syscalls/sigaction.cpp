@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -87,11 +88,12 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     return 0;
 }
 
-int Process::sys$sigreturn(RegisterState& registers)
+int Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
 {
     REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;
 
+#if ARCH(I386)
     //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     u32* stack_ptr = (u32*)registers.userspace_esp;
     u32 smuggled_eax = *stack_ptr;
@@ -114,6 +116,9 @@ int Process::sys$sigreturn(RegisterState& registers)
 
     registers.userspace_esp = registers.esp;
     return smuggled_eax;
+#else
+    PANIC("sys$sigreturn() not implemented.");
+#endif
 }
 
 }
