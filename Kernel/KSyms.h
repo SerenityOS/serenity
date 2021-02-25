@@ -31,12 +31,12 @@
 namespace Kernel {
 
 struct KernelSymbol {
-    u32 address;
+    FlatPtr address;
     const char* name;
 };
 
-u32 address_for_kernel_symbol(const StringView& name);
-const KernelSymbol* symbolicate_kernel_address(u32 address);
+FlatPtr address_for_kernel_symbol(const StringView& name);
+const KernelSymbol* symbolicate_kernel_address(FlatPtr);
 void load_kernel_symbol_table();
 
 extern bool g_kernel_symbols_available;

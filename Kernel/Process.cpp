@@ -260,6 +260,7 @@ Process::~Process()
 extern void signal_trampoline_dummy();
 void signal_trampoline_dummy()
 {
+#if ARCH(I386)
     // The trampoline preserves the current eax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
     // blocking syscall, that syscall may return some special error code in eax;
@@ -280,6 +281,9 @@ void signal_trampoline_dummy()
         "int 0x82\n" // sigreturn syscall
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+#else
+    // FIXME: Implement trampoline for other architectures.
+#endif
 }
 
 extern "C" void asm_signal_trampoline(void);

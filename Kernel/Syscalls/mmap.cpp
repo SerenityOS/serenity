@@ -137,13 +137,13 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
     return true;
 }
 
-void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
+FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mmap_params params;
     if (!copy_from_user(&params, user_params))
-        return (void*)-EFAULT;
+        return -EFAULT;
 
     void* addr = (void*)params.addr;
     size_t size = params.size;
@@ -162,27 +162,27 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (alignment & ~PAGE_MASK)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (page_round_up_would_wrap(size))
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (!is_user_range(VirtualAddress(addr), page_round_up(size)))
-        return (void*)-EFAULT;
+        return -EFAULT;
 
     String name;
     if (params.name.characters) {
         if (params.name.length > PATH_MAX)
-            return (void*)-ENAMETOOLONG;
+            return -ENAMETOOLONG;
         name = copy_string_from_user(params.name);
         if (name.is_null())
-            return (void*)-EFAULT;
+            return -EFAULT;
     }
 
     if (size == 0)
-        return (void*)-EINVAL;
+        return -EINVAL;
     if ((FlatPtr)addr & ~PAGE_MASK)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     bool map_shared = flags & MAP_SHARED;
     bool map_anonymous = flags & MAP_ANONYMOUS;
@@ -193,19 +193,19 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     bool map_randomized = flags & MAP_RANDOMIZED;
 
     if (map_shared && map_private)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (!map_shared && !map_private)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (map_fixed && map_randomized)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (!validate_mmap_prot(prot, map_stack, map_anonymous))
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (map_stack && (!map_private || !map_anonymous))
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     Region* region = nullptr;
     Optional<Range> range;
@@ -223,44 +223,44 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (!range.has_value())
-        return (void*)-ENOMEM;
+        return -ENOMEM;
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         auto region_or_error = space().allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
         if (region_or_error.is_error())
-            return (void*)region_or_error.error().error();
+            return region_or_error.error().error();
         region = region_or_error.value();
     } else {
         if (offset < 0)
-            return (void*)-EINVAL;
+            return -EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
-            return (void*)-EINVAL;
+            return -EINVAL;
         auto description = file_description(fd);
         if (!description)
-            return (void*)-EBADF;
+            return -EBADF;
         if (description->is_directory())
-            return (void*)-ENODEV;
+            return -ENODEV;
         // Require read access even when read protection is not requested.
         if (!description->is_readable())
-            return (void*)-EACCES;
+            return -EACCES;
         if (map_shared) {
             if ((prot & PROT_WRITE) && !description->is_writable())
-                return (void*)-EACCES;
+                return -EACCES;
         }
         if (description->inode()) {
             if (!validate_inode_mmap_prot(*this, prot, *description->inode(), map_shared))
-                return (void*)-EACCES;
+                return -EACCES;
         }
 
         auto region_or_error = description->mmap(*this, range.value(), static_cast<size_t>(offset), prot, map_shared);
         if (region_or_error.is_error())
-            return (void*)region_or_error.error().error();
+            return region_or_error.error().error();
         region = region_or_error.value();
     }
 
     if (!region)
-        return (void*)-ENOMEM;
+        return -ENOMEM;
     region->set_mmap(true);
     if (map_shared)
         region->set_shared(true);
@@ -268,7 +268,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         region->set_stack(true);
     if (!name.is_null())
         region->set_name(name);
-    return region->vaddr().as_ptr();
+    return region->vaddr().get();
 }
 
 static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t size)
@@ -494,26 +494,26 @@ int Process::sys$munmap(void* addr, size_t size)
     return -EINVAL;
 }
 
-void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
+FlatPtr Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mremap_params params {};
     if (!copy_from_user(&params, user_params))
-        return (void*)-EFAULT;
+        return -EFAULT;
 
     auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size);
     if (range_or_error.is_error())
-        return (void*)range_or_error.error().error();
+        return range_or_error.error().error();
 
     auto old_range = range_or_error.value();
 
     auto* old_region = space().find_region_from_range(old_range);
     if (!old_region)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (!old_region->is_mmap())
-        return (void*)-EPERM;
+        return -EPERM;
 
     if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & (MAP_ANONYMOUS | MAP_NORESERVE))) {
         auto range = old_region->range();
@@ -529,28 +529,28 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
 
         auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject, 0, old_name, old_prot, false);
         if (new_region_or_error.is_error())
-            return (void*)new_region_or_error.error().error();
+            return new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();
         new_region.set_mmap(true);
-        return new_region.vaddr().as_ptr();
+        return new_region.vaddr().get();
     }
 
     dbgln("sys$mremap: Unimplemented remap request (flags={})", params.flags);
-    return (void*)-ENOTIMPL;
+    return -ENOTIMPL;
 }
 
-void* Process::sys$allocate_tls(size_t size)
+FlatPtr Process::sys$allocate_tls(size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
     if (!size)
-        return (void*)-EINVAL;
+        return -EINVAL;
 
     if (!m_master_tls_region.is_null())
-        return (void*)-EEXIST;
+        return -EEXIST;
 
     if (thread_count() != 1)
-        return (void*)-EFAULT;
+        return -EFAULT;
 
     Thread* main_thread = nullptr;
     for_each_thread([&main_thread](auto& thread) {
@@ -561,11 +561,11 @@ void* Process::sys$allocate_tls(size_t size)
 
     auto range = space().allocate_range({}, size);
     if (!range.has_value())
-        return (void*)-ENOMEM;
+        return -ENOMEM;
 
     auto region_or_error = space().allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
-        return (void*)region_or_error.error().error();
+        return region_or_error.error().error();
 
     m_master_tls_region = region_or_error.value()->make_weak_ptr();
     m_master_tls_size = size;
@@ -573,13 +573,13 @@ void* Process::sys$allocate_tls(size_t size)
 
     auto tsr_result = main_thread->make_thread_specific_region({});
     if (tsr_result.is_error())
-        return (void*)-EFAULT;
+        return -EFAULT;
 
     auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 
-    return m_master_tls_region.unsafe_ptr()->vaddr().as_ptr();
+    return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
 int Process::sys$msyscall(void* address)

@@ -48,7 +48,7 @@ static u8 parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-u32 address_for_kernel_symbol(const StringView& name)
+FlatPtr address_for_kernel_symbol(const StringView& name)
 {
     for (size_t i = 0; i < s_symbol_count; ++i) {
         if (!strncmp(name.characters_without_null_termination(), s_symbols[i].name, name.length()))
@@ -57,7 +57,7 @@ u32 address_for_kernel_symbol(const StringView& name)
     return 0;
 }
 
-const KernelSymbol* symbolicate_kernel_address(u32 address)
+const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
 {
     if (address < g_lowest_kernel_symbol_address || address > g_highest_kernel_symbol_address)
         return nullptr;
@@ -147,7 +147,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         FlatPtr* stack_ptr = (FlatPtr*)base_pointer;
         while (stack_ptr && safe_memcpy(copied_stack_ptr, stack_ptr, sizeof(copied_stack_ptr), fault_at)) {
             FlatPtr retaddr = copied_stack_ptr[1];
-            dbgln("{:p} (next: {:p})", retaddr, stack_ptr ? (u32*)copied_stack_ptr[0] : 0);
+            dbgln("{:p} (next: {:p})", retaddr, stack_ptr ? (FlatPtr*)copied_stack_ptr[0] : 0);
             stack_ptr = (FlatPtr*)copied_stack_ptr[0];
         }
         return;
