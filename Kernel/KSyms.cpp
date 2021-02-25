@@ -26,6 +26,7 @@
 
 #include <AK/Demangle.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>

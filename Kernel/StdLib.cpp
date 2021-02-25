@@ -29,6 +29,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>

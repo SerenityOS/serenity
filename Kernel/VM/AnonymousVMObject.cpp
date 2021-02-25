@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
