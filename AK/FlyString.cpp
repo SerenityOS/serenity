@@ -34,7 +34,7 @@
 
 namespace AK {
 
-struct FlyStringImplTraits : public AK::Traits<StringImpl*> {
+struct FlyStringImplTraits : public Traits<StringImpl*> {
     static unsigned hash(const StringImpl* s) { return s ? s->hash() : 0; }
     static bool equals(const StringImpl* a, const StringImpl* b)
     {

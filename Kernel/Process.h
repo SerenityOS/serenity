@@ -138,7 +138,7 @@ public:
     ~Process();
 
     static Vector<ProcessID> all_pids();
-    static AK::NonnullRefPtrVector<Process> all_processes();
+    static NonnullRefPtrVector<Process> all_processes();
 
     template<typename EntryFunction>
     RefPtr<Thread> create_kernel_thread(EntryFunction entry, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)

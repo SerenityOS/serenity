@@ -406,14 +406,14 @@ static void print(JS::Value value)
     outln();
 }
 
-static bool file_has_shebang(AK::ByteBuffer file_contents)
+static bool file_has_shebang(ByteBuffer file_contents)
 {
     if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
         return true;
     return false;
 }
 
-static StringView strip_shebang(AK::ByteBuffer file_contents)
+static StringView strip_shebang(ByteBuffer file_contents)
 {
     size_t i = 0;
     for (i = 2; i < file_contents.size(); ++i) {

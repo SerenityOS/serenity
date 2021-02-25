@@ -171,8 +171,8 @@ private:
     StringView m_input;
 
     Utf8View m_utf8_view;
-    AK::Utf8CodepointIterator m_utf8_iterator;
-    AK::Utf8CodepointIterator m_prev_utf8_iterator;
+    Utf8CodepointIterator m_utf8_iterator;
+    Utf8CodepointIterator m_prev_utf8_iterator;
 
     HTMLToken m_current_token;
 

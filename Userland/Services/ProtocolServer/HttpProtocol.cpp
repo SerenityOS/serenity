@@ -46,7 +46,7 @@ HttpProtocol::HttpProtocol()
 
 OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
 {
-    return Detail::start_download(AK::Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_download());
+    return Detail::start_download(Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_download());
 }
 
 }

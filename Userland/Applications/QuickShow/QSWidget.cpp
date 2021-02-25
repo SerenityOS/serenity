@@ -78,7 +78,7 @@ void QSWidget::navigate(Directions direction)
     StringBuilder sb;
     sb.append("/");
     sb.join("/", parts);
-    AK::String current_dir = sb.to_string();
+    auto current_dir = sb.to_string();
 
     if (m_files_in_same_dir.is_empty()) {
         Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);

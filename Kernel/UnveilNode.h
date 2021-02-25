@@ -50,8 +50,8 @@ struct UnveilMetadata {
     bool unveil_inherited_from_root { false }; // true if permissions are inherited from the tree root (/).
 };
 
-struct UnveilNode final : public AK::Trie<String, UnveilMetadata, Traits<String>, UnveilNode> {
-    using AK::Trie<String, UnveilMetadata, Traits<String>, UnveilNode>::Trie;
+struct UnveilNode final : public Trie<String, UnveilMetadata, Traits<String>, UnveilNode> {
+    using Trie<String, UnveilMetadata, Traits<String>, UnveilNode>::Trie;
 
     bool permissions_inherited_from_root() const { return this->metadata_value().unveil_inherited_from_root; }
     bool was_explicitly_unveiled() const { return this->metadata_value().explicitly_unveiled; }

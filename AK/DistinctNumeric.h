@@ -311,9 +311,9 @@ struct Formatter<DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>> : 
 // TODO: Further type aliases?
 
 template<typename T, typename X, auto... Args>
-struct AK::Traits<AK::DistinctNumeric<T, X, Args...>> : public AK::GenericTraits<AK::DistinctNumeric<T, X, Args...>> {
+struct Traits<AK::DistinctNumeric<T, X, Args...>> : public GenericTraits<AK::DistinctNumeric<T, X, Args...>> {
     static constexpr bool is_trivial() { return true; }
-    static constexpr auto hash(const AK::DistinctNumeric<T, X, Args...>& d) { return AK::Traits<T>::hash(d.value()); }
+    static constexpr auto hash(const DistinctNumeric<T, X, Args...>& d) { return Traits<T>::hash(d.value()); }
 };
 
 using AK::DistinctNumeric;

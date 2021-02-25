@@ -89,7 +89,7 @@ int main(int argc, char** argv)
             continue;
 
         fputs(current->buf, outfile);
-        AK::swap(current, previous);
+        swap(current, previous);
         first_run = false;
     }
 

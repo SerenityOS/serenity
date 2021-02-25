@@ -67,7 +67,7 @@ struct PGMLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 };
 
-static void set_adjusted_pixels(PGMLoadingContext& context, const AK::Vector<Gfx::Color>& color_data)
+static void set_adjusted_pixels(PGMLoadingContext& context, const Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
     for (size_t y = 0; y < context.height; ++y) {

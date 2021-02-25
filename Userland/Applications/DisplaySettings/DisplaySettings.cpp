@@ -101,7 +101,7 @@ void DisplaySettingsWidget::create_frame()
 
     m_wallpaper_combo = *find_descendant_of_type_named<GUI::ComboBox>("wallpaper_combo");
     m_wallpaper_combo->set_only_allow_values_from_model(true);
-    m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
+    m_wallpaper_combo->set_model(*GUI::ItemListModel<String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
         String path = text;
         if (path.starts_with("/") && m_monitor_widget->set_wallpaper(path)) {
@@ -139,7 +139,7 @@ void DisplaySettingsWidget::create_frame()
 
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
-    m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
+    m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
         m_monitor_widget->update();

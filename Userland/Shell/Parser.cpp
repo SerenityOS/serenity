@@ -1417,7 +1417,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
             ++it;
             is_negative = true;
         }
-        if (it != selector.event.text.end() && AK::all_of(it, selector.event.text.end(), is_digit)) {
+        if (it != selector.event.text.end() && all_of(it, selector.event.text.end(), is_digit)) {
             if (is_negative)
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
             else
