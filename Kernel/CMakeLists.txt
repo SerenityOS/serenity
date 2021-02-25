@@ -13,10 +13,11 @@ set(KERNEL_SOURCES
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp
     AddressSanitizer.cpp
+    Arch/PC/BIOS.cpp
     Arch/i386/CPU.cpp
     Arch/i386/ProcessorInfo.cpp
     Arch/i386/SafeMem.cpp
-    Arch/PC/BIOS.cpp
+    Arch/x86/SmapDisabler.h
     CMOS.cpp
     CommandLine.cpp
     Console.cpp
