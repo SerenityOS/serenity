@@ -95,7 +95,9 @@ protected:
     ALWAYS_INLINE Token consume(TokenType type, Error error);
     ALWAYS_INLINE bool consume(const String&);
     ALWAYS_INLINE bool try_skip(StringView);
+    ALWAYS_INLINE bool lookahead_any(StringView);
     ALWAYS_INLINE char skip();
+    ALWAYS_INLINE void back(size_t = 1);
     ALWAYS_INLINE void reset();
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
@@ -165,6 +167,7 @@ public:
     ECMA262Parser(Lexer& lexer, Optional<typename ParserTraits<ECMA262Parser>::OptionsType> regex_options)
         : Parser(lexer, regex_options.value_or({}))
     {
+        m_should_use_browser_extended_grammar = regex_options.has_value() && regex_options->has_flag_set(ECMAScriptFlags::BrowserExtended);
     }
 
     ~ECMA262Parser() = default;
@@ -182,6 +185,7 @@ private:
         DisallowDigit,
         DisallowNonDigit,
     };
+    StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
     Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
     StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
@@ -197,6 +201,17 @@ private:
     bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
     Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
     bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
+
+    // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
+    bool parse_quantifiable_assertion(ByteCode&, size_t&, bool named);
+    bool parse_extended_atom(ByteCode&, size_t&, bool named);
+    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, bool unicode, bool named);
+    bool parse_invalid_braced_quantifier(); // Note: This function either parses and *fails*, or doesn't parse anything and returns false.
+    bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
+    Optional<u8> parse_legacy_octal_escape();
+
+    // Keep the Annex B. behaviour behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
+    bool m_should_use_browser_extended_grammar { false };
 };
 
 using PosixExtended = PosixExtendedParser;
