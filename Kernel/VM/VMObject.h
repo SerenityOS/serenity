@@ -88,6 +88,7 @@ public:
     }
 
 protected:
+    VMObject();
     explicit VMObject(size_t);
     explicit VMObject(const VMObject&);
 
