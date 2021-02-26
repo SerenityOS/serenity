@@ -136,7 +136,9 @@ public:
     u32 operator[](size_t index) const
     {
         if (is_u8_view()) {
-            return u8view()[index];
+            i8 ch = u8view()[index];
+            u8 value = *reinterpret_cast<u8*>(&ch);
+            return static_cast<u32>(value);
         }
         return u32view().code_points()[index];
     }

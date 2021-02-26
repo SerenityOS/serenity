@@ -83,21 +83,22 @@ struct regmatch_t {
 };
 
 enum __RegexAllFlags {
-    __Regex_Global = 1,                                  // All matches (don't return after first match)
-    __Regex_Insensitive = __Regex_Global << 1,           // Case insensitive match (ignores case of [a-zA-Z])
-    __Regex_Ungreedy = __Regex_Global << 2,              // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
-    __Regex_Unicode = __Regex_Global << 3,               // Enable all unicode features and interpret all unicode escape sequences as such
-    __Regex_Extended = __Regex_Global << 4,              // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
-    __Regex_Extra = __Regex_Global << 5,                 // Disallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
-    __Regex_MatchNotBeginOfLine = __Regex_Global << 6,   // Pattern is not forced to ^ -> search in whole string!
-    __Regex_MatchNotEndOfLine = __Regex_Global << 7,     // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
-    __Regex_SkipSubExprResults = __Regex_Global << 8,    // Do not return sub expressions in the result
-    __Regex_StringCopyMatches = __Regex_Global << 9,     // Do explicitly copy results into new allocated string instead of StringView to original string.
-    __Regex_SingleLine = __Regex_Global << 10,           // Dot matches newline characters
-    __Regex_Sticky = __Regex_Global << 11,               // Force the pattern to only match consecutive matches from where the previous match ended.
-    __Regex_Multiline = __Regex_Global << 12,            // Handle newline characters. Match each line, one by one.
-    __Regex_SkipTrimEmptyMatches = __Regex_Global << 13, // Do not remove empty capture group results.
-    __Regex_Internal_Stateful = __Regex_Global << 14,    // Internal flag; enables stateful matches.
+    __Regex_Global = 1,                                      // All matches (don't return after first match)
+    __Regex_Insensitive = __Regex_Global << 1,               // Case insensitive match (ignores case of [a-zA-Z])
+    __Regex_Ungreedy = __Regex_Global << 2,                  // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
+    __Regex_Unicode = __Regex_Global << 3,                   // Enable all unicode features and interpret all unicode escape sequences as such
+    __Regex_Extended = __Regex_Global << 4,                  // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
+    __Regex_Extra = __Regex_Global << 5,                     // Disallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
+    __Regex_MatchNotBeginOfLine = __Regex_Global << 6,       // Pattern is not forced to ^ -> search in whole string!
+    __Regex_MatchNotEndOfLine = __Regex_Global << 7,         // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
+    __Regex_SkipSubExprResults = __Regex_Global << 8,        // Do not return sub expressions in the result
+    __Regex_StringCopyMatches = __Regex_Global << 9,         // Do explicitly copy results into new allocated string instead of StringView to original string.
+    __Regex_SingleLine = __Regex_Global << 10,               // Dot matches newline characters
+    __Regex_Sticky = __Regex_Global << 11,                   // Force the pattern to only match consecutive matches from where the previous match ended.
+    __Regex_Multiline = __Regex_Global << 12,                // Handle newline characters. Match each line, one by one.
+    __Regex_SkipTrimEmptyMatches = __Regex_Global << 13,     // Do not remove empty capture group results.
+    __Regex_Internal_Stateful = __Regex_Global << 14,        // Internal flag; enables stateful matches.
+    __Regex_Internal_BrowserExtended = __Regex_Global << 15, // Internal flag; enable browser-specific ECMA262 extensions.
     __Regex_Last = __Regex_SkipTrimEmptyMatches
 };
 
