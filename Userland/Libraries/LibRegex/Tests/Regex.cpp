@@ -549,6 +549,7 @@ TEST_CASE(ECMA262_match)
         { "bar.*(?<!foo)", "barbar", true },
         { "((...)X)+", "fooXbarXbazX", true },
         { "(?:)", "", true },
+        { "\\^", "^" },
         // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
         { "{", "{", true, ECMAScriptFlags::BrowserExtended },
         { "\\5", "\5", true, ECMAScriptFlags::BrowserExtended },
