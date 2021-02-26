@@ -34,6 +34,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>
@@ -55,7 +56,11 @@
 #include <LibGUI/Variant.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/Wizards/CoverWizardPage.h>
+#include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGfx/FontDatabase.h>
+
+#include "DemoWizardDialog.h"
 
 template<typename T>
 class ListViewModel final : public GUI::Model {
@@ -464,6 +469,30 @@ int main(int argc, char** argv)
     input_button.on_click = [&](auto) {
         if (GUI::InputBox::show(window, value, "Enter input:", "Input Box") == GUI::InputBox::ExecOK && !value.is_empty())
             input_label.set_text(value);
+    };
+
+    auto& tab_wizards = tab_widget.add_tab<GUI::Widget>("Wizards");
+    tab_wizards.set_layout<GUI::VerticalBoxLayout>();
+    tab_wizards.layout()->set_margins({ 8, 8, 8, 8 });
+    tab_wizards.layout()->set_spacing(8);
+
+    auto& start_wizard_button = tab_wizards.add<GUI::Button>("Start wizard");
+    auto& wizard_output_box = tab_wizards.add<GUI::TextEditor>();
+    wizard_output_box.set_text("Output from the demo wizard will appear here :^)");
+    wizard_output_box.set_mode(GUI::TextEditor::DisplayOnly);
+    wizard_output_box.set_font(Gfx::FontDatabase::the().default_font());
+
+    start_wizard_button.on_click = [&]() {
+        wizard_output_box.set_text("Wizard started.");
+
+        auto wizard = DemoWizardDialog::construct(window);
+        int result = wizard->exec();
+
+        StringBuilder sb;
+        sb.append(String::formatted("Wizard execution complete.\nDialog ExecResult code: {}", result));
+        if (result == GUI::Dialog::ExecResult::ExecOK)
+            sb.append(String::formatted(" (ExecOK)\n'Installation' location: \"{}\"", wizard->page_1_location()));
+        wizard_output_box.set_text(sb.string_view());
     };
 
     auto& tab_image = tab_widget.add_tab<GUI::Widget>("Images");
