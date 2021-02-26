@@ -136,6 +136,7 @@ BlockBasedFS::~BlockBasedFS()
 
 KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
+    LOCKER(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
@@ -168,6 +169,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
 
 bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
+    LOCKER(m_lock);
     u32 base_offset = index.value() * m_logical_block_size;
     file_description().seek(base_offset, SEEK_SET);
     auto nread = file_description().read(buffer, m_logical_block_size);
@@ -175,8 +177,10 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
     VERIFY(nread.value() == m_logical_block_size);
     return true;
 }
+
 bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
+    LOCKER(m_lock);
     size_t base_offset = index.value() * m_logical_block_size;
     file_description().seek(base_offset, SEEK_SET);
     auto nwritten = file_description().write(buffer, m_logical_block_size);
@@ -187,6 +191,7 @@ bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 
 bool BlockBasedFS::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
 {
+    LOCKER(m_lock);
     auto current = buffer;
     for (unsigned block = index.value(); block < (index.value() + count); block++) {
         if (!raw_read(BlockIndex { block }, current))
@@ -195,8 +200,10 @@ bool BlockBasedFS::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelB
     }
     return true;
 }
+
 bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
 {
+    LOCKER(m_lock);
     auto current = buffer;
     for (unsigned block = index.value(); block < (index.value() + count); block++) {
         if (!raw_write(block, current))
@@ -208,6 +215,7 @@ bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOr
 
 KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
+    LOCKER(m_lock);
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
@@ -220,6 +228,7 @@ KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserO
 
 KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
+    LOCKER(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
@@ -253,6 +262,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 
 KResult BlockBasedFS::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
+    LOCKER(m_lock);
     VERIFY(m_logical_block_size);
     if (!count)
         return EINVAL;
