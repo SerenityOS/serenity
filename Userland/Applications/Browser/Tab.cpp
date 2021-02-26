@@ -116,11 +116,12 @@ Tab::Tab(Type type)
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
+    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this);
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
+    toolbar.add_action(*m_go_home_action);
 
-    toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this));
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { reload(); }, this);
 
     toolbar.add_action(*m_reload_action);
@@ -290,13 +291,14 @@ Tab::Tab(Type type)
         },
         this));
 
-    app_menu.add_action(*m_reload_action);
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
     auto& view_menu = m_menubar->add_menu("View");
+    view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
+    view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
             window()->set_fullscreen(!window()->is_fullscreen());
@@ -314,6 +316,13 @@ Tab::Tab(Type type)
             }
         },
         this));
+
+    auto& go_menu = m_menubar->add_menu("Go");
+    go_menu.add_action(*m_go_back_action);
+    go_menu.add_action(*m_go_forward_action);
+    go_menu.add_action(*m_go_home_action);
+    go_menu.add_separator();
+    go_menu.add_action(*m_reload_action);
 
     auto view_source_action = GUI::Action::create(
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
@@ -429,9 +438,6 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("collect-garbage");
         }
     }));
-
-    auto& bookmarks_menu = m_menubar->add_menu("Bookmarks");
-    bookmarks_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
 
     auto& help_menu = m_menubar->add_menu("Help");
     help_menu.add_action(WindowActions::the().about_action());
