@@ -28,7 +28,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibVT/Terminal.h>
-#include <string.h>
 
 namespace VT {
 
@@ -535,11 +534,11 @@ void Terminal::DCH(const ParamVector& params)
     auto& line = m_lines[m_cursor_row];
 
     // Move n characters of line to the left
-    for (int i = m_cursor_column; i < line.length() - num; i++)
+    for (size_t i = m_cursor_column; i < line.length() - num; i++)
         line.set_code_point(i, line.code_point(i + num));
 
     // Fill remainder of line with blanks
-    for (int i = line.length() - num; i < line.length(); i++)
+    for (size_t i = line.length() - num; i < line.length(); i++)
         line.set_code_point(i, ' ');
 
     line.set_dirty(true);
@@ -759,8 +758,8 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
     VERIFY(column < columns());
     auto& line = m_lines[row];
     line.set_code_point(column, code_point);
-    line.attributes()[column] = m_current_attribute;
-    line.attributes()[column].flags |= Attribute::Touched;
+    line.attribute_at(column) = m_current_attribute;
+    line.attribute_at(column).flags |= Attribute::Touched;
     line.set_dirty(true);
 
     m_last_code_point = code_point;
@@ -1191,9 +1190,9 @@ Attribute Terminal::attribute_at(const Position& position) const
     if (position.row() >= static_cast<int>(line_count()))
         return {};
     auto& line = this->line(position.row());
-    if (position.column() >= line.length())
+    if (static_cast<size_t>(position.column()) >= line.length())
         return {};
-    return line.attributes()[position.column()];
+    return line.attribute_at(position.column());
 }
 
 }
