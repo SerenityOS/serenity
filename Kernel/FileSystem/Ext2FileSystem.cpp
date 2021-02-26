@@ -1141,7 +1141,6 @@ unsigned Ext2FS::blocks_per_group() const
 
 bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
 {
-    LOCKER(m_lock);
     BlockIndex block_index;
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
