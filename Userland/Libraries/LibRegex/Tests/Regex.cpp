@@ -501,6 +501,8 @@ TEST_CASE(ECMA262_parse)
         { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
+        { "{1}", regex::Error::InvalidPattern },
+        { "{1,2}", regex::Error::InvalidPattern },
     };
 
     for (auto& test : tests) {
@@ -525,7 +527,7 @@ TEST_CASE(ECMA262_match)
         bool matches { true };
         ECMAScriptFlags options {};
     };
-
+    // clang-format off
     constexpr _test tests[] {
         { "^hello.$", "hello1" },
         { "^(hello.)$", "hello1" },
@@ -547,7 +549,21 @@ TEST_CASE(ECMA262_match)
         { "bar.*(?<!foo)", "barbar", true },
         { "((...)X)+", "fooXbarXbazX", true },
         { "(?:)", "", true },
+        // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
+        { "{", "{", true, ECMAScriptFlags::BrowserExtended },
+        { "\\5", "\5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\05", "\5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\455", "\45""5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\314", "\314", true, ECMAScriptFlags::BrowserExtended },
+        { "\\cf", "\06", true, ECMAScriptFlags::BrowserExtended },
+        { "\\c1", "\\c1", true, ECMAScriptFlags::BrowserExtended },
+        { "[\\c1]", "\x11", true, ECMAScriptFlags::BrowserExtended },
+        { "[\\w-\\d]", "-", true, ECMAScriptFlags::BrowserExtended },
+        { "^(?:^^\\.?|[!+-]|!=|!==|#|%|%=|&|&&|&&=|&=|\\(|\\*|\\*=|\\+=|,|-=|->|\\/|\\/=|:|::|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|[?@[^]|\\^=|\\^\\^|\\^\\^=|{|\\||\\|=|\\|\\||\\|\\|=|~|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*(\\/(?=[^*/])(?:[^/[\\\\]|\\\\[\\S\\s]|\\[(?:[^\\\\\\]]|\\\\[\\S\\s])*(?:]|$))+\\/)",
+                 "return /xx/", true, ECMAScriptFlags::BrowserExtended
+        }, // #5517, appears to be matching JS expressions that involve regular expressions...
     };
+    // clang-format on
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
