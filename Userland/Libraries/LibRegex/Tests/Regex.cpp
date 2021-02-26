@@ -563,6 +563,7 @@ TEST_CASE(ECMA262_match)
         { "^(?:^^\\.?|[!+-]|!=|!==|#|%|%=|&|&&|&&=|&=|\\(|\\*|\\*=|\\+=|,|-=|->|\\/|\\/=|:|::|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|[?@[^]|\\^=|\\^\\^|\\^\\^=|{|\\||\\|=|\\|\\||\\|\\|=|~|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*(\\/(?=[^*/])(?:[^/[\\\\]|\\\\[\\S\\s]|\\[(?:[^\\\\\\]]|\\\\[\\S\\s])*(?:]|$))+\\/)",
                  "return /xx/", true, ECMAScriptFlags::BrowserExtended
         }, // #5517, appears to be matching JS expressions that involve regular expressions...
+        { "a{2,}", "aaaa" }, // #5518
     };
     // clang-format on
 

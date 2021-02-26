@@ -954,12 +954,10 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         if (match(TokenType::Comma)) {
             consume();
             auto high_bound = read_digits();
-            if (!high_bound.has_value()) {
-                set_error(Error::InvalidBraceContent);
-                return false;
-            }
-
-            repeat_max = high_bound.value();
+            if (high_bound.has_value())
+                repeat_max = high_bound.value();
+        } else {
+            repeat_max = repeat_min;
         }
 
         if (!match(TokenType::RightCurly)) {
