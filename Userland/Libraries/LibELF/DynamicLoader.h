@@ -43,6 +43,8 @@ public:
     static RefPtr<DynamicLoader> try_create(int fd, String filename);
     ~DynamicLoader();
 
+    const String& filename() const { return m_filename; }
+
     bool is_valid() const { return m_valid; }
 
     // Load a full ELF image from file into the current process and create an DynamicObject
@@ -55,8 +57,12 @@ public:
     // Stage 2 of loading: dynamic object loading and primary relocations
     bool load_stage_2(unsigned flags, size_t total_tls_size);
 
-    // Stage 3 of loading: lazy relocations and initializers
+    // Stage 3 of loading: lazy relocations
     RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
+
+    // Stage 4 of loading: initializers
+    void load_stage_4();
+
     // Intended for use by dlsym or other internal methods
     void* symbol_for_name(const StringView&);
 
@@ -111,6 +117,8 @@ private:
     // Stage 3
     void do_lazy_relocations(size_t total_tls_size);
     void setup_plt_trampoline();
+
+    // Stage 4
     void call_object_init_functions();
 
     bool validate();

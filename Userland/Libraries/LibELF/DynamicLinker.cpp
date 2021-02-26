@@ -31,6 +31,7 @@
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/ScopeGuard.h>
 #include <LibC/mman.h>
 #include <LibC/unistd.h>
@@ -50,7 +51,7 @@ namespace {
 HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> g_loaders;
 Vector<NonnullRefPtr<ELF::DynamicObject>> g_global_objects;
 
-using MainFunction = int (*)(int, char**, char**);
+using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
 
 size_t g_current_tls_offset = 0;
@@ -180,62 +181,69 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_dependency_of_impl(const String& name, HashTable<String>& seen_names, Callback callback)
+static void for_each_dependency_of(const String& name, HashTable<String>& seen_names, Callback callback)
 {
     if (seen_names.contains(name))
         return;
     seen_names.set(name);
 
     for (const auto& needed_name : get_dependencies(name))
-        for_each_dependency_of_impl(get_library_name(needed_name), seen_names, callback);
+        for_each_dependency_of(get_library_name(needed_name), seen_names, callback);
 
     callback(*g_loaders.get(name).value());
 }
 
-template<typename Callback>
-static void for_each_dependency_of(const String& name, Callback callback)
+static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_executable(const String& name)
 {
     HashTable<String> seen_names;
-    for_each_dependency_of_impl(name, seen_names, move(callback));
+    NonnullRefPtrVector<DynamicLoader> loaders;
+    for_each_dependency_of(name, seen_names, [&](auto& loader) {
+        loaders.append(loader);
+    });
+    return loaders;
 }
 
-static void load_elf(const String& name)
+static NonnullRefPtr<DynamicLoader> load_main_executable(const String& name)
 {
-    for_each_dependency_of(name, [](auto& loader) {
+    // NOTE: We always map the main executable first, since it may require
+    //       placement at a specific address.
+    auto& main_executable_loader = *g_loaders.get(name).value();
+    auto main_executable_object = main_executable_loader.map();
+    g_global_objects.append(*main_executable_object);
+
+    auto loaders = collect_loaders_for_executable(name);
+
+    for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
-        VERIFY(dynamic_object);
-        g_global_objects.append(*dynamic_object);
-    });
-    for_each_dependency_of(name, [](auto& loader) {
+        if (dynamic_object)
+            g_global_objects.append(*dynamic_object);
+    }
+
+    for (auto& loader : loaders) {
         bool success = loader.link(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
         VERIFY(success);
-    });
-}
+    }
 
-static NonnullRefPtr<DynamicLoader> commit_elf(const String& name)
-{
-    auto loader = g_loaders.get(name).value();
-    for (const auto& needed_name : get_dependencies(name)) {
-        String library_name = get_library_name(needed_name);
-        if (g_loaders.contains(library_name)) {
-            commit_elf(library_name);
+    for (auto& loader : loaders) {
+        auto object = loader.load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
+        VERIFY(object);
+
+        if (loader.filename() == "libsystem.so") {
+            if (syscall(SC_msyscall, object->base_address().as_ptr())) {
+                VERIFY_NOT_REACHED();
+            }
+        }
+
+        if (loader.filename() == "libc.so") {
+            initialize_libc(*object);
         }
     }
 
-    auto object = loader->load_stage_3(RTLD_GLOBAL | RTLD_LAZY, g_total_tls_size);
-    VERIFY(object);
-
-    if (name == "libsystem.so") {
-        if (syscall(SC_msyscall, object->base_address().as_ptr())) {
-            VERIFY_NOT_REACHED();
-        }
+    for (auto& loader : loaders) {
+        loader.load_stage_4();
     }
 
-    if (name == "libc.so") {
-        initialize_libc(*object);
-    }
-    g_loaders.remove(name);
-    return loader;
+    return main_executable_loader;
 }
 
 static void read_environment_variables()
@@ -265,33 +273,26 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     allocate_tls();
 
-    load_elf(main_program_name);
+    auto entry_point_function = [&main_program_name] {
+        auto main_executable_loader = load_main_executable(main_program_name);
+        auto entry_point = main_executable_loader->image().entry();
+        if (main_executable_loader->is_dynamic())
+            entry_point = entry_point.offset(main_executable_loader->text_segment_load_address().get());
+        return (EntryPointFunction)(entry_point.as_ptr());
+    }();
 
-    // NOTE: We put this in a RefPtr instead of a NonnullRefPtr so we can release it later.
-    RefPtr main_program_lib = commit_elf(main_program_name);
-
-    FlatPtr entry_point = reinterpret_cast<FlatPtr>(main_program_lib->image().entry().as_ptr());
-    if (main_program_lib->is_dynamic())
-        entry_point += reinterpret_cast<FlatPtr>(main_program_lib->text_segment_load_address().as_ptr());
-
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "entry point: {:p}", (void*)entry_point);
     g_loaders.clear();
-
-    MainFunction main_function = (MainFunction)(entry_point);
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "jumping to main program entry point: {:p}", main_function);
-    if (g_do_breakpoint_trap_before_entry) {
-        asm("int3");
-    }
-
-    // Unmap the main executable and release our related resources.
-    main_program_lib = nullptr;
 
     int rc = syscall(SC_msyscall, nullptr);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
 
-    rc = main_function(argc, argv, envp);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
+    if (g_do_breakpoint_trap_before_entry) {
+        asm("int3");
+    }
+    rc = entry_point_function(argc, argv, envp);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "rc: {}", rc);
     if (g_libc_exit != nullptr) {
         g_libc_exit(rc);
