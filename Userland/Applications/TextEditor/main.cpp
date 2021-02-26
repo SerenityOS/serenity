@@ -26,6 +26,7 @@
 
 #include "TextEditorWidget.h"
 #include <LibCore/ArgsParser.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
@@ -85,6 +86,10 @@ int main(int argc, char** argv)
         text_widget.open_sesame(file_to_edit);
     else
         text_widget.update_title();
+
+    auto menubar = GUI::MenuBar::construct();
+    text_widget.initialize_menubar(menubar);
+    app->set_menubar(menubar);
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
