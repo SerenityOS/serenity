@@ -1015,7 +1015,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
         // Also part of AtomEscape.
         auto token = consume();
         match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[0] } });
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[1] } });
         return true;
     }
     if (try_skip("\\")) {
