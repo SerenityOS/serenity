@@ -313,7 +313,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
             auto& line = m_terminal.line(first_row_from_history + visual_row);
             for (size_t column = 0; column < line.length(); ++column) {
-                if (m_hovered_href_id == line.attributes()[column].href_id) {
+                if (m_hovered_href_id == line.attribute_at(column).href_id) {
                     bool merged_with_existing_rect = false;
                     auto glyph_rect = this->glyph_rect(visual_row, column);
                     for (auto& rect : hovered_href_rects) {
@@ -340,7 +340,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (visual_beep_active)
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].effective_background_color()).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, color_from_rgb(line.attribute_at(0).effective_background_color()).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
@@ -348,7 +348,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
-            auto attribute = line.attributes()[column];
+            auto attribute = line.attribute_at(column);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
             auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
@@ -405,7 +405,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             continue;
         auto& line = m_terminal.line(first_row_from_history + visual_row);
         for (size_t column = 0; column < line.length(); ++column) {
-            auto attribute = line.attributes()[column];
+            auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
@@ -436,7 +436,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].effective_foreground_color()));
+            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color()));
         }
     }
 }
@@ -590,18 +590,20 @@ VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) c
 
 u32 TerminalWidget::code_point_at(const VT::Position& position) const
 {
+    VERIFY(position.is_valid());
     VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
-    if (position.column() == line.length())
+    if (static_cast<size_t>(position.column()) == line.length())
         return '\n';
     return line.code_point(position.column());
 }
 
 VT::Position TerminalWidget::next_position_after(const VT::Position& position, bool should_wrap) const
 {
+    VERIFY(position.is_valid());
     VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
-    if (position.column() == line.length()) {
+    if (static_cast<size_t>(position.column()) == line.length()) {
         if (static_cast<size_t>(position.row()) == m_terminal.line_count() - 1) {
             if (should_wrap)
                 return { 0, 0 };
@@ -619,12 +621,12 @@ VT::Position TerminalWidget::previous_position_before(const VT::Position& positi
         if (position.row() == 0) {
             if (should_wrap) {
                 auto& last_line = m_terminal.line(m_terminal.line_count() - 1);
-                return { static_cast<int>(m_terminal.line_count() - 1), last_line.length() };
+                return { static_cast<int>(m_terminal.line_count() - 1), static_cast<int>(last_line.length()) };
             }
             return {};
         }
         auto& prev_line = m_terminal.line(position.row() - 1);
-        return { position.row() - 1, prev_line.length() };
+        return { position.row() - 1, static_cast<int>(prev_line.length()) };
     }
     return { position.row(), position.column() - 1 };
 }
@@ -909,18 +911,14 @@ String TerminalWidget::selected_text() const
         int last_column = last_selection_column_on_row(row);
         for (int column = first_column; column <= last_column; ++column) {
             auto& line = m_terminal.line(row);
-            if (line.attributes()[column].is_untouched()) {
+            if (line.attribute_at(column).is_untouched()) {
                 builder.append('\n');
                 break;
             }
             // FIXME: This is a bit hackish.
-            if (line.is_utf32()) {
-                u32 code_point = line.code_point(column);
-                builder.append(Utf32View(&code_point, 1));
-            } else {
-                builder.append(line.code_point(column));
-            }
-            if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
+            u32 code_point = line.code_point(column);
+            builder.append(Utf32View(&code_point, 1));
+            if (column == static_cast<int>(line.length()) - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
         }
