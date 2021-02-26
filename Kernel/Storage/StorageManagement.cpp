@@ -30,6 +30,7 @@
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
@@ -71,6 +72,11 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enume
             }
         });
     }
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
+        if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x6 && PCI::get_programming_interface(address) == 0x1) {
+            controllers.append(AHCIController::initialize(address));
+        }
+    });
     controllers.append(RamdiskController::initialize());
     return controllers;
 }
