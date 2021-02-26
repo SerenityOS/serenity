@@ -29,6 +29,7 @@
 #include "HexEditor.h"
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
@@ -41,6 +42,7 @@ class HexEditorWidget final : public GUI::Widget {
 public:
     virtual ~HexEditorWidget() override;
     void open_file(const String& path);
+    void initialize_menubar(GUI::MenuBar&);
     bool request_close();
 
 private:
@@ -64,6 +66,8 @@ private:
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_goto_decimal_offset_action;
     RefPtr<GUI::Action> m_goto_hex_offset_action;
+
+    GUI::ActionGroup m_bytes_per_row_actions;
 
     RefPtr<GUI::StatusBar> m_statusbar;
 

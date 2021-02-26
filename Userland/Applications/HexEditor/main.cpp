@@ -26,6 +26,7 @@
 
 #include "HexEditorWidget.h"
 #include <LibGUI/Icon.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 
@@ -56,6 +57,10 @@ int main(int argc, char** argv)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
+
+    auto menubar = GUI::MenuBar::construct();
+    hex_editor_widget.initialize_menubar(menubar);
+    app->set_menubar(menubar);
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
