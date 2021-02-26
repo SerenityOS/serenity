@@ -398,7 +398,7 @@ int main(int argc, char** argv)
     auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
-    auto open_settings_action = GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
+    auto open_settings_action = GUI::Action::create("Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
         [&](const GUI::Action&) {
             if (!settings_window)
                 settings_window = create_settings_window(terminal);
@@ -426,7 +426,7 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("Terminal");
-    app_menu.add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    app_menu.add_action(GUI::Action::create("Open new Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         pid_t child;
         const char* argv[] = { "Terminal", nullptr };
         if ((errno = posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
