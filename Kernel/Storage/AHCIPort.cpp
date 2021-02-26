@@ -29,10 +29,23 @@
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/SATADiskDevice.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
+
+NonnullRefPtr<AHCIPort::ScatterList> AHCIPort::ScatterList::create(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
+{
+    return adopt(*new ScatterList(request, allocated_pages, device_block_size));
+}
+
+AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
+    : m_vm_object(AnonymousVMObject::create_with_physical_pages(allocated_pages))
+    , m_device_block_size(device_block_size)
+{
+    m_dma_region = MM.allocate_kernel_region_with_vmobject(m_vm_object, page_round_up((request.block_count() * device_block_size)), "AHCI Scattered DMA", Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes);
+}
 
 NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
@@ -305,19 +318,42 @@ void AHCIPort::set_sleep_state() const
     m_port_registers.cmd = (m_port_registers.cmd & 0x0ffffff) | (0b1000 << 28);
 }
 
+size_t AHCIPort::calculate_descriptors_count(size_t block_count) const
+{
+    VERIFY(m_connected_device);
+    size_t needed_dma_regions_count = page_round_up((block_count * m_connected_device->block_size())) / PAGE_SIZE;
+    VERIFY(needed_dma_regions_count <= m_dma_buffers.size());
+    return needed_dma_regions_count;
+}
+
+Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_list(AsyncBlockDeviceRequest& request)
+{
+    VERIFY(m_lock.is_locked());
+    VERIFY(request.block_count() > 0);
+
+    NonnullRefPtrVector<PhysicalPage> allocated_dma_regions;
+    for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
+        allocated_dma_regions.append(m_dma_buffers.at(index));
+    }
+
+    m_current_scatter_list = ScatterList::create(request, allocated_dma_regions, m_connected_device->block_size());
+    if (request.request_type() == AsyncBlockDeviceRequest::Write) {
+        if (!request.read_from_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
+            return AsyncDeviceRequest::MemoryFault;
+        }
+    }
+    return {};
+}
+
 void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
 {
     ScopedSpinLock lock(m_lock);
-    auto dma_region = MM.allocate_kernel_region(m_dma_buffers[0].paddr(), PAGE_SIZE, "AHCI Mapped DMA", Region::Access::Read | Region::Access::Write);
+    VERIFY(!m_current_scatter_list);
 
-    // FIXME: Allow more than 8 blocks of 512 bytes to be processed!
-    VERIFY(request.block_count() < 9);
-
-    if (request.request_type() == AsyncBlockDeviceRequest::Write) {
-        if (!request.read_from_buffer(request.buffer(), dma_region->vaddr().as_ptr(), 512 * request.block_count())) {
-            request.complete(AsyncDeviceRequest::MemoryFault);
-            return;
-        }
+    auto result = prepare_and_set_scatter_list(request);
+    if (result.has_value()) {
+        request.complete(result.value());
+        return;
     }
 
     auto success = access_device(request.request_type(), request.block_index(), request.block_count());
@@ -325,12 +361,15 @@ void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
         request.complete(AsyncDeviceRequest::Failure);
         return;
     }
+
     if (request.request_type() == AsyncBlockDeviceRequest::Read) {
-        if (!request.write_to_buffer(request.buffer(), dma_region->vaddr().as_ptr(), 512 * request.block_count())) {
+        if (!request.write_to_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
             request.complete(AsyncDeviceRequest::MemoryFault);
+            m_current_scatter_list = nullptr;
             return;
         }
     }
+    m_current_scatter_list = nullptr;
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Reqeust success", representative_port_index());
     request.complete(AsyncDeviceRequest::Success);
 }
@@ -358,10 +397,11 @@ bool AHCIPort::spin_until_ready() const
 bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64 lba, u8 block_count)
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_connected_device);
     VERIFY(is_operable());
+    VERIFY(m_current_scatter_list);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {}", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count);
-
     if (!spin_until_ready())
         return false;
 
@@ -370,8 +410,8 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
     command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
-    command_list_entries[unused_command_header.value()].prdbc = (block_count * 512);
-    command_list_entries[unused_command_header.value()].prdtl = 1;
+    command_list_entries[unused_command_header.value()].prdbc = (block_count * m_connected_device->block_size());
+    command_list_entries[unused_command_header.value()].prdtl = m_current_scatter_list->scatters_count();
 
     // Note: we must set the correct Dword count in this register. Real hardware
     // AHCI controllers do care about this field! QEMU doesn't care if we don't
@@ -382,9 +422,17 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Region::Access::Read | Region::Access::Write, Region::Cacheable::No);
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
-    command_table.descriptors[0].base_high = 0;
-    command_table.descriptors[0].base_low = m_dma_buffers[0].paddr().get();
-    command_table.descriptors[0].byte_count = (block_count * 512) - 1;
+
+    size_t scatter_entry_index = 0;
+    for (auto scatter_page : m_current_scatter_list->vmobject().physical_pages()) {
+        VERIFY(scatter_page);
+        dbgln_if(AHCI_DEBUG, "AHCI Port {}: Add a transfer scatter entry @ {}", representative_port_index(), scatter_page->paddr());
+        command_table.descriptors[scatter_entry_index].base_high = 0;
+        command_table.descriptors[scatter_entry_index].base_low = scatter_page->paddr().get();
+        command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
+        scatter_entry_index++;
+    }
+
     memset(const_cast<u8*>(command_table.atapi_command), 0, 32);
 
     auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
