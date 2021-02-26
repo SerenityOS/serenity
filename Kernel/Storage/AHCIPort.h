@@ -37,6 +37,7 @@
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 #include <Kernel/Storage/StorageDevice.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
@@ -49,6 +50,21 @@ class SATADiskDevice;
 class AHCIPort : public RefCounted<AHCIPort> {
     friend class AHCIPortHandler;
     friend class SATADiskDevice;
+
+private:
+    class ScatterList : public RefCounted<ScatterList> {
+    public:
+        static NonnullRefPtr<ScatterList> create(AsyncBlockDeviceRequest&, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size);
+        const VMObject& vmobject() const { return m_vm_object; }
+        VirtualAddress dma_region() const { return m_dma_region->vaddr(); }
+        size_t scatters_count() const { return m_vm_object->physical_pages().size(); }
+
+    private:
+        ScatterList(AsyncBlockDeviceRequest&, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size);
+        NonnullRefPtr<AnonymousVMObject> m_vm_object;
+        size_t m_device_block_size;
+        OwnPtr<Region> m_dma_region;
+    };
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
@@ -83,6 +99,8 @@ private:
     void start_request(AsyncBlockDeviceRequest&);
     void complete_current_request(AsyncDeviceRequest::RequestResult);
     bool access_device(AsyncBlockDeviceRequest::RequestType, u64 lba, u8 block_count);
+    size_t calculate_descriptors_count(size_t block_count) const;
+    [[nodiscard]] Optional<AsyncDeviceRequest::RequestResult> prepare_and_set_scatter_list(AsyncBlockDeviceRequest& request);
 
     ALWAYS_INLINE bool is_interrupts_enabled() const;
 
@@ -127,6 +145,8 @@ private:
     NonnullRefPtr<AHCIPortHandler> m_parent_handler;
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
+
+    RefPtr<AHCIPort::ScatterList> m_current_scatter_list;
     bool m_disabled_by_firmware { false };
 };
 }
