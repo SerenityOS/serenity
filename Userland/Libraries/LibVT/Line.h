@@ -28,6 +28,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibVT/XtermColors.h>
 
 namespace VT {
@@ -44,8 +45,8 @@ struct Attribute {
         background_color = default_background_color;
         flags = Flags::NoAttributes;
     }
-    u32 foreground_color;
-    u32 background_color;
+    u32 foreground_color {};
+    u32 background_color {};
 
     u32 effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
     u32 effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
@@ -84,52 +85,42 @@ class Line {
     AK_MAKE_NONMOVABLE(Line);
 
 public:
-    explicit Line(u16 columns);
+    explicit Line(size_t length);
     ~Line();
 
-    void clear(Attribute);
-    bool has_only_one_background_color() const;
-    void set_length(u16);
+    struct Cell {
+        u32 code_point {};
+        Attribute attribute;
+    };
 
-    u16 length() const { return m_length; }
+    const Attribute& attribute_at(size_t index) const { return m_cells[index].attribute; }
+    Attribute& attribute_at(size_t index) { return m_cells[index].attribute; }
+
+    Cell& cell_at(size_t index) { return m_cells[index]; }
+    const Cell& cell_at(size_t index) const { return m_cells[index]; }
+
+    void clear(const Attribute&);
+    bool has_only_one_background_color() const;
+
+    size_t length() const { return m_cells.size(); }
+    void set_length(size_t);
 
     u32 code_point(size_t index) const
     {
-        if (m_utf32)
-            return m_code_points.as_u32[index];
-        return m_code_points.as_u8[index];
+        return m_cells[index].code_point;
     }
 
     void set_code_point(size_t index, u32 code_point)
     {
-        if (!m_utf32 && code_point & 0xffffff80u)
-            convert_to_utf32();
-
-        if (m_utf32)
-            m_code_points.as_u32[index] = code_point;
-        else
-            m_code_points.as_u8[index] = code_point;
+        m_cells[index].code_point = code_point;
     }
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
 
-    const Attribute* attributes() const { return m_attributes; }
-    Attribute* attributes() { return m_attributes; }
-
-    void convert_to_utf32();
-
-    bool is_utf32() const { return m_utf32; }
-
 private:
-    union {
-        u8* as_u8;
-        u32* as_u32;
-    } m_code_points { nullptr };
-    Attribute* m_attributes { nullptr };
+    Vector<Cell> m_cells;
     bool m_dirty { false };
-    bool m_utf32 { false };
-    u16 m_length { 0 };
 };
 
 }
