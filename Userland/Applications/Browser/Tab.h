@@ -92,6 +92,7 @@ private:
 
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
+    RefPtr<GUI::Action> m_go_home_action;
     RefPtr<GUI::Action> m_reload_action;
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
