@@ -399,13 +399,14 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 ++pixel_index;
                 if (pixel_index % image.width == 0) {
                     if (image.interlaced) {
-                        if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
-                            ++interlace_pass;
-                            if (interlace_pass < 4)
-                                row = INTERLACE_ROW_OFFSETS[interlace_pass];
-                        } else {
-                            if (interlace_pass < 4)
+                        if (interlace_pass < 4) {
+                            if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
+                                ++interlace_pass;
+                                if (interlace_pass < 4)
+                                    row = INTERLACE_ROW_OFFSETS[interlace_pass];
+                            } else {
                                 row += INTERLACE_ROW_STRIDES[interlace_pass];
+                            }
                         }
                     } else {
                         ++row;
