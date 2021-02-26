@@ -37,7 +37,9 @@ static Flags options_from(const String& flags, VM& vm, GlobalObject& global_obje
 {
     bool g = false, i = false, m = false, s = false, u = false, y = false;
     Flags options {
-        { (regex::ECMAScriptFlags)regex::AllFlags::Global }, // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
+        // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
+        // FIXME: Enable 'BrowserExtended' only if in a browser context.
+        { (regex::ECMAScriptFlags)regex::AllFlags::Global | ECMAScriptFlags::BrowserExtended },
         {},
     };
 
