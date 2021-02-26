@@ -81,7 +81,6 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
             m_state = State::Normal;
         }
         if (m_depths_of_taken_branches.contains_slow(m_current_depth - 1)) {
-            m_depths_of_taken_branches.contains_slow(m_current_depth - 1);
             m_state = State::SkipElseBranch;
         }
         return;
@@ -94,7 +93,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
             m_depths_of_not_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth; });
         }
         if (m_depths_of_taken_branches.contains_slow(m_current_depth)) {
-            m_depths_of_taken_branches.contains_slow(m_current_depth);
+            m_depths_of_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth; });
         }
         m_state = State::Normal;
         return;
@@ -156,6 +155,20 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
             // FIXME: Implement #if logic
             // We currently always take #if branches.
             m_depths_of_taken_branches.append(m_current_depth - 1);
+        }
+        return;
+    }
+
+    if (keyword == "elif") {
+        VERIFY(m_current_depth > 0);
+        // FIXME: Evaluate the elif expression
+        // We currently always treat the expression in #elif as true.
+        if (m_depths_of_not_taken_branches.contains_slow(m_current_depth - 1) /* && should_take*/) {
+            m_depths_of_not_taken_branches.remove_all_matching([this](auto x) { return x == m_current_depth - 1; });
+            m_state = State::Normal;
+        }
+        if (m_depths_of_taken_branches.contains_slow(m_current_depth - 1)) {
+            m_state = State::SkipElseBranch;
         }
         return;
     }
