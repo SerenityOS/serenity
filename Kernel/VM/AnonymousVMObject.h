@@ -43,6 +43,7 @@ public:
     static RefPtr<AnonymousVMObject> create_with_size(size_t, AllocationStrategy);
     static RefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress paddr, size_t size);
     static NonnullRefPtr<AnonymousVMObject> create_with_physical_page(PhysicalPage& page);
+    static NonnullRefPtr<AnonymousVMObject> create_with_physical_pages(NonnullRefPtrVector<PhysicalPage>);
     virtual RefPtr<VMObject> clone() override;
 
     RefPtr<PhysicalPage> allocate_committed_page(size_t);
@@ -119,6 +120,7 @@ private:
     explicit AnonymousVMObject(size_t, AllocationStrategy);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
     explicit AnonymousVMObject(PhysicalPage&);
+    explicit AnonymousVMObject(NonnullRefPtrVector<PhysicalPage>);
     explicit AnonymousVMObject(const AnonymousVMObject&);
 
     virtual const char* class_name() const override { return "AnonymousVMObject"; }
