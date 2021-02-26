@@ -1215,12 +1215,10 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
     return blocks;
 }
 
-KResultOr<InodeIndex> Ext2FS::find_a_free_inode(GroupIndex preferred_group)
+KResultOr<InodeIndex> Ext2FS::allocate_inode(GroupIndex preferred_group)
 {
+    dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_inode(preferred_group: {})", preferred_group);
     LOCKER(m_lock);
-    dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode(preferred_group: {})", preferred_group);
-
-    GroupIndex group_index;
 
     // FIXME: We shouldn't refuse to allocate an inode if there is no group that can house the whole thing.
     //        In those cases we should just spread it across multiple groups.
@@ -1229,52 +1227,55 @@ KResultOr<InodeIndex> Ext2FS::find_a_free_inode(GroupIndex preferred_group)
         return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= 1;
     };
 
+    GroupIndex group_index;
     if (preferred_group.value() && is_suitable_group(preferred_group)) {
         group_index = preferred_group;
     } else {
         for (unsigned i = 1; i <= m_block_group_count; ++i) {
-            if (is_suitable_group(i))
+            if (is_suitable_group(i)) {
                 group_index = i;
+                break;
+            }
         }
     }
 
     if (!group_index) {
-        dmesgln("Ext2FS: find_a_free_inode: no suitable group found for new inode");
+        dmesgln("Ext2FS: allocate_inode: no suitable group found for new inode");
         return ENOSPC;
     }
 
-    dbgln_if(EXT2_DEBUG, "Ext2FS: find_a_free_inode: found suitable group [{}] for new inode :^)", group_index);
+    dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_inode: found suitable group [{}] for new inode :^)", group_index);
 
     auto& bgd = group_descriptor(group_index);
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
-    InodeIndex first_free_inode_in_group = 0;
-
     InodeIndex first_inode_in_group = (group_index.value() - 1) * inodes_per_group() + 1;
 
     auto cached_bitmap_or_error = get_bitmap_block(bgd.bg_inode_bitmap);
     if (cached_bitmap_or_error.is_error())
         return cached_bitmap_or_error.error();
     auto& cached_bitmap = *cached_bitmap_or_error.value();
-    auto inode_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), inodes_in_group);
+    auto inode_bitmap = cached_bitmap.bitmap(inodes_in_group);
     for (size_t i = 0; i < inode_bitmap.size(); ++i) {
         if (inode_bitmap.get(i))
             continue;
-        first_free_inode_in_group = InodeIndex(first_inode_in_group.value() + i);
-        break;
+        inode_bitmap.set(i, true);
+
+        auto inode_index = InodeIndex(first_inode_in_group.value() + i);
+
+        cached_bitmap.dirty = true;
+        m_super_block.s_free_inodes_count--;
+        m_super_block_dirty = true;
+        const_cast<ext2_group_desc&>(bgd).bg_free_inodes_count--;
+        m_block_group_descriptors_dirty = true;
+
+        // In case the inode cache had this cached as "non-existent", uncache that info.
+        m_inode_cache.remove(inode_index.value());
+
+        return inode_index;
     }
 
-    if (!first_free_inode_in_group) {
-        dmesgln("Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(");
-        return EIO;
-    }
-
-    InodeIndex inode = first_free_inode_in_group;
-    dbgln_if(EXT2_DEBUG, "Ext2FS: found suitable inode {}", inode);
-
-    auto result = get_inode_allocation_state(inode);
-    if (result.is_error())
-        return result.error();
-    return inode;
+    dmesgln("Ext2FS: allocate_inode found no available inode, despite bgd claiming there are inodes :(");
+    return EIO;
 }
 
 Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) const
@@ -1417,31 +1418,14 @@ KResult Ext2FS::create_directory(Ext2FSInode& parent_inode, const String& name, 
 
 KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
-    LOCKER(m_lock);
+    if (name.length() > EXT2_NAME_LEN)
+        return ENAMETOOLONG;
 
     if (parent_inode.m_raw_inode.i_links_count == 0)
         return ENOENT;
 
-    if (name.length() > EXT2_NAME_LEN)
-        return ENAMETOOLONG;
-
-    dbgln_if(EXT2_DEBUG, "Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
-
-    // NOTE: This doesn't commit the inode allocation just yet!
-    auto inode_id_or_error = find_a_free_inode();
-    if (inode_id_or_error.is_error()) {
-        dmesgln("Ext2FS: create_inode: allocate_inode failed");
-        return inode_id_or_error.error();
-    }
-    auto inode_id = inode_id_or_error.value();
-
-    // Looks like we're good, time to update the inode bitmap and group+global inode counters.
-    auto result = set_inode_allocation_state(inode_id, true);
-    if (result.is_error())
-        return result;
-
-    auto now = kgettimeofday();
     ext2_inode e2inode {};
+    auto now = kgettimeofday();
     e2inode.i_mode = mode;
     e2inode.i_uid = uid;
     e2inode.i_gid = gid;
@@ -1450,6 +1434,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     e2inode.i_ctime = now.tv_sec;
     e2inode.i_mtime = now.tv_sec;
     e2inode.i_dtime = 0;
+    e2inode.i_flags = 0;
 
     // For directories, add +1 link count for the "." entry in self.
     e2inode.i_links_count = is_directory(mode);
@@ -1459,22 +1444,22 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     else if (is_block_device(mode))
         e2inode.i_block[1] = dev;
 
-    dbgln_if(EXT2_DEBUG, "Ext2FS: writing initial metadata for inode {}", inode_id);
+    auto inode_id = allocate_inode();
+    if (inode_id.is_error())
+        return inode_id.error();
 
-    e2inode.i_flags = 0;
-    auto success = write_ext2_inode(inode_id, e2inode);
+    dbgln_if(EXT2_DEBUG, "Ext2FS: writing initial metadata for inode {}", inode_id.value());
+    auto success = write_ext2_inode(inode_id.value(), e2inode);
     VERIFY(success);
 
-    // We might have cached the fact that this inode didn't exist. Wipe the slate.
-    m_inode_cache.remove(inode_id);
+    auto new_inode = get_inode({ fsid(), inode_id.value() });
+    VERIFY(new_inode);
 
-    auto inode = get_inode({ fsid(), inode_id });
-
-    result = parent_inode.add_child(*inode, name, mode);
+    dbgln_if(EXT2_DEBUG, "Ext2FS: Adding inode '{}' (mode {:o}) to parent directory {}", name, mode, parent_inode.index());
+    auto result = parent_inode.add_child(*new_inode, name, mode);
     if (result.is_error())
         return result;
-
-    return inode.release_nonnull();
+    return new_inode.release_nonnull();
 }
 
 bool Ext2FSInode::populate_lookup_cache() const
