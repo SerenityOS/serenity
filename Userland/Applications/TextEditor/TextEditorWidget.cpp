@@ -69,8 +69,8 @@ TextEditorWidget::TextEditorWidget()
 
     m_config = Core::ConfigFile::get_for_app("TextEditor");
 
-    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
-    auto& toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
+    m_toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
+    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
 
     m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
@@ -337,8 +337,30 @@ TextEditorWidget::TextEditorWidget()
         m_save_as_action->activate();
     });
 
-    auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Text Editor");
+    m_toolbar->add_action(*m_new_action);
+    m_toolbar->add_action(*m_open_action);
+    m_toolbar->add_action(*m_save_action);
+
+    m_toolbar->add_separator();
+
+    m_toolbar->add_action(m_editor->cut_action());
+    m_toolbar->add_action(m_editor->copy_action());
+    m_toolbar->add_action(m_editor->paste_action());
+    m_toolbar->add_action(m_editor->delete_action());
+
+    m_toolbar->add_separator();
+
+    m_toolbar->add_action(m_editor->undo_action());
+    m_toolbar->add_action(m_editor->redo_action());
+}
+
+TextEditorWidget::~TextEditorWidget()
+{
+}
+
+void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
+{
+    auto& app_menu = menubar.add_menu("Text Editor");
     app_menu.add_action(*m_new_action);
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);
@@ -350,7 +372,7 @@ TextEditorWidget::TextEditorWidget()
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("Edit");
+    auto& edit_menu = menubar.add_menu("Edit");
     edit_menu.add_action(m_editor->undo_action());
     edit_menu.add_action(m_editor->redo_action());
     edit_menu.add_separator();
@@ -390,13 +412,13 @@ TextEditorWidget::TextEditorWidget()
     m_preview_actions.set_exclusive(true);
 
     m_layout_toolbar_action = GUI::Action::create_checkable("Toolbar", [&](auto& action) {
-        action.is_checked() ? toolbar_container.set_visible(true) : toolbar_container.set_visible(false);
+        action.is_checked() ? m_toolbar_container->set_visible(true) : m_toolbar_container->set_visible(false);
         m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
         m_config->sync();
     });
     auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
     m_layout_toolbar_action->set_checked(show_toolbar);
-    toolbar_container.set_visible(show_toolbar);
+    m_toolbar_container->set_visible(show_toolbar);
 
     m_layout_statusbar_action = GUI::Action::create_checkable("Status bar", [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
@@ -416,7 +438,7 @@ TextEditorWidget::TextEditorWidget()
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
-    auto& view_menu = menubar->add_menu("View");
+    auto& view_menu = menubar.add_menu("View");
     auto& layout_menu = view_menu.add_submenu("Layout");
     layout_menu.add_action(*m_layout_toolbar_action);
     layout_menu.add_action(*m_layout_statusbar_action);
@@ -510,33 +532,11 @@ TextEditorWidget::TextEditorWidget()
     syntax_actions.add_action(*m_shell_highlight);
     syntax_menu.add_action(*m_shell_highlight);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar.add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
-
-    GUI::Application::the()->set_menubar(move(menubar));
-
-    toolbar.add_action(*m_new_action);
-    toolbar.add_action(*m_open_action);
-    toolbar.add_action(*m_save_action);
-
-    toolbar.add_separator();
-
-    toolbar.add_action(m_editor->cut_action());
-    toolbar.add_action(m_editor->copy_action());
-    toolbar.add_action(m_editor->paste_action());
-    toolbar.add_action(m_editor->delete_action());
-
-    toolbar.add_separator();
-
-    toolbar.add_action(m_editor->undo_action());
-    toolbar.add_action(m_editor->redo_action());
-}
-
-TextEditorWidget::~TextEditorWidget()
-{
 }
 
 void TextEditorWidget::set_path(const LexicalPath& lexical_path)
