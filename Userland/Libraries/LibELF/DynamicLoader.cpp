@@ -154,7 +154,10 @@ void* DynamicLoader::symbol_for_name(const StringView& name)
 
 RefPtr<DynamicObject> DynamicLoader::map()
 {
-    VERIFY(!m_dynamic_object);
+    if (m_dynamic_object) {
+        // Already mapped.
+        return nullptr;
+    }
 
     if (!m_valid) {
         dbgln("DynamicLoader::map failed: image is invalid");
@@ -245,8 +248,12 @@ RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_t
 #endif
     }
 
-    call_object_init_functions();
     return m_dynamic_object;
+}
+
+void DynamicLoader::load_stage_4()
+{
+    call_object_init_functions();
 }
 
 void DynamicLoader::do_lazy_relocations(size_t total_tls_size)
