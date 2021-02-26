@@ -59,12 +59,6 @@ extern char** environ;
 
 namespace Shell {
 
-// FIXME: This should eventually be removed once we've established that
-//        waitpid() is not passed the same job twice.
-#ifdef __serenity__
-#    define ENSURE_WAITID_ONCE
-#endif
-
 void Shell::setup_signals()
 {
     if (m_should_reinstall_signal_handlers) {
@@ -1602,9 +1596,6 @@ void Shell::custom_event(Core::CustomEvent& event)
 
 void Shell::notify_child_event()
 {
-#ifdef ENSURE_WAITID_ONCE
-    static HashTable<pid_t> s_waited_for_pids;
-#endif
     Vector<u64> disowned_jobs;
     // Workaround the fact that we can't receive *who* exactly changed state.
     // The child might still be alive (and even running) when this signal is dispatched to us
@@ -1620,11 +1611,6 @@ void Shell::notify_child_event()
         for (auto& it : jobs) {
             auto job_id = it.key;
             auto& job = *it.value;
-#ifdef ENSURE_WAITID_ONCE
-            // Theoretically, this should never trip, as jobs are removed from
-            // the job table when waitpid() succeeds *and* the child is dead.
-            VERIFY(!s_waited_for_pids.contains(job.pid()));
-#endif
 
             int wstatus = 0;
 #if SH_DEBUG
@@ -1658,18 +1644,6 @@ void Shell::notify_child_event()
                     job.set_is_suspended(true);
                 }
                 found_child = true;
-#ifdef ENSURE_WAITID_ONCE
-                // NOTE: This check is here to find bugs about our assumptions about waitpid(),
-                //       it does not hold in general, and it definitely does not hold in the long run.
-                // Reasons that we would call waitpid() more than once:
-                // - PID reuse/wraparound: This will simply fail the assertion, ignored here.
-                // - Non-terminating unblocks:
-                //   - Suspension: (e.g. via ^Z)
-                //   - ?
-                // - ?
-                if (job.exited())
-                    s_waited_for_pids.set(child_pid);
-#endif
             }
             if (job.should_be_disowned())
                 disowned_jobs.append(job_id);
