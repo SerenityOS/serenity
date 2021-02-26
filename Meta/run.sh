@@ -65,9 +65,9 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
--device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
--device ide-hd,bus=ide.6,drive=disk,unit=0
+-device ahci,id=ahci
+-device ide-hd,bus=ahci.0,drive=disk,unit=0
 -usb
 -debugcon stdio
 -soundhw pcspk
