@@ -82,6 +82,10 @@ private:
     bool populate_lookup_cache() const;
     KResult resize(u64);
     KResult flush_block_list();
+    Vector<BlockBasedFS::BlockIndex> compute_block_list() const;
+    Vector<BlockBasedFS::BlockIndex> compute_block_list_with_meta_blocks() const;
+    Vector<BlockBasedFS::BlockIndex> compute_block_list_impl(bool include_block_list_blocks) const;
+    Vector<BlockBasedFS::BlockIndex> compute_block_list_impl_internal(const ext2_inode& e2inode, bool include_block_list_blocks) const;
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
@@ -144,9 +148,6 @@ private:
     KResultOr<Vector<BlockIndex>> allocate_blocks(GroupIndex preferred_group_index, size_t count);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
-
-    Vector<BlockIndex> block_list_for_inode_impl(const ext2_inode&, bool include_block_list_blocks = false) const;
-    Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
 
     KResultOr<bool> get_inode_allocation_state(InodeIndex) const;
     KResult set_inode_allocation_state(InodeIndex, bool);
