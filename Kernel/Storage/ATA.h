@@ -73,6 +73,8 @@
 #define ATA_IDENT_COMMANDSETS 164
 #define ATA_IDENT_MAX_LBA_EXT 200
 
+#define ATA_USE_LBA_ADDRESSING (1 << 6)
+
 #define IDE_ATA 0x00
 #define IDE_ATAPI 0x01
 
