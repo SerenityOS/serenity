@@ -60,7 +60,8 @@ const ParserAutoComplete::DocumentData& ParserAutoComplete::get_document_data(co
 OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data_for(const String& file)
 {
     auto document = filedb().get(file);
-    VERIFY(document);
+    if (!document)
+        return {};
     auto content = document->text();
     auto document_data = make<DocumentData>(document->text(), file);
     auto root = document_data->parser.parse();
